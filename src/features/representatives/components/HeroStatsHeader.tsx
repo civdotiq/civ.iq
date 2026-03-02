@@ -8,6 +8,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import useSWR from 'swr';
+import { Crown } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import {
   LegislationIcon,
@@ -40,6 +42,13 @@ export function HeroStatsHeader({
   focusAreas,
 }: HeroStatsHeaderProps) {
   const [imageError, setImageError] = useState(false);
+
+  // Fetch leadership positions
+  const { data: leadershipData } = useSWR<{ leadership: Array<{ name: string; type: string }> }>(
+    `/api/representative/${representative.bioguideId}/leadership`,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
 
   // Get photo URL - use API-provided imageUrl or fallback to proxy
   const photoUrl = representative.imageUrl || `/api/photo/${representative.bioguideId}`;
@@ -248,6 +257,15 @@ export function HeroStatsHeader({
                   UP IN {nextElection}
                 </span>
               )}
+              {leadershipData?.leadership?.map((role, index) => (
+                <span
+                  key={index}
+                  className="aicher-heading text-xs sm:text-sm font-bold bg-yellow-50 text-yellow-800 border-2 border-yellow-500 px-3 py-2 flex items-center gap-1"
+                >
+                  <Crown className="w-3 h-3" />
+                  {role.name}
+                </span>
+              ))}
             </div>
 
             {/* Focus Areas */}

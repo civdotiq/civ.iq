@@ -14,6 +14,7 @@ import { TabNavigation, TabItem } from './TabNavigation';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
 import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
+import { Link2 } from 'lucide-react';
 import {
   RepresentativeIcon,
   StatisticsIcon,
@@ -49,6 +50,11 @@ const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.
 
 const CivicAlignmentTab = dynamic(
   () => import('./CivicAlignmentTab').then(mod => ({ default: mod.CivicAlignmentTab })),
+  { loading: TabLoadingSpinner, ssr: false }
+);
+
+const ConnectionsTabComponent = dynamic(
+  () => import('./ConnectionsTab').then(mod => ({ default: mod.ConnectionsTab })),
   { loading: TabLoadingSpinner, ssr: false }
 );
 
@@ -146,6 +152,27 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [fec];
     case 'news':
       return [googleNews];
+    case 'connections': {
+      const usaspending = {
+        color: 'border-civiq-blue',
+        bgColor: 'bg-civiq-blue',
+        name: 'USASpending.gov',
+        description: 'Federal contracts & grants',
+      };
+      const fedRegister = {
+        color: 'border-civiq-green',
+        bgColor: 'bg-civiq-green',
+        name: 'Federal Register',
+        description: 'Regulations & comment periods',
+      };
+      const openStates = {
+        color: 'border-civiq-red',
+        bgColor: 'bg-civiq-red',
+        name: 'OpenStates',
+        description: 'State legislators',
+      };
+      return [usaspending, fedRegister, openStates];
+    }
     case 'alignment':
       return [congress, fec, legislators];
     default:
@@ -353,6 +380,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           description: 'Recent media coverage',
         },
         {
+          id: 'connections',
+          label: 'Connections',
+          icon: <Link2 className="w-4 h-4" />,
+          description: 'District spending, hearings, regulations, and local officials',
+        },
+        {
           id: 'alignment',
           label: 'Civic Alignment',
           icon: <StatisticsIcon className="w-4 h-4" />,
@@ -407,6 +440,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               className="-mx-6 -my-6 p-6"
             />
           );
+        case 'connections':
+          return <ConnectionsTabComponent bioguideId={representative.bioguideId} />;
         case 'alignment':
           return <CivicAlignmentTab bioguideId={representative.bioguideId} />;
         default:

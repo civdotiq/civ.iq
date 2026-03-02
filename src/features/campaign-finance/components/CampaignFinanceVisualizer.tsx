@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import {
   PieChart,
   Pie,
@@ -207,6 +208,35 @@ export function CampaignFinanceVisualizer({
   const [announcement, setAnnouncement] = useState('');
   const [comprehensiveData, setComprehensiveData] = useState<CampaignFinanceData | null>(null);
   const [isLoadingComprehensive, setIsLoadingComprehensive] = useState(!!_bioguideId);
+  const [selectedCycle, setSelectedCycle] = useState<number | null>(null);
+
+  // Fetch election cycles
+  const { data: cyclesData } = useSWR(
+    _bioguideId ? `/api/representative/${_bioguideId}/election-cycles` : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
+  // Set default cycle from API response
+  useEffect(() => {
+    if (cyclesData?.defaultCycle && selectedCycle === null) {
+      setSelectedCycle(cyclesData.defaultCycle);
+    }
+  }, [cyclesData, selectedCycle]);
+
+  // Fetch funding sources
+  const { data: fundingSourcesData } = useSWR(
+    _bioguideId ? `/api/representative/${_bioguideId}/finance/funding-sources` : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
+  // Fetch expenditure categories
+  const { data: expendituresData } = useSWR(
+    _bioguideId ? `/api/representative/${_bioguideId}/finance/expenditures` : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
 
   // Responsive chart heights for mobile optimization
   const chartHeight300 = useResponsiveChartHeight(300, 250);
@@ -216,7 +246,9 @@ export function CampaignFinanceVisualizer({
   useEffect(() => {
     if (_bioguideId) {
       setIsLoadingComprehensive(true);
-      fetch(`/api/representative/${_bioguideId}/finance/comprehensive`)
+      fetch(
+        `/api/representative/${_bioguideId}/finance/comprehensive${selectedCycle ? `?cycle=${selectedCycle}` : ''}`
+      )
         .then(response => {
           if (!response.ok) throw new Error('Failed to fetch comprehensive data');
           return response.json();
@@ -271,7 +303,7 @@ export function CampaignFinanceVisualizer({
           setIsLoadingComprehensive(false);
         });
     }
-  }, [_bioguideId, initialFinanceData]);
+  }, [_bioguideId, initialFinanceData, selectedCycle]);
 
   // Use comprehensive data if available, otherwise fall back to initial data
   const financeData = comprehensiveData || initialFinanceData;
@@ -463,6 +495,24 @@ export function CampaignFinanceVisualizer({
       <div role="status" aria-live="polite" className="sr-only">
         {announcement}
       </div>
+
+      {/* Election Cycle Selector */}
+      {cyclesData?.cycles?.length > 1 && (
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Election Cycle</label>
+          <select
+            value={selectedCycle || ''}
+            onChange={e => setSelectedCycle(Number(e.target.value))}
+            className="border-2 border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-civiq-blue"
+          >
+            {(cyclesData.cycles as number[]).map((cycle: number) => (
+              <option key={cycle} value={cycle}>
+                {cycle}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Tab Navigation - Mobile Responsive with Keyboard Navigation */}
       <div className="aicher-card aicher-no-radius">
@@ -665,6 +715,149 @@ export function CampaignFinanceVisualizer({
                         </div>
                       )}
                   </div>
+                </div>
+              )}
+
+              {/* Funding Sources from Dedicated API */}
+              {fundingSourcesData && fundingSourcesData.totalRaised > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Funding Sources</h4>
+                  <hr className="border-gray-300 mb-4" />
+
+                  {/* Stacked Bar */}
+                  <div className="h-8 flex overflow-hidden border-2 border-gray-300 mb-4">
+                    {fundingSourcesData.individualContributions.percentage > 0 && (
+                      <div
+                        className="h-full bg-[#3ea2d4]"
+                        style={{
+                          width: `${fundingSourcesData.individualContributions.percentage}%`,
+                        }}
+                        title={`Individual: ${fundingSourcesData.individualContributions.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {fundingSourcesData.pacContributions.percentage > 0 && (
+                      <div
+                        className="h-full bg-[#e11d07]"
+                        style={{ width: `${fundingSourcesData.pacContributions.percentage}%` }}
+                        title={`PAC: ${fundingSourcesData.pacContributions.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {fundingSourcesData.partyContributions.percentage > 0 && (
+                      <div
+                        className="h-full bg-[#0a9338]"
+                        style={{ width: `${fundingSourcesData.partyContributions.percentage}%` }}
+                        title={`Party: ${fundingSourcesData.partyContributions.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {fundingSourcesData.candidateContributions.percentage > 0 && (
+                      <div
+                        className="h-full bg-yellow-500"
+                        style={{
+                          width: `${fundingSourcesData.candidateContributions.percentage}%`,
+                        }}
+                        title={`Self-Funded: ${fundingSourcesData.candidateContributions.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {fundingSourcesData.otherContributions.percentage > 0 && (
+                      <div
+                        className="h-full bg-gray-400"
+                        style={{ width: `${fundingSourcesData.otherContributions.percentage}%` }}
+                        title={`Other: ${fundingSourcesData.otherContributions.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Legend */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                    {[
+                      {
+                        label: 'Individual',
+                        data: fundingSourcesData.individualContributions,
+                        color: 'bg-[#3ea2d4]',
+                      },
+                      {
+                        label: 'PAC',
+                        data: fundingSourcesData.pacContributions,
+                        color: 'bg-[#e11d07]',
+                      },
+                      {
+                        label: 'Party',
+                        data: fundingSourcesData.partyContributions,
+                        color: 'bg-[#0a9338]',
+                      },
+                      {
+                        label: 'Self-Funded',
+                        data: fundingSourcesData.candidateContributions,
+                        color: 'bg-yellow-500',
+                      },
+                      {
+                        label: 'Other',
+                        data: fundingSourcesData.otherContributions,
+                        color: 'bg-gray-400',
+                      },
+                    ]
+                      .filter(item => item.data.amount > 0)
+                      .map(item => (
+                        <div key={item.label} className="flex items-center gap-2">
+                          <div className={`w-3 h-3 ${item.color}`} />
+                          <span className="text-gray-700">{item.label}</span>
+                          <span className="font-medium ml-auto">
+                            {formatCurrency(item.data.amount)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* How the Money Is Spent */}
+              {expendituresData && expendituresData.totalDisbursements > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">
+                    How the Money Is Spent
+                  </h4>
+                  <hr className="border-gray-300 mb-4" />
+
+                  <div className="mb-3 font-mono text-sm flex justify-between">
+                    <span>Total Disbursements</span>
+                    <span className="font-semibold">
+                      {formatCurrency(expendituresData.totalDisbursements)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 font-mono text-sm">
+                    {(
+                      expendituresData.expenditureCategories as Array<{
+                        category: string;
+                        amount: number;
+                        percentage: number;
+                        description: string;
+                      }>
+                    ).map(
+                      (cat: {
+                        category: string;
+                        amount: number;
+                        percentage: number;
+                        description: string;
+                      }) => (
+                        <div key={cat.category} className="flex justify-between">
+                          <span className="text-gray-700">{cat.category}</span>
+                          <span>{formatCurrency(cat.amount)}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  {expendituresData.metadata?.fecTransparencyLink && (
+                    <a
+                      href={expendituresData.metadata.fecTransparencyLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#3ea2d4] hover:underline text-xs mt-3 block"
+                    >
+                      View detailed expenditures on FEC.gov →
+                    </a>
+                  )}
                 </div>
               )}
 
