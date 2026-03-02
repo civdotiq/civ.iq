@@ -33,6 +33,14 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
     'property',
     'lending',
     'loan',
+    'goldman sachs',
+    'morgan stanley',
+    'jpmorgan',
+    'citigroup',
+    'wells fargo',
+    'blackstone',
+    'blackrock',
+    'fidelity',
   ],
   Health: [
     'hospital',
@@ -42,20 +50,28 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
     'pharmaceutical',
     'pharma',
     'clinic',
-    'doctor',
     'physician',
-    'nurse',
     'therapy',
     'surgical',
     'medicine',
-    'drug',
     'biotech',
     'dental',
     'veterinary',
+    'pfizer',
+    'merck',
+    'johnson & johnson',
+    'abbott',
+    'medtronic',
+    'unitedhealth',
+    'aetna',
+    'cigna',
+    'humana',
+    'anthem',
+    'kaiser',
+    'blue cross',
   ],
   'Communications/Electronics': [
     'telecom',
-    'communications',
     'technology',
     'software',
     'computer',
@@ -66,9 +82,20 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
     'wireless',
     'tech',
     'digital',
-    'information',
-    'data',
-    'network',
+    'semiconductor',
+    'google',
+    'microsoft',
+    'apple',
+    'amazon',
+    'meta',
+    'facebook',
+    'oracle',
+    'intel',
+    'cisco',
+    'ibm',
+    'comcast',
+    'verizon',
+    'at&t',
   ],
   'Energy/Natural Resources': [
     'energy',
@@ -88,6 +115,12 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
     'extraction',
     'drilling',
     'refining',
+    'exxon',
+    'chevron',
+    'conocophillips',
+    'duke energy',
+    'nextera',
+    'exelon',
   ],
   Transportation: [
     'airline',
@@ -143,17 +176,14 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
     'defense',
     'military',
     'aerospace',
-    'aviation',
     'weapons',
-    'security',
-    'contractor',
-    'government',
-    'federal',
-    'army',
-    'navy',
-    'air force',
-    'marine',
-    'pentagon',
+    'lockheed',
+    'raytheon',
+    'boeing',
+    'northrop grumman',
+    'general dynamics',
+    'l3harris',
+    'bae systems',
   ],
   Education: [
     'education',
@@ -172,45 +202,43 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
   ],
   Labor: [
     'union',
-    'labor',
-    'workers',
-    'employee',
+    'labor union',
     'teamsters',
     'afl-cio',
-    'local',
-    'international',
     'brotherhood',
-    'association',
-    'federation',
+    'laborers',
+    'steelworkers',
+    'seiu',
+    'afscme',
+    'uaw',
+    'ibew',
+    'ufcw',
+    'carpenters',
+    'pipefitters',
+    'firefighter',
   ],
   'Lawyers/Lobbyists': [
-    'law',
+    'law firm',
     'legal',
     'attorney',
     'lawyer',
-    'firm',
+    'law office',
     'lobbying',
     'lobbyist',
-    'advocacy',
     'counsel',
     'litigation',
-    'justice',
   ],
   'Ideology/Single Issue': [
-    'pac',
     'political action',
-    'committee',
-    'advocacy',
-    'rights',
-    'freedom',
-    'liberty',
-    'conservative',
-    'liberal',
-    'progressive',
-    'reform',
-    'citizen',
-    'taxpayer',
-    'voter',
+    'non-profit',
+    'nonprofit',
+    'foundation',
+    'planned parenthood',
+    'sierra club',
+    'nra',
+    'aipac',
+    'aclu',
+    'naacp',
   ],
 };
 
@@ -278,14 +306,50 @@ export interface ProcessedFinanceData {
 }
 
 /**
+ * Non-informative employer values from FEC filings
+ */
+const NON_INFORMATIVE_EMPLOYERS_SET = new Set([
+  'none',
+  'n/a',
+  'na',
+  'not employed',
+  'not applicable',
+  'information requested',
+  'information requested per best efforts',
+  'info requested',
+  'refused',
+  'self',
+  'self-employed',
+  'self employed',
+  'selfemployed',
+  'independent',
+  'private',
+  'personal',
+  'individual',
+]);
+
+/**
  * Classify employer into industry category
  */
-function classifyIndustry(employer: string): string {
+function classifyIndustry(employer: string, occupation?: string): string {
   if (!employer || employer.trim() === '') {
+    // No employer data — try occupation
+    if (occupation) return classifyByOccupation(occupation);
     return 'Unknown';
   }
 
   const cleanEmployer = employer.toLowerCase().trim();
+
+  // Skip non-informative employer values like "NONE" or "SELF-EMPLOYED"
+  if (NON_INFORMATIVE_EMPLOYERS_SET.has(cleanEmployer)) {
+    if (occupation) return classifyByOccupation(occupation);
+    return 'Unknown';
+  }
+
+  // Handle retired specifically
+  if (cleanEmployer === 'retired' || cleanEmployer === 'retiree') {
+    return 'Retired';
+  }
 
   for (const [industry, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {
     for (const keyword of keywords) {
@@ -295,7 +359,87 @@ function classifyIndustry(employer: string): string {
     }
   }
 
+  // Employer exists but didn't match — try occupation
+  if (occupation) {
+    const occResult = classifyByOccupation(occupation);
+    if (occResult !== 'Unknown') return occResult;
+  }
+
   return 'Miscellaneous Business';
+}
+
+/**
+ * Classify by occupation when employer is missing or non-informative
+ */
+const OCCUPATION_KEYWORDS: Record<string, string[]> = {
+  Health: [
+    'physician',
+    'doctor',
+    'nurse',
+    'surgeon',
+    'medical',
+    'healthcare',
+    'dentist',
+    'pharmacist',
+    'therapist',
+  ],
+  'Lawyers/Lobbyists': ['attorney', 'lawyer', 'legal', 'counsel', 'paralegal', 'lobbyist'],
+  'Finance/Insurance/Real Estate': [
+    'banker',
+    'financial',
+    'realtor',
+    'real estate',
+    'insurance',
+    'accountant',
+    'cpa',
+    'auditor',
+    'investment',
+    'trader',
+  ],
+  'Communications/Electronics': [
+    'software',
+    'developer',
+    'programmer',
+    'data scientist',
+    'engineer',
+    'tech',
+  ],
+  Education: ['teacher', 'professor', 'educator', 'principal', 'academic'],
+  Construction: ['contractor', 'construction', 'builder', 'plumber', 'electrician', 'carpenter'],
+  Transportation: ['pilot', 'flight attendant', 'truck driver', 'driver'],
+  Labor: ['union'],
+  Retired: ['retired', 'retiree'],
+  'Not Employed': ['homemaker', 'home maker', 'not employed', 'student', 'unemployed'],
+};
+
+function classifyByOccupation(occupation: string): string {
+  const clean = occupation.toLowerCase().trim();
+  if (!clean) return 'Unknown';
+
+  for (const [industry, keywords] of Object.entries(OCCUPATION_KEYWORDS)) {
+    for (const keyword of keywords) {
+      if (clean.includes(keyword)) return industry;
+    }
+  }
+
+  // Common executive titles → generic business
+  if (
+    [
+      'owner',
+      'executive',
+      'ceo',
+      'president',
+      'manager',
+      'director',
+      'partner',
+      'founder',
+      'entrepreneur',
+    ].some(t => clean.includes(t))
+  ) {
+    return 'Miscellaneous Business';
+  }
+
+  return 'Unknown';
 }
 
 /**
@@ -322,7 +466,8 @@ function processIndustryBreakdown(
     if (amount <= 0) continue;
 
     const employer = contribution.contributor_employer || '';
-    const industry = classifyIndustry(employer);
+    const occupation = contribution.contributor_occupation || '';
+    const industry = classifyIndustry(employer, occupation);
 
     // Track employer data quality
     if (employer && employer.trim() !== '') {

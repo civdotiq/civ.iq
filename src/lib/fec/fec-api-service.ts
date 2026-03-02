@@ -12,6 +12,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
+import { PAC_ACRONYMS } from '@/lib/data/pac-acronyms';
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 
@@ -208,30 +209,6 @@ export function classifyPACType(
   // If it doesn't match any PAC category, return null
   return null;
 }
-
-/**
- * Common PAC acronyms mapped to their official FEC-registered names.
- * The FEC API only searches registered committee names, so acronyms like
- * "AIPAC" won't find "AMERICAN ISRAEL PUBLIC AFFAIRS COMMITTEE" without expansion.
- */
-const PAC_ACRONYMS: Record<string, string> = {
-  AIPAC: 'AMERICAN ISRAEL PUBLIC AFFAIRS COMMITTEE',
-  DCCC: 'DEMOCRATIC CONGRESSIONAL CAMPAIGN COMMITTEE',
-  NRCC: 'NATIONAL REPUBLICAN CONGRESSIONAL COMMITTEE',
-  DSCC: 'DEMOCRATIC SENATORIAL CAMPAIGN COMMITTEE',
-  NRSC: 'NATIONAL REPUBLICAN SENATORIAL COMMITTEE',
-  DNC: 'DEMOCRATIC NATIONAL COMMITTEE',
-  RNC: 'REPUBLICAN NATIONAL COMMITTEE',
-  SEIU: 'SERVICE EMPLOYEES INTERNATIONAL UNION',
-  AFSCME: 'AMERICAN FEDERATION OF STATE COUNTY AND MUNICIPAL EMPLOYEES',
-  IBEW: 'INTERNATIONAL BROTHERHOOD OF ELECTRICAL WORKERS',
-  UAW: 'UNITED AUTOMOBILE AEROSPACE AND AGRICULTURAL IMPLEMENT WORKERS',
-  NARAL: 'NARAL PRO-CHOICE AMERICA',
-  NORPAC: 'NORPAC',
-  DMFI: 'DEMOCRATIC MAJORITY FOR ISRAEL',
-  CUFI: 'CHRISTIANS UNITED FOR ISRAEL',
-  AFP: 'AMERICANS FOR PROSPERITY',
-};
 
 /**
  * Core FEC API Service

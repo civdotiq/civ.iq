@@ -349,8 +349,8 @@ const INDUSTRY_CATEGORIES: IndustryCategory[] = [
   {
     sector: IndustrySector.MISC_BUSINESS,
     category: 'Retail',
-    keywords: ['retail', 'walmart', 'target', 'costco', 'store', 'shop'],
-    occupationKeywords: ['retail', 'sales', 'cashier'],
+    keywords: ['retail', 'walmart', 'target', 'costco', 'store', 'shop', 'grocery'],
+    occupationKeywords: ['retail', 'sales', 'cashier', 'merchandis'],
   },
   {
     sector: IndustrySector.MISC_BUSINESS,
@@ -361,8 +361,34 @@ const INDUSTRY_CATEGORIES: IndustryCategory[] = [
   {
     sector: IndustrySector.MISC_BUSINESS,
     category: 'Business Services',
-    keywords: ['consulting', 'consultant', 'business services', 'management'],
-    occupationKeywords: ['consultant', 'business analyst'],
+    keywords: [
+      'consulting',
+      'consultant',
+      'business services',
+      'management',
+      'staffing',
+      'recruiting',
+    ],
+    occupationKeywords: [
+      'consultant',
+      'business analyst',
+      'executive',
+      'ceo',
+      'cfo',
+      'coo',
+      'cto',
+      'president',
+      'vice president',
+      'owner',
+      'partner',
+      'director',
+      'manager',
+      'founder',
+      'entrepreneur',
+      'business owner',
+      'principal',
+      'managing director',
+    ],
   },
   {
     sector: IndustrySector.MISC_BUSINESS,
@@ -432,22 +458,40 @@ const INDUSTRY_CATEGORIES: IndustryCategory[] = [
   {
     sector: IndustrySector.OTHER,
     category: 'Retired',
-    keywords: ['retired', 'retirement'],
-    occupationKeywords: ['retired'],
-  },
-  {
-    sector: IndustrySector.OTHER,
-    category: 'Self-Employed',
-    keywords: ['self employed', 'self-employed', 'freelance', 'independent'],
-    occupationKeywords: ['self employed', 'self-employed', 'freelance'],
+    keywords: ['retired', 'retirement', 'retiree'],
+    occupationKeywords: ['retired', 'retiree'],
   },
   {
     sector: IndustrySector.OTHER,
     category: 'Not Employed',
-    keywords: ['not employed', 'unemployed', 'homemaker'],
-    occupationKeywords: ['not employed', 'homemaker', 'student'],
+    keywords: ['not employed', 'unemployed', 'homemaker', 'home maker'],
+    occupationKeywords: ['not employed', 'homemaker', 'home maker', 'student', 'unemployed'],
   },
 ];
+
+/**
+ * Non-informative employer values that should be skipped for keyword matching.
+ * When these appear, fall through directly to occupation-based matching.
+ */
+const NON_INFORMATIVE_EMPLOYERS = new Set([
+  'none',
+  'n/a',
+  'na',
+  'not employed',
+  'not applicable',
+  'information requested',
+  'information requested per best efforts',
+  'info requested',
+  'refused',
+  'self',
+  'self-employed',
+  'self employed',
+  'selfemployed',
+  'independent',
+  'private',
+  'personal',
+  'individual',
+]);
 
 /**
  * Categorize a contribution based on employer and occupation
@@ -465,20 +509,26 @@ export function categorizeContribution(
     };
   }
 
-  const employerLower = employer?.toLowerCase() || '';
-  const occupationLower = occupation?.toLowerCase() || '';
+  const employerLower = employer?.toLowerCase().trim() || '';
+  const occupationLower = occupation?.toLowerCase().trim() || '';
 
-  // Try employer match first (higher confidence)
-  for (const industry of INDUSTRY_CATEGORIES) {
-    for (const keyword of industry.keywords) {
-      if (employerLower.includes(keyword.toLowerCase())) {
-        return {
-          sector: industry.sector,
-          category: industry.category,
-          confidence: 'high',
-          matchedKeyword: keyword,
-          matchSource: 'employer',
-        };
+  // Check if employer is informative (not a placeholder like "NONE" or "SELF-EMPLOYED")
+  const hasInformativeEmployer =
+    employerLower !== '' && !NON_INFORMATIVE_EMPLOYERS.has(employerLower);
+
+  // Try employer match first (higher confidence) — only if employer is informative
+  if (hasInformativeEmployer) {
+    for (const industry of INDUSTRY_CATEGORIES) {
+      for (const keyword of industry.keywords) {
+        if (employerLower.includes(keyword.toLowerCase())) {
+          return {
+            sector: industry.sector,
+            category: industry.category,
+            confidence: 'high',
+            matchedKeyword: keyword,
+            matchSource: 'employer',
+          };
+        }
       }
     }
   }
@@ -500,6 +550,41 @@ export function categorizeContribution(
         }
       }
     }
+  }
+
+  // Handle self-employed / independent with a useful occupation
+  if (NON_INFORMATIVE_EMPLOYERS.has(employerLower) && occupationLower) {
+    // Occupation didn't match specific industries above, so classify by occupation text
+    if (
+      ['homemaker', 'home maker', 'not employed', 'unemployed'].some(v =>
+        occupationLower.includes(v)
+      )
+    ) {
+      return {
+        sector: IndustrySector.OTHER,
+        category: 'Not Employed',
+        confidence: 'medium',
+        matchedKeyword: occupationLower,
+        matchSource: 'occupation',
+      };
+    }
+    if (occupationLower.includes('student')) {
+      return {
+        sector: IndustrySector.OTHER,
+        category: 'Not Employed',
+        confidence: 'medium',
+        matchedKeyword: 'student',
+        matchSource: 'occupation',
+      };
+    }
+    // Self-employed with an unclassified occupation
+    return {
+      sector: IndustrySector.MISC_BUSINESS,
+      category: 'Business Services',
+      confidence: 'low',
+      matchedKeyword: 'self-employed',
+      matchSource: 'inferred',
+    };
   }
 
   // No match found
