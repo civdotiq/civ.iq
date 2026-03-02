@@ -129,7 +129,7 @@ export const ArticleCard = memo(function ArticleCard({
               alt={article.title}
               width={compact ? 64 : isPrimary ? 128 : 96}
               height={compact ? 64 : isPrimary ? 96 : 80}
-              className={`object-cover rounded ${
+              className={`object-cover ${
                 compact
                   ? 'w-16 h-16'
                   : isPrimary
@@ -206,7 +206,7 @@ export const ArticleCard = memo(function ArticleCard({
               {article.keywords.slice(0, 3).map((keyword, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  className="inline-flex items-center px-2 py-1 text-xs font-bold border-2 border-[#3ea2d4] bg-blue-100 text-blue-800"
                 >
                   {keyword}
                 </span>

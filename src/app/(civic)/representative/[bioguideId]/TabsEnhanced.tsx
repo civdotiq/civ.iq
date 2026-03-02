@@ -13,7 +13,7 @@ import {
   Globe,
   Clock,
 } from 'lucide-react';
-import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
 import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeContactForm } from '@/features/representatives/components/RepresentativeContactForm';
 import { FinanceJurisdictionSection } from '@/features/campaign-finance/components/FinanceJurisdictionSection';
@@ -381,36 +381,7 @@ function FinanceContent({ data, bioguideId }: { data: Record<string, any>; biogu
   );
 }
 
-// Enhanced component for News tab using ClusteredNewsFeed
-function NewsContent({
-  representative,
-  data,
-}: {
-  representative: EnhancedRepresentative;
-  data: Record<string, any>;
-}) {
-  const articles = data?.articles as unknown[];
-
-  // If no data available, show loading state or empty message
-  if (!articles || articles.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <Newspaper className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-        <div className="text-gray-500">No recent news available</div>
-        <div className="text-sm text-gray-400 mt-1">
-          News data is sourced from NewsAPI and Google News
-        </div>
-      </div>
-    );
-  }
-
-  // Use SimpleNewsSection for clean news display
-  return (
-    <div className="-mx-6 -my-6">
-      <SimpleNewsSection representative={representative} initialLimit={8} className="p-6" />
-    </div>
-  );
-}
+// News tab now uses ClusteredNewsSection directly in the render switch
 
 export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnhancedProps) {
   const [activeTab, setActiveTab] = useState('profile');
@@ -597,7 +568,13 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               <FinanceContent data={data as Record<string, any>} bioguideId={bioguideId} />
             )}
             {activeTab === 'news' && (
-              <NewsContent representative={representative} data={data as Record<string, any>} />
+              <div className="-mx-6 -my-6">
+                <ClusteredNewsSection
+                  representative={representative}
+                  initialLimit={20}
+                  className="p-6"
+                />
+              </div>
             )}
           </div>
         )}

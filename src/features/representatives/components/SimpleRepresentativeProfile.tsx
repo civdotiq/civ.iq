@@ -13,7 +13,7 @@ import { HeroStatsHeader } from './HeroStatsHeader';
 import { TabNavigation, TabItem } from './TabNavigation';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
-import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
 import {
   RepresentativeIcon,
   StatisticsIcon,
@@ -401,9 +401,9 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           );
         case 'news':
           return (
-            <SimpleNewsSection
+            <ClusteredNewsSection
               representative={representative}
-              initialLimit={8}
+              initialLimit={20}
               className="-mx-6 -my-6 p-6"
             />
           );

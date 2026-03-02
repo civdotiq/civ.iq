@@ -44,19 +44,19 @@ export function NewsClusterComponent({
    */
   const getClusterStyles = () => {
     const baseStyles =
-      'bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md';
+      'bg-white border-2 border-gray-300 overflow-hidden transition-all duration-200';
 
     switch (cluster.visualPriority) {
       case 'hero':
-        return `${baseStyles} shadow-lg border-blue-200 ring-1 ring-blue-100`;
+        return `${baseStyles} border-[#3ea2d4]`;
       case 'featured':
-        return `${baseStyles} shadow-md border-gray-300`;
+        return `${baseStyles} border-gray-900`;
       case 'standard':
-        return `${baseStyles} shadow-sm`;
+        return baseStyles;
       case 'compact':
-        return `${baseStyles} shadow-sm`;
+        return baseStyles;
       default:
-        return `${baseStyles} shadow-sm`;
+        return baseStyles;
     }
   };
 
@@ -64,22 +64,24 @@ export function NewsClusterComponent({
    * Get story type badge styles
    */
   const getStoryTypeBadge = () => {
-    const badges = {
-      breaking: 'bg-red-100 text-red-800 border-red-200 🚨 Breaking',
-      developing: 'bg-orange-100 text-orange-800 border-orange-200 📈 Developing',
-      ongoing: 'bg-blue-100 text-blue-800 border-blue-200 📰 Ongoing',
-      background: 'bg-gray-100 text-gray-800 border-gray-200 📋 Background',
+    const badges: Record<string, { classes: string; label: string }> = {
+      breaking: { classes: 'bg-red-100 text-red-800 border-[#e11d07]', label: 'Breaking' },
+      developing: {
+        classes: 'bg-orange-100 text-orange-800 border-orange-500',
+        label: 'Developing',
+      },
+      ongoing: { classes: 'bg-blue-100 text-blue-800 border-[#3ea2d4]', label: 'Ongoing' },
+      background: { classes: 'bg-gray-100 text-gray-800 border-gray-400', label: 'Background' },
     };
 
-    const badgeClass = badges[cluster.storyType] || badges.background;
-    const [colorClasses, ...labelParts] = badgeClass.split(' ');
-    const label = labelParts.join(' ');
+    const fallback = { classes: 'bg-gray-100 text-gray-800 border-gray-400', label: 'Background' };
+    const badge = badges[cluster.storyType] ?? fallback;
 
     return (
       <span
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colorClasses}`}
+        className={`inline-flex items-center px-2 py-1 text-xs font-bold uppercase border-2 ${badge.classes}`}
       >
-        {label}
+        {badge.label}
       </span>
     );
   };
@@ -107,10 +109,10 @@ export function NewsClusterComponent({
   return (
     <div className={`${getClusterStyles()} ${getLayoutClasses()} ${className}`}>
       {/* Header */}
-      <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50">
+      <div className="p-5 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-3">
           {getStoryTypeBadge()}
-          <div className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          <div className="text-sm text-gray-500 bg-gray-100 px-2 py-1 border border-gray-300">
             {cluster.relatedArticles.length + 1} article
             {cluster.relatedArticles.length > 0 ? 's' : ''}
           </div>
@@ -170,7 +172,7 @@ export function NewsClusterComponent({
       </div>
 
       {/* Metadata Footer */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div>
             Diversity: {(cluster.diversityScore * 100).toFixed(0)}% • Freshness:{' '}

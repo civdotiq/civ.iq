@@ -11,7 +11,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
-import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
 import {
   FileText,
   Users,
@@ -562,7 +562,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
       case 'news':
         return (
-          <SimpleNewsSection
+          <ClusteredNewsSection
             apiEndpoint={`/api/state-legislature/${legislator.state}/legislator/${encodeBase64Url(legislator.id)}/news`}
             representative={
               {
@@ -575,7 +575,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 chamber: legislator.chamber === 'upper' ? 'Senate' : 'House',
                 title: '',
                 terms: [],
-              } as unknown as Parameters<typeof SimpleNewsSection>[0]['representative']
+              } as unknown as Parameters<typeof ClusteredNewsSection>[0]['representative']
             }
           />
         );

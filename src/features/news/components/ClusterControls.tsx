@@ -66,9 +66,9 @@ export function ClusterControls({
    * Get view mode button classes
    */
   const getViewModeButtonClasses = (mode: NewsViewMode): string => {
-    const baseClasses = 'px-3 py-2 text-sm font-medium rounded-md transition-all duration-200';
+    const baseClasses = 'px-3 py-2 text-sm font-medium transition-all duration-200';
     return viewMode === mode
-      ? `${baseClasses} bg-blue-600 text-white shadow-sm`
+      ? `${baseClasses} bg-[#3ea2d4] text-white`
       : `${baseClasses} text-gray-600 hover:bg-gray-100`;
   };
 
@@ -76,21 +76,20 @@ export function ClusterControls({
    * Get filter button classes
    */
   const getFilterButtonClasses = (isActive: boolean): string => {
-    const baseClasses =
-      'px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 border';
+    const baseClasses = 'px-3 py-1.5 text-xs font-medium transition-all duration-200 border-2';
     return isActive
-      ? `${baseClasses} bg-blue-100 text-blue-800 border-blue-200`
+      ? `${baseClasses} bg-blue-100 text-blue-800 border-[#3ea2d4]`
       : `${baseClasses} bg-white text-gray-600 border-gray-300 hover:bg-gray-50`;
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 space-y-4 ${className}`}>
+    <div className={`bg-white border-2 border-gray-300 p-4 space-y-4 ${className}`}>
       {/* Top Row: View Mode and Refresh */}
       <div className="flex items-center justify-between">
         {/* View Mode Selector */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">View:</span>
-          <div className="flex rounded-lg border border-gray-300 bg-gray-50">
+          <div className="flex border-2 border-gray-300 bg-gray-50">
             {(['headlines', 'topics', 'timeline', 'coverage'] as NewsViewMode[]).map(mode => (
               <button
                 key={mode}
@@ -111,10 +110,10 @@ export function ClusterControls({
           <button
             onClick={onRefresh}
             disabled={isLoading}
-            className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium transition-colors ${
               isLoading
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-[#3ea2d4] text-white hover:bg-blue-700'
             }`}
           >
             <svg
