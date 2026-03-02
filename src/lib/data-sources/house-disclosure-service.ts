@@ -405,6 +405,9 @@ export class HouseDisclosureService {
     return cachedFetch(
       cacheKey,
       async () => {
+        // Build member lookup before filtering (sync resolver needs the cache)
+        await this.buildMemberLookup();
+
         const currentYear = new Date().getFullYear();
         const years = [currentYear - 1, currentYear];
         const allTrades: StockTrade[] = [];
