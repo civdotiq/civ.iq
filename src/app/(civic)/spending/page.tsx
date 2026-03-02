@@ -3,7 +3,12 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import type { DistrictSpendingResponse } from '@/types/spending';
+import { MapPin, Loader2 } from 'lucide-react';
+import type {
+  DistrictSpendingResponse,
+  GeographicSpendingResponse,
+  GeographicSpendingResult,
+} from '@/types/spending';
 import SpendingSearch from '@/features/spending/components/SpendingSearch';
 import SpendingSummaryCards from '@/features/spending/components/SpendingSummaryCards';
 import SpendingBreakdownChart from '@/features/spending/components/SpendingBreakdownChart';
@@ -159,6 +164,9 @@ function SpendingPageContent() {
           </div>
         )}
 
+        {/* Geographic Spending */}
+        <SpendingByGeography />
+
         {/* Empty state - no district selected */}
         {!districtId && !loading && !error && (
           <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-8 text-center">
@@ -168,6 +176,172 @@ function SpendingPageContent() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+type GeoLayer = 'state' | 'county' | 'district';
+type GeoScope = 'place_of_performance' | 'recipient_location';
+
+const GEO_LAYERS: { value: GeoLayer; label: string }[] = [
+  { value: 'state', label: 'State' },
+  { value: 'county', label: 'County' },
+  { value: 'district', label: 'District' },
+];
+
+const GEO_SCOPES: { value: GeoScope; label: string }[] = [
+  { value: 'place_of_performance', label: 'Where Work Performed' },
+  { value: 'recipient_location', label: 'Recipient Location' },
+];
+
+function formatAmount(amount: number): string {
+  if (Math.abs(amount) >= 1e9) return `$${(amount / 1e9).toFixed(1)}B`;
+  if (Math.abs(amount) >= 1e6) return `$${(amount / 1e6).toFixed(1)}M`;
+  if (Math.abs(amount) >= 1e3) return `$${(amount / 1e3).toFixed(0)}K`;
+  return `$${amount.toFixed(0)}`;
+}
+
+function SpendingByGeography() {
+  const currentYear = new Date().getFullYear();
+  const [geoLayer, setGeoLayer] = useState<GeoLayer>('state');
+  const [scope, setScope] = useState<GeoScope>('place_of_performance');
+  const [fiscalYear, setFiscalYear] = useState(currentYear);
+  const [geoData, setGeoData] = useState<GeographicSpendingResponse | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchGeo() {
+      setGeoLoading(true);
+      setGeoError(null);
+      try {
+        const params = new URLSearchParams({
+          geo_layer: geoLayer,
+          scope,
+          fiscal_year: String(fiscalYear),
+        });
+        const res = await fetch(`/api/spending/geography?${params}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json: GeographicSpendingResponse = await res.json();
+        if (!cancelled) setGeoData(json);
+      } catch (err) {
+        if (!cancelled) setGeoError(err instanceof Error ? err.message : 'Failed to load');
+      } finally {
+        if (!cancelled) setGeoLoading(false);
+      }
+    }
+    fetchGeo();
+    return () => {
+      cancelled = true;
+    };
+  }, [geoLayer, scope, fiscalYear]);
+
+  const sorted = (geoData?.results ?? [])
+    .filter((r: GeographicSpendingResult) => r.aggregatedAmount > 0)
+    .sort(
+      (a: GeographicSpendingResult, b: GeographicSpendingResult) =>
+        b.aggregatedAmount - a.aggregatedAmount
+    );
+  const maxAmount = sorted[0]?.aggregatedAmount ?? 1;
+
+  return (
+    <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6 mt-8">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+        <MapPin className="w-5 h-5 text-[#3ea2d4]" />
+        Spending by Geography
+      </h2>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex border-2 border-gray-300">
+          {GEO_LAYERS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setGeoLayer(opt.value)}
+              className={`px-3 py-1.5 text-sm font-medium ${
+                geoLayer === opt.value
+                  ? 'bg-[#3ea2d4] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex border-2 border-gray-300">
+          {GEO_SCOPES.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setScope(opt.value)}
+              className={`px-3 py-1.5 text-sm font-medium ${
+                scope === opt.value
+                  ? 'bg-[#3ea2d4] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <select
+          value={fiscalYear}
+          onChange={e => setFiscalYear(Number(e.target.value))}
+          className="px-3 py-1.5 text-sm border-2 border-gray-300 bg-white"
+        >
+          {Array.from({ length: 5 }, (_, i) => currentYear - i).map(y => (
+            <option key={y} value={y}>
+              FY {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Results */}
+      {geoLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <span className="ml-2 text-sm text-gray-500">Loading geographic data...</span>
+        </div>
+      ) : geoError ? (
+        <div className="text-center py-8 text-sm text-[#e11d07]">{geoError}</div>
+      ) : sorted.length === 0 ? (
+        <div className="text-center py-8 text-sm text-gray-500">
+          No geographic spending data available
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sorted.slice(0, 25).map((item: GeographicSpendingResult) => (
+            <div key={item.shapeCode} className="flex items-center gap-3">
+              <div className="w-24 sm:w-32 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {item.displayName}
+              </div>
+              <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-800 relative">
+                <div
+                  className="h-full bg-[#3ea2d4]"
+                  style={{ width: `${(item.aggregatedAmount / maxAmount) * 100}%` }}
+                />
+              </div>
+              <div className="w-20 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+                {formatAmount(item.aggregatedAmount)}
+              </div>
+              {item.perCapita != null && (
+                <div className="hidden sm:block w-24 text-right text-xs text-gray-500">
+                  {formatAmount(item.perCapita)}/cap
+                </div>
+              )}
+            </div>
+          ))}
+          {sorted.length > 25 && (
+            <p className="text-xs text-gray-500 pt-2">
+              Showing top 25 of {sorted.length}{' '}
+              {geoLayer === 'state' ? 'states' : geoLayer === 'county' ? 'counties' : 'districts'}
+            </p>
+          )}
+        </div>
+      )}
+
+      <p className="text-xs text-gray-400 mt-4">Source: USASpending.gov · FY {fiscalYear}</p>
     </div>
   );
 }

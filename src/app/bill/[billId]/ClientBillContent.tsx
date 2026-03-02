@@ -535,28 +535,33 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         </div>
                       )}
 
-                      {/* Party Breakdown */}
+                      {/* Party Breakdown — Visual Bars */}
                       {vote.breakdown ? (
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <div className="bg-blue-50 p-2 rounded">
-                            <div className="font-medium text-blue-800 mb-1">Democrats</div>
-                            <div className="text-blue-700">
-                              {vote.breakdown.democratic.yea} Yea / {vote.breakdown.democratic.nay}{' '}
-                              Nay
+                        <div className="space-y-3">
+                          {/* Stacked vote bar */}
+                          <VoteBar vote={vote} />
+                          {/* Party text breakdown */}
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="bg-blue-50 p-2">
+                              <div className="font-medium text-blue-800 mb-1">Democrats</div>
+                              <div className="text-blue-700">
+                                {vote.breakdown.democratic.yea} Yea /{' '}
+                                {vote.breakdown.democratic.nay} Nay
+                              </div>
                             </div>
-                          </div>
-                          <div className="bg-red-50 p-2 rounded">
-                            <div className="font-medium text-red-800 mb-1">Republicans</div>
-                            <div className="text-red-700">
-                              {vote.breakdown.republican.yea} Yea / {vote.breakdown.republican.nay}{' '}
-                              Nay
+                            <div className="bg-red-50 p-2">
+                              <div className="font-medium text-red-800 mb-1">Republicans</div>
+                              <div className="text-red-700">
+                                {vote.breakdown.republican.yea} Yea /{' '}
+                                {vote.breakdown.republican.nay} Nay
+                              </div>
                             </div>
-                          </div>
-                          <div className="bg-gray-50 p-2 rounded">
-                            <div className="font-medium text-gray-800 mb-1">Independents</div>
-                            <div className="text-gray-700">
-                              {vote.breakdown.independent.yea} Yea /{' '}
-                              {vote.breakdown.independent.nay} Nay
+                            <div className="bg-gray-50 p-2">
+                              <div className="font-medium text-gray-800 mb-1">Independents</div>
+                              <div className="text-gray-700">
+                                {vote.breakdown.independent.yea} Yea /{' '}
+                                {vote.breakdown.independent.nay} Nay
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1126,6 +1131,61 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Visual stacked vote bar showing Yea/Nay/Not Voting segmented by party
+function VoteBar({ vote }: { vote: BillVote }) {
+  if (!vote.breakdown || !vote.votes) return null;
+
+  const total = vote.votes.yea + vote.votes.nay + vote.votes.present + vote.votes.notVoting;
+  if (total === 0) return null;
+
+  // Build segments: D-Yea, R-Yea, I-Yea, D-Nay, R-Nay, I-Nay, Not Voting
+  const segments: { label: string; count: number; color: string }[] = [
+    { label: 'D Yea', count: vote.breakdown.democratic.yea, color: '#0a9338' },
+    { label: 'R Yea', count: vote.breakdown.republican.yea, color: '#22c55e' },
+    { label: 'I Yea', count: vote.breakdown.independent.yea, color: '#86efac' },
+    { label: 'D Nay', count: vote.breakdown.democratic.nay, color: '#e11d07' },
+    { label: 'R Nay', count: vote.breakdown.republican.nay, color: '#f87171' },
+    { label: 'I Nay', count: vote.breakdown.independent.nay, color: '#fca5a5' },
+    {
+      label: 'Not Voting',
+      count: vote.votes.notVoting + vote.votes.present,
+      color: '#d1d5db',
+    },
+  ].filter(s => s.count > 0);
+
+  return (
+    <div>
+      <div className="flex h-5 w-full overflow-hidden border-2 border-gray-300">
+        {segments.map(seg => (
+          <div
+            key={seg.label}
+            title={`${seg.label}: ${seg.count}`}
+            style={{
+              width: `${(seg.count / total) * 100}%`,
+              backgroundColor: seg.color,
+            }}
+            className="h-full"
+          />
+        ))}
+      </div>
+      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+        <span className="flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#0a9338' }} />
+          Yea
+        </span>
+        <span className="flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#e11d07' }} />
+          Nay
+        </span>
+        <span className="flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#d1d5db' }} />
+          Not Voting
+        </span>
+      </div>
     </div>
   );
 }
