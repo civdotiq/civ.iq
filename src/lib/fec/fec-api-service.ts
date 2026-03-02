@@ -411,38 +411,49 @@ export class FECApiService {
         const nonConduitContributions: FECContribution[] = [];
 
         try {
-          // Fetch up to 5 pages (500 contributions) to find enough non-conduit data
-          const maxPages = 5;
           const perPage = 100;
+          const baseUrl = `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&sort=-contribution_receipt_amount`;
 
-          for (let page = 1; page <= maxPages; page++) {
-            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&page=${page}&sort=-contribution_receipt_amount`
-            );
+          // Fetch page 1 first to learn total count
+          const firstPage = await this.makeRequest<FECApiResponse<FECContribution>>(
+            `${baseUrl}&page=1`
+          );
 
-            if (response.results && response.results.length > 0) {
-              allContributions.push(...response.results);
+          if (firstPage.results && firstPage.results.length > 0) {
+            allContributions.push(...firstPage.results);
+            const pageNonConduits = firstPage.results.filter(c => !isConduit(c));
+            nonConduitContributions.push(...pageNonConduits);
 
-              // Filter out conduits
-              const pageNonConduits = response.results.filter(c => !isConduit(c));
-              nonConduitContributions.push(...pageNonConduits);
+            // Determine how many more pages to fetch (max 4 more, cap at 500 total)
+            const totalAvailable = firstPage.pagination?.count ?? firstPage.results.length;
+            const maxPages = Math.min(5, Math.ceil(totalAvailable / perPage));
+            const needMore =
+              nonConduitContributions.length < count &&
+              firstPage.results.length >= perPage &&
+              maxPages > 1;
 
-              logger.info(
-                `[FEC API] Page ${page}: Found ${response.results.length} total (${pageNonConduits.length} non-conduit) contributions from committee ${committeeId}`
+            if (needMore) {
+              // Fetch remaining pages in parallel
+              const pageNumbers = Array.from({ length: maxPages - 1 }, (_, i) => i + 2);
+              const pageResults = await Promise.all(
+                pageNumbers.map(page =>
+                  this.makeRequest<FECApiResponse<FECContribution>>(
+                    `${baseUrl}&page=${page}`
+                  ).catch(() => null)
+                )
               );
 
-              // Stop if we have enough non-conduit contributions
-              if (nonConduitContributions.length >= count) {
-                break;
+              for (const response of pageResults) {
+                if (response?.results && response.results.length > 0) {
+                  allContributions.push(...response.results);
+                  nonConduitContributions.push(...response.results.filter(c => !isConduit(c)));
+                }
               }
-
-              // Stop if this page had fewer results than requested (last page)
-              if (response.results.length < perPage) {
-                break;
-              }
-            } else {
-              break; // No more pages
             }
+
+            logger.info(
+              `[FEC API] Fetched ${allContributions.length} total (${nonConduitContributions.length} non-conduit) contributions from committee ${committeeId}`
+            );
           }
 
           if (nonConduitContributions.length > 0) {
@@ -554,7 +565,25 @@ export class FECApiService {
    * Find candidate committee IDs using robust multi-endpoint fallback strategy
    * Returns array of committee IDs prioritized by relevance to the candidate and cycle
    */
+  /**
+   * Short-lived in-memory cache for committee IDs (5 min TTL).
+   * Prevents redundant multi-step lookups when getSampleContributions,
+   * getIndividualContributionsWithEmployer, and getPrincipalCommitteeId
+   * all call findCandidateCommitteeIds in the same request cycle.
+   */
+  private static committeeIdCache = new Map<string, { ids: string[]; expires: number }>();
+
   async findCandidateCommitteeIds(candidateId: string, cycle: number): Promise<string[]> {
+    // Check in-memory cache first (avoids 2-4 FEC calls per redundant invocation)
+    const cacheKey = `${candidateId}:${cycle}`;
+    const cached = FECApiService.committeeIdCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      logger.info(
+        `[FEC API] Committee cache hit for ${candidateId}: ${cached.ids.length} committees`
+      );
+      return cached.ids;
+    }
+
     logger.info(`[FEC API] Starting robust committee finding for ${candidateId} cycle ${cycle}`);
 
     const foundCommittees: string[] = [];
@@ -596,34 +625,37 @@ export class FECApiService {
     }
 
     // STEP 2: /candidate/{id}/committees/?cycle={cycle} (Secondary alternative)
-    try {
-      logger.info(`[FEC API] STEP 2 - Trying candidate committees endpoint`);
-      const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
-        `/candidate/${candidateId}/committees/?cycle=${cycle}&per_page=100`
-      );
-
-      if (response.results && response.results.length > 0) {
-        // Step 2 returns committee objects directly, not nested in committees property
-        const allCommittees = response.results
-          .filter(committee => committee.cycles?.includes(cycle))
-          .map(committee => committee.committee_id);
-
-        // Add new committees not already found
-        const newCommittees = allCommittees.filter(id => !foundCommittees.includes(id));
-        foundCommittees.push(...newCommittees);
-
-        logger.info(
-          `[FEC API] STEP 2 SUCCESS - Found ${newCommittees.length} additional committees:`,
-          newCommittees
+    // Skip if Step 1 already found committees — saves an FEC API call
+    if (foundCommittees.length === 0) {
+      try {
+        logger.info(`[FEC API] STEP 2 - Trying candidate committees endpoint`);
+        const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
+          `/candidate/${candidateId}/committees/?cycle=${cycle}&per_page=100`
         );
-      } else {
-        logger.info(`[FEC API] STEP 2 - No committees found via candidate committees endpoint`);
+
+        if (response.results && response.results.length > 0) {
+          const allCommittees = response.results
+            .filter(committee => committee.cycles?.includes(cycle))
+            .map(committee => committee.committee_id);
+
+          const newCommittees = allCommittees.filter(id => !foundCommittees.includes(id));
+          foundCommittees.push(...newCommittees);
+
+          logger.info(
+            `[FEC API] STEP 2 SUCCESS - Found ${newCommittees.length} additional committees:`,
+            newCommittees
+          );
+        } else {
+          logger.info(`[FEC API] STEP 2 - No committees found via candidate committees endpoint`);
+        }
+      } catch (error) {
+        logger.warn(
+          `[FEC API] STEP 2 FAILED - candidate committees endpoint error:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
-    } catch (error) {
-      logger.warn(
-        `[FEC API] STEP 2 FAILED - candidate committees endpoint error:`,
-        error instanceof Error ? error.message : String(error)
-      );
+    } else {
+      logger.info(`[FEC API] STEP 2 - Skipped (Step 1 found ${foundCommittees.length} committees)`);
     }
 
     // STEP 3: /candidate/{id}/ (Legacy fallback - current approach)
@@ -728,6 +760,13 @@ export class FECApiService {
       `[FEC API] Committee finding complete for ${candidateId}: found ${foundCommittees.length} committees:`,
       foundCommittees
     );
+
+    // Cache for 5 minutes to avoid redundant lookups within the same request cycle
+    FECApiService.committeeIdCache.set(cacheKey, {
+      ids: foundCommittees,
+      expires: Date.now() + 5 * 60 * 1000,
+    });
+
     return foundCommittees;
   }
 
@@ -1102,43 +1141,40 @@ export class FECApiService {
       // Use is_individual=true to get actual donors (not committees)
       // Sort by amount to get largest individual donors first
       for (const committeeId of committeeIds) {
-        const allContributions: FECContribution[] = [];
+        const baseUrl = `/schedules/schedule_a/?committee_id=${committeeId}&two_year_transaction_period=${cycle}&is_individual=true&per_page=100&sort=-contribution_receipt_amount`;
+
+        // Fetch page 1 first to learn total count
+        const firstPage = await this.makeRequest<FECApiResponse<FECContribution>>(
+          `${baseUrl}&page=1`
+        ).catch(() => null);
+
+        if (!firstPage?.results || firstPage.results.length === 0) continue;
+
+        const allContributions: FECContribution[] = firstPage.results.filter(
+          c => c.contributor_employer || c.contributor_occupation
+        );
+
+        // Determine if we need more pages and fetch in parallel
         const maxPages = Math.ceil(count / 100);
+        const needMore =
+          allContributions.length < count && firstPage.results.length >= 100 && maxPages > 1;
 
-        for (let page = 1; page <= maxPages; page++) {
-          try {
-            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-              `/schedules/schedule_a/?committee_id=${committeeId}&two_year_transaction_period=${cycle}&is_individual=true&per_page=100&page=${page}&sort=-contribution_receipt_amount`
-            );
+        if (needMore) {
+          const pageNumbers = Array.from({ length: Math.min(maxPages - 1, 4) }, (_, i) => i + 2);
+          const pageResults = await Promise.all(
+            pageNumbers.map(page =>
+              this.makeRequest<FECApiResponse<FECContribution>>(`${baseUrl}&page=${page}`).catch(
+                () => null
+              )
+            )
+          );
 
-            if (response.results && response.results.length > 0) {
-              // Filter for contributions that have employer or occupation data
-              const withEmployerData = response.results.filter(
-                c => c.contributor_employer || c.contributor_occupation
+          for (const response of pageResults) {
+            if (response?.results && response.results.length > 0) {
+              allContributions.push(
+                ...response.results.filter(c => c.contributor_employer || c.contributor_occupation)
               );
-              allContributions.push(...withEmployerData);
-
-              logger.info(
-                `[FEC API] Individual contributions page ${page}: ${response.results.length} total, ${withEmployerData.length} with employer data`
-              );
-
-              if (allContributions.length >= count) {
-                break;
-              }
-
-              // Stop if no more pages
-              if (response.results.length < 100) {
-                break;
-              }
-            } else {
-              break;
             }
-          } catch (pageError) {
-            logger.warn(
-              `[FEC API] Error fetching individual contributions page ${page}:`,
-              pageError instanceof Error ? pageError.message : String(pageError)
-            );
-            break;
           }
         }
 
