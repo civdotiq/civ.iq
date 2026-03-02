@@ -141,10 +141,15 @@ export class HouseDisclosureService {
   /**
    * Extract structured trade data from PTR PDF text.
    *
-   * House PTR PDFs follow a standardized tabular format:
-   * - Each transaction row contains: owner, asset, type, date, amount, cap gains
-   * - Amounts are ranges (e.g., "$1,001 - $15,000")
-   * - Dates are MM/DD/YYYY
+   * House PTR PDFs use a standardized STOCK Act tabular format with
+   * "IDOwnerAsset" headers repeating on each page. The text from pdf-parse
+   * contains null bytes (\x00) instead of spaces in certain delimiter fields.
+   *
+   * Parsing strategy:
+   * 1. Extract transaction sections between IDOwnerAsset headers and page footers
+   * 2. Strip orphaned SubOwner lines that cross page boundaries
+   * 3. Split each section on "F S : {status}" Filing Status delimiters
+   * 4. Parse each resulting block for owner, asset, ticker, type, dates, amount
    */
   private extractTradesFromText(
     text: string,
@@ -154,128 +159,135 @@ export class HouseDisclosureService {
     sourceUrl: string
   ): StockTrade[] {
     const trades: StockTrade[] = [];
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-    // Common amount range patterns in STOCK Act filings
-    const amountPattern = /\$[\d,]+ - \$[\d,]+|\$[\d,]+\+/;
-    const tickerPattern = /\(([A-Z]{1,5})\)/;
+    // Normalize null bytes to spaces for consistent regex matching
+    const normalized = text.replace(/\x00/g, ' ');
 
-    // Transaction type indicators
-    const transactionTypeMap: Record<string, string> = {
-      'P': 'Purchase',
-      'S': 'Sale',
-      'S (Full)': 'Sale (Full)',
-      'S (Partial)': 'Sale (Partial)',
-      'E': 'Exchange',
-    };
+    // Find all "IDOwnerAsset" table header positions (one per page)
+    const headerRe = /IDOwnerAsset/g;
+    let match: RegExpExecArray | null;
+    const headerPositions: number[] = [];
+    while ((match = headerRe.exec(normalized)) !== null) {
+      headerPositions.push(match.index);
+    }
 
-    // Owner abbreviation mapping
-    const ownerMap: Record<string, string> = {
-      'SP': 'Spouse',
-      'JT': 'Joint',
-      'DC': 'Dependent Child',
-    };
+    if (headerPositions.length === 0) {
+      logger.warn('No IDOwnerAsset headers found in PTR PDF', { docId });
+      return [];
+    }
 
-    // Track whether we've found the transactions section
-    let inTransactions = false;
+    // Extract transaction sections — bounded by next header to prevent overlap
+    const sections: string[] = [];
+    for (let i = 0; i < headerPositions.length; i++) {
+      const hPos = headerPositions[i]!;
+      const headerEnd = normalized.indexOf('\n', hPos);
+      if (headerEnd < 0) continue;
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i] ?? '';
-
-      // Detect start of transactions section
-      if (
-        line.includes('Transaction') ||
-        line.includes('TRANSACTIONS') ||
-        line.includes('Asset')
-      ) {
-        inTransactions = true;
-        continue;
+      // Skip past the cap gains header line ($200?)
+      let startPos = headerEnd;
+      const afterHeader = normalized.slice(headerEnd, headerEnd + 100);
+      const gainsEnd = afterHeader.indexOf('$200?');
+      if (gainsEnd >= 0) {
+        startPos = headerEnd + gainsEnd + 5;
+        const nl = normalized.indexOf('\n', startPos);
+        if (nl >= 0) startPos = nl;
       }
 
-      if (!inTransactions) continue;
+      // End: next header position or page footer pattern
+      let endPos = i + 1 < headerPositions.length
+        ? headerPositions[i + 1]!
+        : normalized.length;
 
-      // Skip header/separator lines
-      if (line.startsWith('---') || line.startsWith('===')) continue;
+      for (const ep of [/\* For the complete list/, /Filing ID #/, /A {3,}C {3,}D/]) {
+        const idx = normalized.slice(startPos).search(ep);
+        if (idx >= 0 && (startPos + idx) < endPos) {
+          endPos = startPos + idx;
+        }
+      }
 
-      // Try to extract an amount range — if present, this line likely contains trade data
-      const amountMatch = line.match(amountPattern);
+      sections.push(normalized.slice(startPos, endPos));
+    }
+
+    let txnText = sections.join('\n');
+
+    // Strip orphaned SubOwner lines (ones at page boundaries not preceded by F S)
+    txnText = txnText.replace(/^S\s{2,}O\s*:[^\n]*\n/gm, (substr, offset) => {
+      const before = txnText.lastIndexOf('\n', offset - 1);
+      const prevLine = before >= 0 ? txnText.slice(before + 1, offset) : '';
+      if (/^F\s{2,}S\s{2,}/.test(prevLine)) {
+        return substr; // Keep — part of F S + S O sequence consumed by split
+      }
+      return ''; // Remove orphan
+    });
+
+    // Split on Filing Status lines + optional Description/SubOwner lines
+    // F      S     : {status}
+    // D          : {description}     (optional)
+    // S          O : {subowner}      (optional, O may have single space before colon)
+    const blocks = txnText.split(
+      /\nF\s{2,}S\s{2,}[^\n]*(?:\nD\s{2,}[^\n]*)?(?:\nS\s{2,}O\s*:[^\n]*)?\n?/
+    );
+
+    const filingDate = filing.filingDate
+      ? this.parseDate(filing.filingDate)
+      : `${year}-01-01`;
+
+    for (const block of blocks) {
+      // Must have a dollar amount range to be a trade
+      const amountMatch = block.match(/(\$[\d,]+)\s*-\s*(\$[\d,]+)/);
       if (!amountMatch) continue;
+      const amount = `${amountMatch[1]} - ${amountMatch[2]}`;
 
-      // Extract dates from this line and surrounding context
-      const dates: string[] = [];
-      const contextWindow = [lines[i - 1] ?? '', line, lines[i + 1] ?? ''].join(' ');
-      const dateMatches = contextWindow.matchAll(/(\d{1,2}\/\d{1,2}\/\d{4})/g);
-      for (const dm of dateMatches) {
-        dates.push(dm[1]!);
-      }
+      // Dates: MM/DD/YYYY (transaction date, then notification date)
+      const dates = [...block.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(m => m[1]!);
+      if (dates.length === 0) continue;
 
-      // Extract ticker symbol
-      const tickerMatch = contextWindow.match(tickerPattern);
-      const ticker = tickerMatch?.[1] ?? null;
+      // Ticker: uppercase letters in parentheses, e.g. (AVGO)
+      const tickerMatch = block.match(/\(([A-Z]{1,6})\)/);
+      const ticker = tickerMatch ? tickerMatch[1]! : null;
 
-      // Determine transaction type
+      // Asset type: two uppercase letters in brackets, e.g. [ST], [OP]
+      const assetTypeMatch = block.match(/\[([A-Z]{2})\]/);
+      const assetType = assetTypeMatch ? assetTypeMatch[1]! : 'ST';
+
+      // Transaction type: after [XX], possibly on next line
       let transactionType = 'Purchase';
-      for (const [abbrev, fullType] of Object.entries(transactionTypeMap)) {
-        if (line.includes(abbrev) || contextWindow.includes(fullType)) {
-          transactionType = fullType;
-          break;
-        }
-      }
-      // More specific: look for Sale indicators
-      if (contextWindow.match(/\bS\b/) || contextWindow.includes('Sale')) {
-        transactionType = 'Sale';
-        if (contextWindow.includes('Full') || contextWindow.includes('(Full)')) {
-          transactionType = 'Sale (Full)';
-        } else if (contextWindow.includes('Partial') || contextWindow.includes('(Partial)')) {
-          transactionType = 'Sale (Partial)';
-        }
-      }
-      if (contextWindow.match(/\bP\b/) || contextWindow.includes('Purchase')) {
-        transactionType = 'Purchase';
+      const txnMatch = block.match(/\[[A-Z]{2}\][\s\n]*(S \(partial\)|S|P|E)/);
+      if (txnMatch) {
+        const t = txnMatch[1]!;
+        if (t === 'P') transactionType = 'Purchase';
+        else if (t === 'S') transactionType = 'Sale';
+        else if (t === 'S (partial)') transactionType = 'Sale (Partial)';
+        else if (t === 'E') transactionType = 'Exchange';
       }
 
-      // Determine owner
+      // Owner: SP=Spouse, JT=Joint, DC=Dependent Child, else Self
+      const trimmed = block.replace(/^[\s\n]+/, '');
       let owner = 'Self';
-      for (const [abbrev, fullOwner] of Object.entries(ownerMap)) {
-        if (line.includes(abbrev)) {
-          owner = fullOwner;
-          break;
+      let ownerLen = 0;
+      if (/^SP[A-Z]/.test(trimmed)) { owner = 'Spouse'; ownerLen = 2; }
+      else if (/^JT[A-Z]/.test(trimmed)) { owner = 'Joint'; ownerLen = 2; }
+      else if (/^DC[A-Z]/.test(trimmed)) { owner = 'Dependent Child'; ownerLen = 2; }
+
+      // Asset description: text between owner prefix and ticker/bracket
+      const afterOwner = trimmed.slice(ownerLen);
+      let assetDescription = '';
+      if (ticker) {
+        const tickerStr = '(' + ticker + ')';
+        const tickerIdx = afterOwner.indexOf(tickerStr);
+        if (tickerIdx > 0) {
+          assetDescription = afterOwner.slice(0, tickerIdx).trim()
+            .replace(/\n/g, ' ').replace(/\s+/g, ' ');
         }
       }
-
-      // Extract asset description — text before the amount, cleaned up
-      const amountIndex = line.indexOf(amountMatch[0]);
-      let assetDescription = line.substring(0, amountIndex).trim();
-      // Remove owner abbreviations and transaction types from asset description
-      assetDescription = assetDescription
-        .replace(/^(SP|JT|DC)\s+/i, '')
-        .replace(/\s+(P|S|E)\s*$/, '')
-        .trim();
-
-      // If asset description is too short, look at preceding line
-      if (assetDescription.length < 5 && i > 0) {
-        assetDescription = (lines[i - 1] ?? '').trim();
+      if (!assetDescription && assetTypeMatch) {
+        const bracketIdx = afterOwner.indexOf('[');
+        if (bracketIdx > 0) {
+          let raw = afterOwner.slice(0, bracketIdx);
+          raw = raw.replace(/\([^)]*\)\s*$/, '');
+          assetDescription = raw.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ');
+        }
       }
-
-      // Extract asset type from brackets [ST], [OP], [BD], etc.
-      const assetTypeMatch = contextWindow.match(/\[([A-Z]{2})\]/);
-      const assetType = assetTypeMatch?.[1] ?? 'ST';
-
-      // Parse transaction date
-      const transactionDate = dates[0]
-        ? this.parseDate(dates[0])
-        : `${year}-01-01`;
-
-      // Parse filing date
-      const filingDate = filing.filingDate
-        ? this.parseDate(filing.filingDate)
-        : `${year}-01-01`;
-
-      // Capital gains indicator
-      const capitalGainsOver200 =
-        contextWindow.includes('Yes') ||
-        contextWindow.includes('$200') ||
-        contextWindow.includes('cap. gains');
 
       trades.push({
         filingId: docId,
@@ -287,10 +299,10 @@ export class HouseDisclosureService {
         ticker,
         assetType,
         transactionType,
-        transactionDate,
+        transactionDate: this.parseDate(dates[0]!),
         filingDate,
-        amount: amountMatch[0],
-        capitalGainsOver200,
+        amount,
+        capitalGainsOver200: false, // Not reliably extractable from text
         sourceUrl,
       });
     }
