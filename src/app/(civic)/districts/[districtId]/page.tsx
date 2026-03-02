@@ -14,6 +14,7 @@ import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistric
 import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import FederalSpendingProfile from '@/features/spending/components/FederalSpendingProfile';
+import { SpendingNarrativeSection } from '@/features/spending/components/SpendingNarrativeSection';
 import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import logger from '@/lib/logging/simple-logger';
@@ -228,6 +229,9 @@ export default function DistrictPage() {
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />
+
+            {/* AI Spending Narrative */}
+            <SpendingNarrativeSection districtId={districtId} />
 
             {/* Relevant Legislation */}
             <DistrictRelevantBills districtId={districtId} />

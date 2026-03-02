@@ -21,6 +21,9 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Brain,
+  Target,
+  AlertCircle,
 } from 'lucide-react';
 import type { StateBill, StateBillVote } from '@/types/state-legislature';
 
@@ -28,6 +31,18 @@ interface StateBillApiResponse {
   success: boolean;
   bill?: StateBill;
   error?: string;
+}
+
+interface AISummaryResponse {
+  success: boolean;
+  summary?: string;
+  keyPoints?: string[];
+  whoItAffects?: string;
+  whatItDoes?: string;
+  currentStatus?: string;
+  confidence?: number;
+  source?: 'ai-generated' | 'fallback';
+  plainLanguage?: { name: string; url: string; description: string };
 }
 
 export default function StateBillDetailPage() {
@@ -53,6 +68,20 @@ export default function StateBillDetailPage() {
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000,
+    }
+  );
+
+  // Fetch AI summary (only when bill is loaded)
+  const { data: aiSummary, isLoading: aiLoading } = useSWR<AISummaryResponse>(
+    data?.success && data?.bill ? `/api/ai/state-bill-summary/${state}/${base64BillId}` : null,
+    async (url: string) => {
+      const response = await fetch(url);
+      if (!response.ok) return { success: false };
+      return await response.json();
+    },
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000,
     }
   );
 
@@ -221,49 +250,143 @@ export default function StateBillDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {activeTab === 'overview' && (
-              <div className="bg-white border-2 border-black p-6 space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                    Bill Details
-                  </h2>
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">Identifier:</span>{' '}
-                      <span className="text-gray-900">{bill.identifier}</span>
+              <div className="space-y-6">
+                {/* AI-Generated Summary */}
+                {aiLoading && (
+                  <div className="bg-white border-2 border-black p-6 animate-pulse">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-5 w-5 bg-gray-300"></div>
+                      <div className="h-4 w-40 bg-gray-300"></div>
                     </div>
-                    <div>
-                      <span className="font-medium text-gray-700">State:</span>{' '}
-                      <span className="text-gray-900">{bill.state.toUpperCase()}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Session:</span>{' '}
-                      <span className="text-gray-900">{bill.session}</span>
-                    </div>
-                    {bill.from_organization && (
-                      <div>
-                        <span className="font-medium text-gray-700">Origin:</span>{' '}
-                        <span className="text-gray-900">{bill.from_organization}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {bill.subject && bill.subject.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Subjects</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {bill.subject.map((subject, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded"
-                        >
-                          {subject}
-                        </span>
-                      ))}
+                    <div className="space-y-2">
+                      <div className="h-4 w-full bg-gray-200"></div>
+                      <div className="h-4 w-5/6 bg-gray-200"></div>
+                      <div className="h-4 w-4/6 bg-gray-200"></div>
                     </div>
                   </div>
                 )}
+                {aiSummary?.success && aiSummary.summary && (
+                  <div className="bg-white border-2 border-black">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Brain className="h-5 w-5 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-600">
+                          AI-Generated Summary
+                        </span>
+                        {aiSummary.confidence !== undefined && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Target className="h-3 w-3" />
+                            {Math.round(aiSummary.confidence * 100)}% confidence
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                      {aiSummary.whatItDoes && (
+                        <div className="bg-blue-50 p-4">
+                          <h4 className="text-sm font-medium text-blue-900 mb-2">
+                            What This Bill Does
+                          </h4>
+                          <p className="text-blue-800 leading-relaxed">{aiSummary.whatItDoes}</p>
+                        </div>
+                      )}
+
+                      <p className="text-gray-700 leading-relaxed">{aiSummary.summary}</p>
+
+                      {aiSummary.whoItAffects && (
+                        <div className="bg-green-50 p-4">
+                          <h4 className="text-sm font-medium text-green-900 mb-2 flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            Who It Affects
+                          </h4>
+                          <p className="text-green-800 leading-relaxed">{aiSummary.whoItAffects}</p>
+                        </div>
+                      )}
+
+                      {aiSummary.keyPoints && aiSummary.keyPoints.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Key Points</h4>
+                          <ul className="space-y-2">
+                            {aiSummary.keyPoints.map((point, index) => (
+                              <li key={index} className="flex items-start gap-2">
+                                <div className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium mt-0.5">
+                                  {index + 1}
+                                </div>
+                                <span className="text-gray-700 text-sm">{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {aiSummary.currentStatus && (
+                        <div className="bg-gray-50 p-4">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            Current Status
+                          </h4>
+                          <p className="text-gray-700 text-sm">{aiSummary.currentStatus}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4 py-3 bg-white border-t border-gray-100">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-3 w-3" />
+                          <span>AI-generated summary • Verify against official sources</span>
+                        </div>
+                        <span>Source: {aiSummary.source}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white border-2 border-black p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      Bill Details
+                    </h2>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">Identifier:</span>{' '}
+                        <span className="text-gray-900">{bill.identifier}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">State:</span>{' '}
+                        <span className="text-gray-900">{bill.state.toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Session:</span>{' '}
+                        <span className="text-gray-900">{bill.session}</span>
+                      </div>
+                      {bill.from_organization && (
+                        <div>
+                          <span className="font-medium text-gray-700">Origin:</span>{' '}
+                          <span className="text-gray-900">{bill.from_organization}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {bill.subject && bill.subject.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Subjects</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {bill.subject.map((subject, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded"
+                          >
+                            {subject}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -15,6 +15,10 @@ import {
   ChevronDown,
   ChevronUp,
   Gavel,
+  Brain,
+  ArrowRight,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
@@ -33,6 +37,7 @@ import {
 } from '@/features/legislation/components/DistrictImpact';
 import { DistrictSelector } from '@/features/legislation/components/DistrictSelector';
 import type { DistrictImpact as DistrictImpactType } from '@/types/district-impact';
+import type { ProcessExplanation } from '@/types/ai';
 import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
@@ -49,6 +54,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   const [districtImpact, setDistrictImpact] = useState<DistrictImpactType | null>(null);
   const [districtImpactLoading, setDistrictImpactLoading] = useState(false);
   const [districtImpactError, setDistrictImpactError] = useState<string | null>(null);
+  const [processExplanation, setProcessExplanation] = useState<ProcessExplanation | null>(null);
+  const [processLoading, setProcessLoading] = useState(false);
   const searchParams = useSearchParams();
 
   // Streaming AI summary hook — only enabled after bill loads
@@ -91,6 +98,33 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
     fetchBill();
   }, [billId]);
+
+  // Fetch legislative process explanation when bill is loaded
+  useEffect(() => {
+    if (!bill) return;
+    let cancelled = false;
+
+    async function fetchProcess() {
+      try {
+        setProcessLoading(true);
+        const response = await fetch(`/api/ai/legislative-process/${billId}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && data.explanation) {
+          setProcessExplanation(data.explanation);
+        }
+      } catch {
+        // Non-critical — silently fail
+      } finally {
+        if (!cancelled) setProcessLoading(false);
+      }
+    }
+
+    fetchProcess();
+    return () => {
+      cancelled = true;
+    };
+  }, [bill, billId]);
 
   // Initialize district from URL param or localStorage
   useEffect(() => {
@@ -279,6 +313,23 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           )}
           {aiSummaryError && !aiIsStreaming && <BillSummaryError error={aiSummaryError} />}
           {aiSummary && !aiIsStreaming && <BillSummaryDisplay summary={aiSummary} />}
+
+          {/* Legislative Process Explainer */}
+          {processLoading && (
+            <div className="bg-white border-2 border-black p-6 animate-pulse">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-5 w-5 bg-gray-300"></div>
+                <div className="h-4 w-48 bg-gray-300"></div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-4 w-full bg-gray-200"></div>
+                <div className="h-4 w-4/5 bg-gray-200"></div>
+              </div>
+            </div>
+          )}
+          {processExplanation && !processLoading && (
+            <LegislativeProcessSection explanation={processExplanation} />
+          )}
 
           {/* District Impact Analysis */}
           <DistrictSelector
@@ -913,6 +964,83 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         apiUrl={`/api/v1/bills/${billId}`}
         congressUrl={bill.url}
       />
+    </div>
+  );
+}
+
+// Legislative Process Section — AI-generated explanation of where a bill stands
+interface LegislativeProcessSectionProps {
+  explanation: ProcessExplanation;
+}
+
+function LegislativeProcessSection({ explanation }: LegislativeProcessSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="bg-white border-2 border-black">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-6 flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Where This Bill Stands</h3>
+          <span className="text-xs text-gray-500 ml-2">AI-generated</span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="w-5 h-5 text-gray-400" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-400" />
+        )}
+      </button>
+
+      {/* Always show current status */}
+      <div className="px-6 pb-4 -mt-2">
+        <p className="text-gray-700 leading-relaxed">{explanation.currentStatus}</p>
+      </div>
+
+      {isExpanded && (
+        <div className="px-6 pb-6 space-y-4 border-t border-gray-100 pt-4">
+          {explanation.whatHappened && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-1">
+                <Clock className="w-4 h-4 text-gray-600" />
+                What Happened
+              </h4>
+              <p className="text-gray-700 text-sm leading-relaxed">{explanation.whatHappened}</p>
+            </div>
+          )}
+
+          {explanation.nextSteps && explanation.nextSteps.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-1">
+                <ArrowRight className="w-4 h-4 text-blue-600" />
+                Next Steps
+              </h4>
+              <ul className="space-y-1">
+                {explanation.nextSteps.map((step, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-blue-600 mt-0.5">{'>'}</span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {explanation.estimatedTimeline && (
+            <div className="bg-gray-50 p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Estimated Timeline</h4>
+              <p className="text-sm text-gray-700">{explanation.estimatedTimeline}</p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-2">
+            <AlertCircle className="h-3 w-3" />
+            <span>AI-generated explanation • Source: {explanation.source}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

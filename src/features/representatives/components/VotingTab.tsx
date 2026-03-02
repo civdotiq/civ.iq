@@ -21,6 +21,7 @@ import {
 import { ExportButton } from '@/shared/components/ui/ExportButton';
 import { ExportColumn } from '@/lib/utils/data-export';
 import { VoteRow, extractVoteId, type Vote } from './VoteRow';
+import { VotePatternSection } from './VotePatternSection';
 
 interface VoteResponse {
   votes: Vote[];
@@ -346,6 +347,9 @@ const VotingTabComponent = React.memo(
 
     return (
       <div data-testid="voting-record">
+        {/* AI Vote Pattern Analysis */}
+        <VotePatternSection bioguideId={bioguideId} />
+
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
           <div className="flex items-center gap-2">
