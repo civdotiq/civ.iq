@@ -111,7 +111,7 @@ export function CommitteeSearch({ initialQuery = '' }: CommitteeSearchProps) {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search PACs and committees (e.g. NRA, Planned Parenthood, American Israel)"
+          placeholder="Search PACs and committees (e.g. AIPAC, NRA, Planned Parenthood)"
           className="w-full pl-12 pr-10 py-3 text-base border-2 border-black dark:border-[#333333] bg-white dark:bg-[#1a1a1e] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3ea2d4] transition-colors"
           aria-label="Search PACs and political committees"
         />

@@ -210,6 +210,30 @@ export function classifyPACType(
 }
 
 /**
+ * Common PAC acronyms mapped to their official FEC-registered names.
+ * The FEC API only searches registered committee names, so acronyms like
+ * "AIPAC" won't find "AMERICAN ISRAEL PUBLIC AFFAIRS COMMITTEE" without expansion.
+ */
+const PAC_ACRONYMS: Record<string, string> = {
+  AIPAC: 'AMERICAN ISRAEL PUBLIC AFFAIRS COMMITTEE',
+  DCCC: 'DEMOCRATIC CONGRESSIONAL CAMPAIGN COMMITTEE',
+  NRCC: 'NATIONAL REPUBLICAN CONGRESSIONAL COMMITTEE',
+  DSCC: 'DEMOCRATIC SENATORIAL CAMPAIGN COMMITTEE',
+  NRSC: 'NATIONAL REPUBLICAN SENATORIAL COMMITTEE',
+  DNC: 'DEMOCRATIC NATIONAL COMMITTEE',
+  RNC: 'REPUBLICAN NATIONAL COMMITTEE',
+  SEIU: 'SERVICE EMPLOYEES INTERNATIONAL UNION',
+  AFSCME: 'AMERICAN FEDERATION OF STATE COUNTY AND MUNICIPAL EMPLOYEES',
+  IBEW: 'INTERNATIONAL BROTHERHOOD OF ELECTRICAL WORKERS',
+  UAW: 'UNITED AUTOMOBILE AEROSPACE AND AGRICULTURAL IMPLEMENT WORKERS',
+  NARAL: 'NARAL PRO-CHOICE AMERICA',
+  NORPAC: 'NORPAC',
+  DMFI: 'DEMOCRATIC MAJORITY FOR ISRAEL',
+  CUFI: 'CHRISTIANS UNITED FOR ISRAEL',
+  AFP: 'AMERICANS FOR PROSPERITY',
+};
+
+/**
  * Core FEC API Service
  * Handles all direct communication with FEC.gov API
  */
@@ -1186,6 +1210,7 @@ export class FECApiService {
   /**
    * Search committees by name
    * Uses 5-minute cache for search results
+   * Expands well-known acronyms so e.g. "AIPAC" finds the real committee
    */
   async searchCommittees(
     query: string,
@@ -1202,16 +1227,44 @@ export class FECApiService {
     }
 
     try {
-      let endpoint = `/committees/?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&sort=-receipts`;
-      if (committeeType && committeeType.length > 0) {
-        endpoint += committeeType.map(t => `&committee_type=${t}`).join('');
+      const typeParams = committeeType?.map(t => `&committee_type=${t}`).join('') ?? '';
+      const baseParams = `&page=${page}&per_page=${perPage}&sort=-receipts${typeParams}`;
+
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeSearchResult>>(
+        `/committees/?q=${encodeURIComponent(query)}${baseParams}`
+      );
+
+      let results = response.results ?? [];
+      let { pagination } = response;
+
+      // If the query matches a known acronym, also search the expanded name
+      // and merge results. Many major PACs register under full names only.
+      const expanded = PAC_ACRONYMS[query.toUpperCase()];
+      if (expanded && page === 1) {
+        try {
+          const expandedResponse = await this.makeRequest<FECApiResponse<FECCommitteeSearchResult>>(
+            `/committees/?q=${encodeURIComponent(expanded)}${baseParams}`
+          );
+
+          const expandedResults = expandedResponse.results ?? [];
+          if (expandedResults.length > 0) {
+            const seen = new Set(results.map(r => r.committee_id));
+            const newResults = expandedResults.filter(r => !seen.has(r.committee_id));
+            // Prepend expanded results (they're the ones the user actually wants)
+            results = [...newResults, ...results];
+            pagination = {
+              ...pagination,
+              count: pagination.count + newResults.length,
+            };
+          }
+        } catch {
+          // Expanded search failed; original results are fine
+        }
       }
 
-      const response = await this.makeRequest<FECApiResponse<FECCommitteeSearchResult>>(endpoint);
-
       const result: FECPaginatedResponse<FECCommitteeSearchResult> = {
-        results: response.results ?? [],
-        pagination: response.pagination,
+        results,
+        pagination,
       };
 
       await govCache.set(cacheKey, result, {
