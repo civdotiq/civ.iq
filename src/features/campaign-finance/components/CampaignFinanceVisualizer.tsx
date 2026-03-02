@@ -547,7 +547,10 @@ export function CampaignFinanceVisualizer({
 
               {/* Top Contributors */}
               {financeData?.top_contributors && financeData.top_contributors.length > 0 && (
-                <TopContributors contributors={financeData.top_contributors} />
+                <TopContributors
+                  contributors={financeData.top_contributors}
+                  cycle={currentCycleData?.cycle}
+                />
               )}
 
               {/* PAC Types Breakdown */}

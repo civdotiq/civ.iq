@@ -34,13 +34,14 @@ interface NormalizedContributor extends Record<string, unknown> {
 interface TopContributorsProps {
   contributors: ContributorInput[];
   loading?: boolean;
+  cycle?: number;
 }
 
 /**
  * Top contributors list with sortable table
  * Shows individual donors and organizations contributing to the campaign
  */
-export function TopContributors({ contributors, loading = false }: TopContributorsProps) {
+export function TopContributors({ contributors, loading = false, cycle }: TopContributorsProps) {
   if (loading) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-white p-6">
@@ -92,12 +93,27 @@ export function TopContributors({ contributors, loading = false }: TopContributo
     key: keyof NormalizedContributor;
     label: string;
     sortable: boolean;
-    format?: (value: unknown) => string;
+    format?: (value: unknown) => React.ReactNode;
   }> = [
     {
       key: 'name',
       label: 'Contributor',
       sortable: true,
+      format: (value: unknown) => {
+        const name = String(value);
+        const params = new URLSearchParams({ contributor_name: name });
+        if (cycle) params.set('two_year_transaction_period', String(cycle));
+        return (
+          <a
+            href={`https://www.fec.gov/data/receipts/individual-contributions/?${params.toString()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            {name}
+          </a>
+        );
+      },
     },
     {
       key: 'totalAmount',
