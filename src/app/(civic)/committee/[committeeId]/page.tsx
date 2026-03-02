@@ -56,6 +56,38 @@ const CommitteeMembers = dynamic(
   }
 );
 
+const CommitteeRegulations = dynamic(
+  () => import('@/features/committees/components/CommitteeRegulations'),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="bg-white border-2 border-black p-6 animate-pulse">
+        <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-16 bg-gray-200"></div>
+          <div className="h-16 bg-gray-200"></div>
+        </div>
+      </div>
+    ),
+  }
+);
+
+const CommitteeHearings = dynamic(
+  () => import('@/features/committees/components/CommitteeHearings'),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="bg-white border-2 border-black p-6 animate-pulse">
+        <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-16 bg-gray-200"></div>
+          <div className="h-16 bg-gray-200"></div>
+        </div>
+      </div>
+    ),
+  }
+);
+
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;
   searchParams: Promise<{ from?: string; name?: string; refresh?: string }>;
@@ -358,6 +390,16 @@ async function CommitteeContent({
             </div>
           </div>
         )}
+
+        {/* Regulations & Rulemaking */}
+        <div className="mt-8">
+          <CommitteeRegulations committeeId={committeeId} />
+        </div>
+
+        {/* Related Hearings */}
+        <div className="mt-8">
+          <CommitteeHearings committeeId={committeeId} />
+        </div>
 
         {/* Structured Data for SEO */}
         <GovernmentOrganizationSchema

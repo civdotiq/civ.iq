@@ -9,6 +9,7 @@ import SpendingSummaryCards from '@/features/spending/components/SpendingSummary
 import SpendingBreakdownChart from '@/features/spending/components/SpendingBreakdownChart';
 import AwardList from '@/features/spending/components/AwardList';
 import { EnablingLegislation } from '@/features/spending/components/EnablingLegislation';
+import { AgencyRelatedBills } from '@/features/spending/components/AgencyRelatedBills';
 
 function SpendingPageContent() {
   const searchParams = useSearchParams();
@@ -141,6 +142,13 @@ function SpendingPageContent() {
                 ]),
               ].filter(Boolean)}
             />
+
+            {/* Agency Related Bills */}
+            {(() => {
+              const topSlug =
+                data.recentContracts[0]?.agencySlug || data.recentGrants[0]?.agencySlug;
+              return topSlug ? <AgencyRelatedBills agencySlug={topSlug} /> : null;
+            })()}
 
             {/* Source attribution */}
             <p className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-4">

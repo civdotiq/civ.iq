@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
 import { FloorActivity } from '@/features/legislation/components/FloorActivity';
 import { WitnessSearch } from '@/features/legislation/components/WitnessSearch';
+import { BillLifecycleChart } from '@/features/legislation/components/BillLifecycleChart';
 
 // Breadcrumb Navigation Component
 function BreadcrumbNav() {
@@ -166,6 +167,9 @@ export default function LegislationPage() {
             <FloorActivity />
             <WitnessSearch />
           </div>
+
+          {/* Bill Lifecycle Pipeline */}
+          <BillLifecycleChart />
 
           {/* Search and Filters */}
           <div className="bg-white border-2 border-black p-4 sm:p-6 mb-8">

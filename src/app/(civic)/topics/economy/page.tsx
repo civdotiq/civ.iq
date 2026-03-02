@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
   title: 'Economy & Jobs Legislation | CIV.IQ',
@@ -290,6 +291,9 @@ export default function EconomyTopicPage() {
             Browse all current legislation →
           </Link>
         </section>
+
+        {/* Cross-Domain Data */}
+        <PolicyAreaCrossDomain policyArea="Economics and Public Finance" />
 
         {/* FAQ Section */}
         <section id="faq">

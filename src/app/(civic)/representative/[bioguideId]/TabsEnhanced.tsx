@@ -16,6 +16,7 @@ import {
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeContactForm } from '@/features/representatives/components/RepresentativeContactForm';
+import { FinanceJurisdictionSection } from '@/features/campaign-finance/components/FinanceJurisdictionSection';
 
 interface CongressBill {
   type?: string;
@@ -306,7 +307,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
 }
 
 // Enhanced component for Finance tab
-function FinanceContent({ data }: { data: Record<string, any> }) {
+function FinanceContent({ data, bioguideId }: { data: Record<string, any>; bioguideId: string }) {
   // Handle FEC API structure
   const summary = data?.financial_summary?.[0] || (data?.summary as Record<string, unknown>);
   const topContributors = data?.top_contributors || (data?.topContributors as unknown[]);
@@ -373,6 +374,9 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
           </div>
         </div>
       )}
+
+      {/* Money & Oversight — Finance/Jurisdiction Join */}
+      <FinanceJurisdictionSection bioguideId={bioguideId} />
     </div>
   );
 }
@@ -589,7 +593,9 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
             )}
             {activeTab === 'bills' && <BillsContent data={data as Record<string, any>} />}
             {activeTab === 'votes' && <VotesContent data={data as Record<string, any>} />}
-            {activeTab === 'finance' && <FinanceContent data={data as Record<string, any>} />}
+            {activeTab === 'finance' && (
+              <FinanceContent data={data as Record<string, any>} bioguideId={bioguideId} />
+            )}
             {activeTab === 'news' && (
               <NewsContent representative={representative} data={data as Record<string, any>} />
             )}

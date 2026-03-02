@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
   title: 'Healthcare Legislation & Policy | CIV.IQ',
@@ -281,6 +282,9 @@ export default function HealthcareTopicPage() {
             Browse all current legislation →
           </Link>
         </section>
+
+        {/* Cross-Domain Data */}
+        <PolicyAreaCrossDomain policyArea="Health" />
 
         {/* FAQ Section */}
         <section id="faq">
