@@ -197,6 +197,7 @@ export function CampaignFinanceVisualizer({
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [comprehensiveData, setComprehensiveData] = useState<CampaignFinanceData | null>(null);
+  const [isLoadingComprehensive, setIsLoadingComprehensive] = useState(!!_bioguideId);
 
   // Responsive chart heights for mobile optimization
   const chartHeight300 = useResponsiveChartHeight(300, 250);
@@ -205,6 +206,7 @@ export function CampaignFinanceVisualizer({
   // Fetch comprehensive finance data
   useEffect(() => {
     if (_bioguideId) {
+      setIsLoadingComprehensive(true);
       fetch(`/api/representative/${_bioguideId}/finance/comprehensive`)
         .then(response => {
           if (!response.ok) throw new Error('Failed to fetch comprehensive data');
@@ -255,6 +257,9 @@ export function CampaignFinanceVisualizer({
         .catch(() => {
           // Fall back to initial data if comprehensive fetch fails
           setComprehensiveData(initialFinanceData || null);
+        })
+        .finally(() => {
+          setIsLoadingComprehensive(false);
         });
     }
   }, [_bioguideId, initialFinanceData]);
@@ -395,6 +400,17 @@ export function CampaignFinanceVisualizer({
     totalRaised > 0 ||
     individualContributions > 0 ||
     (financeData?.top_contributors && financeData.top_contributors.length > 0);
+
+  if (isLoadingComprehensive && !financeData) {
+    return (
+      <div className="aicher-card p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance</h3>
+        <div className="text-center py-8 text-gray-500">
+          <p>Loading campaign finance data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!financeData || !hasData) {
     return (
