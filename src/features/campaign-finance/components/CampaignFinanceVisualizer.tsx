@@ -1517,7 +1517,14 @@ export function CampaignFinanceVisualizer({
                               ).toLocaleDateString()}
                             </td>
                             <td className="px-4 py-2 text-sm text-gray-900">
-                              {contribution.contributor_name}
+                              <a
+                                href={`https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=${encodeURIComponent(contribution.contributor_name)}&two_year_transaction_period=${currentCycleData?.cycle || 2024}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#3ea2d4] hover:underline"
+                              >
+                                {contribution.contributor_name}
+                              </a>
                             </td>
                             <td className="px-4 py-2 text-sm text-gray-900">
                               {formatCurrency(contribution.contribution_receipt_amount)}
