@@ -81,7 +81,17 @@ export function OpenDataStrip({
     </a>
   );
 
-  items.push(<span key="fediverse">Fediverse @civiq@civ.iq</span>);
+  items.push(
+    <a
+      key="fediverse"
+      href="https://civ.iq/api/activitypub/actor"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-gray-600"
+    >
+      Fediverse @civiq@civ.iq
+    </a>
+  );
 
   if (congressUrl) {
     items.push(

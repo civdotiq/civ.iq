@@ -41,11 +41,23 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
             Embed Widgets
           </Link>
           <span className={separatorClass}>•</span>
-          <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Nostr civiq@civ.iq</span>
+          <a
+            href="https://njump.me/civiq@civ.iq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            Nostr civiq@civ.iq
+          </a>
           <span className={separatorClass}>•</span>
-          <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
+          <a
+            href="https://civ.iq/api/activitypub/actor"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
             Fediverse @civiq@civ.iq
-          </span>
+          </a>
         </div>
 
         {/* Legal Links */}

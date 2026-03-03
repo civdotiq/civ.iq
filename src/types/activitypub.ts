@@ -86,6 +86,28 @@ export interface APCreateActivity {
   object: APNote | APArticle;
 }
 
+/** Update Activity (for corrected civic events) */
+export interface APUpdateActivity {
+  '@context': string;
+  type: 'Update';
+  id: string;
+  actor: string;
+  published: string;
+  to: string[];
+  cc: string[];
+  object: APNote | APArticle;
+}
+
+/** Delete Activity (tombstone) */
+export interface APDeleteActivity {
+  '@context': string;
+  type: 'Delete';
+  id: string;
+  actor: string;
+  to: string[];
+  object: { type: 'Tombstone'; id: string };
+}
+
 /** Accept Activity (for Follow requests) */
 export interface APAcceptActivity {
   '@context': string;
@@ -119,7 +141,7 @@ export interface APOrderedCollection {
   totalItems: number;
   first?: string;
   last?: string;
-  orderedItems?: (APCreateActivity | APNote | APArticle)[];
+  orderedItems?: APCollectionItem[];
 }
 
 /** Ordered Collection Page */
@@ -131,8 +153,15 @@ export interface APOrderedCollectionPage {
   totalItems: number;
   next?: string;
   prev?: string;
-  orderedItems: (APCreateActivity | APNote | APArticle)[];
+  orderedItems: APCollectionItem[];
 }
 
+/** Items in an OrderedCollection (activities, objects, or actor IRIs) */
+export type APCollectionItem = APCreateActivity | APUpdateActivity | APNote | APArticle | string;
+
 /** Incoming activity (union of types we handle) */
-export type APIncomingActivity = APFollowActivity | APUndoActivity;
+export type APIncomingActivity =
+  | APFollowActivity
+  | APUndoActivity
+  | APUpdateActivity
+  | APDeleteActivity;

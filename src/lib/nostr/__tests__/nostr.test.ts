@@ -139,17 +139,22 @@ describe('Nostr Event Creation', () => {
     expect(dTag[1]).toBe('civiq:bill-action:hr1234-119-action-2025-01-15');
   });
 
-  test('event content is valid JSON with required fields', () => {
+  test('event content is Markdown with title, summary, and structured data', () => {
     const { createSignedCivicEvent } = require('../events');
     const signed = createSignedCivicEvent(baseCivicEvent, mockPrivateKey);
-    const content = JSON.parse(signed.content);
-    expect(content.version).toBe(1);
-    expect(content.platform).toBe('civiq');
-    expect(content.type).toBe('bill-action');
-    expect(content.title).toBe('H.R. 1234: Passed House');
-    expect(content.summary).toBe('Test Bill Title — Passed House');
-    expect(content.data).toEqual(baseCivicEvent.data);
-    expect(content.source).toEqual(baseCivicEvent.source);
+    const content: string = signed.content;
+
+    // Markdown structure
+    expect(content).toContain('# H.R. 1234: Passed House');
+    expect(content).toContain('Test Bill Title — Passed House');
+    expect(content).toContain('**Type**: bill-action');
+    expect(content).toContain('[congress.gov]');
+    expect(content).toContain('<details><summary>Structured Data</summary>');
+
+    // Structured data in fenced JSON block
+    expect(content).toContain('```json');
+    expect(content).toContain('"platform": "civiq"');
+    expect(content).toContain('"version": 1');
   });
 
   test('all CivicEvent tags are included as t tags', () => {

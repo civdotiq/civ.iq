@@ -41,7 +41,35 @@ CIV.IQ can go offline entirely and the records survive.
 
 **Custom kinds (30100+ range):** No existing client renders them. Data invisible to the ecosystem -- the opposite of rewilding.
 
-**Kind 30023:** Universal client support. Rich structure (title, summary, tags, JSON body). Addressable via `d` tag. The `civiq:` namespace creates a civic data schema within the existing standard.
+**Kind 30023:** Universal client support. Rich structure (title, summary, tags, Markdown content). Addressable via `d` tag. The `civiq:` namespace creates a civic data schema within the existing standard.
+
+## Content Format
+
+Event content is Markdown, not JSON. Long-form Nostr clients (Habla, Yakihonne, Highlighter) render it natively:
+
+```markdown
+# HR 1: Passed House
+
+The bill passed with bipartisan support...
+
+**Type**: bill-action | **Source**: [congress.gov](https://www.congress.gov/...)
+
+---
+
+<details><summary>Structured Data</summary>
+
+\`\`\`json
+{ "platform": "civiq", "version": 1, "type": "bill-action", ... }
+\`\`\`
+
+</details>
+```
+
+Structured data is preserved in a collapsible `<details>` block for programmatic consumers. All metadata remains in tags (`d`, `title`, `summary`, `t`, `r`) for filtering and querying.
+
+## NIP-65 Relay List
+
+A Kind 10002 event is published on every cron run, advertising which relays carry CIV.IQ data. This allows clients to auto-discover relays without hardcoding URLs. The event is replaceable (re-publishing updates it).
 
 ## State Events
 
@@ -53,7 +81,7 @@ State legislature events are higher-leverage rewilding than federal — more inv
 | `state-bill-action`     | `civiq:state-bill-action:state-bill-action-{state}-{id}-{date}`       | OpenStates |
 | `state-vote`            | `civiq:state-vote:state-vote-{state}-{voteId}`                        | OpenStates |
 
-**Enabled states**: CA, NY, TX, IL, FL (configurable via `nostrConfig.enabledStates`).
+**Enabled states**: CA, NY, TX, IL, FL, PA, OH, GA, WA, MI, NJ, VA, MA, AZ, CO (15 states, configurable via `nostrConfig.enabledStates`).
 
 ## Limits
 
@@ -91,15 +119,17 @@ Nostr reaches individuals. ActivityPub reaches institutions — libraries, newsr
 
 ### How It Works
 
-1. **Discovery**: `/.well-known/webfinger?resource=acct:civiq@civ.iq`
+1. **Discovery**: `/.well-known/webfinger?resource=acct:civiq@civ.iq` and `/.well-known/nodeinfo`
 2. **Actor**: `/api/activitypub/actor` returns the JSON-LD actor document
-3. **Follow**: Remote servers POST Follow activities to `/api/activitypub/inbox`
-4. **Delivery**: New civic events are delivered to all follower inboxes via HTTP Signature-authenticated POST
+3. **Follow**: Remote servers POST Follow activities to `/api/activitypub/inbox`; CIV.IQ responds with Accept (with retry on failure: 3 attempts, exponential backoff)
+4. **Delivery**: New civic events are delivered to all follower inboxes via HTTP Signature-authenticated POST. Create and Update activity types supported.
 5. **Outbox**: `/api/activitypub/outbox` provides a paginated OrderedCollection of all published activities
+6. **Collections**: `/api/activitypub/followers` and `/api/activitypub/following` expose standard OrderedCollections
+7. **NodeInfo**: `/api/activitypub/nodeinfo` exposes NodeInfo 2.0 for fediverse directory listing (fediverse.observer, fedidb.org)
 
 ### What Gets Published
 
-Same 9 civic event types as Nostr: bill actions, bill introductions, vote records, executive orders, comment periods, hearings, and state legislature events. Each becomes an ActivityPub `Note` with hashtags, source links, and plain-text fallback.
+Same 9 civic event types as Nostr: bill actions, bill introductions, vote records, executive orders, comment periods, hearings, and state legislature events. Each becomes an ActivityPub `Note` with hashtags, source links, and plain-text fallback. If an event already exists in the outbox, an `Update` activity is sent instead of `Create`.
 
 ### Authentication
 

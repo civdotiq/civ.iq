@@ -38,5 +38,21 @@ export const nostrConfig = {
   dedupTTL: 30 * 24 * 60 * 60,
 
   // State legislature event detection (most reliable OpenStates coverage)
-  enabledStates: ['ca', 'ny', 'tx', 'il', 'fl'] as string[],
+  enabledStates: [
+    'ca',
+    'ny',
+    'tx',
+    'il',
+    'fl',
+    'pa',
+    'oh',
+    'ga',
+    'wa',
+    'mi',
+    'nj',
+    'va',
+    'ma',
+    'az',
+    'co',
+  ] as string[],
 } as const;

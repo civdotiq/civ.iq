@@ -641,7 +641,9 @@ jq -s '.[0].data.name, .[1].data.name' rep1.json rep2.json`}</pre>
           <p className="text-gray-600 mb-grid-3">
             Every significant civic event is cryptographically signed and published to Nostr relays
             as a permanent public record. Events use NIP-23 long-form content (kind{' '}
-            {nostrConfig.eventKind}).
+            {nostrConfig.eventKind}) with Markdown content readable in any long-form client. A
+            NIP-65 relay list (kind 10002) is published so clients auto-discover which relays carry
+            CIV.IQ data. State coverage spans {nostrConfig.enabledStates.length} states.
           </p>
 
           <div className="mb-grid-3">
@@ -693,14 +695,16 @@ jq -s '.[0].data.name, .[1].data.name' rep1.json rep2.json`}</pre>
               {JSON.stringify(
                 {
                   kind: nostrConfig.eventKind,
-                  content: 'Long-form markdown content...',
+                  content:
+                    '# HR 1 passed in House\n\nThe bill passed...\n\n**Type**: bill-action | **Source**: [congress.gov](...)\n\n---\n\n<details><summary>Structured Data</summary>\n\n```json\n{ ... }\n```\n\n</details>',
                   tags: [
-                    ['d', 'bill-action:119-hr-1:2025-01-15'],
-                    ['t', 'bill-action'],
+                    ['d', 'civiq:bill-action:hr1-119-action-2025-01-15'],
                     ['title', 'HR 1 passed in House'],
+                    ['summary', 'The bill passed...'],
                     ['published_at', '1705276800'],
-                    ['L', 'civic-event'],
-                    ['l', 'bill-action', 'civic-event'],
+                    ['t', 'bill-action'],
+                    ['t', 'legislation'],
+                    ['r', 'https://www.congress.gov/bill/119th-congress/house-bill/1'],
                   ],
                   pubkey: '<civiq public key>',
                   sig: '<schnorr signature>',
@@ -710,6 +714,8 @@ jq -s '.[0].data.name, .[1].data.name' rep1.json rep2.json`}</pre>
               )}
             </pre>
             <p className="text-xs text-gray-500 mt-grid-1">
+              Content is Markdown, readable in any NIP-23 client (Habla, Yakihonne, Highlighter).
+              Structured data is preserved in a collapsible <code>&lt;details&gt;</code> block.
               Filter by <code>t</code> tag to subscribe to specific event types. The <code>d</code>{' '}
               tag is the unique event identifier.
             </p>
@@ -746,7 +752,7 @@ const sub = pool.subscribeMany(relays, [{
           <h2 className="text-2xl font-bold mb-grid-2">Fediverse</h2>
           <p className="text-gray-600 mb-grid-3">
             Follow CIV.IQ from Mastodon or any ActivityPub client. The same civic events published
-            to Nostr are formatted as ActivityPub activities.
+            to Nostr are delivered to every follower&apos;s inbox as signed ActivityPub activities.
           </p>
 
           <div className="mb-grid-3">
@@ -756,18 +762,103 @@ const sub = pool.subscribeMany(relays, [{
             </code>
           </div>
 
+          <div className="mb-grid-4">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Federation Endpoints
+            </span>
+            <div className="border-2 border-gray-200 overflow-x-auto mt-1">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
+                  <tr>
+                    <th className="text-left p-grid-2 font-semibold">Endpoint</th>
+                    <th className="text-left p-grid-2 font-semibold">Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">
+                      <a
+                        href={activitypubConfig.actor.id}
+                        className="text-civiq-blue underline hover:no-underline"
+                      >
+                        /api/activitypub/actor
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">
+                      JSON-LD actor document (Service type)
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">/api/activitypub/inbox</td>
+                    <td className="p-grid-2 text-gray-600">
+                      Receives Follow/Undo activities from remote instances
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">
+                      <a
+                        href={activitypubConfig.actor.outbox}
+                        className="text-civiq-blue underline hover:no-underline"
+                      >
+                        /api/activitypub/outbox
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">
+                      Paginated OrderedCollection of published activities
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">
+                      <a
+                        href={activitypubConfig.actor.followers}
+                        className="text-civiq-blue underline hover:no-underline"
+                      >
+                        /api/activitypub/followers
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">
+                      Paginated OrderedCollection of follower actors
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">
+                      <a
+                        href={activitypubConfig.actor.following}
+                        className="text-civiq-blue underline hover:no-underline"
+                      >
+                        /api/activitypub/following
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">
+                      Empty collection (CIV.IQ is publish-only)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-grid-2 font-mono text-xs">
+                      <a
+                        href="/.well-known/nodeinfo"
+                        className="text-civiq-blue underline hover:no-underline"
+                      >
+                        /.well-known/nodeinfo
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">
+                      NodeInfo 2.0 for fediverse directory discovery
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <p className="text-gray-600 text-sm">
             Search{' '}
             <code className="text-sm">
               @{activitypubConfig.actor.username}@{activitypubConfig.domain}
             </code>{' '}
-            in your Mastodon instance to follow. &middot;{' '}
-            <a
-              href={activitypubConfig.actor.id}
-              className="text-civiq-blue underline hover:no-underline"
-            >
-              Actor URL
-            </a>
+            in your Mastodon instance to follow. New civic events are delivered directly to follower
+            inboxes via HTTP Signature-authenticated POST. Activities support Create and Update
+            types.
           </p>
         </section>
 
@@ -818,6 +909,23 @@ const sub = pool.subscribeMany(relays, [{
                     >
                       /.well-known/nostr.json
                     </a>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">NodeInfo 2.0</td>
+                  <td className="p-grid-2 font-mono text-sm">
+                    <a
+                      href="/.well-known/nodeinfo"
+                      className="text-civiq-blue underline hover:no-underline"
+                    >
+                      /.well-known/nodeinfo
+                    </a>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">NIP-65 Relay List</td>
+                  <td className="p-grid-2 font-mono text-sm text-gray-600">
+                    Kind 10002 event (published to relays)
                   </td>
                 </tr>
                 <tr>

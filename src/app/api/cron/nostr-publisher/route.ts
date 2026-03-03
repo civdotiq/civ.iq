@@ -29,7 +29,15 @@ import type {
 import type { FederalRegisterAPIResponse } from '@/types/federal-register';
 import type { GovInfoCollectionResponse } from '@/types/govinfo';
 import { detectStateEvents } from '@/lib/nostr/state-event-detector';
-import { civicEventToNote, wrapInCreate, addToOutbox } from '@/lib/activitypub/outbox';
+import { publishRelayList } from '@/lib/nostr/relay-list';
+import {
+  civicEventToNote,
+  wrapInCreate,
+  wrapInUpdate,
+  addToOutbox,
+  isInOutbox,
+} from '@/lib/activitypub/outbox';
+import { deliverToFollowers, processAcceptRetries } from '@/lib/activitypub/delivery';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -610,6 +618,22 @@ export async function POST(request: NextRequest) {
   });
 
   try {
+    // Publish NIP-65 relay list (Kind 10002, replaceable — safe every run)
+    await publishRelayList(keypair.privateKey).catch(err =>
+      logger.warn('NIP-65 relay list publish failed', {
+        error: err instanceof Error ? err.message : 'Unknown',
+        operation: 'nostr_publisher',
+      })
+    );
+
+    // Process any pending Accept delivery retries
+    await processAcceptRetries().catch(err =>
+      logger.warn('Accept retry processing failed', {
+        error: err instanceof Error ? err.message : 'Unknown',
+        operation: 'nostr_publisher',
+      })
+    );
+
     // Detect new events
     const events = await detectNewEvents();
     const cache = getRedisCache();
@@ -617,6 +641,7 @@ export async function POST(request: NextRequest) {
     let eventsPublished = 0;
     let eventsFailed = 0;
     let activityPubAdded = 0;
+    let activityPubDelivered = 0;
 
     logger.info(`Detected ${events.length} new civic events`, {
       operation: 'nostr_publisher',
@@ -642,9 +667,17 @@ export async function POST(request: NextRequest) {
           // Also add to ActivityPub outbox (same event, different serialization)
           try {
             const note = civicEventToNote(event);
-            const activity = wrapInCreate(note);
-            await addToOutbox(activity);
+            const alreadyExists = await isInOutbox(note.id);
+            const activity = alreadyExists ? wrapInUpdate(note) : wrapInCreate(note);
+
+            if (!alreadyExists) {
+              await addToOutbox(activity as ReturnType<typeof wrapInCreate>);
+            }
             activityPubAdded++;
+
+            // Deliver to follower inboxes
+            const delivery = await deliverToFollowers(activity);
+            activityPubDelivered += delivery.delivered;
           } catch (apError) {
             logger.error('Failed to add event to ActivityPub outbox', apError as Error, {
               eventId: event.id,
@@ -685,6 +718,7 @@ export async function POST(request: NextRequest) {
       eventsSkipped: 0,
       eventsFailed,
       activityPubAdded,
+      activityPubDelivered,
       relayResults,
       totalTime,
     };

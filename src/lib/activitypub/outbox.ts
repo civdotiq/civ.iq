@@ -12,7 +12,7 @@
 
 import { activitypubConfig } from '@/config/activitypub.config';
 import type { CivicEvent } from '@/types/nostr';
-import type { APCreateActivity, APNote, APHashtag } from '@/types/activitypub';
+import type { APCreateActivity, APUpdateActivity, APNote, APHashtag } from '@/types/activitypub';
 import { getRedisCache } from '@/lib/cache/redis-client';
 
 const PUBLIC = 'https://www.w3.org/ns/activitystreams#Public';
@@ -68,6 +68,29 @@ export function wrapInCreate(note: APNote): APCreateActivity {
     cc: note.cc,
     object: note,
   };
+}
+
+/** Wrap a Note in an Update activity */
+export function wrapInUpdate(note: APNote): APUpdateActivity {
+  const { actor } = activitypubConfig;
+
+  return {
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    type: 'Update',
+    id: `${note.id}/activity#update-${Date.now()}`,
+    actor: actor.id,
+    published: new Date().toISOString(),
+    to: note.to,
+    cc: note.cc,
+    object: note,
+  };
+}
+
+/** Check if a note ID already exists in the outbox */
+export async function isInOutbox(noteId: string): Promise<boolean> {
+  const cache = getRedisCache();
+  const activityKey = `${activitypubConfig.outboxKey}:${noteId}`;
+  return cache.exists(activityKey);
 }
 
 /** Store a published activity in the outbox (Redis sorted set) */

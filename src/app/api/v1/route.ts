@@ -146,19 +146,53 @@ export async function GET(): Promise<NextResponse> {
     },
     federation: {
       description:
-        'ActivityPub federation for fediverse interoperability. Follow @civ.iq from Mastodon.',
+        'ActivityPub federation for fediverse interoperability. Follow @civiq@civ.iq from Mastodon. Activities delivered to follower inboxes via HTTP Signatures.',
       endpoints: {
         webfinger: {
           url: 'https://civ.iq/.well-known/webfinger?resource=acct:civiq@civ.iq',
           description: 'WebFinger discovery (RFC 7033)',
         },
+        nodeinfo: {
+          url: 'https://civ.iq/.well-known/nodeinfo',
+          description: 'NodeInfo 2.0 discovery for fediverse directories',
+        },
         actor: {
           url: 'https://civ.iq/api/activitypub/actor',
           description: 'ActivityPub Service actor document',
         },
+        inbox: {
+          url: 'https://civ.iq/api/activitypub/inbox',
+          description: 'Receives Follow/Undo activities from remote instances',
+        },
         outbox: {
           url: 'https://civ.iq/api/activitypub/outbox',
-          description: 'Civic events as ActivityPub activities',
+          description: 'Paginated OrderedCollection of published activities',
+        },
+        followers: {
+          url: 'https://civ.iq/api/activitypub/followers',
+          description: 'Paginated OrderedCollection of follower actors',
+        },
+        following: {
+          url: 'https://civ.iq/api/activitypub/following',
+          description: 'Empty collection (CIV.IQ is publish-only)',
+        },
+      },
+    },
+    nostr: {
+      description:
+        'Nostr publishing layer. Civic events signed with Schnorr signatures and distributed to relays as NIP-23 long-form Markdown content.',
+      endpoints: {
+        status: {
+          url: 'https://civ.iq/api/nostr/status',
+          description: 'Publishing layer status, relay list, recent activity',
+        },
+        verify: {
+          url: 'https://civ.iq/api/nostr/verify',
+          description: 'Read-back verification across all relays',
+        },
+        nip05: {
+          url: 'https://civ.iq/.well-known/nostr.json?name=civiq',
+          description: 'NIP-05 identity verification',
         },
       },
     },

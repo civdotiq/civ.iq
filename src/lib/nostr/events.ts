@@ -28,16 +28,34 @@ export function createSignedCivicEvent(event: CivicEvent, privateKey: Uint8Array
       ['r', event.source.url],
       ...event.tags.map(t => ['t', t]),
     ],
-    content: JSON.stringify({
-      version: 1,
-      platform: 'civiq',
-      type: event.type,
-      title: event.title,
-      summary: event.summary,
-      data: event.data,
-      source: event.source,
-    }),
+    content: buildMarkdownContent(event),
   };
 
   return finalizeEvent(unsignedEvent, privateKey);
+}
+
+/** Build Markdown content for NIP-23 long-form events */
+function buildMarkdownContent(event: CivicEvent): string {
+  const lines = [
+    `# ${event.title}`,
+    '',
+    event.summary,
+    '',
+    `**Type**: ${event.type} | **Source**: [${event.source.api}](${event.source.url})`,
+    '',
+    '---',
+    '',
+    '<details><summary>Structured Data</summary>',
+    '',
+    '```json',
+    JSON.stringify(
+      { platform: 'civiq', version: 1, type: event.type, data: event.data, source: event.source },
+      null,
+      2
+    ),
+    '```',
+    '',
+    '</details>',
+  ];
+  return lines.join('\n');
 }

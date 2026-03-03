@@ -158,6 +158,7 @@ export interface NostrPublishRun {
   eventsSkipped: number;
   eventsFailed: number;
   activityPubAdded: number;
+  activityPubDelivered: number;
   relayResults: RelayPublishResult[];
   totalTime: number;
 }

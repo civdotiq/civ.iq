@@ -16,6 +16,7 @@ import { isFederationEnabled } from '@/lib/activitypub/actor';
 import { verifySignature } from '@/lib/activitypub/http-signatures';
 import { addFollower, removeFollower } from '@/lib/activitypub/followers';
 import { signRequest } from '@/lib/activitypub/http-signatures';
+import { queueAcceptRetry } from '@/lib/activitypub/delivery';
 import logger from '@/lib/logging/simple-logger';
 import type { APFollowActivity, APUndoActivity } from '@/types/activitypub';
 
@@ -132,12 +133,13 @@ async function handleFollow(follow: APFollowActivity): Promise<NextResponse> {
         signal: AbortSignal.timeout(10000),
       });
     } catch (error) {
-      // Accept delivery is best-effort; the follow is still stored
-      logger.warn('ActivityPub inbox: Accept delivery failed', {
+      // Accept delivery is best-effort; queue for retry
+      logger.warn('ActivityPub inbox: Accept delivery failed, queued for retry', {
         inbox,
         error: error instanceof Error ? error.message : 'Unknown',
         operation: 'activitypub_inbox',
       });
+      await queueAcceptRetry(actorId, inbox, acceptBody).catch(() => {});
     }
   }
 

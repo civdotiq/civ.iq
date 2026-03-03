@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { getNostrKeypair } from '@/lib/nostr';
 import { nostrConfig } from '@/config/nostr.config';
+import { getFollowerCount } from '@/lib/activitypub/followers';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -70,6 +71,12 @@ export async function GET() {
         publishedEvents: recentPublishes,
         byType: eventTypeCounts,
       },
+      statesCovered: {
+        count: nostrConfig.enabledStates.length,
+        states: nostrConfig.enabledStates,
+      },
+      contentFormat: 'markdown',
+      nip65RelayList: true,
       eventTypes: [
         'bill-action',
         'bill-introduced',
@@ -81,6 +88,11 @@ export async function GET() {
         'state-bill-action',
         'state-vote',
       ],
+      activityPub: {
+        followers: await getFollowerCount().catch(() => 0),
+        delivery: true,
+        activityTypes: ['Create', 'Update'],
+      },
       metadata: {
         endpoint: '/api/nostr/status',
         generatedAt: new Date().toISOString(),
