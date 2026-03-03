@@ -311,7 +311,7 @@ function SpendingByGeography() {
         </div>
       ) : (
         <div className="space-y-2">
-          {sorted.slice(0, 25).map((item: GeographicSpendingResult) => (
+          {sorted.map((item: GeographicSpendingResult) => (
             <div key={item.shapeCode} className="flex items-center gap-3">
               <div className="w-24 sm:w-32 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {item.displayName}
@@ -332,16 +332,21 @@ function SpendingByGeography() {
               )}
             </div>
           ))}
-          {sorted.length > 25 && (
-            <p className="text-xs text-gray-500 pt-2">
-              Showing top 25 of {sorted.length}{' '}
-              {geoLayer === 'state' ? 'states' : geoLayer === 'county' ? 'counties' : 'districts'}
-            </p>
-          )}
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-4">Source: USASpending.gov · FY {fiscalYear}</p>
+      <p className="text-xs text-gray-400 mt-4">
+        Source:{' '}
+        <a
+          href={`https://usaspending.gov/explorer`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          USASpending.gov
+        </a>{' '}
+        · FY {fiscalYear}
+      </p>
     </div>
   );
 }

@@ -187,24 +187,52 @@ export function CommitteeProfileClient({ profile }: CommitteeProfileClientProps)
       )}
 
       {/* Recipients Table */}
-      {recipients.length > 0 && (
-        <div>
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              Recipients ({recipients.length})
-            </h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {metadata.resolvedRecipients} linked to CIV.IQ profiles
-            </span>
-          </div>
-          <SortableDataTable<RecipientTableRow>
-            data={tableData}
-            columns={columns}
-            defaultSortKey="totalAmount"
-            showInitially={25}
-          />
-        </div>
-      )}
+      {recipients.length > 0 &&
+        (() => {
+          const contributions = tableData.filter(r => r.totalAmount >= 0);
+          const refunds = tableData.filter(r => r.totalAmount < 0);
+
+          return (
+            <>
+              <div>
+                <div className="flex items-baseline justify-between mb-3">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    Contributions ({contributions.length})
+                  </h2>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {metadata.resolvedRecipients} linked to CIV.IQ profiles
+                  </span>
+                </div>
+                <SortableDataTable<RecipientTableRow>
+                  data={contributions}
+                  columns={columns}
+                  defaultSortKey="totalAmount"
+                  showInitially={25}
+                />
+              </div>
+
+              {refunds.length > 0 && (
+                <div>
+                  <div className="mb-3">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      Refunds ({refunds.length})
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Negative amounts represent money returned to this committee, typically due to
+                      contributions that exceeded legal limits or were otherwise rejected.
+                    </p>
+                  </div>
+                  <SortableDataTable<RecipientTableRow>
+                    data={refunds}
+                    columns={columns}
+                    defaultSortKey="totalAmount"
+                    showInitially={25}
+                  />
+                </div>
+              )}
+            </>
+          );
+        })()}
 
       {/* Party Breakdown Chart - only show if we have party data */}
       {linkedRecipients.length > 0 && <RecipientsByParty recipients={linkedRecipients} />}
