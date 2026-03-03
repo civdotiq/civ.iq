@@ -17,7 +17,7 @@ describe('ActivityPub Inbox Types', () => {
       type: 'Follow',
       id: 'https://mastodon.social/users/testuser/follows/1',
       actor: 'https://mastodon.social/users/testuser',
-      object: 'https://civ.iq/api/activitypub/actor',
+      object: 'https://civdotiq.org/api/activitypub/actor',
     };
 
     expect(follow.type).toBe('Follow');
@@ -34,7 +34,7 @@ describe('ActivityPub Inbox Types', () => {
         type: 'Follow',
         id: 'https://mastodon.social/users/testuser/follows/1',
         actor: 'https://mastodon.social/users/testuser',
-        object: 'https://civ.iq/api/activitypub/actor',
+        object: 'https://civdotiq.org/api/activitypub/actor',
       },
     };
 
@@ -47,14 +47,14 @@ describe('ActivityPub Inbox Types', () => {
       type: 'Follow',
       id: 'https://mastodon.social/users/testuser/follows/1',
       actor: 'https://mastodon.social/users/testuser',
-      object: 'https://civ.iq/api/activitypub/actor',
+      object: 'https://civdotiq.org/api/activitypub/actor',
     };
 
     const accept: APAcceptActivity = {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type: 'Accept',
-      id: 'https://civ.iq/api/activitypub/actor/accepts/123',
-      actor: 'https://civ.iq/api/activitypub/actor',
+      id: 'https://civdotiq.org/api/activitypub/actor/accepts/123',
+      actor: 'https://civdotiq.org/api/activitypub/actor',
       object: follow,
     };
 
@@ -66,10 +66,10 @@ describe('ActivityPub Inbox Types', () => {
     const collection: APOrderedCollection = {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type: 'OrderedCollection',
-      id: 'https://civ.iq/api/activitypub/outbox',
+      id: 'https://civdotiq.org/api/activitypub/outbox',
       totalItems: 42,
-      first: 'https://civ.iq/api/activitypub/outbox?page=0',
-      last: 'https://civ.iq/api/activitypub/outbox?page=2',
+      first: 'https://civdotiq.org/api/activitypub/outbox?page=0',
+      last: 'https://civdotiq.org/api/activitypub/outbox?page=2',
     };
 
     expect(collection.type).toBe('OrderedCollection');

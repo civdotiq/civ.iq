@@ -10,7 +10,7 @@
  * Pattern matches nostr.config.ts exactly.
  */
 
-const domain = process.env.ACTIVITYPUB_DOMAIN || 'civ.iq';
+const domain = process.env.ACTIVITYPUB_DOMAIN || 'civdotiq.org';
 const baseUrl = `https://${domain}`;
 
 export const activitypubConfig = {

@@ -10,12 +10,12 @@
     },
     "contact": {
       "name": "CIV.IQ",
-      "url": "https://civ.iq"
+      "url": "https://civdotiq.org"
     }
   },
   "servers": [
     {
-      "url": "https://civ.iq/api/v1",
+      "url": "https://civdotiq.org/api/v1",
       "description": "Production"
     }
   ],

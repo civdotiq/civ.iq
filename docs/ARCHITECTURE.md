@@ -431,7 +431,7 @@ npm run build
 ```env
 # Production variables
 NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://civ.iq
+NEXT_PUBLIC_APP_URL=https://civdotiq.org
 CONGRESS_API_KEY=xxx
 FEC_API_KEY=xxx
 CENSUS_API_KEY=xxx

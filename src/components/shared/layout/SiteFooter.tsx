@@ -42,21 +42,21 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           </Link>
           <span className={separatorClass}>•</span>
           <a
-            href="https://njump.me/civiq@civ.iq"
+            href="https://njump.me/civiq@civdotiq.org"
             target="_blank"
             rel="noopener noreferrer"
             className={linkClass}
           >
-            Nostr civiq@civ.iq
+            Nostr civiq@civdotiq.org
           </a>
           <span className={separatorClass}>•</span>
           <a
-            href="https://civ.iq/api/activitypub/actor"
+            href="https://civdotiq.org/api/activitypub/actor"
             target="_blank"
             rel="noopener noreferrer"
             className={linkClass}
           >
-            Fediverse @civiq@civ.iq
+            Fediverse @civiq@civdotiq.org
           </a>
         </div>
 

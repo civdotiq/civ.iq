@@ -122,8 +122,8 @@ export function getSecureCorsOrigin(): string {
           'https://civic-intel-hub.vercel.app',
           'https://civiq.app',
           'https://www.civiq.app',
-          'https://civ.iq',
-          'https://www.civ.iq',
+          'https://civdotiq.org',
+          'https://www.civdotiq.org',
         ]
       : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
 
@@ -145,8 +145,8 @@ export function isOriginAllowed(origin: string | null): boolean {
           'https://civic-intel-hub.vercel.app',
           'https://civiq.app',
           'https://www.civiq.app',
-          'https://civ.iq',
-          'https://www.civ.iq',
+          'https://civdotiq.org',
+          'https://www.civdotiq.org',
         ]
       : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
 

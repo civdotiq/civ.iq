@@ -82,20 +82,20 @@ describe('GET /api/v1/analytics', () => {
   describe('authentication', () => {
     it('should return 503 when CACHE_WARM_SECRET is not set', async () => {
       delete process.env.CACHE_WARM_SECRET;
-      const response = await GET(makeRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(makeRequest('https://civdotiq.org/api/v1/analytics'));
       expect(response.status).toBe(503);
     });
 
     it('should return 401 when Authorization header is missing', async () => {
       process.env.CACHE_WARM_SECRET = 'test-secret';
-      const response = await GET(makeRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(makeRequest('https://civdotiq.org/api/v1/analytics'));
       expect(response.status).toBe(401);
     });
 
     it('should return 401 when Authorization header is wrong', async () => {
       process.env.CACHE_WARM_SECRET = 'test-secret';
       const response = await GET(
-        makeRequest('https://civ.iq/api/v1/analytics', {
+        makeRequest('https://civdotiq.org/api/v1/analytics', {
           authorization: 'Bearer wrong-secret',
         })
       );
@@ -105,7 +105,7 @@ describe('GET /api/v1/analytics', () => {
     it('should return 200 with correct Authorization header', async () => {
       process.env.CACHE_WARM_SECRET = 'test-secret';
       const response = await GET(
-        makeRequest('https://civ.iq/api/v1/analytics', {
+        makeRequest('https://civdotiq.org/api/v1/analytics', {
           authorization: 'Bearer test-secret',
         })
       );
@@ -123,7 +123,7 @@ describe('GET /api/v1/analytics', () => {
     }
 
     it('should return data with dateRange, totalRequests, endpointCount, endpoints', async () => {
-      const response = await GET(authRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(authRequest('https://civdotiq.org/api/v1/analytics'));
       const body = await response.json();
       expect(body.data).toHaveProperty('dateRange');
       expect(body.data).toHaveProperty('totalRequests');
@@ -132,20 +132,20 @@ describe('GET /api/v1/analytics', () => {
     });
 
     it('should return correct totals from mocked data', async () => {
-      const response = await GET(authRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(authRequest('https://civdotiq.org/api/v1/analytics'));
       const body = await response.json();
       expect(body.data.totalRequests).toBe(150);
       expect(body.data.endpointCount).toBe(2);
     });
 
     it('should include meta with apiVersion', async () => {
-      const response = await GET(authRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(authRequest('https://civdotiq.org/api/v1/analytics'));
       const body = await response.json();
       expect(body.meta.apiVersion).toBe('1.0.0');
     });
 
     it('should set Cache-Control to no-store', async () => {
-      const response = await GET(authRequest('https://civ.iq/api/v1/analytics'));
+      const response = await GET(authRequest('https://civdotiq.org/api/v1/analytics'));
       expect(response.headers.get('Cache-Control')).toBe('no-store');
     });
   });
@@ -157,7 +157,7 @@ describe('GET /api/v1/analytics', () => {
 
     it('should accept valid date params', async () => {
       const response = await GET(
-        makeRequest('https://civ.iq/api/v1/analytics?start=2025-01-01&end=2025-01-07', {
+        makeRequest('https://civdotiq.org/api/v1/analytics?start=2025-01-01&end=2025-01-07', {
           authorization: 'Bearer test-secret',
         })
       );
@@ -169,7 +169,7 @@ describe('GET /api/v1/analytics', () => {
 
     it('should reject invalid date format', async () => {
       const response = await GET(
-        makeRequest('https://civ.iq/api/v1/analytics?start=Jan-01-2025', {
+        makeRequest('https://civdotiq.org/api/v1/analytics?start=Jan-01-2025', {
           authorization: 'Bearer test-secret',
         })
       );

@@ -72,7 +72,7 @@ export function OpenDataStrip({
   items.push(
     <a
       key="nostr"
-      href="https://njump.me/civiq@civ.iq"
+      href="https://njump.me/civiq@civdotiq.org"
       target="_blank"
       rel="noopener noreferrer"
       className="hover:text-gray-600"
@@ -84,12 +84,12 @@ export function OpenDataStrip({
   items.push(
     <a
       key="fediverse"
-      href="https://civ.iq/api/activitypub/actor"
+      href="https://civdotiq.org/api/activitypub/actor"
       target="_blank"
       rel="noopener noreferrer"
       className="hover:text-gray-600"
     >
-      Fediverse @civiq@civ.iq
+      Fediverse @civiq@civdotiq.org
     </a>
   );
 

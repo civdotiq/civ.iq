@@ -210,7 +210,7 @@ async function fetchWithRetry(
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+        'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Government Data Portal',
         ...options.headers,
       },
     });

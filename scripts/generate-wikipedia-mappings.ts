@@ -56,7 +56,7 @@ async function searchWikipedia(representative: Representative): Promise<string |
       const response = await fetch(searchUrl, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+          'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Government Data Portal',
         },
       });
 
@@ -122,7 +122,7 @@ async function searchWikidata(bioguideId: string): Promise<string | null> {
     const response = await fetch(sparqlUrl, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+        'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Government Data Portal',
       },
     });
 

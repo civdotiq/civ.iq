@@ -149,7 +149,7 @@ async function fetchAndParseHTML(url: string): Promise<string | null> {
   const response = await fetch(url, {
     signal: AbortSignal.timeout(15000),
     headers: {
-      'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+      'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org)',
       Accept: 'text/html, text/plain, */*',
     },
   });

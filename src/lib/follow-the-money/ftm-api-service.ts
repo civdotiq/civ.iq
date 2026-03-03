@@ -157,7 +157,7 @@ export class FTMApiService {
     const response = await fetch(url.toString(), {
       signal: AbortSignal.timeout(15000),
       headers: {
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+        'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org)',
         Accept: 'application/json',
       },
     });

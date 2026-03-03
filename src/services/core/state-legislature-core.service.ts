@@ -1312,7 +1312,7 @@ export class StateLegislatureCoreService {
 
         const searchResponse = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+            'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org)',
           },
         });
 
@@ -1327,7 +1327,7 @@ export class StateLegislatureCoreService {
         const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
         const summaryResponse = await fetch(summaryUrl, {
           headers: {
-            'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+            'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org)',
           },
         });
 

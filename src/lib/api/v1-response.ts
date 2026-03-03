@@ -45,7 +45,7 @@ function buildMeta(source: string): V1Meta {
     timestamp: new Date().toISOString(),
     source,
     license: 'MIT',
-    documentation: 'https://civ.iq/docs/api',
+    documentation: 'https://civdotiq.org/docs/api',
   };
 }
 

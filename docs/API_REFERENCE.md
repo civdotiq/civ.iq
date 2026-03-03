@@ -5,7 +5,7 @@ Complete documentation for all API endpoints in the civic-intel-hub platform.
 ## Base URL
 
 - Development: `http://localhost:3000/api`
-- Production: `https://civ.iq/api`
+- Production: `https://civdotiq.org/api`
 
 ## Authentication
 

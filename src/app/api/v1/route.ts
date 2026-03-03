@@ -15,14 +15,14 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<NextResponse> {
-  const baseUrl = 'https://civ.iq/api/v1';
+  const baseUrl = 'https://civdotiq.org/api/v1';
 
   const index = {
     name: 'CIV.IQ Public API',
     version: 'v1',
     description:
       'Open REST API for normalized U.S. government data. No API key required. Rate limited to 60 requests per minute.',
-    documentation: 'https://civ.iq/docs/api',
+    documentation: 'https://civdotiq.org/docs/api',
     license: 'MIT',
     source: 'https://github.com/civdotiq/civic-intel-hub',
     endpoints: {
@@ -109,71 +109,71 @@ export async function GET(): Promise<NextResponse> {
       description: 'Atom XML feeds for subscribing via RSS readers. No account required.',
       endpoints: {
         member: {
-          url: 'https://civ.iq/api/feed/member/{bioguideId}',
+          url: 'https://civdotiq.org/api/feed/member/{bioguideId}',
           description: 'Activity feed for a specific member of Congress',
-          example: 'https://civ.iq/api/feed/member/P000197',
+          example: 'https://civdotiq.org/api/feed/member/P000197',
         },
         bills: {
-          url: 'https://civ.iq/api/feed/bills/latest',
+          url: 'https://civdotiq.org/api/feed/bills/latest',
           description: 'Latest bills introduced in Congress',
         },
         district: {
-          url: 'https://civ.iq/api/feed/district/{districtId}',
+          url: 'https://civdotiq.org/api/feed/district/{districtId}',
           description: 'Activity feed for a congressional district',
-          example: 'https://civ.iq/api/feed/district/MI-12',
+          example: 'https://civdotiq.org/api/feed/district/MI-12',
         },
         bill: {
-          url: 'https://civ.iq/api/feed/bill/{billId}',
+          url: 'https://civdotiq.org/api/feed/bill/{billId}',
           description: 'Status updates for a specific bill',
-          example: 'https://civ.iq/api/feed/bill/119-hr-1',
+          example: 'https://civdotiq.org/api/feed/bill/119-hr-1',
         },
         committee: {
-          url: 'https://civ.iq/api/feed/committee/{committeeId}',
+          url: 'https://civdotiq.org/api/feed/committee/{committeeId}',
           description: 'Activity feed for a committee',
-          example: 'https://civ.iq/api/feed/committee/HSJU',
+          example: 'https://civdotiq.org/api/feed/committee/HSJU',
         },
         stateBills: {
-          url: 'https://civ.iq/api/feed/state/{state}/bills',
+          url: 'https://civdotiq.org/api/feed/state/{state}/bills',
           description: 'Recent state legislature bills via OpenStates',
-          example: 'https://civ.iq/api/feed/state/CA/bills',
+          example: 'https://civdotiq.org/api/feed/state/CA/bills',
         },
         stateLegislator: {
-          url: 'https://civ.iq/api/feed/state/{state}/legislator/{id}',
+          url: 'https://civdotiq.org/api/feed/state/{state}/legislator/{id}',
           description: 'State legislator sponsored bills',
-          example: 'https://civ.iq/api/feed/state/NY/legislator/ocd-person/abc123',
+          example: 'https://civdotiq.org/api/feed/state/NY/legislator/ocd-person/abc123',
         },
       },
     },
     federation: {
       description:
-        'ActivityPub federation for fediverse interoperability. Follow @civiq@civ.iq from Mastodon. Activities delivered to follower inboxes via HTTP Signatures.',
+        'ActivityPub federation for fediverse interoperability. Follow @civiq@civdotiq.org from Mastodon. Activities delivered to follower inboxes via HTTP Signatures.',
       endpoints: {
         webfinger: {
-          url: 'https://civ.iq/.well-known/webfinger?resource=acct:civiq@civ.iq',
+          url: 'https://civdotiq.org/.well-known/webfinger?resource=acct:civiq@civdotiq.org',
           description: 'WebFinger discovery (RFC 7033)',
         },
         nodeinfo: {
-          url: 'https://civ.iq/.well-known/nodeinfo',
+          url: 'https://civdotiq.org/.well-known/nodeinfo',
           description: 'NodeInfo 2.0 discovery for fediverse directories',
         },
         actor: {
-          url: 'https://civ.iq/api/activitypub/actor',
+          url: 'https://civdotiq.org/api/activitypub/actor',
           description: 'ActivityPub Service actor document',
         },
         inbox: {
-          url: 'https://civ.iq/api/activitypub/inbox',
+          url: 'https://civdotiq.org/api/activitypub/inbox',
           description: 'Receives Follow/Undo activities from remote instances',
         },
         outbox: {
-          url: 'https://civ.iq/api/activitypub/outbox',
+          url: 'https://civdotiq.org/api/activitypub/outbox',
           description: 'Paginated OrderedCollection of published activities',
         },
         followers: {
-          url: 'https://civ.iq/api/activitypub/followers',
+          url: 'https://civdotiq.org/api/activitypub/followers',
           description: 'Paginated OrderedCollection of follower actors',
         },
         following: {
-          url: 'https://civ.iq/api/activitypub/following',
+          url: 'https://civdotiq.org/api/activitypub/following',
           description: 'Empty collection (CIV.IQ is publish-only)',
         },
       },
@@ -183,15 +183,15 @@ export async function GET(): Promise<NextResponse> {
         'Nostr publishing layer. Civic events signed with Schnorr signatures and distributed to relays as NIP-23 long-form Markdown content.',
       endpoints: {
         status: {
-          url: 'https://civ.iq/api/nostr/status',
+          url: 'https://civdotiq.org/api/nostr/status',
           description: 'Publishing layer status, relay list, recent activity',
         },
         verify: {
-          url: 'https://civ.iq/api/nostr/verify',
+          url: 'https://civdotiq.org/api/nostr/verify',
           description: 'Read-back verification across all relays',
         },
         nip05: {
-          url: 'https://civ.iq/.well-known/nostr.json?name=civiq',
+          url: 'https://civdotiq.org/.well-known/nostr.json?name=civiq',
           description: 'NIP-05 identity verification',
         },
       },
@@ -206,8 +206,8 @@ export async function GET(): Promise<NextResponse> {
       },
     },
     links: {
-      documentation: 'https://civ.iq/docs/api',
-      openapi: 'https://civ.iq/openapi.json',
+      documentation: 'https://civdotiq.org/docs/api',
+      openapi: 'https://civdotiq.org/openapi.json',
       changelog: `${baseUrl}/changelog`,
     },
     meta: {

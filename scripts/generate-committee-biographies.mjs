@@ -91,7 +91,7 @@ class CommitteeBiographyGenerator {
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Committee Biography Generator',
+          'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Committee Biography Generator',
         },
       });
 

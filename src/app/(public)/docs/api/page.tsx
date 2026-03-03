@@ -15,8 +15,8 @@ export const metadata: Metadata = {
     'Documentation for the CIV.IQ Public API v1. Open REST endpoints for U.S. government data. No API key required.',
 };
 
-const BASE = 'https://civ.iq/api/v1';
-const FEED_BASE = 'https://civ.iq/api/feed';
+const BASE = 'https://civdotiq.org/api/v1';
+const FEED_BASE = 'https://civdotiq.org/api/feed';
 
 interface Endpoint {
   method: string;
@@ -243,7 +243,7 @@ export default function ApiDocsPage() {
                   timestamp: '2025-01-15T12:00:00.000Z',
                   source: 'congress.gov',
                   license: 'MIT',
-                  documentation: 'https://civ.iq/docs/api',
+                  documentation: 'https://civdotiq.org/docs/api',
                 },
               },
               null,

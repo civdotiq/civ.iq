@@ -54,7 +54,7 @@ class BiographyGenerator {
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Biography Data Generator',
+          'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Biography Data Generator',
         },
       });
 

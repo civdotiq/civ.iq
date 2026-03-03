@@ -103,7 +103,7 @@ function makeRequest(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { NextRequest: NR } = require('next/server');
   return [
-    new NR(`https://civ.iq/api/feed/district/${districtId}`) as NextRequest,
+    new NR(`https://civdotiq.org/api/feed/district/${districtId}`) as NextRequest,
     { params: Promise.resolve({ districtId }) },
   ];
 }

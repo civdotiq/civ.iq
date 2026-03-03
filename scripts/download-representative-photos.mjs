@@ -77,7 +77,7 @@ class PhotoDownloader {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Photo Downloader',
+          'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Photo Downloader',
         },
       });
 

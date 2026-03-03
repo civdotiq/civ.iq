@@ -40,7 +40,7 @@ describe('V1 Response Envelope', () => {
 
     it('should set documentation URL', () => {
       const result = v1Success(null, 'test');
-      expect(result.meta.documentation).toBe('https://civ.iq/docs/api');
+      expect(result.meta.documentation).toBe('https://civdotiq.org/docs/api');
     });
 
     it('should pass through the source parameter', () => {
@@ -167,7 +167,7 @@ describe('V1 Response Envelope', () => {
 
       expect(result.meta.apiVersion).toBe('v1');
       expect(result.meta.license).toBe('MIT');
-      expect(result.meta.documentation).toBe('https://civ.iq/docs/api');
+      expect(result.meta.documentation).toBe('https://civdotiq.org/docs/api');
       expect(result.meta.timestamp).toBeTruthy();
     });
   });

@@ -119,7 +119,7 @@ Nostr reaches individuals. ActivityPub reaches institutions — libraries, newsr
 
 ### How It Works
 
-1. **Discovery**: `/.well-known/webfinger?resource=acct:civiq@civ.iq` and `/.well-known/nodeinfo`
+1. **Discovery**: `/.well-known/webfinger?resource=acct:civiq@civdotiq.org` and `/.well-known/nodeinfo`
 2. **Actor**: `/api/activitypub/actor` returns the JSON-LD actor document
 3. **Follow**: Remote servers POST Follow activities to `/api/activitypub/inbox`; CIV.IQ responds with Accept (with retry on failure: 3 attempts, exponential backoff)
 4. **Delivery**: New civic events are delivered to all follower inboxes via HTTP Signature-authenticated POST. Create and Update activity types supported.

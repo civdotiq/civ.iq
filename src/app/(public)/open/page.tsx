@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. No API key required. MIT licensed.',
 };
 
-const BASE = 'https://civ.iq/api/v1';
-const FEED_BASE = 'https://civ.iq/api/feed';
+const BASE = 'https://civdotiq.org/api/v1';
+const FEED_BASE = 'https://civdotiq.org/api/feed';
 
 const FEEDS: { path: string; shortPath?: string; description: string }[] = [
   {
@@ -273,7 +273,7 @@ export default function OpenDataPage() {
                     timestamp: '...',
                     source: 'congress.gov',
                     license: 'MIT',
-                    documentation: 'https://civ.iq/docs/api',
+                    documentation: 'https://civdotiq.org/docs/api',
                   },
                 },
                 null,
@@ -335,7 +335,7 @@ export default function OpenDataPage() {
           <p className="text-gray-600 text-sm">
             JavaScript:{' '}
             <code className="text-xs bg-gray-50 px-1 py-0.5">
-              fetch(&apos;https://civ.iq/api/v1/bills?limit=5&apos;).then(r =&gt; r.json())
+              fetch(&apos;https://civdotiq.org/api/v1/bills?limit=5&apos;).then(r =&gt; r.json())
             </code>
           </p>
         </section>
@@ -483,7 +483,7 @@ done`}</pre>
                   timestamp: '...',
                   source: 'error',
                   license: 'MIT',
-                  documentation: 'https://civ.iq/docs/api',
+                  documentation: 'https://civdotiq.org/docs/api',
                 },
               },
               null,
@@ -649,7 +649,7 @@ jq -s '.[0].data.name, .[1].data.name' rep1.json rep2.json`}</pre>
           <div className="mb-grid-3">
             <span className="text-sm text-gray-500 uppercase tracking-wider">NIP-05 Address</span>
             <code className="block bg-gray-50 border-2 border-gray-200 p-grid-2 text-sm font-mono mt-1">
-              civiq@civ.iq
+              civiq@civdotiq.org
             </code>
           </div>
 
@@ -893,7 +893,7 @@ const sub = pool.subscribeMany(relays, [{
                   <td className="p-grid-2">WebFinger (RFC 7033)</td>
                   <td className="p-grid-2 font-mono text-sm">
                     <a
-                      href="/.well-known/webfinger?resource=acct:civiq@civ.iq"
+                      href="/.well-known/webfinger?resource=acct:civiq@civdotiq.org"
                       className="text-civiq-blue underline hover:no-underline"
                     >
                       /.well-known/webfinger
