@@ -121,29 +121,39 @@ export async function GET(
         }
 
         // Step 3: Fetch bills in related policy areas
+        // Congress.gov API has no policyArea filter, so we fetch pages of 250
+        // and post-filter until we have enough matches (max 3 pages = 750 bills).
         const recentBills: IndustryConnectionsResponse['recentBills'] = [];
 
         if (process.env.CONGRESS_API_KEY && relatedPolicyAreas.length > 0) {
-          const url = new URL('https://api.congress.gov/v3/bill');
-          url.searchParams.set('format', 'json');
-          url.searchParams.set('limit', Math.min(limit * 10, 250).toString());
-          url.searchParams.set('sort', 'updateDate+desc');
+          const policyAreaSet = new Set(relatedPolicyAreas.map(pa => pa.toLowerCase()));
+          const maxPages = 3;
+          const pageSize = 250;
+          let offset = 0;
 
-          const response = await fetch(url.toString(), {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-              'X-API-Key': process.env.CONGRESS_API_KEY,
-            },
-          });
+          for (let page = 0; page < maxPages && recentBills.length < limit; page++) {
+            const url = new URL('https://api.congress.gov/v3/bill');
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('limit', pageSize.toString());
+            url.searchParams.set('offset', offset.toString());
+            url.searchParams.set('sort', 'updateDate+desc');
 
-          if (response.ok) {
+            const response = await fetch(url.toString(), {
+              headers: {
+                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                Accept: 'application/json',
+                'X-API-Key': process.env.CONGRESS_API_KEY,
+              },
+            });
+
+            if (!response.ok) break;
+
             const data = await response.json();
-            const allBills: CongressBillItem[] = data.bills || [];
-            dataSources.push('congress.gov');
+            const bills: CongressBillItem[] = data.bills || [];
+            if (page === 0) dataSources.push('congress.gov');
+            if (bills.length === 0) break;
 
-            const policyAreaSet = new Set(relatedPolicyAreas.map(pa => pa.toLowerCase()));
-            for (const bill of allBills) {
+            for (const bill of bills) {
               if (recentBills.length >= limit) break;
               const billPa = bill.policyArea?.name?.toLowerCase();
               if (billPa && policyAreaSet.has(billPa)) {
@@ -158,6 +168,8 @@ export async function GET(
                 });
               }
             }
+
+            offset += pageSize;
           }
         }
 
