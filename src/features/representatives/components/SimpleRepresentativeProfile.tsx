@@ -330,16 +330,9 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       [representative.committees]
     );
 
-    // Build tabs with dynamic badges from summary data
-    const tabsWithBadges: TabItem[] = useMemo(() => {
-      const billsCount = summaryData?.success
-        ? (summaryData.data?.billsSponsored ??
-          batchData?.data?.bills?.totalSponsored ??
-          batchData?.data?.bills?.currentCongress?.count)
-        : undefined;
-      const votesCount = summaryData?.success ? summaryData.data?.votesParticipated : undefined;
-
-      return [
+    // Build tabs — counts are already shown in the hero stats section
+    const tabsWithBadges: TabItem[] = useMemo(
+      () => [
         {
           id: 'overview',
           label: 'Overview',
@@ -351,14 +344,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           label: 'Voting Records',
           icon: <StatisticsIcon className="w-4 h-4" />,
           description: 'Voting history and positions',
-          badge: votesCount !== undefined && votesCount > 0 ? votesCount : undefined,
         },
         {
           id: 'legislation',
           label: 'Sponsored Bills',
           icon: <LegislationIcon className="w-4 h-4" />,
           description: 'Bills sponsored and co-sponsored',
-          badge: billsCount !== undefined && billsCount > 0 ? billsCount : undefined,
         },
         {
           id: 'finance',
@@ -378,8 +369,9 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           icon: <Link2 className="w-4 h-4" />,
           description: 'District spending, hearings, regulations, and local officials',
         },
-      ];
-    }, [summaryData, batchData]);
+      ],
+      []
+    );
 
     // Get data sources for current tab
     const dataSources = useMemo(() => getDataSourcesForTab(activeTab), [activeTab]);
