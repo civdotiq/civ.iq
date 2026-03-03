@@ -869,7 +869,9 @@ export async function GET(
     let cached = false;
 
     // Background processing with aggressive caching for heavy votes endpoint
-    const cacheKey = `votes:${bioguideId}:${chamber}:${limit}`;
+    // Include session in cache key so session changes (Jan each year) invalidate stale data
+    const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+    const cacheKey = `votes:${bioguideId}:${chamber}:${currentSession}:${limit}`;
 
     try {
       // Bypass cache if requested
