@@ -6,7 +6,6 @@
  */
 
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
 
 interface Representative {
   bioguideId: string;
@@ -24,6 +23,20 @@ interface RepresentativeSelectorProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   maxSelections?: number;
+}
+
+function getPartyAbbrev(party: string): string {
+  if (party === 'Democrat' || party === 'Democratic') return 'D';
+  if (party === 'Republican') return 'R';
+  if (party === 'Independent') return 'I';
+  return party.charAt(0);
+}
+
+function getPartyColor(party: string): string {
+  if (party === 'Democrat' || party === 'Democratic') return 'bg-[#0a9338] text-white';
+  if (party === 'Republican') return 'bg-[#e11d07] text-white';
+  if (party === 'Independent') return 'bg-gray-600 text-white';
+  return 'bg-gray-400 text-white';
 }
 
 export default function RepresentativeSelector({
@@ -66,174 +79,148 @@ export default function RepresentativeSelector({
     }
   };
 
-  const getPartyColor = (party: string) => {
-    switch (party) {
-      case 'Republican':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'Democrat':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Independent':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Representatives to Compare</h2>
-        <p className="text-gray-600 mb-4">
-          Choose up to {maxSelections} representatives to compare their voting records, committee
-          memberships, and legislative achievements.
-        </p>
+    <div>
+      {/* Filters */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder="Search by name..."
+          className="px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#222226] text-gray-900 dark:text-gray-100 focus:border-[#3ea2d4] focus:outline-none"
+        />
+        <select
+          value={stateFilter}
+          onChange={e => setStateFilter(e.target.value)}
+          className="px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#222226] text-gray-900 dark:text-gray-100"
+        >
+          <option value="">All States</option>
+          {states.map(state => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+        <select
+          value={partyFilter}
+          onChange={e => setPartyFilter(e.target.value)}
+          className="px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#222226] text-gray-900 dark:text-gray-100"
+        >
+          <option value="">All Parties</option>
+          {parties.map(party => (
+            <option key={party} value={party}>
+              {party}
+            </option>
+          ))}
+        </select>
+        <select
+          value={chamberFilter}
+          onChange={e => setChamberFilter(e.target.value)}
+          className="px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#222226] text-gray-900 dark:text-gray-100"
+        >
+          <option value="">Both Chambers</option>
+          <option value="House">House</option>
+          <option value="Senate">Senate</option>
+        </select>
+      </div>
 
-        {selectedIds.length >= maxSelections && (
-          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
-            <p className="text-amber-800 text-sm">
-              Maximum of {maxSelections} representatives selected. Remove one to select another.
-            </p>
+      {selectedIds.length >= maxSelections && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Maximum of {maxSelections} selected. Remove one to add another.
+        </p>
+      )}
+
+      {/* Representative List */}
+      <div className="border-2 border-black dark:border-[#333333] max-h-[480px] overflow-y-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-gray-50 dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]">
+            <tr>
+              <th className="text-left px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 w-8"></th>
+              <th className="text-left px-3 py-2 font-semibold text-gray-900 dark:text-gray-100">
+                Name
+              </th>
+              <th className="text-left px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 hidden sm:table-cell">
+                Party
+              </th>
+              <th className="text-left px-3 py-2 font-semibold text-gray-900 dark:text-gray-100">
+                State
+              </th>
+              <th className="text-left px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 hidden sm:table-cell">
+                Chamber
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredReps.map(rep => {
+              const isSelected = selectedIds.includes(rep.bioguideId);
+              const canSelect = isSelected || selectedIds.length < maxSelections;
+
+              return (
+                <tr
+                  key={rep.bioguideId}
+                  onClick={() => canSelect && handleToggleSelection(rep.bioguideId)}
+                  className={`
+                    border-b border-gray-200 dark:border-gray-700 cursor-pointer
+                    ${
+                      isSelected
+                        ? 'bg-blue-50 dark:bg-blue-900/20'
+                        : canSelect
+                          ? 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                          : 'opacity-40 cursor-not-allowed'
+                    }
+                  `}
+                >
+                  <td className="px-3 py-2.5">
+                    <div
+                      className={`w-4 h-4 border-2 flex items-center justify-center ${
+                        isSelected
+                          ? 'border-[#3ea2d4] bg-[#3ea2d4]'
+                          : 'border-gray-400 dark:border-gray-500'
+                      }`}
+                    >
+                      {isSelected && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-gray-100">
+                    {rep.name}
+                  </td>
+                  <td className="px-3 py-2.5 hidden sm:table-cell">
+                    <span
+                      className={`inline-block px-1.5 py-0.5 text-xs font-bold ${getPartyColor(rep.party)}`}
+                    >
+                      {getPartyAbbrev(rep.party)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">
+                    {rep.state}
+                    {rep.district ? `-${rep.district}` : ''}
+                  </td>
+                  <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 hidden sm:table-cell">
+                    {rep.chamber}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {filteredReps.length === 0 && (
+          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+            No representatives match your filters.
           </div>
         )}
       </div>
-
-      {/* Search and Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Representative name..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-          <select
-            value={stateFilter}
-            onChange={e => setStateFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">All States</option>
-            {states.map(state => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Party</label>
-          <select
-            value={partyFilter}
-            onChange={e => setPartyFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">All Parties</option>
-            {parties.map(party => (
-              <option key={party} value={party}>
-                {party}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Chamber</label>
-          <select
-            value={chamberFilter}
-            onChange={e => setChamberFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Both Chambers</option>
-            <option value="House">House</option>
-            <option value="Senate">Senate</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Representative Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-        {filteredReps.map(rep => {
-          const isSelected = selectedIds.includes(rep.bioguideId);
-          const canSelect = isSelected || selectedIds.length < maxSelections;
-
-          return (
-            <div
-              key={rep.bioguideId}
-              className={`
-                relative border-2 rounded-lg p-4 transition-all cursor-pointer
-                ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-50'
-                    : canSelect
-                      ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-                }
-              `}
-              onClick={() => canSelect && handleToggleSelection(rep.bioguideId)}
-            >
-              {isSelected && (
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              <div className="flex items-center mb-3">
-                {rep.imageUrl ? (
-                  <Image
-                    src={rep.imageUrl}
-                    alt={rep.name}
-                    width={48}
-                    height={48}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 font-medium">
-                      {rep.name
-                        .split(' ')
-                        .map(n => n[0])
-                        .join('')}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{rep.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  {rep.title} ({rep.state}
-                  {rep.district && `-${rep.district}`})
-                </p>
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${getPartyColor(
-                    rep.party
-                  )}`}
-                >
-                  {rep.party}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredReps.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No representatives match your current filters.</p>
-        </div>
-      )}
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+        {filteredReps.length} of {representatives.length} members shown
+      </p>
     </div>
   );
 }
