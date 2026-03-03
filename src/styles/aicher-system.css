@@ -848,16 +848,18 @@ body {
   flex-shrink: 0; /* Prevent tab shrinking on mobile */
 }
 
-/* Desktop: scrollable tabs, distribute evenly */
+/* Desktop: distribute tabs evenly, allow text truncation */
 @media (min-width: 1024px) {
   .aicher-tabs nav {
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   .aicher-tab {
     flex: 1 1 0%;
-    min-width: 0; /* Allow tabs to shrink below content width */
+    min-width: 0;
     justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

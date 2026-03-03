@@ -48,11 +48,6 @@ const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.
   ssr: false,
 });
 
-const CivicAlignmentTab = dynamic(
-  () => import('./CivicAlignmentTab').then(mod => ({ default: mod.CivicAlignmentTab })),
-  { loading: TabLoadingSpinner, ssr: false }
-);
-
 const ConnectionsTabComponent = dynamic(
   () => import('./ConnectionsTab').then(mod => ({ default: mod.ConnectionsTab })),
   { loading: TabLoadingSpinner, ssr: false }
@@ -173,8 +168,6 @@ function getDataSourcesForTab(tabId: string): Array<{
       };
       return [usaspending, fedRegister, openStates];
     }
-    case 'alignment':
-      return [congress, fec, legislators];
     default:
       return [congress, fec, legislators];
   }
@@ -385,12 +378,6 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           icon: <Link2 className="w-4 h-4" />,
           description: 'District spending, hearings, regulations, and local officials',
         },
-        {
-          id: 'alignment',
-          label: 'Civic Alignment',
-          icon: <StatisticsIcon className="w-4 h-4" />,
-          description: 'Cross-reference of donor sectors, votes, and district needs',
-        },
       ];
     }, [summaryData, batchData]);
 
@@ -442,8 +429,6 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           );
         case 'connections':
           return <ConnectionsTabComponent bioguideId={representative.bioguideId} />;
-        case 'alignment':
-          return <CivicAlignmentTab bioguideId={representative.bioguideId} />;
         default:
           return <ContactInfoTab representative={representative} />;
       }
