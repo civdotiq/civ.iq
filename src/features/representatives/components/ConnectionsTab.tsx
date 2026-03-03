@@ -128,6 +128,27 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
 
   const { connections, civicActions } = data;
 
+  // Check if there's any data to show
+  const hasContent =
+    civicActions.canComment > 0 ||
+    (connections.districtSpending && connections.districtSpending.totalSpending > 0) ||
+    connections.relevantHearings.length > 0 ||
+    connections.openCommentPeriods.length > 0 ||
+    connections.stateLegislators.length > 0 ||
+    connections.cityCouncils.length > 0;
+
+  if (!hasContent) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-600 mb-2">No connections data available</div>
+        <div className="text-sm text-gray-400">
+          Connection data aggregates spending, hearings, regulations, and officials related to this
+          representative
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Civic Action Summary */}
