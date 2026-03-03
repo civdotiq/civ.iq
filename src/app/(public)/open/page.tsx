@@ -29,6 +29,7 @@ const FEEDS: { path: string; shortPath?: string; description: string }[] = [
   },
   {
     path: '/api/feed/member/{bioguideId}',
+    shortPath: '/feeds/representative/{bioguideId}',
     description: 'Activity feed for a member of Congress',
   },
   {
@@ -42,6 +43,10 @@ const FEEDS: { path: string; shortPath?: string; description: string }[] = [
   {
     path: '/api/feed/district/{districtId}',
     description: 'Activity feed for a congressional district',
+  },
+  {
+    path: '/feeds/floor',
+    description: 'House and Senate floor activity',
   },
   {
     path: '/api/feed/state/{state}/bills',
@@ -235,7 +240,7 @@ export default function OpenDataPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">REST Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">7</div>
+            <div className="text-3xl font-bold">8</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">Atom Feeds</div>
           </div>
           <div className="border-2 border-black p-grid-3">
