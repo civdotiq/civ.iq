@@ -88,35 +88,42 @@ export default function ComparePage() {
     async function loadRepresentatives() {
       try {
         setLoading(true);
-        const response = await fetch('/api/representatives');
+        const response = await fetch('/api/representatives/all');
         if (!response.ok) {
           throw new Error('Failed to fetch representatives');
         }
         const data = await response.json();
 
+        if (!data.success || !data.representatives) {
+          throw new Error(data.error?.message || 'Failed to fetch representatives');
+        }
+
         // Transform data to match our interface
-        const transformedReps: Representative[] = data.map((rep: Record<string, unknown>) => ({
-          bioguideId: (rep.bioguideId as string) || '',
-          name: (rep.name as string) || '',
-          party: (rep.party as string) || '',
-          state: (rep.state as string) || '',
-          district: rep.district as string | undefined,
-          chamber: (rep.chamber as 'House' | 'Senate') || 'House',
-          title:
-            (rep.title as string) || `${rep.chamber === 'House' ? 'Rep.' : 'Sen.'} ${rep.name}`,
-          yearsInOffice: (rep.yearsInOffice as number) || 0,
-          imageUrl: rep.imageUrl as string | undefined,
-          committees: (rep.committees as Array<{ name: string; role?: string }>) || [],
-          votingRecord: {
-            totalVotes: ((rep.votingRecord as Record<string, unknown>)?.totalVotes as number) || 0,
-            partyLineVotes:
-              ((rep.votingRecord as Record<string, unknown>)?.partyLineVotes as number) || 0,
-            missedVotes:
-              ((rep.votingRecord as Record<string, unknown>)?.missedVotes as number) || 0,
-          },
-          billsSponsored: (rep.billsSponsored as number) || 0,
-          billsCosponsored: (rep.billsCosponsored as number) || 0,
-        }));
+        const transformedReps: Representative[] = data.representatives.map(
+          (rep: Record<string, unknown>) => ({
+            bioguideId: (rep.bioguideId as string) || '',
+            name: (rep.name as string) || '',
+            party: (rep.party as string) || '',
+            state: (rep.state as string) || '',
+            district: rep.district as string | undefined,
+            chamber: (rep.chamber as 'House' | 'Senate') || 'House',
+            title:
+              (rep.title as string) || `${rep.chamber === 'House' ? 'Rep.' : 'Sen.'} ${rep.name}`,
+            yearsInOffice: (rep.yearsInOffice as number) || 0,
+            imageUrl: rep.imageUrl as string | undefined,
+            committees: (rep.committees as Array<{ name: string; role?: string }>) || [],
+            votingRecord: {
+              totalVotes:
+                ((rep.votingRecord as Record<string, unknown>)?.totalVotes as number) || 0,
+              partyLineVotes:
+                ((rep.votingRecord as Record<string, unknown>)?.partyLineVotes as number) || 0,
+              missedVotes:
+                ((rep.votingRecord as Record<string, unknown>)?.missedVotes as number) || 0,
+            },
+            billsSponsored: (rep.billsSponsored as number) || 0,
+            billsCosponsored: (rep.billsCosponsored as number) || 0,
+          })
+        );
 
         setRepresentatives(transformedReps);
 
