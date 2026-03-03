@@ -65,12 +65,13 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '') || 2024;
   const startTime = Date.now();
 
   try {
-    logger.info('[Funding Sources API] Called', { bioguideId });
+    logger.info('[Funding Sources API] Called', { bioguideId, cycle });
 
-    const cacheKey = FinanceCacheKeys.fundingSources(bioguideId);
+    const cacheKey = FinanceCacheKeys.fundingSources(bioguideId, cycle);
     const cached = await govCache.get<FundingSourcesAnalysisResponse>(cacheKey);
 
     if (cached) {
@@ -90,7 +91,7 @@ export async function GET(
       });
     }
 
-    const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
+    const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, cycle);
 
     if (!financialSummary) {
       return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId, fecMapping.fecId), {
@@ -141,7 +142,7 @@ export async function GET(
       },
       metadata: {
         bioguideId,
-        cycle: 2024,
+        cycle,
         lastUpdated: new Date().toISOString(),
         fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
         dataSource: 'FEC.gov Financial Summary',

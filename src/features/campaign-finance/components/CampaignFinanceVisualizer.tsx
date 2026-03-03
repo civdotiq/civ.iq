@@ -224,16 +224,20 @@ export function CampaignFinanceVisualizer({
     }
   }, [cyclesData, selectedCycle]);
 
-  // Fetch funding sources
+  // Fetch funding sources (cycle-aware)
   const { data: fundingSourcesData } = useSWR(
-    _bioguideId ? `/api/representative/${_bioguideId}/finance/funding-sources` : null,
+    _bioguideId && selectedCycle
+      ? `/api/representative/${_bioguideId}/finance/funding-sources?cycle=${selectedCycle}`
+      : null,
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false, dedupingInterval: 300000 }
   );
 
-  // Fetch expenditure categories
+  // Fetch expenditure categories (cycle-aware)
   const { data: expendituresData } = useSWR(
-    _bioguideId ? `/api/representative/${_bioguideId}/finance/expenditures` : null,
+    _bioguideId && selectedCycle
+      ? `/api/representative/${_bioguideId}/finance/expenditures?cycle=${selectedCycle}`
+      : null,
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false, dedupingInterval: 300000 }
   );

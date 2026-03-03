@@ -195,6 +195,7 @@ export interface OpenStatesBill {
     note?: string;
   }>;
   sponsorships?: Array<{
+    id?: string;
     name: string;
     entity_type: string;
     classification: string;
@@ -834,6 +835,7 @@ class OpenStatesAPI {
         })) ?? [],
       sponsorships:
         bill.sponsorships?.map(s => ({
+          id: s.id,
           name: s.name,
           entity_type: s.entity_type,
           classification: s.classification,

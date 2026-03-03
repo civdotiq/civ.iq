@@ -58,12 +58,13 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '') || 2024;
   const startTime = Date.now();
 
   try {
-    logger.info('[Expenditures API] Called', { bioguideId });
+    logger.info('[Expenditures API] Called', { bioguideId, cycle });
 
-    const cacheKey = FinanceCacheKeys.expenditures(bioguideId);
+    const cacheKey = FinanceCacheKeys.expenditures(bioguideId, cycle);
     const cached = await govCache.get<ExpenditureAnalysisResponse>(cacheKey);
 
     if (cached) {
@@ -83,7 +84,7 @@ export async function GET(
       });
     }
 
-    const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
+    const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, cycle);
 
     if (!financialSummary) {
       return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId, fecMapping.fecId), {
@@ -123,7 +124,7 @@ export async function GET(
       },
       metadata: {
         bioguideId,
-        cycle: 2024,
+        cycle,
         lastUpdated: new Date().toISOString(),
         fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },

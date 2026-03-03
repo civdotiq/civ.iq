@@ -222,26 +222,33 @@ export async function GET(
       );
     }
 
-    // Fetch bills sponsored by this legislator (max 100 for network analysis)
-    const rawBills = await openStatesAPI.getBillsBySponsor(
-      legislatorId,
-      state.toLowerCase(),
-      undefined,
-      100
-    );
+    // Fetch bills and all legislators in parallel
+    const [rawBills, allLegislators] = await Promise.all([
+      openStatesAPI.getBillsBySponsor(legislatorId, state.toLowerCase(), undefined, 100),
+      openStatesAPI.getLegislators(state.toLowerCase()),
+    ]);
 
-    // Transform bills to match expected format (add missing id and party fields to sponsorships)
+    // Build name→{id, party} lookup from all state legislators
+    const legislatorLookup = new Map<string, { id: string; party: string }>();
+    for (const leg of allLegislators) {
+      legislatorLookup.set(leg.name.toLowerCase(), { id: leg.id, party: leg.party });
+    }
+
+    // Transform bills, resolving sponsor IDs and parties via name lookup
     const bills = rawBills.map(bill => ({
       id: bill.id,
       identifier: bill.identifier,
       title: bill.title,
-      sponsorships: (bill.sponsorships || []).map(s => ({
-        id: '', // OpenStates v3 doesn't provide sponsor ID in bill sponsorships
-        name: s.name,
-        entity_type: s.entity_type,
-        primary: s.primary,
-        party: undefined, // Would need separate API calls to get party for each sponsor
-      })),
+      sponsorships: (bill.sponsorships || []).map(s => {
+        const match = legislatorLookup.get(s.name.toLowerCase());
+        return {
+          id: match?.id || '',
+          name: s.name,
+          entity_type: s.entity_type,
+          primary: s.primary,
+          party: match?.party,
+        };
+      }),
     }));
 
     const chamber = legislator.chamber;
