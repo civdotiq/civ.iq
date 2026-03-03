@@ -822,8 +822,8 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
           'Compare two representatives from different parties. Look for patterns in how they vote.',
         duration: '15 minutes',
         type: 'exploration',
-        civiqFeature: 'Compare Representatives',
-        civiqPath: '/compare',
+        civiqFeature: 'Representatives',
+        civiqPath: '/representatives',
       },
     ],
     discussionQuestions: [

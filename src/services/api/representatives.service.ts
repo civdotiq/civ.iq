@@ -192,20 +192,6 @@ class RepresentativesService extends BaseService {
   }
 
   /**
-   * Compare multiple representatives
-   */
-  async compare(bioguideIds: string[]): Promise<{
-    representatives: Representative[];
-    comparison: {
-      votingSimilarity: Record<string, number>;
-      billCosponsorship: Record<string, number>;
-      partyAlignment: Record<string, number>;
-    };
-  }> {
-    return this.post(`${apiConfig.endpoints.representatives}/compare`, { bioguideIds });
-  }
-
-  /**
    * Sync with Zustand store
    */
   async syncWithStore(filters?: RepresentativeFilters): Promise<void> {

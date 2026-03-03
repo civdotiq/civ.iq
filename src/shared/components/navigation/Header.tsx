@@ -44,7 +44,6 @@ const navigationSections: NavSection[] = [
       { name: 'Comment Periods', href: '/comment-periods' },
       { name: 'Influence', href: '/influence' },
       { name: 'Industries', href: '/industry' },
-      { name: 'Compare', href: '/compare' },
     ],
   },
   {

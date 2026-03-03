@@ -152,51 +152,6 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
         )}
       </div>
 
-      {/* Compare Representatives Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
-        <div className="flex items-center mb-3">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-100 border-2 border-black flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-civiq-blue"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 ml-3">Compare Representatives</h3>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Compare {representative.name}&apos;s voting records, campaign finances, and legislative
-          activity with other representatives from your state or across the country.
-        </p>
-
-        <div className="space-y-3">
-          <Link
-            href={`/compare?base=${representative.bioguideId}`}
-            className="aicher-button-high-emphasis"
-          >
-            Compare representatives
-          </Link>
-
-          <Link
-            href={`/representatives?state=${representative.state}`}
-            className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white"
-          >
-            View all from {representative.state}
-          </Link>
-        </div>
-      </div>
-
       {/* ARCHIVED: Trading Card Feature - Remove comments to restore
    <div className="bg-white border-2 border-black border border-gray-200 p-6">
     <div className="flex items-center mb-3">

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Users, ExternalLink, Newspaper, CheckCircle } from 'lucide-react';
+import { MapPin, ExternalLink, Newspaper, CheckCircle } from 'lucide-react';
 import { DataSourceBadge } from '@/components/shared/ui/DataTransparency';
 import { getStateName } from '@/lib/data/us-states';
 import { buildDistrictUrlForRep } from '@/lib/helpers/url-builders';
@@ -139,27 +139,6 @@ export function RepresentativeSidebar({
             <DataSourceBadge source="congress-legislators" size="sm" />
             <DataSourceBadge source="congress.gov" size="sm" />
             <DataSourceBadge source="fec.gov" size="sm" />
-          </div>
-        </div>
-      </div>
-
-      {/* Compare Representatives */}
-      <div className="bg-white border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5 text-purple-500" />
-          Compare Representatives
-        </h3>
-
-        <div className="space-y-3">
-          <Link
-            href={`/compare?reps=${representative.bioguideId}`}
-            className="block w-full px-4 py-2 bg-blue-600 text-white text-center hover:bg-blue-700 transition-colors"
-          >
-            Start Comparison
-          </Link>
-
-          <div className="text-xs text-gray-500 text-center">
-            Compare voting records, bills, and campaign finance
           </div>
         </div>
       </div>
