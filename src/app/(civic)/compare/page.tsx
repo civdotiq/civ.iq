@@ -82,8 +82,15 @@ interface AlignmentData {
 
 interface SummaryData {
   billsSponsored?: number;
+  billsCosponsored?: number;
   totalRaised?: number;
   votesParticipated?: number;
+}
+
+interface BatchSummaryEnvelope {
+  success: boolean;
+  data: SummaryData;
+  metadata?: Record<string, unknown>;
 }
 
 export interface DetailData {
@@ -116,6 +123,7 @@ function ComparePageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<Map<string, DetailData>>(new Map());
+  const [selectorCollapsed, setSelectorCollapsed] = useState(false);
 
   useEffect(() => {
     async function loadRepresentatives() {
@@ -189,12 +197,15 @@ function ComparePageContent() {
 
     const base = `/api/representative/${bioguideId}`;
 
-    const [summaryRes, votesRes, financeRes, alignmentRes] = await Promise.all([
-      fetchJson<SummaryData>(`${base}/batch?summary=true`),
+    const [summaryEnvelope, votesRes, financeRes, alignmentRes] = await Promise.all([
+      fetchJson<BatchSummaryEnvelope>(`${base}/batch?summary=true`),
       fetchJson<{ votes: VoteRecord[] }>(`${base}/votes?limit=50`),
       fetchJson<FinanceData>(`${base}/finance`),
       fetchJson<AlignmentData>(`${base}/party-alignment`),
     ]);
+
+    // Unwrap the API envelope: { success, data: { billsSponsored, ... } }
+    const summaryRes: SummaryData | null = summaryEnvelope?.data ?? null;
 
     setDetailData(prev => {
       const next = new Map(prev);
@@ -226,18 +237,38 @@ function ComparePageContent() {
 
   const handleSelectionChange = (newSelectedIds: string[]) => {
     setSelectedIds(newSelectedIds);
+    if (newSelectedIds.length >= 2) {
+      setSelectorCollapsed(true);
+    }
     if (newSelectedIds.length > 0) {
       const params = new URLSearchParams();
       params.set('reps', newSelectedIds.join(','));
       window.history.replaceState(null, '', `?${params.toString()}`);
     } else {
+      setSelectorCollapsed(false);
       window.history.replaceState(null, '', window.location.pathname);
     }
   };
 
   const handleClear = () => {
     setSelectedIds([]);
+    setSelectorCollapsed(false);
     window.history.replaceState(null, '', window.location.pathname);
+  };
+
+  const handleRemoveRep = (bioguideId: string) => {
+    const newIds = selectedIds.filter(id => id !== bioguideId);
+    setSelectedIds(newIds);
+    if (newIds.length < 2) {
+      setSelectorCollapsed(false);
+    }
+    if (newIds.length > 0) {
+      const params = new URLSearchParams();
+      params.set('reps', newIds.join(','));
+      window.history.replaceState(null, '', `?${params.toString()}`);
+    } else {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   };
 
   const tabs: ChartType[] = ['overview', 'voting', 'bills', 'finance', 'alignment'];
@@ -296,19 +327,15 @@ function ComparePageContent() {
               selectedReps={selectedRepresentatives.map(rep => ({
                 bioguideId: rep.bioguideId,
                 name: rep.name,
+                party: rep.party,
+                state: rep.state,
+                chamber: rep.chamber,
               }))}
               onClear={handleClear}
+              onRemove={handleRemoveRep}
             />
 
-            {/* Selector - full width */}
-            <RepresentativeSelector
-              representatives={representatives}
-              selectedIds={selectedIds}
-              onSelectionChange={handleSelectionChange}
-              maxSelections={4}
-            />
-
-            {/* Comparison - full width below */}
+            {/* Comparison results - above selector so they're visible immediately */}
             {selectedIds.length > 0 && (
               <div>
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -334,6 +361,16 @@ function ComparePageContent() {
                 />
               </div>
             )}
+
+            {/* Selector - below comparison, collapsible */}
+            <RepresentativeSelector
+              representatives={representatives}
+              selectedIds={selectedIds}
+              onSelectionChange={handleSelectionChange}
+              maxSelections={4}
+              collapsed={selectorCollapsed}
+              onToggleCollapse={() => setSelectorCollapsed(prev => !prev)}
+            />
 
             {/* Source */}
             <p className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-4">

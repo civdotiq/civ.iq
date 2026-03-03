@@ -594,9 +594,38 @@ export async function getOptimizedBillsByMember(
  */
 type BillsSummaryResult = {
   currentCongress: { count: number; congress: number };
+  cosponsoredCount: number;
   totalCareer: number;
   recentBills: Array<{ title: string; date: string; type: string }>;
 };
+
+/**
+ * Fetch just the cosponsored legislation count (limit=1 to read pagination.count)
+ */
+async function fetchCosponsoredCount(bioguideId: string): Promise<number> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) return 0;
+
+  await rateLimiter.waitIfNeeded();
+
+  const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation`);
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('format', 'json');
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'CIV.IQ/2.0 (Summary)',
+      'X-API-Key': apiKey,
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!response.ok) return 0;
+
+  const data = (await response.json()) as { pagination?: { count?: number } };
+  return data.pagination?.count ?? 0;
+}
 
 export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryResult> {
   const cacheKey = `bills-summary:${bioguideId}`;
@@ -607,20 +636,24 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
   }
 
   try {
-    // Fetch just first page of current congress for stats
-    const currentData = await getOptimizedBillsByMember({
-      bioguideId,
-      limit: 10,
-      page: 1,
-      congress: 119,
-    });
+    // Fetch sponsored bills and cosponsored count in parallel
+    const [currentData, cosponsoredCount] = await Promise.all([
+      getOptimizedBillsByMember({
+        bioguideId,
+        limit: 10,
+        page: 1,
+        congress: 119,
+      }),
+      fetchCosponsoredCount(bioguideId),
+    ]);
 
-    const result = {
+    const result: BillsSummaryResult = {
       currentCongress: {
         count: currentData.pagination.total,
         congress: 119,
       },
-      totalCareer: currentData.pagination.total, // Only current congress data available
+      cosponsoredCount,
+      totalCareer: currentData.pagination.total,
       recentBills: currentData.bills.slice(0, 5).map(bill => ({
         title: bill.title,
         date: bill.introducedDate,
@@ -628,12 +661,13 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
       })),
     };
 
-    await govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' }); // Cache for 1 hour
+    await govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' });
     return result;
   } catch (error) {
     logger.error('Bills summary fetch failed', error as Error, { bioguideId });
     return {
       currentCongress: { count: 0, congress: 119 },
+      cosponsoredCount: 0,
       totalCareer: 0,
       recentBills: [],
     };

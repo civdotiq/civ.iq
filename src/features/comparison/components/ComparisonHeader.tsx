@@ -6,11 +6,28 @@
  */
 
 interface ComparisonHeaderProps {
-  selectedReps: Array<{ bioguideId: string; name: string }>;
+  selectedReps: Array<{
+    bioguideId: string;
+    name: string;
+    party: string;
+    state: string;
+    chamber: 'House' | 'Senate';
+  }>;
   onClear: () => void;
+  onRemove?: (bioguideId: string) => void;
 }
 
-export default function ComparisonHeader({ selectedReps, onClear }: ComparisonHeaderProps) {
+function getPartyBorderColor(party: string): string {
+  if (party === 'Democrat' || party === 'Democratic') return 'border-[#0a9338]';
+  if (party === 'Republican') return 'border-[#e11d07]';
+  return 'border-gray-500';
+}
+
+export default function ComparisonHeader({
+  selectedReps,
+  onClear,
+  onRemove,
+}: ComparisonHeaderProps) {
   if (selectedReps.length === 0) return null;
 
   return (
@@ -25,9 +42,22 @@ export default function ComparisonHeader({ selectedReps, onClear }: ComparisonHe
               {selectedReps.map(rep => (
                 <span
                   key={rep.bioguideId}
-                  className="px-2 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-l-4 ${getPartyBorderColor(rep.party)} border border-gray-300 dark:border-gray-600`}
                 >
                   {rep.name}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{rep.state}</span>
+                  {onRemove && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        onRemove(rep.bioguideId);
+                      }}
+                      className="ml-1 text-gray-400 hover:text-[#e11d07] font-bold text-xs leading-none"
+                      aria-label={`Remove ${rep.name}`}
+                    >
+                      &times;
+                    </button>
+                  )}
                 </span>
               ))}
             </div>

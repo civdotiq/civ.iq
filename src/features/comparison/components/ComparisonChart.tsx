@@ -122,9 +122,23 @@ function OverviewSection({
                 value={String(summary?.billsSponsored ?? rep.billsSponsored)}
               />
               <StatRow
+                label="Bills Cosponsored"
+                value={String(summary?.billsCosponsored ?? rep.billsCosponsored)}
+              />
+              <StatRow
                 label="Votes Cast"
                 value={String(summary?.votesParticipated ?? rep.votingRecord.totalVotes)}
               />
+              <StatRow label="Missed Votes" value={String(rep.votingRecord.missedVotes)} />
+              <StatRow
+                label="Party Line %"
+                value={
+                  rep.votingRecord.totalVotes > 0
+                    ? `${Math.round((rep.votingRecord.partyLineVotes / rep.votingRecord.totalVotes) * 100)}%`
+                    : 'N/A'
+                }
+              />
+              <StatRow label="Committees" value={String(rep.committees.length)} />
               <StatRow
                 label="Total Raised"
                 value={
@@ -391,7 +405,13 @@ function BillsSection({
     1
   );
 
-  const maxCosponsored = Math.max(...representatives.map(r => r.billsCosponsored ?? 0), 1);
+  const maxCosponsored = Math.max(
+    ...representatives.map(r => {
+      const d = detailData.get(r.bioguideId);
+      return d?.summary?.billsCosponsored ?? r.billsCosponsored ?? 0;
+    }),
+    1
+  );
 
   return (
     <div className="space-y-6">
@@ -430,7 +450,8 @@ function BillsSection({
         </h4>
         <div className="space-y-2">
           {representatives.map(rep => {
-            const count = rep.billsCosponsored ?? 0;
+            const d = detailData.get(rep.bioguideId);
+            const count = d?.summary?.billsCosponsored ?? rep.billsCosponsored ?? 0;
             const pct = Math.round((count / maxCosponsored) * 100);
             return (
               <div key={rep.bioguideId} className="flex items-center gap-3">

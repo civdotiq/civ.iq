@@ -603,6 +603,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
   const cacheKey = `representative-summary:${bioguideId}`;
   const cached = await govCache.get<{
     billsSponsored?: number;
+    billsCosponsored?: number;
     totalRaised?: number;
     votesParticipated?: number;
     lastUpdated: string;
@@ -646,6 +647,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
         (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
           ?.currentCongress?.count ??
         0,
+      billsCosponsored: (billsData as { cosponsoredCount?: number })?.cosponsoredCount ?? 0,
       totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
       votesParticipated:
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
@@ -660,6 +662,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     logger.error('Representative summary failed', error as Error, { bioguideId });
     return {
       billsSponsored: 0,
+      billsCosponsored: 0,
       totalRaised: 0,
       votesParticipated: undefined,
       lastUpdated: new Date().toISOString(),
