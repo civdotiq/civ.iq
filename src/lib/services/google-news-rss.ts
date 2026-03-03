@@ -109,7 +109,11 @@ function parseGoogleNewsRSS(xmlText: string, limit: number): GoogleNewsArticle[]
       const link = item.link;
       const pubDate = item.pubDate;
       const description = item.description;
-      const source = item.source;
+      const rawSource = item.source;
+      const source =
+        typeof rawSource === 'object' && rawSource !== null
+          ? (rawSource['#text'] as string) || ''
+          : String(rawSource || '');
 
       if (!title || !link) continue;
 
