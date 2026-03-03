@@ -10,8 +10,10 @@ import { notFound } from 'next/navigation';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { getStateName } from '@/lib/data/us-states';
 import Link from 'next/link';
 import { StateVoteDetailView } from '@/features/state-legislature/components/StateVoteDetailView';
+import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface PageProps {
   params: Promise<{
@@ -86,9 +88,29 @@ export default async function StateVotePage({ params }: PageProps) {
 
   const motionLabel =
     vote.motion_text.substring(0, 50) + (vote.motion_text.length > 50 ? '...' : '');
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+  const yesCount = vote.counts.find(c => c.option === 'yes')?.value ?? 0;
+  const noCount = vote.counts.find(c => c.option === 'no')?.value ?? 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Structured Data for SEO */}
+      <LegislativeEventSchema
+        name={`${vote.organization_name}: ${vote.motion_text}`}
+        description={`${vote.motion_text} — Result: ${vote.result}. Yes: ${yesCount}, No: ${noCount}.`}
+        startDate={vote.start_date}
+        organizer={vote.organization_name}
+        location={`${stateName} State Capitol`}
+        url={`https://civdotiq.org/state-legislature/${state}/vote/${id}`}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          { name: motionLabel, url: `https://civdotiq.org/state-legislature/${state}/vote/${id}` },
+        ]}
+      />
+
       <nav className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-blue-600">
           Home

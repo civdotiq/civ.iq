@@ -131,6 +131,20 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
         worksFor={{
           name: `${stateName} State Legislature`,
         }}
+        affiliation={legislator.party ?? undefined}
+        memberOf={legislator.committees?.map(c => ({
+          name: c.name,
+        }))}
+        sameAs={[
+          legislator.contact?.socialMedia?.twitter
+            ? `https://twitter.com/${legislator.contact.socialMedia.twitter}`
+            : '',
+          legislator.contact?.socialMedia?.facebook
+            ? `https://facebook.com/${legislator.contact.socialMedia.facebook}`
+            : '',
+          legislator.links?.[0]?.url ?? '',
+        ].filter(Boolean)}
+        knowsAbout={legislator.committees?.map(c => c.name)}
       />
       <BreadcrumbSchema
         items={[

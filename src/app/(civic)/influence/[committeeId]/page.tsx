@@ -16,6 +16,7 @@ import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
+import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -95,6 +96,21 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
       <main className="container mx-auto px-4 py-8">
+        {/* Structured Data for SEO */}
+        <GovernmentOrganizationSchema
+          name={profile.committee.name}
+          description={`${profile.committee.typeFull} — ${profile.committee.designationFull}. FEC ID: ${profile.committee.committeeId}`}
+          url={`https://civdotiq.org/influence/${committeeId}`}
+          parentOrganization={profile.committee.party || 'Federal Election Commission'}
+        />
+        <BreadcrumbSchema
+          items={[
+            { name: 'Home', url: 'https://civdotiq.org' },
+            { name: 'Influence', url: 'https://civdotiq.org/influence' },
+            { name: profile.committee.name, url: `https://civdotiq.org/influence/${committeeId}` },
+          ]}
+        />
+
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-[#3ea2d4]">

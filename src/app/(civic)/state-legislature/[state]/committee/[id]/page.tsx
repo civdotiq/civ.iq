@@ -10,7 +10,9 @@ import { StateCommitteeProfile } from '@/features/state-legislature/components/S
 import type { StateCommittee, StateParty } from '@/types/state-legislature';
 import { openStatesAPI } from '@/lib/openstates-api';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { getStateName } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
+import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface PageProps {
   params: Promise<{
@@ -115,8 +117,33 @@ export default async function StateCommitteePage({ params }: PageProps) {
     notFound();
   }
 
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+
   return (
     <main className="container mx-auto px-4 py-8">
+      {/* Structured Data for SEO */}
+      <GovernmentOrganizationSchema
+        name={committee.name}
+        description={`${committee.chamber === 'upper' ? 'Senate' : 'House'} committee in the ${stateName} state legislature`}
+        url={`https://civdotiq.org/state-legislature/${state}/committee/${id}`}
+        parentOrganization={`${stateName} State Legislature`}
+        member={committee.members?.map(m => ({
+          name: m.legislator_name,
+          role: m.role,
+        }))}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          { name: 'Committees', url: `https://civdotiq.org/state-legislature/${state}/committees` },
+          {
+            name: committee.name,
+            url: `https://civdotiq.org/state-legislature/${state}/committee/${id}`,
+          },
+        ]}
+      />
+
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-blue-600">

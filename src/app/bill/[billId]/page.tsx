@@ -7,19 +7,23 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import type { Bill } from '@/types/bill';
 import { getBillDisplayStatus } from '@/types/bill';
+import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { LegislationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface BillPageProps {
   params: Promise<{ billId: string }>;
   searchParams: Promise<{ from?: string; name?: string }>;
 }
 
-// For SSR, we'll use a simple approach - return null and let the client handle the data fetching
-async function getBillData(_billId: string): Promise<Bill | null> {
-  // During SSR, just return null to avoid fetch issues
-  // The client-side will handle the data fetching
-  return null;
+async function getBillData(billId: string): Promise<Bill | null> {
+  try {
+    if (!process.env.CONGRESS_API_KEY) return null;
+    return await fetchBillFromCongress(billId);
+  } catch {
+    return null;
+  }
 }
 
 // Generate metadata for SEO
@@ -97,7 +101,7 @@ function BillLoading() {
 }
 
 // Bill content component
-function BillContent({
+async function BillContent({
   billId,
   fromBioguideId,
   fromRepName,
@@ -106,8 +110,46 @@ function BillContent({
   fromBioguideId?: string;
   fromRepName?: string;
 }) {
+  const bill = await getBillData(billId);
+
   return (
     <div className="min-h-screen aicher-background density-detailed">
+      {/* Structured Data for SEO */}
+      {bill && (
+        <LegislationSchema
+          name={`${bill.number}: ${bill.title}`}
+          legislationIdentifier={bill.number}
+          description={bill.summary?.text}
+          datePublished={bill.introducedDate}
+          legislationDate={bill.introducedDate}
+          legislationPassedBy={
+            bill.status.current === 'enacted'
+              ? 'United States Congress'
+              : bill.status.current === 'passed_house'
+                ? 'United States House of Representatives'
+                : bill.status.current === 'passed_senate'
+                  ? 'United States Senate'
+                  : undefined
+          }
+          sponsor={{
+            name: bill.sponsor.representative.name,
+            url: `https://civdotiq.org/representative/${bill.sponsor.representative.bioguideId}`,
+          }}
+          legislationType={bill.type === 'hr' || bill.type === 's' ? 'Bill' : 'Resolution'}
+          url={`https://civdotiq.org/bill/${billId}`}
+        />
+      )}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Legislation', url: 'https://civdotiq.org/legislation' },
+          {
+            name: bill ? bill.number : `Bill ${billId}`,
+            url: `https://civdotiq.org/bill/${billId}`,
+          },
+        ]}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb navigation */}
         {fromBioguideId && fromRepName ? (

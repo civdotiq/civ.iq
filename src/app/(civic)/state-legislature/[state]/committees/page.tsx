@@ -11,7 +11,12 @@ import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legis
 import { Building2, Users } from 'lucide-react';
 import { openStatesAPI } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
-import { getStateLegislatureName, getStateLegislatureType } from '@/lib/data/us-states';
+import {
+  getStateLegislatureName,
+  getStateLegislatureType,
+  getStateName,
+} from '@/lib/data/us-states';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface PageProps {
   params: Promise<{
@@ -158,8 +163,19 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
   const legislatureType = getStateLegislatureType(state.toUpperCase());
   const chamberName = chamber ? getChamberName(state, chamber) : legislatureType;
 
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+
   return (
     <main className="container mx-auto px-4 py-8">
+      {/* Structured Data for SEO */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          { name: 'Committees', url: `https://civdotiq.org/state-legislature/${state}/committees` },
+        ]}
+      />
+
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-blue-600">

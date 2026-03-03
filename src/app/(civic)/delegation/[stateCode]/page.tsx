@@ -11,6 +11,7 @@ import { US_STATES, getStateName, isValidStateCode } from '@/lib/data/us-states'
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DelegationExportButton } from './DelegationExportButton';
+import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 // ISR: Revalidate daily
 export const revalidate = 86400;
@@ -176,6 +177,29 @@ export default async function StateDelegationPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Structured Data for SEO */}
+      <GovernmentOrganizationSchema
+        name={`${stateName} Congressional Delegation`}
+        description={`All ${stateReps.length} members of the ${stateName} federal congressional delegation: ${senators.length} Senators and ${houseMembers.length} Representatives in the 119th Congress.`}
+        url={`https://civdotiq.org/delegation/${normalizedCode.toLowerCase()}`}
+        parentOrganization="United States Congress"
+        member={delegationData.map(m => ({
+          name: m.name,
+          url: `https://civdotiq.org/representative/${m.bioguideId}`,
+          role: m.chamber === 'Senate' ? 'Senator' : `Representative, District ${m.district}`,
+        }))}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'States', url: 'https://civdotiq.org/states' },
+          {
+            name: `${stateName} Delegation`,
+            url: `https://civdotiq.org/delegation/${normalizedCode.toLowerCase()}`,
+          },
+        ]}
+      />
+
       {/* Header */}
       <div className="bg-white border-b-2 border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
