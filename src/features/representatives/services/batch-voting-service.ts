@@ -1024,15 +1024,15 @@ export class BatchVotingService {
     );
 
     // Senate averages ~2.0 votes per session day in active sessions
-    // Increased from 1.5 to account for higher activity in 2025
     const dynamicEstimate = Math.max(1, Math.floor(daysSinceSessionStart * 2.0));
-    // Cap increased from 350 to 700 to support full year of active sessions
+    // Cap to support full year of active sessions
     const safeEstimate = Math.min(dynamicEstimate, 700);
 
     const numbers: number[] = [];
 
-    // Start from estimated current and work backwards
-    for (let i = safeEstimate; i > safeEstimate - count && i > 0; i--) {
+    // Generate from estimate down to 1 to ensure full coverage
+    // Critical for Session 2 when vote numbering restarts and count may be low
+    for (let i = safeEstimate; i > 0; i--) {
       numbers.push(i);
     }
 
@@ -1140,21 +1140,20 @@ export class BatchVotingService {
       const paddedNum = voteNumber.toString().padStart(5, '0');
       const url = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedNum}.xml`;
 
-      const xmlText = await this.circuitBreaker.call(async () => {
-        const response = await httpClient.fetch(url, {
-          signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
-        });
-
-        if (!response.ok) {
-          throw new Error(`Senate XML fetch failed: ${response.status}`);
-        }
-
-        return response.text();
+      const response = await httpClient.fetch(url, {
+        signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
       });
 
+      // 404s are expected for non-existent vote numbers — handle gracefully
+      // without tripping the circuit breaker (which blocks all subsequent requests)
+      if (!response.ok) {
+        return null;
+      }
+
+      const xmlText = await response.text();
       return await this.parseSenateXML(xmlText, congress, session, voteNumber);
     } catch {
-      // Vote probably doesn't exist, which is normal
+      // Network error or timeout — vote may not exist
       return null;
     }
   }
