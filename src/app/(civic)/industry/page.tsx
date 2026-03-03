@@ -20,11 +20,9 @@ const SECTORS = [
   { name: 'Energy/Natural Resources', slug: 'energy-natural-resources' },
   { name: 'Finance/Insurance/Real Estate', slug: 'finance-insurance-real-estate' },
   { name: 'Health', slug: 'health' },
-  { name: 'Lawyers & Lobbyists', slug: 'lawyers-lobbyists' },
   { name: 'Transportation', slug: 'transportation' },
   { name: 'Misc Business', slug: 'misc-business' },
   { name: 'Labor', slug: 'labor' },
-  { name: 'Ideology/Single-Issue', slug: 'ideology-single-issue' },
 ];
 
 export default function IndustryIndexPage() {

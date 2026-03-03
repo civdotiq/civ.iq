@@ -272,11 +272,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     'energy-natural-resources',
     'finance-insurance-real-estate',
     'health',
-    'lawyers-lobbyists',
     'transportation',
     'misc-business',
     'labor',
-    'ideology-single-issue',
   ];
 
   // Industry hub page
