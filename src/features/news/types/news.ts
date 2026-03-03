@@ -10,17 +10,16 @@
  */
 
 /**
- * Base news article interface
+ * Base news article interface — matches API response shape
  */
 export interface NewsArticle {
   url: string;
   title: string;
-  seendate: string;
+  publishedDate: string;
+  source: string;
   domain: string;
-  socialimage?: string;
-  urlmobile?: string;
+  imageUrl?: string;
   language?: string;
-  sourcecountry?: string;
   content?: string;
   summary?: string;
 }
@@ -32,13 +31,13 @@ export interface EnhancedArticle extends NewsArticle {
   // Core article properties (from NewsArticle)
   url: string;
   title: string;
-  publishedDate: string; // Maps to seendate from NewsArticle
-  source: string; // Derived from domain
+  publishedDate: string;
+  source: string;
   domain: string;
   language?: string;
   summary?: string;
   content?: string;
-  imageUrl?: string; // Maps to socialimage from NewsArticle
+  imageUrl?: string;
 
   // Enhanced properties for display
   relevanceScore: number;
@@ -65,12 +64,9 @@ export interface EnhancedArticle extends NewsArticle {
  * Convert NewsArticle to EnhancedArticle
  */
 export function enhanceArticle(article: NewsArticle): EnhancedArticle {
-  const source = extractSourceFromDomain(article.domain);
   return {
     ...article,
-    publishedDate: article.seendate,
-    source,
-    imageUrl: article.socialimage,
+    source: article.source || extractSourceFromDomain(article.domain),
 
     // Required fields for enhanced article
     relevanceScore: 0.5, // Default relevance score

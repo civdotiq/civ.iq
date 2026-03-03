@@ -70,7 +70,6 @@ export function getEnvironmentVariables() {
     CONGRESS_API_KEY: process.env.CONGRESS_API_KEY ? '[SET]' : '[NOT SET]',
     FEC_API_KEY: process.env.FEC_API_KEY ? '[SET]' : '[NOT SET]',
     CENSUS_API_KEY: process.env.CENSUS_API_KEY ? '[SET]' : '[NOT SET]',
-    GDELT_API_KEY: process.env.GDELT_API_KEY ? '[SET]' : '[NOT SET]',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ? '[SET]' : '[NOT SET]',
 
     // Cache Configuration
@@ -94,7 +93,6 @@ export function getEnvironmentVariables() {
     ENABLE_READING_LEVEL_VALIDATION: process.env.ENABLE_READING_LEVEL_VALIDATION || 'false',
     ENABLE_CACHE_COMPRESSION: process.env.ENABLE_CACHE_COMPRESSION || 'false',
     ENABLE_REAL_TIME_NEWS: process.env.ENABLE_REAL_TIME_NEWS || 'false',
-    ENABLE_GDELT: process.env.ENABLE_GDELT || 'false',
     ENABLE_CENSUS: process.env.ENABLE_CENSUS || 'false',
     ENABLE_FEC: process.env.ENABLE_FEC || 'false',
     ENABLE_DARK_MODE: process.env.ENABLE_DARK_MODE || 'false',

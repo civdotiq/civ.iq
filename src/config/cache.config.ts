@@ -72,7 +72,6 @@ export const cacheConfig = {
       congress: 1800, // 30 minutes
       fec: 3600, // 1 hour
       census: 43200, // 12 hours
-      gdelt: 300, // 5 minutes
       openai: 7200, // 2 hours
     },
 

@@ -28,10 +28,8 @@ import styles from './SimpleNewsSection.module.css';
 interface SimpleNewsArticle {
   url: string;
   title: string;
-  seendate: string;
-  publishedDate?: string;
+  publishedDate: string;
   domain: string;
-  socialimage?: string | null;
   imageUrl?: string | null;
   summary?: string;
   source?: string;
@@ -44,7 +42,7 @@ interface NewsResponse {
   articles: SimpleNewsArticle[];
   totalResults: number;
   searchTerms: string[];
-  dataSource: 'newsapi' | 'gdelt' | 'cached' | 'fallback' | 'google-news';
+  dataSource: 'newsapi' | 'cached' | 'fallback' | 'google-news';
   cacheStatus?: string;
   pagination?: {
     currentPage: number;
@@ -449,8 +447,8 @@ export function SimpleNewsSection({
 
         <div className={styles.articlesGrid}>
           {allArticles.map((article, index) => {
-            const imageUrl = article.imageUrl || article.socialimage;
-            const displayDate = article.publishedDate || article.seendate;
+            const imageUrl = article.imageUrl;
+            const displayDate = article.publishedDate;
             const sourceName = article.source || getSourceName(article.domain);
 
             return (
@@ -563,19 +561,7 @@ export function SimpleNewsSection({
                 Google News RSS
               </a>
             </>
-          ) : (
-            <>
-              News data from{' '}
-              <a
-                href="https://www.gdeltproject.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.footerLink}
-              >
-                GDELT Project
-              </a>
-            </>
-          )}
+          ) : null}
         </div>
       )}
     </div>

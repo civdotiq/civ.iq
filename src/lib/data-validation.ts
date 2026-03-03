@@ -82,16 +82,6 @@ const DATA_SOURCES: Record<string, DataSource> = {
     coverage: ['campaign-finance', 'candidates', 'committees', 'contributions'],
     limitations: ['Reporting delays', 'Large contributor focus'],
   },
-  'gdelt-api': {
-    name: 'GDELT Project API',
-    url: 'https://api.gdeltproject.org',
-    type: 'research',
-    reliability: 'medium',
-    lastUpdated: '2024-01-01',
-    updateFrequency: 'real-time',
-    coverage: ['news-articles', 'events', 'trends'],
-    limitations: ['English language bias', 'Coverage varies by topic'],
-  },
   'openstates-api': {
     name: 'OpenStates.org API',
     url: 'https://openstates.org',

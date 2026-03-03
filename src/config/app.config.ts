@@ -42,7 +42,6 @@ export const appConfig = {
 
     // Data sources
     realTimeNews: process.env.ENABLE_REAL_TIME_NEWS === 'true',
-    gdeltIntegration: process.env.ENABLE_GDELT === 'true',
     censusIntegration: process.env.ENABLE_CENSUS === 'true',
     fecIntegration: process.env.ENABLE_FEC === 'true',
 

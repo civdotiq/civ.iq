@@ -53,12 +53,6 @@ const DATA_SOURCES = {
     description: 'Official voting records from House/Senate Clerk',
     color: 'bg-red-600',
   },
-  gdelt: {
-    displayName: 'GDELT Project',
-    url: 'https://www.gdeltproject.org',
-    description: 'Global news and events database',
-    color: 'bg-gray-600',
-  },
 } as const;
 
 interface DataSourceBadgeProps {

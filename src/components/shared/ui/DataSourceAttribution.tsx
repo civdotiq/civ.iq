@@ -21,7 +21,7 @@ interface DataSourceAttributionProps {
   sourceName: string;
   /** Optional URL to the data source */
   sourceUrl?: string;
-  /** Additional context about the data (e.g.,"via GDELT Project") */
+  /** Additional context about the data source */
   sourceContext?: string;
   /** Data freshness indicator */
   lastUpdated?: string;

@@ -4,11 +4,9 @@
  */
 
 /**
- * Simplified News Route - GDELT Removed
+ * News Route — NewsAPI + Google News RSS
  *
- * Optimizations:
- * - Removed 747 lines of GDELT complexity (77% file size reduction)
- * - Single representative fetch (eliminates 3 internal HTTP calls)
+ * - Single representative fetch (no internal HTTP calls)
  * - Parallel NewsAPI + Google News fetching (faster fallback)
  * - Clean fallback chain: NewsAPI → Google News → Empty result
  */
@@ -19,7 +17,7 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 // Vercel serverless function configuration
-export const maxDuration = 10; // Reduced from 20s (GDELT was slow)
+export const maxDuration = 10;
 export const dynamic = 'force-dynamic';
 
 interface NewsArticle {
@@ -202,7 +200,7 @@ async function fetchGoogleNews(
 }
 
 /**
- * Main GET handler - Simplified without GDELT
+ * Main GET handler
  */
 export async function GET(
   request: NextRequest,

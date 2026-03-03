@@ -121,28 +121,6 @@ export function generateSearchTerms(
 }
 
 /**
- * Format search terms for GDELT API
- */
-export function formatForGDELT(terms: GeneratedSearchTerms): string {
-  const { primary, secondary } = terms;
-
-  if (primary.length === 0) {
-    return '';
-  }
-
-  // Primary terms are required (OR)
-  const primaryQuery = primary.map(t => `"${t}"`).join(' OR ');
-
-  // Secondary terms are optional boosters (AND)
-  if (secondary.length > 0) {
-    const secondaryQuery = secondary.map(t => `"${t}"`).join(' OR ');
-    return `(${primaryQuery}) AND (${secondaryQuery})`;
-  }
-
-  return primaryQuery;
-}
-
-/**
  * Format search terms for Google News RSS
  */
 export function formatForGoogleNews(terms: GeneratedSearchTerms): string {

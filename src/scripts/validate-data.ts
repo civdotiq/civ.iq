@@ -236,7 +236,7 @@ class DataValidationRunner {
     };
 
     this.summary.totalChecks++;
-    const newsValidation = dataValidator.validateNewsData(sampleNewsData, 'gdelt-api');
+    const newsValidation = dataValidator.validateNewsData(sampleNewsData, 'newsapi');
 
     if (newsValidation.isValid) {
       console.log(`  ✅ News data validation passed (${newsValidation.confidence}% confidence)`);

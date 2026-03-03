@@ -72,7 +72,7 @@ export function SimpleGoogleNewsFeed({
   });
   const [activeViewMode, setActiveViewMode] = useState<NewsViewMode>(viewMode);
 
-  // Fetch real news data from GDELT API
+  // Fetch real news data from NewsAPI / Google News
   const fetchNews = useCallback(async () => {
     try {
       setLoading(true);
@@ -87,7 +87,7 @@ export function SimpleGoogleNewsFeed({
         },
       });
 
-      // Fetch real news from GDELT API
+      // Fetch real news from news API
       const response = await fetch(
         `/api/representative/${representative.bioguideId}/news?limit=${maxClusters * 3}`
       );
@@ -98,7 +98,7 @@ export function SimpleGoogleNewsFeed({
 
       const newsData = await response.json();
 
-      // Transform GDELT articles into clusters
+      // Transform articles into clusters
       const clusters: SimpleNewsCluster[] = [];
 
       if (newsData.articles && newsData.articles.length > 0) {
@@ -271,9 +271,7 @@ export function SimpleGoogleNewsFeed({
           <div className="text-sm text-gray-500">
             No recent news articles found for {representative.firstName} {representative.lastName}
           </div>
-          <div className="text-xs text-gray-400 mt-2">
-            Data source: GDELT Project • Check back later for updates
-          </div>
+          <div className="text-xs text-gray-400 mt-2">Check back later for updates</div>
         </div>
       );
     }
@@ -531,7 +529,7 @@ export function SimpleGoogleNewsFeed({
       {clusters.length > 0 && (
         <div className="text-center py-6 border-t border-gray-200">
           <div className="text-sm text-gray-500">
-            Real news data from GDELT Project • Updates every 30 minutes
+            Real news data from NewsAPI and Google News RSS
           </div>
           <div className="text-xs text-gray-400 mt-1">
             Showing authentic news coverage from verified sources

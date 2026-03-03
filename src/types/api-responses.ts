@@ -214,62 +214,6 @@ export interface FecApiContributionsResponse {
   };
 }
 
-// ==================== GDELT API Types ====================
-
-export interface GdeltApiArticle {
-  url: string;
-  title: string;
-  summary?: string;
-  source: string;
-  author?: string;
-  published_date: string;
-  language: string;
-  theme?: string;
-  tone?: number;
-  location?: {
-    country: string;
-    state?: string;
-    city?: string;
-  };
-  mentions?: Array<{
-    name: string;
-    type: string;
-    confidence: number;
-  }>;
-}
-
-export interface GdeltApiResponse {
-  articles: GdeltApiArticle[];
-  query_info: {
-    query: string;
-    language: string;
-    startdatetime: string;
-    enddatetime: string;
-    total_articles: number;
-  };
-}
-
-export interface GdeltApiTimelineEntry {
-  date: string;
-  count: number;
-  articles: GdeltApiArticle[];
-}
-
-export interface GdeltApiTimelineResponse {
-  timeline: GdeltApiTimelineEntry[];
-  summary: {
-    total_articles: number;
-    date_range: {
-      start: string;
-      end: string;
-    };
-    top_sources: Array<{
-      source: string;
-      count: number;
-    }>;
-  };
-}
-
 // ==================== Census API Types ====================
 
 export interface CensusApiGeometry {

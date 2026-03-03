@@ -78,8 +78,6 @@ export abstract class BaseService {
         circuitBreaker = circuitBreakers.fec;
       } else if (url.includes('api.census.gov')) {
         circuitBreaker = circuitBreakers.census;
-      } else if (url.includes('gdelt')) {
-        circuitBreaker = circuitBreakers.gdelt;
       }
 
       const fetchOperation = async (): Promise<Response> => {

@@ -28,16 +28,6 @@ export const apiConfig = {
 
   // External service configurations
   external: {
-    // GDELT Project API
-    gdelt: {
-      baseURL: 'https://api.gdeltproject.org/api/v2',
-      timeout: 15000,
-      rateLimit: {
-        requestsPerMinute: 30,
-        burstLimit: 10,
-      },
-    },
-
     // Congress.gov API
     congress: {
       baseURL: 'https://api.congress.gov/v3',
