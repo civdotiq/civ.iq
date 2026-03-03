@@ -43,6 +43,8 @@ const navigationSections: NavSection[] = [
       { name: 'Executive Orders', href: '/executive-orders' },
       { name: 'Comment Periods', href: '/comment-periods' },
       { name: 'Influence', href: '/influence' },
+      { name: 'Industries', href: '/industry' },
+      { name: 'Compare', href: '/compare' },
     ],
   },
   {

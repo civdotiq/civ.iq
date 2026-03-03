@@ -261,6 +261,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // ===========================================
+  // INDUSTRY SECTOR PAGES
+  // ===========================================
+  const industrySectors = [
+    'agribusiness',
+    'communications-electronics',
+    'construction',
+    'defense',
+    'energy-natural-resources',
+    'finance-insurance-real-estate',
+    'health',
+    'lawyers-lobbyists',
+    'transportation',
+    'misc-business',
+    'labor',
+    'ideology-single-issue',
+  ];
+
+  // Industry hub page
+  entries.push({
+    url: `${BASE_URL}/industry`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  });
+
+  for (const sector of industrySectors) {
+    entries.push({
+      url: `${BASE_URL}/industry/${sector}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    });
+  }
+
+  // ===========================================
+  // EMBED DOCUMENTATION
+  // ===========================================
+  entries.push({
+    url: `${BASE_URL}/embed-docs`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  });
+
   for (const page of mainPages) {
     entries.push({
       url: `${BASE_URL}${page.path}`,

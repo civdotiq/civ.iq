@@ -37,6 +37,10 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
             Public API
           </Link>
           <span className={separatorClass}>•</span>
+          <Link href="/embed-docs" className={linkClass}>
+            Embed Widgets
+          </Link>
+          <span className={separatorClass}>•</span>
           <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Nostr civiq@civ.iq</span>
           <span className={separatorClass}>•</span>
           <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
