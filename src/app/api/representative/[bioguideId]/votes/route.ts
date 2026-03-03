@@ -217,10 +217,13 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
       '@/features/representatives/services/batch-voting-service'
     );
 
+    // Congressional sessions: odd years = Session 1, even years = Session 2
+    const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+
     const memberVotes = await batchVotingService.getSenateMemberVotes(
       bioguideId,
       119, // 119th Congress
-      1, // Session 1
+      currentSession,
       limit // Limit votes
     );
 
@@ -548,10 +551,13 @@ async function getHouseVotes(
       '@/features/representatives/services/batch-voting-service'
     );
 
+    // Congressional sessions: odd years = Session 1, even years = Session 2
+    const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+
     const memberVotes = await batchVotingService.getHouseMemberVotes(
       bioguideId,
       119, // 119th Congress
-      1, // Session 1
+      currentSession,
       limit, // Limit votes
       bypassCache // Bypass cache for testing
     );

@@ -378,7 +378,7 @@ export class BatchVotingService {
   async getHouseMemberVotes(
     bioguideId: string,
     congress = 119,
-    session = 1,
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20,
     bypassCache = false
   ): Promise<
@@ -429,7 +429,7 @@ export class BatchVotingService {
   async getSenateMemberVotes(
     bioguideId: string,
     congress = 119,
-    session = 1,
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20
   ): Promise<
     Array<{
