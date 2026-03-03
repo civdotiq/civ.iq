@@ -162,57 +162,7 @@ export const ArticleCard = memo(function ArticleCard({
             <span className="font-medium">{getDisplaySource()}</span>
             <span className="mx-2">•</span>
             <span>{formatPublishedDate(article.publishedDate)}</span>
-
-            {/* Relevance score for primary articles */}
-            {isPrimary && article.relevanceScore && (
-              <>
-                <span className="mx-2">•</span>
-                <span className="text-green-600 font-medium">
-                  {(article.relevanceScore * 100).toFixed(0)}% relevant
-                </span>
-              </>
-            )}
-
-            {/* Local impact indicator */}
-            {article.localImpact && (
-              <>
-                <span className="mx-2">•</span>
-                <span
-                  className={`font-medium ${
-                    article.localImpact.localRelevance === 'high'
-                      ? 'text-green-600'
-                      : article.localImpact.localRelevance === 'medium'
-                        ? 'text-yellow-600'
-                        : 'text-gray-500'
-                  }`}
-                >
-                  {article.localImpact.localRelevance === 'high'
-                    ? '📍 Local'
-                    : article.localImpact.localRelevance === 'medium'
-                      ? '🏛️ Regional'
-                      : '🌐 National'}
-                </span>
-              </>
-            )}
-
-            {/* Verified badge */}
-            <span className="mx-2">•</span>
-            <span className="text-green-600 font-medium">✓ Verified</span>
           </div>
-
-          {/* Keywords/Categories (for primary articles only) */}
-          {isPrimary && article.keywords && article.keywords.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {article.keywords.slice(0, 3).map((keyword, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 text-xs font-bold border-2 border-[#3ea2d4] bg-blue-100 text-blue-800"
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </a>

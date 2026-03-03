@@ -1,8 +1,8 @@
 /**
- * ClusteredNewsSection - Drop-in replacement for SimpleNewsSection
+ * ClusteredNewsSection - News articles grouped by story
  *
- * Fetches news articles, clusters them via NewsClusteringEngine,
- * and renders interactive ClusterControls + NewsClusterComponent list.
+ * Fetches news articles, groups them by title similarity,
+ * and renders with mainstream source preference. No editorial judgment.
  */
 
 'use client';
@@ -10,10 +10,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { EnhancedArticle, enhanceArticle, NewsArticle } from '../types/news';
-import { NewsClusteringEngine, NewsCluster } from '../services/news-clustering-engine';
-import { NewsClusterComponent, NewsViewMode } from './NewsCluster';
-import { ClusterControls, NewsFilters } from './ClusterControls';
-import { LoadingSkeleton } from './LoadingSkeleton';
+import { ArticleCard } from './ArticleCard';
 
 export interface ClusteredNewsSectionProps {
   representative: EnhancedRepresentative;
@@ -22,14 +19,204 @@ export interface ClusteredNewsSectionProps {
   apiEndpoint?: string;
 }
 
-const DEFAULT_FILTERS: NewsFilters = {
-  timeframe: '7d',
-  sources: 'all',
-  storyType: 'all',
-  sortBy: 'relevance',
-};
+/** Domains preferred as primary article source (order doesn't matter) */
+const MAINSTREAM_DOMAINS = new Set([
+  'apnews.com',
+  'reuters.com',
+  'nytimes.com',
+  'washingtonpost.com',
+  'theguardian.com',
+  'politico.com',
+  'bbc.com',
+  'bbc.co.uk',
+  'npr.org',
+  'wsj.com',
+  'thehill.com',
+  'rollcall.com',
+  'pbs.org',
+  'cbsnews.com',
+  'nbcnews.com',
+  'abcnews.go.com',
+  'cnn.com',
+  'spiegel.de',
+  'usatoday.com',
+]);
+
+interface StoryGroup {
+  primary: EnhancedArticle;
+  alsoCoveredBy: EnhancedArticle[];
+}
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_ALSO_COVERED_SHOWN = 5;
+const SIMILARITY_THRESHOLD = 0.4;
+
+/**
+ * Extract significant words from a title for similarity comparison.
+ * Strips common stop words and lowercases everything.
+ */
+function titleWords(title: string): Set<string> {
+  const stop = new Set([
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'by',
+    'from',
+    'is',
+    'are',
+    'was',
+    'were',
+    'be',
+    'been',
+    'has',
+    'have',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'could',
+    'should',
+    'may',
+    'might',
+    'can',
+    'this',
+    'that',
+    'it',
+    'its',
+    'not',
+    'no',
+    'as',
+    'if',
+    'so',
+    'up',
+    'out',
+    'just',
+    'than',
+    'then',
+    'into',
+    'over',
+    'after',
+    'before',
+    'about',
+    'between',
+    'through',
+    'during',
+    'each',
+    'all',
+    'both',
+    'few',
+    'more',
+    'most',
+    'other',
+    'some',
+    'such',
+    'only',
+    'own',
+    'same',
+    'also',
+    'how',
+    'what',
+    'which',
+    'who',
+    'whom',
+    'why',
+    'where',
+    'when',
+    'new',
+    'says',
+    'said',
+  ]);
+  const words = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/);
+  return new Set(words.filter(w => w.length > 2 && !stop.has(w)));
+}
+
+/**
+ * Jaccard similarity between two title word sets.
+ */
+function titleSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let intersection = 0;
+  for (const word of a) {
+    if (b.has(word)) intersection++;
+  }
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+/**
+ * Normalize domain for mainstream matching.
+ */
+function normalizeDomain(domain: string): string {
+  return (domain || '').replace(/^(www\.|m\.|mobile\.)/, '').toLowerCase();
+}
+
+/**
+ * Group articles by title similarity, pick mainstream source as primary.
+ */
+function groupArticles(articles: EnhancedArticle[]): StoryGroup[] {
+  // Sort by date descending (newest first)
+  const sorted = [...articles].sort(
+    (a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
+  );
+
+  const grouped = new Set<number>();
+  const groups: StoryGroup[] = [];
+
+  // Precompute title words for each article
+  const wordSets = sorted.map(a => titleWords(a.title));
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (grouped.has(i)) continue;
+    const anchor = sorted[i];
+    const anchorWords = wordSets[i];
+    if (!anchor || !anchorWords) continue;
+    grouped.add(i);
+
+    const members: EnhancedArticle[] = [anchor];
+
+    // Find similar ungrouped articles
+    for (let j = i + 1; j < sorted.length; j++) {
+      if (grouped.has(j)) continue;
+      const candidate = sorted[j];
+      const candidateWords = wordSets[j];
+      if (!candidate || !candidateWords) continue;
+      if (titleSimilarity(anchorWords, candidateWords) >= SIMILARITY_THRESHOLD) {
+        grouped.add(j);
+        members.push(candidate);
+      }
+    }
+
+    // Pick primary: prefer mainstream source, fallback to most recent (already sorted)
+    const mainstream = members.find(m => MAINSTREAM_DOMAINS.has(normalizeDomain(m.domain)));
+    const primary = mainstream ?? anchor;
+    const alsoCoveredBy = members.filter(m => m !== primary);
+
+    groups.push({ primary, alsoCoveredBy });
+  }
+
+  // Sort groups by primary article date (newest first)
+  groups.sort(
+    (a, b) =>
+      new Date(b.primary.publishedDate).getTime() - new Date(a.primary.publishedDate).getTime()
+  );
+
+  return groups;
+}
 
 export function ClusteredNewsSection({
   representative,
@@ -37,18 +224,15 @@ export function ClusteredNewsSection({
   className = '',
   apiEndpoint,
 }: ClusteredNewsSectionProps) {
-  const [clusters, setClusters] = useState<NewsCluster[]>([]);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
+  const [articleCount, setArticleCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<NewsFilters>(DEFAULT_FILTERS);
-  const [viewMode, setViewMode] = useState<NewsViewMode>('headlines');
-  const engineRef = useRef(new NewsClusteringEngine());
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const articlesRef = useRef<EnhancedArticle[]>([]);
 
   const endpoint = apiEndpoint || `/api/representative/${representative.bioguideId}/news`;
 
-  const fetchAndCluster = useCallback(async () => {
+  const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -66,70 +250,32 @@ export function ClusteredNewsSection({
       const rawArticles: NewsArticle[] = data.articles || [];
 
       if (rawArticles.length === 0) {
-        setClusters([]);
-        articlesRef.current = [];
+        setStoryGroups([]);
+        setArticleCount(0);
         setLoading(false);
         return;
       }
 
       const enhanced = rawArticles.map(enhanceArticle);
-      articlesRef.current = enhanced;
-
-      const timeWindowMap: Record<string, number> = {
-        realtime: 6,
-        '24h': 24,
-        '7d': 168,
-        '30d': 720,
-      };
-
-      const engine = new NewsClusteringEngine({
-        timeWindowHours: timeWindowMap[filters.timeframe] || 168,
-      });
-      engineRef.current = engine;
-
-      const focusKeywords = [representative.lastName || '', representative.firstName || ''].filter(
-        Boolean
-      );
-
-      let result = await engine.clusterArticles(enhanced, {
-        maxClusters: 15,
-        focusKeywords,
-      });
-
-      // Apply story type filter
-      if (filters.storyType !== 'all') {
-        result = result.filter(c => c.storyType === filters.storyType);
-      }
-
-      // Apply sort
-      if (filters.sortBy === 'recency') {
-        result.sort(
-          (a, b) =>
-            new Date(b.primaryArticle.publishedDate).getTime() -
-            new Date(a.primaryArticle.publishedDate).getTime()
-        );
-      } else if (filters.sortBy === 'activity') {
-        result.sort((a, b) => b.relatedArticles.length - a.relatedArticles.length);
-      }
-
-      setClusters(result);
+      setArticleCount(enhanced.length);
+      setStoryGroups(groupArticles(enhanced));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch news');
-      setClusters([]);
+      setStoryGroups([]);
     } finally {
       setLoading(false);
     }
-  }, [endpoint, initialLimit, filters, representative.lastName, representative.firstName]);
+  }, [endpoint, initialLimit]);
 
-  // Initial fetch + refetch on filter changes
+  // Initial fetch
   useEffect(() => {
-    fetchAndCluster();
-  }, [fetchAndCluster]);
+    fetchNews();
+  }, [fetchNews]);
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
     refreshTimerRef.current = setInterval(() => {
-      fetchAndCluster();
+      fetchNews();
     }, REFRESH_INTERVAL_MS);
 
     return () => {
@@ -137,26 +283,26 @@ export function ClusteredNewsSection({
         clearInterval(refreshTimerRef.current);
       }
     };
-  }, [fetchAndCluster]);
+  }, [fetchNews]);
 
   const handleRefresh = useCallback(() => {
-    fetchAndCluster();
-  }, [fetchAndCluster]);
+    fetchNews();
+  }, [fetchNews]);
 
   // Loading state
-  if (loading && clusters.length === 0) {
+  if (loading && storyGroups.length === 0) {
     return (
       <div className={className}>
         <div className="mb-4">
           <h2 className="aicher-heading type-xl text-gray-900 mb-4">Recent News Coverage</h2>
         </div>
-        <LoadingSkeleton count={3} viewMode={viewMode} />
+        <div className="py-8 text-center text-sm text-gray-500">Loading articles...</div>
       </div>
     );
   }
 
   // Error state
-  if (error && clusters.length === 0) {
+  if (error && storyGroups.length === 0) {
     return (
       <div className={className}>
         <div className="text-center py-8">
@@ -175,7 +321,7 @@ export function ClusteredNewsSection({
   }
 
   // Empty state
-  if (clusters.length === 0 && !loading) {
+  if (storyGroups.length === 0 && !loading) {
     return (
       <div className={className}>
         <div className="text-center py-8">
@@ -195,26 +341,52 @@ export function ClusteredNewsSection({
         <h2 className="aicher-heading type-xl text-gray-900 mb-4">Recent News Coverage</h2>
       </div>
 
-      <ClusterControls
-        filters={filters}
-        onFiltersChange={setFilters}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        clustersCount={clusters.length}
-        onRefresh={handleRefresh}
-        isLoading={loading}
-        className="mb-6"
-      />
+      {/* Simple controls: story count + refresh */}
+      <div className="flex items-center justify-between mb-6">
+        <span className="text-sm text-gray-500">
+          {articleCount} {articleCount === 1 ? 'article' : 'articles'} in {storyGroups.length}{' '}
+          {storyGroups.length === 1 ? 'story' : 'stories'}
+        </span>
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="px-3 py-1 text-sm font-medium border-2 border-gray-300 text-gray-700 hover:border-gray-400 transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
 
+      {/* Story groups */}
       <div className="space-y-6">
-        {clusters.map((cluster, index) => (
-          <NewsClusterComponent
-            key={cluster.id}
-            cluster={cluster}
-            viewMode={viewMode}
-            index={index}
-            representative={representative}
-          />
+        {storyGroups.map((group, index) => (
+          <div
+            key={group.primary.url || index}
+            className="border-b border-gray-200 pb-6 last:border-b-0"
+          >
+            <ArticleCard article={group.primary} isPrimary showImage={index === 0} />
+
+            {group.alsoCoveredBy.length > 0 && (
+              <div className="mt-2 ml-3 text-sm text-gray-500">
+                <span>Also covered by: </span>
+                {group.alsoCoveredBy.slice(0, MAX_ALSO_COVERED_SHOWN).map((article, i) => (
+                  <span key={article.url || i}>
+                    {i > 0 && <span> · </span>}
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#3ea2d4] hover:underline"
+                    >
+                      {article.source || normalizeDomain(article.domain)}
+                    </a>
+                  </span>
+                ))}
+                {group.alsoCoveredBy.length > MAX_ALSO_COVERED_SHOWN && (
+                  <span> + {group.alsoCoveredBy.length - MAX_ALSO_COVERED_SHOWN} more</span>
+                )}
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
