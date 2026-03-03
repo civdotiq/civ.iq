@@ -139,14 +139,32 @@ function parseGoogleNewsRSS(xmlText: string, limit: number): GoogleNewsArticle[]
         }
       }
 
+      // Extract image: try description HTML, media:content, or enclosure
+      const descriptionStr = typeof description === 'string' ? description : '';
+      const imageFromDesc = extractImageUrl(descriptionStr);
+      const mediaContent = item['media:content'];
+      const imageFromMedia =
+        mediaContent && typeof mediaContent === 'object'
+          ? (mediaContent as Record<string, unknown>)['@_url']
+          : null;
+      const enclosure = item.enclosure;
+      const imageFromEnclosure =
+        enclosure && typeof enclosure === 'object'
+          ? (enclosure as Record<string, unknown>)['@_url']
+          : null;
+      const socialimage =
+        imageFromDesc ||
+        (typeof imageFromMedia === 'string' ? imageFromMedia : null) ||
+        (typeof imageFromEnclosure === 'string' ? imageFromEnclosure : null);
+
       articles.push({
         title: cleanText(title),
         url: link,
         domain,
         seendate: normalizedDate,
-        description: description ? cleanText(description) : undefined,
+        description: descriptionStr ? cleanText(descriptionStr) : undefined,
         source: source || domain,
-        socialimage: null, // Google News RSS doesn't provide images
+        socialimage,
       });
     }
 
@@ -158,14 +176,26 @@ function parseGoogleNewsRSS(xmlText: string, limit: number): GoogleNewsArticle[]
 }
 
 /**
+ * Extract first image URL from HTML string (e.g. RSS description with <img> tags)
+ */
+function extractImageUrl(html: string): string | null {
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] || null;
+}
+
+/**
  * Clean text by removing HTML tags and normalizing whitespace
  */
 function cleanText(text: string): string {
   return text
     .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#160;/g, ' ')
     .replace(/\s+/g, ' ') // Normalize whitespace
     .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
     .replace(/'/g, "'")
+    .replace(/&#39;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')

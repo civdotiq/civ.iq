@@ -363,7 +363,7 @@ export function ClusteredNewsSection({
             key={group.primary.url || index}
             className="border-b border-gray-200 pb-6 last:border-b-0"
           >
-            <ArticleCard article={group.primary} isPrimary showImage={index === 0} />
+            <ArticleCard article={group.primary} isPrimary showImage />
 
             {group.alsoCoveredBy.length > 0 && (
               <div className="mt-2 ml-3 text-sm text-gray-500">
