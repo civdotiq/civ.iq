@@ -98,6 +98,9 @@ const mockSenateVotes = [
   },
 ];
 
+// Match the route's session calculation: odd years = 1, even years = 2
+const expectedSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+
 describe('/api/representative/[bioguideId]/votes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -143,7 +146,7 @@ describe('/api/representative/[bioguideId]/votes', () => {
       expect(mockBatchVotingService.getHouseMemberVotes).toHaveBeenCalledWith(
         'P000197',
         119,
-        1,
+        expectedSession,
         20,
         false
       );
@@ -159,7 +162,7 @@ describe('/api/representative/[bioguideId]/votes', () => {
       expect(mockBatchVotingService.getHouseMemberVotes).toHaveBeenCalledWith(
         'P000197',
         119,
-        1,
+        expectedSession,
         50,
         false
       );
@@ -175,7 +178,7 @@ describe('/api/representative/[bioguideId]/votes', () => {
       expect(mockBatchVotingService.getHouseMemberVotes).toHaveBeenCalledWith(
         'P000197',
         119,
-        1,
+        expectedSession,
         10,
         true
       );
