@@ -94,14 +94,14 @@ export const RepresentativeCard = memo(function RepresentativeCard({
 
             <div className="flex flex-wrap gap-1.5 mt-2">
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPartyColor(representative.party)}`}
+                className={`px-2 py-0.5 text-xs font-medium ${getPartyColor(representative.party)}`}
               >
                 {representative.party}
               </span>
               {representative.chamber === 'House' && representative.district && (
                 <Link
                   href={`/districts/${representative.state}-${representative.district}`}
-                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue rounded-full text-xs font-medium transition-colors"
+                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue text-xs font-medium transition-colors"
                   onClick={e => e.stopPropagation()}
                 >
                   {representative.state}-{representative.district}
@@ -110,7 +110,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
               {representative.chamber === 'Senate' && (
                 <Link
                   href={`/states/${representative.state}`}
-                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue rounded-full text-xs font-medium transition-colors"
+                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue text-xs font-medium transition-colors"
                   onClick={e => e.stopPropagation()}
                 >
                   {representative.state}
@@ -127,24 +127,24 @@ export const RepresentativeCard = memo(function RepresentativeCard({
         <div className="px-4 sm:px-6 pb-3">
           <div className="flex flex-wrap gap-1.5">
             {representative.chamber === 'Senate' && (
-              <span className="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-300 text-xs font-medium">
                 U.S. Senator
               </span>
             )}
             {representative.chamber === 'House' && (
-              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-medium">
                 U.S. Representative
               </span>
             )}
             {representative.yearsInOffice && representative.yearsInOffice > 0 && (
-              <span className="px-2 py-0.5 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-civiq-green/10 text-civiq-green text-xs font-medium">
                 {representative.yearsInOffice} yrs
               </span>
             )}
             {representative.nextElection &&
               representative.nextElection !== '' &&
               representative.nextElection !== '0' && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium">
                   Next: {representative.nextElection}
                 </span>
               )}
@@ -159,7 +159,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
                 href={`tel:${representative.phone}`}
                 className="flex items-center gap-1 text-gray-600 hover:text-civiq-blue"
               >
-                <span>📞</span>
+                <span>Phone:</span>
                 <span>{representative.phone}</span>
               </a>
             )}
@@ -170,7 +170,6 @@ export const RepresentativeCard = memo(function RepresentativeCard({
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-civiq-blue hover:underline"
               >
-                <span>🌐</span>
                 <span>Website</span>
               </a>
             )}

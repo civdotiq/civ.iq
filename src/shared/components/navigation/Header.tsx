@@ -63,18 +63,6 @@ const navigationSections: NavSection[] = [
 // Flat navigation for mobile and simple links
 const flatNavigation = [{ name: 'About', href: '/about' }];
 
-// Skip to main content link component
-function SkipToContent() {
-  return (
-    <a
-      href="#main-content"
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-civiq-blue focus:text-white focus:font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue"
-    >
-      Skip to main content
-    </a>
-  );
-}
-
 // Dropdown component for desktop navigation
 function NavDropdown({
   section,
@@ -131,10 +119,10 @@ function NavDropdown({
     >
       <button
         onClick={handleClick}
-        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] dark:after:bg-[#5bb8e6] after:transition-all after:duration-200 hover:after:w-full ${
+        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
           isActive
-            ? 'text-[#3ea2d4] dark:text-[#5bb8e6] after:w-full'
-            : 'text-gray-700 dark:text-gray-300 hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
+            ? 'text-civiq-blue after:w-full'
+            : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -158,7 +146,7 @@ function NavDropdown({
           id={menuId}
           role="menu"
           aria-label={`${section.name} navigation`}
-          className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] shadow-lg z-50"
+          className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] z-50"
         >
           <div className="py-2">
             {section.items.map(item => {
@@ -171,8 +159,8 @@ function NavDropdown({
                   aria-current={isCurrentPage ? 'page' : undefined}
                   className={`block px-4 py-2 text-sm transition-colors ${
                     isCurrentPage
-                      ? 'bg-gray-100 dark:bg-[#2a2a2e] text-[#3ea2d4] dark:text-[#5bb8e6] font-medium'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
+                      ? 'bg-gray-100 dark:bg-[#2a2a2e] text-civiq-blue font-medium'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-civiq-blue'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
@@ -192,20 +180,17 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
   const pathname = usePathname();
 
   const headerClasses = transparent
-    ? 'bg-white/95 dark:bg-[#1a1a1e]/95 backdrop-blur-md'
+    ? 'bg-white dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]'
     : 'bg-white dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]';
 
   return (
     <>
-      {/* Skip to main content link for keyboard users */}
-      <SkipToContent />
-
       <header className={`fixed top-0 w-full ${headerClasses} z-50 ${className}`}>
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center group min-h-[44px] py-1 transform transition-all duration-300 hover:scale-105"
+            className="flex items-center group min-h-[44px] py-1 transition-colors duration-200"
             aria-label="CIV.IQ Home"
           >
             <CiviqLogo />
@@ -232,10 +217,10 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] dark:after:bg-[#5bb8e6] after:transition-all after:duration-200 hover:after:w-full ${
+                  className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
                     isActive
-                      ? 'text-[#3ea2d4] dark:text-[#5bb8e6] after:w-full'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
+                      ? 'text-civiq-blue after:w-full'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
                   }`}
                 >
                   {item.name}

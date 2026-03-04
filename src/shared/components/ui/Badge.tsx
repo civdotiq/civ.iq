@@ -35,7 +35,7 @@ export const Badge: FC<BadgeProps> = ({
   return (
     <span
       className={cn(
-        'inline-flex items-center font-medium rounded-full',
+        'inline-flex items-center font-medium',
         variants[variant],
         sizes[size],
         className
@@ -103,7 +103,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({ status, className }) => {
 
   return (
     <Badge variant={variants[status]} className={className}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5" />
+      <span className="w-1.5 h-1.5 bg-current mr-1.5" />
       {labels[status]}
     </Badge>
   );

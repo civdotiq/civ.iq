@@ -179,7 +179,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
           <Link
             key={vote.vote_id || index}
             href={`/state-legislature/${state}/vote/${encodeBase64Url(vote.vote_id)}`}
-            className="block bg-white border-2 border-gray-300 p-grid-3 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+            className="block bg-white border-2 border-gray-300 p-grid-3 hover:border-civiq-blue transition-all cursor-pointer"
           >
             {/* Vote Header */}
             <div className="flex items-start justify-between mb-grid-2">

@@ -19,12 +19,12 @@ const RepresentativeCard = dynamic(
     })),
   {
     loading: () => (
-      <div className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
+      <div className="bg-white border border-gray-200 p-6 animate-pulse">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
           <div className="flex-1">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 w-1/2"></div>
           </div>
         </div>
       </div>
@@ -40,10 +40,10 @@ const StateRepresentativesTab = dynamic(
   {
     loading: () => (
       <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-8 bg-gray-200 w-1/4 mb-4"></div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            <div key={i} className="h-24 bg-gray-200"></div>
           ))}
         </div>
       </div>
@@ -61,9 +61,9 @@ import { saveSearchContext } from '@/components/shared/navigation/BreadcrumbsWit
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-96 bg-white border border-gray-200 rounded-lg">
+    <div className="flex items-center justify-center h-96 bg-white border border-gray-200">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
         <p className="text-sm text-gray-600">Loading congressional district map...</p>
       </div>
     </div>
@@ -76,9 +76,9 @@ const StateDistrictBoundaryMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white border border-gray-200 rounded-lg">
+      <div className="flex items-center justify-center h-96 bg-white border border-gray-200">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+          <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
           <p className="text-sm text-gray-600">Loading state district map...</p>
         </div>
       </div>
@@ -787,7 +787,7 @@ function ResultsContent() {
                             key={`${rep.name}-${index}`}
                             fallback={
                               <div className="bg-white border-2 border-black p-6 animate-pulse">
-                                <div className="h-40 bg-gray-200 rounded"></div>
+                                <div className="h-40 bg-gray-200"></div>
                               </div>
                             }
                           >
@@ -812,7 +812,7 @@ function ResultsContent() {
                   <Suspense
                     fallback={
                       <div className="text-center py-8">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600"></div>
                         <p className="mt-4 text-gray-600">Loading state representatives...</p>
                       </div>
                     }
@@ -931,7 +931,7 @@ export default function Results() {
       fallback={
         <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue"></div>
+            <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
             <p className="mt-4 text-gray-600">Loading results...</p>
           </div>
         </div>

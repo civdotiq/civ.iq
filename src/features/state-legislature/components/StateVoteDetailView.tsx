@@ -67,7 +67,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
   return (
     <div className="space-y-6">
       {/* Vote Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-gray-900">{vote.motion_text}</h1>
           <span
@@ -111,7 +111,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
       </div>
 
       {/* Vote Counts Summary */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Vote Summary</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {vote.counts.map(count => (
@@ -128,7 +128,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
       </div>
 
       {/* Individual Votes */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">How Legislators Voted</h2>
 
         {(['yes', 'no', 'abstain', 'not voting', 'absent', 'excused'] as const).map(option => {

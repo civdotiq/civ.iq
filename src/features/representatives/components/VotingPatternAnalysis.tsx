@@ -106,8 +106,8 @@ export function VotingPatternAnalysis({
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-64 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-gray-200 w-1/3"></div>
+          <div className="h-64 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -184,7 +184,7 @@ export function VotingPatternAnalysis({
               <div key={item.label} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-3 h-3 rounded-full ${
+                    className={`w-3 h-3 ${
                       item.label === 'Yea'
                         ? 'bg-green-500'
                         : item.label === 'Nay'
@@ -209,7 +209,7 @@ export function VotingPatternAnalysis({
           <div className="bg-gray-50 p-4">
             <div className="text-sm text-gray-600 mb-1">Attendance Rate</div>
             <div className="text-2xl font-bold text-gray-900">{attendance.toFixed(1)}%</div>
-            <div className="mt-2 bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="mt-2 bg-gray-200 h-2 overflow-hidden">
               <div
                 className="bg-blue-500 h-full transition-all duration-500"
                 style={{ width: `${attendance}%` }}

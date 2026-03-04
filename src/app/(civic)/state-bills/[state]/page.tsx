@@ -149,7 +149,7 @@ function BillCard({ bill }: { bill: StateBill }) {
               {bill.billNumber}
             </h3>
             <span
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(bill.status)}`}
+              className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium border ${getStatusColor(bill.status)}`}
             >
               {getStatusIcon(bill.status)}
               {formatStatus(bill.status)}
@@ -192,7 +192,7 @@ function BillCard({ bill }: { bill: StateBill }) {
             {bill.subjects.slice(0, 4).map((subject, index) => (
               <span
                 key={index}
-                className="inline-flex px-2 py-1 bg-white border-2 border-gray-300 text-xs rounded-full"
+                className="inline-flex px-2 py-1 bg-white border-2 border-gray-300 text-xs"
               >
                 {subject}
               </span>
@@ -367,7 +367,7 @@ export default function StateBillsPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state bills...</p>
         </div>
       </div>

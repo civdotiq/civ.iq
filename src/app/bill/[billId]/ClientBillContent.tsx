@@ -174,18 +174,18 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
+        <div className="h-8 bg-gray-200 w-1/3"></div>
+        <div className="h-6 bg-white border-2 border-gray-300 w-1/2"></div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
         </div>
         <div className="space-y-4">
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
             <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>
             <span
-              className={`px-3 py-1 text-sm font-medium rounded-full ${getBillStatusColor(bill.status.current)}`}
+              className={`px-3 py-1 text-sm font-medium ${getBillStatusColor(bill.status.current)}`}
             >
               {getBillDisplayStatus(bill.status.current)}
             </span>
@@ -506,21 +506,21 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       {/* Vote Breakdown */}
                       {vote.votes ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
-                          <div className="text-center p-2 bg-green-50 rounded">
+                          <div className="text-center p-2 bg-green-50">
                             <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
                             <div className="text-xs text-green-600">Yea</div>
                           </div>
-                          <div className="text-center p-2 bg-red-50 rounded">
+                          <div className="text-center p-2 bg-red-50">
                             <div className="text-lg font-bold text-red-700">{vote.votes.nay}</div>
                             <div className="text-xs text-red-600">Nay</div>
                           </div>
-                          <div className="text-center p-2 bg-yellow-50 rounded">
+                          <div className="text-center p-2 bg-yellow-50">
                             <div className="text-lg font-bold text-yellow-700">
                               {vote.votes.present}
                             </div>
                             <div className="text-xs text-yellow-600">Present</div>
                           </div>
-                          <div className="text-center p-2 bg-gray-50 rounded">
+                          <div className="text-center p-2 bg-gray-50">
                             <div className="text-lg font-bold text-gray-700">
                               {vote.votes.notVoting}
                             </div>
@@ -528,7 +528,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center p-3 bg-gray-50 rounded mb-3">
+                        <div className="text-center p-3 bg-gray-50 mb-3">
                           <p className="text-sm text-gray-600">
                             Vote counts unavailable from Congress.gov
                           </p>
@@ -575,7 +575,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-8 bg-gray-50 rounded">
+              <div className="text-center py-8 bg-gray-50">
                 <Vote className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 font-medium">No recorded votes yet</p>
                 <p className="text-sm text-gray-500 mt-1">
@@ -681,7 +681,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       key={cosponsor.representative.bioguideId}
                       className={`flex items-center space-x-3 p-3 border-2 hover:bg-white ${
                         cosponsor.withdrawn
-                          ? 'border-gray-300 bg-white border-2 border-gray-300 opacity-60'
+                          ? 'border-gray-300 bg-white opacity-60'
                           : 'border-gray-200'
                       }`}
                     >
@@ -863,7 +863,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           </p>
                           <div className="mt-2 flex items-center justify-between">
                             <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                                 relatedBill.relationship === 'identical'
                                   ? 'bg-green-100 text-green-800'
                                   : relatedBill.relationship === 'supersedes'
@@ -934,9 +934,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-sm font-medium text-gray-600">Current Status</span>
-                <span
-                  className={`text-sm px-2 py-1 rounded-full ${getBillStatusColor(bill.status.current)}`}
-                >
+                <span className={`text-sm px-2 py-1 ${getBillStatusColor(bill.status.current)}`}>
                   {getBillDisplayStatus(bill.status.current)}
                 </span>
               </div>

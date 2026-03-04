@@ -239,7 +239,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
           </div>
 
           {/* What This Vote Means */}
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-4">
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
             <h3 className="font-semibold text-blue-900 mb-2">What This Vote Means</h3>
             <p className="text-sm text-blue-800">
               {(() => {
@@ -310,7 +310,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
 
           {/* Bill Context - CRITICAL HYPERLINK */}
           {voteDetail.bill && voteDetail.bill.number && (
-            <div className="bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg">
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-4">
               <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 About {voteDetail.bill.number}
@@ -319,7 +319,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 <p className="text-sm text-gray-700 mb-3">{voteDetail.bill.title}</p>
               )}
               {voteDetail.bill.summary && (
-                <div className="bg-white border border-gray-200 rounded p-3 mb-3">
+                <div className="bg-white border border-gray-200 p-3 mb-3">
                   <p className="text-xs font-medium text-gray-500 mb-1">Congressional Summary</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{voteDetail.bill.summary}</p>
                 </div>
@@ -441,7 +441,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
 
         {/* Data Availability Notice */}
         {voteDetail.members.length === 0 && (
-          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-6">
+          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
@@ -532,7 +532,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                   {senators.map(senator => (
                     <div
                       key={senator.lisId}
-                      className="flex items-center justify-between py-2 px-3 bg-white rounded border"
+                      className="flex items-center justify-between py-2 px-3 bg-white border"
                     >
                       <div>
                         <div className="font-medium text-gray-900">

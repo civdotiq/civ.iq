@@ -136,11 +136,11 @@ export function TopicNavigation({
               data-tab-id={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
+                flex-shrink-0 px-4 py-2 text-sm font-medium transition-all duration-200
                 flex items-center space-x-2 whitespace-nowrap
                 ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }
               `}
@@ -149,7 +149,7 @@ export function TopicNavigation({
               {tab.count > 0 && (
                 <span
                   className={`
-                    px-2 py-0.5 rounded-full text-xs font-semibold
+                    px-2 py-0.5 text-xs font-semibold
                     ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}
                   `}
                 >

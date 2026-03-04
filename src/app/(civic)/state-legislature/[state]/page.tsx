@@ -171,7 +171,7 @@ function LegislatorCard({
               </p>
             </div>
             <span
-              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
+              className={`inline-flex px-2 py-1 text-xs font-medium ${getPartyColor(legislator.party)}`}
             >
               {legislator.party.charAt(0)}
             </span>
@@ -280,7 +280,7 @@ function ChamberOverview({
             {majority} (+{majoritySeats - minoritySeats})
           </span>
         </div>
-        <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
+        <div className="relative h-8 bg-gray-200 overflow-hidden">
           <div
             className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
             style={{ width: `${demPercentage}%` }}
@@ -351,7 +351,7 @@ function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
                 <p className="text-sm text-gray-600 mt-1">{bill.title}</p>
               </div>
               <span
-                className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ml-4 ${getStatusColor(bill.status)}`}
+                className={`inline-flex px-2 py-1 text-xs font-medium ml-4 ${getStatusColor(bill.status)}`}
               >
                 {formatStatus(bill.status)}
               </span>
@@ -426,7 +426,7 @@ export default function StateLegislaturePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state legislature data...</p>
         </div>
       </div>

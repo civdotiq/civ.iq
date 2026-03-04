@@ -86,15 +86,15 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mb-4"></div>
           <div className="space-y-3">
-            <div className="h-4 bg-white border-2 border-gray-300 rounded w-full"></div>
-            <div className="h-4 bg-white border-2 border-gray-300 rounded w-3/4"></div>
-            <div className="h-4 bg-white border-2 border-gray-300 rounded w-1/2"></div>
+            <div className="h-4 bg-white border-2 border-gray-300 w-full"></div>
+            <div className="h-4 bg-white border-2 border-gray-300 w-3/4"></div>
+            <div className="h-4 bg-white border-2 border-gray-300 w-1/2"></div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="h-20 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-20 bg-white border-2 border-gray-300 rounded"></div>
+            <div className="h-20 bg-white border-2 border-gray-300"></div>
+            <div className="h-20 bg-white border-2 border-gray-300"></div>
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="text-center">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100">
             <svg
               className="w-6 h-6 text-red-600"
               fill="none"
@@ -143,7 +143,7 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="text-center">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-white border-2 border-gray-300 rounded-full">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-white border-2 border-gray-300">
             <svg
               className="w-6 h-6 text-gray-400"
               fill="none"
@@ -179,16 +179,16 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Party Loyalty Score */}
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
+        <div className="bg-gray-50 border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-700">Party Loyalty Score</span>
             <span className={`text-2xl font-bold ${getAlignmentColor(data.loyaltyScore)}`}>
               {data.loyaltyScore.toFixed(1)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+          <div className="w-full bg-gray-200 h-3 mb-3">
             <div
-              className={`h-3 rounded-full transition-all duration-500 ${getPartyColor(representative.party)}`}
+              className={`h-3 transition-all duration-500 ${getPartyColor(representative.party)}`}
               style={{ width: `${Math.min(data.loyaltyScore, 100)}%` }}
             />
           </div>
@@ -198,14 +198,14 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
         </div>
 
         {/* Bipartisan Votes */}
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
+        <div className="bg-gray-50 border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-700">Bipartisan Votes</span>
-            <span className="text-2xl font-bold text-purple-600">{data.bipartisanVotes}</span>
+            <span className="text-2xl font-bold text-gray-900">{data.bipartisanVotes}</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+          <div className="w-full bg-gray-200 h-3 mb-3">
             <div
-              className="bg-purple-500 h-3 rounded-full transition-all duration-500"
+              className="bg-gray-600 h-3 transition-all duration-500"
               style={{
                 width: `${bipartisanPercentage}%`,
               }}
@@ -217,16 +217,16 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
         </div>
 
         {/* Recent Alignment */}
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
+        <div className="bg-gray-50 border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-700">Recent Alignment</span>
             <span className={`text-2xl font-bold ${getAlignmentColor(data.recentAlignment)}`}>
               {data.recentAlignment.toFixed(1)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+          <div className="w-full bg-gray-200 h-3 mb-3">
             <div
-              className={`h-3 rounded-full transition-all duration-500 ${getPartyColor(representative.party)}`}
+              className={`h-3 transition-all duration-500 ${getPartyColor(representative.party)}`}
               style={{ width: `${Math.min(data.recentAlignment, 100)}%` }}
             />
           </div>
@@ -236,14 +236,14 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
         </div>
 
         {/* Total Votes */}
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg">
+        <div className="bg-gray-50 border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-700">Total Votes Analyzed</span>
             <span className="text-2xl font-bold text-gray-900">{data.totalVotes}</span>
           </div>
           <div className="flex items-center mb-3">
             <div
-              className={`w-3 h-3 rounded-full mr-3 ${
+              className={`w-3 h-3 mr-3 ${
                 data.dataSource === 'congress.gov'
                   ? 'bg-green-500'
                   : data.dataSource === 'unavailable'

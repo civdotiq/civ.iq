@@ -59,7 +59,7 @@ export function DataQualityBadge({
   return (
     <div className="inline-flex items-center gap-2">
       <span
-        className={`inline-flex items-center gap-1.5 font-medium rounded-full border ${color} ${sizeClasses[size]}`}
+        className={`inline-flex items-center gap-1.5 font-medium border ${color} ${sizeClasses[size]}`}
         title={showTooltip ? description : undefined}
         role="status"
         aria-label={`${label}: ${text}`}
@@ -75,7 +75,7 @@ export function DataQualityBadge({
         <div className="group relative inline-block">
           <button
             type="button"
-            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="More information about data quality"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -87,7 +87,7 @@ export function DataQualityBadge({
             </svg>
           </button>
           <div
-            className="hidden group-hover:block absolute z-10 w-64 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg -top-2 left-6"
+            className="hidden group-hover:block absolute z-10 w-64 p-3 bg-gray-900 text-white text-sm -top-2 left-6"
             role="tooltip"
           >
             <p className="font-semibold mb-1">{text}</p>

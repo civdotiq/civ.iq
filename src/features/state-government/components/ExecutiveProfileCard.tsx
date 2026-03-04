@@ -105,7 +105,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
   return (
     <div
       className={`bg-white border-2 border-black relative ${getAccentBarClass()} ${
-        highlighted ? 'shadow-lg' : ''
+        highlighted ? 'border-civiq-blue' : ''
       }`}
     >
       <div className="p-6">

@@ -128,7 +128,7 @@ const VotesList = memo(
                         </a>
                       )}
                       {vote.isKeyVote && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
+                        <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">
                           Key Vote
                         </span>
                       )}
@@ -174,7 +174,7 @@ const VotesList = memo(
                   <div className="mt-4 pt-4 aicher-border-t border-gray-200">
                     <div className="space-y-3 text-sm text-gray-600">
                       <div className="space-y-3">
-                        <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="bg-gray-50 p-3">
                           <p className="leading-relaxed text-sm">
                             <span className="font-medium text-gray-900">Question:</span>{' '}
                             {vote.question}
@@ -184,7 +184,7 @@ const VotesList = memo(
                         {vote.rollNumber && vote.rollNumber > 0 && (
                           <p className="leading-relaxed">
                             <span className="font-medium text-gray-900">Roll Call:</span>{' '}
-                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                            <span className="font-mono text-sm bg-gray-100 px-2 py-1">
                               {vote.chamber} Roll #{vote.rollNumber}
                             </span>
                           </p>
@@ -200,7 +200,7 @@ const VotesList = memo(
                         <div className="flex items-center justify-between text-sm">
                           <p>
                             <span className="font-medium text-gray-900">Congress:</span>{' '}
-                            <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                            <span className="font-mono bg-gray-100 px-2 py-1">
                               {vote.bill.congress}th Congress
                             </span>
                           </p>
@@ -210,7 +210,7 @@ const VotesList = memo(
                               href={vote.congressUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                               onClick={e => e.stopPropagation()}
                             >
                               <span>Official Vote Record</span>
@@ -232,7 +232,7 @@ const VotesList = memo(
                         </div>
 
                         {vote.total && (
-                          <div className="bg-blue-50 p-3 rounded-md">
+                          <div className="bg-blue-50 p-3">
                             <h4 className="font-medium text-gray-900 mb-2">Final Tally</h4>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div className="text-green-700">
@@ -257,7 +257,7 @@ const VotesList = memo(
                         )}
 
                         {vote.party_breakdown && (
-                          <div className="bg-purple-50 p-3 rounded-md">
+                          <div className="bg-gray-50 p-3">
                             <h4 className="font-medium text-gray-900 mb-2">Party Breakdown</h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
@@ -289,7 +289,7 @@ const VotesList = memo(
 
                         <div className="border-t border-gray-200 pt-2 mt-2">
                           <p className="text-xs text-gray-500">
-                            💡 <strong>What this means:</strong> This vote determines the official
+                            <strong>What this means:</strong> This vote determines the official
                             position of Congress members on the proposed legislation.
                             {vote.result.toLowerCase().includes('passed') ||
                             vote.result.toLowerCase().includes('agreed')
@@ -538,7 +538,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                   <span className="text-sm text-gray-600">Filter by Category:</span>
                   <button
                     onClick={() => handleFilterChange('all')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'all'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -548,7 +548,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                   </button>
                   <button
                     onClick={() => handleFilterChange('key')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'key'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -558,7 +558,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                   </button>
                   <button
                     onClick={() => handleFilterChange('passed')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'passed'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -568,7 +568,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                   </button>
                   <button
                     onClick={() => handleFilterChange('failed')}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'failed'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -584,7 +584,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                 <span className="text-gray-600">Sort by:</span>
                 <button
                   onClick={() => handleSort('date')}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 transition-colors ${
                     sortField === 'date'
                       ? 'bg-gray-700 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -598,7 +598,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                 </button>
                 <button
                   onClick={() => handleSort('bill')}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 transition-colors ${
                     sortField === 'bill'
                       ? 'bg-gray-700 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -612,7 +612,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                 </button>
                 <button
                   onClick={() => handleSort('result')}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 transition-colors ${
                     sortField === 'result'
                       ? 'bg-gray-700 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -631,7 +631,10 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
             {isPending && (
               <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
                 <div className="flex items-center gap-2 text-sm text-blue-700">
-                  <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
+                  <div
+                    className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent"
+                    style={{ borderRadius: '50%' }}
+                  ></div>
                   Updating results...
                 </div>
               </div>

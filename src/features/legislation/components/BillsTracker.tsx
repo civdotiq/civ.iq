@@ -92,7 +92,7 @@ const BillsList = ({
                     <h4 className="font-semibold text-lg text-civiq-blue">{bill.number}</h4>
                     {bill.sponsorshipType && (
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
+                        className={`px-2 py-1 text-xs font-medium${
                           bill.sponsorshipType === 'sponsored'
                             ? 'bg-civiq-green text-white'
                             : 'bg-civiq-blue text-white'
@@ -107,7 +107,7 @@ const BillsList = ({
                   {/* Committee and Topic Tags */}
                   <div className="flex flex-wrap gap-2 mb-3">
                     {bill.policyArea && (
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium">
                         {bill.policyArea}
                       </span>
                     )}
@@ -115,7 +115,7 @@ const BillsList = ({
                       bill.committees.slice(0, 2).map((committee, idx) => (
                         <span
                           key={`${bill.billId}-committee-${committee}-${idx}`}
-                          className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full"
+                          className="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-medium border border-gray-300"
                         >
                           {committee}
                         </span>
@@ -124,7 +124,7 @@ const BillsList = ({
                       bill.subjects.slice(0, 3).map((subject, idx) => (
                         <span
                           key={`${bill.billId}-subject-${subject}-${idx}`}
-                          className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full"
+                          className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs"
                         >
                           {subject}
                         </span>
@@ -150,9 +150,9 @@ const BillsList = ({
                   <span className={progress >= 80 ? 'text-civiq-green' : ''}>Senate</span>
                   <span className={progress >= 100 ? 'text-civiq-green' : ''}>Law</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-gray-200 h-3 overflow-hidden">
                   <div
-                    className={`h-3 rounded-full transition-all duration-500 ${
+                    className={`h-3 transition-all duration-500 ${
                       stage === 'failed'
                         ? 'bg-civiq-red'
                         : progress >= 60
@@ -221,9 +221,7 @@ const BillsList = ({
                         ].map((step, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
                             <div
-                              className={`w-3 h-3 rounded-full ${
-                                step.done ? 'bg-green-500' : 'bg-gray-300'
-                              }`}
+                              className={`w-3 h-3 ${step.done ? 'bg-green-500' : 'bg-gray-300'}`}
                             />
                             <span className={step.done ? 'text-green-700' : 'text-gray-600'}>
                               {step.label}
@@ -450,11 +448,11 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
   };
 
   const getBillTypeIcon = (type: string) => {
-    if (!type) return '📄';
+    if (!type) return 'Bill';
     const typeUpper = type.toUpperCase();
-    if (typeUpper.includes('HR') || typeUpper.includes('HRES')) return '🏛️';
-    if (typeUpper.includes('S') || typeUpper.includes('SRES')) return '🏢';
-    return '📄';
+    if (typeUpper.includes('HR') || typeUpper.includes('HRES')) return 'H';
+    if (typeUpper.includes('S') || typeUpper.includes('SRES')) return 'S';
+    return 'Bill';
   };
 
   const stats = useMemo(() => {
@@ -491,7 +489,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
           <h3 className="text-lg font-semibold text-gray-900">Legislative Tracker</h3>
           <button
             onClick={() => setShowTimelineView(!showTimelineView)}
-            className="px-3 py-1 text-sm bg-civiq-blue text-white rounded hover:bg-civiq-blue/90 transition-colors"
+            className="px-3 py-1 text-sm bg-civiq-blue text-whitehover:bg-civiq-blue/90 transition-colors"
           >
             {showTimelineView ? 'List View' : 'Timeline View'}
           </button>
@@ -505,7 +503,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
               <select
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                className="w-full text-sm border border-gray-300px-3 py-2"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -519,7 +517,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                className="w-full text-sm border border-gray-300px-3 py-2"
               >
                 {statuses.map(status => (
                   <option key={status} value={status}>
@@ -533,7 +531,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
               <select
                 value={sponsorshipFilter}
                 onChange={e => setSponsorshipFilter(e.target.value as SponsorshipFilterType)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                className="w-full text-sm border border-gray-300px-3 py-2"
               >
                 <option value="all">All Types</option>
                 <option value="sponsored">Sponsored</option>
@@ -545,7 +543,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as SortByType)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                className="w-full text-sm border border-gray-300px-3 py-2"
               >
                 <option value="date">Date Introduced</option>
                 <option value="cosponsors">Number of Cosponsors</option>
@@ -559,7 +557,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                 placeholder="Search bills..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                className="w-full text-sm border border-gray-300px-3 py-2"
               />
             </div>
           </div>
@@ -572,22 +570,22 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
             <div className="flex flex-wrap gap-2">
               <span className="text-sm text-gray-600">Active filters:</span>
               {selectedCategory !== 'all' && (
-                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs">
                   Category: {selectedCategory}
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs">
                   Status: {statusFilter}
                 </span>
               )}
               {sponsorshipFilter !== 'all' && (
-                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs">
                   Type: {sponsorshipFilter}
                 </span>
               )}
               {searchQuery && (
-                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs">
                   Search: &quot;{searchQuery}&quot;
                 </span>
               )}
@@ -598,7 +596,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                   setSponsorshipFilter('all');
                   setSearchQuery('');
                 }}
-                className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition-colors"
+                className="px-2 py-1 bg-gray-200 text-gray-700 text-xshover:bg-gray-300 transition-colors"
               >
                 Clear all
               </button>
@@ -621,7 +619,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
             <div className="text-sm text-gray-600">Avg Cosponsors</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.totalCosponsors}</div>
+            <div className="text-2xl font-bold text-civiq-blue">{stats.totalCosponsors}</div>
             <div className="text-sm text-gray-600">Total Support</div>
           </div>
         </div>
@@ -643,7 +641,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                   <div key={bill.billId} className="relative flex items-start">
                     {/* Timeline dot */}
                     <div
-                      className={`absolute left-6 w-4 h-4 rounded-full border-2 bg-white ${getStatusColor(stage).replace('bg-', 'border-')}`}
+                      className={`absolute left-6 w-4 h-4 border-2 bg-white ${getStatusColor(stage).replace('bg-', 'border-')}`}
                     ></div>
 
                     {/* Content */}
@@ -656,7 +654,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                               <h5 className="font-semibold text-gray-900">{bill.number}</h5>
                               {bill.sponsorshipType && (
                                 <span
-                                  className={`px-2 py-1 text-xs rounded ${
+                                  className={`px-2 py-1 text-xs${
                                     bill.sponsorshipType === 'sponsored'
                                       ? 'bg-green-100 text-green-800'
                                       : 'bg-blue-100 text-blue-800'
@@ -668,7 +666,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                                 </span>
                               )}
                               {bill.policyArea && (
-                                <span className="px-2 py-1 bg-white text-gray-700 text-xs rounded border">
+                                <span className="px-2 py-1 bg-white text-gray-700 text-xsborder">
                                   {bill.policyArea}
                                 </span>
                               )}
@@ -687,9 +685,9 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
                         {/* Mini progress bar */}
                         <div className="mb-2">
-                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="w-full bg-gray-200 h-1.5">
                             <div
-                              className={`h-1.5 rounded-full transition-all duration-500 ${getStatusColor(stage)}`}
+                              className={`h-1.5 transition-all duration-500 ${getStatusColor(stage)}`}
                               style={{ width: `${progress}%` }}
                             />
                           </div>
@@ -726,186 +724,9 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
         />
       )}
 
-      {!showTimelineView && false && (
-        <div className="space-y-4">
-          {filteredAndSortedBills.map(bill => {
-            const latestActionText = bill.latestAction?.text || '';
-            const { stage, progress, label } = getProgressStage(bill.status, latestActionText);
-            const isSelected = selectedBill === bill.billId;
-
-            return (
-              <div
-                key={bill.billId}
-                className={`aicher-card aicher-hover transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? 'border-civiq-blue border-2 border-black'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => setSelectedBill(isSelected ? null : bill.billId)}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">{getBillTypeIcon(bill.type)}</span>
-                        <h4 className="font-semibold text-lg text-civiq-blue">{bill.number}</h4>
-                        {bill.sponsorshipType && (
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded ${
-                              bill.sponsorshipType === 'sponsored'
-                                ? 'bg-civiq-green text-white'
-                                : 'bg-civiq-blue text-white'
-                            }`}
-                          >
-                            {bill.sponsorshipType === 'sponsored' ? 'Sponsored' : 'Co-sponsored'}
-                          </span>
-                        )}
-                      </div>
-                      <h5 className="text-gray-900 font-medium mb-3 line-clamp-2">{bill.title}</h5>
-
-                      {/* Committee and Topic Tags */}
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {bill.policyArea && (
-                          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            {bill.policyArea}
-                          </span>
-                        )}
-                        {bill.committees &&
-                          bill.committees.slice(0, 2).map((committee, idx) => (
-                            <span
-                              key={`${bill.billId}-committee-${committee}-${idx}`}
-                              className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full"
-                            >
-                              {committee}
-                            </span>
-                          ))}
-                        {bill.subjects &&
-                          bill.subjects.slice(0, 3).map((subject, idx) => (
-                            <span
-                              key={`${bill.billId}-subject-${subject}-${idx}`}
-                              className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full"
-                            >
-                              {subject}
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="text-sm text-gray-600 mb-1">
-                        {bill.cosponsors || 0} cosponsors
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(bill.introducedDate).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
-                      <span className={progress >= 20 ? 'text-civiq-green' : ''}>Introduced</span>
-                      <span className={progress >= 30 ? 'text-civiq-green' : ''}>Committee</span>
-                      <span className={progress >= 60 ? 'text-civiq-green' : ''}>House</span>
-                      <span className={progress >= 80 ? 'text-civiq-green' : ''}>Senate</span>
-                      <span className={progress >= 100 ? 'text-civiq-green' : ''}>Law</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                      <div
-                        className={`h-3 rounded-full transition-all duration-500 ${
-                          stage === 'failed'
-                            ? 'bg-civiq-red'
-                            : progress >= 60
-                              ? 'bg-civiq-green'
-                              : 'bg-civiq-blue'
-                        }`}
-                        style={{ width: `${Math.max(progress, 5)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="text-xs font-medium text-gray-700">Status: {label}</div>
-                      <div className="text-xs text-gray-500">Progress: {progress}%</div>
-                    </div>
-                  </div>
-
-                  {/* Latest Action */}
-                  <div className="text-sm text-gray-600 mb-3">
-                    <span className="font-medium">Latest Action:</span>{' '}
-                    {bill.latestAction?.text || 'No action recorded'}
-                    <span className="text-gray-500 ml-2">
-                      {bill.latestAction?.date
-                        ? `(${new Date(bill.latestAction.date).toLocaleDateString()})`
-                        : ''}
-                    </span>
-                  </div>
-
-                  {/* Read More Link */}
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={`/bill/${bill.billId}`}
-                      className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
-                      onClick={e => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      Read more →
-                    </Link>
-                    <span className="text-xs text-gray-400">Congress {bill.congress}</span>
-                  </div>
-
-                  {/* Expanded Details */}
-                  {isSelected && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h6 className="font-medium text-gray-700 mb-2">Bill Details</h6>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <div>Type: {bill.type}</div>
-                            <div>Chamber: {bill.chamber}</div>
-                            <div>Congress: {bill.congress}</div>
-                            <div>
-                              Introduced: {new Date(bill.introducedDate).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <h6 className="font-medium text-gray-700 mb-2">Legislative Progress</h6>
-                          <div className="space-y-2">
-                            {[
-                              { stage: 'introduced', label: 'Introduced', done: progress >= 20 },
-                              {
-                                stage: 'committee',
-                                label: 'Committee Review',
-                                done: progress >= 40,
-                              },
-                              { stage: 'chamber', label: 'Chamber Vote', done: progress >= 60 },
-                              { stage: 'enacted', label: 'Enacted', done: progress >= 100 },
-                            ].map((step, index) => (
-                              <div key={index} className="flex items-center gap-2 text-sm">
-                                <div
-                                  className={`w-3 h-3 rounded-full ${
-                                    step.done ? 'bg-green-500' : 'bg-gray-300'
-                                  }`}
-                                />
-                                <span className={step.done ? 'text-green-700' : 'text-gray-600'}>
-                                  {step.label}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {filteredAndSortedBills.length === 0 && bills.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          <div className="text-4xl mb-4">📋</div>
+          <div className="text-4xl mb-4 text-gray-300 font-bold">--</div>
           <div className="text-lg font-medium mb-2">No Bills Available</div>
           <div className="text-sm text-gray-400 max-w-md mx-auto">
             This representative may not have sponsored any bills recently, or the data may still be
@@ -917,7 +738,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
       {filteredAndSortedBills.length === 0 && bills.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-lg mb-2">🔍</div>
+          <div className="text-lg mb-2 text-gray-400 font-bold">No results</div>
           <div>No bills found matching the selected criteria.</div>
           <div className="text-sm mt-2">Try adjusting your filters or search terms.</div>
         </div>

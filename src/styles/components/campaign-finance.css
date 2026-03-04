@@ -29,12 +29,12 @@
 
 /* Metric cards */
 .campaign-finance-container .metric-card {
-  @apply bg-white rounded-lg p-4 text-center shadow-sm border border-gray-200 hover:shadow-md transition-shadow;
+  @apply bg-white p-4 text-center border-2 border-gray-200 hover:border-civiq-blue transition-colors;
 }
 
 /* Data rows */
 .campaign-finance-container .data-row {
-  @apply flex items-center justify-between p-3 border border-gray-100 rounded hover:bg-gray-50 transition-colors;
+  @apply flex items-center justify-between p-3 border border-gray-100 hover:bg-gray-50 transition-colors;
 }
 
 /* Progress bars */
@@ -95,9 +95,5 @@
 
   .campaign-finance-tabs nav {
     @apply border-b-0;
-  }
-
-  .campaign-finance-container .hover\:shadow-md:hover {
-    @apply shadow-none;
   }
 }

@@ -240,7 +240,7 @@ export function GlobalSearch() {
 
       {/* Results Dropdown */}
       {isOpen && (query.length >= 2 || results) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black z-50 max-h-96 overflow-y-auto">
           {isLoading && <div className="p-4 text-center text-gray-500 text-sm">Searching...</div>}
 
           {!isLoading && results && results.totalResults === 0 && (

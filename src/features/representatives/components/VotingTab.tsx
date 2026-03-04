@@ -266,18 +266,18 @@ const VotingTabComponent = React.memo(
     if (isLoading) {
       return (
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-8 bg-gray-200 w-1/3"></div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
           </div>
           <div className="space-y-2">
-            <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
+            <div className="h-6 bg-white border-2 border-gray-300"></div>
+            <div className="h-6 bg-white border-2 border-gray-300"></div>
+            <div className="h-6 bg-white border-2 border-gray-300"></div>
           </div>
         </div>
       );
@@ -371,7 +371,7 @@ const VotingTabComponent = React.memo(
                 categoryFilter !== 'all' ||
                 dateFilter.start ||
                 dateFilter.end) && (
-                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500">
                   {
                     [
                       positionFilter !== 'all',
@@ -491,7 +491,7 @@ const VotingTabComponent = React.memo(
         {data?.success === false || data?.error ? (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200">
             <div className="flex items-center gap-2 text-sm text-yellow-800">
-              <span className="text-lg">⚠️</span>
+              <span className="text-lg font-bold text-yellow-800">!</span>
               <div>
                 <div className="font-medium">Partial data available</div>
                 <div className="text-xs text-yellow-700 mt-1">
@@ -538,7 +538,7 @@ const VotingTabComponent = React.memo(
               </div>
             </div>
             {/* Attendance bar */}
-            <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="mt-3 h-2 bg-gray-200 overflow-hidden">
               <div
                 className={`h-full transition-all duration-500 ${
                   ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 95
@@ -587,9 +587,9 @@ const VotingTabComponent = React.memo(
         <div className="space-y-2 mb-8">
           <div className="flex items-center gap-3">
             <span className="w-20 text-sm">Yes</span>
-            <div className="flex-1 bg-gray-200 rounded h-6">
+            <div className="flex-1 bg-gray-200 h-6">
               <div
-                className="bg-green-500 h-6 rounded"
+                className="bg-green-500 h-6"
                 style={{
                   width: totalVotes > 0 ? `${(yesVotes / totalVotes) * 100}%` : '0%',
                 }}
@@ -601,9 +601,9 @@ const VotingTabComponent = React.memo(
           </div>
           <div className="flex items-center gap-3">
             <span className="w-20 text-sm">Nay</span>
-            <div className="flex-1 bg-gray-200 rounded h-6">
+            <div className="flex-1 bg-gray-200 h-6">
               <div
-                className="bg-red-500 h-6 rounded"
+                className="bg-red-500 h-6"
                 style={{
                   width: totalVotes > 0 ? `${(nayVotes / totalVotes) * 100}%` : '0%',
                 }}
@@ -616,9 +616,9 @@ const VotingTabComponent = React.memo(
           {presentVotes > 0 && (
             <div className="flex items-center gap-3">
               <span className="w-20 text-sm">Present</span>
-              <div className="flex-1 bg-gray-200 rounded h-6">
+              <div className="flex-1 bg-gray-200 h-6">
                 <div
-                  className="bg-yellow-500 h-6 rounded"
+                  className="bg-yellow-500 h-6"
                   style={{
                     width: totalVotes > 0 ? `${(presentVotes / totalVotes) * 100}%` : '0%',
                   }}
@@ -632,9 +632,9 @@ const VotingTabComponent = React.memo(
           {notVotingVotes > 0 && (
             <div className="flex items-center gap-3">
               <span className="w-20 text-sm">Not Voting</span>
-              <div className="flex-1 bg-gray-200 rounded h-6">
+              <div className="flex-1 bg-gray-200 h-6">
                 <div
-                  className="bg-white0 h-6 rounded"
+                  className="bg-white0 h-6"
                   style={{
                     width: totalVotes > 0 ? `${(notVotingVotes / totalVotes) * 100}%` : '0%',
                   }}
@@ -649,7 +649,7 @@ const VotingTabComponent = React.memo(
 
         {/* Phase 4 Debug: Cache Status Indicator (dev only) */}
         {process.env.NODE_ENV === 'development' && data && (
-          <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+          <div className="mb-4 p-2 bg-blue-50 border border-blue-200 text-xs text-blue-700">
             <div className="font-mono">
               Cache: {data.dataSource || 'unknown'} | Success: {data.success ? '✓' : '✗'} | Votes:{' '}
               {data.votes?.length || 0} | Total: {data.totalResults || 'unknown'}
@@ -738,7 +738,7 @@ const VotingTabComponent = React.memo(
                 <select
                   value={votesPerPage}
                   onChange={e => handleVotesPerPageChange(Number(e.target.value))}
-                  className="px-3 py-2 min-h-[44px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 min-h-[44px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>

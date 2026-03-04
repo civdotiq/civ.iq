@@ -14,17 +14,14 @@ export default function Loading() {
           <Skeleton className="h-6 w-96 mx-auto" />
         </div>
 
-        <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-6">
+        <div className="bg-white border-2 border-black p-6">
           <Skeleton className="h-12 w-full mb-4" />
-          <Skeleton className="h-10 w-32 rounded" />
+          <Skeleton className="h-10 w-32" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-6"
-            >
+            <div key={index} className="bg-white border-2 border-black p-6">
               <Skeleton className="h-6 w-48 mb-2" />
               <Skeleton className="h-4 w-32 mb-4" />
               <Skeleton className="h-4 w-full mb-2" />

@@ -45,9 +45,9 @@ export const Card: FC<CardProps> = memo(
     return (
       <div
         className={cn(
-          'bg-white border border-gray-100 border-2 border-black',
+          'bg-white border-2 border-black',
           isClickable &&
-            'cursor-pointer hover:border-2 border-black hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2',
+            'cursor-pointer hover:border-civiq-blue hover:-translate-y-0.5 transform transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2',
           paddingClasses[padding],
           className
         )}

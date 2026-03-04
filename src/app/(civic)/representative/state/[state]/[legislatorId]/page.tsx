@@ -110,7 +110,7 @@ export default async function StateLegislatorProfilePage({
 
   return (
     <>
-      <main id="main-content">
+      <div>
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <nav className="text-sm text-gray-500 mb-6">
             <Link href="/" className="hover:text-blue-600">
@@ -134,7 +134,7 @@ export default async function StateLegislatorProfilePage({
             <SimpleStateLegislatorProfile legislator={legislator} />
           </ErrorBoundary>
         </ChunkLoadErrorBoundary>
-      </main>
+      </div>
     </>
   );
 }

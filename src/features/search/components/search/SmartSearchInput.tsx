@@ -160,7 +160,7 @@ export function SmartSearchInput({
             onFocus={() => setShowDropdown(true)}
             placeholder={placeholder}
             className={`
-              w-full px-4 py-3 pr-24 text-lg border rounded-lg
+              w-full px-4 py-3 pr-24 text-lg border
               transition-all duration-200
               ${isValid === true ? 'border-green-500 bg-green-50' : ''}
               ${isValid === false ? 'border-orange-500 bg-orange-50' : ''}
@@ -188,7 +188,7 @@ export function SmartSearchInput({
             disabled={!value.trim() || isLoading}
             className={`
               absolute right-2 top-1/2 -translate-y-1/2
-              px-3 py-1.5 rounded-md text-white font-medium
+              px-3 py-1.5 text-white font-medium
               transition-all duration-200
               ${
                 value.trim() && !isLoading
@@ -199,7 +199,7 @@ export function SmartSearchInput({
             aria-label="Search"
           >
             {isLoading ? (
-              <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
             ) : (
               'Search'
             )}
@@ -219,7 +219,7 @@ export function SmartSearchInput({
         {showDropdown && (showRecentSearches || showExamples) && (
           <div
             ref={dropdownRef}
-            className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg"
+            className="absolute z-10 w-full mt-2 bg-white border-2 border-black"
           >
             {/* Recent searches */}
             {showRecentSearches && recentSearches.length > 0 && (
@@ -238,7 +238,7 @@ export function SmartSearchInput({
                     <li key={index}>
                       <button
                         onClick={() => handleRecentSearchClick(search)}
-                        className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 transition-colors"
+                        className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 transition-colors"
                       >
                         🕐 {search}
                       </button>
@@ -260,7 +260,7 @@ export function SmartSearchInput({
                           setValue(example.text);
                           setShowDropdown(false);
                         }}
-                        className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 transition-colors"
+                        className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 transition-colors"
                       >
                         <span className="font-medium">{example.text}</span>
                         <span className="text-gray-500 ml-2">({example.type})</span>

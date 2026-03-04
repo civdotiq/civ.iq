@@ -61,27 +61,27 @@ export function HeroSummary({
   // Loading state (after hooks)
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-gradient-to-br from-white to-neutral-50 p-8">
+      <div className="border-2 border-neutral-200 bg-gradient-to-br from-white to-neutral-50 p-8">
         <div className="animate-pulse">
           <div className="mb-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-8 bg-gray-200 w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 w-1/4"></div>
           </div>
           <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div className="bg-white p-6 border border-neutral-200">
+              <div className="h-4 bg-gray-200 w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 w-2/3"></div>
             </div>
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div className="bg-white p-6 border border-neutral-200">
+              <div className="h-4 bg-gray-200 w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 w-2/3"></div>
             </div>
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div className="bg-white p-6 border border-neutral-200">
+              <div className="h-4 bg-gray-200 w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 w-2/3"></div>
             </div>
           </div>
         </div>
@@ -93,14 +93,14 @@ export function HeroSummary({
     const status = totalRaisedComparison.outlierStatus;
     if (status === 'extreme') {
       return (
-        <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+        <span className="bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
           Significantly {totalRaisedComparison.percentDifference > 0 ? 'Above' : 'Below'} Average
         </span>
       );
     }
     if (status === 'high' || status === 'low') {
       return (
-        <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+        <span className="bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
           {totalRaisedComparison.percentDifference > 0 ? 'Above' : 'Below'} Average
         </span>
       );
@@ -109,7 +109,7 @@ export function HeroSummary({
   };
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-gradient-to-br from-white to-neutral-50 p-8">
+    <div className="border-2 border-neutral-200 bg-gradient-to-br from-white to-neutral-50 p-8">
       <div className="mb-6">
         <h2 className="mb-2 text-2xl font-bold text-neutral-900">Campaign Finance {cycle}</h2>
         <p className="text-neutral-600">{representativeName}</p>
@@ -117,7 +117,7 @@ export function HeroSummary({
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Total Raised */}
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="bg-white p-6 border border-neutral-200">
           <div className="mb-2 text-sm font-medium text-neutral-600">Total Raised</div>
           <div className="mb-2 text-3xl font-bold text-neutral-900">
             ${(totalRaised / 1000000).toFixed(2)}M
@@ -130,7 +130,7 @@ export function HeroSummary({
         </div>
 
         {/* Total Spent */}
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="bg-white p-6 border border-neutral-200">
           <div className="mb-2 text-sm font-medium text-neutral-600">Total Spent</div>
           <div className="mb-2 text-3xl font-bold text-neutral-900">
             ${(totalSpent / 1000000).toFixed(2)}M
@@ -143,7 +143,7 @@ export function HeroSummary({
         </div>
 
         {/* Cash on Hand */}
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="bg-white p-6 border border-neutral-200">
           <div className="mb-2 text-sm font-medium text-neutral-600">Cash on Hand</div>
           <div className="mb-2 text-3xl font-bold text-neutral-900">
             ${(cashOnHand / 1000000).toFixed(2)}M
@@ -154,7 +154,7 @@ export function HeroSummary({
 
       {/* Insights */}
       {insights.length > 0 && (
-        <div className="rounded-lg bg-amber-50 p-6">
+        <div className="bg-amber-50 p-6 border border-amber-200">
           <h3 className="mb-3 text-sm font-semibold uppercase text-amber-900">Key Insights</h3>
           <ul className="space-y-2">
             {insights.map((insight, idx) => (

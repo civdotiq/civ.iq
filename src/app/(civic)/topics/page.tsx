@@ -204,7 +204,7 @@ export default function TopicsHubPage() {
               <Link
                 key={topic.id}
                 href={`/topics/${topic.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-all"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{topic.icon}</span>

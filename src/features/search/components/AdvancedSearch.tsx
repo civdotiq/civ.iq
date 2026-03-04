@@ -240,7 +240,7 @@ export function AdvancedSearch() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors min-h-[44px] ${
+          className={`flex items-center justify-center gap-2 px-4 py-3 border transition-colors min-h-[44px] ${
             showFilters
               ? 'bg-blue-600 text-white border-blue-600'
               : 'aicher-button text-gray-700 aicher-hover'
@@ -458,7 +458,7 @@ export function AdvancedSearch() {
         </h3>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Sort by:</span>
-          <select className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option>Relevance</option>
             <option>Name (A-Z)</option>
             <option>Years in Office</option>
@@ -473,13 +473,13 @@ export function AdvancedSearch() {
         {loading ? (
           // Loading skeleton
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="border border-gray-200 rounded-lg p-6 animate-pulse">
+            <div key={i} className="border border-gray-200 p-6 animate-pulse">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-5 bg-gray-200 w-1/3"></div>
+                  <div className="h-4 bg-gray-200 w-1/2"></div>
+                  <div className="h-4 bg-gray-200 w-1/4"></div>
                 </div>
               </div>
             </div>
@@ -496,7 +496,7 @@ export function AdvancedSearch() {
           results.map((rep, index) => (
             <div
               key={rep.bioguideId}
-              className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+              className="border border-gray-200 p-6 hover:border-gray-400 transition-colors"
             >
               <div className="flex items-start gap-6">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
@@ -526,7 +526,7 @@ export function AdvancedSearch() {
                       <h3 className="text-xl font-semibold text-gray-900 mb-1">{rep.name}</h3>
                       <div className="flex items-center gap-3 text-sm text-gray-600">
                         <span
-                          className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`inline-flex px-2 py-1 text-xs font-medium ${
                             rep.party === 'D'
                               ? 'bg-blue-100 text-blue-700'
                               : rep.party === 'R'
@@ -551,7 +551,7 @@ export function AdvancedSearch() {
                         </span>
                       </div>
                     </div>
-                    <button className="min-h-[44px] px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <button className="min-h-[44px] px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium">
                       View Profile
                     </button>
                   </div>
@@ -566,7 +566,7 @@ export function AdvancedSearch() {
                       <span>{formatCurrency(rep.fundraisingTotal)} raised</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-4 h-4 rounded bg-blue-600"></div>
+                      <div className="w-4 h-4 bg-blue-600"></div>
                       <span>{rep.votingScore}% voting score</span>
                     </div>
                   </div>
@@ -593,15 +593,15 @@ export function AdvancedSearch() {
           </p>
           <div className="flex items-center gap-2">
             <button
-              className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 font-medium"
+              className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50 font-medium"
               disabled
             >
               Previous
             </button>
-            <span className="min-h-[44px] min-w-[44px] px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center justify-center">
+            <span className="min-h-[44px] min-w-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium flex items-center justify-center">
               1
             </span>
-            <button className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 font-medium">
+            <button className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 text-sm hover:bg-gray-50 font-medium">
               Next
             </button>
           </div>

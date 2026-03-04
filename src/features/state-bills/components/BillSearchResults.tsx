@@ -146,7 +146,7 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
             <Link
               key={bill.id}
               href={`/state-bills/${bill.state}/${encodeBase64Url(bill.id)}`}
-              className="block bg-white border-2 border-black hover:border-civiq-blue hover:shadow-lg transition-all group"
+              className="block bg-white border-2 border-black hover:border-civiq-blue transition-all group"
             >
               <div className="p-6">
                 {/* Header */}

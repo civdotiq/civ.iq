@@ -191,7 +191,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
               {upperControl.control} Control (+{upperControl.margin})
             </span>
           </div>
-          <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative h-8 bg-gray-200 overflow-hidden">
             <div
               className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
               style={{ width: `${upperControl.demPercent}%` }}
@@ -215,7 +215,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
               {lowerControl.control} Control (+{lowerControl.margin})
             </span>
           </div>
-          <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative h-8 bg-gray-200 overflow-hidden">
             <div
               className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
               style={{ width: `${lowerControl.demPercent}%` }}
@@ -481,7 +481,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
           return (
             <div key={district.number} className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700 w-16">CD-{district.number}</span>
-              <div className="flex-1 relative h-6 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 relative h-6 bg-gray-200 overflow-hidden">
                 <div
                   className={`absolute h-full transition-all duration-500 ${
                     pviValue < 0 ? 'bg-blue-600 right-1/2' : 'bg-red-600 left-1/2'
@@ -493,7 +493,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
                 />
                 {isCompetitive && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-700 bg-yellow-100 px-2 py-0.5 rounded">
+                    <span className="text-xs font-medium text-gray-700 bg-yellow-100 px-2 py-0.5">
                       Competitive
                     </span>
                   </div>
@@ -512,15 +512,15 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
       </div>
       <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-600">
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+          <div className="w-3 h-3 bg-blue-600"></div>
           Democratic Lean
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+          <div className="w-3 h-3 bg-gray-300"></div>
           Even
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+          <div className="w-3 h-3 bg-red-600"></div>
           Republican Lean
         </span>
       </div>
@@ -598,7 +598,7 @@ export default function StateOverviewPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state data...</p>
         </div>
       </div>

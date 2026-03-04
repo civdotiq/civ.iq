@@ -19,15 +19,15 @@ export default {
     extend: {
       colors: {
         civiq: {
-          red: '#e11d09',
+          red: '#e11d07',
           green: '#0a9338',
-          blue: '#3ea0d2',
+          blue: '#3ea2d4',
           'blue-cool': '#2d8fc9', // Cool blue for data visualization
         },
         // Add the specific blue for consistency
-        'civiq-red': '#e11d09',
+        'civiq-red': '#e11d07',
         'civiq-green': '#0a9338',
-        'civiq-blue': '#3ea0d2',
+        'civiq-blue': '#3ea2d4',
         'civiq-blue-cool': '#2d8fc9',
         // Status semantic colors
         'status-info': '#4b5563',

@@ -40,6 +40,7 @@ interface DistrictChartsProps {
     political: {
       cookPVI: string;
       lastElection: {
+        winner: string;
         margin: number;
         turnout: number;
       };
@@ -210,35 +211,106 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
 export function ElectionHistoryChart({
   currentPVI,
   currentMargin,
+  winner,
+  turnout,
 }: {
   currentPVI: string;
   currentMargin: number;
+  winner?: string;
+  turnout?: number;
 }) {
+  const hasRealData = winner && winner !== 'Data unavailable';
   const pviMatch = currentPVI?.match(/^([DR])\+/);
-  const likelyWinner =
-    pviMatch?.[1] === 'D' ? 'Democratic' : pviMatch?.[1] === 'R' ? 'Republican' : null;
+
+  // Determine display values
+  const winnerLabel = hasRealData
+    ? winner
+    : pviMatch?.[1] === 'D'
+      ? 'Democratic'
+      : pviMatch?.[1] === 'R'
+        ? 'Republican'
+        : null;
+
+  const winnerColor =
+    winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? '#0a9338' : '#e11d07';
+
+  const demPct = hasRealData ? 50 - currentMargin / 2 : null;
+  const repPct = hasRealData ? 50 + currentMargin / 2 : null;
+
+  // For D winners, flip so dem is higher
+  const demBar =
+    winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
+      ? (repPct ?? 0) + (currentMargin ?? 0)
+      : (demPct ?? 0);
+  const repBar =
+    winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? (demPct ?? 0) : (repPct ?? 0);
 
   return (
     <div className="bg-white border-2 border-black p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Election Results History</h3>
-      <div className="flex items-center justify-center h-48 text-center">
-        <div>
-          <p className="text-gray-600">Data unavailable</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Historical election results require state/federal election data APIs
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">2024 Election Results</h3>
+      {hasRealData ? (
+        <>
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span style={{ color: '#0a9338', fontWeight: 600 }}>Democrat</span>
+                <span style={{ color: '#0a9338' }}>{demBar.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-gray-100 h-6 border border-black">
+                <div
+                  className="h-full"
+                  style={{ width: `${demBar}%`, backgroundColor: '#0a9338' }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span style={{ color: '#e11d07', fontWeight: 600 }}>Republican</span>
+                <span style={{ color: '#e11d07' }}>{repBar.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-gray-100 h-6 border border-black">
+                <div
+                  className="h-full"
+                  style={{ width: `${repBar}%`, backgroundColor: '#e11d07' }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-gray-200 space-y-1">
+            <p className="text-sm text-gray-700">
+              <strong style={{ color: winnerColor }}>{winner}</strong> won by{' '}
+              <strong>{Math.abs(currentMargin).toFixed(1)}%</strong>
+            </p>
+            {turnout && turnout > 0 ? (
+              <p className="text-sm text-gray-500">{turnout.toLocaleString()} total votes cast</p>
+            ) : null}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Source: MIT Election Data + Science Lab (MEDSL)
           </p>
-        </div>
-      </div>
-      <p className="text-sm text-gray-600 mt-2">
-        Last election:{' '}
-        {likelyWinner ? (
-          <strong>
-            {likelyWinner} won by {currentMargin.toFixed(1)}%
-          </strong>
-        ) : (
-          <strong>{currentMargin.toFixed(1)}% margin</strong>
-        )}
-      </p>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center justify-center h-48 text-center">
+            <div>
+              <p className="text-gray-600">Data unavailable</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Election results not yet published for this state
+              </p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mt-2">
+            Estimated from Cook PVI:{' '}
+            {winnerLabel ? (
+              <strong>
+                {winnerLabel} +{Math.abs(currentMargin).toFixed(1)}%
+              </strong>
+            ) : (
+              <strong>{Math.abs(currentMargin).toFixed(1)}% margin</strong>
+            )}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -316,6 +388,8 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
         <ElectionHistoryChart
           currentPVI={districtData.political.cookPVI}
           currentMargin={districtData.political.lastElection.margin}
+          winner={districtData.political.lastElection.winner}
+          turnout={districtData.political.lastElection.turnout}
         />
       </div>
 

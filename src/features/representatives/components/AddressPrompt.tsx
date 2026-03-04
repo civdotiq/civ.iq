@@ -152,13 +152,13 @@ export function AddressPrompt({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white border-2 border-black p-6 shadow-xl">
+        <div className="relative w-full max-w-lg bg-white border-2 border-black p-6">
           {/* Header */}
           <div className="mb-6">
             <h2 id="modal-title" className="text-xl font-bold text-gray-900 mb-2">
               Multiple Districts Found
             </h2>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+            <div className="bg-amber-50 border border-amber-200 p-3 mb-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
@@ -190,11 +190,14 @@ export function AddressPrompt({
             <button
               onClick={handleUseLocation}
               disabled={isGettingLocation}
-              className="w-full px-4 py-3 bg-civiq-blue text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors rounded-lg flex items-center justify-center"
+              className="w-full px-4 py-3 bg-civiq-blue text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               {isGettingLocation ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div
+                    className="animate-spin h-4 w-4 border-b-2 border-white mr-2"
+                    style={{ borderRadius: '50%' }}
+                  ></div>
                   Getting your location...
                 </>
               ) : (
@@ -256,7 +259,10 @@ export function AddressPrompt({
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div
+                    className="animate-spin h-4 w-4 border-b-2 border-white mr-2"
+                    style={{ borderRadius: '50%' }}
+                  ></div>
                   Finding District...
                 </div>
               ) : (
@@ -279,7 +285,7 @@ export function AddressPrompt({
           <div className="space-y-3">
             <button
               onClick={() => setShowDistrictOptions(!showDistrictOptions)}
-              className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-300 hover:border-civiq-blue hover:bg-blue-50 transition-all rounded-lg"
+              className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-300 hover:border-civiq-blue hover:bg-blue-50 transition-all"
             >
               <span className="text-sm font-medium text-gray-700">
                 {showDistrictOptions ? 'Hide' : 'Select from'} {districts.length} available
@@ -303,12 +309,12 @@ export function AddressPrompt({
             </button>
 
             {showDistrictOptions && (
-              <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
+              <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 p-2">
                 {districts.map(district => (
                   <button
                     key={`${district.state}-${district.district}`}
                     onClick={() => handleDistrictSelect(district)}
-                    className="w-full text-left px-4 py-3 border border-gray-200 hover:bg-blue-50 hover:border-civiq-blue transition-colors rounded-lg group"
+                    className="w-full text-left px-4 py-3 border border-gray-200 hover:bg-blue-50 hover:border-civiq-blue transition-colors group"
                   >
                     <div className="flex items-center justify-between">
                       <div>

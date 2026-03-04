@@ -42,7 +42,7 @@ export function NonVotingBadge({
   const badge = (
     <span
       className={`
-        inline-flex items-center gap-1.5 rounded-md
+        inline-flex items-center gap-1.5
         bg-amber-100 dark:bg-amber-900/30
         text-amber-800 dark:text-amber-200
         border border-amber-300 dark:border-amber-700
@@ -82,7 +82,6 @@ export function NonVotingBadge({
             text-sm text-gray-700 dark:text-gray-200
             bg-white dark:bg-gray-800
             border border-gray-300 dark:border-gray-600
-            rounded-lg shadow-lg
             left-0 top-full
           "
           role="tooltip"

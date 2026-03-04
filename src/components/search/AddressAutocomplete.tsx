@@ -239,7 +239,7 @@ export default function AddressAutocomplete({
       {/* Loading indicator */}
       {isLoading && (
         <div className="absolute right-16 sm:right-24 top-1/2 -translate-y-1/2">
-          <div className="animate-spin h-4 w-4 border-2 border-civiq-blue border-t-transparent rounded-full" />
+          <div className="animate-spin h-4 w-4 border-2 border-civiq-blue border-t-transparent" />
         </div>
       )}
 
@@ -248,7 +248,7 @@ export default function AddressAutocomplete({
         <ul
           id="address-suggestions"
           role="listbox"
-          className="absolute z-50 w-full bg-white border-2 border-black border-t-0 shadow-lg max-h-80 overflow-y-auto"
+          className="absolute z-50 w-full bg-white border-2 border-black border-t-0 max-h-80 overflow-y-auto"
         >
           {suggestions.length > 0 ? (
             suggestions.map((address, index) => (

@@ -197,7 +197,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 w-full bg-white border-2 border-black shadow-lg mt-1 max-h-96 overflow-hidden flex flex-col">
+        <div className="absolute z-50 w-full bg-white border-2 border-black mt-1 max-h-96 overflow-hidden flex flex-col">
           {/* Search Input */}
           <div className="p-3 border-b-2 border-gray-300">
             <input

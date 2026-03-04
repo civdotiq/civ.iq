@@ -229,7 +229,7 @@ export default async function RepresentativeProfilePage({
         ]}
       />
 
-      <main id="main-content" className="density-default">
+      <div className="density-default">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
@@ -258,7 +258,7 @@ export default async function RepresentativeProfilePage({
             apiUrl={`/api/v1/representatives/${bioguideId}`}
           />
         </div>
-      </main>
+      </div>
     </>
   );
 }

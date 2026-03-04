@@ -25,7 +25,6 @@
   :focus-visible {
     outline: 2px solid #3ea2d4;
     outline-offset: 2px;
-    border-radius: 4px;
   }
 
   /* Selection colors */
@@ -83,7 +82,7 @@
 
   /* Loading skeleton */
   .skeleton {
-    @apply animate-pulse bg-gray-200 rounded;
+    @apply animate-pulse bg-gray-200;
   }
 
   /* Aicher map container - geometric */
@@ -145,7 +144,7 @@
   }
 
   .border-glow-red {
-    border: 2px solid #e11d09;
+    border: 2px solid #e11d07;
   }
 
   /* Hover lift effect */

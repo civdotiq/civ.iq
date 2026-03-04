@@ -30,7 +30,7 @@ const DistrictMap = dynamic(() => import('@/features/districts/components/Distri
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2" />
         <p className="text-sm text-gray-600">Loading district map...</p>
       </div>
     </div>
@@ -143,7 +143,7 @@ export default function DistrictPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading district details...</p>
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function DistrictPage() {
             />
 
             {/* Interactive Map */}
-            <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
+            <div className="bg-white border-2 border-black p-4 sm:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">District Boundaries</h2>
               <DistrictMap state={district.state} district={district.number} />
             </div>
@@ -280,7 +280,7 @@ export default function DistrictPage() {
 
             {/* Wikidata Facts */}
             {district.wikidata && (
-              <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
+              <div className="bg-white border-2 border-black p-4 sm:p-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Facts</h3>
                 <div className="space-y-3">
                   {district.wikidata.established && (

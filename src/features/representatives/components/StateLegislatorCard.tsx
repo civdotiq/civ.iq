@@ -54,8 +54,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   };
 
   const getChamberInfo = (chamber: string) => {
-    if (chamber === 'upper')
-      return { name: 'State Senate', color: 'bg-purple-100 text-purple-800' };
+    if (chamber === 'upper') return { name: 'State Senate', color: 'bg-gray-100 text-gray-800' };
     if (chamber === 'lower') return { name: 'State House', color: 'bg-green-100 text-green-800' };
     return { name: 'Legislature', color: 'bg-white border-2 border-gray-300 text-gray-800' };
   };
@@ -106,14 +105,14 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
 
             <div className="flex flex-wrap gap-1.5 mt-2">
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
+                className={`px-2 py-0.5 text-xs font-medium ${getPartyColor(legislator.party)}`}
               >
                 {legislator.party}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${chamberInfo.color}`}>
+              <span className={`px-2 py-0.5 text-xs font-medium ${chamberInfo.color}`}>
                 {chamberInfo.name}
               </span>
-              <span className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium">
                 District {legislator.district}
               </span>
             </div>
@@ -127,7 +126,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
         <div className="px-4 sm:px-6 pb-3">
           <div className="flex flex-wrap gap-1.5">
             {legislator.currentRole?.start_date && (
-              <span className="px-2 py-0.5 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-civiq-green/10 text-civiq-green text-xs font-medium">
                 Since {new Date(legislator.currentRole.start_date).getFullYear()}
               </span>
             )}
@@ -142,7 +141,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
                 href={`tel:${legislator.phone}`}
                 className="flex items-center gap-1 text-gray-600 hover:text-civiq-blue"
               >
-                <span>📞</span>
+                <span>Phone:</span>
                 <span>{legislator.phone}</span>
               </a>
             )}
@@ -151,7 +150,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
                 href={`mailto:${legislator.email}`}
                 className="flex items-center gap-1 text-civiq-blue hover:underline truncate"
               >
-                <span>✉️</span>
+                <span>Email:</span>
                 <span className="truncate max-w-[180px]">{legislator.email}</span>
               </a>
             )}
@@ -162,7 +161,6 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-civiq-blue hover:underline"
               >
-                <span>🌐</span>
                 <span>Website</span>
               </a>
             )}

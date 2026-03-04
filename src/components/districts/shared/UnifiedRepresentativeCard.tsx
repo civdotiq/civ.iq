@@ -82,7 +82,7 @@ export default function UnifiedRepresentativeCard({
         : 'bg-gray-100 text-gray-800';
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black p-8">
       <div className="flex items-start gap-6">
         {/* Photo - 100px for both federal and state (state's superior size) */}
         <Link href={profileLink} className="flex-shrink-0">
@@ -122,9 +122,7 @@ export default function UnifiedRepresentativeCard({
 
             {/* Party Badge */}
             <div className="flex items-center gap-2">
-              <span
-                className={`inline-block px-2 py-1 rounded text-xs font-bold ${partyColorClass}`}
-              >
+              <span className={`inline-block px-2 py-1 text-xs font-bold ${partyColorClass}`}>
                 {displayParty}
               </span>
 

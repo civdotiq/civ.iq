@@ -122,9 +122,9 @@ export function RepresentativeSidebar({
             <span className="text-sm font-medium text-gray-900">{dataCompleteness}%</span>
           </div>
 
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 h-3">
             <div
-              className="bg-green-600 h-3 rounded-full transition-all duration-300"
+              className="bg-green-600 h-3 transition-all duration-300"
               style={{ width: `${dataCompleteness}%` }}
             />
           </div>
@@ -158,7 +158,7 @@ export function RepresentativeSidebar({
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block hover:bg-white -mx-2 px-2 py-2 rounded"
+                  className="block hover:bg-white -mx-2 px-2 py-2"
                 >
                   <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
                     {article.title}
@@ -192,25 +192,25 @@ export function RepresentativeSidebar({
         <div className="space-y-2">
           <Link
             href={`/representative/${representative.bioguideId}/contact`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white"
           >
             Contact Information
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/committees`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white"
           >
             Committee Assignments
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/votes`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white"
           >
             Full Voting Record
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/bills`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white"
           >
             All Sponsored Bills
           </Link>

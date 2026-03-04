@@ -124,7 +124,7 @@ export function SearchValidation({
           value={query}
           onChange={handleInputChange}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent ${
+          className={`w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent ${
             error ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
           disabled={isValidating}
@@ -133,7 +133,7 @@ export function SearchValidation({
         <button
           type="submit"
           disabled={!query.trim() || isValidating}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-civiq-blue text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-civiq-blue text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isValidating ? (
             <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -252,7 +252,7 @@ export function EnhancedSmartSearchInput({
 
       {/* Suggestions dropdown */}
       {showSuggestions && (showRecentSearches || showExamples) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black z-50">
           {/* Recent searches */}
           {showRecentSearches && recentSearches.length > 0 && (
             <div className="p-3 border-b border-gray-100">
@@ -267,7 +267,7 @@ export function EnhancedSmartSearchInput({
                       const isZip = /^\d{5}$/.test(search);
                       handleValidSearch(search, isZip ? 'zip' : 'address');
                     }}
-                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100"
                   >
                     {search}
                   </button>
@@ -290,7 +290,7 @@ export function EnhancedSmartSearchInput({
                       const isZip = /^\d{5}$/.test(example.value);
                       handleValidSearch(example.value, isZip ? 'zip' : 'address');
                     }}
-                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100"
                   >
                     <span className="font-medium">{example.label}:</span>{' '}
                     <span className="text-gray-600">{example.value}</span>

@@ -256,7 +256,7 @@ export function SimpleGoogleNewsFeed({
           <div className="text-gray-600 mb-4">{error}</div>
           <button
             onClick={fetchNews}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
           >
             Try Again
           </button>
@@ -286,7 +286,7 @@ export function SimpleGoogleNewsFeed({
           return (
             <div
               key={cluster.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-blue-300"
+              className="bg-white border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:border-blue-300"
             >
               {/* Featured Article with Image */}
               {featuredArticle && (
@@ -310,7 +310,7 @@ export function SimpleGoogleNewsFeed({
                       {/* Topic Badge Overlay */}
                       <div className="absolute top-4 left-4 z-10">
                         <span
-                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${
+                          className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold backdrop-blur-sm ${
                             cluster.topicType === 'breaking'
                               ? 'bg-red-500/90 text-white'
                               : cluster.topicType === 'developing'
@@ -334,7 +334,7 @@ export function SimpleGoogleNewsFeed({
                     {!featuredArticle.imageUrl && (
                       <div className="mb-3">
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold ${
                             cluster.topicType === 'breaking'
                               ? 'bg-red-100 text-red-800'
                               : cluster.topicType === 'developing'
@@ -365,7 +365,7 @@ export function SimpleGoogleNewsFeed({
 
                     {/* Metadata */}
                     <div className="flex items-center gap-3 text-xs">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-md">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 bg-gray-100 px-2.5 py-1">
                         <svg
                           className="w-3.5 h-3.5"
                           fill="currentColor"
@@ -500,17 +500,17 @@ export function SimpleGoogleNewsFeed({
 
       {/* Filters - Temporarily commented out due to type mismatch */}
       <div className="mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-white border-2 border-gray-200 p-4">
           <div className="flex flex-wrap items-center gap-2 sm:space-x-4">
             <span className="text-sm font-medium text-gray-700">View:</span>
-            <div className="flex flex-wrap rounded-lg border border-gray-300 bg-gray-50">
+            <div className="flex flex-wrap border border-gray-300 bg-gray-50">
               {(['headlines', 'topics', 'timeline', 'coverage'] as NewsViewMode[]).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setActiveViewMode(mode)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     activeViewMode === mode
-                      ? 'bg-blue-600 text-white shadow-sm'
+                      ? 'bg-blue-600 text-white'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >

@@ -954,7 +954,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
 
   return (
     <div className="print-lesson-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible">
-      <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl print:w-full">
+      <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none border-2 border-black print:border-0 print:w-full">
         {/* Modal Header - Hidden when printing */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
           <h2 className="text-lg font-semibold">Print Lesson Plan</h2>

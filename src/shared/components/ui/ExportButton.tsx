@@ -139,7 +139,7 @@ export function ExportButton<T extends Record<string, unknown>>({
           <div
             role="menu"
             aria-orientation="vertical"
-            className="absolute right-0 z-20 mt-1 w-36 origin-top-right border-2 border-black bg-white shadow-sm"
+            className="absolute right-0 z-20 mt-1 w-36 origin-top-right border-2 border-black bg-white"
           >
             <button
               type="button"
