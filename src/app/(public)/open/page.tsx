@@ -12,7 +12,7 @@ import type { Metadata } from 'next';
 import { nostrConfig } from '@/config/nostr.config';
 import { activitypubConfig } from '@/config/activitypub.config';
 import { DATASET_REGISTRY } from '@/lib/datasets';
-import { DatasetSchema } from '@/components/seo/JsonLd';
+import { DatasetSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Open Data | CIV.IQ',
@@ -211,11 +211,51 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
   { name: 'NewsAPI', url: 'https://newsapi.org', description: 'News aggregation' },
 ];
 
+const DATASET_KEYWORDS: Record<string, string[]> = {
+  'congress-members': [
+    'congress',
+    'representatives',
+    'senators',
+    '119th congress',
+    'federal government',
+  ],
+  committees: [
+    'congress',
+    'committees',
+    'committee membership',
+    '119th congress',
+    'congressional committees',
+  ],
+  'recent-bills': ['congress', 'legislation', 'bills', '119th congress', 'federal law'],
+  'recent-votes': [
+    'congress',
+    'roll call votes',
+    'voting records',
+    '119th congress',
+    'legislative votes',
+  ],
+  'vote-positions': ['congress', 'member votes', 'voting positions', '119th congress', 'roll call'],
+  'campaign-finance': [
+    'campaign finance',
+    'FEC',
+    'political contributions',
+    'PAC',
+    'election funding',
+  ],
+};
+
 export default function OpenDataPage() {
   const BASE_URL = 'https://civdotiq.org';
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Schema.org Breadcrumb */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: `${BASE_URL}` },
+          { name: 'Open Data', url: `${BASE_URL}/open` },
+        ]}
+      />
       {/* Schema.org Dataset markup for each bulk dataset */}
       {DATASET_REGISTRY.map(dataset => (
         <DatasetSchema
@@ -223,10 +263,23 @@ export default function OpenDataPage() {
           name={`${dataset.name} - CIV.IQ`}
           description={dataset.description}
           url={`${BASE_URL}/open`}
-          downloadUrl={`${BASE_URL}/api/download/${dataset.slug}?format=csv`}
-          encodingFormat="text/csv"
+          distributions={[
+            {
+              encodingFormat: 'text/csv',
+              contentUrl: `${BASE_URL}/api/download/${dataset.slug}?format=csv`,
+            },
+            {
+              encodingFormat: 'application/json',
+              contentUrl: `${BASE_URL}/api/download/${dataset.slug}?format=json`,
+            },
+          ]}
           source={dataset.source}
           sourceUrl={dataset.sourceUrl}
+          temporalCoverage="2025-01/2027-01"
+          dateModified={new Date().toISOString()}
+          keywords={DATASET_KEYWORDS[dataset.slug]}
+          variableMeasured={dataset.columnLabels}
+          includedInDataCatalog={{ name: 'CIV.IQ Bulk Datasets', url: `${BASE_URL}/api/download` }}
         />
       ))}
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">

@@ -490,15 +490,28 @@ export function AdministrativeAreaSchema({
   );
 }
 
+interface DatasetDistribution {
+  encodingFormat: string;
+  contentUrl: string;
+}
+
 interface DatasetSchemaProps {
   name: string;
   description: string;
   url: string;
-  downloadUrl: string;
-  encodingFormat: string;
+  /** @deprecated Use distributions array instead */
+  downloadUrl?: string;
+  /** @deprecated Use distributions array instead */
+  encodingFormat?: string;
+  distributions?: DatasetDistribution[];
   source: string;
   sourceUrl: string;
   license?: string;
+  temporalCoverage?: string;
+  dateModified?: string;
+  keywords?: string[];
+  variableMeasured?: string[];
+  includedInDataCatalog?: { name: string; url: string };
 }
 
 /**
@@ -511,11 +524,22 @@ export function DatasetSchema({
   url,
   downloadUrl,
   encodingFormat,
+  distributions,
   source,
   sourceUrl,
   license = 'https://creativecommons.org/publicdomain/mark/1.0/',
+  temporalCoverage,
+  dateModified,
+  keywords,
+  variableMeasured,
+  includedInDataCatalog,
 }: DatasetSchemaProps) {
-  const schema = {
+  // Backward compat: wrap single downloadUrl/encodingFormat into distributions array
+  const resolvedDistributions: DatasetDistribution[] =
+    distributions ??
+    (downloadUrl && encodingFormat ? [{ encodingFormat, contentUrl: downloadUrl }] : []);
+
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name,
@@ -533,18 +557,35 @@ export function DatasetSchema({
       name: source,
       url: sourceUrl,
     },
-    distribution: [
-      {
-        '@type': 'DataDownload',
-        encodingFormat,
-        contentUrl: downloadUrl,
-      },
-    ],
+    distribution: resolvedDistributions.map(d => ({
+      '@type': 'DataDownload',
+      encodingFormat: d.encodingFormat,
+      contentUrl: d.contentUrl,
+    })),
     spatialCoverage: {
       '@type': 'Place',
       name: 'United States of America',
     },
   };
+
+  if (temporalCoverage) schema.temporalCoverage = temporalCoverage;
+  if (dateModified) schema.dateModified = dateModified;
+
+  if (keywords && keywords.length > 0) {
+    schema.keywords = keywords;
+  }
+
+  if (variableMeasured && variableMeasured.length > 0) {
+    schema.variableMeasured = variableMeasured;
+  }
+
+  if (includedInDataCatalog) {
+    schema.includedInDataCatalog = {
+      '@type': 'DataCatalog',
+      name: includedInDataCatalog.name,
+      url: includedInDataCatalog.url,
+    };
+  }
 
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />

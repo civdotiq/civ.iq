@@ -11,6 +11,7 @@ export {
   LegislativeEventSchema,
   LegislationSchema,
   AdministrativeAreaSchema,
+  DatasetSchema,
   DefinedTermSchema,
 } from './JsonLd';
 
