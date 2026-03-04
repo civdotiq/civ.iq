@@ -12,6 +12,7 @@ import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidat
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES } from '@/lib/data/us-states';
+import { getHouseResult2024 } from '@/lib/services/election-results.service';
 
 // Type for Census Gazetteer data
 interface GazetteerDistrict {
@@ -1945,11 +1946,20 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       demographics,
       political: {
         cookPVI,
-        lastElection: {
-          winner: 'Data unavailable',
-          margin: 0,
-          turnout: 0,
-        },
+        lastElection: (() => {
+          const houseResult = getHouseResult2024(
+            representative.state,
+            representative.district || '00'
+          );
+          if (houseResult.dataAvailable) {
+            return {
+              winner: houseResult.winner === 'D' ? 'Democrat' : 'Republican',
+              margin: houseResult.margin,
+              turnout: houseResult.total,
+            };
+          }
+          return { winner: 'Data unavailable', margin: 0, turnout: 0 };
+        })(),
         registeredVoters: 0,
       },
       geography,

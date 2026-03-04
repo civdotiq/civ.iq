@@ -11,6 +11,7 @@ import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { CongressApiMember, CongressApiMembersResponse } from '@/types/api-responses';
+import { getHouseResult2024 } from '@/lib/services/election-results.service';
 
 // Define district data structure
 interface District {
@@ -392,13 +393,22 @@ export async function GET(request: NextRequest) {
         political: {
           cookPVI: getRealCookPVI(stateAbbr, districtNumber),
           isCompetitive: isCompetitiveDistrict(getRealCookPVI(stateAbbr, districtNumber)),
-          lastElection: {
-            winner: member.partyName || 'Unknown',
-            // Estimate margin from Cook PVI (PVI roughly correlates to expected margin)
-            margin: estimateMarginFromPVI(getRealCookPVI(stateAbbr, districtNumber)),
-            // Turnout data unavailable - no reliable free API source
-            turnout: null,
-          },
+          lastElection: (() => {
+            const electionResult = getHouseResult2024(stateAbbr, districtNumber);
+            if (electionResult.dataAvailable) {
+              return {
+                winner: electionResult.winner === 'D' ? 'Democrat' : 'Republican',
+                margin: electionResult.margin,
+                turnout: electionResult.total,
+              };
+            }
+            // Fallback to PVI estimate for missing states
+            return {
+              winner: member.partyName || 'Unknown',
+              margin: estimateMarginFromPVI(getRealCookPVI(stateAbbr, districtNumber)),
+              turnout: null,
+            };
+          })(),
           // Use voting age population from Census (registered voters requires state SoS data)
           votingAgePopulation: censusData.votingAgePopulation || 0,
         },

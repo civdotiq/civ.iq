@@ -16,6 +16,7 @@ import { generateCommittees } from './generators/committees';
 import { generateRecentBills } from './generators/recent-bills';
 import { generateRecentVotes, generateVotePositions } from './generators/recent-votes';
 import { generateCampaignFinance } from './generators/campaign-finance';
+import { generateElectionResults2024 } from './generators/election-results-2024';
 
 export const DATASET_REGISTRY: DatasetGenerator[] = [
   {
@@ -154,6 +155,29 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'PAC Contributions',
     ],
     generate: generateCampaignFinance,
+  },
+  {
+    slug: 'election-results-2024',
+    name: '2024 Election Results',
+    description:
+      'Precinct-aggregated election results for 2024: US House, President, Senate, Governor, and state legislature races.',
+    source: 'MIT Election Data and Science Lab',
+    sourceUrl: 'https://github.com/MEDSL/2024-elections-official',
+    approximateRows: '~7,300',
+    freshness: 'Static (regenerated when MEDSL adds states)',
+    columnLabels: [
+      'District ID',
+      'Office',
+      'Democratic Votes',
+      'Republican Votes',
+      'Other Votes',
+      'Total Votes',
+      'Winner',
+      'Margin',
+      'Dem %',
+      'Rep %',
+    ],
+    generate: generateElectionResults2024,
   },
 ];
 
