@@ -194,10 +194,11 @@ export async function generateCampaignFinanceOnDemand(): Promise<DatasetResult> 
 }
 
 /**
- * Get campaign finance dataset — reads from cache, falls back to on-demand
+ * Get campaign finance dataset — reads from cache only.
+ * This dataset is too large to generate on-demand (~535 FEC API calls).
+ * Returns null when cache is cold so the download route can return 202.
  */
-export async function generateCampaignFinance(): Promise<DatasetResult> {
-  // Try cache first
+export async function generateCampaignFinance(): Promise<DatasetResult | null> {
   const cached = await cache.get<DatasetResult>(CAMPAIGN_FINANCE_CACHE_KEY);
   if (cached && cached.data && cached.data.length > 0) {
     logger.info('Campaign finance dataset served from cache', {
@@ -206,8 +207,10 @@ export async function generateCampaignFinance(): Promise<DatasetResult> {
     return cached;
   }
 
-  logger.info('Campaign finance cache miss, generating on-demand');
-  return generateCampaignFinanceOnDemand();
+  logger.warn('Campaign finance dataset not yet generated — run the dataset-generator cron', {
+    operation: 'dataset_download',
+  });
+  return null;
 }
 
 function buildResult(data: CampaignFinanceRow[]): DatasetResult {

@@ -26,6 +26,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'congress-legislators',
     sourceUrl: 'https://github.com/unitedstates/congress-legislators',
     approximateRows: '~535',
+    freshness: 'Updated hourly',
     generate: generateCongressMembers,
   },
   {
@@ -35,6 +36,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'congress-legislators',
     sourceUrl: 'https://github.com/unitedstates/congress-legislators',
     approximateRows: '~3,000',
+    freshness: 'Updated hourly',
     generate: generateCommittees,
   },
   {
@@ -44,6 +46,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress.gov API',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '250',
+    freshness: 'Updated hourly',
     generate: generateRecentBills,
   },
   {
@@ -53,6 +56,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress.gov + Senate.gov',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '~20',
+    freshness: 'Updated hourly',
     generate: generateRecentVotes,
   },
   {
@@ -62,6 +66,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Congress.gov + Senate.gov + House Clerk',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '~10,000',
+    freshness: 'Updated hourly',
     generate: generateVotePositions,
   },
   {
@@ -71,6 +76,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     source: 'Federal Election Commission',
     sourceUrl: 'https://api.open.fec.gov',
     approximateRows: '~535',
+    freshness: 'Updated daily',
     generate: generateCampaignFinance,
   },
 ];

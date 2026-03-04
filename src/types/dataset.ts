@@ -45,5 +45,6 @@ export interface DatasetGenerator {
   source: string;
   sourceUrl: string;
   approximateRows: string;
-  generate: () => Promise<DatasetResult>;
+  freshness: string;
+  generate: () => Promise<DatasetResult | null>;
 }

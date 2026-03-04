@@ -490,6 +490,67 @@ export function AdministrativeAreaSchema({
   );
 }
 
+interface DatasetSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  downloadUrl: string;
+  encodingFormat: string;
+  source: string;
+  sourceUrl: string;
+  license?: string;
+}
+
+/**
+ * Dataset schema for bulk downloadable datasets
+ * Enables rich results for dataset search (Google Dataset Search)
+ */
+export function DatasetSchema({
+  name,
+  description,
+  url,
+  downloadUrl,
+  encodingFormat,
+  source,
+  sourceUrl,
+  license = 'https://creativecommons.org/publicdomain/mark/1.0/',
+}: DatasetSchemaProps) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name,
+    description,
+    url,
+    license,
+    isAccessibleForFree: true,
+    creator: {
+      '@type': 'Organization',
+      name: 'CIV.IQ',
+      url: 'https://civdotiq.org',
+    },
+    provider: {
+      '@type': 'Organization',
+      name: source,
+      url: sourceUrl,
+    },
+    distribution: [
+      {
+        '@type': 'DataDownload',
+        encodingFormat,
+        contentUrl: downloadUrl,
+      },
+    ],
+    spatialCoverage: {
+      '@type': 'Place',
+      name: 'United States of America',
+    },
+  };
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
 interface DefinedTermSchemaProps {
   name: string;
   description: string;

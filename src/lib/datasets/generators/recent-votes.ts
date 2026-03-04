@@ -10,11 +10,13 @@
  * 1. Vote summaries — the 20 most recent roll-call votes
  * 2. Vote positions — individual member votes for those roll calls (~10K rows)
  *
+ * Both generators share a single cached fetch to avoid duplicate API calls.
+ *
  * Sources: Congress.gov API v3 + Senate XML + House Clerk XML
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { getVoteDetailsService } from '@/lib/services/vote.service';
+import { getVoteDetailsService, UnifiedVoteDetail } from '@/lib/services/vote.service';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
 
 // --- Vote Summaries ---
@@ -103,7 +105,13 @@ interface CongressVoteListItem {
   url: string;
 }
 
-async function fetchRecentVoteList(): Promise<CongressVoteListItem[]> {
+// --- Shared fetch with module-level cache ---
+// Within a single request lifecycle (ISR), both generators
+// share the same resolved promise to avoid duplicate API calls.
+
+let cachedVoteDetails: Promise<UnifiedVoteDetail[]> | null = null;
+
+async function fetchVoteDetails(): Promise<UnifiedVoteDetail[]> {
   const congressApiKey = process.env.CONGRESS_API_KEY;
   if (!congressApiKey) return [];
 
@@ -119,14 +127,9 @@ async function fetchRecentVoteList(): Promise<CongressVoteListItem[]> {
   }
 
   const json = await response.json();
-  return (json.votes || []) as CongressVoteListItem[];
-}
+  const voteList = (json.votes || []) as CongressVoteListItem[];
 
-export async function generateRecentVotes(): Promise<DatasetResult> {
-  const voteList = await fetchRecentVoteList();
-
-  // Fetch full details for each vote (includes member positions)
-  const voteDetails = await Promise.all(
+  const details = await Promise.all(
     voteList.map(async vote => {
       const voteId =
         vote.chamber === 'House'
@@ -141,9 +144,24 @@ export async function generateRecentVotes(): Promise<DatasetResult> {
     })
   );
 
-  const validVotes = voteDetails.filter((v): v is NonNullable<typeof v> => v !== null);
+  return details.filter((v): v is UnifiedVoteDetail => v !== null);
+}
 
-  // Build summaries
+function getSharedVoteDetails(): Promise<UnifiedVoteDetail[]> {
+  if (!cachedVoteDetails) {
+    cachedVoteDetails = fetchVoteDetails().finally(() => {
+      // Clear after resolution so next ISR cycle gets fresh data
+      setTimeout(() => {
+        cachedVoteDetails = null;
+      }, 60000);
+    });
+  }
+  return cachedVoteDetails;
+}
+
+export async function generateRecentVotes(): Promise<DatasetResult> {
+  const validVotes = await getSharedVoteDetails();
+
   const summaryData = validVotes.map(vote => ({
     voteId: vote.voteId,
     chamber: vote.chamber,
@@ -176,26 +194,8 @@ export async function generateRecentVotes(): Promise<DatasetResult> {
 }
 
 export async function generateVotePositions(): Promise<DatasetResult> {
-  const voteList = await fetchRecentVoteList();
+  const validVotes = await getSharedVoteDetails();
 
-  const voteDetails = await Promise.all(
-    voteList.map(async vote => {
-      const voteId =
-        vote.chamber === 'House'
-          ? `house-${vote.congress}-${vote.rollNumber}`
-          : `${vote.congress}-senate-${vote.rollNumber}`;
-      try {
-        return await getVoteDetailsService(voteId);
-      } catch (error) {
-        logger.warn('Failed to fetch vote details for positions', { voteId, error });
-        return null;
-      }
-    })
-  );
-
-  const validVotes = voteDetails.filter((v): v is NonNullable<typeof v> => v !== null);
-
-  // Build positions: one row per member per vote
   const positionData: Record<string, unknown>[] = [];
   for (const vote of validVotes) {
     for (const member of vote.members) {

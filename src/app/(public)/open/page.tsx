@@ -12,6 +12,7 @@ import type { Metadata } from 'next';
 import { nostrConfig } from '@/config/nostr.config';
 import { activitypubConfig } from '@/config/activitypub.config';
 import { DATASET_REGISTRY } from '@/lib/datasets';
+import { DatasetSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Open Data | CIV.IQ',
@@ -211,8 +212,23 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
 ];
 
 export default function OpenDataPage() {
+  const BASE_URL = 'https://civdotiq.org';
+
   return (
     <div className="min-h-screen bg-white">
+      {/* Schema.org Dataset markup for each bulk dataset */}
+      {DATASET_REGISTRY.map(dataset => (
+        <DatasetSchema
+          key={dataset.slug}
+          name={`${dataset.name} - CIV.IQ`}
+          description={dataset.description}
+          url={`${BASE_URL}/open`}
+          downloadUrl={`${BASE_URL}/api/download/${dataset.slug}?format=csv`}
+          encodingFormat="text/csv"
+          source={dataset.source}
+          sourceUrl={dataset.sourceUrl}
+        />
+      ))}
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
@@ -271,12 +287,13 @@ export default function OpenDataPage() {
               <div key={dataset.slug} className="border-2 border-gray-200 p-grid-3">
                 <h3 className="font-bold text-base mb-1">{dataset.name}</h3>
                 <p className="text-sm text-gray-600 mb-grid-2">{dataset.description}</p>
-                <div className="flex items-center justify-between mb-grid-2">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-gray-500 uppercase tracking-wider">
                     {dataset.approximateRows} rows
                   </span>
                   <span className="text-xs text-gray-500">{dataset.source}</span>
                 </div>
+                <div className="text-xs text-gray-400 mb-grid-2">{dataset.freshness}</div>
                 <div className="flex gap-grid-2">
                   <a
                     href={`/api/download/${dataset.slug}?format=csv`}

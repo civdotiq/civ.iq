@@ -45,6 +45,20 @@ export async function GET(
 
   try {
     const result = await generator.generate();
+
+    // Some datasets (campaign-finance) are pre-generated via cron.
+    // Return 202 if the data isn't ready yet.
+    if (!result) {
+      return NextResponse.json(
+        {
+          error: 'Dataset is still being generated. Please try again later.',
+          dataset: slug,
+          hint: 'This dataset is pre-generated daily. It may not be available immediately after deployment.',
+        },
+        { status: 202 }
+      );
+    }
+
     const content = formatDataset(result, format);
     const date = new Date().toISOString().split('T')[0];
     const extension = format === 'csv' ? 'csv' : 'json';
@@ -62,6 +76,7 @@ export async function GET(
         'Content-Type': getContentType(format),
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        Vary: 'Accept-Encoding',
       },
     });
   } catch (error) {
