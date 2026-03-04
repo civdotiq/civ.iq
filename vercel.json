@@ -52,6 +52,10 @@
       "maxDuration": 60,
       "memory": 1024
     },
+    "src/app/api/download/**/*.ts": {
+      "maxDuration": 120,
+      "memory": 1024
+    },
     "src/app/api/cron/**/*.ts": {
       "maxDuration": 300
     },
@@ -75,6 +79,10 @@
     {
       "path": "/api/cron/stock-trade-parser",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/dataset-generator",
+      "schedule": "0 7 * * *"
     }
   ],
   "headers": [

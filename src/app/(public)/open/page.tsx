@@ -11,6 +11,7 @@
 import type { Metadata } from 'next';
 import { nostrConfig } from '@/config/nostr.config';
 import { activitypubConfig } from '@/config/activitypub.config';
+import { DATASET_REGISTRY } from '@/lib/datasets';
 
 export const metadata: Metadata = {
   title: 'Open Data | CIV.IQ',
@@ -234,7 +235,11 @@ export default function OpenDataPage() {
         </p>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-3 mb-grid-8">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-grid-3 mb-grid-8">
+          <div className="border-2 border-black p-grid-3">
+            <div className="text-3xl font-bold">{DATASET_REGISTRY.length}</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">Bulk Datasets</div>
+          </div>
           <div className="border-2 border-black p-grid-3">
             <div className="text-3xl font-bold">10</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">REST Endpoints</div>
@@ -252,6 +257,50 @@ export default function OpenDataPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">Fediverse</div>
           </div>
         </div>
+
+        {/* Bulk Datasets */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Bulk Datasets</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Download complete datasets as CSV or JSON. Updated hourly from official government
+            sources. No account required.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3 mb-grid-3">
+            {DATASET_REGISTRY.map(dataset => (
+              <div key={dataset.slug} className="border-2 border-gray-200 p-grid-3">
+                <h3 className="font-bold text-base mb-1">{dataset.name}</h3>
+                <p className="text-sm text-gray-600 mb-grid-2">{dataset.description}</p>
+                <div className="flex items-center justify-between mb-grid-2">
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">
+                    {dataset.approximateRows} rows
+                  </span>
+                  <span className="text-xs text-gray-500">{dataset.source}</span>
+                </div>
+                <div className="flex gap-grid-2">
+                  <a
+                    href={`/api/download/${dataset.slug}?format=csv`}
+                    className="flex-1 text-center text-sm font-medium border-2 border-black px-grid-2 py-1 hover:bg-black hover:text-white transition-colors"
+                  >
+                    CSV
+                  </a>
+                  <a
+                    href={`/api/download/${dataset.slug}?format=json`}
+                    className="flex-1 text-center text-sm font-medium border-2 border-black px-grid-2 py-1 hover:bg-black hover:text-white transition-colors"
+                  >
+                    JSON
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-500">
+            All datasets are public domain. CSV files include metadata comment headers. JSON files
+            include a column data dictionary. Data refreshes every hour via ISR (campaign finance
+            refreshes daily).
+          </p>
+        </section>
 
         {/* Quick Start */}
         <section className="mb-grid-8">
