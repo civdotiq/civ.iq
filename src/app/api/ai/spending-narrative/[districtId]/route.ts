@@ -118,13 +118,13 @@ export async function GET(
 }
 
 /**
- * Fetch district spending data from existing government spending API
+ * Fetch district spending data from working USASpending district API
  */
 async function fetchDistrictSpending(districtId: string): Promise<DistrictSpending | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/districts/${districtId}/government-spending`, {
-      signal: AbortSignal.timeout(10000),
+    const response = await fetch(`${baseUrl}/api/spending/district/${districtId}`, {
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -132,50 +132,42 @@ async function fetchDistrictSpending(districtId: string): Promise<DistrictSpendi
     }
 
     const data = await response.json();
-    const gov = data.government;
 
-    if (!gov?.federalInvestment) {
+    if (!data.success || !data.summary) {
       return null;
     }
 
-    // Map existing government spending format to DistrictSpending interface
-    const categories: DistrictSpending['categories'] = [];
-    const totalAmount = gov.federalInvestment.totalAnnualSpending || 0;
+    const { summary, recentContracts } = data;
+    const totalAmount = summary.totalSpending || 0;
 
-    if (gov.federalInvestment.infrastructureInvestment > 0) {
+    // Build categories from contract/grant breakdown
+    const categories: DistrictSpending['categories'] = [];
+
+    if (summary.contractSpending > 0) {
       categories.push({
-        name: 'Infrastructure',
-        amount: gov.federalInvestment.infrastructureInvestment,
+        name: 'Federal Contracts',
+        amount: summary.contractSpending,
         percentage:
-          totalAmount > 0
-            ? Math.round((gov.federalInvestment.infrastructureInvestment / totalAmount) * 100)
-            : 0,
+          totalAmount > 0 ? Math.round((summary.contractSpending / totalAmount) * 100) : 0,
       });
     }
 
-    if (gov.socialServices) {
-      const socialTotal =
-        (gov.socialServices.snapBeneficiaries || 0) +
-        (gov.socialServices.medicaidEnrollment || 0) +
-        (gov.socialServices.housingAssistanceUnits || 0) +
-        (gov.socialServices.veteransServices || 0);
-
-      if (socialTotal > 0) {
-        categories.push({
-          name: 'Social Services',
-          amount: socialTotal,
-          percentage: totalAmount > 0 ? Math.round((socialTotal / totalAmount) * 100) : 0,
-        });
-      }
+    if (summary.grantSpending > 0) {
+      categories.push({
+        name: 'Federal Grants',
+        amount: summary.grantSpending,
+        percentage: totalAmount > 0 ? Math.round((summary.grantSpending / totalAmount) * 100) : 0,
+      });
     }
 
+    // Map recent contracts to topContracts
     const topContracts: DistrictSpending['topContracts'] = [];
-    if (gov.federalInvestment.majorProjects) {
-      for (const project of gov.federalInvestment.majorProjects.slice(0, 5)) {
+    if (recentContracts?.length) {
+      for (const contract of recentContracts.slice(0, 5)) {
         topContracts.push({
-          recipient: project.name || project.recipient || 'Federal project',
-          amount: project.amount || 0,
-          description: project.description || project.name || '',
+          recipient: contract.recipientName || 'Federal contractor',
+          amount: contract.amount || 0,
+          description: contract.description || '',
         });
       }
     }

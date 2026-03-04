@@ -49,7 +49,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8 animate-pulse">
+      <div className="bg-white border-2 border-black p-4 sm:p-8 animate-pulse">
         <div className="flex items-center gap-2 mb-4">
           <div className="h-5 w-5 bg-gray-300"></div>
           <div className="h-5 w-56 bg-gray-300"></div>
@@ -67,7 +67,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
   if (error || !data?.narrative) {
     if (error) {
       return (
-        <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
+        <div className="bg-white border-2 border-black p-4 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="h-5 w-5 text-blue-600" />
             <h2 className="text-xl font-bold text-gray-900">Spending in Your Community</h2>
@@ -92,7 +92,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
   const { narrative } = data;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
+    <div className="bg-white border-2 border-black p-4 sm:p-8">
       <div className="flex items-center gap-2 mb-4">
         <Brain className="h-5 w-5 text-blue-600" />
         <h2 className="text-xl font-bold text-gray-900">Spending in Your Community</h2>

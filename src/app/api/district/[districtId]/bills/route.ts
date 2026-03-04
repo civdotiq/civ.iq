@@ -201,8 +201,49 @@ export async function GET(
           }
         }
 
-        // Step 3: Get rep's committee topics
-        const repCommitteeNames = (rep?.committees ?? []).map(c => c.name);
+        // Steps 3 & 4: Fetch rep's committees and recent bills in parallel
+        const fetchLimit = Math.min(limit * 10, 250);
+        const billUrl = new URL('https://api.congress.gov/v3/bill/119');
+        billUrl.searchParams.set('format', 'json');
+        billUrl.searchParams.set('limit', fetchLimit.toString());
+        billUrl.searchParams.set('sort', 'updateDate+desc');
+
+        const congressHeaders = {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
+        };
+
+        // Fetch member committees (for +2 scoring) and bills in parallel
+        const memberCommitteesFetch = rep?.bioguideId
+          ? fetch(`https://api.congress.gov/v3/member/${rep.bioguideId}?format=json`, {
+              headers: congressHeaders,
+              signal: AbortSignal.timeout(8000),
+            })
+              .then(async res => {
+                if (!res.ok) return [];
+                const data = await res.json();
+                return (data.member?.committees ?? [])
+                  .map((c: { name?: string }) => c.name)
+                  .filter((n: string | undefined): n is string => !!n);
+              })
+              .catch(() => [] as string[])
+          : Promise.resolve([] as string[]);
+
+        const billsFetch = fetch(billUrl.toString(), { headers: congressHeaders })
+          .then(async res => {
+            if (!res.ok) return [];
+            const data = await res.json();
+            return (data.bills || []) as CongressBillListItem[];
+          })
+          .catch(() => [] as CongressBillListItem[]);
+
+        const [repCommitteeNames, allBills] = await Promise.all([
+          memberCommitteesFetch,
+          billsFetch,
+        ]);
+
+        // Build rep committee topics for +2 scoring path
         const repTopics = new Set<string>();
         for (const name of repCommitteeNames) {
           for (const t of getTopicsForCommittee(name)) {
@@ -220,27 +261,6 @@ export async function GET(
 
         const relevantPolicyAreas = [...spendingPolicyAreas];
         const policyAreaLower = new Set(relevantPolicyAreas.map(pa => pa.toLowerCase()));
-
-        // Step 4: Fetch recent bills
-        const fetchLimit = Math.min(limit * 10, 250);
-        const url = new URL('https://api.congress.gov/v3/bill');
-        url.searchParams.set('format', 'json');
-        url.searchParams.set('limit', fetchLimit.toString());
-        url.searchParams.set('sort', 'updateDate+desc');
-
-        const response = await fetch(url.toString(), {
-          headers: {
-            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-            Accept: 'application/json',
-            'X-API-Key': process.env.CONGRESS_API_KEY || '',
-          },
-        });
-
-        let allBills: CongressBillListItem[] = [];
-        if (response.ok) {
-          const data = await response.json();
-          allBills = data.bills || [];
-        }
 
         // Step 5: Score each bill
         const scored: DistrictBill[] = [];

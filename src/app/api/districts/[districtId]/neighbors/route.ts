@@ -5,44 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { DISTRICT_NEIGHBORS } from '@/data/district-neighbors';
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
-
-// Simple neighbor mapping based on geographic adjacency
-// This is a simplified version - in production you'd use actual boundary data
-const DISTRICT_NEIGHBORS: Record<string, string[]> = {
-  // Michigan districts (post-2023 redistricting)
-  'MI-01': ['MI-02'],
-  'MI-02': ['MI-01', 'MI-03'],
-  'MI-03': ['MI-02', 'MI-04', 'MI-06'],
-  'MI-04': ['MI-03', 'MI-05', 'MI-07', 'MI-08'],
-  'MI-05': ['MI-04', 'MI-09'],
-  'MI-06': ['MI-03', 'MI-07'],
-  'MI-07': ['MI-04', 'MI-06', 'MI-08'],
-  'MI-08': ['MI-04', 'MI-07', 'MI-09', 'MI-11'],
-  'MI-09': ['MI-05', 'MI-08', 'MI-10'],
-  'MI-10': ['MI-09', 'MI-11'],
-  'MI-11': ['MI-08', 'MI-10', 'MI-12'],
-  'MI-12': ['MI-11', 'MI-13'],
-  'MI-13': ['MI-12'],
-
-  // California districts (sample)
-  'CA-01': ['CA-02', 'CA-03'],
-  'CA-02': ['CA-01', 'CA-03', 'CA-04'],
-  'CA-03': ['CA-01', 'CA-02', 'CA-04', 'CA-05'],
-  'CA-04': ['CA-02', 'CA-03', 'CA-05'],
-  'CA-05': ['CA-03', 'CA-04', 'CA-06'],
-
-  // Texas districts (sample)
-  'TX-01': ['TX-02', 'TX-04'],
-  'TX-02': ['TX-01', 'TX-03', 'TX-04'],
-  'TX-03': ['TX-02', 'TX-04', 'TX-05'],
-  'TX-04': ['TX-01', 'TX-02', 'TX-03'],
-  'TX-05': ['TX-03', 'TX-06'],
-
-  // Add more as needed...
-};
 
 export async function GET(
   request: NextRequest,
@@ -72,7 +38,7 @@ export async function GET(
         })),
         metadata: {
           timestamp: new Date().toISOString(),
-          note: 'Simplified geographic adjacency mapping',
+          note: 'Centroid proximity from Census Bureau gazetteer data',
         },
       },
       {
