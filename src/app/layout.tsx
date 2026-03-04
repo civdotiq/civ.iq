@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/shared/components/navigation/Header';
 import { SiteFooter } from '@/components/shared/layout/SiteFooter';
 import { LiteModeProvider } from '@/lib/lite-mode/context';
+import { OrganizationSchema, WebSiteSchema } from '@/components/seo/JsonLd';
 
 // Google Analytics Measurement ID
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
@@ -113,6 +114,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        {/* Schema.org structured data */}
+        <OrganizationSchema />
+        <WebSiteSchema alternateName={['civdotiq.org', 'Civic Intelligence']} />
         {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}

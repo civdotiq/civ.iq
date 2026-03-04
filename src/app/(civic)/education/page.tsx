@@ -8,10 +8,17 @@
 
 import Link from 'next/link';
 import { EducationClient } from './EducationClient';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export default function EducationPage() {
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Civic Education', url: 'https://civdotiq.org/education' },
+        ]}
+      />
       <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
         <div className="max-w-5xl mx-auto">
           {/* Breadcrumb Navigation */}

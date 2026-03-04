@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, LegislationSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
 
 interface LayoutProps {
@@ -17,6 +17,11 @@ export default async function StateBillLayout({ children, params }: LayoutProps)
 
   return (
     <>
+      <LegislationSchema
+        name={billId.toUpperCase()}
+        legislationIdentifier={billId.toUpperCase()}
+        url={`https://civdotiq.org/state-bills/${state}/${billId}`}
+      />
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },

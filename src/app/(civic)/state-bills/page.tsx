@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { FileText, AlertCircle } from 'lucide-react';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { StateSelector } from '@/features/state-bills/components/StateSelector';
 import {
   BillSearchFilters,
@@ -145,123 +146,131 @@ export default function StateBillsSearchPage() {
   }, [selectedStates, filters, isLoading, handleSearch]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
-            Home
-          </Link>
-          <span className="mx-2">›</span>
-          <Link href="/states" className="hover:text-blue-600">
-            States
-          </Link>
-          <span className="mx-2">›</span>
-          <span className="font-medium text-gray-900">State Bills</span>
-        </nav>
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'State Legislation', url: 'https://civdotiq.org/state-bills' },
+        ]}
+      />
+      <div className="min-h-screen bg-gray-50">
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          {/* Breadcrumb Navigation */}
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-blue-600">
+              Home
+            </Link>
+            <span className="mx-2">›</span>
+            <Link href="/states" className="hover:text-blue-600">
+              States
+            </Link>
+            <span className="mx-2">›</span>
+            <span className="font-medium text-gray-900">State Bills</span>
+          </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3">
-            <FileText className="w-8 h-8 text-civiq-blue" />
-            <div>
-              <h1 className="text-3xl font-black text-gray-900">State Bill Search</h1>
-              <p className="text-gray-600">Search legislation across all 50 states</p>
-            </div>
-          </div>
-        </div>
-        {/* Instructions */}
-        <div className="bg-blue-50 border-2 border-blue-300 p-6 mb-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
-            <div>
-              <h2 className="font-semibold text-blue-900 mb-1">How to Search</h2>
-              <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                <li>Select one or more states to search</li>
-                <li>Optionally apply filters (chamber, type, status, subject)</li>
-                <li>Click &quot;Search Bills&quot; to see results</li>
-                <li>Click any bill to view full details</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Sidebar - Filters */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* State Selector */}
-            <StateSelector
-              selectedStates={selectedStates}
-              onChange={setSelectedStates}
-              multiSelect={true}
-            />
-
-            {/* Search Filters */}
-            <BillSearchFilters
-              filters={filters}
-              onChange={handleFilterChange}
-              onClear={handleClearFilters}
-            />
-
-            {/* Search Button */}
-            <button
-              type="button"
-              onClick={handleSearch}
-              disabled={selectedStates.length === 0 || isLoading}
-              className="w-full bg-civiq-blue text-white py-4 font-bold border-2 border-black hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? 'Searching...' : 'Search Bills'}
-            </button>
-
-            {/* Search Stats */}
-            {selectedStates.length > 0 && (
-              <div className="bg-white border-2 border-gray-300 p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 text-sm">Search Scope</h3>
-                <p className="text-sm text-gray-600">
-                  {selectedStates.length} {selectedStates.length === 1 ? 'state' : 'states'}{' '}
-                  selected
-                </p>
+          {/* Page Title */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-civiq-blue" />
+              <div>
+                <h1 className="text-3xl font-black text-gray-900">State Bill Search</h1>
+                <p className="text-gray-600">Search legislation across all 50 states</p>
               </div>
-            )}
+            </div>
+          </div>
+          {/* Instructions */}
+          <div className="bg-blue-50 border-2 border-blue-300 p-6 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-semibold text-blue-900 mb-1">How to Search</h2>
+                <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Select one or more states to search</li>
+                  <li>Optionally apply filters (chamber, type, status, subject)</li>
+                  <li>Click &quot;Search Bills&quot; to see results</li>
+                  <li>Click any bill to view full details</li>
+                </ol>
+              </div>
+            </div>
           </div>
 
-          {/* Right Content - Results */}
-          <div className="lg:col-span-2">
-            {!hasSearched ? (
-              <div className="bg-white border-2 border-black p-12">
-                <div className="text-center">
-                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to Search</h3>
-                  <p className="text-gray-600">
-                    Select states and filters, then click &quot;Search Bills&quot; to get started.
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Sidebar - Filters */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* State Selector */}
+              <StateSelector
+                selectedStates={selectedStates}
+                onChange={setSelectedStates}
+                multiSelect={true}
+              />
+
+              {/* Search Filters */}
+              <BillSearchFilters
+                filters={filters}
+                onChange={handleFilterChange}
+                onClear={handleClearFilters}
+              />
+
+              {/* Search Button */}
+              <button
+                type="button"
+                onClick={handleSearch}
+                disabled={selectedStates.length === 0 || isLoading}
+                className="w-full bg-civiq-blue text-white py-4 font-bold border-2 border-black hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? 'Searching...' : 'Search Bills'}
+              </button>
+
+              {/* Search Stats */}
+              {selectedStates.length > 0 && (
+                <div className="bg-white border-2 border-gray-300 p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">Search Scope</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedStates.length} {selectedStates.length === 1 ? 'state' : 'states'}{' '}
+                    selected
                   </p>
                 </div>
-              </div>
-            ) : (
-              <BillSearchResults
-                bills={paginatedBills}
-                isLoading={isLoading}
-                error={error}
-                page={page}
-                totalPages={totalPages}
-                totalResults={bills.length}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </div>
-        </div>
+              )}
+            </div>
 
-        {/* Footer Note */}
-        {hasSearched && bills.length > 0 && (
-          <div className="mt-8 bg-gray-100 border-2 border-gray-300 p-4 text-center">
-            <p className="text-sm text-gray-600">
-              Data provided by OpenStates.org. For the most current information, please visit your
-              state&apos;s official legislature website.
-            </p>
+            {/* Right Content - Results */}
+            <div className="lg:col-span-2">
+              {!hasSearched ? (
+                <div className="bg-white border-2 border-black p-12">
+                  <div className="text-center">
+                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to Search</h3>
+                    <p className="text-gray-600">
+                      Select states and filters, then click &quot;Search Bills&quot; to get started.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <BillSearchResults
+                  bills={paginatedBills}
+                  isLoading={isLoading}
+                  error={error}
+                  page={page}
+                  totalPages={totalPages}
+                  totalResults={bills.length}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </div>
           </div>
-        )}
-      </main>
-    </div>
+
+          {/* Footer Note */}
+          {hasSearched && bills.length > 0 && (
+            <div className="mt-8 bg-gray-100 border-2 border-gray-300 p-4 text-center">
+              <p className="text-sm text-gray-600">
+                Data provided by OpenStates.org. For the most current information, please visit your
+                state&apos;s official legislature website.
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+    </>
   );
 }

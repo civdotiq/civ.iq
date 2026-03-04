@@ -8,10 +8,17 @@
 
 import Link from 'next/link';
 import { GlossaryClient } from './GlossaryClient';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export default function GlossaryPage() {
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Glossary', url: 'https://civdotiq.org/glossary' },
+        ]}
+      />
       {/* Main Content */}
       <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
         <div className="max-w-4xl mx-auto">

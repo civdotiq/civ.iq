@@ -244,6 +244,15 @@ const DATASET_KEYWORDS: Record<string, string[]> = {
   ],
 };
 
+const DATASET_SAME_AS: Record<string, string> = {
+  'congress-members': 'https://api.congress.gov/v3/member',
+  committees: 'https://api.congress.gov/v3/committee',
+  'recent-bills': 'https://api.congress.gov/v3/bill',
+  'recent-votes': 'https://api.congress.gov/v3/summaries',
+  'vote-positions': 'https://api.congress.gov/v3/member',
+  'campaign-finance': 'https://api.open.fec.gov/v1/candidates',
+};
+
 export default function OpenDataPage() {
   const BASE_URL = 'https://civdotiq.org';
 
@@ -280,6 +289,8 @@ export default function OpenDataPage() {
           keywords={DATASET_KEYWORDS[dataset.slug]}
           variableMeasured={dataset.columnLabels}
           includedInDataCatalog={{ name: 'CIV.IQ Bulk Datasets', url: `${BASE_URL}/api/download` }}
+          sameAs={DATASET_SAME_AS[dataset.slug]}
+          version="119th-congress"
         />
       ))}
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">

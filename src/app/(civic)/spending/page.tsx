@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MapPin, Loader2 } from 'lucide-react';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import type {
   DistrictSpendingResponse,
   GeographicSpendingResponse,
@@ -353,14 +354,22 @@ function SpendingByGeography() {
 
 export default function SpendingPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-white dark:bg-[#1a1a1e] flex items-center justify-center">
-          <div className="aicher-loading w-8 h-8" />
-        </div>
-      }
-    >
-      <SpendingPageContent />
-    </Suspense>
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Federal Spending', url: 'https://civdotiq.org/spending' },
+        ]}
+      />
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-white dark:bg-[#1a1a1e] flex items-center justify-center">
+            <div className="aicher-loading w-8 h-8" />
+          </div>
+        }
+      >
+        <SpendingPageContent />
+      </Suspense>
+    </>
   );
 }

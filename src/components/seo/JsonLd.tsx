@@ -37,6 +37,7 @@ export function OrganizationSchema({
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${url}/#organization`,
     name,
     url,
     logo,
@@ -57,32 +58,29 @@ export function OrganizationSchema({
 interface WebSiteSchemaProps {
   name?: string;
   url?: string;
-  searchUrl?: string;
+  alternateName?: string[];
 }
 
 /**
- * WebSite schema with search action
- * Enables sitelinks search box in Google
+ * WebSite schema for site identity
+ * Linked via @id to OrganizationSchema
  */
 export function WebSiteSchema({
   name = 'CIV.IQ',
   url = 'https://civdotiq.org',
-  searchUrl = 'https://civdotiq.org/results?zip={search_term_string}',
+  alternateName,
 }: WebSiteSchemaProps) {
-  const schema = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${url}/#website`,
     name,
     url,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: searchUrl,
-      },
-      'query-input': 'required name=search_term_string',
-    },
   };
+
+  if (alternateName && alternateName.length > 0) {
+    schema.alternateName = alternateName;
+  }
 
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
@@ -149,7 +147,7 @@ export function PersonSchema({
 
   if (affiliation) {
     schema.affiliation = {
-      '@type': 'Organization',
+      '@type': 'PoliticalParty',
       name: affiliation,
     };
   }
@@ -512,6 +510,8 @@ interface DatasetSchemaProps {
   keywords?: string[];
   variableMeasured?: string[];
   includedInDataCatalog?: { name: string; url: string };
+  sameAs?: string;
+  version?: string;
 }
 
 /**
@@ -533,6 +533,8 @@ export function DatasetSchema({
   keywords,
   variableMeasured,
   includedInDataCatalog,
+  sameAs,
+  version,
 }: DatasetSchemaProps) {
   // Backward compat: wrap single downloadUrl/encodingFormat into distributions array
   const resolvedDistributions: DatasetDistribution[] =
@@ -578,6 +580,9 @@ export function DatasetSchema({
   if (variableMeasured && variableMeasured.length > 0) {
     schema.variableMeasured = variableMeasured;
   }
+
+  if (sameAs) schema.sameAs = sameAs;
+  if (version) schema.version = version;
 
   if (includedInDataCatalog) {
     schema.includedInDataCatalog = {

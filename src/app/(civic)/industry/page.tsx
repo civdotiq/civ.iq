@@ -5,6 +5,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Industries | CIV.IQ',
@@ -27,41 +28,49 @@ const SECTORS = [
 
 export default function IndustryIndexPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
-      <main className="container mx-auto px-4 py-8">
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-[#3ea2d4]">
-            Home
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">Industries</span>
-        </nav>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Industries</h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
-            Explore how industry sectors connect to federal legislation, congressional committees,
-            and government agencies. Data sourced from Congress.gov and the FEC.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {SECTORS.map(sector => (
-            <Link
-              key={sector.slug}
-              href={`/industry/${sector.slug}`}
-              className="block p-4 border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] hover:border-[#3ea2d4] transition-colors"
-            >
-              <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                {sector.name}
-              </span>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Related bills, committees &amp; agencies
-              </p>
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Industries', url: 'https://civdotiq.org/industry' },
+        ]}
+      />
+      <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
+        <main className="container mx-auto px-4 py-8">
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-[#3ea2d4]">
+              Home
             </Link>
-          ))}
-        </div>
-      </main>
-    </div>
+            <span className="mx-2">&rsaquo;</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">Industries</span>
+          </nav>
+
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Industries</h1>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+              Explore how industry sectors connect to federal legislation, congressional committees,
+              and government agencies. Data sourced from Congress.gov and the FEC.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {SECTORS.map(sector => (
+              <Link
+                key={sector.slug}
+                href={`/industry/${sector.slug}`}
+                className="block p-4 border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] hover:border-[#3ea2d4] transition-colors"
+              >
+                <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  {sector.name}
+                </span>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Related bills, committees &amp; agencies
+                </p>
+              </Link>
+            ))}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

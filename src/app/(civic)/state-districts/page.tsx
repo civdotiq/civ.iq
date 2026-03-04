@@ -11,6 +11,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getAllStateLegislatures, getTotalSeats } from '@/lib/data/static-state-legislatures';
 import { getStateName } from '@/lib/data/us-states';
 
@@ -32,6 +33,12 @@ export default function StateDistrictsPage() {
 
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'State Districts', url: 'https://civdotiq.org/state-districts' },
+        ]}
+      />
       <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}

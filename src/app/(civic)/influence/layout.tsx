@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Follow the Money | CIV.IQ',
@@ -12,5 +13,15 @@ export const metadata: Metadata = {
 };
 
 export default function InfluenceLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Follow the Money', url: 'https://civdotiq.org/influence' },
+        ]}
+      />
+      {children}
+    </>
+  );
 }

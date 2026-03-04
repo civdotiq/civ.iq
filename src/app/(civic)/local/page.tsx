@@ -6,10 +6,17 @@
  */
 
 import Link from 'next/link';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export default function LocalPage() {
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Local Government', url: 'https://civdotiq.org/local' },
+        ]}
+      />
       {/* Main Content */}
       <main className="min-h-screen px-4 pt-8 pb-16">
         <div className="max-w-7xl mx-auto">
