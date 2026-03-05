@@ -16,6 +16,8 @@ import { generateAIText } from '@/lib/ai/provider';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
 import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
+import { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 
 export interface BillSummary {
   billId: string;
@@ -25,10 +27,19 @@ export interface BillSummary {
   whoItAffects: string[];
   whatItDoes: string;
   whyItMatters: string;
+  affectedIndustries: IndustrySector[];
   readingLevel: number;
   confidence: number;
   lastUpdated: string;
   source: 'ai-generated' | 'congressional-summary' | 'manual';
+}
+
+export interface BillMetadata {
+  number: string;
+  title: string;
+  congress: number;
+  chamber: string;
+  policyArea?: string;
 }
 
 export interface BillSummarizationOptions {
@@ -55,12 +66,7 @@ export class BillSummarizer {
    */
   static async summarizeBill(
     billText: string,
-    billMetadata: {
-      number: string;
-      title: string;
-      congress: number;
-      chamber: string;
-    },
+    billMetadata: BillMetadata,
     options: BillSummarizationOptions = {}
   ): Promise<BillSummary> {
     const opts = { ...this.DEFAULT_OPTIONS, ...options };
@@ -197,12 +203,7 @@ export class BillSummarizer {
    */
   private static async generateAISummary(
     billText: string,
-    billMetadata: {
-      number: string;
-      title: string;
-      congress: number;
-      chamber: string;
-    },
+    billMetadata: BillMetadata,
     options: Required<BillSummarizationOptions>
   ): Promise<BillSummary> {
     const prompt = this.buildSummarizationPrompt(billText, billMetadata, options);
@@ -226,7 +227,7 @@ export class BillSummarizer {
    */
   private static buildSummarizationPrompt(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string },
+    billMetadata: BillMetadata,
     options: Required<BillSummarizationOptions>
   ): string {
     const readingLevelInstructions =
@@ -250,6 +251,7 @@ Please provide a summary in the following JSON format:
   "whoItAffects": ["Who this bill affects - regular people, businesses, students, etc."],
   "whatItDoes": "One sentence explaining the main action",
   "whyItMatters": "Why regular people should care about this bill",
+  "affectedIndustries": ["Industry sectors this bill most directly affects. Use ONLY these values: Agribusiness, Communications/Electronics, Construction, Defense, Energy/Natural Resources, Finance/Insurance/Real Estate, Health, Lawyers & Lobbyists, Transportation, Misc Business, Labor, Ideology/Single-Issue, Other"],
   "confidence": 0.95
 }
 
@@ -263,7 +265,7 @@ ${PLAIN_LANGUAGE_RULES}
    */
   static buildStreamingSummaryPrompt(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string }
+    billMetadata: BillMetadata
   ): { system: string; user: string } {
     return {
       system: `You summarize U.S. legislation for CIV.IQ. ${PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only. Do not output JSON.')}`,
@@ -284,7 +286,7 @@ ${PLAIN_LANGUAGE_RULES}`,
    */
   static buildStructuredExtractionPrompt(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string }
+    billMetadata: BillMetadata
   ): { system: string; user: string } {
     return {
       system: `You summarize U.S. legislation for CIV.IQ. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`,
@@ -299,6 +301,7 @@ Extract structured data about this bill. Respond with ONLY this JSON (no markdow
   "whoItAffects": ["Who this bill affects - regular people, businesses, students, etc."],
   "whatItDoes": "One sentence explaining the main action",
   "whyItMatters": "Why regular people should care about this bill",
+  "affectedIndustries": ["Industry sectors this bill most directly affects. Use ONLY these values: Agribusiness, Communications/Electronics, Construction, Defense, Energy/Natural Resources, Finance/Insurance/Real Estate, Health, Lawyers & Lobbyists, Transportation, Misc Business, Labor, Ideology/Single-Issue, Other"],
   "confidence": 0.95
 }
 
@@ -320,10 +323,7 @@ ${PLAIN_LANGUAGE_RULES}`,
   /**
    * Parse AI response into BillSummary format
    */
-  private static parseSummaryResponse(
-    response: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string }
-  ): BillSummary {
+  private static parseSummaryResponse(response: string, billMetadata: BillMetadata): BillSummary {
     try {
       // Try to extract JSON from the response
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -341,6 +341,7 @@ ${PLAIN_LANGUAGE_RULES}`,
         whoItAffects: parsed.whoItAffects || [],
         whatItDoes: parsed.whatItDoes || '',
         whyItMatters: parsed.whyItMatters || '',
+        affectedIndustries: this.validateIndustrySectors(parsed.affectedIndustries, billMetadata),
         readingLevel: 8, // Will be calculated separately
         confidence: parsed.confidence || 0.8,
         lastUpdated: new Date().toISOString(),
@@ -352,11 +353,38 @@ ${PLAIN_LANGUAGE_RULES}`,
   }
 
   /**
+   * Validate AI-returned industry sectors against the IndustrySector enum.
+   * Falls back to policy-area-map lookup when AI returns no valid sectors.
+   */
+  private static validateIndustrySectors(
+    raw: unknown,
+    billMetadata: BillMetadata
+  ): IndustrySector[] {
+    const validValues = new Set(Object.values(IndustrySector));
+
+    if (Array.isArray(raw)) {
+      const validated = raw.filter(
+        (v): v is IndustrySector => typeof v === 'string' && validValues.has(v as IndustrySector)
+      );
+      if (validated.length > 0) {
+        return validated;
+      }
+    }
+
+    // Fallback: use static policy-area-map if policyArea is available
+    if (billMetadata.policyArea) {
+      return getIndustrySectorsForPolicyArea(billMetadata.policyArea);
+    }
+
+    return [];
+  }
+
+  /**
    * Generate simplified summary if reading level is too high
    */
   private static async generateSimplifiedSummary(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string },
+    billMetadata: BillMetadata,
     options: Required<BillSummarizationOptions>,
     currentReadingLevel: number
   ): Promise<{ summary: string; keyPoints: string[] }> {
@@ -473,7 +501,7 @@ Format as JSON:
    */
   private static async generateRuleBasedSummary(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string },
+    billMetadata: BillMetadata,
     _options: Required<BillSummarizationOptions>
   ): Promise<BillSummary> {
     // Extract key phrases and create simple summary
@@ -493,6 +521,9 @@ Format as JSON:
       whoItAffects: ['American citizens', 'Government agencies'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'Laws affect how our government and society work',
+      affectedIndustries: billMetadata.policyArea
+        ? getIndustrySectorsForPolicyArea(billMetadata.policyArea)
+        : [],
       readingLevel,
       confidence: 0.6,
       lastUpdated: new Date().toISOString(),
@@ -528,12 +559,7 @@ Format as JSON:
   /**
    * Generate fallback summary when all else fails
    */
-  private static async generateFallbackSummary(billMetadata: {
-    number: string;
-    title: string;
-    congress: number;
-    chamber: string;
-  }): Promise<BillSummary> {
+  private static async generateFallbackSummary(billMetadata: BillMetadata): Promise<BillSummary> {
     const summaryText = `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by Congress. You can read the full text to learn more about what it does.`;
     const readingLevel = await this.calculateReadingLevel(summaryText);
 
@@ -549,6 +575,9 @@ Format as JSON:
       whoItAffects: ['To be determined'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'All laws can affect citizens',
+      affectedIndustries: billMetadata.policyArea
+        ? getIndustrySectorsForPolicyArea(billMetadata.policyArea)
+        : [],
       readingLevel,
       confidence: 0.3,
       lastUpdated: new Date().toISOString(),
@@ -561,7 +590,7 @@ Format as JSON:
    */
   static async getMultiFormatSummary(
     billText: string,
-    billMetadata: { number: string; title: string; congress: number; chamber: string }
+    billMetadata: BillMetadata
   ): Promise<{
     brief: string;
     detailed: BillSummary;

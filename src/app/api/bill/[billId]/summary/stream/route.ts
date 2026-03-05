@@ -22,6 +22,7 @@ export const dynamic = 'force-dynamic';
 
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import type { BillSummary } from '@/features/legislation/services/ai/bill-summarizer';
+import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
@@ -153,6 +154,7 @@ export async function GET(
             whoItAffects: structured.whoItAffects,
             whatItDoes: structured.whatItDoes,
             whyItMatters: structured.whyItMatters,
+            affectedIndustries: structured.affectedIndustries,
             readingLevel: readingAnalysis.gradeLevel,
             confidence: structured.confidence,
             lastUpdated: new Date().toISOString(),
@@ -246,13 +248,16 @@ function parseStructuredResponse(response: string): {
   whoItAffects: string[];
   whatItDoes: string;
   whyItMatters: string;
+  affectedIndustries: IndustrySector[];
   confidence: number;
 } {
+  const validSectors = new Set(Object.values(IndustrySector));
   const defaults = {
     keyPoints: [] as string[],
     whoItAffects: [] as string[],
     whatItDoes: '',
     whyItMatters: '',
+    affectedIndustries: [] as IndustrySector[],
     confidence: 0.8,
   };
 
@@ -269,6 +274,12 @@ function parseStructuredResponse(response: string): {
       whatItDoes: typeof parsed.whatItDoes === 'string' ? parsed.whatItDoes : defaults.whatItDoes,
       whyItMatters:
         typeof parsed.whyItMatters === 'string' ? parsed.whyItMatters : defaults.whyItMatters,
+      affectedIndustries: Array.isArray(parsed.affectedIndustries)
+        ? parsed.affectedIndustries.filter(
+            (v: unknown): v is IndustrySector =>
+              typeof v === 'string' && validSectors.has(v as IndustrySector)
+          )
+        : defaults.affectedIndustries,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : defaults.confidence,
     };
   } catch {

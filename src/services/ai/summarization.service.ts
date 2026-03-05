@@ -7,6 +7,7 @@ import { BaseService } from '../api/base.service';
 import logger from '@/lib/logging/simple-logger';
 import { redisService } from '../cache/redis.service';
 import { BillSummaryFallbacks } from '@/features/legislation/services/ai/bill-summary-fallbacks';
+import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
 export interface BillSummary {
   billId: string;
@@ -16,6 +17,7 @@ export interface BillSummary {
   whoItAffects: string[];
   whatItDoes: string;
   whyItMatters: string;
+  affectedIndustries: IndustrySector[];
   readingLevel: number;
   confidence: number;
   lastUpdated: string;
@@ -381,6 +383,7 @@ Remember:
         whoItAffects: parsed.whoItAffects || [],
         whatItDoes: parsed.whatItDoes || '',
         whyItMatters: parsed.whyItMatters || '',
+        affectedIndustries: [],
         readingLevel: 8, // Will be calculated separately
         confidence: parsed.confidence || 0.8,
         lastUpdated: new Date().toISOString(),
@@ -509,6 +512,7 @@ Format as JSON:
       whoItAffects: ['American citizens', 'Government agencies'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'Laws affect how our government and society work',
+      affectedIndustries: [],
       readingLevel: 8,
       confidence: 0.6,
       lastUpdated: new Date().toISOString(),
@@ -562,6 +566,7 @@ Format as JSON:
       whoItAffects: ['To be determined'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'All laws can affect citizens',
+      affectedIndustries: [],
       readingLevel: 8,
       confidence: 0.3,
       lastUpdated: new Date().toISOString(),
