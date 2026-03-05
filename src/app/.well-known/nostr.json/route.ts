@@ -27,6 +27,7 @@ export async function GET() {
   const nip05 = {
     names: {
       _: keypair.publicKey,
+      civiq: keypair.publicKey,
     },
     relays: {
       [keypair.publicKey]: nostrConfig.relays,
