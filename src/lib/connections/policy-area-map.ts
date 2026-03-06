@@ -332,6 +332,16 @@ export function getIndustrySectorsForPolicyArea(policyArea: string): IndustrySec
 }
 
 /**
+ * Get all policyAreas whose industrySectors include the given sector.
+ * Reverse lookup: from sector → policyAreas that map to it.
+ */
+export function getPolicyAreasForSector(sector: IndustrySector): string[] {
+  return POLICY_AREA_MAPPINGS.filter(m => m.industrySectors.includes(sector)).map(
+    m => m.policyArea
+  );
+}
+
+/**
  * Get all known policyArea strings.
  */
 export function getAllPolicyAreas(): string[] {

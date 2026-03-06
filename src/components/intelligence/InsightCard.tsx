@@ -12,6 +12,7 @@ import type {
   VoteFinanceInsight,
   TemporalVoteInsight,
   LobbyingPipelineInsight,
+  PACVoteInsight,
 } from '@/lib/intelligence/types';
 
 /**
@@ -30,7 +31,8 @@ interface InsightCardProps {
     | FinanceJurisdictionInsight
     | VoteFinanceInsight
     | TemporalVoteInsight
-    | LobbyingPipelineInsight;
+    | LobbyingPipelineInsight
+    | PACVoteInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }
@@ -199,4 +201,29 @@ export function lobbyingPipelineKeyStats(
   ];
 
   return stats;
+}
+
+/**
+ * Builds key stats array for a PACVoteInsight.
+ */
+export function pacVoteKeyStats(insight: PACVoteInsight): Array<{ label: string; value: string }> {
+  const formattedDisbursed =
+    insight.totalDisbursed >= 1_000_000
+      ? `$${(insight.totalDisbursed / 1_000_000).toFixed(1)}M`
+      : `$${(insight.totalDisbursed / 1_000).toFixed(0)}K`;
+
+  return [
+    {
+      label: 'To legislators',
+      value: formattedDisbursed,
+    },
+    {
+      label: 'Recipients analyzed',
+      value: String(insight.recipientCount),
+    },
+    {
+      label: 'Relevant votes',
+      value: String(insight.relevantBillCount),
+    },
+  ];
 }

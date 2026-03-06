@@ -40,6 +40,12 @@ export const MIN_TRADES_STOCK = 3;
 /** Minimum filings mentioning a committee for lobbying pipeline analysis. */
 export const MIN_FILINGS_LOBBYING = 5;
 
+/** Minimum PAC recipients for PAC-vote analysis. */
+export const MIN_PAC_RECIPIENTS = 3;
+
+/** Minimum relevant votes per recipient in PAC-vote analysis. */
+export const MIN_RELEVANT_VOTES = 3;
+
 /** Minimum peers for meaningful comparison. */
 export const MIN_PEERS = 3;
 
@@ -180,7 +186,7 @@ export function confidenceScore(factors: {
  */
 export function meetsSampleSize(
   actual: number,
-  type: 'votes' | 'quarters' | 'trades' | 'peers' | 'filings'
+  type: 'votes' | 'quarters' | 'trades' | 'peers' | 'filings' | 'recipients'
 ): boolean {
   const minimums: Record<typeof type, number> = {
     votes: MIN_VOTES_PER_SECTOR,
@@ -188,6 +194,7 @@ export function meetsSampleSize(
     trades: MIN_TRADES_STOCK,
     peers: MIN_PEERS,
     filings: MIN_FILINGS_LOBBYING,
+    recipients: MIN_PAC_RECIPIENTS,
   };
   return actual >= minimums[type];
 }

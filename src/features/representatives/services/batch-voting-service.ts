@@ -1499,6 +1499,44 @@ export class BatchVotingService {
   }
 
   /**
+   * Get the yea rate for a specific party on a cached vote.
+   * Cache-only lookup — no new API calls. Returns null if vote not cached.
+   */
+  getPartyYeaRate(
+    chamber: 'House' | 'Senate',
+    congress: number,
+    rollCallNumber: number,
+    party: string
+  ): { yeaRate: number; voteCount: number } | null {
+    // Try to find the cached vote
+    const session1Key =
+      chamber === 'House'
+        ? `house-vote-${congress}-${rollCallNumber}`
+        : `senate-vote-${congress}-1-${rollCallNumber}`;
+    const session2Key =
+      chamber === 'House'
+        ? `house-vote-${congress}-${rollCallNumber}`
+        : `senate-vote-${congress}-2-${rollCallNumber}`;
+
+    const cached =
+      this.cache.get<StandardizedVote>(session1Key) ??
+      this.cache.get<StandardizedVote>(session2Key);
+
+    if (!cached) return null;
+
+    const partyVotes = cached.memberVotes.filter(
+      m => m.party === party && (m.position === 'Yea' || m.position === 'Nay')
+    );
+    if (partyVotes.length === 0) return null;
+
+    const yeaCount = partyVotes.filter(m => m.position === 'Yea').length;
+    return {
+      yeaRate: yeaCount / partyVotes.length,
+      voteCount: partyVotes.length,
+    };
+  }
+
+  /**
    * Get cache and circuit breaker status for debugging
    */
   getStatus(): {

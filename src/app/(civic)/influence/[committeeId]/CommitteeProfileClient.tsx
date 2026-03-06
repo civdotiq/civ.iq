@@ -6,11 +6,15 @@
 'use client';
 
 import Link from 'next/link';
+import useSWR from 'swr';
 import { CommitteeHeader } from '@/features/influence/components/CommitteeHeader';
 import { RecipientsByParty } from '@/features/influence/components/RecipientsByParty';
 import { MetricCard } from '@/features/campaign-finance/components/MetricCard';
 import { SortableDataTable } from '@/features/campaign-finance/components/SortableDataTable';
+import { PACVoteTable } from '@/components/intelligence/PACVoteTable';
+import { InsightCard, pacVoteKeyStats } from '@/components/intelligence/InsightCard';
 import type { CommitteeProfile, ResolvedRecipient } from '@/types/influence';
+import type { PACVoteInsight } from '@/lib/intelligence/types';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -74,8 +78,16 @@ interface CommitteeProfileClientProps {
   profile: CommitteeProfile;
 }
 
+const fetcher = (url: string) => fetch(url).then(r => (r.ok ? r.json() : null));
+
 export function CommitteeProfileClient({ profile }: CommitteeProfileClientProps) {
   const { committee, totals, recipients, metadata } = profile;
+
+  const { data: pacInsight } = useSWR<PACVoteInsight>(
+    `/api/intelligence/pac/${committee.committeeId}`,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
 
   const tableData = recipients.map(toTableRow);
 
@@ -236,6 +248,18 @@ export function CommitteeProfileClient({ profile }: CommitteeProfileClientProps)
 
       {/* Party Breakdown Chart - only show if we have party data */}
       {linkedRecipients.length > 0 && <RecipientsByParty recipients={linkedRecipients} />}
+
+      {/* PAC Vote Intelligence */}
+      {pacInsight && pacInsight.recipientVotes && (
+        <div className="space-y-4">
+          <InsightCard
+            title="PAC Vote Tracing"
+            insight={pacInsight}
+            keyStats={pacVoteKeyStats(pacInsight)}
+          />
+          <PACVoteTable insight={pacInsight} />
+        </div>
+      )}
 
       {/* Source Attribution */}
       <div className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-4">

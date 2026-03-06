@@ -257,6 +257,44 @@ export interface LobbyingPipelineInsight extends InsightBase {
   narrative: string;
 }
 
+// ── Insight 5: PAC-to-Legislator Vote Tracing ────────────────────────
+
+/** Voting record for a single PAC recipient legislator. */
+export interface PACRecipientVoteRecord {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  chamber: 'House' | 'Senate';
+  amountReceived: number;
+  relevantVoteCount: number;
+  /** Fraction of yea votes on PAC-relevant bills (0-1). */
+  yeaRate: number;
+  /** Party-wide yea rate on the same bills (0-1). */
+  partyBaselineYeaRate: number;
+  /** yeaRate - partyBaselineYeaRate. */
+  differenceFromBaseline: number;
+}
+
+/**
+ * Insight: PAC contributions traced to legislators' voting records.
+ * Answers: "This PAC gave $X to these legislators. How did they vote
+ * on issues the PAC lobbied on?"
+ */
+export interface PACVoteInsight extends InsightBase {
+  committeeId: string;
+  committeeName: string;
+  sector: IndustrySector;
+  totalDisbursed: number;
+  recipientCount: number;
+  relevantBillCount: number;
+  recipientVotes: PACRecipientVoteRecord[];
+  aggregateYeaRate: number;
+  aggregateBaselineYeaRate: number;
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
 // ── Ticker Resolution ────────────────────────────────────────────────
 
 /**
