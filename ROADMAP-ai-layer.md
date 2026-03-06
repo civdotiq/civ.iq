@@ -410,11 +410,21 @@ All routes follow existing pattern: `force-dynamic` with response-level `Cache-C
 
 ---
 
-## Section 6 — Phase 4: Open-Source Packaging
+## Section 6 — Phase 4: Open-Source Packaging ✅ COMPLETE
 
 ### Goal
 
 Extract the most reusable components into standalone packages for other civic tech projects.
+
+### Status: Shipped
+
+Both packages extracted via npm workspaces with re-export shims at original paths:
+
+- **`@civiq/civic-statistics`** — Correlation, peer comparison, confidence scoring. 1 source file, 7 consumers.
+- **`@civiq/entity-resolution`** — Committee/agency alias matching, industry taxonomy, ticker-to-sector, FEC entity dedup, bioguide-FEC mapping. 11 source files, 35+ transitive consumers.
+
+Logger and cache dependencies abstracted via `configure({ logger, cache })` injection.
+Each package: `package.json`, `tsconfig.json`, `README.md`, `METHODOLOGY.md`, `CONTRIBUTING.md`, `LICENSE`.
 
 ### Package 1: `@civiq/entity-resolution`
 
