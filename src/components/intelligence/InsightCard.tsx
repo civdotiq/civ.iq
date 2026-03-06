@@ -7,7 +7,11 @@
 
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
-import type { FinanceJurisdictionInsight, VoteFinanceInsight } from '@/lib/intelligence/types';
+import type {
+  FinanceJurisdictionInsight,
+  VoteFinanceInsight,
+  TemporalVoteInsight,
+} from '@/lib/intelligence/types';
 
 /**
  * InsightCard — renders a single intelligence insight.
@@ -21,7 +25,7 @@ import type { FinanceJurisdictionInsight, VoteFinanceInsight } from '@/lib/intel
 
 interface InsightCardProps {
   title: string;
-  insight: FinanceJurisdictionInsight | VoteFinanceInsight;
+  insight: FinanceJurisdictionInsight | VoteFinanceInsight | TemporalVoteInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }
@@ -132,6 +136,33 @@ export function voteFinanceKeyStats(
       value: `${(insight.peerComparison.peerAverage * 100).toFixed(1)}%`,
     });
   }
+
+  return stats;
+}
+
+/**
+ * Builds key stats array for a TemporalVoteInsight.
+ */
+export function temporalVoteKeyStats(
+  insight: TemporalVoteInsight
+): Array<{ label: string; value: string }> {
+  const avgAlignment =
+    insight.quarters.reduce((sum, q) => sum + q.alignmentScore, 0) / insight.quarters.length;
+
+  const stats: Array<{ label: string; value: string }> = [
+    {
+      label: 'Avg alignment',
+      value: `${(avgAlignment * 100).toFixed(1)}%`,
+    },
+    {
+      label: 'Quarters analyzed',
+      value: String(insight.quarters.length),
+    },
+    {
+      label: 'Shifts detected',
+      value: String(insight.shifts.length),
+    },
+  ];
 
   return stats;
 }

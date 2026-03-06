@@ -6,8 +6,18 @@
 'use client';
 
 import useSWR from 'swr';
-import { InsightCard, financeJurisdictionKeyStats, voteFinanceKeyStats } from './InsightCard';
-import type { FinanceJurisdictionInsight, VoteFinanceInsight } from '@/lib/intelligence/types';
+import {
+  InsightCard,
+  financeJurisdictionKeyStats,
+  voteFinanceKeyStats,
+  temporalVoteKeyStats,
+} from './InsightCard';
+import { VoteShiftTimeline } from './VoteShiftTimeline';
+import type {
+  FinanceJurisdictionInsight,
+  VoteFinanceInsight,
+  TemporalVoteInsight,
+} from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
   bioguideId: string;
@@ -34,6 +44,16 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
     }
   );
 
+  // Temporal insights loaded independently (expensive endpoint)
+  const { data: temporalData, isLoading: temporalLoading } = useSWR<TemporalVoteInsight>(
+    `/api/intelligence/representative/${bioguideId}/temporal`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000,
+    }
+  );
+
   if (isLoading) {
     return <IntelligenceLoading />;
   }
@@ -49,9 +69,10 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
   }
 
   const { financeJurisdiction, voteFinance } = data?.insights ?? {};
-  const hasInsights = financeJurisdiction || voteFinance;
+  const temporal = temporalData?.quarters ? temporalData : null;
+  const hasInsights = financeJurisdiction || voteFinance || temporal;
 
-  if (!hasInsights) {
+  if (!hasInsights && !temporalLoading) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
@@ -84,6 +105,24 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
           insight={voteFinance}
           keyStats={voteFinanceKeyStats(voteFinance)}
         />
+      )}
+
+      {temporal && (
+        <>
+          <VoteShiftTimeline quarters={temporal.quarters} shifts={temporal.shifts} />
+          <InsightCard
+            title="Voting Pattern Shifts"
+            insight={temporal}
+            keyStats={temporalVoteKeyStats(temporal)}
+          />
+        </>
+      )}
+
+      {temporalLoading && !temporal && (
+        <div className="border-2 border-gray-200 p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+          <div className="h-48 bg-gray-200 border-2 border-gray-300" />
+        </div>
       )}
     </div>
   );

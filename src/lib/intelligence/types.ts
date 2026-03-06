@@ -115,6 +115,57 @@ export interface VoteFinanceInsight extends InsightBase {
   narrative: string;
 }
 
+// ── Insight 3: Temporal Vote Pattern Shifts ──────────────────────────
+
+/** Quarterly voting alignment data point. */
+export interface QuarterData {
+  /** Quarter label, e.g., "2025-Q1". */
+  quarter: string;
+  /** Party alignment score for this quarter (0-1). */
+  alignmentScore: number;
+  /** Number of votes cast in this quarter. */
+  voteCount: number;
+  /** Rolling 4-quarter average alignment, null if fewer than 4 quarters available. */
+  rollingAverage: number | null;
+}
+
+/** A detected shift in voting alignment. */
+export interface VoteShift {
+  /** Quarter where the shift was detected. */
+  quarter: string;
+  /** Magnitude of the shift in percentage points (absolute value). */
+  magnitude: number;
+  /** Direction of the shift relative to trailing average. */
+  direction: 'increase' | 'decrease';
+  /** Contextual events that may correlate with this shift. */
+  context: {
+    /** Committees the legislator joined near this period. */
+    newCommittees: string[];
+    /** Number of large contributions received in this quarter. */
+    largeContributions: number;
+    /** Whether this quarter falls within 6 months of the next election. */
+    electionProximity: boolean;
+  };
+}
+
+/**
+ * Insight: temporal shifts in a legislator's party-line voting alignment
+ * over calendar quarters of the 119th Congress.
+ */
+export interface TemporalVoteInsight extends InsightBase {
+  bioguideId: string;
+  /** Quarterly alignment data points. */
+  quarters: QuarterData[];
+  /** Detected significant shifts (>10 percentage points from trailing average). */
+  shifts: VoteShift[];
+  /** Overall trend classification across all quarters. */
+  overallTrend: 'stable' | 'increasing' | 'decreasing' | 'volatile';
+  /** How this legislator's average alignment compares to chamber/state peers. */
+  peerComparison: PeerComparison;
+  /** AI-generated or statistical plain-language summary. */
+  narrative: string;
+}
+
 // ── Ticker Resolution ────────────────────────────────────────────────
 
 /**
