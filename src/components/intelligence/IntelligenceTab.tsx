@@ -11,16 +11,21 @@ import {
   financeJurisdictionKeyStats,
   voteFinanceKeyStats,
   temporalVoteKeyStats,
+  lobbyingPipelineKeyStats,
 } from './InsightCard';
 import { VoteShiftTimeline } from './VoteShiftTimeline';
+import { InfluenceChainTable } from './InfluenceChainTable';
 import type {
   FinanceJurisdictionInsight,
   VoteFinanceInsight,
   TemporalVoteInsight,
+  LobbyingPipelineInsight,
 } from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
   bioguideId: string;
+  /** Committee codes this representative serves on (e.g., ["SSFI", "SSAS"]). */
+  committeeCodes?: string[];
 }
 
 interface InsightsResponse {
@@ -34,7 +39,7 @@ interface InsightsResponse {
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
+export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabProps) {
   const { data, error, isLoading } = useSWR<InsightsResponse>(
     `/api/intelligence/representative/${bioguideId}`,
     fetcher,
@@ -47,6 +52,17 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
   // Temporal insights loaded independently (expensive endpoint)
   const { data: temporalData, isLoading: temporalLoading } = useSWR<TemporalVoteInsight>(
     `/api/intelligence/representative/${bioguideId}/temporal`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000,
+    }
+  );
+
+  // Lobbying pipeline loaded per committee (first committee code)
+  const primaryCommittee = committeeCodes?.[0];
+  const { data: lobbyingData, isLoading: lobbyingLoading } = useSWR<LobbyingPipelineInsight>(
+    primaryCommittee ? `/api/intelligence/committee/${primaryCommittee}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -70,9 +86,10 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
 
   const { financeJurisdiction, voteFinance } = data?.insights ?? {};
   const temporal = temporalData?.quarters ? temporalData : null;
-  const hasInsights = financeJurisdiction || voteFinance || temporal;
+  const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
+  const hasInsights = financeJurisdiction || voteFinance || temporal || lobbying;
 
-  if (!hasInsights && !temporalLoading) {
+  if (!hasInsights && !temporalLoading && !lobbyingLoading) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
@@ -116,6 +133,24 @@ export function IntelligenceTab({ bioguideId }: IntelligenceTabProps) {
             keyStats={temporalVoteKeyStats(temporal)}
           />
         </>
+      )}
+
+      {lobbying && (
+        <>
+          <InfluenceChainTable insight={lobbying} />
+          <InsightCard
+            title="Lobbying Pipeline"
+            insight={lobbying}
+            keyStats={lobbyingPipelineKeyStats(lobbying)}
+          />
+        </>
+      )}
+
+      {lobbyingLoading && !lobbying && primaryCommittee && (
+        <div className="border-2 border-gray-200 p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+        </div>
       )}
 
       {temporalLoading && !temporal && (

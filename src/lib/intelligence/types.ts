@@ -166,6 +166,97 @@ export interface TemporalVoteInsight extends InsightBase {
   narrative: string;
 }
 
+// ── Insight 4: Lobbying-Committee-Legislation Pipeline ───────────────
+
+/** Result of resolving a single LDA government_entities string. */
+export interface GovernmentEntityResolution {
+  /** Original text from the LDA filing. */
+  rawText: string;
+  /** Resolution outcome. */
+  type: 'committee' | 'agency' | 'noise' | 'unresolved';
+  /** Committee code (e.g., "SSFI") if resolved to a committee. */
+  committeeCode?: string;
+  /** Committee name if resolved. */
+  committeeName?: string;
+  /** Agency slug if resolved to an agency. */
+  agencySlug?: string;
+  /** Resolution confidence: 1.0 for exact, 0.85+ for fuzzy, 0 for noise. */
+  confidence: number;
+}
+
+/** Activity summary for a single lobbying organization on a committee. */
+export interface LobbyingOrganizationActivity {
+  /** Organization name (client from LDA filing). */
+  name: string;
+  /** Total spending across matched filings. */
+  totalSpending: number;
+  /** Number of filings mentioning this committee. */
+  filingCount: number;
+  /** LDA issue codes appearing in their filings. */
+  issueCodes: string[];
+}
+
+/** A bill matched to lobbied issues via policyArea alignment. */
+export interface MatchedBill {
+  /** Bill ID, e.g., "119-hr-1234". */
+  id: string;
+  /** Bill title. */
+  title: string;
+  /** Bill type (HR, S, etc.). */
+  type: string;
+  /** Bill number. */
+  number: string;
+  /** Congress number. */
+  congress: number;
+  /** Congress.gov policyArea. */
+  policyArea: string;
+  /** Date the bill was introduced. */
+  introducedDate: string;
+  /** LDA issue codes that map to this bill's policyArea. */
+  matchedIssueCodes: string[];
+}
+
+/** Timeline alignment between lobbying activity and bill introduction. */
+export interface TimelineAlignment {
+  /** LDA issue code. */
+  issueCode: string;
+  /** Human-readable issue label. */
+  issueLabel: string;
+  /** Total lobbying spending on this issue for this committee. */
+  lobbyingSpending: number;
+  /** Number of organizations lobbying on this issue. */
+  organizationCount: number;
+  /** Bills whose policyArea maps to this issue code. */
+  matchedBills: MatchedBill[];
+}
+
+/**
+ * Insight: lobbying expenditures → committee activity → legislative output.
+ * Keyed by committee, not by representative.
+ */
+export interface LobbyingPipelineInsight extends InsightBase {
+  /** Committee code this insight is about. */
+  committeeCode: string;
+  /** Committee name. */
+  committeeName: string;
+  /** Chamber. */
+  chamber: 'House' | 'Senate' | 'Joint';
+  /** Total lobbying spending mentioning this committee. */
+  totalSpending: number;
+  /** Unique organizations lobbying this committee. */
+  organizationCount: number;
+  /** Total matched bills. */
+  matchedBillCount: number;
+  /** Top organizations by spending. */
+  topOrganizations: LobbyingOrganizationActivity[];
+  /** Issue-to-bill alignment. */
+  issueAlignments: TimelineAlignment[];
+  /** How this committee's lobbying volume compares to same-chamber peers. */
+  peerComparison: PeerComparison;
+  /** AI-generated or statistical plain-language summary. */
+  narrative: string;
+}
+
 // ── Ticker Resolution ────────────────────────────────────────────────
 
 /**

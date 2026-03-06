@@ -37,6 +37,9 @@ export const MIN_QUARTERS_TEMPORAL = 4;
 /** Minimum trades for stock-committee analysis. */
 export const MIN_TRADES_STOCK = 3;
 
+/** Minimum filings mentioning a committee for lobbying pipeline analysis. */
+export const MIN_FILINGS_LOBBYING = 5;
+
 /** Minimum peers for meaningful comparison. */
 export const MIN_PEERS = 3;
 
@@ -177,13 +180,14 @@ export function confidenceScore(factors: {
  */
 export function meetsSampleSize(
   actual: number,
-  type: 'votes' | 'quarters' | 'trades' | 'peers'
+  type: 'votes' | 'quarters' | 'trades' | 'peers' | 'filings'
 ): boolean {
   const minimums: Record<typeof type, number> = {
     votes: MIN_VOTES_PER_SECTOR,
     quarters: MIN_QUARTERS_TEMPORAL,
     trades: MIN_TRADES_STOCK,
     peers: MIN_PEERS,
+    filings: MIN_FILINGS_LOBBYING,
   };
   return actual >= minimums[type];
 }

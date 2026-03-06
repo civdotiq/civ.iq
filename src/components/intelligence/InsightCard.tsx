@@ -11,6 +11,7 @@ import type {
   FinanceJurisdictionInsight,
   VoteFinanceInsight,
   TemporalVoteInsight,
+  LobbyingPipelineInsight,
 } from '@/lib/intelligence/types';
 
 /**
@@ -25,7 +26,11 @@ import type {
 
 interface InsightCardProps {
   title: string;
-  insight: FinanceJurisdictionInsight | VoteFinanceInsight | TemporalVoteInsight;
+  insight:
+    | FinanceJurisdictionInsight
+    | VoteFinanceInsight
+    | TemporalVoteInsight
+    | LobbyingPipelineInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }
@@ -161,6 +166,35 @@ export function temporalVoteKeyStats(
     {
       label: 'Shifts detected',
       value: String(insight.shifts.length),
+    },
+  ];
+
+  return stats;
+}
+
+/**
+ * Builds key stats array for a LobbyingPipelineInsight.
+ */
+export function lobbyingPipelineKeyStats(
+  insight: LobbyingPipelineInsight
+): Array<{ label: string; value: string }> {
+  const formattedSpending =
+    insight.totalSpending >= 1_000_000
+      ? `$${(insight.totalSpending / 1_000_000).toFixed(1)}M`
+      : `$${(insight.totalSpending / 1_000).toFixed(0)}K`;
+
+  const stats: Array<{ label: string; value: string }> = [
+    {
+      label: 'Total lobbying',
+      value: formattedSpending,
+    },
+    {
+      label: 'Organizations',
+      value: String(insight.organizationCount),
+    },
+    {
+      label: 'Matched bills',
+      value: String(insight.matchedBillCount),
     },
   ];
 

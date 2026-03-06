@@ -22,6 +22,7 @@ import {
   NewsIcon,
   IntelligenceIcon,
 } from '@/components/icons/AicherIcons';
+import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -61,6 +62,26 @@ const IntelligenceTab = dynamic(
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
+}
+
+/** Derive committee codes from committee names via ALL_COMMITTEE_MAPPINGS */
+function deriveCommitteeCodes(committees?: Array<{ name: string }>): string[] {
+  if (!committees || committees.length === 0) return [];
+
+  const codes: string[] = [];
+  for (const committee of committees) {
+    const lower = committee.name.toLowerCase();
+    for (const mapping of ALL_COMMITTEE_MAPPINGS) {
+      if (
+        lower.includes(mapping.committeeName.toLowerCase()) ||
+        mapping.committeeName.toLowerCase().includes(lower)
+      ) {
+        codes.push(mapping.committeeCode);
+        break;
+      }
+    }
+  }
+  return codes;
 }
 
 /** Derive focus areas from committee names */
@@ -399,7 +420,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
             />
           );
         case 'intelligence':
-          return <IntelligenceTab bioguideId={representative.bioguideId} />;
+          return (
+            <IntelligenceTab
+              bioguideId={representative.bioguideId}
+              committeeCodes={deriveCommitteeCodes(representative.committees)}
+            />
+          );
         case 'news':
           return (
             <ClusteredNewsSection
