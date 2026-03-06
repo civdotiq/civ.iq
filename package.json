@@ -2,6 +2,9 @@
   "name": "civic-intel-hub",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "author": "Mark Sandford",
   "license": "MIT",
   "overrides": {

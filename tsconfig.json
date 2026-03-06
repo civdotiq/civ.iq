@@ -35,7 +35,10 @@
       "@/types/*": ["./src/types/*"],
       "@/types": ["./src/types/index.ts"],
       "@/store/*": ["./src/store/*"],
-      "@/lib/*": ["./src/lib/*"]
+      "@/lib/*": ["./src/lib/*"],
+      "@civiq/civic-statistics": ["./packages/civic-statistics/src/index.ts"],
+      "@civiq/entity-resolution": ["./packages/entity-resolution/src/index.ts"],
+      "@civiq/entity-resolution/*": ["./packages/entity-resolution/src/*"]
     },
     "target": "ES2017"
   },

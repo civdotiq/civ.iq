@@ -1,0 +1,50 @@
+{
+  "name": "@civiq/entity-resolution",
+  "version": "0.1.0",
+  "description": "Entity resolution for civic data — committee/agency alias matching, industry taxonomy, ticker-to-sector resolution, FEC entity deduplication",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./industry-taxonomy": {
+      "types": "./dist/industry-taxonomy.d.ts",
+      "import": "./dist/industry-taxonomy.js"
+    },
+    "./committee-agency-map": {
+      "types": "./dist/committee-agency-map.d.ts",
+      "import": "./dist/committee-agency-map.js"
+    }
+  },
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "fuse.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "author": "Mark Sandford",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/civiq/entity-resolution"
+  },
+  "keywords": [
+    "entity-resolution",
+    "civic",
+    "government",
+    "committee",
+    "fec",
+    "civic-tech"
+  ]
+}

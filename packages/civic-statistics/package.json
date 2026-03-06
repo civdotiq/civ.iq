@@ -1,0 +1,40 @@
+{
+  "name": "@civiq/civic-statistics",
+  "version": "0.1.0",
+  "description": "Civic data statistics utilities — correlation, peer comparison, confidence scoring with civic-domain defaults",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "simple-statistics": "^7.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "author": "Mark Sandford",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/civiq/civic-statistics"
+  },
+  "keywords": [
+    "civic",
+    "statistics",
+    "correlation",
+    "government",
+    "civic-tech"
+  ]
+}

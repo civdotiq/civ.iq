@@ -1,9 +1,9 @@
-const nextJest = require('next/jest')
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files
   dir: './',
-})
+});
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
@@ -13,25 +13,28 @@ const customJestConfig = {
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
-    '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}'
+    '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}',
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
     '!src/app/layout.tsx',
-    '!src/app/globals.css'
+    '!src/app/globals.css',
   ],
   coverageThreshold: {
     global: {
       branches: 70,
       functions: 70,
       lines: 70,
-      statements: 70
-    }
+      statements: 70,
+    },
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@civiq/civic-statistics$': '<rootDir>/packages/civic-statistics/src/index.ts',
+    '^@civiq/entity-resolution$': '<rootDir>/packages/entity-resolution/src/index.ts',
+    '^@civiq/entity-resolution/(.*)$': '<rootDir>/packages/entity-resolution/src/$1',
   },
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
@@ -41,14 +44,14 @@ const customJestConfig = {
     '<rootDir>/tests/.*\\.spec\\.ts$',
     '<rootDir>/tests/utils/',
     '<rootDir>/tests/fixtures/',
-    '<rootDir>/src/.*test-helpers.*'
+    '<rootDir>/src/.*test-helpers.*',
   ],
   // Add explicit ignore for the duplicate package.json
   rootDir: '.',
   testEnvironmentOptions: {
     customExportConditions: [''],
-  }
-}
+  },
+};
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig)
+module.exports = createJestConfig(customJestConfig);
