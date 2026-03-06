@@ -13,6 +13,7 @@ import type {
   TemporalVoteInsight,
   LobbyingPipelineInsight,
   PACVoteInsight,
+  StockCommitteeInsight,
 } from '@/lib/intelligence/types';
 
 /**
@@ -32,7 +33,8 @@ interface InsightCardProps {
     | VoteFinanceInsight
     | TemporalVoteInsight
     | LobbyingPipelineInsight
-    | PACVoteInsight;
+    | PACVoteInsight
+    | StockCommitteeInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }
@@ -224,6 +226,30 @@ export function pacVoteKeyStats(insight: PACVoteInsight): Array<{ label: string;
     {
       label: 'Relevant votes',
       value: String(insight.relevantBillCount),
+    },
+  ];
+}
+
+/**
+ * Builds key stats array for a StockCommitteeInsight.
+ */
+export function stockCommitteeKeyStats(
+  insight: StockCommitteeInsight
+): Array<{ label: string; value: string }> {
+  const committeesWithOverlap = insight.committees.filter(c => c.flaggedTradeCount > 0).length;
+
+  return [
+    {
+      label: 'Flagged trades',
+      value: String(insight.flaggedTradeCount),
+    },
+    {
+      label: 'Overlap rate',
+      value: `${(insight.overlapRate * 100).toFixed(1)}%`,
+    },
+    {
+      label: 'Committees',
+      value: String(committeesWithOverlap),
     },
   ];
 }

@@ -27,7 +27,7 @@ import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
 } from '@/lib/connections/committee-agency-map';
-import { getAllPolicyAreas, getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
+import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
@@ -45,34 +45,6 @@ const DISCLAIMER =
   'Correlation does not indicate causation or improper behavior.';
 
 // ── Committee → IndustrySector Mapping ───────────────────────────────
-
-/**
- * Map a committee's topics to IndustrySector values using policy-area-map.
- * A committee topic matches a policy area if the topic appears in that
- * policy area's topic list. The policy area's industrySectors are then
- * attributed to the committee.
- */
-function getJurisdictionSectors(committeeTopics: string[]): IndustrySector[] {
-  const sectors = new Set<IndustrySector>();
-
-  for (const policyArea of getAllPolicyAreas()) {
-    const mapping = getPolicyAreaMapping(policyArea);
-    if (!mapping) continue;
-
-    // Check if any committee topic matches this policy area's topics
-    const hasOverlap = committeeTopics.some(topic =>
-      mapping.topics.some(t => t.toLowerCase() === topic.toLowerCase())
-    );
-
-    if (hasOverlap) {
-      for (const sector of mapping.industrySectors) {
-        sectors.add(sector);
-      }
-    }
-  }
-
-  return Array.from(sectors);
-}
 
 /**
  * Find the CommitteeMapping entry for a committee by name (fuzzy match).
@@ -226,7 +198,7 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   const committees = rep.committees.map(c => {
     const mapping = findCommitteeMapping(c.name);
     const topics = mapping?.topics ?? [];
-    const jurisdictionSectors = getJurisdictionSectors(topics);
+    const jurisdictionSectors = getJurisdictionSectorsForTopics(topics);
     return { name: c.name, mapping, jurisdictionSectors };
   });
 

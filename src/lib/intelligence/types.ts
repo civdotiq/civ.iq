@@ -295,6 +295,50 @@ export interface PACVoteInsight extends InsightBase {
   narrative: string;
 }
 
+// ── Insight 6: Stock Trade-Committee Jurisdiction ────────────────────
+
+/** A single flagged stock trade in a committee-jurisdiction sector. */
+export interface FlaggedTrade {
+  ticker: string;
+  assetDescription: string;
+  transactionType: string;
+  transactionDate: string;
+  amount: string;
+  owner: string;
+  sector: IndustrySector;
+  committeeName: string;
+  sourceUrl: string;
+}
+
+/** Per-committee overlap summary. */
+export interface CommitteeTradeOverlap {
+  committeeName: string;
+  committeeCode: string;
+  jurisdictionSectors: IndustrySector[];
+  flaggedTradeCount: number;
+  totalTradesInSectors: number;
+}
+
+/**
+ * Insight: stock trades in sectors regulated by the legislator's committees.
+ * Answers: "Did this legislator trade stocks in sectors their committee regulates?"
+ * House members only (Senate disclosures not yet integrated).
+ */
+export interface StockCommitteeInsight extends InsightBase {
+  bioguideId: string;
+  totalTrades: number;
+  totalResolvableTrades: number;
+  flaggedTradeCount: number;
+  /** flagged / resolvable */
+  overlapRate: number;
+  /** What % of random trades would overlap by chance */
+  expectedOverlapRate: number;
+  committees: CommitteeTradeOverlap[];
+  flaggedTrades: FlaggedTrade[];
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
 // ── Ticker Resolution ────────────────────────────────────────────────
 
 /**

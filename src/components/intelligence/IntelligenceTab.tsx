@@ -12,14 +12,17 @@ import {
   voteFinanceKeyStats,
   temporalVoteKeyStats,
   lobbyingPipelineKeyStats,
+  stockCommitteeKeyStats,
 } from './InsightCard';
 import { VoteShiftTimeline } from './VoteShiftTimeline';
 import { InfluenceChainTable } from './InfluenceChainTable';
+import { StockOverlapTable } from './StockOverlapTable';
 import type {
   FinanceJurisdictionInsight,
   VoteFinanceInsight,
   TemporalVoteInsight,
   LobbyingPipelineInsight,
+  StockCommitteeInsight,
 } from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
@@ -70,6 +73,16 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     }
   );
 
+  // Stock trade-committee jurisdiction loaded independently
+  const { data: stockData, isLoading: stockLoading } = useSWR<StockCommitteeInsight>(
+    `/api/intelligence/representative/${bioguideId}/stock-trades`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000,
+    }
+  );
+
   if (isLoading) {
     return <IntelligenceLoading />;
   }
@@ -87,9 +100,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const { financeJurisdiction, voteFinance } = data?.insights ?? {};
   const temporal = temporalData?.quarters ? temporalData : null;
   const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
-  const hasInsights = financeJurisdiction || voteFinance || temporal || lobbying;
+  const stock = stockData?.flaggedTrades ? stockData : null;
+  const hasInsights = financeJurisdiction || voteFinance || temporal || lobbying || stock;
 
-  if (!hasInsights && !temporalLoading && !lobbyingLoading) {
+  if (!hasInsights && !temporalLoading && !lobbyingLoading && !stockLoading) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
@@ -146,7 +160,25 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         </>
       )}
 
+      {stock && (
+        <>
+          <StockOverlapTable insight={stock} />
+          <InsightCard
+            title="Stock Trade-Committee Overlap"
+            insight={stock}
+            keyStats={stockCommitteeKeyStats(stock)}
+          />
+        </>
+      )}
+
       {lobbyingLoading && !lobbying && primaryCommittee && (
+        <div className="border-2 border-gray-200 p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+        </div>
+      )}
+
+      {stockLoading && !stock && (
         <div className="border-2 border-gray-200 p-6 animate-pulse">
           <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
           <div className="h-32 bg-gray-200 border-2 border-gray-300" />

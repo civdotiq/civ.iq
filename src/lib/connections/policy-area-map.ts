@@ -347,3 +347,27 @@ export function getPolicyAreasForSector(sector: IndustrySector): string[] {
 export function getAllPolicyAreas(): string[] {
   return POLICY_AREA_MAPPINGS.map(m => m.policyArea);
 }
+
+/**
+ * Map committee topics to IndustrySector values using policy-area-map.
+ * A committee topic matches a policy area if the topic appears in that
+ * policy area's topic list. The policy area's industrySectors are then
+ * attributed to the committee.
+ */
+export function getJurisdictionSectorsForTopics(committeeTopics: string[]): IndustrySector[] {
+  const sectors = new Set<IndustrySector>();
+
+  for (const mapping of POLICY_AREA_MAPPINGS) {
+    const hasOverlap = committeeTopics.some(topic =>
+      mapping.topics.some(t => t.toLowerCase() === topic.toLowerCase())
+    );
+
+    if (hasOverlap) {
+      for (const sector of mapping.industrySectors) {
+        sectors.add(sector);
+      }
+    }
+  }
+
+  return Array.from(sectors);
+}
