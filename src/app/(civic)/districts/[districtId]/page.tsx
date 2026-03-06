@@ -24,6 +24,19 @@ import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
+const DistrictIntelligenceCard = dynamic(
+  () => import('@/components/intelligence/DistrictIntelligenceCard'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-white border-2 border-black p-6 animate-pulse">
+        <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+        <div className="h-24 bg-gray-200 border-2 border-gray-300" />
+      </div>
+    ),
+  }
+);
+
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
   ssr: false,
@@ -258,6 +271,9 @@ export default function DistrictPage() {
 
             {/* Relevant Legislation */}
             <DistrictRelevantBills districtId={districtId} />
+
+            {/* Intelligence */}
+            <DistrictIntelligenceCard districtId={districtId} />
           </div>
 
           {/* Sidebar */}

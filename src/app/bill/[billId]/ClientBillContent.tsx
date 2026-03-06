@@ -40,6 +40,7 @@ import type { DistrictImpact as DistrictImpactType } from '@/types/district-impa
 import type { ProcessExplanation } from '@/types/ai';
 import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
+import { BillIntelligenceSection } from '@/components/intelligence/BillIntelligenceSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
 interface ClientBillContentProps {
@@ -587,6 +588,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
           {/* Related Federal Spending */}
           <BillSpendingSection billId={billId} />
+
+          {/* Intelligence */}
+          <BillIntelligenceSection billId={billId} />
 
           {/* Sponsor and Cosponsors */}
           <div className="bg-white border-2 border-black p-6">

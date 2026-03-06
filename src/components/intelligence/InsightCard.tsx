@@ -14,6 +14,7 @@ import type {
   LobbyingPipelineInsight,
   PACVoteInsight,
   StockCommitteeInsight,
+  BillIntelligenceInsight,
 } from '@/lib/intelligence/types';
 
 /**
@@ -34,7 +35,8 @@ interface InsightCardProps {
     | TemporalVoteInsight
     | LobbyingPipelineInsight
     | PACVoteInsight
-    | StockCommitteeInsight;
+    | StockCommitteeInsight
+    | BillIntelligenceInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }
@@ -252,4 +254,38 @@ export function stockCommitteeKeyStats(
       value: String(committeesWithOverlap),
     },
   ];
+}
+
+/**
+ * Builds key stats array for a BillIntelligenceInsight.
+ */
+export function billIntelligenceKeyStats(
+  insight: BillIntelligenceInsight
+): Array<{ label: string; value: string }> {
+  const stats: Array<{ label: string; value: string }> = [
+    {
+      label: 'Affected sectors',
+      value: String(insight.affectedSectors.length),
+    },
+  ];
+
+  if (insight.sponsorAnalysis) {
+    stats.push({
+      label: 'Sponsor sector %',
+      value: `${insight.sponsorAnalysis.sectorDonationPercentage.toFixed(1)}%`,
+    });
+  }
+
+  if (insight.relatedLobbyingSpending > 0) {
+    const formatted =
+      insight.relatedLobbyingSpending >= 1_000_000
+        ? `$${(insight.relatedLobbyingSpending / 1_000_000).toFixed(1)}M`
+        : `$${(insight.relatedLobbyingSpending / 1_000).toFixed(0)}K`;
+    stats.push({
+      label: 'Lobbying spending',
+      value: formatted,
+    });
+  }
+
+  return stats;
 }

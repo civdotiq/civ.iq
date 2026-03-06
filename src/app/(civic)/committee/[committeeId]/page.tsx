@@ -72,6 +72,19 @@ const CommitteeRegulations = dynamic(
   }
 );
 
+const CommitteeIntelligence = dynamic(
+  () => import('@/components/intelligence/CommitteeIntelligence'),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="border-2 border-gray-200 p-6 animate-pulse">
+        <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+        <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+      </div>
+    ),
+  }
+);
+
 const CommitteeHearings = dynamic(
   () => import('@/features/committees/components/CommitteeHearings'),
   {
@@ -399,6 +412,11 @@ async function CommitteeContent({
         {/* Related Hearings */}
         <div className="mt-8">
           <CommitteeHearings committeeId={committeeId} />
+        </div>
+
+        {/* Intelligence */}
+        <div className="mt-8">
+          <CommitteeIntelligence committeeId={committeeId} />
         </div>
 
         {/* Structured Data for SEO */}
