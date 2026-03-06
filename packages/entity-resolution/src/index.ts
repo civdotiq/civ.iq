@@ -57,7 +57,7 @@ export {
 export { sicToSector } from './sic-sector-map';
 
 // ── Ticker Industry Resolver ─────────────────────────────────────────
-export { resolveTickerIndustry } from './ticker-industry-resolver';
+export { resolveTickerIndustry, resolveTickerIndustries } from './ticker-industry-resolver';
 
 // ── LDA Issue Policy Map ─────────────────────────────────────────────
 export {

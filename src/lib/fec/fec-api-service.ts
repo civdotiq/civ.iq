@@ -385,6 +385,18 @@ export class FECApiService {
     cycle: number,
     count: number = 100
   ): Promise<FECContribution[]> {
+    // Check cache first — multiple analyzers fetch the same contributions per page load
+    const cacheKey = `fec:contributions:${candidateId}:${cycle}:${count}`;
+    try {
+      const cached = await govCache.get<FECContribution[]>(cacheKey);
+      if (cached) {
+        logger.info(`[FEC API] Cache hit for sample contributions`, { candidateId, cycle });
+        return cached;
+      }
+    } catch {
+      // Cache miss — continue to API fetch
+    }
+
     // Get all available committee IDs using robust method
     const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
     if (committeeIds.length === 0) {
@@ -461,12 +473,20 @@ export class FECApiService {
               `[FEC API] ✅ SUCCESS: Found ${nonConduitContributions.length} non-conduit contributions (${allContributions.length} total) from committee ${committeeId} in cycle ${cycle}`
             );
             // Return up to the requested count of non-conduit contributions
-            return nonConduitContributions.slice(0, count);
+            const result = nonConduitContributions.slice(0, count);
+            govCache
+              .set(cacheKey, result, { dataType: 'finance', source: 'fec-api' })
+              .catch(() => {});
+            return result;
           } else if (allContributions.length > 0) {
             logger.warn(
               `[FEC API] ⚠️ WARNING: Only found conduit contributions for committee ${committeeId}, returning them anyway`
             );
-            return allContributions.slice(0, count);
+            const result = allContributions.slice(0, count);
+            govCache
+              .set(cacheKey, result, { dataType: 'finance', source: 'fec-api' })
+              .catch(() => {});
+            return result;
           } else {
             logger.info(
               `[FEC API] No contributions found for committee ${committeeId} in cycle ${cycle}`

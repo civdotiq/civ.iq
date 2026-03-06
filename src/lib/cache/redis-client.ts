@@ -549,6 +549,81 @@ export class RedisCache {
     }
   }
 
+  /**
+   * Batch get multiple keys at once. Returns results in the same order as keys.
+   * Null for keys that don't exist or on error.
+   */
+  async mget<T = unknown>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+
+    try {
+      // Upstash REST API
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const prefixedKeys = keys.map(k => encodeURIComponent(this.keyPrefix + k));
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/mget/${prefixedKeys.join('/')}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const results: (T | null)[] = (data.result as (string | null)[]).map(
+              (val: string | null) => (val ? (JSON.parse(val) as T) : null)
+            );
+            return results;
+          }
+
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on mget, falling back to memory', {
+            error: (restError as Error).message,
+          });
+        }
+      }
+
+      // ioredis native mget
+      if (this.isConnected && this.client) {
+        const values = await this.client.mget(...keys);
+        return values.map(v => (v ? (JSON.parse(v) as T) : null));
+      }
+
+      // Fallback: individual memory cache lookups
+      return keys.map(key => {
+        const fallbackKey = this.getFallbackKey(key);
+        const entry = this.fallbackCache.get(fallbackKey);
+        if (entry && Date.now() - entry.timestamp < entry.ttl) {
+          return entry.data as T;
+        }
+        return null;
+      });
+    } catch (error) {
+      logger.error('[Cache] mget error', {
+        error: (error as Error).message,
+        keyCount: keys.length,
+      });
+
+      // Fallback to individual memory lookups
+      return keys.map(key => {
+        const fallbackKey = this.getFallbackKey(key);
+        const entry = this.fallbackCache.get(fallbackKey);
+        if (entry && Date.now() - entry.timestamp < entry.ttl) {
+          return entry.data as T;
+        }
+        return null;
+      });
+    }
+  }
+
   async keys(pattern: string): Promise<string[]> {
     try {
       if (this.isConnected && this.client) {

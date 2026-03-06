@@ -180,6 +180,110 @@ async function fetchSicCode(cik: number): Promise<string | null> {
 }
 
 /**
+ * Resolve multiple stock tickers to IndustrySectors in parallel.
+ *
+ * Deduplicates tickers, checks cache in batch, then resolves remaining
+ * tickers concurrently (max 5 parallel SEC API requests).
+ *
+ * Returns a Map from normalized ticker to resolution (null for unresolvable).
+ */
+export async function resolveTickerIndustries(
+  tickers: string[]
+): Promise<Map<string, TickerResolution | null>> {
+  const results = new Map<string, TickerResolution | null>();
+
+  // Deduplicate and normalize
+  const uniqueTickers = [...new Set(tickers.map(t => t.toUpperCase().trim()).filter(Boolean))];
+
+  if (uniqueTickers.length === 0) {
+    return results;
+  }
+
+  // Separate known funds (instant null)
+  const resolvable: string[] = [];
+  for (const ticker of uniqueTickers) {
+    if (KNOWN_FUNDS.has(ticker)) {
+      results.set(ticker, null);
+    } else {
+      resolvable.push(ticker);
+    }
+  }
+
+  // Batch cache lookup
+  const cacheKeys = resolvable.map(t => `ticker-sic:${t}`);
+  const cached = await Promise.all(
+    cacheKeys.map(key =>
+      getCache()
+        .get<TickerResolution | 'null'>(key)
+        .catch(() => null)
+    )
+  );
+
+  const uncached: string[] = [];
+  for (let i = 0; i < resolvable.length; i++) {
+    const hit = cached[i];
+    if (hit === 'null') {
+      results.set(resolvable[i]!, null);
+    } else if (hit) {
+      results.set(resolvable[i]!, hit);
+    } else {
+      uncached.push(resolvable[i]!);
+    }
+  }
+
+  // Resolve uncached tickers with concurrency limit
+  const CONCURRENCY = 5;
+  for (let i = 0; i < uncached.length; i += CONCURRENCY) {
+    const batch = uncached.slice(i, i + CONCURRENCY);
+    const resolved = await Promise.all(batch.map(t => resolveSingle(t)));
+    for (let j = 0; j < batch.length; j++) {
+      results.set(batch[j]!, resolved[j]!);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Resolve a single ticker (no cache check — used by batch after cache miss).
+ */
+async function resolveSingle(normalizedTicker: string): Promise<TickerResolution | null> {
+  const cacheKey = `ticker-sic:${normalizedTicker}`;
+
+  const cik = (tickerCikMap as Record<string, number>)[normalizedTicker];
+  if (!cik) {
+    getLogger().debug(`[TickerResolver] No CIK found for ticker: ${normalizedTicker}`);
+    await cacheMiss(cacheKey);
+    return null;
+  }
+
+  const sicCode = await fetchSicCode(cik);
+  if (!sicCode) {
+    await cacheMiss(cacheKey);
+    return null;
+  }
+
+  const sector = sicToSector(sicCode);
+  if (!sector) {
+    getLogger().debug(
+      `[TickerResolver] SIC ${sicCode} has no sector mapping for ${normalizedTicker}`
+    );
+    await cacheMiss(cacheKey);
+    return null;
+  }
+
+  const result: TickerResolution = { sector, sicCode, confidence: 1.0 };
+
+  try {
+    await getCache().set(cacheKey, result, SIC_CACHE_TTL);
+  } catch {
+    // Non-fatal
+  }
+
+  return result;
+}
+
+/**
  * Cache a null result to avoid repeated lookups for unresolvable tickers.
  */
 async function cacheMiss(cacheKey: string): Promise<void> {
