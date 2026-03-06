@@ -38,7 +38,12 @@ import type {
   PeerComparison,
 } from '../types';
 import type { TickerResolution } from '../types';
-import { findCommitteeMapping, generateInsightNarrative } from './shared';
+import {
+  findCommitteeMapping,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
@@ -78,6 +83,14 @@ export async function analyzeStockCommittee(
     // Cache miss or error -- continue
   }
 
+  // 2-6. Fetch, compute, narrate, cache — all under timeout
+  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'StockCommittee');
+}
+
+async function computeAndCache(
+  bioguideId: string,
+  cacheKey: string
+): Promise<StockCommitteeInsight | null> {
   // 2. Fetch and validate data
   const data = await fetchData(bioguideId);
   if (!data) {

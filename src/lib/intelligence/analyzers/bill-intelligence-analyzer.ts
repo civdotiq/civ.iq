@@ -23,7 +23,13 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, type IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
-import { getCurrentElectionCycle, findCommitteeMapping, generateInsightNarrative } from './shared';
+import {
+  getCurrentElectionCycle,
+  findCommitteeMapping,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 import { confidenceScore } from '../statistics/civic-stats';
 import type { BillIntelligenceInsight } from '../types';
 
@@ -57,6 +63,14 @@ export async function analyzeBillIntelligence(
     // Cache miss or error — continue to computation
   }
 
+  // 2-9. Fetch, compute, narrate, cache — all under timeout
+  return withTimeout(computeAndCache(billId, cacheKey), ANALYZER_TIMEOUT_MS, 'BillIntelligence');
+}
+
+async function computeAndCache(
+  billId: string,
+  cacheKey: string
+): Promise<BillIntelligenceInsight | null> {
   // 2. Fetch bill data
   const bill = await fetchBillFromCongress(billId);
   if (!bill) {

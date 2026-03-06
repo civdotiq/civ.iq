@@ -24,7 +24,13 @@ import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getPolicyAreasForSector } from '@/lib/connections/policy-area-map';
-import { getCurrentElectionCycle, getBillSectors, generateInsightNarrative } from './shared';
+import {
+  getCurrentElectionCycle,
+  getBillSectors,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 import {
   confidenceScore,
   peerComparison,
@@ -75,6 +81,14 @@ export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsig
     // Cache miss or error — continue
   }
 
+  // 2-8. Classify, resolve, fetch, compute, narrate, cache — all under timeout
+  return withTimeout(computeAndCache(committeeId, cacheKey), ANALYZER_TIMEOUT_MS, 'PACVotes');
+}
+
+async function computeAndCache(
+  committeeId: string,
+  cacheKey: string
+): Promise<PACVoteInsight | null> {
   // 2. Classify PAC sector
   const classification = await classifyPAC(committeeId);
   if (!classification) {

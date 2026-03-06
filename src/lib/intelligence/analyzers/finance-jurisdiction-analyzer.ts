@@ -27,7 +27,13 @@ import {
 } from '@/lib/connections/committee-agency-map';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
-import { getCurrentElectionCycle, findCommitteeMapping, generateInsightNarrative } from './shared';
+import {
+  getCurrentElectionCycle,
+  findCommitteeMapping,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -64,6 +70,18 @@ export async function analyzeFinanceJurisdiction(
     // Cache miss or error — continue to computation
   }
 
+  // 2-6. Fetch, compute, narrate, cache — all under timeout
+  return withTimeout(
+    computeAndCache(bioguideId, cacheKey),
+    ANALYZER_TIMEOUT_MS,
+    'FinanceJurisdiction'
+  );
+}
+
+async function computeAndCache(
+  bioguideId: string,
+  cacheKey: string
+): Promise<FinanceJurisdictionInsight | null> {
   // 2. Fetch data
   const data = await fetchData(bioguideId);
   if (!data) {

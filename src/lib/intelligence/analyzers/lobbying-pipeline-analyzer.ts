@@ -21,7 +21,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { generateInsightNarrative } from './shared';
+import { generateInsightNarrative, withTimeout, ANALYZER_TIMEOUT_MS } from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
@@ -84,6 +84,18 @@ export async function analyzeLobbyingPipeline(
     // Cache miss or error — continue to computation
   }
 
+  // 2-8. Validate, fetch, compute, narrate, cache — all under timeout
+  return withTimeout(
+    computeAndCache(committeeCode, cacheKey),
+    ANALYZER_TIMEOUT_MS,
+    'LobbyingPipeline'
+  );
+}
+
+async function computeAndCache(
+  committeeCode: string,
+  cacheKey: string
+): Promise<LobbyingPipelineInsight | null> {
   // 2. Validate committee
   const committeeMapping = ALL_COMMITTEE_MAPPINGS.find(m => m.committeeCode === committeeCode);
   if (!committeeMapping) {

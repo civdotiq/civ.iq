@@ -22,6 +22,30 @@ import {
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
+// ── Timeout Wrapper ─────────────────────────────────────────────────
+
+/** Default analyzer timeout: 60 seconds */
+export const ANALYZER_TIMEOUT_MS = 60_000;
+
+/**
+ * Race a promise against a timeout. Individual service calls already have
+ * their own timeouts (10-30s), but this catches accumulated latency when
+ * multiple sequential calls add up.
+ */
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label: string
+): Promise<T> {
+  const timeout = new Promise<never>((_, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id);
+      reject(new Error(`[${label}] Analyzer timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeout]);
+}
+
 // ── FEC Election Cycle ──────────────────────────────────────────────
 
 /**

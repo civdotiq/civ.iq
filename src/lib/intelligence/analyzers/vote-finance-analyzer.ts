@@ -30,7 +30,13 @@ import {
   MIN_VOTES_PER_SECTOR,
   MIN_PEERS,
 } from '../statistics/civic-stats';
-import { getCurrentElectionCycle, getBillSectors, generateInsightNarrative } from './shared';
+import {
+  getCurrentElectionCycle,
+  getBillSectors,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -68,6 +74,14 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
     // Cache miss or error — continue
   }
 
+  // 2-6. Fetch, compute, narrate, cache — all under timeout
+  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'VoteFinance');
+}
+
+async function computeAndCache(
+  bioguideId: string,
+  cacheKey: string
+): Promise<VoteFinanceInsight | null> {
   // 2. Fetch data
   const data = await fetchData(bioguideId);
   if (!data) {
