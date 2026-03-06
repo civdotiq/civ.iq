@@ -1670,6 +1670,315 @@ Proxy endpoint for Senate.gov XML vote data (handles CORS).
 }
 ```
 
+### Intelligence
+
+All intelligence endpoints use `force-dynamic` and return `Cache-Control: public, s-maxage=43200, stale-while-revalidate=3600` (12-hour CDN cache). Every insight includes `InsightBase` metadata: `confidence` (0-1), `dataAsOf`, `methodology`, `disclaimer`, `lastAnalyzedAt`, and `source` (`ai-generated` or `statistical-fallback`).
+
+#### GET /api/intelligence/representative/[bioguideId]
+
+Combined finance-jurisdiction and vote-finance insights for a legislator. Both analyzers run in parallel.
+
+**Parameters:**
+
+- `bioguideId` (path): Congress bioguide identifier (e.g., `P000197`)
+
+**Response:**
+
+```json
+{
+  "bioguideId": "string",
+  "insights": {
+    "financeJurisdiction": {
+      "bioguideId": "string",
+      "overlapScore": "number (0-1)",
+      "committees": [
+        {
+          "committeeCode": "string",
+          "committeeName": "string",
+          "jurisdictionSectors": ["string"],
+          "jurisdictionDonations": "number",
+          "jurisdictionDonationPercentage": "number (0-1)"
+        }
+      ],
+      "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+      "narrative": "string",
+      "confidence": "number (0-1)",
+      "dataAsOf": "string (ISO)",
+      "methodology": "string",
+      "disclaimer": "string",
+      "lastAnalyzedAt": "string (ISO)",
+      "source": "ai-generated|statistical-fallback"
+    },
+    "voteFinance": {
+      "bioguideId": "string",
+      "correlations": [
+        {
+          "sector": "string",
+          "donationAmount": "number",
+          "billsVotedOn": "number",
+          "alignmentScore": "number (0-1)",
+          "meetsSampleSize": "boolean"
+        }
+      ],
+      "overallCorrelation": "number|null",
+      "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+      "narrative": "string",
+      "...InsightBase fields"
+    }
+  },
+  "generatedAt": "string (ISO)"
+}
+```
+
+Returns `null` for either insight when data is insufficient (no committees, no FEC mapping, fewer than 10 votes per sector).
+
+#### GET /api/intelligence/representative/[bioguideId]/influence-chain
+
+Lobbying pipeline insights for each committee a representative sits on.
+
+**Parameters:**
+
+- `bioguideId` (path): Congress bioguide identifier
+
+**Response:**
+
+```json
+{
+  "bioguideId": "string",
+  "committees": [
+    {
+      "committeeCode": "string",
+      "committeeName": "string",
+      "lobbyingInsight": {
+        "committeeCode": "string",
+        "committeeName": "string",
+        "chamber": "House|Senate|Joint",
+        "totalSpending": "number",
+        "organizationCount": "number",
+        "matchedBillCount": "number",
+        "topOrganizations": [
+          { "name": "string", "totalSpending": "number", "filingCount": "number", "issueCodes": ["string"] }
+        ],
+        "issueAlignments": [
+          {
+            "issueCode": "string",
+            "issueLabel": "string",
+            "lobbyingSpending": "number",
+            "organizationCount": "number",
+            "matchedBills": [{ "id": "string", "title": "string", "policyArea": "string" }]
+          }
+        ],
+        "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+        "narrative": "string",
+        "...InsightBase fields"
+      }
+    }
+  ],
+  "generatedAt": "string (ISO)"
+}
+```
+
+Returns `null` for `lobbyingInsight` when fewer than 5 filings reference the committee.
+
+#### GET /api/intelligence/representative/[bioguideId]/temporal
+
+Temporal vote pattern shift analysis across quarterly windows.
+
+**Parameters:**
+
+- `bioguideId` (path): Congress bioguide identifier
+
+**Response:**
+
+```json
+{
+  "bioguideId": "string",
+  "quarters": [
+    { "quarter": "2025-Q1", "alignmentScore": "number (0-1)", "voteCount": "number", "rollingAverage": "number|null" }
+  ],
+  "shifts": [
+    {
+      "quarter": "string",
+      "magnitude": "number",
+      "direction": "increase|decrease",
+      "context": { "newCommittees": ["string"], "largeContributions": "number", "electionProximity": "boolean" }
+    }
+  ],
+  "overallTrend": "stable|increasing|decreasing|volatile",
+  "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+  "narrative": "string",
+  "...InsightBase fields"
+}
+```
+
+Returns `null` when fewer than 4 quarters of vote data available.
+
+#### GET /api/intelligence/representative/[bioguideId]/stock-trades
+
+Stock trade-committee jurisdiction overlap analysis. House members only.
+
+**Parameters:**
+
+- `bioguideId` (path): Congress bioguide identifier
+
+**Response:**
+
+```json
+{
+  "bioguideId": "string",
+  "totalTrades": "number",
+  "totalResolvableTrades": "number",
+  "flaggedTradeCount": "number",
+  "overlapRate": "number (0-1)",
+  "expectedOverlapRate": "number (0-1)",
+  "committees": [
+    {
+      "committeeName": "string",
+      "committeeCode": "string",
+      "jurisdictionSectors": ["string"],
+      "flaggedTradeCount": "number",
+      "totalTradesInSectors": "number"
+    }
+  ],
+  "flaggedTrades": [
+    {
+      "ticker": "string",
+      "assetDescription": "string",
+      "transactionType": "string",
+      "transactionDate": "string",
+      "amount": "string",
+      "sector": "string",
+      "committeeName": "string",
+      "sourceUrl": "string"
+    }
+  ],
+  "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+  "narrative": "string",
+  "...InsightBase fields"
+}
+```
+
+Returns `null` for Senate members or when fewer than 3 resolvable trades.
+
+#### GET /api/intelligence/committee/[committeeId]
+
+Lobbying pipeline analysis for a specific committee.
+
+**Parameters:**
+
+- `committeeId` (path): Committee code (e.g., `HSAG`, `SSFI`)
+
+**Response:**
+
+Same as `LobbyingPipelineInsight` (see influence-chain response above). Returns 404 if committee code not found in mappings.
+
+#### GET /api/intelligence/bill/[billId]
+
+Sponsor/cosponsor funding analysis and related lobbying activity for a bill.
+
+**Parameters:**
+
+- `billId` (path): Bill identifier in format `{congress}-{type}-{number}` (e.g., `119-hr-1234`)
+
+**Response:**
+
+```json
+{
+  "billId": "string",
+  "billTitle": "string",
+  "policyArea": "string",
+  "affectedSectors": ["string"],
+  "sponsorAnalysis": {
+    "bioguideId": "string",
+    "name": "string",
+    "party": "string",
+    "sectorDonationPercentage": "number (0-1)",
+    "sectorDonationAmount": "number",
+    "totalDonations": "number"
+  },
+  "cosponsorSummary": {
+    "totalCosponsors": "number",
+    "analyzedCosponsors": "number",
+    "avgSectorDonationPercentage": "number (0-1)"
+  },
+  "relatedLobbyingSpending": "number",
+  "relatedLobbyingOrgs": "number",
+  "narrative": "string",
+  "...InsightBase fields"
+}
+```
+
+Returns `null` when bill not found, has no policy area, or no sectors map to the policy area.
+
+#### GET /api/intelligence/pac/[committeeId]
+
+PAC-to-legislator vote tracing analysis.
+
+**Parameters:**
+
+- `committeeId` (path): FEC committee ID (e.g., `C00123456`)
+
+**Response:**
+
+```json
+{
+  "committeeId": "string",
+  "committeeName": "string",
+  "sector": "string",
+  "totalDisbursed": "number",
+  "recipientCount": "number",
+  "relevantBillCount": "number",
+  "recipientVotes": [
+    {
+      "bioguideId": "string",
+      "name": "string",
+      "party": "string",
+      "state": "string",
+      "chamber": "House|Senate",
+      "amountReceived": "number",
+      "relevantVoteCount": "number",
+      "yeaRate": "number (0-1)",
+      "partyBaselineYeaRate": "number (0-1)",
+      "differenceFromBaseline": "number"
+    }
+  ],
+  "aggregateYeaRate": "number (0-1)",
+  "aggregateBaselineYeaRate": "number (0-1)",
+  "peerComparison": { "percentileRank": "number", "peerAverage": "number", "peerCount": "number" },
+  "narrative": "string",
+  "...InsightBase fields"
+}
+```
+
+Returns `null` when PAC sector is unclassified (`OTHER`) or fewer than 3 recipients.
+
+#### GET /api/intelligence/district/[districtId]
+
+Intelligence summary for all representatives in a district.
+
+**Parameters:**
+
+- `districtId` (path): District identifier (e.g., `CA-13`, `TX-Senate`)
+
+**Response:**
+
+```json
+{
+  "districtId": "string",
+  "representatives": [
+    {
+      "bioguideId": "string",
+      "name": "string",
+      "party": "string",
+      "chamber": "House|Senate",
+      "financeJurisdictionOverlap": "number|null",
+      "hasStockTrades": "boolean",
+      "insightsAvailable": "number"
+    }
+  ]
+}
+```
+
 ## Rate Limiting
 
 API endpoints implement intelligent rate limiting:
@@ -1698,6 +2007,8 @@ Responses are cached with appropriate TTLs:
   - Bill lifecycle: 1h
   - District bills: 6h
   - Policy area list: 24h
+- Intelligence insights: 12 hours (s-maxage)
+  - Analyzer-level Redis cache: 7 days (most), 14 days (temporal)
 
 ## Error Responses
 
@@ -1737,6 +2048,7 @@ All data comes from official government sources:
 - **GDELT** - News aggregation
 - **congress-legislators** - Enhanced member data
 - **Wikidata** - Biographical information via SPARQL
+- **Senate LDA** - Lobbying disclosure filings
 
 ## Notes
 

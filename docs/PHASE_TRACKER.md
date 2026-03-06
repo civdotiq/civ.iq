@@ -1,10 +1,90 @@
 # Phase Tracker - CIV.IQ Development Progress
 
-## 🎯 Current Status: STATE LEGISLATIVE DISTRICT MAPPING (Phase 8 Complete)
+## 🎯 Current Status: OPEN-SOURCE PACKAGE EXTRACTION (Phase 10 Complete)
 
-Last Updated: November 6, 2025
+Last Updated: March 6, 2026
 
 ## ✅ Completed Phases
+
+### Phase 10: Open-Source Package Extraction (February 2026)
+
+**Status**: COMPLETE ✅
+
+#### @civiq/civic-statistics
+
+- **✅ Statistical Utilities**: Confidence scoring, peer comparison, correlation (Spearman/Pearson)
+- **✅ Sample Size Enforcement**: `meetsSampleSize()` with configurable thresholds
+- **✅ Constants**: MIN_VOTES_PER_SECTOR (10), MIN_QUARTERS_TEMPORAL (4), MIN_TRADES_STOCK (3), MIN_FILINGS_LOBBYING (5), MIN_PAC_RECIPIENTS (3), MIN_RELEVANT_VOTES (3), MIN_PEERS (3)
+- **✅ Pure Functions**: No external dependencies, fully unit-tested
+
+#### @civiq/entity-resolution
+
+- **✅ Committee Alias Resolution**: Maps committee name variants to canonical codes
+- **✅ Ticker-to-Industry Resolution**: Batch ticker symbol to IndustrySector mapping
+- **✅ FEC Recipient Matching**: Deduplication and resolution of FEC committee recipients
+
+#### Technical Implementation
+
+- **✅ npm Workspaces**: `packages/civic-statistics` and `packages/entity-resolution`
+- **✅ Re-export Shims**: Existing app code imports from packages via workspace resolution
+- **✅ TypeScript Build**: Each package has its own `tsconfig.json` and builds independently
+
+### Phase 9: AI Civic Intelligence Layer (December 2025 - February 2026)
+
+**Status**: COMPLETE ✅
+
+#### Intelligence Analyzers (6)
+
+- **✅ Finance-Jurisdiction Overlap**: Campaign donor sectors vs committee jurisdictions
+- **✅ Vote-Finance Correlation**: Voting record alignment with donor industry sectors
+- **✅ Temporal Vote Pattern Shifts**: Quarterly party-line alignment trends with shift detection
+- **✅ Lobbying-Committee-Legislation Pipeline**: LDA filings → committee activity → bill output
+- **✅ PAC-to-Legislator Vote Tracing**: PAC contributions traced to recipient voting records
+- **✅ Stock Trade-Committee Jurisdiction**: STOCK Act disclosure trades in regulated sectors (House only)
+
+#### Bill Intelligence
+
+- **✅ Bill Intelligence Analyzer**: Sponsor/cosponsor funding analysis with lobbying cross-reference
+
+#### API Routes (8)
+
+- **✅ Representative Insights**: `/api/intelligence/representative/[bioguideId]` (finance-jurisdiction + vote-finance)
+- **✅ Influence Chain**: `/api/intelligence/representative/[bioguideId]/influence-chain` (lobbying pipeline per committee)
+- **✅ Temporal Analysis**: `/api/intelligence/representative/[bioguideId]/temporal`
+- **✅ Stock Trade Analysis**: `/api/intelligence/representative/[bioguideId]/stock-trades`
+- **✅ Committee Intelligence**: `/api/intelligence/committee/[committeeId]`
+- **✅ Bill Intelligence**: `/api/intelligence/bill/[billId]`
+- **✅ PAC Intelligence**: `/api/intelligence/pac/[committeeId]`
+- **✅ District Intelligence**: `/api/intelligence/district/[districtId]`
+
+#### UI Components (11)
+
+- **✅ InsightCard**: Base card for all intelligence displays with confidence badge
+- **✅ FinanceJurisdictionCard**: Committee-donor overlap visualization
+- **✅ VoteFinanceCard**: Sector-by-sector correlation display
+- **✅ TemporalVoteCard**: Quarterly alignment chart with shift markers
+- **✅ StockTradeCard**: Flagged trade table with committee jurisdiction context
+- **✅ LobbyingPipelineCard**: Organization spending and issue-bill alignment
+- **✅ PACVoteCard**: Recipient vote records with baseline comparison
+- **✅ BillIntelligenceCard**: Sponsor funding and lobbying summary
+- **✅ DistrictIntelligenceSummary**: Multi-representative overview
+- **✅ InfluenceChainCard**: Committee-level lobbying pipeline
+- **✅ IntelligenceTab**: Tab component for representative/bill/district pages
+
+#### Entity Resolution
+
+- **✅ Ticker-to-Industry Resolver**: Batch resolution with Redis caching
+- **✅ Lobbying-Committee Resolver**: LDA filing entity matching to committee codes
+- **✅ LDA Issue-Policy Map**: Issue code to Congress.gov policy area alignment
+- **✅ FEC Recipient Resolver**: Committee disbursement to bioguide ID matching
+
+#### Architecture
+
+- **✅ Statistics-First**: Every analyzer computes numbers before calling LLM
+- **✅ Reading Level Validation**: AI text must pass Flesch-Kincaid <= 8 with retry
+- **✅ Peer Comparison Baselines**: All insights compared to peer group via Redis mget
+- **✅ Redis Caching**: 7-14 day TTLs at analyzer level, 12-hour s-maxage at API level
+- **✅ Correlation-Only Language**: "pattern", "correlation", "association" — never causation
 
 ### Phase 8: State Legislative District Mapping - Interactive Boundaries for All State Districts (November 6, 2025)
 
@@ -339,7 +419,7 @@ Last Updated: November 6, 2025
 - **Bundle Size**: 1.8MB (target: < 2MB) ✅
 - **Lighthouse Score**: 95+ ✅
 - **TypeScript Compliance**: 100% (0 compilation errors) ✅
-- **Test Coverage**: 78% (target: 80%) ⚠️
+- **Test Coverage**: 88 suites / 1,200 tests ✅
 
 ### Data Coverage
 
@@ -361,6 +441,7 @@ Last Updated: November 6, 2025
 - **DoE (Department of Education)**: ✅ Planned integration
 - **CDC PLACES**: ✅ Planned integration
 - **USASpending.gov**: ✅ Planned integration
+- **Senate LDA (Lobbying)**: ✅ Fully integrated
 - **OpenStates**: ⏳ Planned
 - **Google Civic**: ❌ Not using (mock data concerns)
 - **ProPublica**: ❌ Not using (data quality issues)
@@ -400,8 +481,8 @@ A phase is considered complete when:
 
 - [ ] Migrate remaining JavaScript files to TypeScript
 - [ ] Increase test coverage to 90%
-- [ ] Implement Redis caching layer
-- [ ] Add comprehensive logging system
+- [x] Implement Redis caching layer
+- [x] Add comprehensive logging system
 - [ ] Optimize bundle splitting
 
 ## 🔗 Related Documents
