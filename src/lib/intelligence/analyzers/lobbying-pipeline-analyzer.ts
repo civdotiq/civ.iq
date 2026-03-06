@@ -20,9 +20,8 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
+import { generateInsightNarrative } from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
@@ -52,9 +51,6 @@ import type {
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 /** Standard disclaimer */
 const DISCLAIMER =
@@ -107,50 +103,58 @@ export async function analyzeLobbyingPipeline(
   // 5. Peer comparison
   const peer = await computePeerComparison(committeeCode, stats.totalSpending, committeeMapping);
 
-  // 6. Generate insight
-  try {
-    const narrative = await generateNarrative(committeeMapping, stats, peer);
-
-    const insight: LobbyingPipelineInsight = {
-      committeeCode,
-      committeeName: committeeMapping.committeeName,
-      chamber: committeeMapping.chamber,
-      totalSpending: stats.totalSpending,
-      organizationCount: stats.organizationCount,
-      matchedBillCount: stats.matchedBillCount,
-      topOrganizations: stats.topOrganizations,
-      issueAlignments: stats.issueAlignments,
-      peerComparison: peer ?? {
-        value: stats.totalSpending,
-        peerAverage: stats.totalSpending,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence: stats.confidence,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +
-        'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +
-        'Data from Senate LDA disclosures and Congress.gov.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-
-    // 7. Cache
-    await cacheInsight(cacheKey, insight);
-    await cacheLobbyingScore(committeeCode, stats.totalSpending);
-
-    return insight;
-  } catch (error) {
-    logger.error('[LobbyingPipeline] AI generation failed, using fallback', error as Error, {
-      committeeCode,
+  // 5b. Recompute confidence with actual peer count
+  if (peer) {
+    stats.confidence = confidenceScore({
+      sampleSize: stats.topOrganizations.reduce((sum, o) => sum + o.filingCount, 0),
+      minimumSampleSize: MIN_FILINGS_LOBBYING,
+      dataCompleteness: Math.min(stats.issueAlignments.length / 3, 1),
+      peerCount: peer.peerCount,
     });
-
-    return generateFallback(committeeCode, committeeMapping, stats, peer);
   }
+
+  // 6. Fetch and match bills to enrich issue alignments
+  const { alignments, totalMatchedBills } = await fetchAndMatchBills(stats.issueAlignments);
+  stats.issueAlignments = alignments;
+  stats.matchedBillCount = totalMatchedBills;
+
+  // 7. Generate insight
+  const { narrative, source } = await generateNarrative(committeeMapping, stats, peer);
+
+  const insight: LobbyingPipelineInsight = {
+    committeeCode,
+    committeeName: committeeMapping.committeeName,
+    chamber: committeeMapping.chamber,
+    totalSpending: stats.totalSpending,
+    organizationCount: stats.organizationCount,
+    matchedBillCount: stats.matchedBillCount,
+    topOrganizations: stats.topOrganizations,
+    issueAlignments: stats.issueAlignments,
+    peerComparison: peer ?? {
+      value: stats.totalSpending,
+      peerAverage: stats.totalSpending,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence:
+      source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +
+      'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +
+      'Data from Senate LDA disclosures and Congress.gov.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
+
+  // 8. Cache
+  await cacheInsight(cacheKey, insight);
+  await cacheLobbyingScore(committeeCode, stats.totalSpending);
+
+  return insight;
 }
 
 // ── Data Fetching & Resolution ───────────────────────────────────────
@@ -450,14 +454,11 @@ async function computePeerComparison(
   );
 
   try {
-    const peerScores: number[] = [];
+    const peerCacheKeys = sameChamber.map(p => lobbyingScoreCacheKey(p.committeeCode));
+    if (peerCacheKeys.length < MIN_PEERS) return null;
 
-    for (const peer of sameChamber) {
-      const score = await getRedisCache().get<number>(lobbyingScoreCacheKey(peer.committeeCode));
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const values = await getRedisCache().mget<number>(peerCacheKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) {
       return null;
@@ -475,16 +476,10 @@ async function generateNarrative(
   mapping: CommitteeMapping,
   stats: ComputedStats,
   peer: PeerComparison | null
-): Promise<string> {
-  // First, fetch and match bills to enrich issue alignments
-  const { alignments, totalMatchedBills } = await fetchAndMatchBills(stats.issueAlignments);
-  stats.issueAlignments = alignments;
-  stats.matchedBillCount = totalMatchedBills;
-
-  const systemPrompt =
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
-    'lobbying activity and legislative output. ' +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+    'lobbying activity and legislative output. ';
 
   const topIssueLines = stats.issueAlignments
     .slice(0, 5)
@@ -524,23 +519,9 @@ Write a 2-3 sentence plain-language summary of these factual patterns. State the
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const fallback = buildStatisticalSummary(mapping, stats, peer);
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[LobbyingPipeline] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      committeeCode: mapping.committeeCode,
-    });
-  }
-
-  return buildStatisticalSummary(mapping, stats, peer);
+  return generateInsightNarrative(systemContext, userPrompt, fallback, '[LobbyingPipeline]');
 }
 
 // ── Fallback ─────────────────────────────────────────────────────────
@@ -571,53 +552,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-async function generateFallback(
-  committeeCode: string,
-  mapping: CommitteeMapping,
-  stats: ComputedStats,
-  peer: PeerComparison | null
-): Promise<LobbyingPipelineInsight> {
-  // Enrich with bills even in fallback
-  const { alignments, totalMatchedBills } = await fetchAndMatchBills(stats.issueAlignments);
-  stats.issueAlignments = alignments;
-  stats.matchedBillCount = totalMatchedBills;
-
-  const narrative = buildStatisticalSummary(mapping, stats, peer);
-
-  const insight: LobbyingPipelineInsight = {
-    committeeCode,
-    committeeName: mapping.committeeName,
-    chamber: mapping.chamber,
-    totalSpending: stats.totalSpending,
-    organizationCount: stats.organizationCount,
-    matchedBillCount: stats.matchedBillCount,
-    topOrganizations: stats.topOrganizations,
-    issueAlignments: stats.issueAlignments,
-    peerComparison: peer ?? {
-      value: stats.totalSpending,
-      peerAverage: stats.totalSpending,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(stats.confidence, 0.5),
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +
-      'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +
-      'Data from Senate LDA disclosures and Congress.gov.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  const cacheKey = `insight:lobbying_pipeline:${committeeCode}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ────────────────────────────────────────────────────

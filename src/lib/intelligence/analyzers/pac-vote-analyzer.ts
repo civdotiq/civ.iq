@@ -17,17 +17,14 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { categorizePACByName, IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
-import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
-import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { getPolicyAreasForSector } from '@/lib/connections/policy-area-map';
+import { getCurrentElectionCycle, getBillSectors, generateInsightNarrative } from './shared';
 import {
   confidenceScore,
   peerComparison,
@@ -39,9 +36,6 @@ import type { PACVoteInsight, PACRecipientVoteRecord, PeerComparison } from '../
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 /** Max votes to fetch per recipient */
 const MAX_VOTES = 200;
@@ -109,11 +103,7 @@ export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsig
   }
 
   // 5. Fetch votes and classify per recipient
-  const recipientVotes = await fetchAndClassifyRecipientVotes(
-    recipients,
-    classification.sector,
-    relevantPolicyAreas
-  );
+  const recipientVotes = await fetchAndClassifyRecipientVotes(recipients, classification.sector);
 
   // Drop recipients below MIN_RELEVANT_VOTES
   const qualifiedRecipients = recipientVotes.filter(r => r.relevantVoteCount >= MIN_RELEVANT_VOTES);
@@ -147,65 +137,53 @@ export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsig
   // 8. Generate insight
   const totalDisbursed = qualifiedRecipients.reduce((sum, r) => sum + r.amountReceived, 0);
 
-  try {
-    const narrative = await generateNarrative(classification, qualifiedRecipients, stats, peer);
+  const { narrative, source } = await generateNarrative(
+    classification,
+    qualifiedRecipients,
+    stats,
+    peer
+  );
 
-    const confidence = confidenceScore({
-      sampleSize: totalRelevantVotes,
-      minimumSampleSize: MIN_TOTAL_RELEVANT_VOTES * 3,
-      dataCompleteness: qualifiedRecipients.length / recipients.length,
-      peerCount: peer?.peerCount ?? 0,
-    });
+  const confidence = confidenceScore({
+    sampleSize: totalRelevantVotes,
+    minimumSampleSize: MIN_TOTAL_RELEVANT_VOTES * 3,
+    dataCompleteness: qualifiedRecipients.length / recipients.length,
+    peerCount: peer?.peerCount ?? 0,
+  });
 
-    const insight: PACVoteInsight = {
-      committeeId,
-      committeeName: classification.name,
-      sector: classification.sector,
-      totalDisbursed,
-      recipientCount: qualifiedRecipients.length,
-      relevantBillCount,
-      recipientVotes: qualifiedRecipients,
-      aggregateYeaRate: stats.aggregateYeaRate,
-      aggregateBaselineYeaRate: stats.aggregateBaselineYeaRate,
-      peerComparison: peer ?? {
-        value: stats.aggregateYeaRate,
-        peerAverage: stats.aggregateYeaRate,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'PAC recipients identified via FEC disbursement data. ' +
-        'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
-        'Yea rates compared to same-party baselines on the same roll calls.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
+  const insight: PACVoteInsight = {
+    committeeId,
+    committeeName: classification.name,
+    sector: classification.sector,
+    totalDisbursed,
+    recipientCount: qualifiedRecipients.length,
+    relevantBillCount,
+    recipientVotes: qualifiedRecipients,
+    aggregateYeaRate: stats.aggregateYeaRate,
+    aggregateBaselineYeaRate: stats.aggregateBaselineYeaRate,
+    peerComparison: peer ?? {
+      value: stats.aggregateYeaRate,
+      peerAverage: stats.aggregateYeaRate,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'PAC recipients identified via FEC disbursement data. ' +
+      'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
+      'Yea rates compared to same-party baselines on the same roll calls.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
 
-    await cacheInsight(cacheKey, insight);
-    await cacheAggregateYeaRate(committeeId, classification.sector, stats.aggregateYeaRate);
+  await cacheInsight(cacheKey, insight);
+  await cacheAggregateYeaRate(committeeId, classification.sector, stats.aggregateYeaRate);
 
-    return insight;
-  } catch (error) {
-    logger.error('[PACVotes] AI generation failed, using fallback', error as Error, {
-      committeeId,
-    });
-
-    return generateFallback(
-      committeeId,
-      classification,
-      qualifiedRecipients,
-      stats,
-      totalDisbursed,
-      relevantBillCount,
-      peer,
-      recipients.length
-    );
-  }
+  return insight;
 }
 
 // ── PAC Classification ───────────────────────────────────────────────
@@ -242,7 +220,7 @@ interface LinkedRecipient {
 
 async function resolveRecipients(committeeId: string): Promise<LinkedRecipient[] | null> {
   try {
-    const all = await resolveCommitteeRecipients(committeeId, 2024);
+    const all = await resolveCommitteeRecipients(committeeId, getCurrentElectionCycle());
 
     // Filter to those with bioguideId and positive disbursements
     const withBioguide = all.filter(r => r.bioguideId && r.chamber && r.totalAmount > 0);
@@ -280,8 +258,7 @@ async function resolveRecipients(committeeId: string): Promise<LinkedRecipient[]
 
 async function fetchAndClassifyRecipientVotes(
   recipients: LinkedRecipient[],
-  pacSector: IndustrySector,
-  _relevantPolicyAreas: string[]
+  pacSector: IndustrySector
 ): Promise<PACRecipientVoteRecord[]> {
   const records: PACRecipientVoteRecord[] = [];
 
@@ -306,11 +283,8 @@ async function processRecipientVotes(
   recipient: LinkedRecipient,
   pacSector: IndustrySector
 ): Promise<PACRecipientVoteRecord | null> {
-  const currentYear = new Date().getFullYear();
-  const session = currentYear % 2 === 1 ? 1 : 2;
-
-  // Fetch votes
-  const rawVotes =
+  // Fetch votes from both sessions of the 119th Congress
+  const fetchSession = async (session: 1 | 2) =>
     recipient.chamber === 'House'
       ? await batchVotingService.getHouseMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES)
       : await batchVotingService.getSenateMemberVotes(
@@ -319,6 +293,9 @@ async function processRecipientVotes(
           session,
           MAX_VOTES
         );
+
+  const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
+  const rawVotes = [...session1, ...session2];
 
   if (rawVotes.length === 0) return null;
 
@@ -375,60 +352,6 @@ async function processRecipientVotes(
   };
 }
 
-// ── Bill Classification ──────────────────────────────────────────────
-
-async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
-  try {
-    const summary = await BillSummaryCache.getSummary(billId);
-    if (summary?.affectedIndustries?.length) {
-      return summary.affectedIndustries;
-    }
-  } catch {
-    // Cache miss — try static fallback
-  }
-
-  return inferSectorsFromTitle(billTitle);
-}
-
-/**
- * Rough inference of sectors from bill title using policy-area-map.
- * Replicated from vote-finance-analyzer.ts (private function).
- */
-function inferSectorsFromTitle(title: string): IndustrySector[] {
-  const titleLower = title.toLowerCase();
-
-  const keywordToPolicyArea: Array<[string[], string]> = [
-    [['defense', 'military', 'armed forces', 'veteran'], 'Armed Forces and National Security'],
-    [['health', 'medicare', 'medicaid', 'drug', 'pharmaceutical'], 'Health'],
-    [['tax', 'revenue', 'irs'], 'Taxation'],
-    [['energy', 'oil', 'gas', 'renewable', 'nuclear'], 'Energy'],
-    [['bank', 'financial', 'securities', 'insurance'], 'Finance and Financial Sector'],
-    [['agriculture', 'farm', 'food', 'nutrition'], 'Agriculture and Food'],
-    [['transportation', 'highway', 'aviation', 'rail'], 'Transportation and Public Works'],
-    [['education', 'school', 'student'], 'Education'],
-    [['environment', 'climate', 'pollution', 'epa'], 'Environmental Protection'],
-    [['labor', 'worker', 'employment', 'wage'], 'Labor and Employment'],
-    [['immigration', 'border', 'visa'], 'Immigration'],
-    [['trade', 'tariff', 'commerce'], 'Commerce'],
-    [['housing', 'hud', 'mortgage'], 'Housing and Community Development'],
-    [['technology', 'cyber', 'broadband', 'telecom'], 'Science, Technology, Communications'],
-    [['crime', 'law enforcement', 'criminal'], 'Crime and Law Enforcement'],
-    [['construction', 'infrastructure', 'water'], 'Water Resources Development'],
-  ];
-
-  const sectors = new Set<IndustrySector>();
-
-  for (const [keywords, policyArea] of keywordToPolicyArea) {
-    if (keywords.some(k => titleLower.includes(k))) {
-      for (const sector of getIndustrySectorsForPolicyArea(policyArea)) {
-        sectors.add(sector);
-      }
-    }
-  }
-
-  return Array.from(sectors);
-}
-
 // ── Statistics ───────────────────────────────────────────────────────
 
 interface AggregateStats {
@@ -483,15 +406,11 @@ async function computePeerComparison(
 
   try {
     const keys = await getRedisCache().keys(pattern);
-    const peerScores: number[] = [];
+    const peerKeys = keys.filter(k => !k.endsWith(`:${committeeId}`));
+    if (peerKeys.length < MIN_PEERS) return null;
 
-    for (const key of keys) {
-      if (key.endsWith(`:${committeeId}`)) continue;
-      const score = await getRedisCache().get<number>(key);
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) return null;
 
@@ -508,11 +427,10 @@ async function generateNarrative(
   recipients: PACRecipientVoteRecord[],
   stats: AggregateStats,
   peer: PeerComparison | null
-): Promise<string> {
-  const systemPrompt =
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
-    "PAC contributions and legislators' voting records. " +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+    "PAC contributions and legislators' voting records. ";
 
   const totalDisbursed = recipients.reduce((sum, r) => sum + r.amountReceived, 0);
   const totalVotes = recipients.reduce((sum, r) => sum + r.relevantVoteCount, 0);
@@ -553,23 +471,9 @@ Write a 2-3 sentence plain-language summary. State the overall pattern of how PA
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const fallback = buildStatisticalSummary(classification, recipients, stats, peer);
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[PACVotes] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      committeeId: classification.name,
-    });
-  }
-
-  return buildStatisticalSummary(classification, recipients, stats, peer);
+  return generateInsightNarrative(systemContext, userPrompt, fallback, '[PACVotes]');
 }
 
 function buildStatisticalSummary(
@@ -595,62 +499,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-// ── Fallback ─────────────────────────────────────────────────────────
-
-async function generateFallback(
-  committeeId: string,
-  classification: PACClassification,
-  recipients: PACRecipientVoteRecord[],
-  stats: AggregateStats,
-  totalDisbursed: number,
-  relevantBillCount: number,
-  peer: PeerComparison | null,
-  totalRecipientCount: number
-): Promise<PACVoteInsight> {
-  const narrative = buildStatisticalSummary(classification, recipients, stats, peer);
-
-  const confidence = confidenceScore({
-    sampleSize: recipients.reduce((sum, r) => sum + r.relevantVoteCount, 0),
-    minimumSampleSize: MIN_TOTAL_RELEVANT_VOTES * 3,
-    dataCompleteness: recipients.length / totalRecipientCount,
-    peerCount: peer?.peerCount ?? 0,
-  });
-
-  const insight: PACVoteInsight = {
-    committeeId,
-    committeeName: classification.name,
-    sector: classification.sector,
-    totalDisbursed,
-    recipientCount: recipients.length,
-    relevantBillCount,
-    recipientVotes: recipients,
-    aggregateYeaRate: stats.aggregateYeaRate,
-    aggregateBaselineYeaRate: stats.aggregateBaselineYeaRate,
-    peerComparison: peer ?? {
-      value: stats.aggregateYeaRate,
-      peerAverage: stats.aggregateYeaRate,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(confidence, 0.5),
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'PAC recipients identified via FEC disbursement data. ' +
-      'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
-      'Yea rates compared to same-party baselines on the same roll calls.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  const cacheKey = `insight:pac_votes:${committeeId}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ────────────────────────────────────────────────────

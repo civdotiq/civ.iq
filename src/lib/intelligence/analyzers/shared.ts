@@ -1,0 +1,161 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Shared utilities for intelligence analyzers.
+ *
+ * Deduplicates common logic: FEC cycle computation, committee fuzzy matching,
+ * bill sector classification, and AI narrative generation with retry/fallback.
+ */
+
+import logger from '@/lib/logging/simple-logger';
+import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
+import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
+import {
+  ALL_COMMITTEE_MAPPINGS,
+  type CommitteeMapping,
+} from '@/lib/connections/committee-agency-map';
+import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
+import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+
+// ── FEC Election Cycle ──────────────────────────────────────────────
+
+/**
+ * Returns the current FEC election cycle year.
+ * FEC cycles are even years — contributions in odd years belong to the next even year.
+ */
+export function getCurrentElectionCycle(): number {
+  const year = new Date().getFullYear();
+  return year % 2 === 0 ? year : year + 1;
+}
+
+// ── Committee Fuzzy Matching ────────────────────────────────────────
+
+/**
+ * Find the best matching committee mapping for a given committee name.
+ * Uses bidirectional substring matching against ALL_COMMITTEE_MAPPINGS.
+ */
+export function findCommitteeMapping(committeeName: string): CommitteeMapping | undefined {
+  const normalized = committeeName.toLowerCase();
+  return ALL_COMMITTEE_MAPPINGS.find(
+    m =>
+      normalized.includes(m.committeeName.toLowerCase()) ||
+      m.committeeName.toLowerCase().includes(normalized)
+  );
+}
+
+// ── Bill Sector Classification ──────────────────────────────────────
+
+/**
+ * Get industry sectors for a bill. Tries cached AI summary first,
+ * falls back to keyword-based inference from the title.
+ */
+export async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
+  try {
+    const summary = await BillSummaryCache.getSummary(billId);
+    if (summary?.affectedIndustries?.length) {
+      return summary.affectedIndustries;
+    }
+  } catch {
+    // Cache miss — try static fallback
+  }
+
+  return inferSectorsFromTitle(billTitle);
+}
+
+/**
+ * Rough inference of sectors from bill title keywords → policy area → sectors.
+ * Not as accurate as AI classification but provides coverage for
+ * bills without cached summaries.
+ */
+export function inferSectorsFromTitle(title: string): IndustrySector[] {
+  const titleLower = title.toLowerCase();
+
+  const keywordToPolicyArea: Array<[string[], string]> = [
+    [['defense', 'military', 'armed forces', 'veteran'], 'Armed Forces and National Security'],
+    [['health', 'medicare', 'medicaid', 'drug', 'pharmaceutical'], 'Health'],
+    [['tax', 'revenue', 'irs'], 'Taxation'],
+    [['energy', 'oil', 'gas', 'renewable', 'nuclear'], 'Energy'],
+    [['bank', 'financial', 'securities', 'insurance'], 'Finance and Financial Sector'],
+    [['agriculture', 'farm', 'food', 'nutrition'], 'Agriculture and Food'],
+    [['transportation', 'highway', 'aviation', 'rail'], 'Transportation and Public Works'],
+    [['education', 'school', 'student'], 'Education'],
+    [['environment', 'climate', 'pollution', 'epa'], 'Environmental Protection'],
+    [['labor', 'worker', 'employment', 'wage'], 'Labor and Employment'],
+    [['immigration', 'border', 'visa'], 'Immigration'],
+    [['trade', 'tariff', 'commerce'], 'Commerce'],
+    [['housing', 'hud', 'mortgage'], 'Housing and Community Development'],
+    [['technology', 'cyber', 'broadband', 'telecom'], 'Science, Technology, Communications'],
+    [['crime', 'law enforcement', 'criminal'], 'Crime and Law Enforcement'],
+    [['construction', 'infrastructure', 'water'], 'Water Resources Development'],
+  ];
+
+  const sectors = new Set<IndustrySector>();
+
+  for (const [keywords, policyArea] of keywordToPolicyArea) {
+    if (keywords.some(k => titleLower.includes(k))) {
+      for (const sector of getIndustrySectorsForPolicyArea(policyArea)) {
+        sectors.add(sector);
+      }
+    }
+  }
+
+  return Array.from(sectors);
+}
+
+// ── AI Narrative Generation ─────────────────────────────────────────
+
+/** Max AI narrative regeneration attempts */
+const MAX_AI_RETRIES = 3;
+
+/** Target Flesch-Kincaid reading level */
+const TARGET_READING_LEVEL = 8;
+
+/**
+ * Generate an AI narrative with reading level validation and retry logic.
+ * Falls back to the provided statistical summary on failure.
+ *
+ * @param systemContext - Domain-specific prefix for the system prompt
+ * @param userPrompt - The full data-bearing prompt for the AI
+ * @param statisticalFallback - Pre-built plain-text fallback if AI fails
+ * @param label - Log label for this analyzer (e.g., '[FinanceJurisdiction]')
+ * @returns The narrative string and whether AI was used
+ */
+export async function generateInsightNarrative(
+  systemContext: string,
+  userPrompt: string,
+  statisticalFallback: string,
+  label: string
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemPrompt =
+    systemContext +
+    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+
+  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
+    try {
+      const result = await generateAIText(systemPrompt, userPrompt, {
+        maxTokens: 300,
+        temperature: 0.3,
+      });
+
+      if (!result) continue;
+
+      if (ReadingLevelValidator.meetsTarget(result, TARGET_READING_LEVEL)) {
+        return { narrative: result, source: 'ai-generated' };
+      }
+
+      logger.warn(`${label} Narrative failed reading level`, { attempt: attempt + 1 });
+    } catch (error) {
+      logger.warn(`${label} AI generation attempt failed`, {
+        attempt: attempt + 1,
+        error: (error as Error).message,
+      });
+    }
+  }
+
+  return { narrative: statisticalFallback, source: 'statistical-fallback' };
+}

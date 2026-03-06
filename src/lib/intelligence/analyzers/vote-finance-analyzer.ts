@@ -17,16 +17,12 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
-import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
-import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import {
   correlation,
   peerComparison,
@@ -34,13 +30,11 @@ import {
   MIN_VOTES_PER_SECTOR,
   MIN_PEERS,
 } from '../statistics/civic-stats';
+import { getCurrentElectionCycle, getBillSectors, generateInsightNarrative } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 /** Max votes to fetch for analysis */
 const MAX_VOTES = 200;
@@ -90,45 +84,54 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
   // 4. Peer comparison
   const peer = await computePeerComparison(bioguideId, stats, data);
 
-  // 5. Generate insight
-  try {
-    const narrative = await generateNarrative(data, stats, peer);
-
-    const insight: VoteFinanceInsight = {
-      bioguideId,
-      correlations: stats.correlations,
-      overallCorrelation: stats.overallCorrelation,
-      peerComparison: peer ?? {
-        value: stats.overallAlignment,
-        peerAverage: stats.overallAlignment,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence: stats.confidence,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
-        'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
-        'Spearman rank correlation across sectors with 10+ votes.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-
-    // 6. Cache
-    await cacheInsight(cacheKey, insight);
-    await cacheAlignmentScore(bioguideId, stats.overallAlignment, data);
-
-    return insight;
-  } catch (error) {
-    logger.error('[VoteFinance] AI generation failed, using fallback', error as Error, {
-      bioguideId,
+  // 4b. Recompute confidence with actual peer count
+  if (peer) {
+    const totalVotes = stats.correlations.reduce((sum, c) => sum + c.billsVotedOn, 0);
+    const sectorsWithEnoughData = stats.correlations.filter(c => c.meetsSampleSize).length;
+    const baseConfidence = confidenceScore({
+      sampleSize: totalVotes,
+      minimumSampleSize: MIN_VOTES_PER_SECTOR * 3,
+      dataCompleteness:
+        data.votes.length > 0
+          ? data.votes.filter(v => v.sectors.length > 0).length / data.votes.length
+          : 0,
+      peerCount: peer.peerCount,
     });
-
-    return generateFallback(bioguideId, data.name, stats, peer);
+    stats.confidence = sectorsWithEnoughData >= 2 ? baseConfidence : Math.min(baseConfidence, 0.5);
   }
+
+  // 5. Generate insight
+  const { narrative, source } = await generateNarrative(data, stats, peer);
+
+  const insight: VoteFinanceInsight = {
+    bioguideId,
+    correlations: stats.correlations,
+    overallCorrelation: stats.overallCorrelation,
+    peerComparison: peer ?? {
+      value: stats.overallAlignment,
+      peerAverage: stats.overallAlignment,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence:
+      source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
+      'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
+      'Spearman rank correlation across sectors with 10+ votes.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
+
+  // 6. Cache
+  await cacheInsight(cacheKey, insight);
+  await cacheAlignmentScore(bioguideId, stats.overallAlignment, data);
+
+  return insight;
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -215,24 +218,26 @@ interface RawVote {
 
 async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Promise<RawVote[]> {
   try {
-    const currentYear = new Date().getFullYear();
-    const session = currentYear % 2 === 1 ? 1 : 2;
+    const fetchSession = async (session: 1 | 2) => {
+      const rawVotes =
+        chamber === 'House'
+          ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, session, MAX_VOTES)
+          : await batchVotingService.getSenateMemberVotes(bioguideId, 119, session, MAX_VOTES);
 
-    const rawVotes =
-      chamber === 'House'
-        ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, session, MAX_VOTES)
-        : await batchVotingService.getSenateMemberVotes(bioguideId, 119, session, MAX_VOTES);
+      return rawVotes
+        .filter(v => v.bill && v.position)
+        .map(v => ({
+          billType: v.bill!.type,
+          billNumber: v.bill!.number,
+          billCongress: v.bill!.congress,
+          billTitle: v.bill!.title,
+          position: v.position,
+          date: v.date,
+        }));
+    };
 
-    return rawVotes
-      .filter(v => v.bill && v.position)
-      .map(v => ({
-        billType: v.bill!.type,
-        billNumber: v.bill!.number,
-        billCongress: v.bill!.congress,
-        billTitle: v.bill!.title,
-        position: v.position,
-        date: v.date,
-      }));
+    const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
+    return [...session1, ...session2];
   } catch (error) {
     logger.warn('[VoteFinance] Vote fetch failed', { bioguideId, error: (error as Error).message });
     return [];
@@ -241,7 +246,7 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
 
 async function fetchContributions(fecId: string) {
   try {
-    return await fecApiService.getSampleContributions(fecId, 2024, 500);
+    return await fecApiService.getSampleContributions(fecId, getCurrentElectionCycle(), 500);
   } catch {
     return [];
   }
@@ -281,66 +286,6 @@ async function classifyVoteIndustries(rawVotes: RawVote[]): Promise<VoteWithIndu
   }
 
   return results;
-}
-
-/**
- * Get industry sectors for a bill. Try cached AI summary first,
- * fall back to policy-area-map static lookup.
- */
-async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
-  // Try cached AI-classified industries
-  try {
-    const summary = await BillSummaryCache.getSummary(billId);
-    if (summary?.affectedIndustries?.length) {
-      return summary.affectedIndustries;
-    }
-  } catch {
-    // Cache miss — try static fallback
-  }
-
-  // Static fallback: infer from bill title keywords → policy area → sectors
-  return inferSectorsFromTitle(billTitle);
-}
-
-/**
- * Rough inference of sectors from bill title using policy-area-map.
- * Not as accurate as AI classification but provides coverage for
- * bills without cached summaries.
- */
-function inferSectorsFromTitle(title: string): IndustrySector[] {
-  const titleLower = title.toLowerCase();
-
-  // Map keywords to policy areas, then get sectors
-  const keywordToPolicyArea: Array<[string[], string]> = [
-    [['defense', 'military', 'armed forces', 'veteran'], 'Armed Forces and National Security'],
-    [['health', 'medicare', 'medicaid', 'drug', 'pharmaceutical'], 'Health'],
-    [['tax', 'revenue', 'irs'], 'Taxation'],
-    [['energy', 'oil', 'gas', 'renewable', 'nuclear'], 'Energy'],
-    [['bank', 'financial', 'securities', 'insurance'], 'Finance and Financial Sector'],
-    [['agriculture', 'farm', 'food', 'nutrition'], 'Agriculture and Food'],
-    [['transportation', 'highway', 'aviation', 'rail'], 'Transportation and Public Works'],
-    [['education', 'school', 'student'], 'Education'],
-    [['environment', 'climate', 'pollution', 'epa'], 'Environmental Protection'],
-    [['labor', 'worker', 'employment', 'wage'], 'Labor and Employment'],
-    [['immigration', 'border', 'visa'], 'Immigration'],
-    [['trade', 'tariff', 'commerce'], 'Commerce'],
-    [['housing', 'hud', 'mortgage'], 'Housing and Community Development'],
-    [['technology', 'cyber', 'broadband', 'telecom'], 'Science, Technology, Communications'],
-    [['crime', 'law enforcement', 'criminal'], 'Crime and Law Enforcement'],
-    [['construction', 'infrastructure', 'water'], 'Water Resources Development'],
-  ];
-
-  const sectors = new Set<IndustrySector>();
-
-  for (const [keywords, policyArea] of keywordToPolicyArea) {
-    if (keywords.some(k => titleLower.includes(k))) {
-      for (const sector of getIndustrySectorsForPolicyArea(policyArea)) {
-        sectors.add(sector);
-      }
-    }
-  }
-
-  return Array.from(sectors);
 }
 
 // ── Statistical Computation ──────────────────────────────────────────
@@ -463,14 +408,11 @@ async function computePeerComparison(
   try {
     const keys = await getRedisCache().keys(pattern);
 
-    const peerScores: number[] = [];
-    for (const key of keys) {
-      if (key.endsWith(`:${bioguideId}`)) continue; // Skip self
-      const score = await getRedisCache().get<number>(key);
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEERS) return null;
+
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) return null;
 
@@ -490,11 +432,10 @@ async function generateNarrative(
   data: FetchedData,
   stats: ComputedStats,
   peer: PeerComparison | null
-): Promise<string> {
-  const systemPrompt =
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
-    'campaign finance and voting records. ' +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+    'campaign finance and voting records. ';
 
   // Build sector detail lines (top 5 by donation amount)
   const topCorrelations = stats.correlations.filter(c => c.meetsSampleSize).slice(0, 5);
@@ -538,23 +479,9 @@ Write a 2-3 sentence plain-language summary. State the overall alignment pattern
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const fallback = buildStatisticalFallback(data, stats, peer);
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[VoteFinance] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      bioguideId: data.name,
-    });
-  }
-
-  return buildStatisticalSummary(data, stats, peer);
+  return generateInsightNarrative(systemContext, userPrompt, fallback, '[VoteFinance]');
 }
 
 function describeCorrelation(r: number): string {
@@ -567,9 +494,7 @@ function describeCorrelation(r: number): string {
   return `strong ${direction}`;
 }
 
-// ── Fallback ─────────────────────────────────────────────────────────
-
-function buildStatisticalSummary(
+function buildStatisticalFallback(
   data: FetchedData,
   stats: ComputedStats,
   peer: PeerComparison | null
@@ -594,55 +519,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-async function generateFallback(
-  bioguideId: string,
-  name: string,
-  stats: ComputedStats,
-  peer: PeerComparison | null
-): Promise<VoteFinanceInsight> {
-  const narrative = buildStatisticalSummary(
-    {
-      name,
-      party: '',
-      state: '',
-      chamber: 'House',
-      votes: [],
-      sectorDonations: new Map(),
-      totalDonations: 0,
-    },
-    stats,
-    peer
-  );
-
-  const insight: VoteFinanceInsight = {
-    bioguideId,
-    correlations: stats.correlations,
-    overallCorrelation: stats.overallCorrelation,
-    peerComparison: peer ?? {
-      value: stats.overallAlignment,
-      peerAverage: stats.overallAlignment,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(stats.confidence, 0.5),
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
-      'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
-      'Spearman rank correlation across sectors with 10+ votes.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  const cacheKey = `insight:vote_finance:${bioguideId}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ────────────────────────────────────────────────────

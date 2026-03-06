@@ -18,17 +18,12 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
-import { resolveTickerIndustry } from '@/lib/intelligence/entity-resolution/ticker-industry-resolver';
+import { resolveTickerIndustries } from '@/lib/intelligence/entity-resolution/ticker-industry-resolver';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
-import {
-  ALL_COMMITTEE_MAPPINGS,
-  getTopicsForCommittee,
-} from '@/lib/connections/committee-agency-map';
+import { getTopicsForCommittee } from '@/lib/connections/committee-agency-map';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import {
   peerComparison,
@@ -43,12 +38,10 @@ import type {
   PeerComparison,
 } from '../types';
 import type { TickerResolution } from '../types';
+import { findCommitteeMapping, generateInsightNarrative } from './shared';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 /** Total number of IndustrySector enum values */
 const TOTAL_SECTOR_COUNT = Object.keys(IndustrySector).length;
@@ -97,50 +90,58 @@ export async function analyzeStockCommittee(
   // 4. Peer comparison
   const peer = await computePeerComparison(bioguideId, stats.overlapRate, data);
 
-  // 5. Generate insight
-  try {
-    const narrative = await generateNarrative(data, stats, peer);
-
-    const insight: StockCommitteeInsight = {
-      bioguideId,
-      totalTrades: data.totalTrades,
-      totalResolvableTrades: data.resolvedTrades.length,
-      flaggedTradeCount: stats.flaggedTrades.length,
-      overlapRate: stats.overlapRate,
-      expectedOverlapRate: stats.expectedOverlapRate,
-      committees: stats.committees,
-      flaggedTrades: stats.flaggedTrades,
-      peerComparison: peer ?? {
-        value: stats.overlapRate,
-        peerAverage: stats.overlapRate,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence: stats.confidence,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Stock trades from House Clerk STOCK Act disclosures matched to committee jurisdiction sectors. ' +
-        'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
-        'Expected overlap rate = jurisdiction sectors / 13 total sectors.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-
-    // 6. Cache
-    await cacheInsight(cacheKey, insight);
-    await cacheOverlapRate(bioguideId, stats.overlapRate, data);
-
-    return insight;
-  } catch (error) {
-    logger.error('[StockCommittee] AI generation failed, using fallback', error as Error, {
-      bioguideId,
+  // 4b. Recompute confidence with actual peer count
+  if (peer) {
+    const dataCompleteness = data.resolvedTrades.length / Math.max(data.totalTrades, 1);
+    const baseConf = confidenceScore({
+      sampleSize: data.resolvedTrades.length,
+      minimumSampleSize: MIN_TRADES_STOCK,
+      dataCompleteness,
+      peerCount: peer.peerCount,
     });
-
-    return generateFallback(bioguideId, data, stats, peer);
+    const overlapRatio =
+      stats.expectedOverlapRate > 0 ? stats.overlapRate / stats.expectedOverlapRate : 1;
+    const signalStrength = Math.min(Math.abs(overlapRatio - 1) * 2, 1);
+    stats.confidence = Math.round(baseConf * (0.5 + signalStrength * 0.5) * 100) / 100;
   }
+
+  // 5. Generate insight
+  const { narrative, source } = await generateNarrative(data, stats, peer);
+
+  const insight: StockCommitteeInsight = {
+    bioguideId,
+    totalTrades: data.totalTrades,
+    totalResolvableTrades: data.resolvedTrades.length,
+    flaggedTradeCount: stats.flaggedTrades.length,
+    overlapRate: stats.overlapRate,
+    expectedOverlapRate: stats.expectedOverlapRate,
+    committees: stats.committees,
+    flaggedTrades: stats.flaggedTrades,
+    peerComparison: peer ?? {
+      value: stats.overlapRate,
+      peerAverage: stats.overlapRate,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence:
+      source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Stock trades from House Clerk STOCK Act disclosures matched to committee jurisdiction sectors. ' +
+      'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
+      'Expected overlap rate = jurisdiction sectors / 13 total sectors.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
+
+  // 6. Cache
+  await cacheInsight(cacheKey, insight);
+  await cacheOverlapRate(bioguideId, stats.overlapRate, data);
+
+  return insight;
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -210,10 +211,13 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     return null;
   }
 
-  // Resolve tickers to sectors
+  // Resolve tickers to sectors (batch)
+  const tickerList = tradesWithTickers.map(t => t.ticker!);
+  const resolutionMap = await resolveTickerIndustries(tickerList);
+
   const resolvedTrades: ResolvedTrade[] = [];
   for (const trade of tradesWithTickers) {
-    const resolution = await resolveTickerIndustry(trade.ticker!);
+    const resolution = resolutionMap.get(trade.ticker!.toUpperCase().trim());
     if (resolution) {
       resolvedTrades.push({
         ticker: trade.ticker!,
@@ -245,12 +249,7 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     const sectors = getJurisdictionSectorsForTopics(topics);
 
     // Find committee code via fuzzy match
-    const normalizedName = c.name.toLowerCase();
-    const mapping = ALL_COMMITTEE_MAPPINGS.find(
-      m =>
-        normalizedName.includes(m.committeeName.toLowerCase()) ||
-        m.committeeName.toLowerCase().includes(normalizedName)
-    );
+    const mapping = findCommitteeMapping(c.name);
 
     if (sectors.length > 0) {
       committees.push({
@@ -412,15 +411,11 @@ async function computePeerComparison(
 
   try {
     const keys = await getRedisCache().keys(pattern);
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEERS) return null;
 
-    const peerScores: number[] = [];
-    for (const key of keys) {
-      if (key.endsWith(`:${bioguideId}`)) continue;
-      const score = await getRedisCache().get<number>(key);
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) return null;
 
@@ -436,11 +431,10 @@ async function generateNarrative(
   data: FetchedData,
   stats: ComputedStats,
   peer: PeerComparison | null
-): Promise<string> {
-  const systemPrompt =
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
-    'stock trades and committee jurisdictions. ' +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+    'stock trades and committee jurisdictions. ';
 
   const committeeLines = stats.committees
     .filter(c => c.flaggedTradeCount > 0)
@@ -472,23 +466,9 @@ Write a 2-3 sentence plain-language summary. State the overlap rate and how it c
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const fallback = buildStatisticalSummary(data, stats, peer);
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[StockCommittee] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      bioguideId: data.name,
-    });
-  }
-
-  return buildStatisticalSummary(data, stats, peer);
+  return generateInsightNarrative(systemContext, userPrompt, fallback, '[StockCommittee]');
 }
 
 // ── Fallback ─────────────────────────────────────────────────────────
@@ -520,48 +500,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-async function generateFallback(
-  bioguideId: string,
-  data: FetchedData,
-  stats: ComputedStats,
-  peer: PeerComparison | null
-): Promise<StockCommitteeInsight> {
-  const narrative = buildStatisticalSummary(data, stats, peer);
-
-  const insight: StockCommitteeInsight = {
-    bioguideId,
-    totalTrades: data.totalTrades,
-    totalResolvableTrades: data.resolvedTrades.length,
-    flaggedTradeCount: stats.flaggedTrades.length,
-    overlapRate: stats.overlapRate,
-    expectedOverlapRate: stats.expectedOverlapRate,
-    committees: stats.committees,
-    flaggedTrades: stats.flaggedTrades,
-    peerComparison: peer ?? {
-      value: stats.overlapRate,
-      peerAverage: stats.overlapRate,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(stats.confidence, 0.5),
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Stock trades from House Clerk STOCK Act disclosures matched to committee jurisdiction sectors. ' +
-      'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
-      'Expected overlap rate = jurisdiction sectors / 13 total sectors.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  const cacheKey = `insight:stock_committee:${bioguideId}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ────────────────────────────────────────────────────

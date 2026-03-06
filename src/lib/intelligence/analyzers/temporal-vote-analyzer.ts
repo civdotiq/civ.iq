@@ -22,12 +22,9 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
-import { fecApiService } from '@/lib/fec/fec-api-service';
+import { generateInsightNarrative } from './shared';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   confidenceScore,
@@ -43,14 +40,8 @@ const CACHE_TTL = 14 * 24 * 60 * 60;
 /** Redis TTL for parsed roll call party breakdowns: 30 days. */
 const ROLLCALL_CACHE_TTL = 30 * 24 * 60 * 60;
 
-/** Max AI narrative regeneration attempts. */
-const MAX_AI_RETRIES = 3;
-
 /** Shift detection threshold: 10 percentage points from trailing average. */
 const SHIFT_THRESHOLD = 0.1;
-
-/** FEC "large contribution" threshold: $5,000+ */
-const LARGE_CONTRIBUTION_THRESHOLD = 5000;
 
 /** Standard disclaimer for all temporal vote insights. */
 const DISCLAIMER =
@@ -336,53 +327,36 @@ export async function analyzeTemporalVotes(
   });
 
   // 8. Generate insight
-  try {
-    const narrative = await generateNarrative(data, quarters, shifts, overallTrend, peer);
+  const { narrative, source } = await generateNarrative(data, quarters, shifts, overallTrend, peer);
 
-    const insight: TemporalVoteInsight = {
-      bioguideId,
-      quarters,
-      shifts,
-      overallTrend,
-      peerComparison: peer ?? {
-        value: avgAlignment,
-        peerAverage: avgAlignment,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence: conf,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Party alignment computed by comparing each vote to the party majority position ' +
-        'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +
-        'Shifts detected when quarterly alignment deviates >10 percentage points from trailing 4-quarter average.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
+  const insight: TemporalVoteInsight = {
+    bioguideId,
+    quarters,
+    shifts,
+    overallTrend,
+    peerComparison: peer ?? {
+      value: avgAlignment,
+      peerAverage: avgAlignment,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Party alignment computed by comparing each vote to the party majority position ' +
+      'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +
+      'Shifts detected when quarterly alignment deviates >10 percentage points from trailing 4-quarter average.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
 
-    await cacheInsight(cacheKey, insight);
-    await cachePeerScore(bioguideId, avgAlignment, data.chamber, data.state);
+  await cacheInsight(cacheKey, insight);
+  await cachePeerScore(bioguideId, avgAlignment, data.chamber, data.state);
 
-    return insight;
-  } catch (error) {
-    logger.error('[TemporalVotes] AI generation failed, using fallback', error as Error, {
-      bioguideId,
-    });
-
-    return generateFallback(
-      bioguideId,
-      data,
-      quarters,
-      shifts,
-      overallTrend,
-      avgAlignment,
-      conf,
-      peer
-    );
-  }
+  return insight;
 }
 
 // ── Data Fetching ───────────────────────────────────────────────────
@@ -632,36 +606,6 @@ function classifyTrend(
   return diff > 0 ? 'increasing' : 'decreasing';
 }
 
-// ── Contribution Context Enrichment ─────────────────────────────────
-
-/**
- * Enrich shift context with FEC contribution data.
- * Called after shifts are detected. Modifies shifts in place.
- */
-export async function enrichShiftContext(bioguideId: string, shifts: VoteShift[]): Promise<void> {
-  if (shifts.length === 0) return;
-
-  const fecId = getFECIdFromBioguide(bioguideId);
-  if (!fecId) return;
-
-  try {
-    const contributions = await fecApiService.getSampleContributions(fecId, 2024, 500);
-
-    for (const shift of shifts) {
-      const quarterContributions = contributions.filter(c => {
-        const cQuarter = getQuarterLabel(c.contribution_receipt_date);
-        return cQuarter === shift.quarter;
-      });
-
-      shift.context.largeContributions = quarterContributions.filter(
-        c => c.contribution_receipt_amount >= LARGE_CONTRIBUTION_THRESHOLD
-      ).length;
-    }
-  } catch {
-    logger.warn('[TemporalVotes] Failed to enrich shift context with FEC data', { bioguideId });
-  }
-}
-
 // ── Peer Comparison ─────────────────────────────────────────────────
 
 function alignmentCacheKey(chamber: string, state: string, bioguideId: string): string {
@@ -695,14 +639,11 @@ async function computePeerComparison(
     const pattern = `temporal-alignment:${chamber}:${state}:*`;
     const keys = await getRedisCache().keys(pattern);
 
-    const peerScores: number[] = [];
-    for (const key of keys) {
-      if (key.endsWith(`:${bioguideId}`)) continue;
-      const score = await getRedisCache().get<number>(key);
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEERS) return null;
+
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) return null;
 
@@ -720,11 +661,10 @@ async function generateNarrative(
   shifts: VoteShift[],
   overallTrend: string,
   peer: PeerComparison | null
-): Promise<string> {
-  const systemPrompt =
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns in ' +
-    'voting behavior over time. ' +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
+    'voting behavior over time. ';
 
   const quarterLines = quarters
     .map(
@@ -770,23 +710,9 @@ Write a 2-3 sentence plain-language summary of this legislator's voting alignmen
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const fallback = buildStatisticalSummary(data, quarters, shifts, overallTrend, peer);
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[TemporalVotes] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      bioguideId: data.name,
-    });
-  }
-
-  return buildStatisticalSummary(data, quarters, shifts, overallTrend, peer);
+  return generateInsightNarrative(systemContext, userPrompt, fallback, '[TemporalVotes]');
 }
 
 function avgFromQuarters(quarters: QuarterData[]): number {
@@ -820,48 +746,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-async function generateFallback(
-  bioguideId: string,
-  data: FetchedData,
-  quarters: QuarterData[],
-  shifts: VoteShift[],
-  overallTrend: TemporalVoteInsight['overallTrend'],
-  avgAlignment: number,
-  conf: number,
-  peer: PeerComparison | null
-): Promise<TemporalVoteInsight> {
-  const narrative = buildStatisticalSummary(data, quarters, shifts, overallTrend, peer);
-
-  const insight: TemporalVoteInsight = {
-    bioguideId,
-    quarters,
-    shifts,
-    overallTrend,
-    peerComparison: peer ?? {
-      value: avgAlignment,
-      peerAverage: avgAlignment,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(conf, 0.5),
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Party alignment computed by comparing each vote to the party majority position ' +
-      'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +
-      'Shifts detected when quarterly alignment deviates >10 percentage points from trailing 4-quarter average.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  const cacheKey = `insight:temporal_votes:${bioguideId}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ───────────────────────────────────────────────────

@@ -16,16 +16,14 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, type IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
-import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
+import { getCurrentElectionCycle, findCommitteeMapping, generateInsightNarrative } from './shared';
 import { confidenceScore } from '../statistics/civic-stats';
 import type { BillIntelligenceInsight } from '../types';
 
@@ -34,9 +32,6 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /** Max cosponsors to analyze (top by date) */
 const MAX_COSPONSORS = 10;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 const DISCLAIMER =
   'This analysis shows factual patterns in public data. ' +
@@ -132,63 +127,45 @@ export async function analyzeBillIntelligence(
   });
 
   // 8. Generate narrative
+  const { narrative, source } = await generateNarrative(
+    bill.title,
+    policyArea,
+    affectedSectors,
+    sponsorAnalysis,
+    cosponsorSummary,
+    lobbyingSpending,
+    lobbyingOrgs
+  );
+
+  const insight: BillIntelligenceInsight = {
+    billId,
+    billTitle: bill.title,
+    policyArea,
+    affectedSectors,
+    sponsorAnalysis,
+    cosponsorSummary,
+    relatedLobbyingSpending: lobbyingSpending,
+    relatedLobbyingOrgs: lobbyingOrgs,
+    narrative,
+    confidence: conf,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
+      'Sectors mapped via Congress.gov policy areas. ' +
+      'Lobbying data from Senate LDA disclosures matched to bill committees.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
+
+  // 9. Cache
   try {
-    const narrative = await generateNarrative(
-      bill.title,
-      policyArea,
-      affectedSectors,
-      sponsorAnalysis,
-      cosponsorSummary,
-      lobbyingSpending,
-      lobbyingOrgs
-    );
-
-    const insight: BillIntelligenceInsight = {
-      billId,
-      billTitle: bill.title,
-      policyArea,
-      affectedSectors,
-      sponsorAnalysis,
-      cosponsorSummary,
-      relatedLobbyingSpending: lobbyingSpending,
-      relatedLobbyingOrgs: lobbyingOrgs,
-      narrative,
-      confidence: conf,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
-        'Sectors mapped via Congress.gov policy areas. ' +
-        'Lobbying data from Senate LDA disclosures matched to bill committees.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-
-    // 9. Cache
-    try {
-      await getRedisCache().set(cacheKey, insight, CACHE_TTL);
-    } catch {
-      logger.warn('[BillIntelligence] Cache write failed', { billId });
-    }
-
-    return insight;
-  } catch (error) {
-    logger.error('[BillIntelligence] AI generation failed, using fallback', error as Error, {
-      billId,
-    });
-
-    return generateFallback(
-      billId,
-      bill.title,
-      policyArea,
-      affectedSectors,
-      sponsorAnalysis,
-      cosponsorSummary,
-      lobbyingSpending,
-      lobbyingOrgs,
-      conf
-    );
+    await getRedisCache().set(cacheKey, insight, CACHE_TTL);
+  } catch {
+    logger.warn('[BillIntelligence] Cache write failed', { billId });
   }
+
+  return insight;
 }
 
 // ── Member Sector Analysis ───────────────────────────────────────────
@@ -213,7 +190,11 @@ async function analyzeMemberSectorDonations(
 
   let contributions;
   try {
-    contributions = await fecApiService.getSampleContributions(fecId, 2024, 500);
+    contributions = await fecApiService.getSampleContributions(
+      fecId,
+      getCurrentElectionCycle(),
+      500
+    );
   } catch {
     return null;
   }
@@ -253,13 +234,7 @@ async function getRelatedLobbyingData(
 
   for (const committee of committees) {
     // Resolve committee name to committee code
-    const normalizedName = committee.name.toLowerCase();
-    const mapping = ALL_COMMITTEE_MAPPINGS.find(
-      m =>
-        normalizedName.includes(m.committeeName.toLowerCase()) ||
-        m.committeeName.toLowerCase().includes(normalizedName)
-    );
-
+    const mapping = findCommitteeMapping(committee.name);
     if (!mapping) continue;
 
     try {
@@ -286,7 +261,7 @@ async function generateNarrative(
   cosponsorSummary: BillIntelligenceInsight['cosponsorSummary'],
   lobbyingSpending: number,
   lobbyingOrgs: number
-): Promise<string> {
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const sectorList = sectors.slice(0, 5).join(', ');
   const sponsorInfo = sponsor
     ? `The sponsor, ${sponsor.name} (${sponsor.party}), received $${sponsor.sectorDonationAmount.toLocaleString()} from these sectors, representing ${sponsor.sectorDonationPercentage.toFixed(1)}% of their total $${sponsor.totalDonations.toLocaleString()} in contributions.`
@@ -314,25 +289,7 @@ async function generateNarrative(
     `Use "pattern", "correlation", or "association" — never "caused", "influenced", or "resulted in". ` +
     `State facts only.`;
 
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const result = await generateAIText(PLAIN_LANGUAGE_SYSTEM_PROMPT, prompt, {
-      maxTokens: 300,
-      temperature: 0.3,
-    });
-
-    if (!result) continue;
-
-    if (ReadingLevelValidator.meetsTarget(result, 8)) {
-      return result;
-    }
-
-    logger.warn('[BillIntelligence] Narrative failed reading level', {
-      attempt: attempt + 1,
-    });
-  }
-
-  // Fallback: generate statistical summary
-  return buildStatisticalNarrative(
+  const fallback = buildStatisticalNarrative(
     billTitle,
     policyArea,
     sectors,
@@ -340,6 +297,13 @@ async function generateNarrative(
     cosponsorSummary,
     lobbyingSpending,
     lobbyingOrgs
+  );
+
+  return generateInsightNarrative(
+    'You summarize bill funding patterns for CIV.IQ. ',
+    prompt,
+    fallback,
+    '[BillIntelligence]'
   );
 }
 
@@ -370,45 +334,4 @@ function buildStatisticalNarrative(
   }
 
   return narrative;
-}
-
-function generateFallback(
-  billId: string,
-  billTitle: string,
-  policyArea: string,
-  affectedSectors: IndustrySector[],
-  sponsorAnalysis: MemberSectorResult | null,
-  cosponsorSummary: BillIntelligenceInsight['cosponsorSummary'],
-  lobbyingSpending: number,
-  lobbyingOrgs: number,
-  conf: number
-): BillIntelligenceInsight {
-  return {
-    billId,
-    billTitle,
-    policyArea,
-    affectedSectors,
-    sponsorAnalysis,
-    cosponsorSummary,
-    relatedLobbyingSpending: lobbyingSpending,
-    relatedLobbyingOrgs: lobbyingOrgs,
-    narrative: buildStatisticalNarrative(
-      billTitle,
-      policyArea,
-      affectedSectors,
-      sponsorAnalysis,
-      cosponsorSummary,
-      lobbyingSpending,
-      lobbyingOrgs
-    ),
-    confidence: conf,
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
-      'Sectors mapped via Congress.gov policy areas. ' +
-      'Lobbying data from Senate LDA disclosures matched to bill committees.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
 }

@@ -16,9 +16,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { generateAIText } from '@/lib/ai/provider';
-import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -29,13 +27,11 @@ import {
 } from '@/lib/connections/committee-agency-map';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
+import { getCurrentElectionCycle, findCommitteeMapping, generateInsightNarrative } from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
-
-/** Max AI narrative regeneration attempts */
-const MAX_AI_RETRIES = 3;
 
 /** Standard disclaimer for all finance-jurisdiction insights */
 const DISCLAIMER =
@@ -43,25 +39,6 @@ const DISCLAIMER =
   'Campaign contributions are legal and do not indicate wrongdoing. ' +
   'Committee assignments are determined by party leadership, not by donors. ' +
   'Correlation does not indicate causation or improper behavior.';
-
-// ── Committee → IndustrySector Mapping ───────────────────────────────
-
-/**
- * Find the CommitteeMapping entry for a committee by name (fuzzy match).
- * Same logic as getAgenciesForCommittee in committee-agency-map.ts.
- */
-function findCommitteeMapping(committeeName: string): CommitteeMapping | null {
-  const normalizedName = committeeName.toLowerCase();
-  for (const mapping of ALL_COMMITTEE_MAPPINGS) {
-    if (
-      normalizedName.includes(mapping.committeeName.toLowerCase()) ||
-      mapping.committeeName.toLowerCase().includes(normalizedName)
-    ) {
-      return mapping;
-    }
-  }
-  return null;
-}
 
 // ── Main Analyzer ────────────────────────────────────────────────────
 
@@ -99,44 +76,51 @@ export async function analyzeFinanceJurisdiction(
   // 4. Peer comparison (from cached peer overlap scores)
   const peer = await computePeerComparison(bioguideId, stats.overlapScore, data.committeeCodes);
 
-  // 5. Generate insight
-  try {
-    const narrative = await generateNarrative(data, stats, peer);
-
-    const insight: FinanceJurisdictionInsight = {
-      bioguideId,
-      overlapScore: stats.overlapScore,
-      committees: stats.committees,
-      peerComparison: peer ?? {
-        value: stats.overlapScore,
-        peerAverage: stats.overlapScore,
-        peerCount: 0,
-        peerGroupLabel: 'Insufficient peer data',
-        percentileRank: 50,
-      },
-      narrative,
-      confidence: stats.confidence,
-      dataAsOf: new Date().toISOString(),
-      methodology:
-        'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
-        'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',
-      disclaimer: DISCLAIMER,
-      lastAnalyzedAt: new Date().toISOString(),
-      source: 'ai-generated',
-    };
-
-    // 6. Cache
-    await cacheInsight(cacheKey, insight);
-    await cacheOverlapScore(bioguideId, stats.overlapScore, data.committeeCodes);
-
-    return insight;
-  } catch (error) {
-    logger.error('[FinanceJurisdiction] AI generation failed, using fallback', error as Error, {
-      bioguideId,
+  // 4b. Recompute confidence with actual peer count
+  if (peer) {
+    stats.confidence = confidenceScore({
+      sampleSize:
+        Array.from(data.sectorDonations.values()).reduce((s, v) => s + v, 0) > 0
+          ? data.sectorDonations.size
+          : 0,
+      minimumSampleSize: 3,
+      dataCompleteness:
+        data.committees.filter(c => c.mapping).length / Math.max(data.committees.length, 1),
+      peerCount: peer.peerCount,
     });
-
-    return generateFallback(bioguideId, data.name, stats, peer);
   }
+
+  // 5. Generate narrative
+  const { narrative, source } = await generateNarrative(data, stats, peer);
+
+  const insight: FinanceJurisdictionInsight = {
+    bioguideId,
+    overlapScore: stats.overlapScore,
+    committees: stats.committees,
+    peerComparison: peer ?? {
+      value: stats.overlapScore,
+      peerAverage: stats.overlapScore,
+      peerCount: 0,
+      peerGroupLabel: 'Insufficient peer data',
+      percentileRank: 50,
+    },
+    narrative,
+    confidence:
+      source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    dataAsOf: new Date().toISOString(),
+    methodology:
+      'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
+      'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',
+    disclaimer: DISCLAIMER,
+    lastAnalyzedAt: new Date().toISOString(),
+    source,
+  };
+
+  // 6. Cache
+  await cacheInsight(cacheKey, insight);
+  await cacheOverlapScore(bioguideId, stats.overlapScore, data.committeeCodes);
+
+  return insight;
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -148,7 +132,7 @@ interface FetchedData {
   chamber: 'House' | 'Senate';
   committees: Array<{
     name: string;
-    mapping: CommitteeMapping | null;
+    mapping: CommitteeMapping | undefined;
     jurisdictionSectors: IndustrySector[];
   }>;
   committeeCodes: string[];
@@ -174,7 +158,11 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   // Fetch contributions (sample for speed — full fetch is expensive)
   let contributions;
   try {
-    contributions = await fecApiService.getSampleContributions(fecId, 2024, 500);
+    contributions = await fecApiService.getSampleContributions(
+      fecId,
+      getCurrentElectionCycle(),
+      500
+    );
   } catch {
     logger.warn('[FinanceJurisdiction] FEC fetch failed', { bioguideId, fecId });
     return null;
@@ -314,20 +302,15 @@ async function computePeerComparison(
     ? `${committeeMapping.committeeName} committee members`
     : 'committee peers';
 
-  // Look up cached peer scores
+  // Look up cached peer scores (batch)
   try {
     const pattern = `overlap-score:${primaryCommittee}:*`;
     const keys = await getRedisCache().keys(pattern);
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEERS) return null;
 
-    const peerScores: number[] = [];
-    for (const key of keys) {
-      // Skip self
-      if (key.endsWith(`:${bioguideId}`)) continue;
-      const score = await getRedisCache().get<number>(key);
-      if (score !== null && typeof score === 'number') {
-        peerScores.push(score);
-      }
-    }
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
     if (peerScores.length < MIN_PEERS) {
       return null;
@@ -345,12 +328,7 @@ async function generateNarrative(
   data: FetchedData,
   stats: ComputedStats,
   peer: PeerComparison | null
-): Promise<string> {
-  const systemPrompt =
-    'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
-    'campaign finance and committee jurisdictions. ' +
-    PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only.');
-
+): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const committeeLines = stats.committees
     .map(
       c =>
@@ -379,25 +357,16 @@ Write a 2-3 sentence plain-language summary of these factual patterns. State wha
 
 ${PLAIN_LANGUAGE_RULES}`;
 
-  // Try up to MAX_AI_RETRIES times for reading level compliance
-  for (let attempt = 0; attempt < MAX_AI_RETRIES; attempt++) {
-    const text = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 300,
-    });
+  const systemContext =
+    'You analyze civic data for CIV.IQ. You describe factual patterns between ' +
+    'campaign finance and committee jurisdictions. ';
 
-    if (ReadingLevelValidator.meetsTarget(text, 8)) {
-      return text;
-    }
-
-    logger.info('[FinanceJurisdiction] Reading level too high, retrying', {
-      attempt: attempt + 1,
-      bioguideId: data.name,
-    });
-  }
-
-  // Fallback: return a statistical summary
-  return buildStatisticalSummary(data, stats, peer);
+  return generateInsightNarrative(
+    systemContext,
+    userPrompt,
+    buildStatisticalSummary(data, stats, peer),
+    '[FinanceJurisdiction]'
+  );
 }
 
 // ── Fallback ─────────────────────────────────────────────────────────
@@ -428,60 +397,6 @@ function buildStatisticalSummary(
   }
 
   return summary;
-}
-
-async function generateFallback(
-  bioguideId: string,
-  name: string,
-  stats: ComputedStats,
-  peer: PeerComparison | null
-): Promise<FinanceJurisdictionInsight> {
-  const overlapPct = (stats.overlapScore * 100).toFixed(1);
-  const topCommittee = [...stats.committees].sort(
-    (a, b) => b.jurisdictionDonationPercentage - a.jurisdictionDonationPercentage
-  )[0];
-
-  let narrative =
-    `${overlapPct}% of ${name}'s campaign donations come from industry sectors ` +
-    `under their committee jurisdictions.`;
-
-  if (topCommittee && topCommittee.jurisdictionDonationPercentage > 0) {
-    narrative +=
-      ` The ${topCommittee.committeeName} committee accounts for the largest overlap ` +
-      `(${topCommittee.jurisdictionDonationPercentage.toFixed(1)}%).`;
-  }
-
-  if (peer && peer.peerCount >= MIN_PEERS) {
-    narrative += ` The average for ${peer.peerGroupLabel} is ${(peer.peerAverage * 100).toFixed(1)}%.`;
-  }
-
-  const insight: FinanceJurisdictionInsight = {
-    bioguideId,
-    overlapScore: stats.overlapScore,
-    committees: stats.committees,
-    peerComparison: peer ?? {
-      value: stats.overlapScore,
-      peerAverage: stats.overlapScore,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
-    narrative,
-    confidence: Math.min(stats.confidence, 0.5), // Lower confidence for fallback
-    dataAsOf: new Date().toISOString(),
-    methodology:
-      'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
-      'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',
-    disclaimer: DISCLAIMER,
-    lastAnalyzedAt: new Date().toISOString(),
-    source: 'statistical-fallback',
-  };
-
-  // Still cache the fallback
-  const cacheKey = `insight:finance_jurisdiction:${bioguideId}`;
-  await cacheInsight(cacheKey, insight);
-
-  return insight;
 }
 
 // ── Cache Helpers ────────────────────────────────────────────────────
