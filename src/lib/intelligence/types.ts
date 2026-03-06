@@ -11,6 +11,10 @@
  */
 
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import type { PeerComparison } from '@civiq/civic-statistics';
+
+// Re-export PeerComparison so existing consumers of this file keep working
+export type { PeerComparison };
 
 // ── Base Types ───────────────────────────────────────────────────────
 
@@ -31,25 +35,6 @@ export interface InsightBase {
   lastAnalyzedAt: string;
   /** Whether AI narrative was used or fell back to statistical summary. */
   source: 'ai-generated' | 'statistical-fallback';
-}
-
-// ── Peer Comparison ──────────────────────────────────────────────────
-
-/**
- * Comparison of a legislator's metric to their peer group.
- * Peers are legislators in the same chamber, committee, or state delegation.
- */
-export interface PeerComparison {
-  /** The legislator's value for this metric. */
-  value: number;
-  /** The peer group average for this metric. */
-  peerAverage: number;
-  /** How many peers were included in the comparison. */
-  peerCount: number;
-  /** Description of the peer group (e.g., "Senate Finance Committee members"). */
-  peerGroupLabel: string;
-  /** Percentile rank within the peer group (0-100). */
-  percentileRank: number;
 }
 
 // ── Industry Correlation ─────────────────────────────────────────────
@@ -337,6 +322,60 @@ export interface StockCommitteeInsight extends InsightBase {
   flaggedTrades: FlaggedTrade[];
   peerComparison: PeerComparison;
   narrative: string;
+}
+
+// ── Bill Intelligence ────────────────────────────────────────────────
+
+/**
+ * Insight: sponsor/cosponsor funding analysis and related lobbying
+ * activity for a specific bill. Answers: "Who funds this bill's
+ * sponsors, and do those funders align with the bill's policy area?"
+ */
+export interface BillIntelligenceInsight extends InsightBase {
+  billId: string;
+  billTitle: string;
+  policyArea: string;
+  affectedSectors: IndustrySector[];
+  sponsorAnalysis: {
+    bioguideId: string;
+    name: string;
+    party: string;
+    /** What % of sponsor's donations come from sectors this bill affects. */
+    sectorDonationPercentage: number;
+    sectorDonationAmount: number;
+    totalDonations: number;
+  } | null;
+  cosponsorSummary: {
+    totalCosponsors: number;
+    analyzedCosponsors: number;
+    /** Average sector donation % across analyzed cosponsors. */
+    avgSectorDonationPercentage: number;
+  };
+  relatedLobbyingSpending: number;
+  relatedLobbyingOrgs: number;
+  narrative: string;
+}
+
+// ── District Intelligence Summary ────────────────────────────────────
+
+/**
+ * Lightweight summary of intelligence availability for a district's representatives.
+ * Not a full InsightBase — this is a thin aggregation response.
+ */
+export interface DistrictIntelligenceSummary {
+  districtId: string;
+  representatives: Array<{
+    bioguideId: string;
+    name: string;
+    party: string;
+    chamber: 'House' | 'Senate';
+    /** Finance-jurisdiction overlap score (0-1), null if unavailable. */
+    financeJurisdictionOverlap: number | null;
+    /** Whether this representative has stock trade data. */
+    hasStockTrades: boolean;
+    /** Number of intelligence insights available. */
+    insightsAvailable: number;
+  }>;
 }
 
 // ── Ticker Resolution ────────────────────────────────────────────────
