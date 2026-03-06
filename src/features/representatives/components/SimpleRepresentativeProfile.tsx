@@ -20,6 +20,7 @@ import {
   LegislationIcon,
   FinanceIcon,
   NewsIcon,
+  IntelligenceIcon,
 } from '@/components/icons/AicherIcons';
 
 // Dynamically import heavy tabs to reduce initial bundle size
@@ -46,6 +47,17 @@ const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.
   loading: TabLoadingSpinner,
   ssr: false,
 });
+
+const IntelligenceTab = dynamic(
+  () =>
+    import('@/components/intelligence/IntelligenceTab').then(mod => ({
+      default: mod.IntelligenceTab,
+    })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
@@ -139,6 +151,8 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [congress];
     case 'finance':
       return [fec];
+    case 'intelligence':
+      return [congress, fec];
     case 'news':
       return [googleNews];
     default:
@@ -331,6 +345,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           description: 'Fundraising and expenditures',
         },
         {
+          id: 'intelligence',
+          label: 'Intelligence',
+          icon: <IntelligenceIcon className="w-4 h-4" />,
+          description: 'AI-powered analysis of finance, voting, and committee patterns',
+        },
+        {
           id: 'news',
           label: 'Recent News',
           icon: <NewsIcon className="w-4 h-4" />,
@@ -378,6 +398,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               bioguideId={representative.bioguideId}
             />
           );
+        case 'intelligence':
+          return <IntelligenceTab bioguideId={representative.bioguideId} />;
         case 'news':
           return (
             <ClusteredNewsSection

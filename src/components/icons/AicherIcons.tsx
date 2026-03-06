@@ -541,6 +541,31 @@ export const ExternalLinkIcon = ({ className, size = 24 }: IconProps) => (
 );
 
 /**
+ * Intelligence/Analysis - Magnifying glass over bar chart
+ */
+export const IntelligenceIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    {/* Bars */}
+    <rect x="3" y="16" width="3" height="6" />
+    <rect x="8" y="12" width="3" height="10" />
+    <rect x="13" y="14" width="3" height="8" />
+    {/* Baseline */}
+    <rect x="1" y="22" width="17" height="2" />
+    {/* Magnifying glass lens */}
+    <circle cx="17" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2" />
+    {/* Magnifying glass handle */}
+    <rect x="20" y="10.5" width="5" height="2" transform="rotate(45 20 10.5)" />
+  </svg>
+);
+
+/**
  * Export all icons as a collection
  */
 export const AicherIcons = {
@@ -572,6 +597,7 @@ export const AicherIcons = {
   Info: InfoIcon,
   ExternalLink: ExternalLinkIcon,
   News: NewsIcon,
+  Intelligence: IntelligenceIcon,
 };
 
 export default AicherIcons;
