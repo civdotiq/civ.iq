@@ -1,5 +1,7 @@
 # CIV.IQ AI Civic Intelligence Layer
 
+**Status**: All four phases complete. The intelligence layer is shipped and optimized.
+
 **Foundation documents**: ANALYSIS-entities.md, ANALYSIS-ai-integration.md, ANALYSIS-feasibility.md
 **Note**: This roadmap supersedes the foundation documents where they conflict. The architecture has been simplified from what those analyses originally proposed.
 
@@ -91,7 +93,7 @@ The intelligence layer is not greenfield. These existing implementations are its
 
 ---
 
-## Section 3 — Phase 1: First Two Insights End-to-End
+## Section 3 — Phase 1: First Two Insights End-to-End ✅ COMPLETE
 
 ### Goal
 
@@ -190,29 +192,70 @@ All analyzers follow the same structure, modeled on the existing `CivicAlignment
 
 Integrate on the representative detail page (`src/app/(civic)/representative/[bioguideId]/page.tsx`) as a new "Intelligence" tab.
 
-### File Structure
+### File Structure (as shipped)
 
 ```
 src/lib/intelligence/
 +-- analyzers/
+|   +-- shared.ts                           # Shared utilities (cycle, committee match, narrative)
 |   +-- finance-jurisdiction-analyzer.ts    # Insight 1: committee funding overlap
 |   +-- vote-finance-analyzer.ts            # Insight 2: vote-finance correlation
+|   +-- lobbying-pipeline-analyzer.ts       # Gap A2: lobbying -> committee -> bills
+|   +-- pac-vote-analyzer.ts               # Gap E1: PAC -> legislator vote tracing
+|   +-- temporal-vote-analyzer.ts          # Gap C1: voting pattern shifts over time
+|   +-- stock-committee-analyzer.ts        # Gap B1: stock trades vs committee jurisdiction
+|   +-- bill-intelligence-analyzer.ts      # Bill sponsor/cosponsor funding analysis
 +-- entity-resolution/
-|   +-- ticker-industry-resolver.ts         # Stock ticker -> IndustrySector
-|   +-- sec-sic-data.json                   # SEC EDGAR company data (static)
-|   +-- sic-sector-map.ts                   # SIC code -> IndustrySector mapping
+|   +-- ticker-industry-resolver.ts         # Stock ticker -> IndustrySector (re-export shim)
+|   +-- sec-sic-data.json                   # SEC EDGAR company data (re-export shim)
+|   +-- sic-sector-map.ts                   # SIC code -> IndustrySector (re-export shim)
+|   +-- committee-alias-table.ts            # Committee name variants (re-export shim)
+|   +-- lobbying-committee-resolver.ts      # government_entities resolver (re-export shim)
+|   +-- lda-issue-policy-map.ts             # LDA issue codes -> policyArea (re-export shim)
 +-- statistics/
-|   +-- civic-stats.ts                      # Wraps simple-statistics with civic defaults
+|   +-- civic-stats.ts                      # Wraps simple-statistics (re-export shim)
 +-- types.ts                                # All intelligence layer type definitions
 
 src/app/api/intelligence/
 +-- representative/[bioguideId]/
-|   +-- route.ts                            # Serves cached insights for a legislator
+|   +-- route.ts                            # All insights for a legislator
+|   +-- influence-chain/route.ts            # Lobbying chain
+|   +-- temporal/route.ts                   # Vote shift timeline
+|   +-- stock-trades/route.ts               # Stock trade overlap
++-- committee/[committeeId]/route.ts        # Committee-level intelligence
++-- bill/[billId]/route.ts                  # Bill-specific insights
++-- district/[districtId]/route.ts          # District-level summary
++-- pac/[committeeId]/route.ts              # PAC vote tracing
 
 src/components/intelligence/
-+-- InsightCard.tsx
-+-- InsightDisclaimer.tsx
-+-- ConfidenceBadge.tsx
++-- InsightCard.tsx                          # Reusable insight display
++-- ConfidenceBadge.tsx                     # Green/amber/hidden confidence
++-- InsightDisclaimer.tsx                   # Correlation != causation
++-- IntelligenceTab.tsx                     # Representative page tab
++-- InfluenceChainTable.tsx                 # Lobbying pipeline table
++-- VoteShiftTimeline.tsx                   # Temporal shift chart
++-- PACVoteTable.tsx                        # PAC recipient vote records
++-- StockOverlapTable.tsx                   # Stock trade overlap table
++-- BillIntelligenceSection.tsx             # Bill page integration
++-- CommitteeIntelligence.tsx               # Committee page integration
++-- DistrictIntelligenceCard.tsx            # District page integration
+
+packages/civic-statistics/                  # @civiq/civic-statistics (npm package)
++-- src/civic-stats.ts                      # Correlation, peer comparison, confidence
++-- src/types.ts                            # PeerComparison, CorrelationResult
+
+packages/entity-resolution/                 # @civiq/entity-resolution (npm package)
++-- src/ticker-industry-resolver.ts         # Ticker -> SIC -> IndustrySector
++-- src/committee-agency-map.ts             # Committee -> agency/topic mapping
++-- src/committee-alias-table.ts            # Committee name alias table
++-- src/lobbying-committee-resolver.ts      # Fuse.js fuzzy committee matching
++-- src/sic-sector-map.ts                   # SIC -> IndustrySector static map
++-- src/lda-issue-policy-map.ts             # LDA issue -> policyArea mapping
++-- src/industry-taxonomy.ts                # 13 OpenSecrets-style sectors
++-- src/fec-entity-resolution.ts            # FEC donor deduplication
++-- src/bioguide-fec-mapping.ts             # Bioguide <-> FEC ID mapping
++-- data/sec-sic-data.json                  # SEC EDGAR company tickers (~10K)
++-- data/bioguide-fec-mapping.json          # 537-member mapping
 ```
 
 ### Verification Test Cases
@@ -228,7 +271,7 @@ src/components/intelligence/
 
 ---
 
-## Section 4 — Phase 2: Expand Analyzers
+## Section 4 — Phase 2: Expand Analyzers ✅ COMPLETE
 
 ### Goal
 
@@ -331,35 +374,13 @@ Before building this analyzer, profile the actual data:
 
 **Data quality warning**: House disclosures report amounts in ranges ("$1,001 - $15,000"), not exact figures. Tickers are self-reported and sometimes wrong or missing.
 
-### Phase 2 File Additions
+### Phase 2 File Additions (all shipped)
 
-```
-src/lib/intelligence/analyzers/
-+-- lobbying-pipeline-analyzer.ts     # Gap A2
-+-- pac-vote-analyzer.ts              # Gap E1
-+-- temporal-vote-analyzer.ts         # Gap C1
-+-- stock-committee-analyzer.ts       # Gap B1
-
-src/lib/intelligence/entity-resolution/
-+-- committee-alias-table.ts          # Built from data profiling
-+-- lobbying-committee-resolver.ts    # Resolves government_entities text
-+-- lda-issue-policy-map.ts           # LDA issue codes -> policyArea mapping
-
-src/app/api/intelligence/
-+-- representative/[bioguideId]/
-|   +-- influence-chain/route.ts
-|   +-- temporal/route.ts
-+-- committee/[committeeId]/
-|   +-- route.ts
-
-src/components/intelligence/
-+-- InfluenceChainTable.tsx
-+-- VoteShiftTimeline.tsx
-```
+All analyzers, entity resolution modules, API routes, and UI components listed in the Phase 1 file structure above. See Section 3 for the complete shipped inventory.
 
 ---
 
-## Section 5 — Phase 3: Page Integration and Polish
+## Section 5 — Phase 3: Page Integration and Polish ✅ COMPLETE
 
 ### Goal
 
@@ -386,15 +407,18 @@ Complete the UI integration across all page types and ensure the intelligence la
 
 - Summary intelligence card for the district's representative(s)
 
-### Remaining API Endpoints
+### API Endpoints (all shipped)
 
 | Endpoint                                                            | Purpose                                    |
 | ------------------------------------------------------------------- | ------------------------------------------ |
+| `GET /api/intelligence/representative/[bioguideId]`                 | All insights for a legislator              |
 | `GET /api/intelligence/representative/[bioguideId]/influence-chain` | Lobbying -> committee -> legislation chain |
 | `GET /api/intelligence/representative/[bioguideId]/temporal`        | Voting pattern shift timeline              |
+| `GET /api/intelligence/representative/[bioguideId]/stock-trades`    | Stock trade-committee overlap              |
 | `GET /api/intelligence/committee/[committeeId]`                     | Committee-level intelligence               |
 | `GET /api/intelligence/bill/[billId]`                               | Bill-specific insights                     |
 | `GET /api/intelligence/district/[districtId]`                       | District-level summary                     |
+| `GET /api/intelligence/pac/[committeeId]`                           | PAC-to-legislator vote tracing             |
 
 All routes follow existing pattern: `force-dynamic` with response-level `Cache-Control` headers. Insights are served from Redis cache or generated on-demand, so response times are sub-50ms for cached results.
 
@@ -407,6 +431,22 @@ All routes follow existing pattern: `force-dynamic` with response-level `Cache-C
 3. **Numbers with context**: Never show a number alone. Always pair with: (a) what it means, (b) the comparison group average, (c) whether the difference is statistically meaningful. Example: "72% alignment with the finance industry (peer average: 68%, not a statistically significant difference)."
 
 4. **Progressive disclosure**: Summary first (one sentence), then key stats (3 numbers), then full analysis (paragraph + chart), then methodology (expandable).
+
+### Shipped UI Components
+
+| Component                      | Location                       | Used On                        |
+| ------------------------------ | ------------------------------ | ------------------------------ |
+| `InsightCard.tsx`              | `src/components/intelligence/` | All intelligence sections      |
+| `ConfidenceBadge.tsx`          | `src/components/intelligence/` | All insight cards              |
+| `InsightDisclaimer.tsx`        | `src/components/intelligence/` | All insight cards              |
+| `IntelligenceTab.tsx`          | `src/components/intelligence/` | Representative page            |
+| `InfluenceChainTable.tsx`      | `src/components/intelligence/` | Representative influence chain |
+| `VoteShiftTimeline.tsx`        | `src/components/intelligence/` | Representative temporal        |
+| `PACVoteTable.tsx`             | `src/components/intelligence/` | PAC intelligence               |
+| `StockOverlapTable.tsx`        | `src/components/intelligence/` | Stock trade intelligence       |
+| `BillIntelligenceSection.tsx`  | `src/components/intelligence/` | Bill detail page               |
+| `CommitteeIntelligence.tsx`    | `src/components/intelligence/` | Committee detail page          |
+| `DistrictIntelligenceCard.tsx` | `src/components/intelligence/` | District page                  |
 
 ---
 
@@ -482,59 +522,64 @@ Each package needs:
 
 ---
 
-## Section 7 — Dependencies and Prerequisites
+## Section 6b — Post-Implementation Optimizations ✅ COMPLETE
 
-### npm Packages to Install
+After all four phases shipped, a cross-analyzer audit identified correctness bugs and performance bottlenecks. These were fixed in two commits.
 
-```bash
-npm install simple-statistics    # Correlation, regression, z-scores — pure JS, no native deps
-```
+### Correctness Fixes
 
-One new runtime dependency. Existing dependencies cover everything else:
+1. **Dynamic FEC election cycle**: All 6 analyzers used hardcoded `2024`. Replaced with `getCurrentElectionCycle()` in `shared.ts` — returns the current or next even year dynamically.
 
-- `fuse.js`: fuzzy matching (already installed, used in Phase 2 for lobbying resolution)
-- `@upstash/redis`: insight caching (already installed)
-- `recharts`: chart components (already installed)
-- `zod`: input validation (already installed)
+2. **Dual-session vote fetching**: `vote-finance-analyzer` and `pac-vote-analyzer` fetched only session 1 of the 119th Congress. Now fetches both sessions via `Promise.all([fetchSession(1), fetchSession(2)])`, capturing the full vote record.
 
-### Data Files to Download
+3. **Peer count in confidence scores**: Four analyzers (`finance-jurisdiction`, `vote-finance`, `stock-committee`, `lobbying-pipeline`) passed `peerCount: 0` to `confidenceScore()` on initial computation, then never recomputed after peer comparison. Now recompute confidence with the actual peer count, which affects the 20% peer weight in the confidence formula.
 
-1. **SEC EDGAR company tickers**: `https://www.sec.gov/files/company_tickers.json` (~500KB, CIK -> ticker -> SIC code). Save as `src/lib/intelligence/entity-resolution/sec-sic-data.json`. Update monthly.
-2. **SIC code reference**: Static ~5KB file mapping SIC codes to industry names.
+4. **Dead code removal**: Removed unused `enrichShiftContext()` from `temporal-vote-analyzer` (exported but never called) along with its `LARGE_CONTRIBUTION_THRESHOLD` constant and FEC imports.
+
+### Performance Fixes
+
+5. **Shared analyzer utilities** (`src/lib/intelligence/analyzers/shared.ts`): Extracted duplicated logic from all 7 analyzers into shared functions — `getCurrentElectionCycle()`, `findCommitteeMapping()`, `getBillSectors()`, `inferSectorsFromTitle()`, `generateInsightNarrative()`. Net reduction: ~500 lines.
+
+6. **Shared AI narrative generation**: `generateInsightNarrative()` consolidates the retry loop (max 3 attempts), reading level validation (FK <= 8), and statistical fallback pattern that was duplicated in every analyzer.
+
+7. **FEC contribution caching**: `getSampleContributions()` in `fec-api-service.ts` now caches results via `govCache` (4hr Redis TTL, 30min memory). Eliminates duplicate FEC API calls when multiple analyzers process the same legislator.
+
+8. **Batch ticker resolution**: New `resolveTickerIndustries(tickers[])` in `@civiq/entity-resolution` deduplicates tickers, performs parallel cache lookups, and resolves SEC API calls with a concurrency limit of 5. Replaces the sequential per-trade `resolveTickerIndustry()` loop in `stock-committee-analyzer`.
+
+9. **Redis `mget` for peer comparisons**: Added `mget()` to `RedisCache` (supports ioredis, Upstash REST, and memory fallback). All 6 peer comparison functions across all analyzers converted from N+1 individual `get()` calls to a single `keys()` + `mget()` pair.
+
+### Files Changed
+
+- **Created**: `src/lib/intelligence/analyzers/shared.ts`
+- **Modified (7 analyzers)**: `finance-jurisdiction-analyzer.ts`, `vote-finance-analyzer.ts`, `pac-vote-analyzer.ts`, `bill-intelligence-analyzer.ts`, `temporal-vote-analyzer.ts`, `stock-committee-analyzer.ts`, `lobbying-pipeline-analyzer.ts`
+- **Modified (infrastructure)**: `src/lib/cache/redis-client.ts` (mget), `src/lib/fec/fec-api-service.ts` (caching)
+- **Modified (package)**: `packages/entity-resolution/src/ticker-industry-resolver.ts` (batch), `packages/entity-resolution/src/index.ts` (export)
+
+---
+
+## Section 7 — Dependencies and Prerequisites (all satisfied)
+
+### npm Packages Installed
+
+- `simple-statistics` — Correlation, regression, z-scores (pure JS, no native deps)
+- `fuse.js` — Fuzzy matching for lobbying committee resolution
+- `@upstash/redis` — Insight caching
+- `recharts` — Chart components (VoteShiftTimeline)
+- `zod` — Input validation
+
+### Data Files
+
+- **SEC EDGAR company tickers**: `packages/entity-resolution/data/sec-sic-data.json` (~10K entries, CIK -> ticker -> SIC code). Update monthly from `https://www.sec.gov/files/company_tickers.json`.
+- **Bioguide-FEC mapping**: `packages/entity-resolution/data/bioguide-fec-mapping.json` (537 members).
+- **SIC code reference**: `packages/entity-resolution/src/sic-sector-map.ts` (static map, SIC -> IndustrySector).
 
 ### Environment Variables
 
-No new variables. All required API keys are already configured. The existing `GOOGLE_GENERATIVE_AI_API_KEY` and `generateAIText` provider abstraction handle the AI narrative calls.
+No new variables were needed. All API keys were already configured.
 
-### Database Migrations
+### CLAUDE.md
 
-None. Redis is schemaless. No SQL, no Prisma, no Drizzle.
-
-### CLAUDE.md Updates
-
-Add before Phase 1 starts:
-
-```markdown
-## Intelligence Layer
-
-### Architecture
-
-- Analyzers: `src/lib/intelligence/analyzers/` (on-demand, cached in Redis)
-- Entity resolution: `src/lib/intelligence/entity-resolution/`
-- Statistics: `src/lib/intelligence/statistics/` (wraps simple-statistics)
-- API routes: `src/app/api/intelligence/`
-- UI components: `src/components/intelligence/`
-
-### Rules
-
-- Statistics first, AI second. Every analyzer computes numbers before calling LLM.
-- Every insight carries: confidence (0-1), dataAsOf, methodology, disclaimer.
-- Minimum sample sizes: 10 votes per sector, 4 quarters for temporal, 3 trades for stock analysis.
-- All AI text must pass reading level validation (Flesch-Kincaid <= 8).
-- Never claim causation. Use "pattern", "correlation", "association" — never "caused", "influenced", "resulted in".
-- Baselines required: always compare to peer group average.
-- Kill threshold: if an analyzer's false positive rate exceeds 20%, do not ship it.
-```
+Updated with intelligence layer architecture and rules. See the `## Intelligence Layer` section in `CLAUDE.md`.
 
 ---
 
