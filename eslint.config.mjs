@@ -29,6 +29,8 @@ export default [
       // Temp directories
       'temp/**',
       '.archive/**',
+      // Package build artifacts
+      'packages/*/dist/**',
     ],
   },
   ...tseslint.configs.recommended,

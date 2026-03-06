@@ -12,9 +12,10 @@
 
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { PeerComparison } from '@civiq/civic-statistics';
+import type { GovernmentEntityResolution, TickerResolution } from '@civiq/entity-resolution';
 
-// Re-export PeerComparison so existing consumers of this file keep working
-export type { PeerComparison };
+// Re-export types from packages so existing consumers of this file keep working
+export type { PeerComparison, GovernmentEntityResolution, TickerResolution };
 
 // ── Base Types ───────────────────────────────────────────────────────
 
@@ -152,22 +153,6 @@ export interface TemporalVoteInsight extends InsightBase {
 }
 
 // ── Insight 4: Lobbying-Committee-Legislation Pipeline ───────────────
-
-/** Result of resolving a single LDA government_entities string. */
-export interface GovernmentEntityResolution {
-  /** Original text from the LDA filing. */
-  rawText: string;
-  /** Resolution outcome. */
-  type: 'committee' | 'agency' | 'noise' | 'unresolved';
-  /** Committee code (e.g., "SSFI") if resolved to a committee. */
-  committeeCode?: string;
-  /** Committee name if resolved. */
-  committeeName?: string;
-  /** Agency slug if resolved to an agency. */
-  agencySlug?: string;
-  /** Resolution confidence: 1.0 for exact, 0.85+ for fuzzy, 0 for noise. */
-  confidence: number;
-}
 
 /** Activity summary for a single lobbying organization on a committee. */
 export interface LobbyingOrganizationActivity {
@@ -376,16 +361,4 @@ export interface DistrictIntelligenceSummary {
     /** Number of intelligence insights available. */
     insightsAvailable: number;
   }>;
-}
-
-// ── Ticker Resolution ────────────────────────────────────────────────
-
-/**
- * Result of resolving a stock ticker to an industry sector.
- * Returns null for ETFs, mutual funds, and unresolvable tickers.
- */
-export interface TickerResolution {
-  sector: IndustrySector;
-  sicCode: string;
-  confidence: number;
 }
