@@ -54,10 +54,17 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
 }));
 
 const mockGetSampleContributions = jest.fn();
+const mockGetFinancialSummary = jest.fn();
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
     getSampleContributions: (...args: unknown[]) => mockGetSampleContributions(...args),
+    getFinancialSummary: (...args: unknown[]) => mockGetFinancialSummary(...args),
   },
+}));
+
+const mockGetEnhancedRepresentative = jest.fn();
+jest.mock('@/features/representatives/services/congress.service', () => ({
+  getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
 }));
 
 jest.mock('@/lib/fec/industry-taxonomy', () => ({
@@ -131,7 +138,56 @@ const mockBill = {
       withdrawn: false,
     },
   ],
-  committees: [{ committeeId: 'HSEN', name: 'Energy and Commerce' }],
+  committees: [
+    { committeeId: 'HSEN', name: 'Energy and Commerce', chamber: 'House', activities: [] },
+  ],
+  votes: [],
+  relatedBills: [],
+  status: {
+    current: 'introduced',
+    lastAction: { date: '2025-01-15', description: 'Introduced' },
+    timeline: [],
+  },
+  introducedDate: '2025-01-15',
+  cboCostEstimates: [],
+};
+
+const mockBillWithVote = {
+  ...mockBill,
+  votes: [
+    {
+      voteId: 'v1',
+      chamber: 'House' as const,
+      date: '2025-03-01',
+      question: 'On Passage',
+      result: 'Passed' as const,
+      votes: { yea: 230, nay: 195, present: 2, notVoting: 8 },
+      breakdown: {
+        democratic: { yea: 210, nay: 3, present: 0, notVoting: 2 },
+        republican: { yea: 20, nay: 192, present: 2, notVoting: 6 },
+        independent: { yea: 0, nay: 0, present: 0, notVoting: 0 },
+      },
+    },
+  ],
+};
+
+const mockBillWithBipartisanVote = {
+  ...mockBill,
+  votes: [
+    {
+      voteId: 'v2',
+      chamber: 'Senate' as const,
+      date: '2025-03-01',
+      question: 'On Passage',
+      result: 'Passed' as const,
+      votes: { yea: 78, nay: 22, present: 0, notVoting: 0 },
+      breakdown: {
+        democratic: { yea: 42, nay: 7, present: 0, notVoting: 0 },
+        republican: { yea: 36, nay: 15, present: 0, notVoting: 0 },
+        independent: { yea: 0, nay: 0, present: 0, notVoting: 0 },
+      },
+    },
+  ],
 };
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -144,6 +200,8 @@ describe('analyzeBillIntelligence', () => {
     mockFetchBillFromCongress.mockResolvedValue(mockBill);
     mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
     mockGetSampleContributions.mockResolvedValue([{ amount: 5000 }]);
+    mockGetFinancialSummary.mockResolvedValue(null);
+    mockGetEnhancedRepresentative.mockResolvedValue(null);
   });
 
   it('returns cached insight on cache hit', async () => {
@@ -222,10 +280,257 @@ describe('analyzeBillIntelligence', () => {
     const result = await analyzeBillIntelligence('119-hr-1');
 
     expect(result).not.toBeNull();
-    // Lobbying pipeline should have been called if committee maps correctly
     const lobbyingMod = jest.requireMock<{ analyzeLobbyingPipeline: jest.Mock }>(
       '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer'
     );
     expect(lobbyingMod.analyzeLobbyingPipeline).toHaveBeenCalled();
+  });
+
+  // ── Story context tests ───────────────────────────────────────
+
+  it('includes bill progress from bill status', async () => {
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.billProgress).toBeDefined();
+    expect(result!.billProgress!.status).toBe('introduced');
+    expect(result!.billProgress!.daysSinceIntroduction).toBeGreaterThanOrEqual(0);
+    expect(result!.billProgress!.passedCommittee).toBe(false);
+  });
+
+  it('detects bipartisan cosponsorship', async () => {
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.bipartisanCosponsorship).toBe(true);
+  });
+
+  it('detects non-bipartisan cosponsorship', async () => {
+    const unipartisanBill = {
+      ...mockBill,
+      cosponsors: [
+        {
+          representative: { bioguideId: 'A000001', name: 'One', party: 'Democrat' },
+          withdrawn: false,
+        },
+        {
+          representative: { bioguideId: 'A000002', name: 'Two', party: 'Democrat' },
+          withdrawn: false,
+        },
+      ],
+    };
+    mockFetchBillFromCongress.mockResolvedValue(unipartisanBill);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+    expect(result!.bipartisanCosponsorship).toBe(false);
+  });
+
+  it('extracts vote outcome with party-line detection', async () => {
+    mockFetchBillFromCongress.mockResolvedValue(mockBillWithVote);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.voteOutcome).toBeDefined();
+    expect(result!.voteOutcome!.chamber).toBe('House');
+    expect(result!.voteOutcome!.result).toBe('Passed');
+    expect(result!.voteOutcome!.yea).toBe(230);
+    expect(result!.voteOutcome!.nay).toBe(195);
+    expect(result!.voteOutcome!.partyLine).toBe(true);
+    expect(result!.voteOutcome!.bipartisan).toBe(false);
+  });
+
+  it('detects bipartisan vote', async () => {
+    mockFetchBillFromCongress.mockResolvedValue(mockBillWithBipartisanVote);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.voteOutcome).toBeDefined();
+    expect(result!.voteOutcome!.partyLine).toBe(false);
+    expect(result!.voteOutcome!.bipartisan).toBe(true);
+  });
+
+  it('includes sponsor-committee connection when sponsor sits on bill committee', async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue({
+      bioguideId: 'P000197',
+      name: 'Nancy Pelosi',
+      committees: [{ name: 'Energy and Commerce', role: 'Member' }],
+    });
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.sponsorCommitteeConnection).toBeDefined();
+    expect(result!.sponsorCommitteeConnection!.connected).toBe(true);
+    expect(result!.sponsorCommitteeConnection!.committeeName).toBe('Energy and Commerce');
+    expect(result!.sponsorCommitteeConnection!.sponsorRole).toBe('Member');
+  });
+
+  it('reports no sponsor-committee connection when sponsor not on committee', async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue({
+      bioguideId: 'P000197',
+      name: 'Nancy Pelosi',
+      committees: [{ name: 'Judiciary', role: 'Member' }],
+    });
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.sponsorCommitteeConnection).toBeDefined();
+    expect(result!.sponsorCommitteeConnection!.connected).toBe(false);
+  });
+
+  it('includes sponsor funding context from financial summary', async () => {
+    mockGetFinancialSummary.mockResolvedValue({ receipts: 1200000 });
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.sponsorFundingContext).toBeDefined();
+    expect(result!.sponsorFundingContext!.totalRaised).toBe(1200000);
+  });
+
+  it('includes CBO fiscal impact when available', async () => {
+    const billWithCBO = {
+      ...mockBill,
+      cboCostEstimates: [
+        {
+          title: 'CBO',
+          description: 'Would increase deficit by $50B over 10 years',
+          url: '',
+          pubDate: '',
+        },
+      ],
+    };
+    mockFetchBillFromCongress.mockResolvedValue(billWithCBO);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.fiscalImpact).toBe('Would increase deficit by $50B over 10 years');
+  });
+
+  it('includes top lobbying org names when available', async () => {
+    const lobbyingMod = jest.requireMock<{ analyzeLobbyingPipeline: jest.Mock }>(
+      '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer'
+    );
+    lobbyingMod.analyzeLobbyingPipeline.mockResolvedValue({
+      totalSpending: 2300000,
+      organizationCount: 8,
+      topOrganizations: [
+        { name: 'American Road Builders', totalSpending: 900000 },
+        { name: 'Construction Industry Council', totalSpending: 600000 },
+      ],
+    });
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.topLobbyingOrgs).toEqual([
+      'American Road Builders',
+      'Construction Industry Council',
+    ]);
+    expect(result!.relatedLobbyingSpending).toBe(2300000);
+  });
+
+  it('includes related bill count', async () => {
+    const billWithRelated = {
+      ...mockBill,
+      relatedBills: [
+        { number: 'S. 100', title: 'Senate version', relationship: 'identical' as const },
+        { number: 'H.R. 200', title: 'Related', relationship: 'related' as const },
+      ],
+    };
+    mockFetchBillFromCongress.mockResolvedValue(billWithRelated);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.relatedBillCount).toBe(2);
+  });
+
+  // ── Graceful degradation ─────────────────────────────────────
+
+  it('degrades gracefully when getFinancialSummary fails', async () => {
+    mockGetFinancialSummary.mockRejectedValue(new Error('FEC API down'));
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.sponsorFundingContext).toBeUndefined();
+    expect(result!.sponsorAnalysis).not.toBeNull();
+  });
+
+  it('degrades gracefully when getEnhancedRepresentative fails', async () => {
+    mockGetEnhancedRepresentative.mockRejectedValue(new Error('Congress API down'));
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.sponsorCommitteeConnection).toBeUndefined();
+  });
+
+  it('omits voteOutcome when bill has no votes', async () => {
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.voteOutcome).toBeUndefined();
+  });
+
+  it('higher confidence when enrichment data is available', async () => {
+    // First: baseline with no enrichment
+    const baseline = await analyzeBillIntelligence('119-hr-1');
+
+    // Reset mocks and add enrichment data
+    jest.clearAllMocks();
+    mockRedisGet.mockResolvedValue(null);
+    mockRedisSet.mockResolvedValue(undefined);
+    mockFetchBillFromCongress.mockResolvedValue(mockBillWithVote);
+    mockGetFECIdFromBioguide.mockReturnValue('H0CA12345');
+    mockGetSampleContributions.mockResolvedValue([{ amount: 5000 }]);
+    mockGetFinancialSummary.mockResolvedValue({ receipts: 1200000 });
+    mockGetEnhancedRepresentative.mockResolvedValue({
+      committees: [{ name: 'Energy and Commerce', role: 'Member' }],
+    });
+
+    const enriched = await analyzeBillIntelligence('119-hr-1');
+
+    expect(baseline).not.toBeNull();
+    expect(enriched).not.toBeNull();
+    expect(enriched!.confidence).toBeGreaterThan(baseline!.confidence);
+  });
+
+  // ── Backward compatibility ───────────────────────────────────
+
+  it('old cached insights without new fields still work', async () => {
+    const oldCached = {
+      billId: '119-hr-1',
+      billTitle: 'Old Bill',
+      policyArea: 'Health',
+      affectedSectors: ['HEALTH'],
+      sponsorAnalysis: null,
+      cosponsorSummary: {
+        totalCosponsors: 0,
+        analyzedCosponsors: 0,
+        avgSectorDonationPercentage: 0,
+      },
+      relatedLobbyingSpending: 0,
+      relatedLobbyingOrgs: 0,
+      narrative: 'Old narrative.',
+      confidence: 0.5,
+      dataAsOf: '2025-01-01',
+      methodology: 'Old methodology.',
+      disclaimer: 'Correlation disclaimer.',
+      lastAnalyzedAt: '2025-01-01',
+      source: 'statistical-fallback',
+      // No new fields — backward compatible
+    };
+    mockRedisGet.mockResolvedValueOnce(oldCached);
+
+    const result = await analyzeBillIntelligence('119-hr-1');
+    expect(result).toEqual(oldCached);
+    expect(result!.voteOutcome).toBeUndefined();
+    expect(result!.billProgress).toBeUndefined();
   });
 });

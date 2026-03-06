@@ -41,10 +41,16 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
 }));
 
 const mockGetSampleContributions = jest.fn();
+const mockGetFinancialSummary = jest.fn();
 jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
     getSampleContributions: (...args: unknown[]) => mockGetSampleContributions(...args),
+    getFinancialSummary: (...args: unknown[]) => mockGetFinancialSummary(...args),
   },
+}));
+
+jest.mock('@/features/representatives/services/congress.service', () => ({
+  getEnhancedRepresentative: jest.fn().mockResolvedValue(null),
 }));
 
 // Mock the lobbying pipeline analyzer since it's a cross-analyzer call
@@ -113,7 +119,16 @@ const mockBill = {
       withdrawn: false,
     },
   ],
-  committees: [{ committeeId: 'hasc00', name: 'Armed Services' }],
+  committees: [{ committeeId: 'hasc00', name: 'Armed Services', chamber: 'House', activities: [] }],
+  votes: [],
+  relatedBills: [],
+  status: {
+    current: 'introduced',
+    lastAction: { date: '2025-01-15', description: 'Introduced' },
+    timeline: [],
+  },
+  introducedDate: '2025-01-15',
+  cboCostEstimates: [],
 };
 
 const mockContributions = [
@@ -140,10 +155,12 @@ describe('Integration: GET /api/intelligence/bill/[billId]', () => {
     mockFetchBillFromCongress.mockResolvedValue(mockBill);
     mockGetFECIdFromBioguide.mockReturnValue('H0XX00001');
     mockGetSampleContributions.mockResolvedValue(mockContributions);
+    mockGetFinancialSummary.mockResolvedValue(null);
     mockAnalyzeLobbyingPipeline.mockResolvedValue({
       committeeCode: 'HSAS',
       totalSpending: 500000,
       organizationCount: 10,
+      topOrganizations: [{ name: 'Defense Lobby Inc', totalSpending: 200000 }],
     });
   });
 

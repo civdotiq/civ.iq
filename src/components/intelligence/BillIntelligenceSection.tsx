@@ -18,7 +18,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 /**
  * Determines the headline finding from the data.
- * This is the single most important thing the user should take away.
+ * Priority: vote+funding > committee+funding > lobbying > no connection.
  */
 function getHeadline(data: BillIntelligenceInsight): {
   text: string;
@@ -28,6 +28,34 @@ function getHeadline(data: BillIntelligenceInsight): {
   const cosponsorPct = data.cosponsorSummary.avgSectorDonationPercentage;
   const hasLobbying = data.relatedLobbyingSpending > 0;
   const sponsorName = data.sponsorAnalysis?.name ?? 'the sponsor';
+  const hasVote = !!data.voteOutcome;
+  const onCommittee = data.sponsorCommitteeConnection?.connected;
+
+  // Notable: vote result + funding connection
+  if (hasVote && sponsorPct >= 5) {
+    const v = data.voteOutcome!;
+    const voteDesc = v.partyLine
+      ? 'along party lines'
+      : v.bipartisan
+        ? 'with bipartisan support'
+        : '';
+    return {
+      text: `This bill ${v.result.toLowerCase()} in the ${v.chamber} ${v.yea}-${v.nay}${voteDesc ? ' ' + voteDesc : ''}. ${sponsorPct.toFixed(1)}% of ${sponsorName}'s funding comes from related industries.`,
+      notable: true,
+    };
+  }
+
+  // Notable: sponsor on committee + funding context
+  if (onCommittee && data.sponsorAnalysis) {
+    const totalContext = data.sponsorFundingContext
+      ? ` out of ${formatDollars(data.sponsorFundingContext.totalRaised)} total raised`
+      : '';
+    const amt = formatDollars(data.sponsorAnalysis.sectorDonationAmount);
+    return {
+      text: `${sponsorName} introduced this bill and sits on the ${data.sponsorCommitteeConnection!.committeeName}, which oversees it. ${sponsorName} received ${amt} from related industries${totalContext}.`,
+      notable: true,
+    };
+  }
 
   // Notable: sponsor receives significant funding from related sectors
   if (sponsorPct >= 5) {
@@ -49,8 +77,9 @@ function getHeadline(data: BillIntelligenceInsight): {
   // Notable: significant lobbying on related committees
   if (hasLobbying) {
     const amt = formatDollars(data.relatedLobbyingSpending);
+    const orgDetail = data.topLobbyingOrgs?.length ? `, led by ${data.topLobbyingOrgs[0]}` : '';
     return {
-      text: `No notable funding connection between the sponsor and related industries. ${data.relatedLobbyingOrgs} organizations spent ${amt} lobbying the committees this bill was referred to.`,
+      text: `No notable funding connection between the sponsor and related industries. ${data.relatedLobbyingOrgs} organizations spent ${amt} lobbying related committees${orgDetail}.`,
       notable: true,
     };
   }
@@ -109,6 +138,24 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
       {/* Headline finding */}
       <p className="type-base text-gray-900 leading-relaxed mb-4">{headline.text}</p>
 
+      {/* Vote result bar — when vote data is available */}
+      {data.voteOutcome && <VoteResultBar vote={data.voteOutcome} />}
+
+      {/* Sponsor-committee badge */}
+      {data.sponsorCommitteeConnection?.connected && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="border-2 border-gray-900 px-2 py-0.5 type-xs aicher-heading">
+            ON COMMITTEE
+          </span>
+          <span className="type-xs text-gray-600">
+            Sponsor sits on {data.sponsorCommitteeConnection.committeeName}
+            {data.sponsorCommitteeConnection.sponsorRole
+              ? ` as ${data.sponsorCommitteeConnection.sponsorRole}`
+              : ''}
+          </span>
+        </div>
+      )}
+
       {/* Detailed breakdown — only when there's something worth showing */}
       {showDetails && (
         <div className="border-2 border-gray-200 p-4 mb-4">
@@ -120,6 +167,9 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
                 </div>
                 <div className="type-xs text-gray-500">
                   of {data.sponsorAnalysis.name}&apos;s funding from related industries
+                  {data.sponsorFundingContext && (
+                    <> ({formatDollars(data.sponsorFundingContext.totalRaised)} total)</>
+                  )}
                 </div>
               </div>
             )}
@@ -130,7 +180,8 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
                   {cosponsorPct.toFixed(1)}%
                 </div>
                 <div className="type-xs text-gray-500">
-                  average across {data.cosponsorSummary.analyzedCosponsors} cosponsors
+                  average across {data.cosponsorSummary.analyzedCosponsors}{' '}
+                  {data.bipartisanCosponsorship ? 'bipartisan ' : ''}cosponsors
                 </div>
               </div>
             )}
@@ -162,6 +213,13 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
       {/* AI narrative — the full explanation */}
       <p className="type-sm text-gray-600 leading-relaxed">{data.narrative}</p>
 
+      {/* CBO fiscal impact */}
+      {data.fiscalImpact && (
+        <p className="type-xs text-gray-500 mt-2 border-l-2 border-gray-300 pl-3">
+          CBO estimate: {data.fiscalImpact}
+        </p>
+      )}
+
       {/* Date */}
       <p className="type-xs text-gray-400 mt-3">
         Analysis based on data through{' '}
@@ -178,6 +236,34 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
         methodology={data.methodology}
         source={data.source}
       />
+    </div>
+  );
+}
+
+/**
+ * Proportional vote result bar with party breakdown.
+ */
+function VoteResultBar({ vote }: { vote: NonNullable<BillIntelligenceInsight['voteOutcome']> }) {
+  const total = vote.yea + vote.nay;
+  if (total === 0) return null;
+  const yeaPct = (vote.yea / total) * 100;
+
+  const voteLabel = vote.partyLine ? 'Party-line vote' : vote.bipartisan ? 'Bipartisan vote' : '';
+
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between type-xs text-gray-500 mb-1">
+        <span>Yea {vote.yea}</span>
+        <span>
+          {vote.result} in {vote.chamber}
+          {voteLabel ? ` — ${voteLabel}` : ''}
+        </span>
+        <span>Nay {vote.nay}</span>
+      </div>
+      <div className="flex h-3 border-2 border-gray-900 overflow-hidden">
+        <div className="bg-[#0a9338]" style={{ width: `${yeaPct}%` }} />
+        <div className="bg-[#e11d07]" style={{ width: `${100 - yeaPct}%` }} />
+      </div>
     </div>
   );
 }

@@ -339,6 +339,42 @@ export interface BillIntelligenceInsight extends InsightBase {
   relatedLobbyingSpending: number;
   relatedLobbyingOrgs: number;
   narrative: string;
+
+  // ── Story context (all optional, backward compatible) ─────────
+  /** Vote outcome for this bill, if any recorded votes exist. */
+  voteOutcome?: {
+    chamber: 'House' | 'Senate';
+    result: string;
+    yea: number;
+    nay: number;
+    partyLine: boolean;
+    bipartisan: boolean;
+  };
+  /** Bill progress status. */
+  billProgress?: {
+    status: string;
+    daysSinceIntroduction: number;
+    passedCommittee: boolean;
+  };
+  /** CBO fiscal impact estimate description, if available. */
+  fiscalImpact?: string;
+  /** Whether the sponsor sits on one of the bill's committees. */
+  sponsorCommitteeConnection?: {
+    connected: boolean;
+    committeeName?: string;
+    sponsorRole?: string;
+  };
+  /** Total raised by sponsor (gives percentage context). */
+  sponsorFundingContext?: {
+    totalRaised: number;
+    cycle: number;
+  };
+  /** Number of related bills. */
+  relatedBillCount?: number;
+  /** Whether cosponsorship is bipartisan. */
+  bipartisanCosponsorship?: boolean;
+  /** Top lobbying organizations by name. */
+  topLobbyingOrgs?: string[];
 }
 
 // ── District Intelligence Summary ────────────────────────────────────

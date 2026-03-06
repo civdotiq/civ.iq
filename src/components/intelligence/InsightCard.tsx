@@ -258,34 +258,79 @@ export function stockCommitteeKeyStats(
 
 /**
  * Builds key stats array for a BillIntelligenceInsight.
+ * Max 3 cards, prioritized by notability.
  */
 export function billIntelligenceKeyStats(
   insight: BillIntelligenceInsight
 ): Array<{ label: string; value: string }> {
-  const stats: Array<{ label: string; value: string }> = [
-    {
-      label: 'Affected sectors',
-      value: String(insight.affectedSectors.length),
-    },
-  ];
+  const candidates: Array<{ label: string; value: string; priority: number }> = [];
 
+  // Vote result — highest priority when available
+  if (insight.voteOutcome) {
+    const v = insight.voteOutcome;
+    const tag = v.partyLine ? ' (party-line)' : v.bipartisan ? ' (bipartisan)' : '';
+    candidates.push({
+      label: `${v.chamber} vote`,
+      value: `${v.yea}-${v.nay}${tag}`,
+      priority: 10,
+    });
+  }
+
+  // Sponsor sector funding
   if (insight.sponsorAnalysis) {
-    stats.push({
-      label: 'Sponsor sector %',
+    const totalCtx = insight.sponsorFundingContext
+      ? ` of ${formatCompact(insight.sponsorFundingContext.totalRaised)}`
+      : '';
+    candidates.push({
+      label: `Sponsor industry funding${totalCtx}`,
       value: `${insight.sponsorAnalysis.sectorDonationPercentage.toFixed(1)}%`,
+      priority: 8,
     });
   }
 
+  // Lobbying spending
   if (insight.relatedLobbyingSpending > 0) {
-    const formatted =
-      insight.relatedLobbyingSpending >= 1_000_000
-        ? `$${(insight.relatedLobbyingSpending / 1_000_000).toFixed(1)}M`
-        : `$${(insight.relatedLobbyingSpending / 1_000).toFixed(0)}K`;
-    stats.push({
-      label: 'Lobbying spending',
-      value: formatted,
+    candidates.push({
+      label: 'Committee lobbying',
+      value: formatCompact(insight.relatedLobbyingSpending),
+      priority: 7,
     });
   }
 
-  return stats;
+  // Sponsor on committee
+  if (insight.sponsorCommitteeConnection?.connected) {
+    candidates.push({
+      label: 'Sponsor on committee',
+      value: 'Yes',
+      priority: 6,
+    });
+  }
+
+  // Bill status
+  if (insight.billProgress) {
+    const status = insight.billProgress.status.replace(/_/g, ' ');
+    candidates.push({
+      label: 'Status',
+      value: status.charAt(0).toUpperCase() + status.slice(1),
+      priority: 3,
+    });
+  }
+
+  // Affected sectors as fallback
+  candidates.push({
+    label: 'Related sectors',
+    value: String(insight.affectedSectors.length),
+    priority: 1,
+  });
+
+  return candidates
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 3)
+    .map(({ label, value }) => ({ label, value }));
+}
+
+function formatCompact(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
 }

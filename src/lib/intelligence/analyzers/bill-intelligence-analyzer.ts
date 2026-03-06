@@ -22,6 +22,7 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector, type IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
 import {
   getCurrentElectionCycle,
@@ -32,12 +33,23 @@ import {
 } from './shared';
 import { confidenceScore } from '../statistics/civic-stats';
 import type { BillIntelligenceInsight } from '../types';
+import type { Bill, BillVote } from '@/types/bill';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /** Max cosponsors to analyze (top by date) */
 const MAX_COSPONSORS = 10;
+
+/** Story context extracted from bill data — zero additional API calls. */
+interface StoryContext {
+  voteOutcome?: BillIntelligenceInsight['voteOutcome'];
+  billProgress?: BillIntelligenceInsight['billProgress'];
+  fiscalImpact?: string;
+  relatedBillCount: number;
+  bipartisanCosponsorship: boolean;
+  topLobbyingOrgNames: string[];
+}
 
 const DISCLAIMER =
   'This analysis shows factual patterns in public data. ' +
@@ -91,28 +103,33 @@ async function computeAndCache(
     return null;
   }
 
-  // 4. Analyze sponsor
+  // 4. Analyze sponsor, cosponsors, enrichment, and lobbying — all in parallel
   const sponsorBioguide = bill.sponsor.representative.bioguideId;
-  const sponsorAnalysis = await analyzeMemberSectorDonations(
-    sponsorBioguide,
-    bill.sponsor.representative.name,
-    bill.sponsor.representative.party,
-    affectedSectors
-  );
-
-  // 5. Analyze cosponsors (top MAX_COSPONSORS by date)
+  const cycle = getCurrentElectionCycle();
   const cosponsorsToAnalyze = bill.cosponsors.filter(c => !c.withdrawn).slice(0, MAX_COSPONSORS);
 
-  const cosponsorResults = await Promise.all(
-    cosponsorsToAnalyze.map(c =>
+  const [sponsorAnalysis, financialSummary, enhancedRep, cosponsorResults, lobbyingData] =
+    await Promise.all([
       analyzeMemberSectorDonations(
-        c.representative.bioguideId,
-        c.representative.name,
-        c.representative.party,
+        sponsorBioguide,
+        bill.sponsor.representative.name,
+        bill.sponsor.representative.party,
         affectedSectors
-      ).catch(() => null)
-    )
-  );
+      ),
+      fetchFinancialSummary(sponsorBioguide, cycle),
+      fetchEnhancedRepresentative(sponsorBioguide),
+      Promise.all(
+        cosponsorsToAnalyze.map(c =>
+          analyzeMemberSectorDonations(
+            c.representative.bioguideId,
+            c.representative.name,
+            c.representative.party,
+            affectedSectors
+          ).catch(() => null)
+        )
+      ),
+      getRelatedLobbyingData(bill.committees),
+    ]);
 
   const validCosponsorResults = cosponsorResults.filter(
     (r): r is NonNullable<typeof r> => r !== null
@@ -129,18 +146,37 @@ async function computeAndCache(
     avgSectorDonationPercentage: avgCosponsorPct,
   };
 
-  // 6. Related lobbying spending from committee lobbying pipeline cache
-  const { lobbyingSpending, lobbyingOrgs } = await getRelatedLobbyingData(bill.committees);
+  const { lobbyingSpending, lobbyingOrgs, topOrgNames } = lobbyingData;
 
-  // 7. Compute confidence
+  // 6b. Extract story context from bill object (zero additional API calls)
+  const storyContext = computeStoryContext(bill, topOrgNames);
+
+  // 6c. Compute sponsor-committee connection
+  const sponsorCommitteeConnection = computeSponsorCommitteeConnection(
+    bill.committees,
+    enhancedRep?.committees
+  );
+
+  // 6d. Sponsor funding context
+  const sponsorFundingContext = financialSummary
+    ? { totalRaised: financialSummary, cycle }
+    : undefined;
+
+  // 7. Compute confidence — enriched data increases completeness
+  const dataCompleteness = computeDataCompleteness(
+    sponsorAnalysis,
+    storyContext,
+    sponsorCommitteeConnection,
+    sponsorFundingContext
+  );
   const conf = confidenceScore({
     sampleSize: affectedSectors.length,
     minimumSampleSize: 1,
-    dataCompleteness: sponsorAnalysis ? 0.8 : 0.4,
+    dataCompleteness,
     peerCount: validCosponsorResults.length,
   });
 
-  // 8. Generate narrative
+  // 8. Generate narrative with enriched context
   const { narrative, source } = await generateNarrative(
     bill.title,
     policyArea,
@@ -148,7 +184,10 @@ async function computeAndCache(
     sponsorAnalysis,
     cosponsorSummary,
     lobbyingSpending,
-    lobbyingOrgs
+    lobbyingOrgs,
+    storyContext,
+    sponsorCommitteeConnection,
+    sponsorFundingContext
   );
 
   const insight: BillIntelligenceInsight = {
@@ -166,10 +205,22 @@ async function computeAndCache(
     methodology:
       'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
       'Sectors mapped via Congress.gov policy areas. ' +
-      'Lobbying data from Senate LDA disclosures matched to bill committees.',
+      'Lobbying data from Senate LDA disclosures matched to bill committees.' +
+      (storyContext.voteOutcome ? ' Vote data from Congress.gov roll calls.' : '') +
+      (storyContext.fiscalImpact ? ' Fiscal estimates from CBO.' : ''),
     disclaimer: DISCLAIMER,
     lastAnalyzedAt: new Date().toISOString(),
     source,
+    // Story context fields
+    voteOutcome: storyContext.voteOutcome,
+    billProgress: storyContext.billProgress,
+    fiscalImpact: storyContext.fiscalImpact,
+    sponsorCommitteeConnection,
+    sponsorFundingContext,
+    relatedBillCount: storyContext.relatedBillCount,
+    bipartisanCosponsorship: storyContext.bipartisanCosponsorship,
+    topLobbyingOrgs:
+      storyContext.topLobbyingOrgNames.length > 0 ? storyContext.topLobbyingOrgNames : undefined,
   };
 
   // 9. Cache
@@ -180,6 +231,141 @@ async function computeAndCache(
   }
 
   return insight;
+}
+
+// ── Story Context Extraction ──────────────────────────────────────
+
+function computeStoryContext(bill: Bill, topOrgNames: string[]): StoryContext {
+  // Vote outcome — pick the most recent recorded vote
+  let voteOutcome: StoryContext['voteOutcome'];
+  const lastVote = bill.votes.length > 0 ? bill.votes[bill.votes.length - 1] : undefined;
+  if (lastVote?.votes && !lastVote.votesUnavailable) {
+    voteOutcome = {
+      chamber: lastVote.chamber,
+      result: lastVote.result,
+      yea: lastVote.votes.yea,
+      nay: lastVote.votes.nay,
+      partyLine: isPartyLineVote(lastVote),
+      bipartisan: isBipartisanVote(lastVote),
+    };
+  }
+
+  // Bill progress
+  const daysSinceIntroduction = Math.floor(
+    (Date.now() - new Date(bill.introducedDate).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const passedCommittee = [
+    'reported',
+    'passed_house',
+    'passed_senate',
+    'passed_both',
+    'enacted',
+  ].includes(bill.status.current);
+  const billProgress = {
+    status: bill.status.current,
+    daysSinceIntroduction,
+    passedCommittee,
+  };
+
+  // CBO fiscal impact
+  let fiscalImpact: string | undefined;
+  const firstEstimate = bill.cboCostEstimates?.[0];
+  if (firstEstimate) {
+    fiscalImpact = firstEstimate.description;
+  }
+
+  // Bipartisan cosponsorship
+  const activeCosponsors = bill.cosponsors.filter(c => !c.withdrawn);
+  const parties = new Set(activeCosponsors.map(c => c.representative.party));
+  const bipartisanCosponsorship = parties.size >= 2;
+
+  return {
+    voteOutcome,
+    billProgress,
+    fiscalImpact,
+    relatedBillCount: bill.relatedBills.length,
+    bipartisanCosponsorship,
+    topLobbyingOrgNames: topOrgNames,
+  };
+}
+
+function isPartyLineVote(vote: BillVote): boolean {
+  if (!vote.breakdown) return false;
+  const { democratic, republican } = vote.breakdown;
+  // Party-line if >80% of each party voted opposite directions
+  const demYeaRate = democratic.yea / Math.max(democratic.yea + democratic.nay, 1);
+  const repYeaRate = republican.yea / Math.max(republican.yea + republican.nay, 1);
+  return (demYeaRate > 0.8 && repYeaRate < 0.2) || (demYeaRate < 0.2 && repYeaRate > 0.8);
+}
+
+function isBipartisanVote(vote: BillVote): boolean {
+  if (!vote.breakdown) return false;
+  const { democratic, republican } = vote.breakdown;
+  // Bipartisan if >30% of each party voted the same way
+  const demYeaRate = democratic.yea / Math.max(democratic.yea + democratic.nay, 1);
+  const repYeaRate = republican.yea / Math.max(republican.yea + republican.nay, 1);
+  return (demYeaRate > 0.3 && repYeaRate > 0.3) || (demYeaRate < 0.7 && repYeaRate < 0.7);
+}
+
+// ── Enrichment API Calls ──────────────────────────────────────────
+
+async function fetchFinancialSummary(bioguideId: string, cycle: number): Promise<number | null> {
+  try {
+    const fecId = getFECIdFromBioguide(bioguideId);
+    if (!fecId) return null;
+    const summary = await fecApiService.getFinancialSummary(fecId, cycle);
+    return summary?.receipts ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchEnhancedRepresentative(
+  bioguideId: string
+): Promise<{ committees?: Array<{ name: string; role?: string }> } | null> {
+  try {
+    return await getEnhancedRepresentative(bioguideId);
+  } catch {
+    return null;
+  }
+}
+
+function computeSponsorCommitteeConnection(
+  billCommittees: Bill['committees'],
+  sponsorCommittees?: Array<{ name: string; role?: string; title?: string }>
+): BillIntelligenceInsight['sponsorCommitteeConnection'] | undefined {
+  if (!sponsorCommittees?.length || billCommittees.length === 0) return undefined;
+
+  for (const bc of billCommittees) {
+    const bcName = bc.name.toLowerCase();
+    for (const sc of sponsorCommittees) {
+      const scName = sc.name.toLowerCase();
+      if (bcName.includes(scName) || scName.includes(bcName)) {
+        return {
+          connected: true,
+          committeeName: bc.name,
+          sponsorRole: sc.role ?? sc.title,
+        };
+      }
+    }
+  }
+
+  return { connected: false };
+}
+
+function computeDataCompleteness(
+  sponsorAnalysis: MemberSectorResult | null,
+  storyContext: StoryContext,
+  sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
+): number {
+  let score = sponsorAnalysis ? 0.5 : 0.2;
+  if (storyContext.voteOutcome) score += 0.1;
+  if (storyContext.fiscalImpact) score += 0.05;
+  if (sponsorCommitteeConnection) score += 0.1;
+  if (sponsorFundingContext) score += 0.1;
+  if (storyContext.topLobbyingOrgNames.length > 0) score += 0.05;
+  return Math.min(score, 1);
 }
 
 // ── Member Sector Analysis ───────────────────────────────────────────
@@ -241,28 +427,41 @@ async function analyzeMemberSectorDonations(
 // ── Lobbying Data ────────────────────────────────────────────────────
 
 async function getRelatedLobbyingData(
-  committees: Array<{ committeeId: string; name: string }>
-): Promise<{ lobbyingSpending: number; lobbyingOrgs: number }> {
+  committees: Array<{
+    committeeId: string;
+    name: string;
+    chamber: 'House' | 'Senate';
+    activities: Array<{ date: string; activity: string }>;
+  }>
+): Promise<{ lobbyingSpending: number; lobbyingOrgs: number; topOrgNames: string[] }> {
+  const mappedCommittees = committees
+    .map(c => findCommitteeMapping(c.name))
+    .filter((m): m is NonNullable<typeof m> => m !== undefined);
+
+  const lobbyingResults = await Promise.all(
+    mappedCommittees.map(m => analyzeLobbyingPipeline(m.committeeCode).catch(() => null))
+  );
+
   let totalSpending = 0;
   let totalOrgs = 0;
+  const allOrgs: Array<{ name: string; totalSpending: number }> = [];
 
-  for (const committee of committees) {
-    // Resolve committee name to committee code
-    const mapping = findCommitteeMapping(committee.name);
-    if (!mapping) continue;
-
-    try {
-      const lobbyingInsight = await analyzeLobbyingPipeline(mapping.committeeCode);
-      if (lobbyingInsight) {
-        totalSpending += lobbyingInsight.totalSpending;
-        totalOrgs += lobbyingInsight.organizationCount;
+  for (const lobbyingInsight of lobbyingResults) {
+    if (lobbyingInsight) {
+      totalSpending += lobbyingInsight.totalSpending;
+      totalOrgs += lobbyingInsight.organizationCount;
+      for (const org of lobbyingInsight.topOrganizations) {
+        allOrgs.push(org);
       }
-    } catch {
-      // Lobbying data unavailable — continue
     }
   }
 
-  return { lobbyingSpending: totalSpending, lobbyingOrgs: totalOrgs };
+  const topOrgNames = allOrgs
+    .sort((a, b) => b.totalSpending - a.totalSpending)
+    .slice(0, 3)
+    .map(o => o.name);
+
+  return { lobbyingSpending: totalSpending, lobbyingOrgs: totalOrgs, topOrgNames };
 }
 
 // ── Narrative Generation ─────────────────────────────────────────────
@@ -274,7 +473,10 @@ async function generateNarrative(
   sponsor: MemberSectorResult | null,
   cosponsorSummary: BillIntelligenceInsight['cosponsorSummary'],
   lobbyingSpending: number,
-  lobbyingOrgs: number
+  lobbyingOrgs: number,
+  storyContext: StoryContext,
+  sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
 ): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const sectorList = sectors.slice(0, 5).join(', ');
   const sponsorInfo = sponsor
@@ -291,17 +493,25 @@ async function generateNarrative(
       ? `${lobbyingOrgs} organizations spent $${lobbyingSpending.toLocaleString()} lobbying the committees this bill was referred to.`
       : '';
 
+  // Build structured story facts block from enrichment data
+  const storyFacts = buildStoryFactsBlock(
+    storyContext,
+    sponsorCommitteeConnection,
+    sponsorFundingContext
+  );
+
   const prompt =
-    `Write a 2-3 sentence summary of funding patterns for this bill.\n\n` +
+    `Write a 3-5 sentence narrative about this bill's story: who introduced it, the funding picture, and any notable connections.\n\n` +
     `${PLAIN_LANGUAGE_RULES}\n\n` +
     `Bill: "${billTitle}"\n` +
     `Policy area: ${policyArea}\n` +
     `Affected industry sectors: ${sectorList}\n` +
     `${sponsorInfo}\n` +
     `${cosponsorInfo}\n` +
-    `${lobbyingInfo}\n\n` +
+    `${lobbyingInfo}\n` +
+    `${storyFacts}\n\n` +
     `Use "pattern", "correlation", or "association" — never "caused", "influenced", or "resulted in". ` +
-    `State facts only.`;
+    `State facts only. Lead with the most notable finding.`;
 
   const fallback = buildStatisticalNarrative(
     billTitle,
@@ -310,42 +520,157 @@ async function generateNarrative(
     sponsor,
     cosponsorSummary,
     lobbyingSpending,
-    lobbyingOrgs
+    lobbyingOrgs,
+    storyContext,
+    sponsorCommitteeConnection,
+    sponsorFundingContext
   );
 
   return generateInsightNarrative(
-    'You summarize bill funding patterns for CIV.IQ. ',
+    'You summarize bill funding patterns and legislative context for CIV.IQ. ',
     prompt,
     fallback,
     '[BillIntelligence]'
   );
 }
 
+function buildStoryFactsBlock(
+  storyContext: StoryContext,
+  sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
+): string {
+  const facts: string[] = [];
+
+  if (storyContext.voteOutcome) {
+    const v = storyContext.voteOutcome;
+    const voteType = v.partyLine ? 'party-line' : v.bipartisan ? 'bipartisan' : '';
+    facts.push(
+      `Vote: ${v.result} in the ${v.chamber} (${v.yea}-${v.nay}${voteType ? ', ' + voteType : ''}).`
+    );
+  }
+
+  if (storyContext.billProgress) {
+    const p = storyContext.billProgress;
+    facts.push(
+      `Status: ${p.status}, ${p.daysSinceIntroduction} days since introduction${p.passedCommittee ? ', passed committee' : ''}.`
+    );
+  }
+
+  if (sponsorCommitteeConnection?.connected) {
+    facts.push(
+      `The sponsor sits on the ${sponsorCommitteeConnection.committeeName} committee${sponsorCommitteeConnection.sponsorRole ? ' as ' + sponsorCommitteeConnection.sponsorRole : ''}, which has jurisdiction over this bill.`
+    );
+  }
+
+  if (sponsorFundingContext) {
+    const totalFormatted = formatCompactDollars(sponsorFundingContext.totalRaised);
+    facts.push(
+      `Sponsor total raised: ${totalFormatted} in the ${sponsorFundingContext.cycle} cycle.`
+    );
+  }
+
+  if (storyContext.fiscalImpact) {
+    facts.push(`CBO estimate: ${storyContext.fiscalImpact}`);
+  }
+
+  if (storyContext.bipartisanCosponsorship) {
+    facts.push('Cosponsorship is bipartisan.');
+  }
+
+  if (storyContext.topLobbyingOrgNames.length > 0) {
+    facts.push(`Top lobbying organizations: ${storyContext.topLobbyingOrgNames.join(', ')}.`);
+  }
+
+  if (storyContext.relatedBillCount > 0) {
+    facts.push(`${storyContext.relatedBillCount} related bills.`);
+  }
+
+  return facts.length > 0 ? `\nStory context:\n${facts.join('\n')}` : '';
+}
+
+function formatCompactDollars(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
+}
+
 // ── Fallback Narratives ──────────────────────────────────────────────
 
 function buildStatisticalNarrative(
-  billTitle: string,
+  _billTitle: string,
   policyArea: string,
   sectors: IndustrySector[],
   sponsor: MemberSectorResult | null,
   cosponsorSummary: BillIntelligenceInsight['cosponsorSummary'],
   lobbyingSpending: number,
-  lobbyingOrgs: number
+  lobbyingOrgs: number,
+  storyContext: StoryContext,
+  sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
 ): string {
   const sectorList = sectors.slice(0, 3).join(', ');
-  let narrative = `This bill addresses ${policyArea}, which relates to the ${sectorList} sector${sectors.length > 1 ? 's' : ''}.`;
+  const parts: string[] = [];
 
-  if (sponsor) {
-    narrative += ` The sponsor received ${sponsor.sectorDonationPercentage.toFixed(1)}% of campaign contributions from these sectors.`;
+  // Lead with sponsor + committee connection if notable
+  if (sponsor && sponsorCommitteeConnection?.connected) {
+    const totalContext = sponsorFundingContext
+      ? ` out of ${formatCompactDollars(sponsorFundingContext.totalRaised)} total raised`
+      : '';
+    parts.push(
+      `${sponsor.name} introduced this ${policyArea.toLowerCase()} bill and sits on the ${sponsorCommitteeConnection.committeeName}, which oversees it. ` +
+        `${sponsor.name} received $${sponsor.sectorDonationAmount.toLocaleString()} from ${sectorList} industries${totalContext}.`
+    );
+  } else if (sponsor) {
+    const totalContext = sponsorFundingContext
+      ? ` of ${formatCompactDollars(sponsorFundingContext.totalRaised)} total raised`
+      : '';
+    parts.push(
+      `${sponsor.name} received ${sponsor.sectorDonationPercentage.toFixed(1)}% of campaign contributions from ${sectorList} sectors${totalContext}.`
+    );
+  } else {
+    parts.push(
+      `This bill addresses ${policyArea}, which relates to the ${sectorList} sector${sectors.length > 1 ? 's' : ''}.`
+    );
   }
 
-  if (cosponsorSummary.analyzedCosponsors > 0) {
-    narrative += ` Among ${cosponsorSummary.analyzedCosponsors} analyzed cosponsors, the average was ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}%.`;
-  }
-
+  // Lobbying with org names
   if (lobbyingSpending > 0) {
-    narrative += ` ${lobbyingOrgs} organizations spent $${lobbyingSpending.toLocaleString()} lobbying related committees.`;
+    const orgDetail =
+      storyContext.topLobbyingOrgNames.length > 0
+        ? `, led by ${storyContext.topLobbyingOrgNames[0]}`
+        : '';
+    parts.push(
+      `${lobbyingOrgs} organizations spent $${lobbyingSpending.toLocaleString()} lobbying related committees${orgDetail}.`
+    );
   }
 
-  return narrative;
+  // Vote outcome
+  if (storyContext.voteOutcome) {
+    const v = storyContext.voteOutcome;
+    const voteDesc = v.partyLine
+      ? 'along party lines'
+      : v.bipartisan
+        ? 'with bipartisan support'
+        : '';
+    parts.push(
+      `The bill ${v.result.toLowerCase()} in the ${v.chamber} ${v.yea}-${v.nay}${voteDesc ? ' ' + voteDesc : ''}.`
+    );
+  } else {
+    parts.push('The bill has no recorded votes yet.');
+  }
+
+  // Cosponsorship
+  if (cosponsorSummary.analyzedCosponsors > 0 && cosponsorSummary.avgSectorDonationPercentage > 0) {
+    const bipartisan = storyContext.bipartisanCosponsorship ? 'bipartisan ' : '';
+    parts.push(
+      `Among ${cosponsorSummary.analyzedCosponsors} ${bipartisan}cosponsors analyzed, the average sector contribution was ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}%.`
+    );
+  }
+
+  // CBO
+  if (storyContext.fiscalImpact) {
+    parts.push(`CBO estimates: ${storyContext.fiscalImpact}`);
+  }
+
+  return parts.join(' ');
 }
