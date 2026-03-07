@@ -17,6 +17,7 @@ import FederalSpendingProfile from '@/features/spending/components/FederalSpendi
 import { SpendingNarrativeSection } from '@/features/spending/components/SpendingNarrativeSection';
 import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
+import { EconomicIndicatorsSection } from '@/features/districts/components/EconomicIndicatorsSection';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -262,6 +263,9 @@ export default function DistrictPage() {
                 }}
               />
             )}
+
+            {/* Economic Indicators */}
+            <EconomicIndicatorsSection districtId={districtId} />
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />

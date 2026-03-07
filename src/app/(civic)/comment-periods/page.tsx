@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, MessageSquare, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface CommentPeriodItem {
@@ -103,16 +103,19 @@ export default function CommentPeriodsPage() {
         )}
       </div>
       {item.summary && <p className="text-sm text-gray-600 line-clamp-2">{item.summary}</p>}
-      {item.commentUrl && (
-        <a
-          href={item.commentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-2 text-sm font-medium text-[#3ea2d4] hover:underline"
-        >
-          Submit a comment →
-        </a>
-      )}
+      <div className="flex items-center gap-4 mt-2">
+        {item.commentUrl && (
+          <a
+            href={item.commentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-[#3ea2d4] hover:underline"
+          >
+            Submit a comment →
+          </a>
+        )}
+        <CommentCountBadge documentNumber={item.id} />
+      </div>
     </div>
   );
 
@@ -238,5 +241,42 @@ export default function CommentPeriodsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function CommentCountBadge({ documentNumber }: { documentNumber: string }) {
+  const [commentCount, setCommentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Stagger requests to avoid flooding the rate-limited API
+    const delay = Math.floor(Math.random() * 2000);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/federal-register/${documentNumber}/comments?pageSize=1`);
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        if (!cancelled && json?.success && json.stats?.total > 0) {
+          setCommentCount(json.stats.total);
+        }
+      } catch {
+        // Silently fail — this is supplementary data
+      }
+    }, delay);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [documentNumber]);
+
+  if (commentCount === null) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+      <Users className="w-3 h-3" />
+      {commentCount.toLocaleString()} comment{commentCount !== 1 ? 's' : ''}
+    </span>
   );
 }

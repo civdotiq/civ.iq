@@ -28,6 +28,7 @@ import { TopContributors } from './TopContributors';
 import { useResponsiveChartHeight } from '../../../hooks/useResponsiveChartHeight';
 import { CHART_COLORS } from '../../../lib/constants/chart-colors';
 import { StockTradesSection } from './StockTradesSection';
+import { SecFilingsSection } from './SecFilingsSection';
 
 // Chart colors - using centralized brand palette
 const COLORS = CHART_COLORS;
@@ -1634,6 +1635,7 @@ export function CampaignFinanceVisualizer({
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">STOCK Act Disclosures</h3>
               <StockTradesSection bioguideId={_bioguideId} />
+              <SecFilingsSection bioguideId={_bioguideId} />
             </div>
           )}
 
