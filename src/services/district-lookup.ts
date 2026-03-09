@@ -45,7 +45,11 @@ class DistrictLookupService {
   }
 
   /**
-   * Find congressional district by latitude and longitude coordinates
+   * Find congressional district by latitude and longitude coordinates.
+   *
+   * Uses Census Bureau's coordinates→geographies API for authoritative
+   * point-in-polygon district resolution. Falls back to BBOX/centroid
+   * if Census API is unavailable.
    */
   async findDistrictByCoordinates(
     latitude: number,
@@ -66,7 +70,19 @@ class DistrictLookupService {
         };
       }
 
-      // Use district boundary service for point-in-district lookup
+      // Primary: Census Bureau coordinate→district lookup (authoritative)
+      const censusResult = await this.lookupDistrictByCensusCoordinates(latitude, longitude);
+      if (censusResult) {
+        return censusResult;
+      }
+
+      // Fallback: BBOX + centroid distance from local metadata
+      logger.warn('Census coordinate lookup unavailable, using BBOX fallback', {
+        latitude,
+        longitude,
+        service: 'DistrictLookupService',
+      });
+
       const result = await districtBoundaryService.findDistrictByPoint(latitude, longitude);
 
       return {
@@ -88,6 +104,109 @@ class DistrictLookupService {
         method: 'fallback',
         error: 'Lookup failed',
       };
+    }
+  }
+
+  /**
+   * Call Census Bureau's geographies/coordinates endpoint to get the
+   * congressional district for a lat/lng point. Returns null if the
+   * API is unavailable or returns no data.
+   */
+  private async lookupDistrictByCensusCoordinates(
+    latitude: number,
+    longitude: number
+  ): Promise<DistrictLookupResult | null> {
+    try {
+      const url =
+        `https://geocoding.geo.census.gov/geocoder/geographies/coordinates` +
+        `?x=${longitude}&y=${latitude}` +
+        `&benchmark=Public_AR_Current&vintage=Current_Current` +
+        `&layers=119th Congressional Districts` +
+        `&format=json`;
+
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const geographies = data?.result?.geographies;
+
+      if (!geographies) {
+        return null;
+      }
+
+      // Extract 119th Congressional District
+      const congressionalDistricts =
+        geographies['119th Congressional Districts'] ??
+        geographies['Congressional Districts'] ??
+        [];
+
+      if (congressionalDistricts.length === 0) {
+        return null;
+      }
+
+      const censusDistrict = congressionalDistricts[0];
+      const geoid = censusDistrict.GEOID as string;
+
+      if (!geoid || geoid.length < 4) {
+        return null;
+      }
+
+      // Parse GEOID: SSFFF (state FIPS + district number)
+      const stateFips = geoid.substring(0, 2);
+      const districtNum = geoid.substring(2).replace(/^0+/, '') || '0';
+      const districtId = `${stateFips}-${districtNum.padStart(2, '0')}`;
+
+      // Try to match against our local metadata for full district info
+      const localDistrict = districtBoundaryService.getDistrictById(districtId);
+
+      if (localDistrict) {
+        return {
+          found: true,
+          district: localDistrict,
+          confidence: 1.0,
+          method: 'census_api',
+        };
+      }
+
+      // Census returned a district but we don't have local metadata —
+      // construct a minimal DistrictBoundary from Census data
+      const stateAbbr = this.getStateAbbrFromFips(stateFips);
+      const fallbackDistrict: DistrictBoundary = {
+        id: districtId,
+        state_fips: stateFips,
+        state_name: this.getStateNameFromAbbr(stateAbbr),
+        state_abbr: stateAbbr,
+        district_num: districtNum.padStart(2, '0'),
+        name: `${stateAbbr}-${districtNum.padStart(2, '0')}`,
+        full_name: (censusDistrict.NAME as string) || `Congressional District ${districtNum}`,
+        centroid: [
+          parseFloat(censusDistrict.CENTLON as string) || longitude,
+          parseFloat(censusDistrict.CENTLAT as string) || latitude,
+        ],
+        bbox: [longitude - 1, latitude - 1, longitude + 1, latitude + 1],
+        area_sqm: (censusDistrict.AREALAND as number) || 0,
+        geoid: geoid,
+      };
+
+      return {
+        found: true,
+        district: fallbackDistrict,
+        confidence: 1.0,
+        method: 'census_api',
+      };
+    } catch (error) {
+      logger.warn('Census coordinate→district lookup failed', {
+        error: error instanceof Error ? error.message : 'Unknown',
+        latitude,
+        longitude,
+        service: 'DistrictLookupService',
+      });
+      return null;
     }
   }
 
@@ -351,6 +470,71 @@ class DistrictLookupService {
       });
       return null;
     }
+  }
+
+  /**
+   * Get state abbreviation from FIPS code
+   */
+  private getStateAbbrFromFips(fips: string): string {
+    const fipsToAbbr: Record<string, string> = {
+      '01': 'AL',
+      '02': 'AK',
+      '04': 'AZ',
+      '05': 'AR',
+      '06': 'CA',
+      '08': 'CO',
+      '09': 'CT',
+      '10': 'DE',
+      '11': 'DC',
+      '12': 'FL',
+      '13': 'GA',
+      '15': 'HI',
+      '16': 'ID',
+      '17': 'IL',
+      '18': 'IN',
+      '19': 'IA',
+      '20': 'KS',
+      '21': 'KY',
+      '22': 'LA',
+      '23': 'ME',
+      '24': 'MD',
+      '25': 'MA',
+      '26': 'MI',
+      '27': 'MN',
+      '28': 'MS',
+      '29': 'MO',
+      '30': 'MT',
+      '31': 'NE',
+      '32': 'NV',
+      '33': 'NH',
+      '34': 'NJ',
+      '35': 'NM',
+      '36': 'NY',
+      '37': 'NC',
+      '38': 'ND',
+      '39': 'OH',
+      '40': 'OK',
+      '41': 'OR',
+      '42': 'PA',
+      '44': 'RI',
+      '45': 'SC',
+      '46': 'SD',
+      '47': 'TN',
+      '48': 'TX',
+      '49': 'UT',
+      '50': 'VT',
+      '51': 'VA',
+      '53': 'WA',
+      '54': 'WV',
+      '55': 'WI',
+      '56': 'WY',
+      '60': 'AS',
+      '66': 'GU',
+      '69': 'MP',
+      '72': 'PR',
+      '78': 'VI',
+    };
+    return fipsToAbbr[fips] || 'XX';
   }
 
   /**
