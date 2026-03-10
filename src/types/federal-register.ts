@@ -12,6 +12,8 @@
  * API Documentation: https://www.federalregister.gov/developers/documentation/api/v1
  */
 
+import type { InsightBase } from '@/lib/intelligence/types';
+
 // Agency information from Federal Register
 export interface FederalRegisterAgency {
   id: number;
@@ -167,6 +169,8 @@ export interface FederalRegisterAPIDocument {
   comments_close_on?: string;
   effective_on?: string;
   regulation_id_number?: string;
+  body_html_url?: string;
+  raw_text_url?: string;
   agencies: Array<{
     raw_name: string;
     name: string;
@@ -176,4 +180,75 @@ export interface FederalRegisterAPIDocument {
     parent_id: number | null;
     slug: string;
   }>;
+}
+
+// ── Preamble Extraction Types ─────────────────────────────────────
+
+/** Text statistics computed before AI extraction (statistics-first rule). */
+export interface PreambleTextStats {
+  wordCount: number;
+  sectionCount: number;
+  dollarAmountMentions: number;
+  dateMentions: number;
+  entityMentions: number;
+  wasTruncated: boolean;
+}
+
+/** Industry or sector identified as impacted by the rule. */
+export interface PreambleIndustryImpact {
+  industry: string;
+  impactType:
+    | 'regulatory_burden'
+    | 'deregulatory_relief'
+    | 'new_requirement'
+    | 'modified_requirement';
+  description: string;
+  estimatedAffectedEntities: number | null;
+}
+
+/** Cost estimate extracted from the preamble. */
+export interface PreambleCostEstimate {
+  description: string;
+  amount: string;
+  amountLow: number | null;
+  amountHigh: number | null;
+  type: 'cost' | 'benefit' | 'transfer';
+  affectedParty: string;
+  timePeriod: string | null;
+}
+
+/** A compliance or effective date timeline entry. */
+export interface PreambleTimeline {
+  date: string;
+  event: string;
+  isEstimate: boolean;
+}
+
+/** A single structured fact extracted from a Federal Register preamble. */
+export interface PreambleFact {
+  category:
+    | 'industry_impact'
+    | 'cost_estimate'
+    | 'timeline'
+    | 'affected_entity'
+    | 'legal_authority'
+    | 'compliance_requirement';
+  summary: string;
+  sourceQuote: string | null;
+  confidence: number;
+}
+
+/** Full preamble extraction result. Extends InsightBase for consistency with other analyzers. */
+export interface PreambleExtractionInsight extends InsightBase {
+  documentNumber: string;
+  title: string;
+  agency: string;
+  documentType: 'proposed_rule' | 'final_rule' | 'notice' | 'executive_order';
+  publicationDate: string;
+  textStats: PreambleTextStats;
+  industryImpacts: PreambleIndustryImpact[];
+  costEstimates: PreambleCostEstimate[];
+  timelines: PreambleTimeline[];
+  facts: PreambleFact[];
+  narrative: string;
 }
