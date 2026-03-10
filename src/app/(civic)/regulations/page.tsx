@@ -244,6 +244,14 @@ export default function RegulationsPage() {
                   {item.summary && (
                     <p className="text-sm text-gray-600 line-clamp-2">{item.summary}</p>
                   )}
+                  {(item.type === 'proposed_rule' || item.type === 'final_rule') && (
+                    <Link
+                      href={`/regulations/${item.id}#preamble-analysis`}
+                      className="inline-block mt-2 text-xs font-medium border-2 border-gray-300 px-2 py-0.5 text-gray-500 hover:border-[#3ea2d4] hover:text-[#3ea2d4]"
+                    >
+                      Preamble analysis available
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

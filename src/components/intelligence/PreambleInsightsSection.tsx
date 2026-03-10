@@ -57,7 +57,10 @@ export function PreambleInsightsSection({ documentNumber }: PreambleInsightsSect
     data.facts.length;
 
   return (
-    <div className="bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] p-6">
+    <div
+      id="preamble-analysis"
+      className="bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] p-6"
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <h2 className="aicher-heading type-lg text-gray-900 dark:text-gray-100">
