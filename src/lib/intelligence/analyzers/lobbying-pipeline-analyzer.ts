@@ -41,12 +41,14 @@ import {
   MIN_FILINGS_LOBBYING,
   MIN_PEERS,
 } from '../statistics/civic-stats';
+import { classifyStance } from '../embeddings/stance-classifier';
 import type {
   LobbyingPipelineInsight,
   LobbyingOrganizationActivity,
   MatchedBill,
   TimelineAlignment,
   PeerComparison,
+  StanceClassification,
 } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -110,7 +112,7 @@ async function computeAndCache(
   }
 
   // 4. Compute statistics
-  const stats = computeStatistics(data);
+  const stats = await computeStatistics(data);
 
   // 5. Peer comparison
   const peer = await computePeerComparison(committeeCode, stats.totalSpending, committeeMapping);
@@ -239,7 +241,7 @@ interface ComputedStats {
   confidence: number;
 }
 
-function computeStatistics(data: ResolvedData): ComputedStats {
+async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
   const { matchedFilings } = data;
 
   // Group by organization
@@ -268,6 +270,9 @@ function computeStatistics(data: ResolvedData): ComputedStats {
     }))
     .sort((a, b) => b.totalSpending - a.totalSpending)
     .slice(0, 15);
+
+  // Classify stance for top organizations using their specific_issues text
+  await classifyOrganizationStances(topOrganizations, matchedFilings);
 
   const totalSpending = Array.from(orgMap.values()).reduce((sum, o) => sum + o.spending, 0);
   const organizationCount = orgMap.size;
@@ -310,6 +315,40 @@ function computeStatistics(data: ResolvedData): ComputedStats {
     issueAlignments,
     confidence,
   };
+}
+
+// ── Stance Classification ────────────────────────────────────────────
+
+async function classifyOrganizationStances(
+  orgs: LobbyingOrganizationActivity[],
+  filings: LobbyingFiling[]
+): Promise<void> {
+  // Build a map of org name → concatenated specific_issues text
+  const orgIssueText = new Map<string, string>();
+  for (const filing of filings) {
+    const issues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
+    if (issues.length === 0) continue;
+    const orgName = filing.client.name;
+    const existing = orgIssueText.get(orgName) ?? '';
+    orgIssueText.set(orgName, existing + ' ' + issues.join(' '));
+  }
+
+  // Classify stance for each top org (non-blocking, best-effort)
+  const stancePromises = orgs.map(async org => {
+    const text = orgIssueText.get(org.name)?.trim();
+    if (!text || text.length < 20) return; // Skip if insufficient text
+
+    try {
+      const stance = await classifyStance(text.substring(0, 1000), 'lobbying');
+      if (stance) {
+        org.stance = stance;
+      }
+    } catch {
+      // Non-fatal — org just won't have stance data
+    }
+  });
+
+  await Promise.all(stancePromises);
 }
 
 // ── Bill Fetching & Matching ─────────────────────────────────────────

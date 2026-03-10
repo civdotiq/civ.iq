@@ -9,6 +9,7 @@ import type {
   LobbyingPipelineInsight,
   LobbyingOrganizationActivity,
   TimelineAlignment,
+  StanceClassification,
 } from '@/lib/intelligence/types';
 
 /**
@@ -35,6 +36,30 @@ function formatCurrency(amount: number): string {
     return `$${(amount / 1_000).toFixed(0)}K`;
   }
   return `$${amount.toLocaleString()}`;
+}
+
+const STANCE_STYLES: Record<string, string> = {
+  'supports legislation': 'border-[#0a9338] text-[#0a9338]',
+  'opposes legislation': 'border-[#e11d07] text-[#e11d07]',
+  'seeks amendment': 'border-[#3ea2d4] text-[#3ea2d4]',
+  neutral: 'border-gray-500 text-gray-500',
+};
+
+const STANCE_LABELS: Record<string, string> = {
+  'supports legislation': 'Supports',
+  'opposes legislation': 'Opposes',
+  'seeks amendment': 'Amendment',
+  neutral: 'Neutral',
+};
+
+function StanceBadge({ stance }: { stance: StanceClassification }) {
+  const style = STANCE_STYLES[stance.stance] ?? 'border-gray-500 text-gray-500';
+  const label = STANCE_LABELS[stance.stance] ?? stance.stance;
+  return (
+    <span className={`inline-block border-2 px-1.5 py-0 type-xs aicher-heading ${style}`}>
+      {label}
+    </span>
+  );
 }
 
 export function InfluenceChainTable({ insight, className = '' }: InfluenceChainTableProps) {
@@ -81,8 +106,11 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
                   <th className="text-right py-2 pr-4 aicher-heading-wide type-xs text-gray-500">
                     Filings
                   </th>
-                  <th className="text-left py-2 aicher-heading-wide type-xs text-gray-500 hidden sm:table-cell">
+                  <th className="text-left py-2 pr-4 aicher-heading-wide type-xs text-gray-500 hidden sm:table-cell">
                     Issue areas
+                  </th>
+                  <th className="text-left py-2 aicher-heading-wide type-xs text-gray-500 hidden md:table-cell">
+                    Stance
                   </th>
                 </tr>
               </thead>
@@ -94,9 +122,12 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
                       {formatCurrency(org.totalSpending)}
                     </td>
                     <td className="py-2 pr-4 text-right text-gray-700">{org.filingCount}</td>
-                    <td className="py-2 text-gray-500 hidden sm:table-cell">
+                    <td className="py-2 pr-4 text-gray-500 hidden sm:table-cell">
                       {org.issueCodes.slice(0, 3).join(', ')}
                       {org.issueCodes.length > 3 && ` +${org.issueCodes.length - 3}`}
+                    </td>
+                    <td className="py-2 text-gray-500 hidden md:table-cell">
+                      {org.stance && <StanceBadge stance={org.stance} />}
                     </td>
                   </tr>
                 ))}

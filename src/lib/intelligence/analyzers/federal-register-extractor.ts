@@ -19,6 +19,8 @@ import logger from '@/lib/logging/simple-logger';
 import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { withTimeout, ANALYZER_TIMEOUT_MS, generateInsightNarrative } from './shared';
+import { extractEntities } from '@/lib/intelligence/embeddings/civic-ner';
+import type { CivicEntity } from '@/lib/intelligence/embeddings/types';
 import {
   getDocumentMetadata,
   getPreambleText,
@@ -116,7 +118,15 @@ async function computeAndCache(
     wasTruncated: preambleText.length > MAX_PREAMBLE_CHARS,
   };
 
-  // 5. Attempt AI extraction
+  // 5a. NER entity extraction (non-critical, best-effort)
+  let entities: CivicEntity[] = [];
+  try {
+    entities = await extractEntities(truncatedText, documentNumber);
+  } catch {
+    // NER is non-critical — continue without entities
+  }
+
+  // 5b. Attempt AI extraction
   const extraction = await attemptAIExtraction(doc, agency, documentType, truncatedText, stats);
 
   // 6. Generate narrative (uses shared utility for retry + reading level validation)
@@ -148,6 +158,7 @@ async function computeAndCache(
     timelines: extraction.timelines,
     facts: extraction.facts,
     narrative,
+    entities: entities.length > 0 ? entities : undefined,
     confidence,
     dataAsOf: doc.publication_date,
     methodology: methodologyParts.join(' '),

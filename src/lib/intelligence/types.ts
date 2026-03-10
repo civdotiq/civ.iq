@@ -165,6 +165,8 @@ export interface LobbyingOrganizationActivity {
   filingCount: number;
   /** LDA issue codes appearing in their filings. */
   issueCodes: string[];
+  /** Stance toward legislation detected via zero-shot NLI, if available. */
+  stance?: StanceClassification;
 }
 
 /** A bill matched to lobbied issues via policyArea alignment. */
@@ -442,6 +444,18 @@ export interface BillLobbyingSimilarity {
   matches: LobbyingSimilarityMatch[];
   averageSimilarity: number;
   hasStrongMatches: boolean;
+}
+
+// ── Stance Classification ────────────────────────────────────────────
+
+/**
+ * Stance classification from zero-shot NLI model.
+ * Detects whether text supports/opposes legislation or regulation.
+ */
+export interface StanceClassification {
+  stance: string;
+  confidence: number;
+  context: 'lobbying' | 'regulatory';
 }
 
 // ── District Intelligence Summary ────────────────────────────────────

@@ -11,4 +11,12 @@ export {
   DEFAULT_MAX_SECTORS,
 } from './cosine-similarity';
 export { SECTOR_DESCRIPTIONS } from './sector-descriptions';
-export type { SectorClassification, SectorEmbeddingEntry } from './types';
+export type {
+  SectorClassification,
+  SectorEmbeddingEntry,
+  ZeroShotResult,
+  CivicEntity,
+} from './types';
+export { classifyBillSectorsZeroShot, classifyZeroShot } from './zero-shot-classifier';
+export { classifyStance } from './stance-classifier';
+export { extractEntities } from './civic-ner';

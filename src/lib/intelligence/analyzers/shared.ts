@@ -22,6 +22,7 @@ import {
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { classifyBillSectors } from '@/lib/intelligence/embeddings';
+import { classifyBillSectorsZeroShot } from '@/lib/intelligence/embeddings';
 
 // ── Timeout Wrapper ─────────────────────────────────────────────────
 
@@ -76,10 +77,11 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
 // ── Bill Sector Classification ──────────────────────────────────────
 
 /**
- * Get industry sectors for a bill. Three-tier fallback:
+ * Get industry sectors for a bill. Four-tier fallback:
  * 1. Cached AI summary (fastest, most accurate)
- * 2. Semantic embedding classification (ML-based, handles novel titles)
- * 3. Keyword-based inference (static, always works)
+ * 2. Semantic embedding classification (cosine similarity, handles novel titles)
+ * 3. Zero-shot NLI classification (NLI model, understands natural language)
+ * 4. Keyword-based inference (static, always works)
  */
 export async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
   // Step 1: Cached AI summary
@@ -99,10 +101,20 @@ export async function getBillSectors(billId: string, billTitle: string): Promise
       return embeddingResults.map(r => r.sector);
     }
   } catch {
-    // Embedding failed — fall back to keywords
+    // Embedding failed — try zero-shot
   }
 
-  // Step 3: Keyword-based inference
+  // Step 3: Zero-shot NLI classification
+  try {
+    const zeroShotResults = await classifyBillSectorsZeroShot(billTitle);
+    if (zeroShotResults.length > 0) {
+      return zeroShotResults.map(r => r.sector);
+    }
+  } catch {
+    // Zero-shot failed — fall back to keywords
+  }
+
+  // Step 4: Keyword-based inference
   return inferSectorsFromTitle(billTitle);
 }
 

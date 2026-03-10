@@ -14,6 +14,7 @@ import type {
   PreambleCostEstimate,
   PreambleTimeline,
 } from '@/types/federal-register';
+import type { CivicEntity } from '@/lib/intelligence/embeddings/types';
 
 interface PreambleInsightsSectionProps {
   documentNumber: string;
@@ -50,6 +51,7 @@ export function PreambleInsightsSection({ documentNumber }: PreambleInsightsSect
   const hasCosts = data.costEstimates.length > 0;
   const hasImpacts = data.industryImpacts.length > 0;
   const hasTimelines = data.timelines.length > 0;
+  const hasEntities = (data.entities?.length ?? 0) > 0;
   const totalExtracted =
     data.costEstimates.length +
     data.industryImpacts.length +
@@ -102,6 +104,9 @@ export function PreambleInsightsSection({ documentNumber }: PreambleInsightsSect
 
       {/* Timeline */}
       {hasTimelines && <TimelineList timelines={data.timelines} />}
+
+      {/* Entities */}
+      {hasEntities && <EntitiesSection entities={data.entities!} />}
 
       {/* Data date */}
       <p className="type-xs text-gray-400 dark:text-gray-500 mt-3">
@@ -244,6 +249,65 @@ function TimelineList({ timelines }: { timelines: PreambleTimeline[] }) {
             </span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+const ENTITY_TYPE_STYLES: Record<CivicEntity['type'], string> = {
+  ORG: 'border-[#3ea2d4] text-[#3ea2d4]',
+  PER: 'border-gray-700 text-gray-700 dark:border-gray-300 dark:text-gray-300',
+  LOC: 'border-[#0a9338] text-[#0a9338]',
+  MONEY: 'border-[#e11d07] text-[#e11d07]',
+  DATE: 'border-gray-500 text-gray-500',
+  MISC: 'border-gray-400 text-gray-400',
+};
+
+const ENTITY_TYPE_LABELS: Record<CivicEntity['type'], string> = {
+  ORG: 'Organizations',
+  PER: 'People',
+  LOC: 'Locations',
+  MONEY: 'Dollar Amounts',
+  DATE: 'Dates',
+  MISC: 'Other',
+};
+
+function EntitiesSection({ entities }: { entities: CivicEntity[] }) {
+  const grouped = new Map<CivicEntity['type'], CivicEntity[]>();
+  for (const entity of entities) {
+    const list = grouped.get(entity.type) ?? [];
+    list.push(entity);
+    grouped.set(entity.type, list);
+  }
+
+  // Display order: ORG, PER, LOC, MONEY, DATE, MISC
+  const displayOrder: CivicEntity['type'][] = ['ORG', 'PER', 'LOC', 'MONEY', 'DATE', 'MISC'];
+
+  return (
+    <div className="mb-4">
+      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+        Extracted Entities
+      </h3>
+      <div className="space-y-2">
+        {displayOrder
+          .filter(type => grouped.has(type))
+          .map(type => (
+            <div key={type}>
+              <div className="type-xs text-gray-500 dark:text-gray-400 mb-1">
+                {ENTITY_TYPE_LABELS[type]}
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {grouped.get(type)!.map((entity, i) => (
+                  <span
+                    key={`${entity.text}-${i}`}
+                    className={`inline-block border-2 px-2 py-0.5 type-xs ${ENTITY_TYPE_STYLES[type]}`}
+                  >
+                    {entity.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
       </div>
     </div>
   );

@@ -34,8 +34,10 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
 
 // Mock embedding classifier
 const mockClassifyBillSectors = jest.fn();
+const mockClassifyBillSectorsZeroShot = jest.fn();
 jest.mock('@/lib/intelligence/embeddings', () => ({
   classifyBillSectors: (...args: unknown[]) => mockClassifyBillSectors(...args),
+  classifyBillSectorsZeroShot: (...args: unknown[]) => mockClassifyBillSectorsZeroShot(...args),
 }));
 
 // Mock ReadingLevelValidator
@@ -164,35 +166,61 @@ describe('shared intelligence utilities', () => {
       expect(mockClassifyBillSectors).toHaveBeenCalledWith('CHIPS and Science Act');
     });
 
-    it('falls back to keywords when embeddings return empty (step 3)', async () => {
+    it('uses zero-shot when embeddings return empty (step 3)', async () => {
       mockGetSummary.mockResolvedValue(null);
       mockClassifyBillSectors.mockResolvedValue([]);
+      mockClassifyBillSectorsZeroShot.mockResolvedValue([{ sector: 'Health', confidence: 0.72 }]);
+
+      const sectors = await getBillSectors('HR1234-119', 'Medicare Health Improvement Act');
+      expect(sectors).toEqual(['Health']);
+      expect(mockClassifyBillSectorsZeroShot).toHaveBeenCalledWith(
+        'Medicare Health Improvement Act'
+      );
+    });
+
+    it('falls back to keywords when zero-shot returns empty (step 4)', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([]);
+      mockClassifyBillSectorsZeroShot.mockResolvedValue([]);
 
       const sectors = await getBillSectors('HR1234-119', 'Medicare Health Improvement Act');
       expect(sectors.length).toBeGreaterThan(0);
       expect(sectors).toContain('HEALTH');
     });
 
-    it('falls back to keywords when embeddings throw (step 3)', async () => {
+    it('falls back to keywords when embeddings throw (step 3 to step 4)', async () => {
       mockGetSummary.mockResolvedValue(null);
       mockClassifyBillSectors.mockRejectedValue(new Error('Model failed'));
+      mockClassifyBillSectorsZeroShot.mockResolvedValue([]);
 
       const sectors = await getBillSectors('HR1234-119', 'Defense Authorization Act');
       expect(sectors).toContain('DEFENSE');
     });
 
-    it('falls back through all 3 steps gracefully', async () => {
+    it('falls back through all 4 steps gracefully', async () => {
       mockGetSummary.mockRejectedValue(new Error('Redis error'));
       mockClassifyBillSectors.mockRejectedValue(new Error('WASM error'));
+      mockClassifyBillSectorsZeroShot.mockRejectedValue(new Error('NLI error'));
 
       const sectors = await getBillSectors('HR1234-119', 'Defense Authorization Act');
-      // Step 3 keywords should still work
+      // Step 4 keywords should still work
       expect(sectors).toContain('DEFENSE');
+    });
+
+    it('skips zero-shot when embeddings succeed', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([
+        { sector: 'Communications/Electronics', confidence: 0.72 },
+      ]);
+
+      await getBillSectors('HR1234-119', 'CHIPS Act');
+      expect(mockClassifyBillSectorsZeroShot).not.toHaveBeenCalled();
     });
 
     it('returns empty array when all steps fail for unrecognized title', async () => {
       mockGetSummary.mockResolvedValue(null);
       mockClassifyBillSectors.mockResolvedValue([]);
+      mockClassifyBillSectorsZeroShot.mockResolvedValue([]);
 
       const sectors = await getBillSectors('HR1234-119', 'Resolution on procedural matters');
       expect(sectors).toEqual([]);

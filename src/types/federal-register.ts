@@ -251,4 +251,6 @@ export interface PreambleExtractionInsight extends InsightBase {
   timelines: PreambleTimeline[];
   facts: PreambleFact[];
   narrative: string;
+  /** Named entities extracted via local BERT NER model, if available. */
+  entities?: import('@/lib/intelligence/embeddings/types').CivicEntity[];
 }

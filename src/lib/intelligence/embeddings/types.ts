@@ -22,3 +22,22 @@ export interface SectorEmbeddingEntry {
   /** 384-dimensional normalized embedding vector. */
   embedding: number[];
 }
+
+/**
+ * A zero-shot classification result from NLI-based inference.
+ */
+export interface ZeroShotResult {
+  label: string;
+  score: number;
+}
+
+/**
+ * An entity extracted from text via NER or regex augmentation.
+ */
+export interface CivicEntity {
+  text: string;
+  type: 'ORG' | 'PER' | 'LOC' | 'MISC' | 'MONEY' | 'DATE';
+  confidence: number;
+  start: number;
+  end: number;
+}
