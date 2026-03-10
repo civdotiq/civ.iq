@@ -6,6 +6,7 @@ import useSWR from 'swr';
 import { AlertCircle, RefreshCw, ExternalLink, FileText } from 'lucide-react';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
+import { PreambleInsightsSection } from '@/components/intelligence/PreambleInsightsSection';
 
 interface FederalRegisterDocument {
   title: string;
@@ -264,6 +265,9 @@ export default function RegulationDetailPage() {
                 </a>
               )}
             </div>
+
+            {/* Preamble Intelligence */}
+            <PreambleInsightsSection documentNumber={documentNumber} />
 
             {/* Related Committee Hearings */}
             {hearingsData && hearingsData.hearings.length > 0 && (
