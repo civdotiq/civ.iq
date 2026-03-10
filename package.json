@@ -52,6 +52,8 @@
     "generate-district-neighbors": "tsx scripts/generate-district-neighbors.ts",
     "process-election-data": "tsx scripts/process-election-data.ts",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
+    "generate:embeddings": "tsx scripts/generate-sector-embeddings.ts",
+    "collect:training-data": "tsx scripts/collect-training-data.ts",
     "security:audit": "[ -f package-lock.json ] && npm audit --audit-level=moderate || echo 'Skipping audit: no lockfile'",
     "security:full": "npm run security:audit",
     "preinstall": "echo 'Skipping security audit for deployment'",
@@ -78,6 +80,7 @@
   "dependencies": {
     "@ai-sdk/google": "3.0.29",
     "@heroicons/react": "2.2.0",
+    "@huggingface/transformers": "3.8.1",
     "@mapbox/mbtiles": "0.12.1",
     "@mapbox/vector-tile": "2.0.4",
     "@types/d3": "^7.4.3",

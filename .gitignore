@@ -54,6 +54,10 @@ data-sources/
 # Large data files
 scripts/data/
 
+# ML training data (regenerated per-cycle, too large for repo)
+training-data/*.json
+models/
+
 # Backup files
 *.backup
 *.bak

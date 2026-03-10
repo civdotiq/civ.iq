@@ -8,6 +8,7 @@
 export {
   correlation,
   peerComparison,
+  peerComparisonWithAnomalies,
   confidenceScore,
   meetsSampleSize,
   mean,
@@ -21,6 +22,8 @@ export {
   MIN_PEERS,
 } from './civic-stats';
 
+export { detectAnomalies, ANOMALY_THRESHOLD } from './anomaly-detection';
+
 export type { CorrelationMethod, CorrelationResult } from './civic-stats';
 
-export type { PeerComparison } from './types';
+export type { PeerComparison, AnomalyFlag, AnomalyResult } from './types';

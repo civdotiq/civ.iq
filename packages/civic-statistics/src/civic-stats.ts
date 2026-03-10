@@ -24,7 +24,8 @@ import {
   quantileRank,
 } from 'simple-statistics';
 
-import type { PeerComparison } from './types';
+import type { PeerComparison, AnomalyResult } from './types';
+import { detectAnomalies } from './anomaly-detection';
 
 // ── Minimum Sample Sizes ─────────────────────────────────────────────
 
@@ -204,3 +205,39 @@ export function meetsSampleSize(
  * for convenience so callers don't need a separate import.
  */
 export { mean, sampleStandardDeviation };
+
+// ── Peer Comparison with Anomaly Detection ───────────────────────────
+
+/**
+ * Compare a value against a peer group AND detect per-dimension anomalies.
+ *
+ * Extends `peerComparison()` by accepting per-dimension data for both
+ * the subject and peers, running Modified Z-Score anomaly detection,
+ * and attaching the result to the returned PeerComparison.
+ *
+ * If sector-level data is not provided, behaves identically to `peerComparison()`.
+ */
+export function peerComparisonWithAnomalies(
+  value: number,
+  peerValues: number[],
+  peerGroupLabel: string,
+  sectorData?: {
+    /** The subject's per-sector values. */
+    subject: Map<string, number>;
+    /** Each peer's per-sector values. Key = sector, value = array of peer amounts. */
+    peers: Map<string, number[]>;
+    /** Optional anomaly threshold override. */
+    threshold?: number;
+  }
+): (PeerComparison & { anomalies?: AnomalyResult }) | null {
+  const base = peerComparison(value, peerValues, peerGroupLabel);
+  if (!base) return null;
+
+  if (!sectorData) return base;
+
+  const anomalies = detectAnomalies(sectorData.subject, sectorData.peers, {
+    threshold: sectorData.threshold,
+  });
+
+  return { ...base, anomalies };
+}

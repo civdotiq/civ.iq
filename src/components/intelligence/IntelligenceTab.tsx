@@ -17,12 +17,15 @@ import {
 import { VoteShiftTimeline } from './VoteShiftTimeline';
 import { InfluenceChainTable } from './InfluenceChainTable';
 import { StockOverlapTable } from './StockOverlapTable';
+import { VotePredictionCard } from './VotePredictionCard';
+import { InfluenceClusterChart } from './InfluenceClusterChart';
 import type {
   FinanceJurisdictionInsight,
   VoteFinanceInsight,
   TemporalVoteInsight,
   LobbyingPipelineInsight,
   StockCommitteeInsight,
+  VotePredictionInsight,
 } from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
@@ -83,6 +86,17 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     }
   );
 
+  // Vote prediction (ML-based) loaded independently
+  const { data: votePredictionData, isLoading: votePredictionLoading } =
+    useSWR<VotePredictionInsight>(
+      `/api/intelligence/representative/${bioguideId}/vote-prediction`,
+      fetcher,
+      {
+        revalidateOnFocus: false,
+        dedupingInterval: 300000,
+      }
+    );
+
   if (isLoading) {
     return <IntelligenceLoading />;
   }
@@ -101,9 +115,17 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const temporal = temporalData?.quarters ? temporalData : null;
   const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
   const stock = stockData?.flaggedTrades ? stockData : null;
-  const hasInsights = financeJurisdiction || voteFinance || temporal || lobbying || stock;
+  const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
+  const hasInsights =
+    financeJurisdiction || voteFinance || temporal || lobbying || stock || votePrediction;
 
-  if (!hasInsights && !temporalLoading && !lobbyingLoading && !stockLoading) {
+  if (
+    !hasInsights &&
+    !temporalLoading &&
+    !lobbyingLoading &&
+    !stockLoading &&
+    !votePredictionLoading
+  ) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
@@ -160,6 +182,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         </>
       )}
 
+      {votePrediction && <VotePredictionCard insight={votePrediction} />}
+
       {stock && (
         <>
           <StockOverlapTable insight={stock} />
@@ -170,6 +194,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           />
         </>
       )}
+
+      <InfluenceClusterChart highlightBioguideId={bioguideId} />
 
       {lobbyingLoading && !lobbying && primaryCommittee && (
         <div className="border-2 border-gray-200 p-6 animate-pulse">

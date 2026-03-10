@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CommitteeSearch } from '@/features/influence/components/CommitteeSearch';
+import { InfluenceClusterChart } from '@/components/intelligence/InfluenceClusterChart';
 
 function InfluencePageContent() {
   const searchParams = useSearchParams();
@@ -78,6 +79,11 @@ function InfluencePageContent() {
             </div>
           </div>
         )}
+
+        {/* Funding Influence Clusters */}
+        <div className="mt-8">
+          <InfluenceClusterChart />
+        </div>
 
         {/* Source */}
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-6">

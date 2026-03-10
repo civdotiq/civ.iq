@@ -213,6 +213,46 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
       {/* AI narrative — the full explanation */}
       <p className="type-sm text-gray-600 leading-relaxed">{data.narrative}</p>
 
+      {/* Lobbying Language Similarity */}
+      {data.lobbyingSimilarity?.hasStrongMatches && data.lobbyingSimilarity.matches.length > 0 && (
+        <div className="mt-4">
+          <h4 className="aicher-heading type-sm text-gray-900 mb-2">
+            Lobbying Language Similarity
+          </h4>
+          <p className="type-xs text-gray-500 mb-2">
+            This bill&apos;s provisions show semantic overlap with the following lobbying
+            disclosures:
+          </p>
+          <div className="border-2 border-gray-200 divide-y divide-gray-200">
+            {data.lobbyingSimilarity.matches
+              .filter(m => m.similarity >= 0.55)
+              .slice(0, 5)
+              .map(match => (
+                <div key={match.filingId} className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="type-sm font-medium text-gray-900">
+                        {(match.similarity * 100).toFixed(0)}% match
+                      </span>
+                      <span className="type-sm text-gray-700"> &mdash; {match.client}</span>
+                    </div>
+                    <span className="type-xs text-gray-400 whitespace-nowrap ml-2">
+                      ${match.income.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="type-xs text-gray-500 mt-1">
+                    Filed by: {match.registrant} &middot; {match.period}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <p className="type-xs text-gray-400 mt-2">
+            Similarity measures how closely the bill&apos;s language aligns with lobbying issue
+            descriptions. High similarity does not imply the bill was written by lobbyists.
+          </p>
+        </div>
+      )}
+
       {/* CBO fiscal impact */}
       {data.fiscalImpact && (
         <p className="type-xs text-gray-500 mt-2 border-l-2 border-gray-300 pl-3">

@@ -16,6 +16,7 @@ import type { GovernmentEntityResolution, TickerResolution } from '@civiq/entity
 
 // Re-export types from packages so existing consumers of this file keep working
 export type { PeerComparison, GovernmentEntityResolution, TickerResolution };
+export type { AnomalyFlag, AnomalyResult } from '@civiq/civic-statistics';
 
 // ── Base Types ───────────────────────────────────────────────────────
 
@@ -375,6 +376,72 @@ export interface BillIntelligenceInsight extends InsightBase {
   bipartisanCosponsorship?: boolean;
   /** Top lobbying organizations by name. */
   topLobbyingOrgs?: string[];
+  /** Lobbying filings with high language similarity to this bill. */
+  lobbyingSimilarity?: BillLobbyingSimilarity;
+}
+
+// ── Vote Prediction (ML-based) ──────────────────────────────────────
+
+/**
+ * ML-derived vote prediction insight. Uses a trained XGBoost model to
+ * predict how a legislator would vote based on their donor profile.
+ * The key metric is the independence score: how often the legislator
+ * votes against their donor-predicted position.
+ */
+export interface VotePredictionInsight extends InsightBase {
+  bioguideId: string;
+  independenceScore: {
+    /** How often the legislator voted against model prediction (0-1). */
+    score: number;
+    /** Number of votes where model was confident. */
+    confidentPredictions: number;
+    /** Number of times legislator defied prediction. */
+    deviations: number;
+    /** Peer comparison — percentile among chamber peers. */
+    peerPercentile: number;
+  };
+  /** Test set accuracy of the model (disclosed for transparency). */
+  modelAccuracy: number;
+  peerComparison: PeerComparison;
+  /** Top 5 bills where legislator deviated from prediction. */
+  notableDeviations: Array<{
+    billId: string;
+    billTitle: string;
+    predictedVote: 'yea' | 'nay';
+    actualVote: 'yea' | 'nay';
+    yeaProbability: number;
+    billSectors: IndustrySector[];
+  }>;
+  /** Top 3 model features driving this legislator's predictions. */
+  topPredictiveFactors: Array<{
+    feature: string;
+    humanLabel: string;
+    importance: number;
+  }>;
+  narrative: string;
+}
+
+// ── Bill Lobbying Similarity ────────────────────────────────────────
+
+/**
+ * Semantic similarity between bill text and lobbying filing text.
+ * Surfaces when legislative language mirrors what lobbyists asked for.
+ */
+export interface LobbyingSimilarityMatch {
+  filingId: string;
+  client: string;
+  registrant: string;
+  issueText: string;
+  similarity: number;
+  period: string;
+  income: number;
+}
+
+export interface BillLobbyingSimilarity {
+  billId: string;
+  matches: LobbyingSimilarityMatch[];
+  averageSimilarity: number;
+  hasStrongMatches: boolean;
 }
 
 // ── District Intelligence Summary ────────────────────────────────────

@@ -24,6 +24,8 @@ import { aggregateByIndustrySector, type IndustrySector } from '@/lib/fec/indust
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
+import { computeBillLobbyingSimilarity } from '../embeddings/bill-lobbying-similarity';
+import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
@@ -108,28 +110,35 @@ async function computeAndCache(
   const cycle = getCurrentElectionCycle();
   const cosponsorsToAnalyze = bill.cosponsors.filter(c => !c.withdrawn).slice(0, MAX_COSPONSORS);
 
-  const [sponsorAnalysis, financialSummary, enhancedRep, cosponsorResults, lobbyingData] =
-    await Promise.all([
-      analyzeMemberSectorDonations(
-        sponsorBioguide,
-        bill.sponsor.representative.name,
-        bill.sponsor.representative.party,
-        affectedSectors
-      ),
-      fetchFinancialSummary(sponsorBioguide, cycle),
-      fetchEnhancedRepresentative(sponsorBioguide),
-      Promise.all(
-        cosponsorsToAnalyze.map(c =>
-          analyzeMemberSectorDonations(
-            c.representative.bioguideId,
-            c.representative.name,
-            c.representative.party,
-            affectedSectors
-          ).catch(() => null)
-        )
-      ),
-      getRelatedLobbyingData(bill.committees),
-    ]);
+  const [
+    sponsorAnalysis,
+    financialSummary,
+    enhancedRep,
+    cosponsorResults,
+    lobbyingData,
+    lobbyingSimilarity,
+  ] = await Promise.all([
+    analyzeMemberSectorDonations(
+      sponsorBioguide,
+      bill.sponsor.representative.name,
+      bill.sponsor.representative.party,
+      affectedSectors
+    ),
+    fetchFinancialSummary(sponsorBioguide, cycle),
+    fetchEnhancedRepresentative(sponsorBioguide),
+    Promise.all(
+      cosponsorsToAnalyze.map(c =>
+        analyzeMemberSectorDonations(
+          c.representative.bioguideId,
+          c.representative.name,
+          c.representative.party,
+          affectedSectors
+        ).catch(() => null)
+      )
+    ),
+    getRelatedLobbyingData(bill.committees),
+    fetchLobbyingSimilarity(billId, bill.title, policyArea).catch(() => null),
+  ]);
 
   const validCosponsorResults = cosponsorResults.filter(
     (r): r is NonNullable<typeof r> => r !== null
@@ -221,6 +230,7 @@ async function computeAndCache(
     bipartisanCosponsorship: storyContext.bipartisanCosponsorship,
     topLobbyingOrgs:
       storyContext.topLobbyingOrgNames.length > 0 ? storyContext.topLobbyingOrgNames : undefined,
+    lobbyingSimilarity: lobbyingSimilarity ?? undefined,
   };
 
   // 9. Cache
@@ -462,6 +472,57 @@ async function getRelatedLobbyingData(
     .map(o => o.name);
 
   return { lobbyingSpending: totalSpending, lobbyingOrgs: totalOrgs, topOrgNames };
+}
+
+// ── Lobbying Similarity ──────────────────────────────────────────────
+
+async function fetchLobbyingSimilarity(billId: string, billTitle: string, policyArea: string) {
+  try {
+    // Fetch recent lobbying filings for the bill's policy area
+    const currentYear = new Date().getFullYear();
+    const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
+
+    // Fetch last 4 quarters
+    const filings = [];
+    let year = currentYear;
+    let quarter = currentQuarter;
+    for (let i = 0; i < 4; i++) {
+      try {
+        const qFilings = await senateLobbyingAPI.fetchFilingsByQuarter(year, quarter);
+        filings.push(...qFilings);
+      } catch {
+        // Skip failed quarters
+      }
+      quarter--;
+      if (quarter < 1) {
+        quarter = 4;
+        year--;
+      }
+    }
+
+    if (filings.length === 0) return null;
+
+    // Use bill title as proxy for bill text (avoids expensive text fetch)
+    const formattedFilings = filings
+      .filter(f => f.specific_issues?.length)
+      .slice(0, 100)
+      .map(f => ({
+        id: f.id,
+        client: f.client.name,
+        registrant: f.registrant.name,
+        specificIssues: Array.isArray(f.specific_issues) ? f.specific_issues : [],
+        income: f.income ?? 0,
+        period: `${f.filingPeriod} ${f.filingYear}`,
+      }));
+
+    return computeBillLobbyingSimilarity(billId, billTitle, formattedFilings);
+  } catch (error) {
+    logger.warn('[BillIntelligence] Lobbying similarity failed', {
+      billId,
+      error: (error as Error).message,
+    });
+    return null;
+  }
 }
 
 // ── Narrative Generation ─────────────────────────────────────────────

@@ -1,0 +1,19 @@
+# Python ML dependencies for CIV.IQ training pipelines
+# These are dev-only — they never run in the Next.js application.
+#
+# Install: pip install -r requirements-ml.txt
+# Or with venv: python -m venv .venv && source .venv/bin/activate && pip install -r requirements-ml.txt
+
+# Phase 2: Vote Prediction Model Training
+xgboost>=2.0.0
+scikit-learn>=1.4.0
+onnxmltools>=1.12.0
+skl2onnx>=1.16.0
+shap>=0.44.0
+
+# Phase 4: Influence Clustering
+umap-learn>=0.5.5
+hdbscan>=0.8.33
+
+# Shared
+numpy>=1.26.0

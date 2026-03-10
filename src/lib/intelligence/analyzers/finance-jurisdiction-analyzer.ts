@@ -26,7 +26,7 @@ import {
   type CommitteeMapping,
 } from '@/lib/connections/committee-agency-map';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
-import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
+import { peerComparisonWithAnomalies, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
@@ -91,8 +91,18 @@ async function computeAndCache(
   // 3. Compute statistics
   const stats = computeStatistics(data);
 
-  // 4. Peer comparison (from cached peer overlap scores)
-  const peer = await computePeerComparison(bioguideId, stats.overlapScore, data.committeeCodes);
+  // 4. Peer comparison (from cached peer overlap scores) + anomaly detection
+  // Convert IndustrySector keys to strings for the anomaly detector
+  const sectorDonationsStr = new Map<string, number>();
+  for (const [sector, amount] of data.sectorDonations) {
+    sectorDonationsStr.set(sector as string, amount);
+  }
+  const peer = await computePeerComparison(
+    bioguideId,
+    stats.overlapScore,
+    data.committeeCodes,
+    sectorDonationsStr
+  );
 
   // 4b. Recompute confidence with actual peer count
   if (peer) {
@@ -136,7 +146,12 @@ async function computeAndCache(
 
   // 6. Cache
   await cacheInsight(cacheKey, insight);
-  await cacheOverlapScore(bioguideId, stats.overlapScore, data.committeeCodes);
+  await cacheOverlapScore(
+    bioguideId,
+    stats.overlapScore,
+    data.committeeCodes,
+    data.sectorDonations
+  );
 
   return insight;
 }
@@ -285,31 +300,52 @@ function overlapScoreCacheKey(committeeCode: string, bioguideId: string): string
   return `overlap-score:${committeeCode}:${bioguideId}`;
 }
 
+/** Cache key for per-sector donation amounts for a legislator. */
+function sectorDonationsCacheKey(bioguideId: string): string {
+  return `sector-donations:${bioguideId}`;
+}
+
 /**
- * Store this legislator's overlap score for future peer comparisons.
+ * Store this legislator's overlap score and per-sector donations for
+ * future peer comparisons and anomaly detection.
  */
 async function cacheOverlapScore(
   bioguideId: string,
   overlapScore: number,
-  committeeCodes: string[]
+  committeeCodes: string[],
+  sectorDonations: Map<IndustrySector, number>
 ): Promise<void> {
-  for (const code of committeeCodes) {
-    try {
-      await getRedisCache().set(overlapScoreCacheKey(code, bioguideId), overlapScore, CACHE_TTL);
-    } catch {
-      // Non-fatal
-    }
+  const redis = getRedisCache();
+
+  // Build per-sector donations object for anomaly detection
+  const sectorObj: Record<string, number> = {};
+  for (const [sector, amount] of sectorDonations) {
+    sectorObj[sector as string] = amount;
   }
+
+  // All writes are independent — execute in parallel
+  const writes = [
+    ...committeeCodes.map(code =>
+      redis.set(overlapScoreCacheKey(code, bioguideId), overlapScore, CACHE_TTL).catch(() => {})
+    ),
+    redis.set(sectorDonationsCacheKey(bioguideId), sectorObj, CACHE_TTL).catch(() => {}),
+  ];
+
+  await Promise.all(writes);
 }
 
 /**
  * Compute peer comparison by looking up cached overlap scores
  * for other members of the same committees.
+ *
+ * When per-sector funding data is available for both the subject and peers,
+ * also runs Modified Z-Score anomaly detection to flag unusual sector funding.
  */
 async function computePeerComparison(
   bioguideId: string,
   overlapScore: number,
-  committeeCodes: string[]
+  committeeCodes: string[],
+  subjectSectorDonations?: Map<string, number>
 ): Promise<PeerComparison | null> {
   if (!committeeCodes.length) return null;
 
@@ -334,7 +370,74 @@ async function computePeerComparison(
       return null;
     }
 
-    return peerComparison(overlapScore, peerScores, label);
+    // Build per-sector peer data for anomaly detection
+    let sectorData:
+      | {
+          subject: Map<string, number>;
+          peers: Map<string, number[]>;
+        }
+      | undefined;
+
+    if (subjectSectorDonations && subjectSectorDonations.size > 0) {
+      // Extract peer bioguide IDs from cache keys (pattern: overlap-score:{committee}:{bioguideId})
+      const peerBioguideIds = peerKeys
+        .map(k => k.split(':').pop())
+        .filter((id): id is string => Boolean(id));
+
+      const peerSectorData = await collectPeerSectorData(peerBioguideIds);
+      if (peerSectorData) {
+        sectorData = {
+          subject: subjectSectorDonations,
+          peers: peerSectorData,
+        };
+      }
+    }
+
+    return peerComparisonWithAnomalies(overlapScore, peerScores, label, sectorData);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Collect per-sector funding data from cached peer donation amounts.
+ *
+ * Uses per-sector donation caches (stored via `sectorDonationsCacheKey`)
+ * to get the actual per-sector amounts for each peer. Caller is responsible
+ * for filtering peerBioguideIds to same-committee peers and excluding the subject.
+ *
+ * Returns a map of sector → array of peer amounts, or null if insufficient data.
+ */
+async function collectPeerSectorData(
+  peerBioguideIds: string[]
+): Promise<Map<string, number[]> | null> {
+  try {
+    const redis = getRedisCache();
+
+    // Fetch per-sector donation caches for all peers
+    const sectorCacheKeys = peerBioguideIds.map(id => sectorDonationsCacheKey(id));
+    const peerSectorCaches = await redis.mget<Record<string, number>>(sectorCacheKeys);
+
+    const sectorMap = new Map<string, number[]>();
+    let peersWithData = 0;
+
+    for (const sectorObj of peerSectorCaches) {
+      if (!sectorObj) continue;
+      peersWithData++;
+
+      for (const [sector, amount] of Object.entries(sectorObj)) {
+        if (!sectorMap.has(sector)) {
+          sectorMap.set(sector, []);
+        }
+        sectorMap.get(sector)!.push(amount);
+      }
+    }
+
+    if (peersWithData < MIN_PEERS) return null;
+
+    // Only return if we have enough peers in at least one sector
+    const hasEnoughData = Array.from(sectorMap.values()).some(v => v.length >= MIN_PEERS);
+    return hasEnoughData ? sectorMap : null;
   } catch {
     return null;
   }
@@ -362,6 +465,13 @@ async function generateNarrative(
       `(${peer.peerCount} peers, percentile rank: ${peer.percentileRank}).`
     : 'No peer comparison available yet (insufficient data from other committee members).';
 
+  const anomalyLine = peer?.anomalies?.hasAnomalies
+    ? `ANOMALY FLAGS:\n${peer.anomalies.flags
+        .filter(f => f.isAnomaly)
+        .map(f => `- ${f.description}`)
+        .join('\n')}`
+    : '';
+
   const userPrompt = `LEGISLATOR: ${data.name} (${data.party}-${data.state}), ${data.chamber}
 
 COMMITTEES AND JURISDICTION OVERLAP:
@@ -370,6 +480,8 @@ ${committeeLines}
 OVERALL OVERLAP: ${(stats.overlapScore * 100).toFixed(1)}% of campaign donations come from industry sectors under this legislator's committee jurisdictions.
 
 ${peerLine}
+
+${anomalyLine}
 
 Write a 2-3 sentence plain-language summary of these factual patterns. State what percentage of donations come from sectors the legislator's committees oversee. If peer comparison is available, note whether this is above, below, or near the peer average. Do not claim causation. Do not judge.
 
@@ -412,6 +524,14 @@ function buildStatisticalSummary(
   if (peer && peer.peerCount >= MIN_PEERS) {
     const peerPct = (peer.peerAverage * 100).toFixed(1);
     summary += ` The average for ${peer.peerGroupLabel} is ${peerPct}%.`;
+  }
+
+  // Include anomaly findings in fallback so they aren't silently dropped
+  if (peer?.anomalies?.hasAnomalies) {
+    const anomalyDescriptions = peer.anomalies.flags
+      .filter(f => f.isAnomaly)
+      .map(f => f.description);
+    summary += ' ' + anomalyDescriptions.join(' ');
   }
 
   return summary;

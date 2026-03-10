@@ -5,10 +5,13 @@
 export {
   correlation,
   peerComparison,
+  peerComparisonWithAnomalies,
   confidenceScore,
   meetsSampleSize,
   mean,
   sampleStandardDeviation,
+  detectAnomalies,
+  ANOMALY_THRESHOLD,
   MIN_VOTES_PER_SECTOR,
   MIN_QUARTERS_TEMPORAL,
   MIN_TRADES_STOCK,
@@ -18,4 +21,10 @@ export {
   MIN_PEERS,
 } from '@civiq/civic-statistics';
 
-export type { CorrelationMethod, CorrelationResult, PeerComparison } from '@civiq/civic-statistics';
+export type {
+  CorrelationMethod,
+  CorrelationResult,
+  PeerComparison,
+  AnomalyFlag,
+  AnomalyResult,
+} from '@civiq/civic-statistics';

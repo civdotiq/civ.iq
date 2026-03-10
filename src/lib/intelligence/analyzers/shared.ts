@@ -21,6 +21,7 @@ import {
 } from '@/lib/connections/committee-agency-map';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { classifyBillSectors } from '@/lib/intelligence/embeddings';
 
 // ── Timeout Wrapper ─────────────────────────────────────────────────
 
@@ -75,19 +76,33 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
 // ── Bill Sector Classification ──────────────────────────────────────
 
 /**
- * Get industry sectors for a bill. Tries cached AI summary first,
- * falls back to keyword-based inference from the title.
+ * Get industry sectors for a bill. Three-tier fallback:
+ * 1. Cached AI summary (fastest, most accurate)
+ * 2. Semantic embedding classification (ML-based, handles novel titles)
+ * 3. Keyword-based inference (static, always works)
  */
 export async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
+  // Step 1: Cached AI summary
   try {
     const summary = await BillSummaryCache.getSummary(billId);
     if (summary?.affectedIndustries?.length) {
       return summary.affectedIndustries;
     }
   } catch {
-    // Cache miss — try static fallback
+    // Cache miss — try embedding classifier
   }
 
+  // Step 2: Semantic embedding classification
+  try {
+    const embeddingResults = await classifyBillSectors(billTitle);
+    if (embeddingResults.length > 0) {
+      return embeddingResults.map(r => r.sector);
+    }
+  } catch {
+    // Embedding failed — fall back to keywords
+  }
+
+  // Step 3: Keyword-based inference
   return inferSectorsFromTitle(billTitle);
 }
 

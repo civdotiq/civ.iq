@@ -32,6 +32,12 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
   BillSummaryCache: { getSummary: (...args: unknown[]) => mockGetSummary(...args) },
 }));
 
+// Mock embedding classifier
+const mockClassifyBillSectors = jest.fn();
+jest.mock('@/lib/intelligence/embeddings', () => ({
+  classifyBillSectors: (...args: unknown[]) => mockClassifyBillSectors(...args),
+}));
+
 // Mock ReadingLevelValidator
 const mockMeetsTarget = jest.fn();
 jest.mock('@/features/legislation/services/ai/reading-level-validator', () => ({
@@ -135,7 +141,7 @@ describe('shared intelligence utilities', () => {
   // ── getBillSectors ──────────────────────────────────────────────
 
   describe('getBillSectors', () => {
-    it('returns AI-classified sectors from cache', async () => {
+    it('returns AI-classified sectors from cache (step 1)', async () => {
       mockGetSummary.mockResolvedValue({
         affectedIndustries: ['HEALTH', 'DEFENSE'],
       });
@@ -143,25 +149,50 @@ describe('shared intelligence utilities', () => {
       const sectors = await getBillSectors('HR1234-119', 'Some bill');
       expect(sectors).toEqual(['HEALTH', 'DEFENSE']);
       expect(mockGetSummary).toHaveBeenCalledWith('HR1234-119');
+      // Embedding classifier should NOT be called when cache hits
+      expect(mockClassifyBillSectors).not.toHaveBeenCalled();
     });
 
-    it('falls back to keyword inference when cache misses', async () => {
+    it('uses embedding classifier when cache misses (step 2)', async () => {
       mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([
+        { sector: 'Communications/Electronics', confidence: 0.72 },
+      ]);
+
+      const sectors = await getBillSectors('HR1234-119', 'CHIPS and Science Act');
+      expect(sectors).toEqual(['Communications/Electronics']);
+      expect(mockClassifyBillSectors).toHaveBeenCalledWith('CHIPS and Science Act');
+    });
+
+    it('falls back to keywords when embeddings return empty (step 3)', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([]);
 
       const sectors = await getBillSectors('HR1234-119', 'Medicare Health Improvement Act');
       expect(sectors.length).toBeGreaterThan(0);
       expect(sectors).toContain('HEALTH');
     });
 
-    it('falls back to keyword inference when cache throws', async () => {
-      mockGetSummary.mockRejectedValue(new Error('Redis error'));
+    it('falls back to keywords when embeddings throw (step 3)', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockRejectedValue(new Error('Model failed'));
 
       const sectors = await getBillSectors('HR1234-119', 'Defense Authorization Act');
       expect(sectors).toContain('DEFENSE');
     });
 
-    it('returns empty array for unrecognized title with no cache', async () => {
+    it('falls back through all 3 steps gracefully', async () => {
+      mockGetSummary.mockRejectedValue(new Error('Redis error'));
+      mockClassifyBillSectors.mockRejectedValue(new Error('WASM error'));
+
+      const sectors = await getBillSectors('HR1234-119', 'Defense Authorization Act');
+      // Step 3 keywords should still work
+      expect(sectors).toContain('DEFENSE');
+    });
+
+    it('returns empty array when all steps fail for unrecognized title', async () => {
       mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([]);
 
       const sectors = await getBillSectors('HR1234-119', 'Resolution on procedural matters');
       expect(sectors).toEqual([]);
