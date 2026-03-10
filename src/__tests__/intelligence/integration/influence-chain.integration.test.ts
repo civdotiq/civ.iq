@@ -6,9 +6,8 @@
 /**
  * Integration tests for GET /api/intelligence/representative/[bioguideId]/influence-chain
  *
- * Mocks data sources (Senate LDA, Congress.gov) but lets the lobbying pipeline
- * analyzer run its actual computation logic. Tests multi-committee iteration
- * and entity resolution pipeline.
+ * Mocks data sources but lets the influence chain analyzer run its
+ * computation logic. Tests the full request → response pipeline.
  */
 
 // ── Mocks (data-source level) ──────────────────────────────────────
@@ -35,23 +34,21 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
 }));
 
-jest.mock('@/lib/connections/committee-agency-map', () => ({
-  ALL_COMMITTEE_MAPPINGS: [
-    {
-      committeeCode: 'HSAS',
-      committeeName: 'Armed Services',
-      chamber: 'House' as const,
-      topics: ['defense'],
-      agencies: ['DOD'],
-    },
-    {
-      committeeCode: 'HSIF',
-      committeeName: 'Energy and Commerce',
-      chamber: 'House' as const,
-      topics: ['energy', 'health'],
-      agencies: ['DOE', 'HHS'],
-    },
-  ],
+jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
+  getFECIdFromBioguide: jest.fn().mockReturnValue('H0CA12345'),
+}));
+
+jest.mock('@/lib/fec/fec-api-service', () => ({
+  fecApiService: {
+    getSampleContributions: jest.fn().mockResolvedValue([]),
+  },
+}));
+
+jest.mock('@/features/representatives/services/batch-voting-service', () => ({
+  batchVotingService: {
+    getHouseMemberVotes: jest.fn().mockResolvedValue([]),
+    getSenateMemberVotes: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 const mockFetchRecentFilings = jest.fn();
@@ -61,8 +58,9 @@ jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
   },
 }));
 
-jest.mock('@/lib/cache', () => ({
-  cachedFetch: jest.fn().mockResolvedValue([]),
+jest.mock('@/lib/intelligence/entity-resolution/lobbying-committee-resolver', () => ({
+  resolveFilingEntities: jest.fn().mockReturnValue([]),
+  getResolvedCommittees: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('@/lib/ai/provider', () => ({
@@ -73,6 +71,25 @@ jest.mock('@/features/legislation/services/ai/reading-level-validator', () => ({
   ReadingLevelValidator: { meetsTarget: jest.fn().mockReturnValue(false) },
 }));
 
+jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
+  BillSummaryCache: { getSummary: jest.fn().mockResolvedValue(null) },
+}));
+
+jest.mock('@/lib/intelligence/embeddings', () => ({
+  classifyBillSectors: jest.fn().mockResolvedValue([]),
+  classifyBillSectorsZeroShot: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock('@/lib/connections/policy-area-map', () => ({
+  getIndustrySectorsForPolicyArea: jest.fn().mockReturnValue([]),
+}));
+
+jest.mock('@/lib/intelligence/statistics/civic-stats', () => ({
+  peerComparison: jest.fn().mockReturnValue(null),
+  confidenceScore: jest.fn().mockReturnValue(0.7),
+  MIN_PEERS: 3,
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function mockRequest(url: string) {
@@ -81,21 +98,6 @@ function mockRequest(url: string) {
 
 function mockParams(obj: Record<string, string>) {
   return { params: Promise.resolve(obj) };
-}
-
-function createMockFilings(committeeEntity: string, count: number, orgPrefix: string) {
-  return Array.from({ length: count }, (_, i) => ({
-    filing_uuid: `filing-${orgPrefix}-${i}`,
-    filing_year: 2025,
-    filing_period: 'Q1',
-    filing_type: 'Q',
-    client: { name: `${orgPrefix} Corp ${i}` },
-    registrant: { name: `Lobby Firm ${i}` },
-    income: 50000 + i * 10000,
-    government_entities: [{ name: committeeEntity }],
-    issues: [{ code: 'DEF', description: 'Defense' }],
-    lobbying_activities: [],
-  }));
 }
 
 // ── Tests ────────────────────────────────────────────────────────────
@@ -113,36 +115,6 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
   beforeEach(() => {
     jest.clearAllMocks();
     mockRedisStore.clear();
-  });
-
-  it('returns committee pipelines for a representative with committees', async () => {
-    mockGetEnhancedRepresentative.mockResolvedValue({
-      bioguideId: 'T000001',
-      name: 'Test Rep',
-      party: 'Democrat',
-      state: 'CA',
-      chamber: 'House',
-      committees: [{ name: 'Armed Services' }],
-    });
-
-    // Create enough filings to pass MIN_FILINGS_LOBBYING threshold
-    const filings = createMockFilings('House Armed Services Committee', 10, 'defense');
-    mockFetchRecentFilings.mockResolvedValue(filings);
-
-    const res = await GET(
-      mockRequest(
-        'http://localhost/api/intelligence/representative/T000001/influence-chain'
-      ) as never,
-      mockParams({ bioguideId: 'T000001' })
-    );
-
-    expect(res.status).toBe(200);
-    const data = await res.json();
-
-    expect(data.bioguideId).toBe('T000001');
-    expect(data).toHaveProperty('committeePipelines');
-    expect(data).toHaveProperty('generatedAt');
-    expect(Array.isArray(data.committeePipelines)).toBe(true);
   });
 
   it('returns 404 when representative not found', async () => {
@@ -164,6 +136,7 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
       chamber: 'House',
       committees: [],
     });
+    mockFetchRecentFilings.mockResolvedValue([]);
 
     const res = await GET(
       mockRequest('http://localhost/') as never,
@@ -180,20 +153,47 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
     expect(res.status).toBe(400);
   });
 
-  it('handles partial failure when one committee pipeline throws', async () => {
+  it('returns 404 when no lobbying filings found', async () => {
     mockGetEnhancedRepresentative.mockResolvedValue({
       bioguideId: 'T000001',
       name: 'Test Rep',
       party: 'Democrat',
       state: 'CA',
       chamber: 'House',
-      committees: [{ name: 'Armed Services' }, { name: 'Energy and Commerce' }],
+      committees: [{ name: 'Armed Services' }],
     });
+    mockFetchRecentFilings.mockResolvedValue([]);
 
-    // First call for Armed Services returns data, second call for Energy returns nothing
-    mockFetchRecentFilings
-      .mockResolvedValueOnce(createMockFilings('House Armed Services Committee', 10, 'defense'))
-      .mockResolvedValueOnce([]);
+    const res = await GET(
+      mockRequest('http://localhost/') as never,
+      mockParams({ bioguideId: 'T000001' })
+    );
+    // No filings means no chains can be built, returns 404
+    expect(res.status).toBe(404);
+  });
+
+  it('returns cached insight on cache hit', async () => {
+    const cached = {
+      bioguideId: 'T000001',
+      chains: [],
+      totalChainsDetected: 0,
+      chainsDropped: 0,
+      peerComparison: {
+        value: 0,
+        peerAverage: 0,
+        peerCount: 0,
+        peerGroupLabel: 'test',
+        percentileRank: 50,
+      },
+      narrative: 'Cached narrative',
+      confidence: 0.8,
+      dataAsOf: new Date().toISOString(),
+      methodology: 'test',
+      disclaimer: 'test',
+      lastAnalyzedAt: new Date().toISOString(),
+      source: 'statistical-fallback',
+    };
+    mockRedisStore.set('insight:influence_chain:T000001', cached);
 
     const res = await GET(
       mockRequest('http://localhost/') as never,
@@ -202,8 +202,7 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
 
     expect(res.status).toBe(200);
     const data = await res.json();
-
-    // Should still return 200 even if some pipelines are empty
-    expect(Array.isArray(data.committeePipelines)).toBe(true);
+    expect(data.bioguideId).toBe('T000001');
+    expect(data.narrative).toBe('Cached narrative');
   });
 });

@@ -4,34 +4,25 @@
  */
 
 /**
- * Intelligence API — Representative Influence Chain
+ * Intelligence API — Influence Chain
  *
- * Aggregates lobbying pipeline insights for each of a representative's
- * committees. Shows "lobbying → committee → legislation chain" per
- * representative.
+ * Returns influence chain analysis for a legislator,
+ * tracing lobbying money through contributions to voting records.
  *
  * Endpoint: GET /api/intelligence/representative/[bioguideId]/influence-chain
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
-import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
-import type { LobbyingPipelineInsight } from '@/lib/intelligence/types';
+import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import type { InfluenceChainInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
-
-interface InfluenceChainResponse {
-  bioguideId: string;
-  committeePipelines: LobbyingPipelineInsight[];
-  generatedAt: string;
-}
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
-): Promise<NextResponse<InfluenceChainResponse | { error: string }>> {
+): Promise<NextResponse<InfluenceChainInsight | { error: string }>> {
   const { bioguideId } = await params;
 
   if (!bioguideId || typeof bioguideId !== 'string') {
@@ -43,54 +34,16 @@ export async function GET(
   try {
     logger.info('[Intelligence] Influence chain request', { bioguideId: upperId });
 
-    const rep = await getEnhancedRepresentative(upperId);
-    if (!rep?.committees?.length) {
+    const insight = await analyzeInfluenceChains(upperId).catch(() => null);
+
+    if (!insight) {
       return NextResponse.json(
-        { error: 'Representative not found or has no committee assignments' },
+        { error: 'Influence chain analysis not available for this legislator' },
         { status: 404 }
       );
     }
 
-    // Resolve committee names to committee codes via fuzzy match
-    const committeeCodes: string[] = [];
-    for (const committee of rep.committees) {
-      const normalizedName = committee.name.toLowerCase();
-      const mapping = ALL_COMMITTEE_MAPPINGS.find(
-        m =>
-          normalizedName.includes(m.committeeName.toLowerCase()) ||
-          m.committeeName.toLowerCase().includes(normalizedName)
-      );
-      if (mapping) {
-        committeeCodes.push(mapping.committeeCode);
-      }
-    }
-
-    if (committeeCodes.length === 0) {
-      return NextResponse.json({ error: 'No known committee codes matched' }, { status: 404 });
-    }
-
-    // Fetch lobbying pipeline for each committee (individually cached)
-    const results = await Promise.all(
-      committeeCodes.map(code =>
-        analyzeLobbyingPipeline(code).catch(error => {
-          logger.error('[Intelligence] Lobbying pipeline failed for committee', error as Error, {
-            bioguideId: upperId,
-            committeeCode: code,
-          });
-          return null;
-        })
-      )
-    );
-
-    const committeePipelines = results.filter((r): r is LobbyingPipelineInsight => r !== null);
-
-    const response: InfluenceChainResponse = {
-      bioguideId: upperId,
-      committeePipelines,
-      generatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(response, {
+    return NextResponse.json(insight, {
       headers: {
         'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
       },

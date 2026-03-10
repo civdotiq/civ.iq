@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { SectorLeaderboard } from '@/components/intelligence/SectorLeaderboard';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 
@@ -271,6 +272,9 @@ export default function IndustrySectorPage() {
                 </div>
               </div>
             )}
+
+            {/* Sector Leaderboard */}
+            <SectorLeaderboard initialSector={data?.sector} />
           </div>
         )}
       </main>

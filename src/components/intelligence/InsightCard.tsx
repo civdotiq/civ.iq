@@ -15,6 +15,7 @@ import type {
   PACVoteInsight,
   StockCommitteeInsight,
   BillIntelligenceInsight,
+  InfluenceChainInsight,
 } from '@/lib/intelligence/types';
 
 /**
@@ -36,7 +37,8 @@ interface InsightCardProps {
     | LobbyingPipelineInsight
     | PACVoteInsight
     | StockCommitteeInsight
-    | BillIntelligenceInsight;
+    | BillIntelligenceInsight
+    | InfluenceChainInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
 }

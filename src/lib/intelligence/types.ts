@@ -446,6 +446,98 @@ export interface BillLobbyingSimilarity {
   hasStrongMatches: boolean;
 }
 
+// ── Influence Chain ──────────────────────────────────────────────────
+
+export interface InfluenceChainLink {
+  type: 'lobbying' | 'contribution' | 'committee' | 'bill_match' | 'vote' | 'text_similarity';
+  label: string;
+  confidence: number;
+  data: Record<string, unknown>;
+}
+
+export interface InfluenceChain {
+  organization: string;
+  lobbyingSpending: number;
+  contributionAmount: number;
+  billId: string;
+  billTitle: string;
+  vote: 'yea' | 'nay' | 'not_voting';
+  textSimilarity: number | null;
+  links: InfluenceChainLink[];
+  chainConfidence: number;
+}
+
+export interface InfluenceChainInsight extends InsightBase {
+  bioguideId: string;
+  chains: InfluenceChain[];
+  totalChainsDetected: number;
+  chainsDropped: number;
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
+// ── Money Report Card ───────────────────────────────────────────────
+
+export interface RepMoneyMetrics {
+  bioguideId: string;
+  name: string;
+  party: string;
+  chamber: 'House' | 'Senate';
+  state: string;
+  voteFinanceCorrelation: number | null;
+  financeJurisdictionOverlap: number | null;
+  independenceScore: number | null;
+  influenceChainCount: number;
+}
+
+export interface DistrictAggregates {
+  averageCorrelation: number | null;
+  highestOverlap: { name: string; value: number } | null;
+  lowestOverlap: { name: string; value: number } | null;
+  mostIndependent: { name: string; value: number } | null;
+  leastIndependent: { name: string; value: number } | null;
+}
+
+export interface MoneyReportCardInsight extends InsightBase {
+  state: string;
+  district: string;
+  multiDistrict: boolean;
+  representatives: RepMoneyMetrics[];
+  aggregates: DistrictAggregates;
+  narrative: string;
+}
+
+// ── Sector Leaderboard ──────────────────────────────────────────────
+
+export interface SectorLeaderboardEntry {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  chamber: 'House' | 'Senate';
+  sectorAlignmentScore: number;
+  sectorDonationAmount: number;
+  billsVotedOn: number;
+  rank: number;
+}
+
+export interface SectorLeaderboardResponse {
+  sector: IndustrySector;
+  sectorLabel: string;
+  chamber: 'house' | 'senate' | 'all';
+  party: string | null;
+  entries: SectorLeaderboardEntry[];
+  stats: {
+    mean: number;
+    median: number;
+    standardDeviation: number;
+    includedMembers: number;
+    excludedMembers: number;
+  };
+  generatedAt: string;
+  dataAsOf: string;
+}
+
 // ── Stance Classification ────────────────────────────────────────────
 
 /**

@@ -18,6 +18,7 @@ import { VoteShiftTimeline } from './VoteShiftTimeline';
 import { InfluenceChainTable } from './InfluenceChainTable';
 import { StockOverlapTable } from './StockOverlapTable';
 import { VotePredictionCard } from './VotePredictionCard';
+import { InfluenceChainCard } from './InfluenceChainCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
 import type {
   FinanceJurisdictionInsight,
@@ -26,6 +27,7 @@ import type {
   LobbyingPipelineInsight,
   StockCommitteeInsight,
   VotePredictionInsight,
+  InfluenceChainInsight,
 } from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
@@ -97,6 +99,17 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       }
     );
 
+  // Influence chain analysis loaded independently
+  const { data: influenceChainData, isLoading: influenceChainLoading } =
+    useSWR<InfluenceChainInsight>(
+      `/api/intelligence/representative/${bioguideId}/influence-chain`,
+      fetcher,
+      {
+        revalidateOnFocus: false,
+        dedupingInterval: 300000,
+      }
+    );
+
   if (isLoading) {
     return <IntelligenceLoading />;
   }
@@ -116,15 +129,23 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
   const stock = stockData?.flaggedTrades ? stockData : null;
   const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
+  const influenceChain = influenceChainData?.chains ? influenceChainData : null;
   const hasInsights =
-    financeJurisdiction || voteFinance || temporal || lobbying || stock || votePrediction;
+    financeJurisdiction ||
+    voteFinance ||
+    temporal ||
+    lobbying ||
+    stock ||
+    votePrediction ||
+    influenceChain;
 
   if (
     !hasInsights &&
     !temporalLoading &&
     !lobbyingLoading &&
     !stockLoading &&
-    !votePredictionLoading
+    !votePredictionLoading &&
+    !influenceChainLoading
   ) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
@@ -182,6 +203,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         </>
       )}
 
+      {influenceChain && <InfluenceChainCard insight={influenceChain} />}
+
       {votePrediction && <VotePredictionCard insight={votePrediction} />}
 
       {stock && (
@@ -198,6 +221,13 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       <InfluenceClusterChart highlightBioguideId={bioguideId} />
 
       {lobbyingLoading && !lobbying && primaryCommittee && (
+        <div className="border-2 border-gray-200 p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+        </div>
+      )}
+
+      {influenceChainLoading && !influenceChain && (
         <div className="border-2 border-gray-200 p-6 animate-pulse">
           <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
           <div className="h-32 bg-gray-200 border-2 border-gray-300" />
