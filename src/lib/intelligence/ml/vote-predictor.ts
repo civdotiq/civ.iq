@@ -17,6 +17,8 @@
  * independence.
  */
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import logger from '@/lib/logging/simple-logger';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
@@ -176,8 +178,9 @@ export function getModelMetadata(): VotePredictionModelMetadata | null {
   if (metadataCache) return metadataCache;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    metadataCache = require(`../../../${METADATA_PATH}`) as VotePredictionModelMetadata;
+    const filePath = join(process.cwd(), METADATA_PATH);
+    const raw = readFileSync(filePath, 'utf-8');
+    metadataCache = JSON.parse(raw) as VotePredictionModelMetadata;
     return metadataCache;
   } catch {
     logger.warn('[VotePredictor] Model metadata not found — model may not be trained yet');

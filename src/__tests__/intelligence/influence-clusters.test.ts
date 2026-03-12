@@ -104,15 +104,12 @@ describe('Influence Clusters', () => {
     // Reset module cache to get fresh imports
     jest.resetModules();
 
-    // Mock the JSON require — the module uses require('./influence-clusters.json')
-    // which resolves relative to the module's location
-    jest.doMock(
-      require
-        .resolve('@/lib/intelligence/clusters')
-        .replace(/index\.[jt]s$/, 'influence-clusters.json'),
-      () => MOCK_CLUSTER_DATA,
-      { virtual: true }
-    );
+    // Mock fs.readFileSync to return the cluster data
+    // The module uses readFileSync to load influence-clusters.json
+    jest.doMock('fs', () => ({
+      ...jest.requireActual('fs'),
+      readFileSync: jest.fn().mockReturnValue(JSON.stringify(MOCK_CLUSTER_DATA)),
+    }));
 
     // Re-require the module
     // eslint-disable-next-line @typescript-eslint/no-require-imports

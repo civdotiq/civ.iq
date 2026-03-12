@@ -11,6 +11,8 @@
  * and checked into git (~100-150KB).
  */
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import type { InfluenceClusterData, LegislatorClusterPoint, ClusterMetadata } from './types';
 
 /** Module-level cache — loaded once per process. */
@@ -22,14 +24,17 @@ let loadFailed = false;
 /**
  * Load precomputed influence clusters.
  * Returns null if the data file doesn't exist (clusters not yet computed).
+ * Uses fs.readFileSync instead of require() to avoid bundler static analysis
+ * errors when the JSON file doesn't exist in the deployment.
  */
 export function getInfluenceClusters(): InfluenceClusterData | null {
   if (clusterCache) return clusterCache;
   if (loadFailed) return null;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    clusterCache = require('./influence-clusters.json') as InfluenceClusterData;
+    const filePath = join(__dirname, 'influence-clusters.json');
+    const raw = readFileSync(filePath, 'utf-8');
+    clusterCache = JSON.parse(raw) as InfluenceClusterData;
     return clusterCache;
   } catch {
     loadFailed = true;
