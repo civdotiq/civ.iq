@@ -45,7 +45,11 @@ interface InsightsResponse {
   generatedAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then(res => {
+    if (!res.ok) return null;
+    return res.json();
+  });
 
 export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabProps) {
   const { data, error, isLoading } = useSWR<InsightsResponse>(

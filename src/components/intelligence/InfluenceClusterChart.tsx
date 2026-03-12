@@ -18,7 +18,11 @@ interface InfluenceClusterChartProps {
   className?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then(res => {
+    if (!res.ok) return null;
+    return res.json();
+  });
 
 /** Party colors per design system. */
 const PARTY_COLORS = {
@@ -72,7 +76,7 @@ export function InfluenceClusterChart({
 
   // Compute coordinate mapping
   const { scaleX, scaleY } = useMemo(() => {
-    if (!data?.legislators.length) return { scaleX: (v: number) => v, scaleY: (v: number) => v };
+    if (!data?.legislators?.length) return { scaleX: (v: number) => v, scaleY: (v: number) => v };
 
     const xs = data.legislators.map(l => l.x);
     const ys = data.legislators.map(l => l.y);
@@ -128,7 +132,7 @@ export function InfluenceClusterChart({
     );
   }
 
-  if (!data?.legislators.length) {
+  if (!data?.legislators?.length) {
     return null;
   }
 
