@@ -47,7 +47,7 @@ interface InsightsResponse {
 
 const fetcher = (url: string) =>
   fetch(url).then(res => {
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error(`${res.status}`);
     return res.json();
   });
 
