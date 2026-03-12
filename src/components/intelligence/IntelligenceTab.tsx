@@ -36,89 +36,109 @@ interface IntelligenceTabProps {
   committeeCodes?: string[];
 }
 
-interface InsightsResponse {
-  bioguideId: string;
-  insights: {
-    financeJurisdiction: FinanceJurisdictionInsight | null;
-    voteFinance: VoteFinanceInsight | null;
-  };
-  generatedAt: string;
-}
-
 const fetcher = (url: string) =>
   fetch(url).then(res => {
     if (!res.ok) throw new Error(`${res.status}`);
     return res.json();
   });
 
+const SWR_OPTIONS = {
+  revalidateOnFocus: false,
+  dedupingInterval: 300000, // 5 minutes
+};
+
 export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabProps) {
-  const { data, error, isLoading } = useSWR<InsightsResponse>(
-    `/api/intelligence/representative/${bioguideId}`,
+  // All insights load independently — no single request blocks the entire tab
+  const {
+    data: financeJurisdictionData,
+    error: fjError,
+    isLoading: fjLoading,
+  } = useSWR<FinanceJurisdictionInsight>(
+    `/api/intelligence/representative/${bioguideId}/finance-jurisdiction`,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes
-    }
+    SWR_OPTIONS
   );
 
-  // Temporal insights loaded independently (expensive endpoint)
+  const {
+    data: voteFinanceData,
+    error: vfError,
+    isLoading: vfLoading,
+  } = useSWR<VoteFinanceInsight>(
+    `/api/intelligence/representative/${bioguideId}/vote-finance`,
+    fetcher,
+    SWR_OPTIONS
+  );
+
   const { data: temporalData, isLoading: temporalLoading } = useSWR<TemporalVoteInsight>(
     `/api/intelligence/representative/${bioguideId}/temporal`,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000,
-    }
+    SWR_OPTIONS
   );
 
-  // Lobbying pipeline loaded per committee (first committee code)
   const primaryCommittee = committeeCodes?.[0];
   const { data: lobbyingData, isLoading: lobbyingLoading } = useSWR<LobbyingPipelineInsight>(
     primaryCommittee ? `/api/intelligence/committee/${primaryCommittee}` : null,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000,
-    }
+    SWR_OPTIONS
   );
 
-  // Stock trade-committee jurisdiction loaded independently
   const { data: stockData, isLoading: stockLoading } = useSWR<StockCommitteeInsight>(
     `/api/intelligence/representative/${bioguideId}/stock-trades`,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000,
-    }
+    SWR_OPTIONS
   );
 
-  // Vote prediction (ML-based) loaded independently
   const { data: votePredictionData, isLoading: votePredictionLoading } =
     useSWR<VotePredictionInsight>(
       `/api/intelligence/representative/${bioguideId}/vote-prediction`,
       fetcher,
-      {
-        revalidateOnFocus: false,
-        dedupingInterval: 300000,
-      }
+      SWR_OPTIONS
     );
 
-  // Influence chain analysis loaded independently
   const { data: influenceChainData, isLoading: influenceChainLoading } =
     useSWR<InfluenceChainInsight>(
       `/api/intelligence/representative/${bioguideId}/influence-chain`,
       fetcher,
-      {
-        revalidateOnFocus: false,
-        dedupingInterval: 300000,
-      }
+      SWR_OPTIONS
     );
 
-  if (isLoading) {
-    return <IntelligenceLoading />;
-  }
+  // Validate responses — only use data with expected shape
+  const financeJurisdiction =
+    financeJurisdictionData?.overlapScore != null ? financeJurisdictionData : null;
+  const voteFinance = voteFinanceData?.overallCorrelation != null ? voteFinanceData : null;
+  const temporal = temporalData?.quarters ? temporalData : null;
+  const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
+  const stock = stockData?.flaggedTrades ? stockData : null;
+  const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
+  const influenceChain = influenceChainData?.chains ? influenceChainData : null;
 
-  if (error) {
+  const hasAnyInsight =
+    financeJurisdiction ||
+    voteFinance ||
+    temporal ||
+    lobbying ||
+    stock ||
+    votePrediction ||
+    influenceChain;
+  const allDoneLoading =
+    !fjLoading &&
+    !vfLoading &&
+    !temporalLoading &&
+    !lobbyingLoading &&
+    !stockLoading &&
+    !votePredictionLoading &&
+    !influenceChainLoading;
+  const allErrored =
+    fjError &&
+    vfError &&
+    !temporalData &&
+    !lobbyingData &&
+    !stockData &&
+    !votePredictionData &&
+    !influenceChainData;
+
+  // If all primary sources errored out, show error message
+  if (allErrored && allDoneLoading) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="type-sm text-gray-500">
@@ -128,29 +148,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     );
   }
 
-  const { financeJurisdiction, voteFinance } = data?.insights ?? {};
-  const temporal = temporalData?.quarters ? temporalData : null;
-  const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
-  const stock = stockData?.flaggedTrades ? stockData : null;
-  const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
-  const influenceChain = influenceChainData?.chains ? influenceChainData : null;
-  const hasInsights =
-    financeJurisdiction ||
-    voteFinance ||
-    temporal ||
-    lobbying ||
-    stock ||
-    votePrediction ||
-    influenceChain;
-
-  if (
-    !hasInsights &&
-    !temporalLoading &&
-    !lobbyingLoading &&
-    !stockLoading &&
-    !votePredictionLoading &&
-    !influenceChainLoading
-  ) {
+  // If everything finished loading and nothing has data, show empty state
+  if (!hasAnyInsight && allDoneLoading) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
@@ -162,6 +161,9 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     );
   }
 
+  // Show initial loading only if nothing has resolved yet
+  const nothingYet = !hasAnyInsight && !allDoneLoading;
+
   return (
     <div className="space-y-6">
       <p className="type-sm text-gray-500">
@@ -169,6 +171,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         jurisdictions using public government data.
       </p>
 
+      {/* Finance-Jurisdiction */}
       {financeJurisdiction && (
         <InsightCard
           title="Finance-Jurisdiction Overlap"
@@ -176,7 +179,9 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           keyStats={financeJurisdictionKeyStats(financeJurisdiction)}
         />
       )}
+      {fjLoading && !financeJurisdiction && <InsightSkeleton />}
 
+      {/* Vote-Finance */}
       {voteFinance && (
         <InsightCard
           title="Vote-Finance Correlation"
@@ -184,7 +189,9 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           keyStats={voteFinanceKeyStats(voteFinance)}
         />
       )}
+      {vfLoading && !voteFinance && <InsightSkeleton />}
 
+      {/* Temporal */}
       {temporal && (
         <>
           <VoteShiftTimeline quarters={temporal.quarters} shifts={temporal.shifts} />
@@ -195,7 +202,9 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           />
         </>
       )}
+      {temporalLoading && !temporal && <InsightSkeleton tall />}
 
+      {/* Lobbying Pipeline */}
       {lobbying && (
         <>
           <InfluenceChainTable insight={lobbying} />
@@ -206,11 +215,17 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           />
         </>
       )}
+      {lobbyingLoading && !lobbying && primaryCommittee && <InsightSkeleton />}
 
+      {/* Influence Chain */}
       {influenceChain && <InfluenceChainCard insight={influenceChain} />}
+      {influenceChainLoading && !influenceChain && <InsightSkeleton />}
 
+      {/* Vote Prediction */}
       {votePrediction && <VotePredictionCard insight={votePrediction} />}
+      {votePredictionLoading && !votePrediction && <InsightSkeleton />}
 
+      {/* Stock Trades */}
       {stock && (
         <>
           <StockOverlapTable insight={stock} />
@@ -221,61 +236,26 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
           />
         </>
       )}
+      {stockLoading && !stock && <InsightSkeleton />}
 
+      {/* Influence Clusters (always loads independently) */}
       <InfluenceClusterChart highlightBioguideId={bioguideId} />
 
-      {lobbyingLoading && !lobbying && primaryCommittee && (
-        <div className="border-2 border-gray-200 p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
-        </div>
-      )}
-
-      {influenceChainLoading && !influenceChain && (
-        <div className="border-2 border-gray-200 p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
-        </div>
-      )}
-
-      {stockLoading && !stock && (
-        <div className="border-2 border-gray-200 p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-          <div className="h-32 bg-gray-200 border-2 border-gray-300" />
-        </div>
-      )}
-
-      {temporalLoading && !temporal && (
-        <div className="border-2 border-gray-200 p-6 animate-pulse">
-          <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-          <div className="h-48 bg-gray-200 border-2 border-gray-300" />
+      {/* Initial loading state when nothing has resolved */}
+      {nothingYet && (
+        <div className="border-2 border-gray-200 p-6 text-center">
+          <p className="type-sm text-gray-500">Loading intelligence insights...</p>
         </div>
       )}
     </div>
   );
 }
 
-function IntelligenceLoading() {
+function InsightSkeleton({ tall = false }: { tall?: boolean }) {
   return (
-    <div className="space-y-6">
-      <div className="animate-pulse">
-        <div className="h-4 bg-gray-200 border-2 border-gray-300 w-3/4 mb-6" />
-        {[1, 2].map(i => (
-          <div key={i} className="border-2 border-gray-200 p-6 mb-6">
-            <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {[1, 2, 3].map(j => (
-                <div key={j} className="border-2 border-gray-200 p-3">
-                  <div className="h-8 bg-gray-200 border-2 border-gray-300 mb-1" />
-                  <div className="h-3 bg-gray-200 border-2 border-gray-300 w-2/3" />
-                </div>
-              ))}
-            </div>
-            <div className="h-4 bg-gray-200 border-2 border-gray-300 mb-2" />
-            <div className="h-4 bg-gray-200 border-2 border-gray-300 w-5/6" />
-          </div>
-        ))}
-      </div>
+    <div className="border-2 border-gray-200 p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+      <div className={`${tall ? 'h-48' : 'h-32'} bg-gray-200 border-2 border-gray-300`} />
     </div>
   );
 }

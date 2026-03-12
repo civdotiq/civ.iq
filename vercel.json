@@ -59,6 +59,10 @@
     "src/app/api/cron/**/*.ts": {
       "maxDuration": 300
     },
+    "src/app/api/intelligence/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "src/app/api/**/*.ts": {
       "maxDuration": 20
     }

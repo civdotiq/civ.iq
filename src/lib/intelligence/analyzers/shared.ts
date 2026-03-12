@@ -26,8 +26,8 @@ import { classifyBillSectorsZeroShot } from '@/lib/intelligence/embeddings';
 
 // ── Timeout Wrapper ─────────────────────────────────────────────────
 
-/** Default analyzer timeout: 60 seconds */
-export const ANALYZER_TIMEOUT_MS = 60_000;
+/** Default analyzer timeout: 55 seconds (leaves 5s headroom for Vercel function overhead) */
+export const ANALYZER_TIMEOUT_MS = 55_000;
 
 /**
  * Race a promise against a timeout. Individual service calls already have

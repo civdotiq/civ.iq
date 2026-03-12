@@ -34,6 +34,7 @@ import type {
 } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120;
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
 const ANALYZER_TIMEOUT_MS = 30_000;

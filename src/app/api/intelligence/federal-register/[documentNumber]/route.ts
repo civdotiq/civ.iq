@@ -18,6 +18,7 @@ import { extractPreambleFacts } from '@/lib/intelligence/analyzers/federal-regis
 import type { PreambleExtractionInsight } from '@/types/federal-register';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 // FR document numbers follow YYYY-NNNNN pattern (e.g., "2025-12345")
 const DOCUMENT_NUMBER_PATTERN = /^\d{4}-\d{1,6}$/;

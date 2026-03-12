@@ -18,6 +18,7 @@ import { analyzePACVotes } from '@/lib/intelligence/analyzers/pac-vote-analyzer'
 import type { PACVoteInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,

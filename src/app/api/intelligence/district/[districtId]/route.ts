@@ -20,6 +20,7 @@ import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance
 import type { DistrictIntelligenceSummary } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,

@@ -22,6 +22,7 @@ import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorLeaderboardResponse } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 // ── Slug-to-Sector Mapping ──────────────────────────────────────────
 

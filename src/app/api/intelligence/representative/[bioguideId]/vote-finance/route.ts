@@ -4,18 +4,18 @@
  */
 
 /**
- * Intelligence API — Influence Chain
+ * Intelligence API — Vote-Finance Correlation
  *
- * Returns influence chain analysis for a legislator,
- * tracing lobbying money through contributions to voting records.
+ * Returns vote-finance correlation analysis for a legislator.
+ * Split from the base route for independent loading and better timeout handling.
  *
- * Endpoint: GET /api/intelligence/representative/[bioguideId]/influence-chain
+ * Endpoint: GET /api/intelligence/representative/[bioguideId]/vote-finance
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
-import type { InfluenceChainInsight } from '@/lib/intelligence/types';
+import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
+import type { VoteFinanceInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -23,7 +23,7 @@ export const maxDuration = 60;
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
-): Promise<NextResponse<InfluenceChainInsight | { error: string }>> {
+): Promise<NextResponse<VoteFinanceInsight | { error: string }>> {
   const { bioguideId } = await params;
 
   if (!bioguideId || typeof bioguideId !== 'string') {
@@ -33,13 +33,18 @@ export async function GET(
   const upperId = bioguideId.toUpperCase();
 
   try {
-    logger.info('[Intelligence] Influence chain request', { bioguideId: upperId });
+    logger.info('[Intelligence] Vote-finance request', { bioguideId: upperId });
 
-    const insight = await analyzeInfluenceChains(upperId).catch(() => null);
+    const insight = await analyzeVoteFinance(upperId).catch(error => {
+      logger.error('[Intelligence] Vote-finance analyzer failed', error as Error, {
+        bioguideId: upperId,
+      });
+      return null;
+    });
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Influence chain analysis not available for this legislator' },
+        { error: 'Vote-finance analysis not available for this legislator' },
         { status: 404 }
       );
     }
@@ -50,7 +55,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    logger.error('[Intelligence] Influence chain error', error as Error, {
+    logger.error('[Intelligence] Vote-finance error', error as Error, {
       bioguideId: upperId,
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

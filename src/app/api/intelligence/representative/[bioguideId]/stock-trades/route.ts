@@ -18,6 +18,7 @@ import { analyzeStockCommittee } from '@/lib/intelligence/analyzers/stock-commit
 import type { StockCommitteeInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,

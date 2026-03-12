@@ -20,6 +20,7 @@ import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-p
 import type { LobbyingPipelineInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,

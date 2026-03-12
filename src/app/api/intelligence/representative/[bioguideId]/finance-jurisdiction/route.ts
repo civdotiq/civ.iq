@@ -4,18 +4,18 @@
  */
 
 /**
- * Intelligence API — Influence Chain
+ * Intelligence API — Finance-Jurisdiction Overlap
  *
- * Returns influence chain analysis for a legislator,
- * tracing lobbying money through contributions to voting records.
+ * Returns finance-jurisdiction overlap analysis for a legislator.
+ * Split from the base route for independent loading and better timeout handling.
  *
- * Endpoint: GET /api/intelligence/representative/[bioguideId]/influence-chain
+ * Endpoint: GET /api/intelligence/representative/[bioguideId]/finance-jurisdiction
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
-import type { InfluenceChainInsight } from '@/lib/intelligence/types';
+import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
+import type { FinanceJurisdictionInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -23,7 +23,7 @@ export const maxDuration = 60;
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
-): Promise<NextResponse<InfluenceChainInsight | { error: string }>> {
+): Promise<NextResponse<FinanceJurisdictionInsight | { error: string }>> {
   const { bioguideId } = await params;
 
   if (!bioguideId || typeof bioguideId !== 'string') {
@@ -33,13 +33,18 @@ export async function GET(
   const upperId = bioguideId.toUpperCase();
 
   try {
-    logger.info('[Intelligence] Influence chain request', { bioguideId: upperId });
+    logger.info('[Intelligence] Finance-jurisdiction request', { bioguideId: upperId });
 
-    const insight = await analyzeInfluenceChains(upperId).catch(() => null);
+    const insight = await analyzeFinanceJurisdiction(upperId).catch(error => {
+      logger.error('[Intelligence] Finance-jurisdiction analyzer failed', error as Error, {
+        bioguideId: upperId,
+      });
+      return null;
+    });
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Influence chain analysis not available for this legislator' },
+        { error: 'Finance-jurisdiction analysis not available for this legislator' },
         { status: 404 }
       );
     }
@@ -50,7 +55,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    logger.error('[Intelligence] Influence chain error', error as Error, {
+    logger.error('[Intelligence] Finance-jurisdiction error', error as Error, {
       bioguideId: upperId,
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

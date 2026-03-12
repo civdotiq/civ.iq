@@ -4,10 +4,10 @@
  */
 
 /**
- * Intelligence API — Representative Insights
+ * Intelligence API — Representative Insights (Legacy Combined Endpoint)
  *
- * Serves cached intelligence insights for a legislator or generates them
- * on-demand. Runs both analyzers in parallel and returns combined results.
+ * Kept for backward compatibility. The UI now fetches finance-jurisdiction
+ * and vote-finance independently via their own sub-routes.
  *
  * Endpoint: GET /api/intelligence/representative/[bioguideId]
  */
@@ -19,6 +19,7 @@ import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-an
 import type { FinanceJurisdictionInsight, VoteFinanceInsight } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 interface RepresentativeInsightsResponse {
   bioguideId: string;
@@ -44,7 +45,6 @@ export async function GET(
   try {
     logger.info('[Intelligence] Representative insights request', { bioguideId: upperId });
 
-    // Run both analyzers in parallel — each handles its own caching
     const [financeJurisdiction, voteFinance] = await Promise.all([
       analyzeFinanceJurisdiction(upperId).catch(error => {
         logger.error('[Intelligence] Finance-jurisdiction analyzer failed', error as Error, {
@@ -60,7 +60,6 @@ export async function GET(
       }),
     ]);
 
-    // Return even if both are null — the UI handles empty states
     const response: RepresentativeInsightsResponse = {
       bioguideId: upperId,
       insights: {
