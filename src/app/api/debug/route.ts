@@ -70,8 +70,8 @@ interface DiagnosticResult {
 }
 
 export async function GET(request: NextRequest) {
-  // Block debug endpoint in production
-  if (process.env.NODE_ENV === 'production') {
+  // Block debug endpoint outside local development
+  if (process.env.NODE_ENV !== 'development' || process.env.VERCEL) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -237,7 +237,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
