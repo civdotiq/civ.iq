@@ -2,9 +2,9 @@
 
 ## Quick Context
 
-**Project**: civic-intel-hub | **Stack**: Next.js 15 + TypeScript + React 18
-**Purpose**: Federal civic data platform using ONLY real government APIs (no mock data ever)
-**Status**: 100% TypeScript compliant, 107 API endpoints
+**Project**: civic-intel-hub | **Stack**: Next.js 16 + TypeScript + React 18
+**Purpose**: Civic intelligence platform using ONLY real government APIs (no mock data ever)
+**Status**: 100% TypeScript compliant, 181 API endpoints, 12 intelligence analyzers
 
 ## Critical Rules (NEVER VIOLATE)
 
@@ -26,12 +26,20 @@
 
 ```
 src/
-├── app/api/          # API routes (real data only)
-├── components/       # React components
-├── features/         # Feature modules (campaign-finance, legislation, representatives)
-├── lib/              # Utilities and services
-├── types/            # TypeScript definitions
-└── hooks/            # Custom React hooks
+├── app/api/              # 181 API routes (real data only)
+├── app/(civic)/          # Public pages
+├── components/           # React components
+│   └── intelligence/     # 18 insight cards and analysis displays
+├── features/             # Feature modules (campaign-finance, legislation, representatives)
+├── lib/                  # Utilities and services
+│   ├── intelligence/     # 12 analyzers, ML models, embeddings, entity resolution
+│   ├── nostr/            # Nostr event signing and relay publishing
+│   └── data-sources/     # Federal Register, FRED, SEC, lobbying services
+├── types/                # TypeScript definitions
+└── hooks/                # Custom React hooks
+packages/
+├── civic-statistics/     # @civiq/civic-statistics
+└── entity-resolution/    # @civiq/entity-resolution
 ```
 
 ## Validation Commands
@@ -107,8 +115,9 @@ npm run diagnose:apis # Test API connectivity
 
 ## Extended Documentation
 
-- `docs/API_REFERENCE.md` - Complete API documentation (107 endpoints)
+- `docs/API_REFERENCE.md` - Complete API documentation (181 endpoints)
 - `docs/ARCHITECTURE.md` - System design and patterns
+- `docs/DATA_NETWORK.md` - Cross-domain join layer
 - `docs/PHASE_TRACKER.md` - Feature completion tracking
 - `SECURITY.md` - Security policies
 

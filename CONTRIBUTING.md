@@ -37,7 +37,8 @@ We are committed to providing a welcoming and inclusive environment for all cont
 
 ### Prerequisites
 
-- Node.js 18 or higher
+- Node.js 20 or higher
+- npm 10 or higher
 - Git
 - A GitHub account
 - Basic knowledge of TypeScript and React
@@ -78,8 +79,14 @@ We are committed to providing a welcoming and inclusive environment for all cont
    ```
 
 5. Run tests to verify setup:
+
    ```bash
    npm test
+   ```
+
+6. Run full validation:
+   ```bash
+   npm run validate:all
    ```
 
 ## Development Process
@@ -181,11 +188,20 @@ export const RepresentativeCard: React.FC<RepresentativeCardProps> = React.memo(
 
 ```
 src/
-├── app/              # Next.js routes
-├── components/       # Reusable UI components
-├── lib/             # Utilities and services
-├── hooks/           # Custom React hooks
-└── types/           # TypeScript definitions
+├── app/api/              # API routes (181 endpoints)
+├── app/(civic)/          # Public pages
+├── components/           # Reusable UI components
+│   └── intelligence/     # Insight cards and analysis displays
+├── features/             # Feature modules
+├── lib/                  # Utilities, services, and intelligence layer
+│   ├── intelligence/     # Analyzers, ML, embeddings, entity resolution
+│   ├── data-sources/     # External data service clients
+│   └── nostr/            # Nostr event publishing
+├── hooks/                # Custom React hooks
+└── types/                # TypeScript definitions
+packages/
+├── civic-statistics/     # @civiq/civic-statistics
+└── entity-resolution/    # @civiq/entity-resolution
 ```
 
 - **Colocate related code** - keep files near where they're used
@@ -246,13 +262,19 @@ export async function GET(request: Request) {
 npm test
 
 # Watch mode
-npm test -- --watch
+npm run test:watch
 
 # Coverage report
 npm run test:coverage
 
 # Type checking
 npm run type-check
+
+# End-to-end tests
+npm run test:e2e
+
+# Full validation (lint + types + test + build)
+npm run validate:all
 ```
 
 ### Writing Tests
@@ -340,18 +362,19 @@ Fixes #123
 
 ### High Priority
 
-- **State Legislature Integration** - OpenStates API implementation
 - **Local Government Data** - City/county official tracking
 - **Accessibility** - WCAG 2.1 AA compliance improvements
 - **Test Coverage** - Expand unit and integration tests
 - **Performance** - Bundle size optimization, caching improvements
+- **Intelligence Analyzers** - Additional cross-domain analysis patterns
 
 ### Medium Priority
 
 - **Documentation** - API docs, user guides, architecture docs
 - **UI/UX** - Design improvements, mobile optimization
 - **Data Validation** - Additional API cross-validation
-- **Error Handling** - Improved error messages and recovery
+- **Entity Resolution** - Improved matching across data sources
+- **State Data Coverage** - More state-level data integrations
 
 ### Good First Issues
 

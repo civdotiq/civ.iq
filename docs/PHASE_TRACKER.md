@@ -1,10 +1,51 @@
 # Phase Tracker - CIV.IQ Development Progress
 
-## 🎯 Current Status: OPEN-SOURCE PACKAGE EXTRACTION (Phase 10 Complete)
+## Current Status: ML DEEPENING & MONEY-TO-VOTES (Phase 11 Complete)
 
-Last Updated: March 6, 2026
+Last Updated: March 15, 2026
 
-## ✅ Completed Phases
+## Completed Phases
+
+### Phase 11: ML Deepening & Money-to-Votes (March 2026)
+
+**Status**: COMPLETE
+
+#### ML Pipeline
+
+- **Training Data Collection**: `scripts/collect-training-data.ts` collects historical roll call data into `training-data/*.json`
+- **Vote Prediction Model**: Python training (`scripts/train-vote-model.py`) exports XGBoost to ONNX; TypeScript inference in `src/lib/intelligence/ml/vote-predictor.ts`
+- **Bill-Lobbying Similarity**: Semantic matching via all-MiniLM-L6-v2 embeddings between bill text and lobbied issues
+- **Influence Clustering**: Offline Python computation (`scripts/compute-influence-clusters.py`) served as JSON via API
+
+#### HuggingFace Small-Model Pipelines
+
+- **Zero-Shot Classification**: nli-deberta-v3-xsmall for stance detection and topic classification
+- **Named Entity Recognition**: bert-base-NER for extracting entities from civic text
+- **Text Embeddings**: all-MiniLM-L6-v2 for cosine similarity between bills and lobbying filings
+
+#### Money-to-Votes Features
+
+- **Influence Chain Analyzer**: Traces lobbying → contribution → committee → bill → vote pathways per committee
+  - API: `/api/intelligence/representative/[bioguideId]/influence-chain`
+  - UI: `InfluenceChainCard.tsx`, `InfluenceChainTable.tsx`
+- **Sector Leaderboard**: Rankings of legislators by industry sector donation levels relative to peers
+  - API: `/api/intelligence/sector/[sector]/leaderboard`
+  - UI: `SectorLeaderboard.tsx` (integrated into industry/[sector] pages)
+- **Address Money Report**: Address or ZIP lookup showing campaign finance → committee → legislative outcome chains for local representatives
+  - API: `/api/intelligence/address/money-report` (POST for address, GET for ZIP)
+  - UI: `AddressLookupForm.tsx` + `MoneyReportCard.tsx`
+  - Page: `/money-report`
+
+#### Vote Prediction
+
+- **Vote Prediction Analyzer**: ML model predicts roll call votes with independence score measuring deviation from party line
+  - API: `/api/intelligence/representative/[bioguideId]/vote-prediction`
+  - UI: `VotePredictionCard.tsx`
+
+#### Federal Register Intelligence
+
+- **Regulatory Analysis**: Statistical analysis of proposed and final rules from the Federal Register
+  - API: `/api/intelligence/federal-register/[documentNumber]`
 
 ### Phase 10: Open-Source Package Extraction (February 2026)
 
@@ -355,14 +396,7 @@ Last Updated: March 6, 2026
 - Automated validation pipeline
 - 90% API call reduction achieved
 
-## 🚧 In Progress
-
-### State Legislature Integration
-
-- OpenStates API integration planning
-- State representative data models
-- State bill tracking system
-- State committee structures
+## In Progress
 
 ### Local Government Expansion
 
@@ -371,33 +405,21 @@ Last Updated: March 6, 2026
 - Mayor profiles
 - Local ordinance tracking
 
-## 📅 Upcoming Phases
+## Upcoming
 
-### Q3 2025: State & Local Expansion
-
-- State legislature representatives
-- Governor profiles
-- State bill tracking
-- Local government officials
-- Municipal meeting schedules
-
-### Q4 2025: Civic Engagement Tools
+### Civic Engagement Tools
 
 - Voter registration assistance
 - Election reminders
 - Town hall notifications
-- Petition platform
-- Community forums
 
-### Q1 2026: Advanced Analytics
+### Data Coverage Expansion
 
-- Predictive voting models
-- Influence network mapping
-- Legislative effectiveness scoring
-- Campaign finance predictions
-- Policy impact analysis
+- Additional state-level data integrations
+- Municipal meeting schedules
+- Local ordinance tracking
 
-## 🛡️ Security Milestones
+## Security Milestones
 
 ### Zero-Trust Security Remediation (August 10, 2025)
 
@@ -410,43 +432,50 @@ Last Updated: March 6, 2026
 - 100% authentic government data
 - Honest "unavailable" messaging
 
-## 📊 Metrics & Performance
+## Metrics & Performance
 
-### Current Performance Stats
+### Current Stats
 
-- **Page Load**: < 2s (target: < 3s) ✅
-- **API Response**: < 200ms average ✅
-- **Bundle Size**: 1.8MB (target: < 2MB) ✅
-- **Lighthouse Score**: 95+ ✅
-- **TypeScript Compliance**: 100% (0 compilation errors) ✅
-- **Test Coverage**: 88 suites / 1,200 tests ✅
+- **Page Load**: < 2s (target: < 3s)
+- **API Response**: < 200ms average
+- **TypeScript Compliance**: 100% (0 compilation errors)
+- **Test Coverage**: 118 suites / 1,500+ tests
+- **API Routes**: 181 endpoints
+- **Intelligence Analyzers**: 12
+- **Intelligence UI Components**: 18
 
 ### Data Coverage
 
-- **Federal Representatives**: 100% (535/535) ✅
-- **ZIP Codes Mapped**: 84.4% (39,363/46,620) ✅
-- **Districts with Boundaries**: 100% (435/435) ✅
-- **Committee Data**: 100% (all standing committees) ✅
-- **Voting Records**: 100% (House + Senate) ✅
+- **Federal Representatives**: 100% (535/535)
+- **State Legislators**: All 50 states (via OpenStates)
+- **ZIP Codes Mapped**: 84.4% (39,363/46,620)
+- **Congressional District Boundaries**: 100% (435/435)
+- **State Legislative District Boundaries**: 100% (7,383/7,383)
+- **Committee Data**: 100% (all standing committees)
+- **Voting Records**: 100% (House + Senate)
 
 ### API Integration Status
 
-- **Congress.gov**: ✅ Fully integrated
-- **FEC**: ✅ Fully integrated
-- **Census**: ✅ Fully integrated
-- **GDELT**: ✅ Fully integrated
-- **Senate.gov**: ✅ Fully integrated
-- **BLS (Bureau of Labor Statistics)**: ✅ Fully integrated
-- **FCC (Federal Communications Commission)**: ✅ Fully integrated
-- **DoE (Department of Education)**: ✅ Planned integration
-- **CDC PLACES**: ✅ Planned integration
-- **USASpending.gov**: ✅ Planned integration
-- **Senate LDA (Lobbying)**: ✅ Fully integrated
-- **OpenStates**: ⏳ Planned
-- **Google Civic**: ❌ Not using (mock data concerns)
-- **ProPublica**: ❌ Not using (data quality issues)
+- **Congress.gov**: Fully integrated
+- **FEC**: Fully integrated
+- **Census**: Fully integrated
+- **OpenStates**: Fully integrated (all 50 states)
+- **USASpending.gov**: Fully integrated
+- **Federal Register**: Fully integrated
+- **GovInfo**: Fully integrated
+- **Senate.gov XML**: Fully integrated
+- **House Clerk XML**: Fully integrated
+- **BLS**: Fully integrated
+- **SEC EDGAR**: Fully integrated
+- **Senate LDA (Lobbying)**: Fully integrated
+- **FRED**: Fully integrated
+- **Wikidata SPARQL**: Fully integrated
+- **FollowTheMoney.org**: Fully integrated
+- **Regulations.gov**: Fully integrated
+- **GDELT**: Fully integrated
+- **Census TIGER/Line**: Fully integrated
 
-## 🎯 Definition of Done
+## Definition of Done
 
 A phase is considered complete when:
 
@@ -459,7 +488,7 @@ A phase is considered complete when:
 7. All linters pass
 8. Production deployment successful
 
-## 📝 Notes
+## Notes
 
 ### Key Decisions
 
@@ -483,11 +512,15 @@ A phase is considered complete when:
 - [ ] Increase test coverage to 90%
 - [x] Implement Redis caching layer
 - [x] Add comprehensive logging system
+- [x] Intelligence layer with ML pipeline
+- [x] Open-source package extraction
 - [ ] Optimize bundle splitting
 
-## 🔗 Related Documents
+## Related Documents
 
 - [ROADMAP.md](../ROADMAP.md) - Future planning
-- [CHANGELOG.md](../CHANGELOG.md) - Release history
-- [SECURITY-REMEDIATION.md](../SECURITY-REMEDIATION.md) - Security audit details
+- [ROADMAP-ai-layer.md](../ROADMAP-ai-layer.md) - Intelligence layer roadmap
+- [DATA_NETWORK.md](./DATA_NETWORK.md) - Cross-domain join layer
+- [API_REFERENCE.md](./API_REFERENCE.md) - Complete API documentation
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 - [README.md](../README.md) - Project overview

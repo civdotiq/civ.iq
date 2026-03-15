@@ -161,29 +161,29 @@ For security concerns, contact:
 - Email: security@civ-iq.com
 - Response time: Within 48 hours
 
-## Recent Security Enhancements (November 2025)
+## Security Enhancements
 
 ### EFF Security Guidelines Compliance
 
-Following the Electronic Frontier Foundation's Security Self-Defense guidelines, we've implemented:
+Following the Electronic Frontier Foundation's Security Self-Defense guidelines:
 
 1. **Supply Chain Protection**
-   - Added `package-lock.json` for dependency pinning
-   - Configured Dependabot for automated security updates
+   - `package-lock.json` for dependency pinning
+   - Dependabot for automated security updates
    - GitHub Actions security workflow with daily scans
 
 2. **Production CSP Hardening**
-   - Removed `unsafe-inline` and `unsafe-eval` from production CSP
+   - No `unsafe-inline` or `unsafe-eval` in production CSP
    - Environment-aware security headers
-   - Added `upgrade-insecure-requests` directive
+   - `upgrade-insecure-requests` directive
 
 3. **Redis-Based Rate Limiting**
-   - Persistent rate limiting with Redis (src/lib/security/rate-limit-redis.ts)
+   - Persistent rate limiting with Upstash Redis (`src/lib/security/rate-limit-redis.ts`)
    - Graceful fallback to in-memory when Redis unavailable
    - Per-endpoint configuration
 
 4. **API Key Validation**
-   - Automated validation of API key format and security (src/lib/security/api-key-validation.ts)
+   - Automated validation of API key format and security (`src/lib/security/api-key-validation.ts`)
    - Detection of placeholder values and test keys
    - Production-specific configuration validation
 
@@ -193,6 +193,13 @@ Following the Electronic Frontier Foundation's Security Self-Defense guidelines,
    - Dependency review for pull requests
    - Lockfile verification in CI pipeline
 
+6. **Intelligence Layer Security**
+   - All ML models run server-side only (no client exposure)
+   - AI-generated text validated for reading level and factual framing
+   - No causation claims — correlation-only language enforced
+   - Confidence scores and methodology disclosed on every insight
+   - HuggingFace small models loaded on-demand, no external API calls for inference
+
 ## Updates
 
-This security policy is reviewed quarterly and updated as needed. Last update: **November 13, 2025** (EFF compliance update).
+This security policy is reviewed quarterly and updated as needed. Last update: **March 15, 2026**.

@@ -4,11 +4,11 @@
 
 <h1 align="center">CIV.IQ</h1>
 
-<p align="center">Civic data from government sources, organized for public use.</p>
+<p align="center">Civic intelligence from government sources, organized for public use.</p>
 
 <p align="center">
   <a href="https://civdotiq.org">civdotiq.org</a> &bull;
-  <a href="docs/API_DOCUMENTATION.md">API Reference</a> &bull;
+  <a href="docs/API_REFERENCE.md">API Reference</a> &bull;
   <a href="CONTRIBUTING.md">Contribute</a> &bull;
   <a href="LICENSE">License</a>
 </p>
@@ -17,23 +17,54 @@
 
 ## What this is
 
-A platform for looking up elected officials and what they do. Enter an address or ZIP code, get back representatives at every level of government with their voting records, campaign finance data, committee assignments, and legislative activity.
+A civic intelligence platform. Enter an address or ZIP code to find representatives at every level of government — federal, state, and local — with voting records, campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns.
 
-All data comes from government APIs. If the data isn't available, the interface says so.
+All data comes from government APIs. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface says so. Nothing is fabricated.
+
+## What it does
+
+**Representatives**: Federal and state legislators with photos, contact info, committee assignments, and voting records.
+
+**Campaign Finance**: FEC contributions, PAC spending, expenditure tracking, and donor sector analysis.
+
+**Intelligence Layer**: Statistical analyzers that cross-reference voting records with campaign finance, lobbying filings, stock trades, and committee jurisdictions to surface patterns of potential influence. Every insight carries a confidence score, methodology note, and correlation-not-causation disclaimer.
+
+**Vote Prediction**: An XGBoost model (trained on historical roll call data, exported to ONNX) predicts how representatives are likely to vote on upcoming legislation, with an independence score measuring deviation from party line.
+
+**Money Report**: Address-based lookup that traces the path from campaign contributions through committee assignments to legislative outcomes for your specific representatives.
+
+**Sector Leaderboard**: Rankings of legislators by industry sector, showing which members receive the most from a given industry relative to their peers.
+
+**Regulations & Comment Periods**: Federal Register integration for proposed rules, final rules, executive orders, and open public comment periods.
+
+**State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, votes, and calendars. Interactive district boundary maps for all 7,383 state legislative districts.
+
+**District Intelligence**: Demographics, economic indicators (BLS employment data), federal spending (USASpending), infrastructure metrics, and bills ranked by relevance to each congressional district.
+
+**Nostr Publishing**: Civic events (new bills, votes, hearings) are signed and published to the Nostr network for decentralized, verifiable distribution.
 
 ## Data sources
 
-| Source             | What it provides                                     |
-| ------------------ | ---------------------------------------------------- |
-| Congress.gov       | Bills, votes, members, committees                    |
-| FEC.gov            | Campaign contributions, expenditures, filings        |
-| U.S. Census Bureau | Demographics, geocoding, economic data               |
-| Senate.gov         | Senate floor votes, roll calls                       |
-| House Clerk        | House voting records                                 |
-| OpenStates         | State legislators, bills, committees (all 50 states) |
-| GovInfo            | Hearing transcripts, legislative documents           |
-| Federal Register   | Executive orders, proposed rules, comment periods    |
-| Census Geocoding   | Address-to-district resolution                       |
+| Source                     | What it provides                                            |
+| -------------------------- | ----------------------------------------------------------- |
+| Congress.gov v3            | Bills, votes, members, committees, hearings                 |
+| FEC.gov                    | Campaign contributions, expenditures, PAC filings           |
+| U.S. Census Bureau         | Demographics, geocoding, economic data                      |
+| Senate.gov XML             | Senate floor votes, roll calls                              |
+| House Clerk XML            | House voting records                                        |
+| OpenStates GraphQL         | State legislators, bills, committees, votes (all 50 states) |
+| GovInfo                    | Hearing transcripts, legislative documents                  |
+| Federal Register           | Executive orders, proposed rules, comment periods           |
+| USASpending.gov v2         | Federal contracts, grants, awards by district               |
+| Senate LDA                 | Lobbying disclosure filings                                 |
+| Bureau of Labor Statistics | Employment, wages, labor force data                         |
+| SEC EDGAR                  | Financial disclosures, stock trades (STOCK Act)             |
+| Wikidata SPARQL            | State executives, judiciary, biographies                    |
+| FollowTheMoney.org         | State campaign finance data                                 |
+| FRED                       | Federal Reserve economic indicators                         |
+| Regulations.gov            | Public comments on proposed rules                           |
+| GDELT v2                   | News aggregation                                            |
+| Census TIGER/Line          | Congressional and state district boundaries                 |
 
 No data is fabricated, scraped, or generated.
 
@@ -49,11 +80,25 @@ cp .env.example .env.local
 Add API keys to `.env.local`. All are free:
 
 ```env
+# Required
 CONGRESS_API_KEY=       # api.congress.gov/sign-up
 FEC_API_KEY=            # api.open.fec.gov/developers
 CENSUS_API_KEY=         # api.census.gov/data/key_signup.html
-OPENSTATES_API_KEY=     # openstates.org/api/register
+OPENSTATES_API_KEY=     # openstates.org/accounts/profile
+
+# Recommended
+UPSTASH_REDIS_REST_URL= # upstash.com (caching)
+UPSTASH_REDIS_REST_TOKEN=
+GOOGLE_GENERATIVE_AI_API_KEY= # aistudio.google.com/apikey (AI summaries)
+
+# Optional (enhanced features)
+FRED_API_KEY=           # fredaccount.stlouisfed.org/apikeys
+DATA_GOV_API_KEY=       # api.data.gov/signup (Regulations.gov)
+FOLLOWTHEMONEY_API_KEY= # followthemoney.org/our-data/apis
+GOVINFO_API_KEY=        # api.govinfo.gov/docs
 ```
+
+See `.env.example` for the full list, including Nostr publishing and ActivityPub federation.
 
 ```bash
 npm run dev
@@ -65,26 +110,126 @@ Verify at [localhost:3000/api/health](http://localhost:3000/api/health).
 
 ```
 src/
-├── app/api/            # API routes
-├── components/         # Shared components
-├── features/           # Feature modules
+├── app/
+│   ├── api/                  # 181 API routes
+│   └── (civic)/              # Pages (representatives, districts, legislation, etc.)
+├── components/
+│   ├── intelligence/         # Insight cards, leaderboards, influence chains
+│   └── ...                   # Shared UI, search, visualizations
+├── features/                 # Feature modules
 │   ├── campaign-finance/
 │   ├── legislation/
 │   ├── representatives/
 │   └── state-legislature/
-├── lib/                # API clients, services, utilities
-├── hooks/              # React hooks
-└── types/              # TypeScript definitions
+├── lib/
+│   ├── intelligence/         # Analyzers, ML models, embeddings, entity resolution
+│   ├── nostr/                # Nostr event signing and relay publishing
+│   ├── data-sources/         # Federal Register, FRED, SEC, lobbying services
+│   └── ...                   # API clients, services, utilities
+├── hooks/                    # Custom React hooks
+└── types/                    # TypeScript definitions
+packages/
+├── civic-statistics/         # @civiq/civic-statistics (npm package)
+└── entity-resolution/        # @civiq/entity-resolution (npm package)
 ```
 
 ## Stack
 
-Next.js 15, React 18, TypeScript (strict), Tailwind CSS, MapLibre GL, D3.js, Recharts, Redis.
+Next.js 16, React 18, TypeScript (strict), Tailwind CSS, SWR, Zustand, MapLibre GL, D3.js, Recharts, Redis (Upstash + ioredis), Zod, simple-statistics, HuggingFace Transformers (small models), Google Gemini AI, nostr-tools.
 
-## Validation
+## Intelligence layer
+
+12 statistical analyzers cross-reference government data domains:
+
+| Analyzer                     | What it detects                                            |
+| ---------------------------- | ---------------------------------------------------------- |
+| Finance-Jurisdiction Overlap | Donor sectors that match a member's committee jurisdiction |
+| Vote-Finance Correlation     | Voting alignment with campaign contributor industries      |
+| Temporal Vote Shifts         | Quarterly changes in party-line voting patterns            |
+| Lobbying Pipeline            | Lobbying spend → committee activity → bill output chains   |
+| PAC-to-Vote Tracing          | PAC contributions traced to recipient voting records       |
+| Stock-Committee Overlap      | STOCK Act trades in sectors a member's committee regulates |
+| Influence Chain              | Full money → committee → legislation → vote pathways       |
+| Sector Leaderboard           | Industry-by-industry legislator rankings                   |
+| Vote Prediction              | ML model (XGBoost/ONNX) for roll call vote forecasting     |
+| Bill Intelligence            | Sponsor funding sources cross-referenced with lobbying     |
+| Bill-Lobbying Similarity     | Semantic similarity between bill text and lobbied issues   |
+| Federal Register Analysis    | Regulatory intelligence from proposed and final rules      |
+
+Every insight carries: confidence score (0–1), data-as-of timestamp, methodology description, and a disclaimer that correlation does not imply causation.
+
+### ML pipeline
+
+- **Vote prediction**: Training data collected via `npm run collect:training-data`, model trained in Python (`scripts/train-vote-model.py`), exported to ONNX, inference in TypeScript (`src/lib/intelligence/ml/vote-predictor.ts`)
+- **Text similarity**: all-MiniLM-L6-v2 embeddings for bill-to-lobbying matching
+- **Classification**: nli-deberta-v3-xsmall for zero-shot stance detection
+- **Named entity recognition**: bert-base-NER for extracting entities from civic text
+- **Influence clusters**: Offline Python computation (`scripts/compute-influence-clusters.py`) served as JSON
+
+### Open-source packages
+
+Two packages are extracted as standalone npm workspace packages:
+
+- **@civiq/civic-statistics** — Confidence scoring, peer comparison, correlation (Spearman/Pearson), anomaly detection, sample size enforcement
+- **@civiq/entity-resolution** — Committee alias resolution, ticker-to-industry mapping, FEC recipient deduplication
+
+## Commands
 
 ```bash
-npm run validate:all    # lint + type-check + test + build
+# Development
+npm run dev                          # Dev server at localhost:3000
+npm run build                        # Production build
+npm run lint                         # ESLint
+npm run lint:fix                     # ESLint with auto-fix
+npm run type-check                   # TypeScript strict check
+npm run type-check:watch             # TypeScript watch mode
+
+# Testing
+npm test                             # Run all tests (Jest)
+npm run test:watch                   # Watch mode (Vitest)
+npm run test:coverage                # Coverage report
+npm run test:ci                      # CI mode with coverage
+npm run test:e2e                     # Playwright end-to-end tests
+npm run test:e2e:ui                  # Playwright with UI
+npm run test:e2e:headed              # Playwright in headed browser
+
+# Validation
+npm run validate:all                 # lint + type-check + test + build
+npm run validate:production          # Production API validation
+npm run validate:production:critical # Critical-only production checks
+npm run validate:production:parallel # Parallel production validation
+npm run diagnose:apis                # Test API connectivity
+
+# Performance
+npm run perf:benchmark               # Run performance benchmarks
+npm run perf:analyze                 # Bundle analysis build
+npm run perf:baseline                # Save benchmark as baseline
+npm run test:performance             # Performance test suite
+npm run test:performance:quick       # Quick performance baseline
+npm run test:load                    # Load testing
+npm run test:redis                   # Redis performance test
+
+# Data & ML
+npm run collect:training-data        # Collect ML training data
+npm run generate:embeddings          # Generate sector embedding vectors
+npm run seed-data                    # Seed Congress data
+npm run process-census               # Process Census data
+npm run process-district-boundaries  # Process district GeoJSON/PMTiles
+npm run process:state-districts      # Process state legislative districts
+npm run process:mobile-pmtiles       # Generate mobile-optimized PMTiles
+npm run validate-mappings            # Validate ZIP-to-district mappings
+npm run validate-districts           # Validate district data
+
+# Security
+npm run security:audit               # npm audit (moderate level)
+npm run security:full                # Full security scan
+npm run security:emergency           # Emergency vulnerability fix
+
+# Utilities
+npm run analyze                      # Next.js bundle analyzer
+npm run clean                        # Remove .next and node_modules
+npm run clean:install                # Clean + reinstall
+npm run flatten                      # Flatten codebase to XML
 ```
 
 ## Contributing
