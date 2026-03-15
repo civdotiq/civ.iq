@@ -72,7 +72,9 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
           <div className="border-2 border-gray-200 divide-y divide-gray-200">
             {notableDeviations.map(deviation => (
               <div key={deviation.billId} className="p-3">
-                <div className="type-sm font-medium text-gray-900">{deviation.billTitle}</div>
+                <div className="type-sm font-medium text-gray-900 line-clamp-2">
+                  {deviation.billTitle}
+                </div>
                 <div className="type-xs text-gray-500 mt-1">
                   Model predicted:{' '}
                   <span className="font-medium">{deviation.predictedVote.toUpperCase()}</span> (

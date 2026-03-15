@@ -131,10 +131,10 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
   }
 
   const inputClasses =
-    'border-2 border-gray-300 p-2 type-sm w-full focus:border-gray-900 outline-none';
+    'border-2 border-gray-300 p-2 text-base w-full focus:border-gray-900 outline-none';
   const labelClasses = 'type-xs text-gray-500 aicher-heading-wide mb-1 block';
   const buttonClasses =
-    'border-2 border-gray-900 bg-gray-900 text-white px-4 py-2 type-sm aicher-heading hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed';
+    'border-2 border-gray-900 bg-gray-900 text-white px-4 py-3 min-h-[44px] type-sm aicher-heading hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
     <div className={className}>
@@ -143,7 +143,7 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         <button
           type="button"
           onClick={() => setMode('address')}
-          className={`px-4 py-2 type-sm aicher-heading border-2 ${
+          className={`px-4 py-3 min-h-[44px] type-sm aicher-heading border-2 ${
             mode === 'address'
               ? 'border-gray-900 bg-gray-900 text-white'
               : 'border-gray-300 bg-white text-gray-700'
@@ -154,7 +154,7 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         <button
           type="button"
           onClick={() => setMode('zip')}
-          className={`px-4 py-2 type-sm aicher-heading border-2 border-l-0 ${
+          className={`px-4 py-3 min-h-[44px] type-sm aicher-heading border-2 border-l-0 ${
             mode === 'zip'
               ? 'border-gray-900 bg-gray-900 text-white'
               : 'border-gray-300 bg-white text-gray-700'

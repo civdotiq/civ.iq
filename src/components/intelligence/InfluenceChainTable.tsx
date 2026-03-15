@@ -56,7 +56,7 @@ function StanceBadge({ stance }: { stance: StanceClassification }) {
   const style = STANCE_STYLES[stance.stance] ?? 'border-gray-500 text-gray-500';
   const label = STANCE_LABELS[stance.stance] ?? stance.stance;
   return (
-    <span className={`inline-block border-2 px-1.5 py-0 type-xs aicher-heading ${style}`}>
+    <span className={`inline-block border-2 px-2 py-0.5 type-xs aicher-heading ${style}`}>
       {label}
     </span>
   );
@@ -71,7 +71,7 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
           Lobbying Pipeline: {insight.chamber} {insight.committeeName}
         </h3>
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div className="border-2 border-gray-200 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {formatCurrency(insight.totalSpending)}

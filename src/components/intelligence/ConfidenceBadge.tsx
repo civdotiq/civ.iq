@@ -29,7 +29,7 @@ export function ConfidenceBadge({ confidence, className = '' }: ConfidenceBadgeP
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 border-2 aicher-heading type-xs ${colorClasses} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 border-2 aicher-heading type-xs ${colorClasses} ${className}`}
       title={`Confidence score: ${(confidence * 100).toFixed(0)}%`}
     >
       <span className={`w-2 h-2 ${isHigh ? 'bg-[#0a9338]' : 'bg-amber-500'}`} aria-hidden="true" />

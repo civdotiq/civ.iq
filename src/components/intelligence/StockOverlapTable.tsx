@@ -36,7 +36,7 @@ export function StockOverlapTable({ insight, className = '' }: StockOverlapTable
           Stock Trade-Committee Jurisdiction
         </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
           <div className="border-2 border-gray-200 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.totalTrades}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Total trades</div>

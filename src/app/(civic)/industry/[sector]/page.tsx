@@ -48,7 +48,7 @@ const fetcher = async (url: string) => {
 
 const chamberStyles: Record<string, string> = {
   House: 'bg-blue-100 text-blue-800',
-  Senate: 'bg-purple-100 text-purple-800',
+  Senate: 'bg-gray-200 text-gray-900',
   Joint: 'bg-gray-100 text-gray-700',
 };
 

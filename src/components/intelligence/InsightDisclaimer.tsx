@@ -35,7 +35,7 @@ export function InsightDisclaimer({
 
       <button
         onClick={() => setExpanded(prev => !prev)}
-        className="type-xs text-[#3ea2d4] aicher-heading-wide mt-2 aicher-focus"
+        className="type-xs text-[#3ea2d4] aicher-heading-wide mt-2 py-2 min-h-[44px] inline-flex items-center aicher-focus"
         aria-expanded={expanded}
       >
         {expanded ? 'Hide methodology' : 'How was this computed?'}

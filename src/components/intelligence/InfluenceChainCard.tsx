@@ -167,7 +167,7 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
       {hasMore && (
         <button
           onClick={() => setShowAll(prev => !prev)}
-          className="type-xs text-[#3ea2d4] aicher-heading-wide mt-1 mb-4 aicher-focus"
+          className="type-xs text-[#3ea2d4] aicher-heading-wide mt-1 mb-4 py-2 min-h-[44px] inline-flex items-center aicher-focus"
           aria-expanded={showAll}
         >
           {showAll ? 'Show fewer chains' : `Show all ${insight.chains.length} chains`}

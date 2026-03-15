@@ -128,7 +128,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
         <select
           value={selectedSector}
           onChange={e => setSelectedSector(e.target.value)}
-          className="w-full border-2 border-gray-900 bg-white p-2 type-sm text-gray-900 focus:outline-none"
+          className="w-full border-2 border-gray-900 bg-white p-2 text-base text-gray-900 focus:outline-none"
         >
           {ALL_SECTORS.map(s => (
             <option key={s} value={s}>
@@ -145,7 +145,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
             <button
               key={c.value}
               onClick={() => setChamber(c.value)}
-              className={`px-3 py-1 type-xs font-medium ${
+              className={`px-3 py-2 min-h-[44px] type-xs font-medium ${
                 chamber === c.value
                   ? 'border-2 border-gray-900 bg-gray-100 text-gray-900'
                   : 'border-2 border-gray-200 text-gray-500'
@@ -160,7 +160,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
             <button
               key={p.value}
               onClick={() => setParty(p.value)}
-              className={`px-3 py-1 type-xs font-medium ${
+              className={`px-3 py-2 min-h-[44px] type-xs font-medium ${
                 party === p.value
                   ? 'border-2 border-gray-900 bg-gray-100 text-gray-900'
                   : 'border-2 border-gray-200 text-gray-500'
@@ -222,10 +222,16 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
                 <th className="type-xs text-gray-500 font-medium text-left p-2 w-12">#</th>
                 <th className="type-xs text-gray-500 font-medium text-left p-2">Name</th>
                 <th className="type-xs text-gray-500 font-medium text-center p-2 w-12">Party</th>
-                <th className="type-xs text-gray-500 font-medium text-left p-2 w-14">State</th>
+                <th className="type-xs text-gray-500 font-medium text-left p-2 w-14 hidden sm:table-cell">
+                  State
+                </th>
                 <th className="type-xs text-gray-500 font-medium text-right p-2 w-24">Alignment</th>
-                <th className="type-xs text-gray-500 font-medium text-right p-2 w-24">Donations</th>
-                <th className="type-xs text-gray-500 font-medium text-right p-2 w-16">Bills</th>
+                <th className="type-xs text-gray-500 font-medium text-right p-2 w-24 hidden sm:table-cell">
+                  Donations
+                </th>
+                <th className="type-xs text-gray-500 font-medium text-right p-2 w-16 hidden md:table-cell">
+                  Bills
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -247,16 +253,18 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
                       title={entry.party}
                     />
                   </td>
-                  <td className="type-xs text-gray-600 p-2">{entry.state}</td>
+                  <td className="type-xs text-gray-600 p-2 hidden sm:table-cell">{entry.state}</td>
                   <td
                     className={`type-xs font-medium text-right p-2 ${alignmentColor(entry.sectorAlignmentScore)}`}
                   >
                     {entry.sectorAlignmentScore.toFixed(1)}%
                   </td>
-                  <td className="type-xs text-gray-600 text-right p-2">
+                  <td className="type-xs text-gray-600 text-right p-2 hidden sm:table-cell">
                     {formatCompactDollars(entry.sectorDonationAmount)}
                   </td>
-                  <td className="type-xs text-gray-600 text-right p-2">{entry.billsVotedOn}</td>
+                  <td className="type-xs text-gray-600 text-right p-2 hidden md:table-cell">
+                    {entry.billsVotedOn}
+                  </td>
                 </tr>
               ))}
             </tbody>

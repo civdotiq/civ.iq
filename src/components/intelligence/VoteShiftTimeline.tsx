@@ -97,7 +97,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex items-center gap-4 mt-3 type-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-4 mt-3 type-xs text-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block w-4 h-0.5" style={{ backgroundColor: '#3ea2d4' }} />
           Quarterly alignment
@@ -111,10 +111,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
         </span>
         {shifts.length > 0 && (
           <span className="flex items-center gap-1">
-            <span
-              className="inline-block w-2 h-2"
-              style={{ backgroundColor: '#e11d07', borderRadius: '50%' }}
-            />
+            <span className="inline-block w-2 h-2" style={{ backgroundColor: '#e11d07' }} />
             Detected shift
           </span>
         )}

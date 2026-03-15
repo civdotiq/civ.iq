@@ -95,22 +95,22 @@ export function InfluenceClusterChart({
     };
   }, [data, dimensions]);
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
+  const findNearest = useCallback(
+    (clientX: number, clientY: number) => {
       if (!data || !svgRef.current) return;
 
       const rect = svgRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+      const posX = clientX - rect.left;
+      const posY = clientY - rect.top;
 
-      // Find nearest legislator within 15px
+      // Larger hit area on touch (30px) vs mouse (15px)
       let nearest: LegislatorClusterPoint | null = null;
-      let minDist = 15;
+      let minDist = 30;
 
       for (const leg of data.legislators) {
         const cx = scaleX(leg.x);
         const cy = scaleY(leg.y);
-        const dist = Math.sqrt((mouseX - cx) ** 2 + (mouseY - cy) ** 2);
+        const dist = Math.sqrt((posX - cx) ** 2 + (posY - cy) ** 2);
         if (dist < minDist) {
           minDist = dist;
           nearest = leg;
@@ -118,9 +118,26 @@ export function InfluenceClusterChart({
       }
 
       setHoveredLegislator(nearest);
-      setTooltipPos({ x: mouseX, y: mouseY });
+      setTooltipPos({ x: posX, y: posY });
     },
     [data, scaleX, scaleY]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      findNearest(e.clientX, e.clientY);
+    },
+    [findNearest]
+  );
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<SVGSVGElement>) => {
+      const touch = e.touches[0];
+      if (touch) {
+        findNearest(touch.clientX, touch.clientY);
+      }
+    },
+    [findNearest]
   );
 
   if (isLoading) {
@@ -154,7 +171,9 @@ export function InfluenceClusterChart({
           height={dimensions.height}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredLegislator(null)}
-          className="block"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={() => setHoveredLegislator(null)}
+          className="block touch-none"
         >
           {data.legislators.map(leg => {
             const cx = scaleX(leg.x);
