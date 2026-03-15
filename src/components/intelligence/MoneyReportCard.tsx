@@ -118,35 +118,40 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
               </div>
             </div>
 
-            {/* Right: 3 metric cells */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              <div className="text-center">
+            {/* Right: 3 metric cells — stack on mobile, row on sm+ */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="text-center min-w-0">
                 <div
                   className={`aicher-heading type-lg ${metricColor(rep.voteFinanceCorrelation)}`}
                 >
                   {formatPct(rep.voteFinanceCorrelation)}
                 </div>
-                <div className="type-xs text-gray-500 aicher-heading-wide">
-                  Vote-Finance Correlation
+                <div className="type-xs text-gray-500 aicher-heading-wide leading-tight">
+                  Vote-Finance
+                  <br className="sm:hidden" /> Correlation
                 </div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <div
                   className={`aicher-heading type-lg ${metricColor(rep.financeJurisdictionOverlap)}`}
                 >
                   {formatPct(rep.financeJurisdictionOverlap)}
                 </div>
-                <div className="type-xs text-gray-500 aicher-heading-wide">
-                  Committee-Donor Overlap
+                <div className="type-xs text-gray-500 aicher-heading-wide leading-tight">
+                  Committee-Donor
+                  <br className="sm:hidden" /> Overlap
                 </div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <div
                   className={`aicher-heading type-lg ${independenceColor(rep.independenceScore)}`}
                 >
                   {formatPct(rep.independenceScore)}
                 </div>
-                <div className="type-xs text-gray-500 aicher-heading-wide">Independence Score</div>
+                <div className="type-xs text-gray-500 aicher-heading-wide leading-tight">
+                  Independence
+                  <br className="sm:hidden" /> Score
+                </div>
               </div>
             </div>
           </div>
