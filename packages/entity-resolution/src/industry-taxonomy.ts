@@ -597,12 +597,15 @@ export function categorizeContribution(
 }
 
 /**
- * Aggregate contributions by industry sector
+ * Aggregate contributions by industry sector.
+ * Uses smart categorization when contributor_name is available,
+ * falling back to PAC name matching for unclassified contributions.
  */
 export function aggregateByIndustrySector(
   contributions: Array<{
     contributor_employer?: string;
     contributor_occupation?: string;
+    contributor_name?: string;
     contribution_receipt_amount: number;
   }>
 ): Array<{
@@ -624,9 +627,10 @@ export function aggregateByIndustrySector(
   let totalContributions = 0;
 
   for (const contrib of contributions) {
-    const categorization = categorizeContribution(
+    const categorization = categorizeContributionSmart(
       contrib.contributor_employer,
-      contrib.contributor_occupation
+      contrib.contributor_occupation,
+      contrib.contributor_name
     );
 
     const amount = contrib.contribution_receipt_amount;
