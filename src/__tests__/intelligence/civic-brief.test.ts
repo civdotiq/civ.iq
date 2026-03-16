@@ -433,6 +433,7 @@ describe('civic-brief-assembler', () => {
     expect(result).not.toBeNull();
     expect(result!.source).toBe('statistical-fallback');
     expect(result!.summary).toContain('Test Rep');
+    expect(result!.summary).toContain('Your representative'); // addresses the reader directly
     expect(result!.summary).toContain('Democrat'); // citizen-friendly party name
     expect(result!.identity.name).toBe('Test Rep');
     expect(result!.disclaimer).toContain('Correlation');

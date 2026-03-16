@@ -133,7 +133,8 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
               ))}
               {funding.topSectors.some(s => s.overlapsCommittee) && (
                 <p className="type-xs text-gray-400 mt-1">
-                  Highlighted sectors overlap with this representative&apos;s committee jurisdiction
+                  Highlighted industries fall under topics this representative&apos;s committees
+                  oversee
                 </p>
               )}
             </div>

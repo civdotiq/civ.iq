@@ -94,10 +94,14 @@ function detectFundingJurisdictionOverlap(input: PatternInput): BriefPattern | n
 
   const last = lastName(input.identity.name);
 
+  const committeeName =
+    input.identity.committees.find(c => input.funding.topSectors.some(s => s.overlapsCommittee))
+      ?.name ?? 'their committee';
+
   return {
     type: 'funding-jurisdiction-overlap',
-    headline: `${last}'s biggest donors work in industries their committees oversee.`,
-    detail: `${overlapPct.toFixed(0)}% of sampled campaign donations come from sectors that fall under the jurisdiction of committees ${input.identity.name} serves on. The largest overlap is ${topOverlap.sector}, which donated $${topOverlap.amount.toLocaleString()} (${topOverlap.pct.toFixed(0)}% of sampled contributions).`,
+    headline: `${last}'s top donors come from industries their committees regulate.`,
+    detail: `${input.identity.name} sits on ${committeeName}, which oversees policy affecting the ${topOverlap.sector} industry. That same industry gave $${topOverlap.amount.toLocaleString()} to their campaign — ${overlapPct.toFixed(0)}% of donations reviewed came from industries under their committees. This does not prove wrongdoing, but it means the people funding their campaign have a direct stake in their committee work.`,
     dataPoints: {
       overlapPct: Math.round(overlapPct),
       overlapSectorCount: overlapSectors.length,
@@ -138,8 +142,8 @@ function detectVotingPartyDivergence(input: PatternInput): BriefPattern | null {
   if (zScore > 0) {
     return {
       type: 'voting-party-divergence',
-      headline: `${last} breaks from their party more often than most ${input.identity.chamber} ${partyName}s.`,
-      detail: `${input.identity.name} votes with their party ${input.voting.partyAlignmentPct.toFixed(0)}% of the time, compared to ${input.peerPartyAlignmentPct.toFixed(0)}% for the average ${input.identity.chamber} ${partyName}. That is ${diffPct.toFixed(0)} percentage points below the peer average across ${input.voting.totalVotes} votes.`,
+      headline: `${last} votes against their own party more than most ${partyName}s.`,
+      detail: `In ${input.voting.totalVotes} recorded votes, ${input.identity.name} sided with their party ${input.voting.partyAlignmentPct.toFixed(0)}% of the time. The average ${input.identity.chamber} ${partyName} votes with the party ${input.peerPartyAlignmentPct.toFixed(0)}% of the time. That ${diffPct.toFixed(0)}-point gap means ${last} is more willing to cross party lines than most of their colleagues.`,
       dataPoints: {
         partyAlignmentPct: input.voting.partyAlignmentPct,
         peerAveragePct: input.peerPartyAlignmentPct,
@@ -152,8 +156,8 @@ function detectVotingPartyDivergence(input: PatternInput): BriefPattern | null {
 
   return {
     type: 'voting-party-divergence',
-    headline: `${last} votes with their party more often than most ${input.identity.chamber} ${partyName}s.`,
-    detail: `${input.identity.name} votes with their party ${input.voting.partyAlignmentPct.toFixed(0)}% of the time, compared to ${input.peerPartyAlignmentPct.toFixed(0)}% for the average ${input.identity.chamber} ${partyName}. That is ${diffPct.toFixed(0)} percentage points above the peer average across ${input.voting.totalVotes} votes.`,
+    headline: `${last} is one of the most reliable ${partyName} votes in the ${input.identity.chamber}.`,
+    detail: `In ${input.voting.totalVotes} recorded votes, ${input.identity.name} sided with their party ${input.voting.partyAlignmentPct.toFixed(0)}% of the time. The average ${input.identity.chamber} ${partyName} votes with the party ${input.peerPartyAlignmentPct.toFixed(0)}% of the time. That ${diffPct.toFixed(0)}-point difference means ${last} rarely breaks ranks.`,
     dataPoints: {
       partyAlignmentPct: input.voting.partyAlignmentPct,
       peerAveragePct: input.peerPartyAlignmentPct,
@@ -177,8 +181,8 @@ function detectLegislationFocusShift(input: PatternInput): BriefPattern | null {
     const last = lastName(input.identity.name);
     return {
       type: 'legislation-focus-shift',
-      headline: `${last} writes more of their own bills than most legislators.`,
-      detail: `${input.identity.name} sponsored ${sponsored} bills and cosponsored ${cosponsored}, a ratio of ${ratio.toFixed(0)}-to-1. Most legislators cosponsor 10 to 20 times more bills than they write themselves. A lower ratio can indicate focused legislative priorities.`,
+      headline: `${last} authors their own legislation more than most.`,
+      detail: `${input.identity.name} wrote ${sponsored} bills and signed on to ${cosponsored} others. Most legislators co-sign far more bills than they write — typically 10 to 20 times more. ${last}'s ratio of ${ratio.toFixed(0)}-to-1 suggests they focus on advancing their own policy priorities rather than just adding their name to colleagues' work.`,
       dataPoints: {
         billsSponsored: sponsored,
         billsCosponsored: cosponsored,
@@ -208,8 +212,8 @@ function detectDonorConcentration(input: PatternInput): BriefPattern | null {
 
   return {
     type: 'donor-concentration',
-    headline: `Most of ${last}'s campaign money comes from one industry: ${topSector.sector}.`,
-    detail: `${topSector.sector} accounts for ${topSector.pct.toFixed(0)}% of sampled contributions ($${topSector.amount.toLocaleString()}).${input.funding.topSectors[1] ? ` The next largest sector is ${input.funding.topSectors[1].pct.toFixed(0)}%.` : ''} When one industry dominates a campaign's funding, it is worth watching how the legislator votes on issues that affect that industry.`,
+    headline: `One industry — ${topSector.sector} — dominates ${last}'s campaign funding.`,
+    detail: `The ${topSector.sector} industry gave $${topSector.amount.toLocaleString()} to ${input.identity.name}'s campaign, making up ${topSector.pct.toFixed(0)}% of the donations we reviewed.${input.funding.topSectors[1] ? ` No other industry comes close — the next largest gave just ${input.funding.topSectors[1].pct.toFixed(0)}%.` : ''} When one industry provides this much of a campaign's funding, voters may want to watch how ${last} votes on issues affecting that industry.`,
     dataPoints: {
       topSector: topSector.sector,
       topSectorPct: Math.round(topSector.pct),
@@ -243,8 +247,8 @@ function detectInStateFundingRatio(input: PatternInput): BriefPattern | null {
   if (zScore < 0) {
     return {
       type: 'in-state-funding-ratio',
-      headline: `Most of ${last}'s money comes from outside ${input.identity.state}.`,
-      detail: `${outOfStatePct.toFixed(0)}% of sampled donations come from out of state, compared to a ${input.identity.chamber} average of ${(100 - input.peerInStatePctMean).toFixed(0)}%. Only ${input.funding.inStatePct.toFixed(0)}% of donations come from within ${input.identity.state}. This is based on ${input.funding.contributionsSampled} sampled contributions from the ${input.funding.cycle} cycle.`,
+      headline: `Most of ${last}'s campaign money comes from outside ${input.identity.state}.`,
+      detail: `Only ${input.funding.inStatePct.toFixed(0)}% of ${input.identity.name}'s donations came from people in ${input.identity.state} — the rest came from out of state. For comparison, the typical ${input.identity.chamber} member gets about ${input.peerInStatePctMean.toFixed(0)}% of their money from within their own state. This can mean national interest groups are more invested in this race than local donors. Based on ${input.funding.contributionsSampled} donations from the ${input.funding.cycle} cycle.`,
       dataPoints: {
         inStatePct: Math.round(input.funding.inStatePct),
         peerMeanPct: Math.round(input.peerInStatePctMean),
@@ -257,8 +261,8 @@ function detectInStateFundingRatio(input: PatternInput): BriefPattern | null {
 
   return {
     type: 'in-state-funding-ratio',
-    headline: `${last} gets more of their money from within ${input.identity.state} than most peers.`,
-    detail: `${input.funding.inStatePct.toFixed(0)}% of sampled donations come from within ${input.identity.state}, compared to a ${input.identity.chamber} average of ${input.peerInStatePctMean.toFixed(0)}%. This is based on ${input.funding.contributionsSampled} sampled contributions from the ${input.funding.cycle} cycle.`,
+    headline: `${last}'s donors are mostly from ${input.identity.state} — more local than most.`,
+    detail: `${input.funding.inStatePct.toFixed(0)}% of ${input.identity.name}'s donations came from people in ${input.identity.state}. The typical ${input.identity.chamber} member gets about ${input.peerInStatePctMean.toFixed(0)}% from their own state, so ${last}'s funding is more locally driven than average. Based on ${input.funding.contributionsSampled} donations from the ${input.funding.cycle} cycle.`,
     dataPoints: {
       inStatePct: Math.round(input.funding.inStatePct),
       peerMeanPct: Math.round(input.peerInStatePctMean),
@@ -288,8 +292,8 @@ function detectCommitteePowerPosition(input: PatternInput): BriefPattern | null 
 
   return {
     type: 'committee-power-position',
-    headline: `${last} holds a leadership role on ${powerRoles.length === 1 ? 'a key committee' : `${powerRoles.length} committees`}.`,
-    detail: `${input.identity.name} ${roleDescriptions.join(' and ')}. Committee leaders decide which bills get hearings and votes, giving them more influence over legislation than rank-and-file members.`,
+    headline: `${last} leads ${powerRoles.length === 1 ? 'a committee' : `${powerRoles.length} committees`} — that gives them extra power.`,
+    detail: `${input.identity.name} ${roleDescriptions.join(' and ')}. Why this matters: committee leaders control which bills get a hearing and which ones never come up for a vote. This gives ${last} more power to shape legislation than most members of Congress.`,
     dataPoints: {
       leadershipPositions: powerRoles.length,
       totalCommittees: input.identity.committees.length,
@@ -320,8 +324,8 @@ function detectLobbyingLegislationAlignment(input: PatternInput): BriefPattern |
 
   return {
     type: 'lobbying-legislation-alignment',
-    headline: `Some of ${last}'s bills use language similar to lobbying filings.`,
-    detail: `${input.oversight.topLobbyingMatches.length} lobbying filings contain language that matches bills ${input.identity.name} sponsored or cosponsored. The closest match is between a filing by ${topMatch.filing} and the bill "${topMatch.bill}" (${(topMatch.similarity * 100).toFixed(0)}% text similarity). Similar language is common and does not mean coordination occurred.`,
+    headline: `Lobbying groups used similar language to bills ${last} backed.`,
+    detail: `We compared the text of lobbying filings to bills ${input.identity.name} sponsored or co-signed. ${input.oversight.topLobbyingMatches.length} filings used similar wording. The closest match: ${topMatch.filing} filed lobbying paperwork that overlaps ${(topMatch.similarity * 100).toFixed(0)}% with the bill "${topMatch.bill}." This is common — lobbyists and legislators often draw from the same policy language — and does not mean they coordinated.`,
     dataPoints: {
       alignmentScore: Math.round(input.oversight.lobbyingAlignmentScore * 100),
       matchCount: input.oversight.topLobbyingMatches.length,

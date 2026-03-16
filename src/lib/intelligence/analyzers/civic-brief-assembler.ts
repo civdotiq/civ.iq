@@ -437,17 +437,19 @@ ${patternLines}
 
 Generate JSON with these fields only:
 {
-  "patterns": [{ "type": "pattern-type", "headline": "1 sentence a citizen can understand", "detail": "2-3 sentences explaining what the numbers mean for voters" }],
-  "summary": "2-3 sentence overview a voter can read in 15 seconds. Lead with what matters most. Use 'your representative' where natural."
+  "patterns": [{ "type": "pattern-type", "headline": "1 plain sentence — answer: why should a voter care?", "detail": "2-3 sentences. Explain what the numbers mean for the voter, not just what they are. Start with the most important fact." }],
+  "summary": "2-3 sentences a voter can read in 15 seconds. Start with 'Your representative' and say something useful about who funds them and what they do. End with the single most important finding."
 }
 
 ${PLAIN_LANGUAGE_RULES}
-- Write for voters, not policy analysts. Explain what the numbers mean, not just what they are.
+- Write for voters, not policy analysts. Answer the question: "So what? Why does this matter to me?"
+- Do NOT just restate numbers. Explain what they mean. "$2.5M raised" is a fact. "Most of that money came from the banking industry, which their committee regulates" is an insight.
+- Use "you" and "your" to address the reader. Say "your representative" not "the representative."
 - State only what the data shows. Do not speculate on motives.
 - Do not say a legislator "should" do anything.
-- Each statement must reference specific numbers from the data above.
 - Use "pattern", "correlation", "association" — never "caused", "influenced", "resulted in".
-- Refer to the representative by last name after the first mention.`;
+- Use the representative's last name after the first mention.
+- Explain terms: "cosponsored" means "signed on to support someone else's bill." "Committee jurisdiction" means "the topics that committee is in charge of."`;
 }
 
 function buildFallbackSummary(
@@ -464,28 +466,34 @@ function buildFallbackSummary(
         : identity.party === 'I' || identity.party === 'ID'
           ? 'Independent'
           : identity.party;
+
+  const last = identity.name.split(' ').pop() ?? identity.name;
+
+  // Lead with who they are and where
   const location = identity.district
-    ? `${identity.state}'s ${ordinal(parseInt(identity.district))} congressional district`
+    ? `${identity.state}'s ${ordinal(parseInt(identity.district))} district`
     : identity.state;
 
   const parts: string[] = [];
 
   parts.push(
-    `${identity.name} is a ${partyName} who represents ${location} in the ${identity.chamber}.`
+    `Your representative ${identity.name} is a ${partyName} serving ${location} in the U.S. ${identity.chamber}.`
   );
 
+  // Tell the citizen something useful — money and activity
   if (funding.totalRaised !== null && voting.totalVotes > 0) {
     parts.push(
-      `They have raised $${formatCompactFallback(funding.totalRaised)} for the ${funding.cycle} election cycle and cast ${voting.totalVotes} recorded votes so far.`
+      `${last} has raised $${formatCompactFallback(funding.totalRaised)} for the ${funding.cycle} election cycle and cast ${voting.totalVotes} votes on the record.`
     );
   } else if (funding.totalRaised !== null) {
     parts.push(
-      `They have raised $${formatCompactFallback(funding.totalRaised)} for the ${funding.cycle} election cycle.`
+      `${last} has raised $${formatCompactFallback(funding.totalRaised)} for the ${funding.cycle} election cycle.`
     );
   } else if (voting.totalVotes > 0) {
-    parts.push(`They have cast ${voting.totalVotes} recorded votes so far.`);
+    parts.push(`${last} has cast ${voting.totalVotes} votes on the record so far this session.`);
   }
 
+  // Add the most noteworthy finding — this is what makes it an intelligence brief, not a bio
   if (patterns.length > 0) {
     parts.push(patterns[0]!.headline);
   }
