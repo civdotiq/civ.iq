@@ -23,9 +23,9 @@ const features: Feature[] = [
     icon: RepresentativesIcon,
     iconColor: 'civiq-blue',
     title: 'Federal Representatives',
-    description: 'All 540 House and Senate members with profiles and contact info',
+    description: 'All 535 House and Senate members with profiles and contact info',
     href: '/representatives',
-    stat: '540 Members',
+    stat: '535 Members',
   },
   {
     icon: LocationIcon,
@@ -79,9 +79,9 @@ const features: Feature[] = [
     icon: LocationIcon,
     iconColor: 'civiq-green',
     title: 'Local Government',
-    description: 'Find local officials and government contacts by address',
+    description: 'Local government coverage — expanding incrementally',
     href: '/local',
-    stat: 'All Localities',
+    stat: 'Roadmap',
   },
 ];
 

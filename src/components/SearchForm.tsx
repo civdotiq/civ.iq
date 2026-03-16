@@ -221,7 +221,7 @@ export default function SearchForm() {
             onChange={value => {
               setSearchInput(value);
             }}
-            placeholder="Enter address or ZIP code"
+            placeholder="Enter address"
             disabled={isLoading}
             defaultValue={searchInput}
             ariaLabel="Search by address or ZIP code"
@@ -341,8 +341,8 @@ export default function SearchForm() {
         </div>
       )}
       <p className="text-xs sm:text-sm text-gray-500 mt-grid-1 sm:mt-grid-2 px-grid-1">
-        Try: &ldquo;123 Main St, Detroit, MI&rdquo;, &ldquo;1600 Pennsylvania Ave&rdquo;, or
-        &ldquo;48221&rdquo;
+        Try: &ldquo;123 Main St, Detroit, MI&rdquo; or &ldquo;1600 Pennsylvania Ave, Washington,
+        DC&rdquo;
       </p>
     </div>
   );

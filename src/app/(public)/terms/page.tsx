@@ -67,19 +67,25 @@ export default function TermsPage() {
 
               <section className="mb-grid-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Use License
+                  Open Source License
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
-                  Permission is granted to temporarily access CIV.IQ for personal, non-commercial
-                  use only. This license does not include:
+                  CIV.IQ is open-source software released under the{' '}
+                  <a
+                    href="https://github.com/civdotiq/civ.iq/blob/main/LICENSE"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    MIT License
+                  </a>
+                  . You are free to use, copy, modify, and distribute the source code under the
+                  terms of that license.
                 </p>
-                <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
-                  <li>Modifying or copying the materials</li>
-                  <li>Using the materials for commercial purposes</li>
-                  <li>Attempting to reverse engineer any software</li>
-                  <li>Removing copyright or proprietary notations</li>
-                  <li>Transferring the materials to another person</li>
-                </ul>
+                <p className="text-gray-700 leading-relaxed">
+                  The CIV.IQ name, logo, and brand identity remain the property of CIV.IQ.
+                  Government data presented on the platform is public domain.
+                </p>
               </section>
 
               <section className="mb-grid-4">
@@ -142,16 +148,6 @@ export default function TermsPage() {
                   <li>Collect or harvest personal data of other users</li>
                   <li>Impersonate any person or entity</li>
                 </ul>
-              </section>
-
-              <section className="mb-grid-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                  Intellectual Property
-                </h2>
-                <p className="text-gray-700 leading-relaxed">
-                  The platform design, logo, and original content are owned by CIV.IQ and protected
-                  by copyright laws. Government data presented on the platform is public domain.
-                </p>
               </section>
 
               <section className="mb-grid-4">

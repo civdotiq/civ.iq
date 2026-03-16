@@ -50,14 +50,7 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
             Nostr civiq@civdotiq.org
           </a>
           <span className={separatorClass}>•</span>
-          <a
-            href="https://civdotiq.org/api/activitypub/actor"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={linkClass}
-          >
-            Fediverse @civiq@civdotiq.org
-          </a>
+          <span className={linkClass}>Fediverse @civiq@civdotiq.org</span>
         </div>
 
         {/* Legal Links */}
