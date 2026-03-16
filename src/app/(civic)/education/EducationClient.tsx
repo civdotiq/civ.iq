@@ -33,7 +33,6 @@ import {
   EDUCATION_CURRICULUM,
   GRADE_LEVEL_INFO,
   LESSON_TOPICS,
-  TEACHER_RESOURCES,
   WORKSHEETS,
   ASSESSMENT_RUBRICS,
   C3_STANDARDS,
@@ -309,9 +308,6 @@ export function EducationClient() {
 
       {/* Standards Tab Content */}
       {activeTab === 'standards' && <StandardsSection standards={standardsForGradeLevel} />}
-
-      {/* Teacher Resources Section */}
-      <TeacherResourcesSection gradeLevel={selectedGradeLevel} />
 
       {/* Print Lesson Modal */}
       {printLesson && (
@@ -866,50 +862,6 @@ function StandardsSection({ standards }: StandardsSectionProps) {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-interface TeacherResourcesSectionProps {
-  gradeLevel: GradeLevel;
-}
-
-function TeacherResourcesSection({ gradeLevel }: TeacherResourcesSectionProps) {
-  const resources = TEACHER_RESOURCES.filter(
-    r => r.gradeLevel === 'all' || r.gradeLevel === gradeLevel
-  );
-
-  return (
-    <div className="mt-12">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Teacher Resources</h2>
-      <div className="grid md:grid-cols-2 gap-4">
-        {resources.map(resource => (
-          <div
-            key={resource.id}
-            className="bg-white border-2 border-black p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-civiq-blue/10">
-                {resource.type === 'guide' && <BookOpen className="w-5 h-5 text-civiq-blue" />}
-                {resource.type === 'standards' && <Target className="w-5 h-5 text-civiq-blue" />}
-                {resource.type === 'quick-reference' && (
-                  <FileText className="w-5 h-5 text-civiq-blue" />
-                )}
-                {resource.type === 'rubric' && (
-                  <GraduationCap className="w-5 h-5 text-civiq-blue" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900">{resource.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{resource.description}</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-sm text-gray-400">
-                  Coming Soon
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

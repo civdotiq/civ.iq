@@ -11,7 +11,7 @@ export default function AboutPage() {
           { name: 'About', url: 'https://civdotiq.org/about' },
         ]}
       />
-      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing real-time access to federal, state, and local government data. 540 federal representatives, 50 state legislatures, and 39,000+ ZIP codes mapped to congressional districts." />
+      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures, 39,000+ ZIP codes, and machine-learning analysis of money-in-politics patterns." />
       <div className="min-h-screen aicher-background">
         <div className="max-w-3xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
           <nav className="text-sm text-gray-500 mb-6">
@@ -46,20 +46,19 @@ export default function AboutPage() {
               representatives.
             </h1>
             <p className="text-lg text-gray-600 max-w-md">
-              Federal, state, and local government data in one place.
+              Federal and state government data, organized for public use. All information sourced
+              from official government APIs. Nothing is fabricated.
             </p>
           </div>
 
           {/* What CIV.IQ Provides - Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-4 mb-grid-8">
             <div className="aicher-card p-grid-4">
-              <div className="text-3xl font-bold text-black mb-grid-1">540</div>
-              <h2 className="text-lg font-semibold text-black mb-grid-2">
-                Federal Representatives
-              </h2>
+              <div className="text-3xl font-bold text-black mb-grid-1">535</div>
+              <h2 className="text-lg font-semibold text-black mb-grid-2">Members of Congress</h2>
               <p className="text-gray-600 text-sm">
-                435 House members, 100 Senators, 5 territorial delegates. Voting records, committee
-                assignments, sponsored legislation.
+                435 House members and 100 Senators. Voting records, committee assignments, sponsored
+                legislation, and plain-language summaries.
               </p>
             </div>
 
@@ -67,31 +66,71 @@ export default function AboutPage() {
               <div className="text-3xl font-bold text-black mb-grid-1">50</div>
               <h2 className="text-lg font-semibold text-black mb-grid-2">State Legislatures</h2>
               <p className="text-gray-600 text-sm">
-                State legislators, bills, and votes. Governors, attorneys general, and state supreme
-                court justices.
+                7,383 state legislators across all 50 states. Bills, votes, committees, governors,
+                and attorneys general.
               </p>
             </div>
 
             <div className="aicher-card p-grid-4">
-              <div className="text-3xl font-bold text-black mb-grid-1">39K</div>
-              <h2 className="text-lg font-semibold text-black mb-grid-2">ZIP Codes</h2>
+              <div className="text-3xl font-bold text-black mb-grid-1">12</div>
+              <h2 className="text-lg font-semibold text-black mb-grid-2">Intelligence Analyzers</h2>
               <p className="text-gray-600 text-sm">
-                Enter your ZIP code to find your representatives. Includes multi-district areas and
-                all U.S. territories.
+                Statistical analysis cross-referencing votes, campaign finance, lobbying, and stock
+                trades. Every insight carries a confidence score and methodology.
               </p>
             </div>
 
             <div className="aicher-card p-grid-4">
-              <div className="text-3xl font-bold text-black mb-grid-1">$</div>
-              <h2 className="text-lg font-semibold text-black mb-grid-2">Campaign Finance</h2>
+              <div className="text-3xl font-bold text-black mb-grid-1">18</div>
+              <h2 className="text-lg font-semibold text-black mb-grid-2">
+                Government Data Sources
+              </h2>
               <p className="text-gray-600 text-sm">
-                FEC data on contributions, expenditures, and funding sources. See who funds your
-                representatives.
+                Congress.gov, FEC, Census Bureau, Federal Register, Senate lobbying disclosures,
+                USASpending, BLS, and more.
               </p>
             </div>
           </div>
 
-          {/* Data Sources - Minimal List */}
+          {/* Principles */}
+          <div className="mb-grid-8">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
+              Principles
+            </h2>
+            <div className="space-y-grid-3">
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Real data only.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  If data is unavailable, we say so. Nothing is generated or estimated.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Nonpartisan.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  No editorial position. We surface patterns and let citizens draw conclusions.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Transparent methodology.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Every analysis shows its confidence score, data sources, and disclaimers.
+                  Correlation is never presented as causation.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Open.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Open source (MIT). Data available via{' '}
+                  <Link href="/open" className="text-civiq-blue hover:underline">
+                    public API, RSS, Nostr, and the Fediverse
+                  </Link>
+                  . No account required.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Sources */}
           <div className="mb-grid-8">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
               Official Sources
@@ -116,6 +155,31 @@ export default function AboutPage() {
                 name="Open States"
                 description="State legislatures"
                 href="https://openstates.org/"
+              />
+              <DataSourceRow
+                name="Federal Register"
+                description="Rules, regulations, executive orders"
+                href="https://www.federalregister.gov/"
+              />
+              <DataSourceRow
+                name="Senate LDA"
+                description="Lobbying disclosures"
+                href="https://lda.senate.gov/"
+              />
+              <DataSourceRow
+                name="USASpending.gov"
+                description="Federal contracts, grants"
+                href="https://www.usaspending.gov/"
+              />
+              <DataSourceRow
+                name="Bureau of Labor Statistics"
+                description="Employment, wages"
+                href="https://www.bls.gov/"
+              />
+              <DataSourceRow
+                name="GovInfo.gov"
+                description="Hearing transcripts"
+                href="https://www.govinfo.gov/"
               />
             </div>
           </div>

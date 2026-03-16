@@ -89,10 +89,6 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           <Link href="/disclaimer" className={linkClass}>
             Disclaimer
           </Link>
-          <span className={separatorClass}>•</span>
-          <Link href="/transparency/reading-levels" className={linkClass}>
-            Reading Level Compliance
-          </Link>
         </div>
 
         {/* Copyright */}

@@ -12,20 +12,19 @@ import { useEffect, useState, Suspense, useCallback } from 'react';
 import logger from '@/lib/logging/simple-logger';
 import { parseAddressComponents } from '@/lib/census-geocoder';
 // Dynamic imports for code splitting - reduces initial bundle size
-const RepresentativeCard = dynamic(
+const RepBriefSummary = dynamic(
   () =>
-    import('@/features/representatives/components/RepresentativeCard').then(mod => ({
-      default: mod.RepresentativeCard,
+    import('@/components/intelligence/RepBriefSummary').then(mod => ({
+      default: mod.RepBriefSummary,
     })),
   {
     loading: () => (
-      <div className="bg-white border border-gray-200 p-6 animate-pulse">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-          <div className="flex-1">
-            <div className="h-4 bg-gray-200 w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 w-1/2"></div>
-          </div>
+      <div className="bg-white border-2 border-gray-900 p-6 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 w-3/4"></div>
+          <div className="h-3 bg-gray-200 w-1/2"></div>
+          <div className="h-3 bg-gray-200 w-full mt-4"></div>
+          <div className="h-3 bg-gray-200 w-4/5"></div>
         </div>
       </div>
     ),
@@ -595,6 +594,9 @@ function ResultsContent() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Representatives</h1>
+          <p className="text-sm text-gray-500 mb-3">
+            Plain-language summaries from public government data.
+          </p>
           <p className="text-gray-600">
             Representatives for {searchType === 'zip' ? 'ZIP code' : 'address'}{' '}
             <span className="font-semibold">{searchQuery}</span>
@@ -786,12 +788,19 @@ function ResultsContent() {
                           <Suspense
                             key={`${rep.name}-${index}`}
                             fallback={
-                              <div className="bg-white border-2 border-black p-6 animate-pulse">
+                              <div className="bg-white border-2 border-gray-900 p-6 animate-pulse">
                                 <div className="h-40 bg-gray-200"></div>
                               </div>
                             }
                           >
-                            <RepresentativeCard representative={rep} />
+                            <RepBriefSummary
+                              bioguideId={rep.bioguideId}
+                              name={rep.name}
+                              party={rep.party?.charAt(0) ?? ''}
+                              state={rep.state}
+                              district={rep.district ?? null}
+                              chamber={rep.chamber}
+                            />
                           </Suspense>
                         ))}
                       </div>

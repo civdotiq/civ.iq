@@ -65,22 +65,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Your Representatives CTA */}
-      <div className="px-grid-2 sm:px-grid-3 lg:px-grid-4 pb-grid-2 sm:pb-grid-4">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/your-reps"
-            className="block border-2 border-gray-900 p-4 sm:p-6 hover:bg-gray-50 transition-colors"
-          >
-            <h2 className="aicher-heading type-lg text-gray-900 mb-1">Your Representatives</h2>
-            <p className="type-sm text-gray-600">
-              See who represents you and what they&apos;re doing — plain-language summaries from
-              public government data.
-            </p>
-          </Link>
-        </div>
-      </div>
-
       {/* Feature Grid Section */}
       <FeatureGrid />
 

@@ -182,7 +182,7 @@ export default function Home() {
             <div className="relative group">
               <div className="relative overflow-hidden border-2 border-black bg-white">
                 <SmartSearchInput
-                  placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
+                  placeholder="Enter address (e.g., 123 Main St, City, State)"
                   className="w-full"
                   showRecentSearches={true}
                   showExamples={true}
