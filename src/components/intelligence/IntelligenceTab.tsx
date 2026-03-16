@@ -19,8 +19,10 @@ import { InfluenceChainTable } from './InfluenceChainTable';
 import { StockOverlapTable } from './StockOverlapTable';
 import { VotePredictionCard } from './VotePredictionCard';
 import { InfluenceChainCard } from './InfluenceChainCard';
+import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
 import type {
+  CivicBriefInsight,
   FinanceJurisdictionInsight,
   VoteFinanceInsight,
   TemporalVoteInsight,
@@ -102,6 +104,12 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       SWR_OPTIONS
     );
 
+  const { data: civicBriefData, isLoading: civicBriefLoading } = useSWR<CivicBriefInsight>(
+    `/api/intelligence/representative/${bioguideId}/brief`,
+    fetcher,
+    SWR_OPTIONS
+  );
+
   // Validate responses — only use data with expected shape
   const financeJurisdiction =
     financeJurisdictionData?.overlapScore != null ? financeJurisdictionData : null;
@@ -111,8 +119,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const stock = stockData?.flaggedTrades ? stockData : null;
   const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
   const influenceChain = influenceChainData?.chains ? influenceChainData : null;
+  const civicBrief = civicBriefData?.identity ? civicBriefData : null;
 
   const hasAnyInsight =
+    civicBrief ||
     financeJurisdiction ||
     voteFinance ||
     temporal ||
@@ -121,6 +131,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     votePrediction ||
     influenceChain;
   const allDoneLoading =
+    !civicBriefLoading &&
     !fjLoading &&
     !vfLoading &&
     !temporalLoading &&
@@ -170,6 +181,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         Statistical analysis connecting campaign finance, voting records, and committee
         jurisdictions using public government data.
       </p>
+
+      {/* Civic Intelligence Brief */}
+      {civicBrief && <CivicBriefCard insight={civicBrief} />}
+      {civicBriefLoading && !civicBrief && <InsightSkeleton tall />}
 
       {/* Finance-Jurisdiction */}
       {financeJurisdiction && (

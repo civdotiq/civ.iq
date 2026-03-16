@@ -538,6 +538,70 @@ export interface SectorLeaderboardResponse {
   dataAsOf: string;
 }
 
+// ── Civic Intelligence Brief ─────────────────────────────────────────
+
+/** 7 defined pattern types — AI selects from these, never invents new ones */
+export type BriefPatternType =
+  | 'funding-jurisdiction-overlap'
+  | 'voting-party-divergence'
+  | 'legislation-focus-shift'
+  | 'donor-concentration'
+  | 'in-state-funding-ratio'
+  | 'committee-power-position'
+  | 'lobbying-legislation-alignment';
+
+export interface BriefPattern {
+  type: BriefPatternType;
+  headline: string;
+  detail: string;
+  dataPoints: Record<string, number | string>;
+  significance: number;
+}
+
+export interface BriefIdentity {
+  name: string;
+  party: string;
+  state: string;
+  district: string | null;
+  chamber: 'House' | 'Senate';
+  termStart: string;
+  committees: Array<{ name: string; role: string }>;
+}
+
+export interface BriefFunding {
+  totalRaised: number | null;
+  totalSpent: number | null;
+  cashOnHand: number | null;
+  inStatePct: number | null;
+  topSectors: Array<{ sector: string; amount: number; pct: number; overlapsCommittee: boolean }>;
+  contributionsSampled: number;
+  cycle: number;
+}
+
+export interface BriefVoting {
+  totalVotes: number;
+  partyAlignmentPct: number | null;
+  missedVotePct: number | null;
+  billsSponsored: number;
+  billsCosponsored: number;
+}
+
+export interface BriefOversight {
+  jurisdictionOverlapScore: number | null;
+  lobbyingAlignmentScore: number | null;
+  topLobbyingMatches: Array<{ filing: string; bill: string; similarity: number }>;
+}
+
+export interface CivicBriefInsight extends InsightBase {
+  bioguideId: string;
+  identity: BriefIdentity;
+  funding: BriefFunding;
+  voting: BriefVoting;
+  oversight: BriefOversight;
+  patterns: BriefPattern[];
+  summary: string;
+}
+
 // ── Stance Classification ────────────────────────────────────────────
 
 /**
