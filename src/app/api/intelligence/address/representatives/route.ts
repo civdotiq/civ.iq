@@ -1,0 +1,174 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Intelligence API — Address Representatives Resolver
+ *
+ * Lightweight district resolver: address/ZIP -> congressional district -> rep list.
+ * No heavy analysis — just identity resolution for progressive loading.
+ *
+ * POST /api/intelligence/address/representatives  (street/city/state address)
+ * GET  /api/intelligence/address/representatives?zip=20001  (ZIP fallback)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/logging/simple-logger';
+import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
+import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
+import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
+import { withTimeout } from '@/lib/intelligence/analyzers/shared';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
+
+// ── Types ────────────────────────────────────────────────────────────
+
+interface RepresentativeIdentity {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district: string | null;
+  chamber: 'House' | 'Senate';
+}
+
+interface RepresentativesResponse {
+  representatives: RepresentativeIdentity[];
+  state: string;
+  district: string;
+  multiDistrict: boolean;
+}
+
+type RouteResponse = RepresentativesResponse | { error: string };
+
+// ── Shared Logic ─────────────────────────────────────────────────────
+
+async function resolveRepresentatives(
+  state: string,
+  district: string,
+  multiDistrict: boolean
+): Promise<RepresentativesResponse> {
+  const allReps = await RepresentativesCoreService.getAllRepresentatives();
+  const stateUpper = state.toUpperCase();
+
+  const districtReps = allReps.filter(rep => {
+    if (rep.state !== stateUpper) return false;
+    if (rep.chamber === 'Senate') return true;
+    return rep.chamber === 'House' && rep.district === district;
+  });
+
+  return {
+    representatives: districtReps.map(rep => ({
+      bioguideId: rep.bioguideId,
+      name: rep.name,
+      party: rep.party,
+      state: rep.state,
+      district: rep.district ?? null,
+      chamber: rep.chamber as 'House' | 'Senate',
+    })),
+    state: stateUpper,
+    district,
+    multiDistrict,
+  };
+}
+
+// ── POST: Address Resolution ─────────────────────────────────────────
+
+export async function POST(request: NextRequest): Promise<NextResponse<RouteResponse>> {
+  try {
+    const body = (await request.json()) as Partial<{
+      street: string;
+      city: string;
+      state: string;
+      zip: string;
+    }>;
+
+    if (!body.street || !body.city || !body.state) {
+      return NextResponse.json({ error: 'street, city, and state are required' }, { status: 400 });
+    }
+
+    logger.info('[Representatives] POST address resolution', {
+      city: body.city,
+      state: body.state,
+    });
+
+    const geocodeResult = await withTimeout(
+      CensusGeocoderService.geocodeAddress({
+        street: body.street,
+        city: body.city,
+        state: body.state,
+        zip: body.zip,
+      }),
+      15_000,
+      'CensusGeocode'
+    );
+
+    if (!geocodeResult.congressionalDistrict) {
+      return NextResponse.json(
+        { error: 'Could not resolve congressional district for this address' },
+        { status: 404 }
+      );
+    }
+
+    const result = await resolveRepresentatives(
+      body.state.toUpperCase(),
+      geocodeResult.congressionalDistrict.number,
+      false
+    );
+
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+      },
+    });
+  } catch (error) {
+    logger.error('[Representatives] POST error', error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ── GET: ZIP Code Fallback ───────────────────────────────────────────
+
+export async function GET(request: NextRequest): Promise<NextResponse<RouteResponse>> {
+  try {
+    const zip = request.nextUrl.searchParams.get('zip');
+
+    if (!zip || !/^\d{5}$/.test(zip)) {
+      return NextResponse.json(
+        { error: 'A valid 5-digit zip query parameter is required' },
+        { status: 400 }
+      );
+    }
+
+    logger.info('[Representatives] GET zip resolution', { zip });
+
+    const districts = getAllDistrictsForZip(zip);
+
+    if (districts.length === 0) {
+      return NextResponse.json(
+        { error: `No congressional district found for ZIP ${zip}` },
+        { status: 404 }
+      );
+    }
+
+    const multiDistrict = districts.length > 1;
+    const primary = districts.find(d => d.primary) ?? districts[0]!;
+
+    const result = await resolveRepresentatives(
+      primary.state.toUpperCase(),
+      primary.district,
+      multiDistrict
+    );
+
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+      },
+    });
+  } catch (error) {
+    logger.error('[Representatives] GET error', error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

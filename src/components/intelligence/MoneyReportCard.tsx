@@ -3,6 +3,12 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * @deprecated Replaced by RepBriefSummary + RepresentativeLookupForm.
+ * The /money-report route now redirects to /your-reps.
+ * Do not use in new code. Will be removed in a future cleanup.
+ */
+
 'use client';
 
 import { ConfidenceBadge } from './ConfidenceBadge';

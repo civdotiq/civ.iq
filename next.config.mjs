@@ -172,6 +172,16 @@ const nextConfig = {
     // Optimize package imports for better tree-shaking
     optimizePackageImports: ['d3', 'recharts', 'lucide-react', 'date-fns'],
   },
+  // Redirects for deprecated routes
+  async redirects() {
+    return [
+      {
+        source: '/money-report',
+        destination: '/your-reps',
+        permanent: true,
+      },
+    ];
+  },
   // Rewrites for clean URL aliases
   async rewrites() {
     return [

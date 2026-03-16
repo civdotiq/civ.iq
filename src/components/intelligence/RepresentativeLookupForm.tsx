@@ -3,23 +3,32 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-/**
- * @deprecated Replaced by RepresentativeLookupForm.
- * The /money-report route now redirects to /your-reps.
- * Do not use in new code. Will be removed in a future cleanup.
- */
-
 'use client';
 
 import { useState } from 'react';
-import { MoneyReportCard } from './MoneyReportCard';
-import type { MoneyReportCardInsight } from '@/lib/intelligence/types';
+import { RepBriefSummary } from './RepBriefSummary';
 
-interface AddressLookupFormProps {
+interface RepresentativeLookupFormProps {
   className?: string;
 }
 
 type LookupMode = 'address' | 'zip';
+
+interface RepIdentity {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district: string | null;
+  chamber: 'House' | 'Senate';
+}
+
+interface RepresentativesResult {
+  representatives: RepIdentity[];
+  state: string;
+  district: string;
+  multiDistrict: boolean;
+}
 
 const US_STATES = [
   'AL',
@@ -75,7 +84,7 @@ const US_STATES = [
   'WY',
 ] as const;
 
-export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
+export function RepresentativeLookupForm({ className = '' }: RepresentativeLookupFormProps) {
   const [mode, setMode] = useState<LookupMode>('address');
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
@@ -84,27 +93,27 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
   const [zipOnly, setZipOnly] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [insight, setInsight] = useState<MoneyReportCardInsight | null>(null);
+  const [result, setResult] = useState<RepresentativesResult | null>(null);
 
   function canSubmitAddress(): boolean {
     return street.trim().length > 0 && city.trim().length > 0 && state.length > 0;
   }
 
   function canSubmitZip(): boolean {
-    return zipOnly.trim().length > 0;
+    return /^\d{5}$/.test(zipOnly.trim());
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setInsight(null);
+    setResult(null);
     setLoading(true);
 
     try {
       let response: Response;
 
       if (mode === 'address') {
-        response = await fetch('/api/intelligence/address/money-report', {
+        response = await fetch('/api/intelligence/address/representatives', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -116,7 +125,7 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         });
       } else {
         response = await fetch(
-          `/api/intelligence/address/money-report?zip=${encodeURIComponent(zipOnly.trim())}`
+          `/api/intelligence/address/representatives?zip=${encodeURIComponent(zipOnly.trim())}`
         );
       }
 
@@ -127,10 +136,14 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         throw new Error(String(message));
       }
 
-      const data: MoneyReportCardInsight = await response.json();
-      setInsight(data);
+      const data: RepresentativesResult = await response.json();
+      setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "We couldn't find representatives for that address. Try a full street address with ZIP code."
+      );
     } finally {
       setLoading(false);
     }
@@ -174,11 +187,11 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         {mode === 'address' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <div className="sm:col-span-2">
-              <label htmlFor="addr-street" className={labelClasses}>
+              <label htmlFor="rep-street" className={labelClasses}>
                 Street Address
               </label>
               <input
-                id="addr-street"
+                id="rep-street"
                 type="text"
                 value={street}
                 onChange={e => setStreet(e.target.value)}
@@ -188,11 +201,11 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
               />
             </div>
             <div>
-              <label htmlFor="addr-city" className={labelClasses}>
+              <label htmlFor="rep-city" className={labelClasses}>
                 City
               </label>
               <input
-                id="addr-city"
+                id="rep-city"
                 type="text"
                 value={city}
                 onChange={e => setCity(e.target.value)}
@@ -202,11 +215,11 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
               />
             </div>
             <div>
-              <label htmlFor="addr-state" className={labelClasses}>
+              <label htmlFor="rep-state" className={labelClasses}>
                 State
               </label>
               <select
-                id="addr-state"
+                id="rep-state"
                 value={state}
                 onChange={e => setState(e.target.value)}
                 className={inputClasses}
@@ -221,11 +234,11 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
               </select>
             </div>
             <div>
-              <label htmlFor="addr-zip" className={labelClasses}>
+              <label htmlFor="rep-zip" className={labelClasses}>
                 ZIP Code (optional)
               </label>
               <input
-                id="addr-zip"
+                id="rep-zip"
                 type="text"
                 value={zip}
                 onChange={e => setZip(e.target.value)}
@@ -236,11 +249,11 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
           </div>
         ) : (
           <div className="mb-4">
-            <label htmlFor="zip-only" className={labelClasses}>
+            <label htmlFor="rep-zip-only" className={labelClasses}>
               ZIP Code
             </label>
             <input
-              id="zip-only"
+              id="rep-zip-only"
               type="text"
               value={zipOnly}
               onChange={e => setZipOnly(e.target.value)}
@@ -256,7 +269,7 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
           disabled={loading || (mode === 'address' ? !canSubmitAddress() : !canSubmitZip())}
           className={buttonClasses}
         >
-          {mode === 'address' ? 'Analyze My Representatives' : 'Look Up by ZIP'}
+          {loading ? 'Finding your representatives...' : 'Find My Representatives'}
         </button>
       </form>
 
@@ -264,7 +277,7 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
       {loading && (
         <div className="border-2 border-gray-200 p-4 mt-4">
           <p className="type-sm text-gray-600 animate-pulse">
-            Analyzing your representatives&apos; financial patterns...
+            Looking up your congressional district...
           </p>
         </div>
       )}
@@ -276,8 +289,40 @@ export function AddressLookupForm({ className = '' }: AddressLookupFormProps) {
         </div>
       )}
 
-      {/* Results */}
-      {insight && <MoneyReportCard insight={insight} className="mt-4" />}
+      {/* Results — rep cards with progressive brief loading */}
+      {result && (
+        <div className="mt-6">
+          <p className="type-sm text-gray-500 mb-4">
+            {result.state} District {result.district}
+            {result.multiDistrict && (
+              <span className="text-gray-400">
+                {' '}
+                (this ZIP code spans multiple districts — showing primary)
+              </span>
+            )}
+          </p>
+
+          {result.representatives.length === 0 && (
+            <p className="type-sm text-gray-500">
+              No representatives found for this district. This may be a data gap.
+            </p>
+          )}
+
+          <div className="space-y-4">
+            {result.representatives.map(rep => (
+              <RepBriefSummary
+                key={rep.bioguideId}
+                bioguideId={rep.bioguideId}
+                name={rep.name}
+                party={rep.party}
+                state={rep.state}
+                district={rep.district}
+                chamber={rep.chamber}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
