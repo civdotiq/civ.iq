@@ -36,20 +36,25 @@ export default function LocalPage() {
             services and decisions that directly impact your neighborhood.
           </p>
 
-          {/* Coming Soon Notice */}
-          <div className="max-w-2xl mx-auto bg-blue-50 border border-blue-200 p-8 mb-12">
-            <h2 className="text-2xl font-semibold text-blue-900 mb-4">Coming Soon</h2>
-            <p className="text-blue-800 mb-4">
-              We&apos;re working hard to bring you comprehensive local government data including
-              mayors, city council members, county commissioners, and school board officials.
+          {/* Roadmap Notice */}
+          <div className="max-w-2xl mx-auto border-2 border-black p-8 mb-12">
+            <h2 className="text-2xl font-semibold mb-4">Roadmap</h2>
+            <p className="text-gray-700 mb-4">
+              There is no single API for local government data in the United States. Over 90,000
+              local jurisdictions each publish records in different formats, or not at all. This is
+              the hardest data integration problem in civic technology.
             </p>
-            <p className="text-blue-700">
-              In the meantime, use our address search to find your federal and state
-              representatives.
+            <p className="text-gray-700 mb-4">
+              CIV.IQ is building local coverage incrementally, starting with the largest
+              municipalities and expanding through open data portals, state-level aggregators, and
+              community contributions.
+            </p>
+            <p className="text-gray-700">
+              Today, use our address search to find your federal and state representatives.
             </p>
             <Link
               href="/"
-              className="inline-block mt-6 bg-civiq-blue text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors"
+              className="inline-block mt-6 border-2 border-black px-6 py-3 font-medium hover:bg-black hover:text-white transition-colors"
             >
               Search Representatives
             </Link>
