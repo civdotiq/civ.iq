@@ -188,6 +188,14 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
         methodology={insight.methodology}
         source={insight.source}
       />
+
+      {/* Investigate network link */}
+      <a
+        href={`/investigate?node=rep:${insight.bioguideId}`}
+        className="block mt-4 px-3 py-2 border-2 border-[#3ea2d4] text-[#3ea2d4] type-sm text-center font-bold hover:bg-[#3ea2d4] hover:text-white transition-colors"
+      >
+        Visualize network
+      </a>
     </div>
   );
 }

@@ -41,6 +41,8 @@ interface InsightCardProps {
     | InfluenceChainInsight;
   keyStats: Array<{ label: string; value: string }>;
   className?: string;
+  /** Optional bioguide ID to enable "Explore connections" link */
+  bioguideId?: string;
 }
 
 function formatDate(iso: string): string {
@@ -55,7 +57,13 @@ function formatDate(iso: string): string {
   }
 }
 
-export function InsightCard({ title, insight, keyStats, className = '' }: InsightCardProps) {
+export function InsightCard({
+  title,
+  insight,
+  keyStats,
+  className = '',
+  bioguideId,
+}: InsightCardProps) {
   return (
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header: title + confidence */}
@@ -90,6 +98,15 @@ export function InsightCard({ title, insight, keyStats, className = '' }: Insigh
         methodology={insight.methodology}
         source={insight.source}
       />
+
+      {bioguideId && (
+        <a
+          href={`/investigate?node=rep:${bioguideId}`}
+          className="block mt-3 type-xs text-[#3ea2d4] hover:underline"
+        >
+          Explore connections
+        </a>
+      )}
     </div>
   );
 }
