@@ -155,15 +155,6 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
   const base64Id = encodeBase64Url(legislator.id);
 
-  // Fetch finance data
-  const { data: financeData, isLoading: financeLoading } = useSWR(
-    activeTab === 'finance'
-      ? `/api/state-legislature/${legislator.state}/legislator/${base64Id}/finance`
-      : null,
-    (url: string) => fetch(url).then(r => r.json()),
-    { revalidateOnFocus: false, dedupingInterval: 300000 }
-  );
-
   // Fetch network data
   const { data: networkData, isLoading: networkLoading } = useSWR(
     activeTab === 'network'
@@ -179,12 +170,6 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false, dedupingInterval: 300000 }
   );
-
-  const formatCurrency = (amount: number): string => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
-  };
 
   // Render sidebar content (for overview tab)
   const renderSidebar = () => (
@@ -656,82 +641,17 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
         );
 
       case 'finance':
-        if (financeLoading) {
-          return (
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 w-1/3"></div>
-              <div className="h-32 bg-gray-100 border-2 border-gray-300"></div>
-            </div>
-          );
-        }
-        if (!financeData?.success || !financeData?.finance) {
-          return (
-            <div className="text-center py-8">
-              <div className="text-gray-600 mb-2">Campaign finance data not available</div>
-              <div className="text-sm text-gray-400">
-                FollowTheMoney coverage varies by state. Finance data may not be available for this
-                legislator.
-              </div>
-            </div>
-          );
-        }
         return (
-          <div className="space-y-6">
-            {/* Total Contributions */}
-            {financeData.finance.totalContributions != null &&
-              financeData.finance.totalContributions > 0 && (
-                <div className="border-2 border-black p-4 sm:p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Contributions</h3>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {formatCurrency(financeData.finance.totalContributions)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Source: {financeData.finance.source || 'FollowTheMoney'}
-                  </div>
-                </div>
-              )}
-
-            {/* Top Industries */}
-            {financeData.finance.topIndustries && financeData.finance.topIndustries.length > 0 && (
-              <div className="border-2 border-black p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Industries</h3>
-                <div className="space-y-2 font-mono text-sm">
-                  {financeData.finance.topIndustries.map(
-                    (ind: { industry: string; amount: number; count: number }) => (
-                      <div key={ind.industry} className="flex justify-between">
-                        <span className="text-gray-700 truncate mr-3">{ind.industry}</span>
-                        <span className="font-semibold flex-shrink-0">
-                          {formatCurrency(ind.amount)}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Election Cycles */}
-            {financeData.finance.electionCycles &&
-              financeData.finance.electionCycles.length > 0 && (
-                <div className="border-2 border-black p-4 sm:p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Election Cycles</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {financeData.finance.electionCycles.map(
-                      (cycle: { year: number; raised: number; spent: number; office: string }) => (
-                        <div
-                          key={cycle.year}
-                          className="border-2 border-gray-300 px-3 py-2 text-sm"
-                        >
-                          <div className="font-bold">{cycle.year}</div>
-                          <div className="text-xs text-gray-500">
-                            Raised: {formatCurrency(cycle.raised)}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
+          <div className="border-2 border-gray-200 p-6 sm:p-8 text-center">
+            <DollarSign className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="type-base text-gray-900 aicher-heading mb-2">
+              State campaign finance data coming soon
+            </p>
+            <p className="type-sm text-gray-500 max-w-md mx-auto">
+              We are working on integrating official state-level campaign finance disclosures.
+              Federal campaign finance data is available on federal representative profiles via
+              FEC.gov.
+            </p>
           </div>
         );
 
