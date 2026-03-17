@@ -38,3 +38,14 @@ export { ensureMeshInitialized } from './init';
 // Traversal — generic N-hop BFS exploration
 export { traverseMesh } from './traversal';
 export type { TraversalFilter, TraversalResult } from './traversal';
+
+// Temporal — time-series edge aggregation and trend detection
+export { buildTemporalProfile, computeTrend, detectTemporalEvents } from './temporal';
+export type {
+  TemporalBucket,
+  TemporalEdge,
+  TemporalEdgeSummary,
+  TemporalEvent,
+  TemporalProfile,
+  TemporalTrend,
+} from './temporal-types';

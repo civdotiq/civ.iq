@@ -82,7 +82,26 @@ export interface GraphEdge {
   /** Data quality confidence (0-1) */
   confidence: number;
   /** Temporal context for timeline display */
-  temporal?: { date: string; period?: string };
+  temporal?: {
+    date: string;
+    period?: string;
+    /** When this relationship first appeared in the data */
+    firstSeen?: string;
+    /** Most recent activity */
+    lastSeen?: string;
+    /** Pre-computed quarterly buckets (populated by hydrators when available) */
+    buckets?: Array<{
+      period: string;
+      start: string;
+      end: string;
+      value: number;
+      eventCount: number;
+    }>;
+    /** Computed trend */
+    trend?: 'increasing' | 'decreasing' | 'stable' | 'new' | 'ended';
+    /** Year-over-year change */
+    yoyChange?: number | null;
+  };
   /** ISO timestamp of freshest source data */
   dataAsOf: string;
   /** URL to the authoritative external data source for verification */

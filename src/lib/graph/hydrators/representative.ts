@@ -156,7 +156,10 @@ async function hydrateContributions(
   const contributions = await fecApiService.getSampleContributions(fecId, cycle, MAX_CONTRIBUTIONS);
 
   // Aggregate by employer (organization)
-  const orgTotals = new Map<string, { total: number; count: number; latestDate: string }>();
+  const orgTotals = new Map<
+    string,
+    { total: number; count: number; earliestDate: string; latestDate: string }
+  >();
   for (const contrib of contributions) {
     const employer = contrib.contributor_employer?.trim();
     if (
@@ -169,11 +172,15 @@ async function hydrateContributions(
       continue;
     }
     const key = employer.toUpperCase();
-    const existing = orgTotals.get(key) ?? { total: 0, count: 0, latestDate: '' };
+    const existing = orgTotals.get(key) ?? { total: 0, count: 0, earliestDate: '', latestDate: '' };
     existing.total += contrib.contribution_receipt_amount;
     existing.count += 1;
-    if (contrib.contribution_receipt_date > existing.latestDate) {
-      existing.latestDate = contrib.contribution_receipt_date;
+    const receiptDate = contrib.contribution_receipt_date;
+    if (receiptDate && (!existing.earliestDate || receiptDate < existing.earliestDate)) {
+      existing.earliestDate = receiptDate;
+    }
+    if (receiptDate && receiptDate > existing.latestDate) {
+      existing.latestDate = receiptDate;
     }
     orgTotals.set(key, existing);
   }
@@ -213,7 +220,14 @@ async function hydrateContributions(
       },
       weight: Math.min(data.total / maxAmount, 1.0),
       confidence: 0.9,
-      temporal: data.latestDate ? { date: data.latestDate, period: `${cycle} cycle` } : undefined,
+      temporal: data.latestDate
+        ? {
+            date: data.latestDate,
+            period: `${cycle} cycle`,
+            firstSeen: data.earliestDate || data.latestDate,
+            lastSeen: data.latestDate,
+          }
+        : undefined,
       dataAsOf,
       sourceUrl: `https://www.fec.gov/data/receipts/individual-contributions/?committee_id=${fecId}&contributor_employer=${encodeURIComponent(orgName)}`,
       sourceLabel: 'FEC individual contributions',

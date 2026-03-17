@@ -184,24 +184,41 @@ async function hydrateLobbyingActivity(
     if (!lobbyingData || lobbyingData.length === 0) return { nodes, edges };
 
     // Aggregate lobbying by org — take top 20
-    const orgSpending = new Map<string, number>();
+    const orgSpending = new Map<
+      string,
+      { total: number; earliestQuarter: string; latestQuarter: string }
+    >();
     for (const data of lobbyingData) {
       const filings = data.filings ?? [];
       for (const filing of filings) {
         const orgName = filing.company?.trim();
         if (!orgName) continue;
         const key = orgName.toUpperCase();
-        orgSpending.set(key, (orgSpending.get(key) ?? 0) + (filing.amount ?? 0));
+        const existing = orgSpending.get(key) ?? {
+          total: 0,
+          earliestQuarter: '',
+          latestQuarter: '',
+        };
+        existing.total += filing.amount ?? 0;
+        const period = filing.year && filing.quarter ? `${filing.year}-${filing.quarter}` : '';
+        if (period && (!existing.earliestQuarter || period < existing.earliestQuarter)) {
+          existing.earliestQuarter = period;
+        }
+        if (period && period > existing.latestQuarter) {
+          existing.latestQuarter = period;
+        }
+        orgSpending.set(key, existing);
       }
     }
 
     const sorted = Array.from(orgSpending.entries())
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => b.total - a.total)
       .slice(0, 20);
 
-    const maxSpend = sorted[0]?.[1] ?? 1;
+    const maxSpend = sorted[0]?.[1]?.total ?? 1;
 
-    for (const [orgName, spending] of sorted) {
+    for (const [orgName, orgData] of sorted) {
+      const spending = orgData.total;
       const orgId = toCanonicalId('organization', normalizeOrgName(orgName));
       const displayName = toTitleCase(orgName);
 
@@ -224,6 +241,13 @@ async function hydrateLobbyingActivity(
         properties: { spending },
         weight: Math.min(spending / maxSpend, 1.0),
         confidence: 0.85,
+        temporal: orgData.latestQuarter
+          ? {
+              date: orgData.latestQuarter,
+              firstSeen: orgData.earliestQuarter || orgData.latestQuarter,
+              lastSeen: orgData.latestQuarter,
+            }
+          : undefined,
         dataAsOf,
         sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
         sourceLabel: 'Senate Lobbying Disclosure Act',
