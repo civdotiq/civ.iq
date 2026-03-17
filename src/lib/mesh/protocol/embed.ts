@@ -63,6 +63,8 @@ const BASE_STYLES = `
   .attribution a { color: #3ea2d4; text-decoration: none; }
 `;
 
+import { displaySector } from '../sector-display';
+
 export interface ScorecardData {
   name: string;
   party: string;
@@ -98,16 +100,16 @@ export function renderScorecard(data: ScorecardData): string {
     <div class="card">
       <div class="card-title">${escapeHtml(data.name)} <span class="${partyClass}">(${escapeHtml(data.party)}-${escapeHtml(districtLabel)})</span></div>
       <div class="card-row">
-        <span class="card-label">Alignment</span>
+        <span class="card-label">District Match</span>
         <span class="card-value">${alignmentPct} ${alignmentBar}</span>
       </div>
       <div class="card-row">
-        <span class="card-label">Independence</span>
+        <span class="card-label">Votes Against Party</span>
         <span class="card-value">${data.independenceScore != null ? `${Math.round(data.independenceScore * 100)}%` : 'N/A'}</span>
       </div>
       <div class="card-row">
-        <span class="card-label">Top Donor Sector</span>
-        <span class="card-value">${escapeHtml(data.topDonorSector ?? 'N/A')}</span>
+        <span class="card-label">Top Donor Industry</span>
+        <span class="card-value">${escapeHtml(data.topDonorSector ? displaySector(data.topDonorSector) : 'N/A')}</span>
       </div>
       <div class="attribution">
         Data: <a href="https://civ.iq" target="_blank" rel="noopener">CIV.IQ</a> &middot; ${escapeHtml(formatDate(data.dataAsOf))}
@@ -126,16 +128,16 @@ export function renderDistrictCard(data: DistrictCardData): string {
     <div class="card">
       <div class="card-title">${escapeHtml(data.districtId)} &middot; ${escapeHtml(data.districtLabel)}</div>
       <div class="card-row">
-        <span class="card-label">Rep Alignment</span>
+        <span class="card-label">Rep Match</span>
         <span class="card-value">${alignmentPct} ${alignmentBar}</span>
       </div>
       <div class="card-row">
-        <span class="card-label">Peer Avg</span>
+        <span class="card-label">Similar Districts Avg</span>
         <span class="card-value">${data.peerAvg != null ? `${Math.round(data.peerAvg * 100)}%` : 'N/A'}</span>
       </div>
       <div class="card-row">
-        <span class="card-label">Top Sector</span>
-        <span class="card-value">${escapeHtml(data.topSector ?? 'N/A')}</span>
+        <span class="card-label">Top Industry</span>
+        <span class="card-value">${escapeHtml(data.topSector ? displaySector(data.topSector) : 'N/A')}</span>
       </div>
       <div class="attribution">
         Data: <a href="https://civ.iq" target="_blank" rel="noopener">CIV.IQ</a> &middot; ${escapeHtml(formatDate(data.dataAsOf))}

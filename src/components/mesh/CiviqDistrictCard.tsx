@@ -12,6 +12,8 @@
  * Follows Aicher/Ulm design system.
  */
 
+import { displaySector } from '@/lib/mesh/sector-display';
+
 interface CiviqDistrictCardProps {
   districtId: string;
   districtLabel: string;
@@ -42,15 +44,15 @@ export default function CiviqDistrictCard({
         {districtId} &middot; {districtLabel}
       </div>
 
-      <Row label="Rep Alignment" value={formatPct(repAlignment)} bar={repAlignment} />
-      <Row label="Peer Avg" value={formatPct(peerAvg)} />
-      <Row label="Top Sector" value={topSector ?? 'N/A'} />
+      <Row label="Rep Match" value={formatPct(repAlignment)} bar={repAlignment} />
+      <Row label="Similar Districts Avg" value={formatPct(peerAvg)} />
+      <Row label="Top Industry" value={topSector ? displaySector(topSector) : 'N/A'} />
 
       <div
         style={{
           marginTop: '12px',
           paddingTop: '8px',
-          borderTop: '1px solid #e5e5e5',
+          borderTop: '2px solid #e5e5e5',
           fontSize: '11px',
           color: '#999',
         }}
@@ -78,7 +80,7 @@ function Row({ label, value, bar }: { label: string; value: string; bar?: number
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '4px 0',
-        borderBottom: '1px solid #e5e5e5',
+        borderBottom: '2px solid #e5e5e5',
       }}
     >
       <span style={{ color: '#666', fontSize: '13px' }}>{label}</span>

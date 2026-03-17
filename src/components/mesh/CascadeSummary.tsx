@@ -13,6 +13,7 @@
 'use client';
 
 import type { CascadeResult, CascadeRepEffect } from '@/lib/mesh/propagation/cascade';
+import { displaySector } from '@/lib/mesh/sector-display';
 
 interface CascadeSummaryProps {
   result: CascadeResult;
@@ -28,8 +29,8 @@ export default function CascadeSummary({ result }: CascadeSummaryProps) {
           Cascade Simulation
         </h3>
         <p className="text-sm text-gray-500">
-          If <span className="font-medium text-gray-700">{result.sector}</span> funding {direction}s
-          by {Math.abs(result.changePercent)}%
+          If <span className="font-medium text-gray-700">{displaySector(result.sector)}</span>{' '}
+          funding {direction}s by {Math.abs(result.changePercent)}%
         </p>
       </div>
 

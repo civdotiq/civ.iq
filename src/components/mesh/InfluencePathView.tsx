@@ -79,9 +79,9 @@ function PathCard({ path, rank }: { path: ScoredPath; rank: number }) {
               key={i}
               className="text-xs text-gray-500 bg-gray-50 border-2 border-gray-200 px-2 py-1"
             >
-              ${`${(es.dollarWeight * 100).toFixed(0)}%`} dollar
+              {(es.dollarWeight * 100).toFixed(0)}% funding strength
               {' / '}
-              {(es.temporalWeight * 100).toFixed(0)}% recent
+              {(es.temporalWeight * 100).toFixed(0)}% recency
             </span>
           ))}
         </div>

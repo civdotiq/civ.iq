@@ -16,6 +16,7 @@ import type {
   CounterfactualResult,
   CounterfactualPrediction,
 } from '@/lib/mesh/propagation/counterfactual';
+import { displaySector } from '@/lib/mesh/sector-display';
 
 interface CounterfactualCardProps {
   result: CounterfactualResult;
@@ -30,8 +31,10 @@ export default function CounterfactualCard({ result }: CounterfactualCardProps) 
         </h3>
         <p className="text-sm text-gray-500">
           What if donations from{' '}
-          <span className="font-medium text-gray-700">{result.maskedSectors.join(', ')}</span> were
-          removed?
+          <span className="font-medium text-gray-700">
+            {result.maskedSectors.map(displaySector).join(', ')}
+          </span>{' '}
+          were removed?
         </p>
       </div>
 

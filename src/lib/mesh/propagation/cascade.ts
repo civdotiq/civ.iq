@@ -78,48 +78,71 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
   logger.info('[Cascade] Simulating', { sector, changePercent });
 
   const allReps = await getAllEnhancedRepresentatives();
-  const affectedReps: CascadeRepEffect[] = [];
 
-  // Process all reps with significant sector exposure
-  for (const rep of allReps) {
-    const vfInsight = await withTimeout(
-      analyzeVoteFinance(rep.bioguideId),
-      15_000,
-      `Cascade:VF:${rep.bioguideId}`
-    ).catch(() => null);
+  // Phase 1: Fetch vote-finance data in parallel batches to find exposed reps
+  const BATCH_SIZE = 20;
+  const exposedReps: Array<{
+    rep: (typeof allReps)[0];
+    correlations: IndustryCorrelation[];
+    sectorCorr: IndustryCorrelation;
+    totalDonations: number;
+  }> = [];
 
-    if (!vfInsight?.correlations) continue;
-
-    const sectorCorr = vfInsight.correlations.find(c => c.sector === sector);
-    if (!sectorCorr) continue;
-
-    // Check minimum sector exposure
-    const totalDonations = vfInsight.correlations.reduce((s, c) => s + c.donationAmount, 0);
-    if (totalDonations === 0) continue;
-    const sectorShare = sectorCorr.donationAmount / totalDonations;
-    if (sectorShare < MIN_SECTOR_EXPOSURE) continue;
-
-    // Build original and perturbed donor profiles
-    const donorProfile = buildDonorProfile(vfInsight.correlations, totalDonations);
-    const perturbedProfile = perturbSectorFunding(donorProfile, sector, changePercent);
-
-    // Run predictions on sector-relevant bills
-    const effect = await simulateRepEffect(
-      rep.bioguideId,
-      rep.name,
-      rep.party,
-      rep.state,
-      rep.chamber as 'House' | 'Senate',
-      rep.yearsInOffice ?? 0,
-      donorProfile,
-      perturbedProfile,
-      sectorCorr.donationAmount,
-      sectorCorr.donationAmount * (1 + changePercent / 100),
-      sector
+  for (let i = 0; i < allReps.length; i += BATCH_SIZE) {
+    const batch = allReps.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(rep =>
+        withTimeout(analyzeVoteFinance(rep.bioguideId), 10_000, `Cascade:VF:${rep.bioguideId}`)
+      )
     );
 
-    if (effect) {
-      affectedReps.push(effect);
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j]!;
+      if (result.status !== 'fulfilled' || !result.value?.correlations) continue;
+
+      const correlations = result.value.correlations;
+      const sectorCorr = correlations.find(c => c.sector === sector);
+      if (!sectorCorr) continue;
+
+      const totalDonations = correlations.reduce((s, c) => s + c.donationAmount, 0);
+      if (totalDonations === 0) continue;
+
+      const sectorShare = sectorCorr.donationAmount / totalDonations;
+      if (sectorShare < MIN_SECTOR_EXPOSURE) continue;
+
+      exposedReps.push({ rep: batch[j]!, correlations, sectorCorr, totalDonations });
+    }
+  }
+
+  // Phase 2: Run predictions only for exposed reps (in parallel batches)
+  const affectedReps: CascadeRepEffect[] = [];
+
+  for (let i = 0; i < exposedReps.length; i += BATCH_SIZE) {
+    const batch = exposedReps.slice(i, i + BATCH_SIZE);
+    const effects = await Promise.allSettled(
+      batch.map(({ rep, correlations, sectorCorr, totalDonations }) => {
+        const donorProfile = buildDonorProfile(correlations, totalDonations);
+        const perturbedProfile = perturbSectorFunding(donorProfile, sector, changePercent);
+        return simulateRepEffect(
+          rep.bioguideId,
+          rep.name,
+          rep.party,
+          rep.state,
+          rep.chamber as 'House' | 'Senate',
+          rep.yearsInOffice ?? 0,
+          donorProfile,
+          perturbedProfile,
+          sectorCorr.donationAmount,
+          sectorCorr.donationAmount * (1 + changePercent / 100),
+          sector
+        );
+      })
+    );
+
+    for (const effect of effects) {
+      if (effect.status === 'fulfilled' && effect.value) {
+        affectedReps.push(effect.value);
+      }
     }
   }
 

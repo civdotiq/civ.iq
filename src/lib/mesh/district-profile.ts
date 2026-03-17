@@ -27,6 +27,7 @@ import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance
 import { confidenceScore } from '@/lib/intelligence/statistics/civic-stats';
 import { generateInsightNarrative, withTimeout } from '@/lib/intelligence/analyzers/shared';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import { buildTemporalProfile } from './temporal';
 import { dateToPeriod, periodToDateRange } from './temporal';
 import type {
@@ -468,9 +469,12 @@ interface BillData {
 
 async function fetchDistrictBills(districtId: string): Promise<BillData | null> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/district/${districtId}/bills?limit=20`, {
-      headers: { 'User-Agent': 'CIV.IQ/1.0' },
-    });
+    const response = await fetch(
+      `${getInternalBaseUrl()}/api/district/${districtId}/bills?limit=20`,
+      {
+        headers: { 'User-Agent': 'CIV.IQ/1.0' },
+      }
+    );
     if (!response.ok) return null;
     const data = await response.json();
     return {
@@ -522,15 +526,14 @@ function buildSectorConcentrations(
     }
   }
 
-  // Count bills per sector (approximate via policy area)
+  // Count bills per sector via policy area → sector mapping
   if (billsData?.bills) {
     for (const bill of billsData.bills) {
       if (!bill.policyArea) continue;
-      // Map policy areas to sectors using the agency mapping as proxy
-      for (const [, sector] of Object.entries(AGENCY_SECTOR_MAP)) {
-        if (sectorSpending.has(sector)) {
+      const mapping = getPolicyAreaMapping(bill.policyArea);
+      if (mapping?.industrySectors) {
+        for (const sector of mapping.industrySectors) {
           sectorBills.set(sector, (sectorBills.get(sector) ?? 0) + 1);
-          break;
         }
       }
     }
@@ -667,9 +670,11 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return denominator === 0 ? 0 : dotProduct / denominator;
 }
 
-function getBaseUrl(): string {
+function getInternalBaseUrl(): string {
   if (typeof window !== 'undefined') return '';
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
 }
 
 // Re-export for external use

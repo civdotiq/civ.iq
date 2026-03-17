@@ -12,6 +12,8 @@
  * Follows Aicher/Ulm design system (no shadows, no gradients, 2px borders).
  */
 
+import { displaySector } from '@/lib/mesh/sector-display';
+
 interface CiviqScorecardProps {
   name: string;
   party: string;
@@ -58,18 +60,21 @@ export default function CiviqScorecard({
         </span>
       </div>
 
-      <Row label="Alignment" value={formatPct(alignmentScore)} bar={alignmentScore} />
+      <Row label="District Match" value={formatPct(alignmentScore)} bar={alignmentScore} />
       <Row
-        label="Independence"
-        value={independenceScore != null ? independenceScore.toFixed(2) : 'N/A'}
+        label="Votes Against Party"
+        value={independenceScore != null ? `${Math.round(independenceScore * 100)}%` : 'N/A'}
       />
-      <Row label="Top Donor Sector" value={topDonorSector ?? 'N/A'} />
+      <Row
+        label="Top Donor Industry"
+        value={topDonorSector ? displaySector(topDonorSector) : 'N/A'}
+      />
 
       <div
         style={{
           marginTop: '12px',
           paddingTop: '8px',
-          borderTop: '1px solid #e5e5e5',
+          borderTop: '2px solid #e5e5e5',
           fontSize: '11px',
           color: '#999',
         }}
@@ -97,7 +102,7 @@ function Row({ label, value, bar }: { label: string; value: string; bar?: number
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '4px 0',
-        borderBottom: '1px solid #e5e5e5',
+        borderBottom: '2px solid #e5e5e5',
       }}
     >
       <span style={{ color: '#666', fontSize: '13px' }}>{label}</span>
