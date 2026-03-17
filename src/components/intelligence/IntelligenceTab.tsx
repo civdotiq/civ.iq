@@ -21,7 +21,9 @@ import { VotePredictionCard } from './VotePredictionCard';
 import { InfluenceChainCard } from './InfluenceChainCard';
 import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
+import { TemporalProximityCard } from './TemporalProximityCard';
 import { CounterfactualSection } from '@/components/mesh/CounterfactualSection';
+import type { TemporalProximityInsight } from '@/lib/intelligence/analyzers/temporal-proximity-analyzer';
 import type {
   CivicBriefInsight,
   FinanceJurisdictionInsight,
@@ -111,6 +113,13 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     SWR_OPTIONS
   );
 
+  const { data: temporalProximityData, isLoading: temporalProximityLoading } =
+    useSWR<TemporalProximityInsight>(
+      `/api/intelligence/temporal-proximity/${bioguideId}`,
+      fetcher,
+      SWR_OPTIONS
+    );
+
   // Validate responses — only use data with expected shape
   const financeJurisdiction =
     financeJurisdictionData?.overlapScore != null ? financeJurisdictionData : null;
@@ -121,6 +130,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
   const influenceChain = influenceChainData?.chains ? influenceChainData : null;
   const civicBrief = civicBriefData?.identity ? civicBriefData : null;
+  const temporalProximity = temporalProximityData?.patterns ? temporalProximityData : null;
 
   const hasAnyInsight =
     civicBrief ||
@@ -130,7 +140,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     lobbying ||
     stock ||
     votePrediction ||
-    influenceChain;
+    influenceChain ||
+    temporalProximity;
   const allDoneLoading =
     !civicBriefLoading &&
     !fjLoading &&
@@ -139,7 +150,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     !lobbyingLoading &&
     !stockLoading &&
     !votePredictionLoading &&
-    !influenceChainLoading;
+    !influenceChainLoading &&
+    !temporalProximityLoading;
   const allErrored =
     fjError &&
     vfError &&
@@ -253,6 +265,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         </>
       )}
       {stockLoading && !stock && <InsightSkeleton />}
+
+      {/* Timing Patterns */}
+      {temporalProximity && <TemporalProximityCard insight={temporalProximity} />}
+      {temporalProximityLoading && !temporalProximity && <InsightSkeleton />}
 
       {/* What-If Analysis */}
       <CounterfactualSection bioguideId={bioguideId} />
