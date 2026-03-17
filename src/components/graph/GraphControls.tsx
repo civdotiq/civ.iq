@@ -62,8 +62,11 @@ export function GraphControls() {
       ))}
 
       {/* Confidence slider */}
-      <div className="flex items-center gap-2 ml-auto">
-        <label className="type-xs text-gray-500">Data quality:</label>
+      <div
+        className="flex items-center gap-2 ml-auto"
+        title="Higher = only show connections with stronger evidence. Lower = include weaker matches."
+      >
+        <label className="type-xs text-gray-500">Show only high-confidence data:</label>
         <input
           type="range"
           min={0}

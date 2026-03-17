@@ -131,7 +131,7 @@ function getEmptyStateMessages(node: GraphNode, connectedEdges: GraphEdge[]): st
         'Limited public records found for this organization. Try searching by a different name variation.'
       );
     } else {
-      messages.push("No connections found. Double-click to expand this node's network.");
+      messages.push('No connections found yet. Double-click to load more data.');
     }
     return messages;
   }
@@ -289,10 +289,10 @@ export function GraphSidebar({
   if (!selectedNode && !selectedEdge) {
     return (
       <aside className="border-2 border-gray-200 dark:border-gray-700 p-4">
-        <p className="type-sm text-gray-500 mb-2">Select a node or edge to view details.</p>
-        <p className="type-xs text-gray-400">
-          Click a node to see its data and sources. Double-click to expand its network.
+        <p className="type-sm text-gray-500 mb-2">
+          Click any person, organization, or bill in the graph to see details here.
         </p>
+        <p className="type-xs text-gray-400">Double-click to see more of their connections.</p>
       </aside>
     );
   }
@@ -473,7 +473,7 @@ function NodeDetail({
           onClick={() => onExpandNode(node.id)}
           className="w-full mt-4 py-2 type-xs font-bold border-2 border-[#3ea2d4] text-[#3ea2d4] hover:bg-[#3ea2d4] hover:text-white transition-colors"
         >
-          Expand network
+          Show more connections
         </button>
       )}
 

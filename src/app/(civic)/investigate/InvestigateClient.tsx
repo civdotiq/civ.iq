@@ -106,14 +106,9 @@ export default function InvestigateClient() {
         <div className="mb-8">
           <h1 className="aicher-heading text-2xl mb-2">Investigate Connections</h1>
           <p className="type-sm text-gray-600 dark:text-gray-400 mb-2">
-            This tool shows publicly reported connections between elected officials and the
-            organizations that fund them, lobby them, and do business with the federal government.
-            All data comes from official government sources including FEC.gov, Senate lobbying
-            disclosures, and Congress.gov.
-          </p>
-          <p className="type-xs text-gray-400">
-            Search for a name below, then click any node for details and sources. Double-click to
-            expand a node&apos;s network.
+            See who funds, lobbies, and works with your elected officials. All data comes from
+            official government sources including FEC.gov, Senate lobbying disclosures, and
+            Congress.gov.
           </p>
         </div>
 
@@ -126,8 +121,8 @@ export default function InvestigateClient() {
         {/* Main grid: canvas + sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 mt-8">
           <div>
-            {/* Controls */}
-            <GraphControls />
+            {/* Controls — only show when graph has data */}
+            {nodesArray.length > 0 && <GraphControls />}
 
             {/* Canvas */}
             <div
@@ -136,30 +131,36 @@ export default function InvestigateClient() {
             >
               {isLoading && nodesArray.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="type-sm text-gray-500">Loading network data...</p>
+                  <p className="type-sm text-gray-500">Loading connections...</p>
                 </div>
               ) : nodesArray.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
+                  <div className="text-center max-w-md">
                     <p className="type-sm text-gray-500 mb-2">
-                      Search for a legislator, bill, or committee to begin investigating.
+                      Search for a name above to see their connections.
                     </p>
                     <p className="type-xs text-gray-400">
-                      Try: &quot;Nancy Pelosi&quot;, &quot;Armed Services Committee&quot;, or a
-                      bioguide ID like &quot;P000197&quot;
+                      Try &quot;Nancy Pelosi&quot; or &quot;Armed Services Committee&quot;
                     </p>
                   </div>
                 </div>
               ) : (
-                <GraphCanvas
-                  nodes={nodesArray}
-                  edges={edgesArray}
-                  selectedNodeId={selectedNodeId}
-                  selectedEdgeId={selectedEdgeId}
-                  onNodeClick={handleNodeClick}
-                  onNodeDoubleClick={handleExpandNode}
-                  onEdgeClick={selectEdge}
-                />
+                <>
+                  <div className="absolute top-2 left-2 z-10 bg-white/90 dark:bg-gray-900/90 border-2 border-gray-200 dark:border-gray-700 px-3 py-2 pointer-events-none">
+                    <p className="type-xs text-gray-500">
+                      Click any shape to see details. Double-click to expand its connections.
+                    </p>
+                  </div>
+                  <GraphCanvas
+                    nodes={nodesArray}
+                    edges={edgesArray}
+                    selectedNodeId={selectedNodeId}
+                    selectedEdgeId={selectedEdgeId}
+                    onNodeClick={handleNodeClick}
+                    onNodeDoubleClick={handleExpandNode}
+                    onEdgeClick={selectEdge}
+                  />
+                </>
               )}
             </div>
 
