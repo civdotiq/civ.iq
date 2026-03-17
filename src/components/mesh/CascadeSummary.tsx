@@ -70,25 +70,6 @@ export default function CascadeSummary({ result }: CascadeSummaryProps) {
         </section>
       )}
 
-      {/* Most affected bills */}
-      {result.mostAffectedBills.length > 0 && (
-        <section>
-          <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-            Most affected legislation
-          </h4>
-          <div className="space-y-1">
-            {result.mostAffectedBills.slice(0, 5).map(bill => (
-              <div key={bill.billId} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700 truncate">{bill.title}</span>
-                <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                  {bill.flipCount} flip{bill.flipCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <footer className="border-t-2 border-gray-200 pt-3">
         <p className="text-xs text-gray-400">{result.disclaimer}</p>
       </footer>
@@ -102,7 +83,7 @@ function RepEffectRow({ rep }: { rep: CascadeRepEffect }) {
   const partyColor = rep.party === 'D' ? '#0a9338' : rep.party === 'R' ? '#e11d07' : '#999';
 
   return (
-    <div className="flex items-center justify-between py-1 border-b border-gray-100">
+    <div className="flex items-center justify-between py-2 border-b-2 border-gray-200">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 flex-shrink-0" style={{ backgroundColor: partyColor }} />
         <span className="text-sm text-gray-700">

@@ -36,7 +36,7 @@ const BASE_STYLES = `
     justify-content: space-between;
     align-items: center;
     padding: 4px 0;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 2px solid #e5e5e5;
   }
   .card-row:last-of-type { border-bottom: none; }
   .card-label { color: #666; font-size: 13px; }
@@ -56,7 +56,7 @@ const BASE_STYLES = `
   .attribution {
     margin-top: 12px;
     padding-top: 8px;
-    border-top: 1px solid #e5e5e5;
+    border-top: 2px solid #e5e5e5;
     font-size: 11px;
     color: #999;
   }
@@ -103,7 +103,7 @@ export function renderScorecard(data: ScorecardData): string {
       </div>
       <div class="card-row">
         <span class="card-label">Independence</span>
-        <span class="card-value">${data.independenceScore != null ? data.independenceScore.toFixed(2) : 'N/A'}</span>
+        <span class="card-value">${data.independenceScore != null ? `${Math.round(data.independenceScore * 100)}%` : 'N/A'}</span>
       </div>
       <div class="card-row">
         <span class="card-label">Top Donor Sector</span>

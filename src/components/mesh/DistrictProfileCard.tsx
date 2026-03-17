@@ -60,8 +60,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
   if (loading) {
     return (
       <div className="bg-white border-2 border-black p-6">
-        <div className="h-6 bg-gray-200 border-2 border-gray-300 w-2/3 mb-4" />
-        <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+        <p className="text-sm text-gray-500">Loading district profile...</p>
       </div>
     );
   }
@@ -184,7 +183,7 @@ function SectorBar({ sector }: { sector: SectorConcentration }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-600 w-40 truncate flex-shrink-0">{sector.sector}</span>
-      <div className="flex-1 h-3 bg-gray-100 border border-gray-300">
+      <div className="flex-1 h-3 bg-gray-100 border-2 border-gray-300">
         <div
           className="h-full"
           style={{

@@ -4,16 +4,15 @@
  */
 
 /**
- * Bulk Export API
+ * Schema & Methodology Export API
  *
- * Exports cached civic intelligence for all entities of a given type.
- * For researchers and journalists who need the full dataset.
+ * Exports the Civic Mesh schema and methodology for a given entity type.
+ * Intended for researchers and journalists to understand the data model.
  *
  * GET /api/mesh/bulk/representative?format=json
  * GET /api/mesh/bulk/representative?format=csv
  *
  * Rate limited: 10 requests/hour per IP.
- * Returns only cached data — does not trigger fresh computation.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -102,7 +101,7 @@ export async function GET(
         'Verify findings against primary sources.',
       exportedAt: new Date().toISOString(),
       meshVersion: '1.0.0',
-      note: 'Bulk entity data export requires cache warming. Entities without cached data are omitted.',
+      note: 'This endpoint exports the entity schema and methodology. Individual entity data is available via /api/mesh/entity/[type]:[id].',
     };
 
     if (format === 'csv') {

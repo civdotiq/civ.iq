@@ -21,7 +21,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { predictVote, buildFeatureVector } from '@/lib/intelligence/ml/vote-predictor';
-import { getBillSectors, withTimeout } from '@/lib/intelligence/analyzers/shared';
+import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { IndustryCorrelation } from '@/lib/intelligence/types';
@@ -51,7 +51,7 @@ export interface CascadeRepEffect {
   simulatedFunding: number;
   averageShift: number;
   flippedVotes: number;
-  topAffectedBill: { billId: string; title: string; shift: number } | null;
+  sectorExposure: number;
 }
 
 export interface CascadeResult {
@@ -59,7 +59,7 @@ export interface CascadeResult {
   changePercent: number;
   affectedReps: CascadeRepEffect[];
   totalFlips: number;
-  mostAffectedBills: Array<{ billId: string; title: string; flipCount: number }>;
+  repsAnalyzed: number;
   confidence: number;
   methodology: string;
   disclaimer: string;
@@ -79,10 +79,9 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
 
   const allReps = await getAllEnhancedRepresentatives();
   const affectedReps: CascadeRepEffect[] = [];
-  const billFlips = new Map<string, { title: string; count: number }>();
 
-  // Process reps with significant sector exposure
-  for (const rep of allReps.slice(0, 100)) {
+  // Process all reps with significant sector exposure
+  for (const rep of allReps) {
     const vfInsight = await withTimeout(
       analyzeVoteFinance(rep.bioguideId),
       15_000,
@@ -121,19 +120,6 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
 
     if (effect) {
       affectedReps.push(effect);
-
-      // Track bill flip counts
-      if (effect.topAffectedBill) {
-        const existing = billFlips.get(effect.topAffectedBill.billId);
-        if (existing) {
-          existing.count += effect.flippedVotes;
-        } else {
-          billFlips.set(effect.topAffectedBill.billId, {
-            title: effect.topAffectedBill.title,
-            count: effect.flippedVotes,
-          });
-        }
-      }
     }
   }
 
@@ -142,18 +128,13 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
 
   const totalFlips = affectedReps.reduce((sum, r) => sum + r.flippedVotes, 0);
 
-  const mostAffectedBills = Array.from(billFlips.entries())
-    .map(([billId, data]) => ({ billId, title: data.title, flipCount: data.count }))
-    .sort((a, b) => b.flipCount - a.flipCount)
-    .slice(0, 10);
-
   const result: CascadeResult = {
     sector,
     changePercent,
     affectedReps: affectedReps.slice(0, 50),
     totalFlips,
-    mostAffectedBills,
-    confidence: Math.min(affectedReps.length / 20, 0.85),
+    repsAnalyzed: allReps.length,
+    confidence: affectedReps.length > 0 ? Math.min(affectedReps.length / 20, 0.85) : 0,
     methodology:
       'Perturbs sector funding by the specified percentage, renormalizes remaining sectors, ' +
       'and compares vote predictions before/after perturbation for all exposed representatives.',
@@ -258,10 +239,6 @@ async function simulateRepEffect(
     simulatedFunding,
     averageShift: shift,
     flippedVotes: flipped ? 1 : 0,
-    topAffectedBill: {
-      billId: `${sector}-legislation`,
-      title: `${sector} sector legislation`,
-      shift,
-    },
+    sectorExposure: currentFunding,
   };
 }

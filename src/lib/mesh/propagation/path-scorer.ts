@@ -97,10 +97,10 @@ export async function scoreInfluence(
     })
     .sort((a, b) => b.score - a.score);
 
-  const aggregateScore = Math.min(
-    scoredPaths.reduce((sum, p) => sum + p.score, 0),
-    1.0
-  );
+  const aggregateScore =
+    scoredPaths.length > 0
+      ? scoredPaths.reduce((sum, p) => sum + p.score, 0) / scoredPaths.length
+      : 0;
 
   const confidence = scoredPaths.length > 0 ? Math.min(scoredPaths.length / 5, 0.9) : 0;
 
@@ -113,7 +113,7 @@ export async function scoreInfluence(
     confidence,
     methodology:
       'Edge scoring: dollar amount (log-scaled) * temporal recency (exponential decay) * ' +
-      'data confidence. Path score = product of edge scores. Aggregate = sum of path scores, capped at 1.',
+      'data confidence. Path score = product of edge scores. Aggregate = average of path scores.',
   };
 }
 

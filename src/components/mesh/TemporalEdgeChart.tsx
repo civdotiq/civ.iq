@@ -58,7 +58,7 @@ export default function TemporalEdgeChart({
   const gap = Math.max(2, Math.floor(barWidth / 3));
 
   return (
-    <div style={{ fontFamily: 'var(--font-braun-linear, monospace)' }}>
+    <div style={{ fontFamily: 'var(--font-braun-linear, sans-serif)' }}>
       {label && (
         <div
           style={{

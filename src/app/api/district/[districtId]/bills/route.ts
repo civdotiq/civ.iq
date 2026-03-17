@@ -74,7 +74,7 @@ interface CongressBillListItem {
 }
 
 function parseDistrictId(districtId: string): { state: string; district: string } | null {
-  const match = districtId.match(/^([A-Z]{2})-(\d{2}|AL)$/i);
+  const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|Senate)$/i);
   if (!match) return null;
   return {
     state: (match[1] ?? '').toUpperCase(),

@@ -43,8 +43,10 @@ export async function GET(
   if (!keypair) {
     return NextResponse.json({
       entityType,
-      events: [],
-      message: 'Nostr publishing not configured',
+      totalEvents: 0,
+      relays: 0,
+      eventIds: [],
+      configured: false,
       meta: { generatedAt: new Date().toISOString() },
     });
   }
@@ -60,6 +62,7 @@ export async function GET(
       totalEvents: result.totalUniqueEvents,
       relays: result.relayResults.length,
       eventIds: result.eventIds,
+      configured: true,
       meta: { generatedAt: new Date().toISOString() },
     });
   } catch (error) {

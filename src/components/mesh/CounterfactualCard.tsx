@@ -58,11 +58,11 @@ export default function CounterfactualCard({ result }: CounterfactualCardProps) 
         </div>
       </div>
 
-      {/* Predictions table */}
+      {/* Sector sensitivity */}
       {result.predictions.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-0">
           {result.predictions.slice(0, 5).map(pred => (
-            <PredictionRow key={pred.billId} prediction={pred} />
+            <PredictionRow key={pred.sector} prediction={pred} />
           ))}
         </div>
       )}
@@ -79,9 +79,9 @@ function PredictionRow({ prediction }: { prediction: CounterfactualPrediction })
   const shiftColor = prediction.flipped ? '#e11d07' : '#999';
 
   return (
-    <div className="flex items-center justify-between py-1 border-b border-gray-100">
-      <span className="text-sm text-gray-700 truncate flex-1">{prediction.billTitle}</span>
-      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+    <div className="flex items-center justify-between py-2 border-b-2 border-gray-200">
+      <span className="text-sm text-gray-700 truncate flex-1">{prediction.sectorLabel}</span>
+      <div className="flex items-center gap-4 flex-shrink-0 ml-2">
         <span className="text-xs text-gray-500">
           {(prediction.originalProbability * 100).toFixed(0)}%
         </span>

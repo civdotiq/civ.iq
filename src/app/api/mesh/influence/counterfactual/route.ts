@@ -27,7 +27,12 @@ interface RequestBody {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const body = (await request.json()) as Partial<RequestBody>;
+    let body: Partial<RequestBody>;
+    try {
+      body = (await request.json()) as Partial<RequestBody>;
+    } catch {
+      return ApiErrors.validation('Invalid JSON in request body');
+    }
 
     if (!body.bioguideId || !body.maskSectors || body.maskSectors.length === 0) {
       return ApiErrors.validation('bioguideId and maskSectors (non-empty array) are required');

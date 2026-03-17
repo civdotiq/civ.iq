@@ -20,7 +20,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { predictVote, buildFeatureVector } from '@/lib/intelligence/ml/vote-predictor';
-import { getBillSectors, withTimeout } from '@/lib/intelligence/analyzers/shared';
+import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
@@ -39,8 +39,9 @@ export interface CounterfactualQuery {
 }
 
 export interface CounterfactualPrediction {
-  billId: string;
-  billTitle: string;
+  sector: IndustrySector;
+  sectorLabel: string;
+  billsVotedOn: number;
   originalProbability: number;
   maskedProbability: number;
   shift: number;
@@ -102,21 +103,22 @@ export async function runCounterfactual(
   const rep = allReps.find(r => r.bioguideId === bioguideId);
   if (!rep) return null;
 
-  // Get sector-relevant bills to predict on
-  const bills = getSectorRelevantBills(vfInsight.correlations, maskSectors);
-  if (bills.length === 0) return null;
+  // Compute per-sector sensitivity by running predictions with/without each masked sector
+  const relevantSectors = vfInsight.correlations.filter(
+    c => maskSectors.includes(c.sector) && c.billsVotedOn > 0
+  );
+  if (relevantSectors.length === 0) return null;
 
-  // Run predictions
   const predictions: CounterfactualPrediction[] = [];
-  for (const bill of bills.slice(0, 10)) {
-    const billSectors = await getBillSectors(bill.billId, bill.billTitle);
+  for (const corr of relevantSectors.slice(0, 10)) {
+    const sectorBills = [corr.sector];
 
     const originalFV = buildFeatureVector(
       donorProfile,
       rep.party as 'D' | 'R' | 'I',
       rep.chamber as 'House' | 'Senate',
       rep.yearsInOffice ?? 0,
-      billSectors,
+      sectorBills,
       0,
       false
     );
@@ -126,7 +128,7 @@ export async function runCounterfactual(
       rep.party as 'D' | 'R' | 'I',
       rep.chamber as 'House' | 'Senate',
       rep.yearsInOffice ?? 0,
-      billSectors,
+      sectorBills,
       0,
       false
     );
@@ -143,8 +145,9 @@ export async function runCounterfactual(
         (originalPred.predictedVote === 'nay' && maskedPred.predictedVote === 'yea');
 
       predictions.push({
-        billId: bill.billId,
-        billTitle: bill.billTitle,
+        sector: corr.sector,
+        sectorLabel: `${corr.sector} sector (${corr.billsVotedOn} votes analyzed)`,
+        billsVotedOn: corr.billsVotedOn,
         originalProbability: originalPred.yeaProbability,
         maskedProbability: maskedPred.yeaProbability,
         shift,
@@ -167,8 +170,8 @@ export async function runCounterfactual(
     flippedCount,
     confidence: Math.min(predictions.length / 10, 0.9),
     methodology:
-      'Feature-masking counterfactual: sets target sector donations to zero in the ' +
-      'vote prediction model, renormalizes remaining sectors, and compares P(yea).',
+      'Sector-level sensitivity analysis: sets target sector donations to zero in the ' +
+      'vote prediction model, renormalizes remaining sectors, and compares P(yea) per sector.',
     disclaimer: DISCLAIMER,
   };
 
@@ -201,27 +204,4 @@ export function maskDonorProfile(
   }
 
   return masked;
-}
-
-interface BillRef {
-  billId: string;
-  billTitle: string;
-}
-
-function getSectorRelevantBills(
-  correlations: Array<{ sector: IndustrySector; billsVotedOn: number }>,
-  maskSectors: IndustrySector[]
-): BillRef[] {
-  // Use the sectors that were masked — find bills they voted on
-  // Since we don't have bill IDs directly, generate synthetic references
-  // The actual prediction uses the sector overlap features
-  const relevantSectors = correlations.filter(
-    c => maskSectors.includes(c.sector) && c.billsVotedOn > 0
-  );
-
-  // Generate bill references from the masked sectors
-  return relevantSectors.slice(0, 10).map((c, i) => ({
-    billId: `sector-${c.sector.toLowerCase().replace(/[^a-z]/g, '-')}-${i}`,
-    billTitle: `${c.sector} sector legislation (${c.billsVotedOn} votes)`,
-  }));
 }
