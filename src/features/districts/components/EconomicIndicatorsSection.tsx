@@ -98,7 +98,16 @@ export function EconomicIndicatorsSection({ districtId }: EconomicIndicatorsSect
       <div className="flex items-center gap-2 text-xs text-gray-500 mt-6 pt-3 border-t border-gray-100">
         <AlertCircle className="h-3 w-3 flex-shrink-0" />
         <span>
-          Source: Federal Reserve Bank of St. Louis (FRED) &middot; Updated{' '}
+          Source:{' '}
+          <a
+            href="https://fred.stlouisfed.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            Federal Reserve Bank of St. Louis (FRED)
+          </a>{' '}
+          &middot; Updated{' '}
           {data.indicators[0]?.latestDate
             ? new Date(data.indicators[0].latestDate + 'T00:00:00').toLocaleDateString('en-US', {
                 month: 'short',

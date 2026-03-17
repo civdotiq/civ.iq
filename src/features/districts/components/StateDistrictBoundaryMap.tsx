@@ -553,7 +553,18 @@ export default function StateDistrictBoundaryMap({
               </div>
             </div>
           </div>
-          <div>Data: U.S. Census Bureau TIGER/Line 2025</div>
+          <div>
+            Data:{' '}
+            <a
+              href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] hover:underline"
+            >
+              U.S. Census Bureau TIGER/Line
+            </a>{' '}
+            2025
+          </div>
         </div>
 
         {metadata && (

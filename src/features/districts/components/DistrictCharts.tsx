@@ -88,7 +88,15 @@ export function AgeDistributionChart({
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Median age: <strong>{medianAge.toFixed(1)} years</strong> | Source: Census ACS 5-Year
+        Median age: <strong>{medianAge.toFixed(1)} years</strong> | Source:{' '}
+        <a
+          href="https://data.census.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Census ACS 5-Year
+        </a>
       </p>
     </div>
   );
@@ -140,8 +148,15 @@ export function IncomeDistributionChart({
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Median household income: <strong>${medianIncome.toLocaleString()}</strong> | Source: Census
-        ACS 5-Year
+        Median household income: <strong>${medianIncome.toLocaleString()}</strong> | Source:{' '}
+        <a
+          href="https://data.census.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Census ACS 5-Year
+        </a>
       </p>
     </div>
   );
@@ -234,16 +249,9 @@ export function ElectionHistoryChart({
   const winnerColor =
     winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? '#0a9338' : '#e11d07';
 
-  const demPct = hasRealData ? 50 - currentMargin / 2 : null;
-  const repPct = hasRealData ? 50 + currentMargin / 2 : null;
-
-  // For D winners, flip so dem is higher
-  const demBar =
-    winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
-      ? (repPct ?? 0) + (currentMargin ?? 0)
-      : (demPct ?? 0);
-  const repBar =
-    winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? (demPct ?? 0) : (repPct ?? 0);
+  const isDemWinner = winnerLabel === 'Democrat' || winnerLabel === 'Democratic';
+  const demBar = hasRealData ? (isDemWinner ? 50 + currentMargin / 2 : 50 - currentMargin / 2) : 0;
+  const repBar = hasRealData ? (isDemWinner ? 50 - currentMargin / 2 : 50 + currentMargin / 2) : 0;
 
   return (
     <div className="bg-white border-2 border-black p-6">
@@ -286,7 +294,15 @@ export function ElectionHistoryChart({
             ) : null}
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            Source: MIT Election Data + Science Lab (MEDSL)
+            Source:{' '}
+            <a
+              href="https://electionlab.mit.edu/data"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] hover:underline"
+            >
+              MIT Election Data + Science Lab (MEDSL)
+            </a>
           </p>
         </>
       ) : (
@@ -355,7 +371,15 @@ export function EmploymentByIndustryChart({
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Civilian employed population 16+ | Source: Census ACS 5-Year
+        Civilian employed population 16+ | Source:{' '}
+        <a
+          href="https://data.census.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Census ACS 5-Year
+        </a>
       </p>
     </div>
   );

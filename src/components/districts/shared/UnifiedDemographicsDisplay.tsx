@@ -121,7 +121,17 @@ export default function UnifiedDemographicsDisplay({
       </div>
 
       {/* Data source */}
-      <div className="mt-4 text-xs text-gray-500">Data: U.S. Census Bureau</div>
+      <div className="mt-4 text-xs text-gray-500">
+        Data:{' '}
+        <a
+          href="https://data.census.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          U.S. Census Bureau
+        </a>
+      </div>
     </div>
   );
 }

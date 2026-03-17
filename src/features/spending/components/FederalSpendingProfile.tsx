@@ -110,7 +110,16 @@ export default function FederalSpendingProfile({ districtId }: FederalSpendingPr
       </div>
 
       <p className="text-xs text-gray-400 dark:text-gray-500">
-        Source: USASpending.gov &middot; {data.metadata.dataSource}
+        Source:{' '}
+        <a
+          href="https://usaspending.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          USASpending.gov
+        </a>{' '}
+        &middot; {data.metadata.dataSource}
       </p>
     </div>
   );

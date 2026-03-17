@@ -299,7 +299,15 @@ export function RealDistrictMapContainer({
             </div>
           </div>
           <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
-            Source: US Census Bureau
+            Source:{' '}
+            <a
+              href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] hover:underline"
+            >
+              US Census Bureau
+            </a>
             {mapState.districtCount > 0 && ` | ${mapState.districtCount} districts`}
           </div>
         </div>

@@ -134,7 +134,18 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
 
       <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
         <AlertCircle className="h-3 w-3" />
-        <span>AI-generated narrative from USASpending.gov data • Source: {narrative.source}</span>
+        <span>
+          AI-generated narrative from{' '}
+          <a
+            href="https://usaspending.gov"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            USASpending.gov
+          </a>{' '}
+          data • Source: {narrative.source}
+        </span>
       </div>
     </div>
   );

@@ -348,7 +348,15 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
 
             {/* Data Attribution */}
             <div className="text-xs text-gray-500 text-center">
-              Data: U.S. Census Bureau TIGER/Line
+              Data:{' '}
+              <a
+                href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#3ea2d4] hover:underline"
+              >
+                U.S. Census Bureau TIGER/Line
+              </a>
             </div>
           </div>
         ) : (

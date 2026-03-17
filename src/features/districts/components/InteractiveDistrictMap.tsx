@@ -483,7 +483,17 @@ export function InteractiveDistrictMap({
 
           <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
             <div>Interactive map with zoom, pan, and district boundaries</div>
-            <div className="text-xs">Data: U.S. Census Bureau TIGER/Line</div>
+            <div className="text-xs">
+              Data:{' '}
+              <a
+                href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#3ea2d4] hover:underline"
+              >
+                U.S. Census Bureau TIGER/Line
+              </a>
+            </div>
           </div>
         </div>
       )}
