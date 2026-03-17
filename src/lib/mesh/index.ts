@@ -39,6 +39,17 @@ export { ensureMeshInitialized } from './init';
 export { traverseMesh } from './traversal';
 export type { TraversalFilter, TraversalResult } from './traversal';
 
+// District Profile — computed district intelligence profiles
+export { buildDistrictProfile, cosineSimilarity } from './district-profile';
+export type {
+  DistrictProfile,
+  RepresentationAlignment,
+  SectorConcentration,
+  BillExposure,
+  PeerDistrict,
+  DistrictVector,
+} from './district-profile-types';
+
 // Temporal — time-series edge aggregation and trend detection
 export { buildTemporalProfile, computeTrend, detectTemporalEvents } from './temporal';
 export type {

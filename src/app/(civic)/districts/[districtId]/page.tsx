@@ -38,6 +38,16 @@ const DistrictIntelligenceCard = dynamic(
   }
 );
 
+const DistrictProfileCard = dynamic(() => import('@/components/mesh/DistrictProfileCard'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white border-2 border-black p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
+      <div className="h-32 bg-gray-200 border-2 border-gray-300" />
+    </div>
+  ),
+});
+
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
   ssr: false,
@@ -278,6 +288,9 @@ export default function DistrictPage() {
 
             {/* Intelligence */}
             <DistrictIntelligenceCard districtId={districtId} />
+
+            {/* District Intelligence Profile */}
+            <DistrictProfileCard districtId={districtId} />
           </div>
 
           {/* Sidebar */}
