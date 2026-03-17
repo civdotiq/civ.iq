@@ -5,6 +5,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { SectorLeaderboard } from '@/components/intelligence/SectorLeaderboard';
+import { CascadeSection } from '@/components/mesh/CascadeSection';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 
@@ -275,6 +276,9 @@ export default function IndustrySectorPage() {
 
             {/* Sector Leaderboard */}
             <SectorLeaderboard initialSector={data?.sector} />
+
+            {/* Funding Impact Simulation */}
+            <CascadeSection sector={data?.sector ?? sector} />
           </div>
         )}
       </main>

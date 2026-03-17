@@ -21,6 +21,7 @@ import { VotePredictionCard } from './VotePredictionCard';
 import { InfluenceChainCard } from './InfluenceChainCard';
 import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
+import { CounterfactualSection } from '@/components/mesh/CounterfactualSection';
 import type {
   CivicBriefInsight,
   FinanceJurisdictionInsight,
@@ -252,6 +253,9 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
         </>
       )}
       {stockLoading && !stock && <InsightSkeleton />}
+
+      {/* What-If Analysis */}
+      <CounterfactualSection bioguideId={bioguideId} />
 
       {/* Influence Clusters (always loads independently) */}
       <InfluenceClusterChart highlightBioguideId={bioguideId} />

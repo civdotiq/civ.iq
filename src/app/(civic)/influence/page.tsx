@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CommitteeSearch } from '@/features/influence/components/CommitteeSearch';
 import { InfluenceClusterChart } from '@/components/intelligence/InfluenceClusterChart';
+import { InfluencePathSection } from '@/components/mesh/InfluencePathSection';
 
 function InfluencePageContent() {
   const searchParams = useSearchParams();
@@ -79,6 +80,11 @@ function InfluencePageContent() {
             </div>
           </div>
         )}
+
+        {/* Trace Influence Paths */}
+        <div className="mt-8">
+          <InfluencePathSection />
+        </div>
 
         {/* Funding Influence Clusters */}
         <div className="mt-8">
