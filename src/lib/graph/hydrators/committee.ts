@@ -16,7 +16,13 @@ import logger from '@/lib/logging/simple-logger';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { getAgenciesForCommittee, type AgencyInfo } from '@/lib/connections/committee-agency-map';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
-import { toCanonicalId, toEdgeId, formatNodeLabel, normalizeOrgName } from '../normalize';
+import {
+  toCanonicalId,
+  toEdgeId,
+  formatNodeLabel,
+  normalizeOrgName,
+  toTitleCase,
+} from '../normalize';
 import type { GraphNode, GraphEdge } from '@/types/graph';
 import type { HydrationSource } from '../types';
 import type { Committee } from '@/types/committee';
@@ -47,7 +53,9 @@ export async function hydrateCommittee(committeeCode: string): Promise<Hydration
       jurisdiction: committee.jurisdiction,
     },
     dataAsOf: now,
-    profileUrl: `/committees/${committeeCode}`,
+    profileUrl: `/committee/${committeeCode}`,
+    sourceUrl: `https://www.congress.gov/committee/${committeeCode}`,
+    sourceLabel: 'Congress.gov',
   };
 
   const sources: HydrationSource[] = [
@@ -99,6 +107,8 @@ async function hydrateMembers(
       },
       dataAsOf,
       profileUrl: `/representative/${rep.bioguideId}`,
+      sourceUrl: `https://bioguide.congress.gov/search/bio/${rep.bioguideId}`,
+      sourceLabel: 'Congress.gov',
     });
 
     const isLeader = member.role === 'Chair' || member.role === 'Ranking Member';
@@ -112,6 +122,7 @@ async function hydrateMembers(
       weight: isLeader ? 1.0 : 0.5,
       confidence: 1.0,
       dataAsOf,
+      sourceLabel: 'Congress.gov committee membership',
     });
   }
 
@@ -138,6 +149,8 @@ async function hydrateAgencies(
       label: formatNodeLabel('agency', { name: agency.name }),
       properties: { name: agency.name, abbreviation: agency.abbreviation },
       dataAsOf,
+      sourceUrl: `https://www.usaspending.gov/agency/${agency.slug}`,
+      sourceLabel: 'USASpending.gov',
     });
 
     edges.push({
@@ -150,6 +163,7 @@ async function hydrateAgencies(
       weight: 0.8,
       confidence: 1.0,
       dataAsOf,
+      sourceLabel: 'Congressional oversight jurisdiction',
     });
   }
 
@@ -189,13 +203,16 @@ async function hydrateLobbyingActivity(
 
     for (const [orgName, spending] of sorted) {
       const orgId = toCanonicalId('organization', normalizeOrgName(orgName));
+      const displayName = toTitleCase(orgName);
 
       nodes.push({
         id: orgId,
         type: 'organization',
-        label: formatNodeLabel('organization', { name: orgName }),
+        label: formatNodeLabel('organization', { name: displayName }),
         properties: { name: orgName, lobbyingSpending: spending },
         dataAsOf,
+        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceLabel: 'Senate LDA filings',
       });
 
       edges.push({
@@ -208,6 +225,8 @@ async function hydrateLobbyingActivity(
         weight: Math.min(spending / maxSpend, 1.0),
         confidence: 0.85,
         dataAsOf,
+        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceLabel: 'Senate Lobbying Disclosure Act',
       });
     }
   } catch (error) {

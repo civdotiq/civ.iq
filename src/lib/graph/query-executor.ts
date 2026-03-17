@@ -19,7 +19,19 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import type { StructuredQuery } from './query-compiler';
+import { getStateName } from '@/lib/data/us-states';
 import type { GraphNode, GraphEdge } from '@/types/graph';
+
+const BILL_TYPE_SLUGS: Record<string, string> = {
+  hr: 'house-bill',
+  s: 'senate-bill',
+  hres: 'house-resolution',
+  sres: 'senate-resolution',
+  hjres: 'house-joint-resolution',
+  sjres: 'senate-joint-resolution',
+  hconres: 'house-concurrent-resolution',
+  sconres: 'senate-concurrent-resolution',
+};
 
 export interface QueryResult {
   matchingNodes: GraphNode[];
@@ -113,16 +125,136 @@ async function hydrateTraversals(
     .flatMap(r => r.value);
 }
 
+// ── Human-readable explanation helpers ───────────────────────────────
+
+const TYPE_LABELS: Record<string, { singular: string; plural: string }> = {
+  representative: { singular: 'representative', plural: 'representatives' },
+  bill: { singular: 'bill', plural: 'bills' },
+  committee: { singular: 'committee', plural: 'committees' },
+  organization: { singular: 'organization', plural: 'organizations' },
+};
+
+function ordinalSuffix(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  const mod10 = n % 10;
+  if (mod10 === 1) return `${n}st`;
+  if (mod10 === 2) return `${n}nd`;
+  if (mod10 === 3) return `${n}rd`;
+  return `${n}th`;
+}
+
+/** Convert party code to adjective form for natural sentence composition */
+function getPartyAdjective(value: string): string {
+  const v = value.toLowerCase();
+  if (v === 'd' || v === 'democrat' || v === 'democratic') return 'Democratic';
+  if (v === 'r' || v === 'republican') return 'Republican';
+  if (v === 'i' || v === 'independent') return 'Independent';
+  return '';
+}
+
+/** Translate a graph traversal into a plain-English sentence */
+function humanizeTraversal(edge: string, direction: string): string | null {
+  if (edge === 'donated_to') return 'Showing their campaign finance connections';
+  if (edge === 'serves_on') return 'Showing their committee assignments';
+  if (edge === 'lobbied' && direction === 'incoming')
+    return 'Showing organizations that lobbied them';
+  if (edge === 'lobbied' && direction === 'outgoing') return 'Showing who they lobbied';
+  if (edge === 'voted_on') return 'Showing their voting record';
+  if (edge === 'sponsored') return 'Showing bills they sponsored';
+  if (edge === 'oversees') return 'Showing agencies under their oversight';
+  return null;
+}
+
+/** Resolve the correct singular/plural label, absorbing chamber into the type */
+function getTypeLabel(
+  typeName: string,
+  query: StructuredQuery
+): { singular: string; plural: string } {
+  const base = TYPE_LABELS[typeName] ?? { singular: typeName, plural: `${typeName}s` };
+  if (typeName !== 'representative') return base;
+
+  const chamberFilter = query.filters.find(f => f.field === 'chamber');
+  if (chamberFilter) {
+    const chamber = String(chamberFilter.value).toLowerCase();
+    if (chamber === 'senate') return { singular: 'senator', plural: 'senators' };
+    if (chamber === 'house') return { singular: 'House member', plural: 'House members' };
+  }
+  return base;
+}
+
+/**
+ * Build a citizen-readable explanation from a structured query result.
+ *
+ * Composes a single natural sentence instead of concatenating filter dumps.
+ * Examples:
+ *   "2 senators from Texas."
+ *   "8 Democratic representatives."
+ *   "No Republican senators found from California."
+ *   "3 committees matching "armed". Showing their members."
+ */
 function buildExplanation(
   typeName: string,
   count: number,
   query: StructuredQuery,
   truncated: boolean
 ): string {
-  const filterDesc = query.filters.map(f => `${f.field} ${f.op} "${f.value}"`).join(', ');
-  const traversalDesc = query.traversals.map(t => `${t.direction} ${t.edge}`).join(', ');
+  const labels = getTypeLabel(typeName, query);
+  const typeWord = count === 1 ? labels.singular : labels.plural;
 
-  return `Found ${count} ${typeName}${count !== 1 ? 's' : ''}${filterDesc ? ` matching ${filterDesc}` : ''}${traversalDesc ? ` with ${traversalDesc}` : ''}.${truncated ? ' Results truncated.' : ''}`;
+  // Party becomes an adjective before the type: "Democratic senators"
+  const partyFilter = query.filters.find(f => f.field === 'party');
+  const partyAdj = partyFilter ? getPartyAdjective(String(partyFilter.value)) : '';
+
+  // Build the noun phrase: "[count] [party] [type]" or "No [party] [type] found"
+  let sentence: string;
+  if (count === 0) {
+    sentence = `No ${partyAdj ? partyAdj + ' ' : ''}${typeWord} found`;
+  } else {
+    sentence = `${count} ${partyAdj ? partyAdj + ' ' : ''}${typeWord}`;
+  }
+
+  // Append modifier phrases: "from Texas", 'matching "Pelosi"'
+  const modifiers: string[] = [];
+
+  const stateFilter = query.filters.find(f => f.field === 'state');
+  if (stateFilter) {
+    const code = String(stateFilter.value).toUpperCase();
+    modifiers.push(`from ${getStateName(code) ?? String(stateFilter.value)}`);
+  }
+
+  const textFilter = query.filters.find(f => f.field === 'name' || f.field === 'title');
+  if (textFilter) {
+    modifiers.push(
+      textFilter.op === 'contains'
+        ? `matching \u201c${textFilter.value}\u201d`
+        : `named \u201c${textFilter.value}\u201d`
+    );
+  }
+
+  // Fallback for any filter we haven't explicitly humanized
+  const handledFields = new Set(['party', 'state', 'name', 'title', 'chamber', 'congress']);
+  for (const f of query.filters) {
+    if (handledFields.has(f.field)) continue;
+    const opLabel =
+      f.op === 'contains' ? 'matching' : f.op === 'gt' ? 'above' : f.op === 'lt' ? 'below' : '';
+    modifiers.push(`with ${f.field} ${opLabel} \u201c${f.value}\u201d`.replace(/\s{2,}/g, ' '));
+  }
+
+  if (modifiers.length > 0) {
+    sentence += ' ' + modifiers.join(', ');
+  }
+  sentence += '.';
+
+  if (truncated) sentence += ' Showing first results.';
+
+  // Traversals become separate follow-up sentences
+  for (const t of query.traversals) {
+    const readable = humanizeTraversal(t.edge, t.direction);
+    if (readable) sentence += ' ' + readable + '.';
+  }
+
+  return sentence;
 }
 
 /** Apply structured filters to an array of objects with string-keyed fields */
@@ -288,6 +420,8 @@ async function executeBillQuery(query: StructuredQuery): Promise<QueryResult> {
     const matchingNodes: GraphNode[] = bills.map(bill => {
       const billType = bill.type.toLowerCase();
       const identifier = `${bill.congress}-${billType}-${bill.number}`;
+      const congressOrdinal = ordinalSuffix(bill.congress);
+      const billTypeSlug = BILL_TYPE_SLUGS[billType] ?? billType;
       return {
         id: toCanonicalId('bill', identifier),
         type: 'bill' as const,
@@ -303,6 +437,9 @@ async function executeBillQuery(query: StructuredQuery): Promise<QueryResult> {
           latestAction: bill.latestAction?.text,
         },
         dataAsOf: bill.updateDate ?? new Date().toISOString(),
+        profileUrl: `/bill/${identifier}`,
+        sourceUrl: `https://www.congress.gov/bill/${congressOrdinal}-congress/${billTypeSlug}/${bill.number}`,
+        sourceLabel: 'Congress.gov',
       };
     });
 
@@ -451,6 +588,8 @@ async function executeOrganizationQuery(query: StructuredQuery): Promise<QueryRe
         lobbyingRole: org.role,
       },
       dataAsOf: new Date().toISOString(),
+      sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(org.name)}`,
+      sourceLabel: 'Senate LDA filings',
     }));
 
     const relatedEdges = await hydrateTraversals(matchingNodes, query);
