@@ -327,7 +327,7 @@ export function GraphCanvas({
         .attr('class', 'type-xs')
         .attr('fill', 'currentColor')
         .text(
-          d.graphNode.label.length > 20 ? d.graphNode.label.slice(0, 18) + '...' : d.graphNode.label
+          d.graphNode.label.length > 25 ? d.graphNode.label.slice(0, 23) + '...' : d.graphNode.label
         );
     });
 
@@ -395,6 +395,12 @@ export function GraphCanvas({
             <>
               <p className="type-sm font-bold">{tooltipData.node.label}</p>
               <p className="type-xs text-gray-500">{tooltipData.node.type}</p>
+              {tooltipData.node.sourceLabel && (
+                <p className="type-xs text-gray-400">Source: {tooltipData.node.sourceLabel}</p>
+              )}
+              <p className="type-xs text-[#3ea2d4] mt-1">
+                Click to view details. Double-click to expand.
+              </p>
             </>
           )}
           {tooltipData.edge && (
@@ -403,6 +409,10 @@ export function GraphCanvas({
               <p className="type-xs text-gray-500">
                 Confidence: {(tooltipData.edge.confidence * 100).toFixed(0)}%
               </p>
+              {tooltipData.edge.sourceLabel && (
+                <p className="type-xs text-gray-400">Source: {tooltipData.edge.sourceLabel}</p>
+              )}
+              <p className="type-xs text-[#3ea2d4] mt-1">Click for details and source link.</p>
             </>
           )}
         </div>

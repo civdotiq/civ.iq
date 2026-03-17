@@ -103,6 +103,8 @@ export async function hydrateBill(identifier: string): Promise<HydrationPlan | n
     },
     dataAsOf: now,
     profileUrl: `/legislation/${congress}/${type}${number}`,
+    sourceUrl: `https://api.congress.gov/v3/bill/${congress}/${type}/${number}`,
+    sourceLabel: 'Congress.gov',
   };
 
   const fullBillId = `${congress}/${type}/${number}`;
@@ -152,6 +154,7 @@ async function hydrateSponsors(
         properties: { name, party, state, bioguideId },
         dataAsOf,
         profileUrl: `/representative/${bioguideId}`,
+        sourceLabel: 'Congress.gov',
       });
 
       edges.push({
@@ -164,6 +167,7 @@ async function hydrateSponsors(
         weight: 1.0,
         confidence: 1.0,
         dataAsOf,
+        sourceLabel: 'Congress.gov bill sponsorship',
       });
     }
   }
@@ -201,6 +205,7 @@ async function hydrateSectors(
       label: formatNodeLabel('sector', { name: sector }),
       properties: { name: sector },
       dataAsOf,
+      sourceLabel: 'CIV.IQ sector classification',
     });
 
     edges.push({
@@ -213,6 +218,7 @@ async function hydrateSectors(
       weight: 0.7,
       confidence: 0.8,
       dataAsOf,
+      sourceLabel: 'CIV.IQ sector classification',
     });
   }
 
@@ -248,6 +254,7 @@ async function hydrateReferrals(
       label: formatNodeLabel('committee', { name }),
       properties: { name, code },
       dataAsOf,
+      sourceLabel: 'Congress.gov',
     });
 
     edges.push({
@@ -260,6 +267,7 @@ async function hydrateReferrals(
       weight: 0.6,
       confidence: 1.0,
       dataAsOf,
+      sourceLabel: 'Congress.gov committee referral',
     });
   }
 

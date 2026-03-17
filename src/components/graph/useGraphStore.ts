@@ -33,6 +33,7 @@ interface GraphState {
 
   // Actions
   addNeighborhood: (data: GraphNeighborhood) => void;
+  addQueryResults: (nodes: GraphNode[], edges: GraphEdge[]) => void;
   selectNode: (id: string | null) => void;
   selectEdge: (id: string | null) => void;
   toggleEdgeType: (type: GraphEdgeType) => void;
@@ -135,6 +136,25 @@ export const useGraphStore = create<GraphState>()(
           },
           false,
           'addNeighborhood'
+        ),
+
+      addQueryResults: (queryNodes: GraphNode[], queryEdges: GraphEdge[]) =>
+        set(
+          state => {
+            const nodes = new Map(state.nodes);
+            const edges = new Map(state.edges);
+
+            for (const node of queryNodes) {
+              nodes.set(node.id, node);
+            }
+            for (const edge of queryEdges) {
+              edges.set(edge.id, edge);
+            }
+
+            return { nodes, edges };
+          },
+          false,
+          'addQueryResults'
         ),
 
       selectNode: (id: string | null) =>

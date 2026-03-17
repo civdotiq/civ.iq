@@ -61,6 +61,10 @@ export interface GraphNode {
   dataAsOf: string;
   /** Link to existing CIV.IQ page, if applicable */
   profileUrl?: string;
+  /** URL to the authoritative external data source for verification */
+  sourceUrl?: string;
+  /** Human-readable label for the external data source (e.g., "Congress.gov") */
+  sourceLabel?: string;
 }
 
 export interface GraphEdge {
@@ -81,6 +85,10 @@ export interface GraphEdge {
   temporal?: { date: string; period?: string };
   /** ISO timestamp of freshest source data */
   dataAsOf: string;
+  /** URL to the authoritative external data source for verification */
+  sourceUrl?: string;
+  /** Human-readable label for the external data source (e.g., "FEC.gov") */
+  sourceLabel?: string;
 }
 
 // ── Graph Neighborhood ──────────────────────────────────────────────

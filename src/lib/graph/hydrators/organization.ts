@@ -161,6 +161,7 @@ async function hydrateLobbyingFilings(
         },
         dataAsOf,
         profileUrl: `/committee/${committeeCode}`,
+        sourceLabel: 'Congress.gov',
       });
 
       const weight = Math.min(agg.totalAmount / 10_000_000, 1);
@@ -186,6 +187,8 @@ async function hydrateLobbyingFilings(
             }
           : undefined,
         dataAsOf,
+        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceLabel: 'Senate Lobbying Disclosure Act',
       });
     }
   } catch (error) {
@@ -233,6 +236,7 @@ async function hydrateSectorClassification(
       },
       dataAsOf,
       profileUrl: `/industry/${sectorKey}`,
+      sourceLabel: 'CIV.IQ sector classification',
     });
 
     const confidenceMap: Record<string, number> = {
@@ -255,6 +259,7 @@ async function hydrateSectorClassification(
       weight: 0.5,
       confidence: confidenceMap[result.confidence] ?? 0.5,
       dataAsOf,
+      sourceLabel: 'CIV.IQ sector classification',
     });
   } catch (error) {
     logger.warn('[Graph:Org] Sector classification failed', {
@@ -329,6 +334,10 @@ async function hydrateDonations(
         },
         dataAsOf,
         profileUrl: bioguideId ? `/representative/${bioguideId}` : undefined,
+        sourceUrl: bioguideId
+          ? `https://bioguide.congress.gov/search/bio/${bioguideId}`
+          : undefined,
+        sourceLabel: 'FEC disbursement records',
       });
 
       const weight = maxTotal > 0 ? disbursement.total / maxTotal : 0.5;
@@ -353,6 +362,8 @@ async function hydrateDonations(
           period: `${cycle - 1}-${cycle} cycle`,
         },
         dataAsOf,
+        sourceUrl: `https://www.fec.gov/data/disbursements/?committee_id=${orgCommittee.committee_id}`,
+        sourceLabel: 'FEC disbursement records',
       });
     }
   } catch (error) {

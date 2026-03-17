@@ -22,7 +22,13 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getCurrentElectionCycle } from '@/lib/intelligence/analyzers/shared';
-import { toCanonicalId, toEdgeId, normalizeOrgName, formatNodeLabel } from '../normalize';
+import {
+  toCanonicalId,
+  toEdgeId,
+  normalizeOrgName,
+  formatNodeLabel,
+  toTitleCase,
+} from '../normalize';
 import type { GraphNode, GraphEdge } from '@/types/graph';
 import type { HydrationSource } from '../types';
 
@@ -64,6 +70,8 @@ export async function hydrateRepresentative(bioguideId: string): Promise<Hydrati
     },
     dataAsOf: now,
     profileUrl: `/representative/${upperId}`,
+    sourceUrl: `https://bioguide.congress.gov/search/bio/${upperId}`,
+    sourceLabel: 'Biographical Directory of Congress',
   };
 
   const sources: HydrationSource[] = [
@@ -108,6 +116,8 @@ async function hydrateCommittees(
       label: formatNodeLabel('committee', { name: committee.name }),
       properties: { name: committee.name, code: cmteCode },
       dataAsOf,
+      sourceUrl: `https://www.congress.gov/committee/${cmteCode}`,
+      sourceLabel: 'Congress.gov',
     });
 
     edges.push({
@@ -124,6 +134,7 @@ async function hydrateCommittees(
           : 0.5,
       confidence: 1.0,
       dataAsOf,
+      sourceLabel: 'Congress.gov',
     });
   }
 
@@ -177,12 +188,16 @@ async function hydrateContributions(
   for (const [orgName, data] of sorted) {
     const orgId = toCanonicalId('organization', normalizeOrgName(orgName));
 
+    const displayName = toTitleCase(orgName);
+
     nodes.push({
       id: orgId,
       type: 'organization',
-      label: formatNodeLabel('organization', { name: orgName }),
+      label: formatNodeLabel('organization', { name: displayName }),
       properties: { name: orgName },
       dataAsOf,
+      sourceUrl: `https://www.fec.gov/data/receipts/individual-contributions/?committee_id=${fecId}&contributor_employer=${encodeURIComponent(orgName)}`,
+      sourceLabel: 'FEC individual contributions',
     });
 
     edges.push({
@@ -190,7 +205,7 @@ async function hydrateContributions(
       type: 'donated_to',
       sourceId: orgId,
       targetId: repId,
-      label: `$${data.total.toLocaleString()} from ${orgName} employees`,
+      label: `$${data.total.toLocaleString()} from ${displayName} employees`,
       properties: {
         amount: data.total,
         contributionCount: data.count,
@@ -200,6 +215,8 @@ async function hydrateContributions(
       confidence: 0.9,
       temporal: data.latestDate ? { date: data.latestDate, period: `${cycle} cycle` } : undefined,
       dataAsOf,
+      sourceUrl: `https://www.fec.gov/data/receipts/individual-contributions/?committee_id=${fecId}&contributor_employer=${encodeURIComponent(orgName)}`,
+      sourceLabel: 'FEC individual contributions',
     });
   }
 
@@ -228,6 +245,13 @@ async function hydrateVotes(
 
     // Only add bill node if not already added (dedup)
     if (!nodes.some(n => n.id === billId)) {
+      // Build profileUrl only when billNumber is a valid bill identifier (e.g. "HR 1234", "SJRES 12")
+      // — not when it fell back to a title string or vote ID
+      const billMatch = billNumber.match(/^(HR|S|HRES|SRES|HJRES|SJRES|HCONRES|SCONRES)\s*(\d+)$/i);
+      const profileUrl = billMatch
+        ? `/bill/119-${billMatch[1]!.toLowerCase()}-${billMatch[2]!}`
+        : undefined;
+
       nodes.push({
         id: billId,
         type: 'bill',
@@ -241,6 +265,8 @@ async function hydrateVotes(
           congress: 119,
         },
         dataAsOf,
+        profileUrl,
+        sourceLabel: 'Congress.gov',
       });
     }
 
@@ -260,6 +286,7 @@ async function hydrateVotes(
       confidence: 1.0,
       temporal: vote.date ? { date: vote.date } : undefined,
       dataAsOf,
+      sourceLabel: 'Congressional roll call record',
     });
   }
 

@@ -280,17 +280,25 @@ async function CommitteeContent({
               <p className="text-gray-700 leading-relaxed">{committee.jurisdiction}</p>
             </div>
 
-            {committee.url && (
+            <div className="flex flex-wrap gap-3">
+              {committee.url && (
+                <Link
+                  href={committee.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Congress.gov
+                </Link>
+              )}
               <Link
-                href={committee.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                href={`/investigate?node=cmte:${committeeId}`}
+                className="inline-flex items-center px-4 py-2 border-2 border-[#3ea2d4] text-[#3ea2d4] type-sm font-bold hover:bg-[#3ea2d4] hover:text-white transition-colors"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Congress.gov
+                Investigate connections
               </Link>
-            )}
+            </div>
           </div>
 
           {/* Contact Information */}

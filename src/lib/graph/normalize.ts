@@ -102,6 +102,118 @@ export function formatNodeLabel(type: GraphNodeType, properties: Record<string, 
   }
 }
 
+/**
+ * Title-case an ALL CAPS organization name for display.
+ *
+ * Handles three categories:
+ * 1. Known acronyms/suffixes (LLC, IBM, PAC) — preserved uppercase
+ * 2. Common connector words (of, the, and) — lowercased (except at start)
+ * 3. Everything else — title-cased, including hyphenated parts (e.g. "Smith-Jones")
+ */
+
+const LOWERCASE_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'as',
+  'at',
+  'by',
+  'for',
+  'from',
+  'in',
+  'into',
+  'nor',
+  'of',
+  'on',
+  'or',
+  'the',
+  'to',
+  'via',
+  'with',
+]);
+
+const PRESERVE_UPPERCASE = new Set([
+  // Business entity suffixes
+  'LLC',
+  'LLP',
+  'PAC',
+  'INC',
+  'CORP',
+  'LTD',
+  'PLC',
+  'LP',
+  'NA',
+  'CO',
+  'PLLC',
+  'PC',
+  'PA',
+  'SC',
+  'APC',
+  'ASSN',
+  'INTL',
+  // Well-known acronyms common in FEC/lobbying data
+  'IBM',
+  'ATT',
+  'USA',
+  'US',
+  'HP',
+  'GE',
+  'GM',
+  'BP',
+  'UPS',
+  'AFL',
+  'CIO',
+  'UAW',
+  'SEIU',
+  'BAE',
+  'CSX',
+  'SAP',
+  // Geography abbreviations
+  'DC',
+  'PR',
+  'NY',
+  'LA',
+  'UK',
+]);
+
+function titleCaseWord(word: string): string {
+  return word
+    .toLowerCase()
+    .split('-')
+    .map(part => {
+      if (!part) return part;
+      const letters = part.replace(/[^A-Za-z]/g, '');
+      if (letters && PRESERVE_UPPERCASE.has(letters.toUpperCase())) {
+        return part.toUpperCase();
+      }
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join('-');
+}
+
+export function toTitleCase(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((word, i) => {
+      const letters = word.replace(/[^A-Za-z]/g, '');
+      if (!letters) return word;
+
+      // Preserve known acronyms and business suffixes
+      if (PRESERVE_UPPERCASE.has(letters.toUpperCase())) {
+        return word.toUpperCase();
+      }
+
+      // Lowercase common connector words (except first word)
+      if (i > 0 && LOWERCASE_WORDS.has(letters.toLowerCase())) {
+        return word.toLowerCase();
+      }
+
+      // Title case with hyphen awareness (e.g. "AFL-CIO" preserves both parts)
+      return titleCaseWord(word);
+    })
+    .join(' ');
+}
+
 /** Build an edge ID from source, type, and target */
 export function toEdgeId(sourceId: string, type: string, targetId: string): string {
   return `${sourceId}->${type}->${targetId}`;

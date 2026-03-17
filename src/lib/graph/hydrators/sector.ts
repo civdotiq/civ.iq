@@ -73,6 +73,7 @@ export async function hydrateSector(sectorKey: string): Promise<HydrationPlan | 
     label: formatNodeLabel('sector', { name: displayName }),
     properties: { name: displayName },
     dataAsOf: now,
+    sourceLabel: 'CIV.IQ sector analysis',
   };
 
   const sources: HydrationSource[] = [
@@ -152,6 +153,7 @@ async function hydrateLeaderboard(
       },
       dataAsOf,
       profileUrl: `/representative/${entry.bioguideId}`,
+      sourceLabel: 'FEC contribution records',
     };
 
     const edge: GraphEdge = {
@@ -169,6 +171,7 @@ async function hydrateLeaderboard(
       weight: entry.sectorDonationAmount / maxDonation,
       confidence: Math.min(entry.sectorAlignmentScore, 1),
       dataAsOf,
+      sourceLabel: 'FEC contribution records',
     };
 
     nodes.push(repNode);

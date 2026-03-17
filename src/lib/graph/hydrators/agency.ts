@@ -52,6 +52,7 @@ export async function hydrateAgency(agencySlug: string): Promise<HydrationPlan |
     label: formatNodeLabel('agency', { name: agencyName }),
     properties: { name: agencyName },
     dataAsOf: now,
+    sourceLabel: 'Congressional oversight jurisdiction',
   };
 
   const usaSpendingSlug = agencyInfo.usaSpendingSlug;
@@ -84,6 +85,7 @@ async function hydrateOversightCommittees(
       label: formatNodeLabel('committee', { name: cmte.committeeName }),
       properties: { name: cmte.committeeName, chamber: cmte.chamber },
       dataAsOf,
+      sourceLabel: 'Congress.gov',
     });
 
     edges.push({
@@ -96,6 +98,7 @@ async function hydrateOversightCommittees(
       weight: 0.8,
       confidence: 1.0,
       dataAsOf,
+      sourceLabel: 'Congressional oversight jurisdiction',
     });
   }
 

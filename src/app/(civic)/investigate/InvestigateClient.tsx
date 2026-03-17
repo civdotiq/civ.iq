@@ -6,14 +6,16 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GraphCanvas } from '@/components/graph/GraphCanvas';
 import { GraphSidebar } from '@/components/graph/GraphSidebar';
 import { GraphControls } from '@/components/graph/GraphControls';
 import { GraphSearch } from '@/components/graph/GraphSearch';
+import { GraphQueryBar } from '@/components/graph/GraphQueryBar';
 import { GraphLegend } from '@/components/graph/GraphLegend';
 import { useGraphStore } from '@/components/graph/useGraphStore';
 import { useGraphNeighborhood } from '@/components/graph/useGraphData';
+import type { GraphNode, GraphEdge } from '@/types/graph';
 
 export default function InvestigateClient() {
   const searchParams = useSearchParams();
@@ -28,41 +30,61 @@ export default function InvestigateClient() {
     selectNode,
     selectEdge,
     addNeighborhood,
+    addQueryResults,
     reset,
   } = useGraphStore();
 
-  // Fetch initial node neighborhood
-  const { data: initialNeighborhood, isLoading } = useGraphNeighborhood(
-    initialNode && !expandedNodeIds.has(initialNode) ? initialNode : null
-  );
+  // Separate expansion state from selection to avoid double-click race
+  const [expandNodeId, setExpandNodeId] = useState<string | null>(initialNode);
+
+  // Fetch neighborhood for the node to expand
+  const shouldFetch = expandNodeId && !expandedNodeIds.has(expandNodeId);
+  const { data: expandData, isLoading } = useGraphNeighborhood(shouldFetch ? expandNodeId : null);
 
   useEffect(() => {
-    if (initialNeighborhood) {
-      addNeighborhood(initialNeighborhood);
+    if (expandData) {
+      addNeighborhood(expandData);
     }
-  }, [initialNeighborhood, addNeighborhood]);
+  }, [expandData, addNeighborhood]);
 
-  const handleNodeDoubleClick = useCallback(
-    (nodeId: string) => {
-      if (!expandedNodeIds.has(nodeId)) {
-        // Will trigger fetch via useGraphNeighborhood in ExpandHandler
-        selectNode(nodeId);
-      }
+  // Single-click: select only (show sidebar details, no expansion)
+  const handleNodeClick = useCallback(
+    (id: string | null) => {
+      selectNode(id);
     },
-    [expandedNodeIds, selectNode]
+    [selectNode]
   );
 
+  // Double-click or sidebar "Expand": expand the node's network
+  const handleExpandNode = useCallback(
+    (nodeId: string) => {
+      if (!expandedNodeIds.has(nodeId)) {
+        setExpandNodeId(nodeId);
+      }
+    },
+    [expandedNodeIds]
+  );
+
+  // Search: reset graph and load a new root node
   const handleSearch = useCallback(
     (nodeId: string) => {
       reset();
-      // Update URL without navigation
       const url = new URL(window.location.href);
       url.searchParams.set('node', nodeId);
       window.history.pushState({}, '', url.toString());
-      // Trigger fetch
       selectNode(nodeId);
+      setExpandNodeId(nodeId);
     },
     [reset, selectNode]
+  );
+
+  // Natural-language query: reset and populate with query results
+  const handleQueryResults = useCallback(
+    (queryNodes: GraphNode[], queryEdges: GraphEdge[]) => {
+      reset();
+      addQueryResults(queryNodes, queryEdges);
+    },
+    [reset, addQueryResults]
   );
 
   const nodesArray = Array.from(nodes.values());
@@ -83,14 +105,23 @@ export default function InvestigateClient() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="aicher-heading text-2xl mb-2">Investigate Connections</h1>
-          <p className="type-sm text-gray-600 dark:text-gray-400">
-            Explore relationships between legislators, donors, committees, and government contracts.
-            Click a node to select, double-click to expand its network.
+          <p className="type-sm text-gray-600 dark:text-gray-400 mb-2">
+            This tool shows publicly reported connections between elected officials and the
+            organizations that fund them, lobby them, and do business with the federal government.
+            All data comes from official government sources including FEC.gov, Senate lobbying
+            disclosures, and Congress.gov.
+          </p>
+          <p className="type-xs text-gray-400">
+            Search for a name below, then click any node for details and sources. Double-click to
+            expand a node&apos;s network.
           </p>
         </div>
 
         {/* Search */}
-        <GraphSearch onSelect={handleSearch} />
+        <div className="space-y-4">
+          <GraphSearch onSelect={handleSearch} />
+          <GraphQueryBar onResults={handleQueryResults} />
+        </div>
 
         {/* Main grid: canvas + sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 mt-8">
@@ -125,8 +156,8 @@ export default function InvestigateClient() {
                   edges={edgesArray}
                   selectedNodeId={selectedNodeId}
                   selectedEdgeId={selectedEdgeId}
-                  onNodeClick={selectNode}
-                  onNodeDoubleClick={handleNodeDoubleClick}
+                  onNodeClick={handleNodeClick}
+                  onNodeDoubleClick={handleExpandNode}
                   onEdgeClick={selectEdge}
                 />
               )}
@@ -142,28 +173,11 @@ export default function InvestigateClient() {
             selectedEdgeId={selectedEdgeId}
             nodes={nodes}
             edges={edges}
+            onSelectNode={selectNode}
+            onExpandNode={handleExpandNode}
           />
         </div>
-
-        {/* Expand handler — fetches neighborhoods for selected nodes */}
-        <ExpandHandler />
       </main>
     </div>
   );
-}
-
-/** Hidden component that fetches neighborhoods when a node is selected but not yet expanded */
-function ExpandHandler() {
-  const { selectedNodeId, expandedNodeIds, addNeighborhood } = useGraphStore();
-
-  const shouldFetch = selectedNodeId && !expandedNodeIds.has(selectedNodeId);
-  const { data } = useGraphNeighborhood(shouldFetch ? selectedNodeId : null);
-
-  useEffect(() => {
-    if (data) {
-      addNeighborhood(data);
-    }
-  }, [data, addNeighborhood]);
-
-  return null;
 }
