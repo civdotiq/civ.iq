@@ -39,7 +39,7 @@ No new databases. Same Redis. Same hydrator pattern. Same "statistics first, AI 
 **Phase 2: Temporal Mesh** — Add time-series to every edge
 **Phase 3: District Intelligence Profile** — The citizen-facing "digital twin"
 **Phase 4: Influence Propagation** — ML on the graph (counterfactuals, cascades)
-**Phase 5: Open Civic Data Protocol** — Public API, Nostr feeds, embeddable widgets
+**Phase 5: Open Civic Data Protocol** — Public API, Nostr feeds, embeddable widgets ✓
 
 Each phase has its own plan file: `PLAN-civic-mesh-phase-N.md`
 

@@ -74,3 +74,13 @@ export type { ScoredPath, InfluenceScore, EdgeScore } from './propagation/path-s
 
 export { simulateCascade, perturbSectorFunding } from './propagation/cascade';
 export type { CascadeQuery, CascadeResult, CascadeRepEffect } from './propagation/cascade';
+
+// Protocol — unified entity API, Nostr feeds, embeddable widgets (Phase 5)
+export { resolveEntity, parseMeshId } from './protocol/entity-api';
+export type { MeshEntityResponse } from './protocol/entity-api';
+
+export { publishCivicIntelligence, entityTypeFromId } from './protocol/feed';
+export type { CivicIntelligenceEvent } from './protocol/feed';
+
+export { renderScorecard, renderDistrictCard } from './protocol/embed';
+export type { ScorecardData, DistrictCardData } from './protocol/embed';
