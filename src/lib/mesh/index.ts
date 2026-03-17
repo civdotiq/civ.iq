@@ -60,3 +60,17 @@ export type {
   TemporalProfile,
   TemporalTrend,
 } from './temporal-types';
+
+// Propagation — influence path scoring, counterfactuals, cascade simulation
+export { runCounterfactual, maskDonorProfile } from './propagation/counterfactual';
+export type {
+  CounterfactualQuery,
+  CounterfactualResult,
+  CounterfactualPrediction,
+} from './propagation/counterfactual';
+
+export { scoreInfluence, scoreEdge } from './propagation/path-scorer';
+export type { ScoredPath, InfluenceScore, EdgeScore } from './propagation/path-scorer';
+
+export { simulateCascade, perturbSectorFunding } from './propagation/cascade';
+export type { CascadeQuery, CascadeResult, CascadeRepEffect } from './propagation/cascade';
