@@ -188,93 +188,130 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   // Show initial loading only if nothing has resolved yet
   const nothingYet = !hasAnyInsight && !allDoneLoading;
 
+  // Count available detailed analyses for the summary label
+  const detailedCount = [
+    financeJurisdiction,
+    voteFinance,
+    temporal,
+    lobbying,
+    influenceChain,
+    votePrediction,
+    stock,
+    temporalProximity,
+  ].filter(Boolean).length;
+  // Always-rendered sections (What-If, Clusters) add to the count
+  const totalDetailedCount = detailedCount + 2;
+  // Always show details section — What-If and Clusters are always available,
+  // plus we show it while data is still loading
+  const hasDetailedInsights = civicBrief != null || !allDoneLoading;
+
   return (
     <div className="space-y-6">
-      <p className="type-sm text-gray-500">
-        Statistical analysis connecting campaign finance, voting records, and committee
-        jurisdictions using public government data.
-      </p>
-
-      {/* Civic Intelligence Brief */}
+      {/* Tier 1: Civic Brief — always visible */}
       {civicBrief && <CivicBriefCard insight={civicBrief} />}
       {civicBriefLoading && !civicBrief && <InsightSkeleton tall />}
 
-      {/* Finance-Jurisdiction */}
-      {financeJurisdiction && (
-        <InsightCard
-          title="Finance-Jurisdiction Overlap"
-          insight={financeJurisdiction}
-          keyStats={financeJurisdictionKeyStats(financeJurisdiction)}
-        />
+      {/* Tier 2: Detailed analysis — collapsed by default */}
+      {hasDetailedInsights && (
+        <details className="group">
+          <summary className="cursor-pointer list-none py-3 border-2 border-gray-200 px-4 sm:px-6 flex items-center justify-between aicher-focus [&::-webkit-details-marker]:hidden">
+            <span className="aicher-heading type-sm text-[#3ea2d4]">
+              Show detailed analysis
+              {allDoneLoading && ` (${totalDetailedCount} sections available)`}
+            </span>
+            <span
+              className="type-sm text-gray-400 group-open:rotate-180 transition-transform"
+              aria-hidden="true"
+            >
+              ▼
+            </span>
+          </summary>
+
+          <div className="space-y-6 mt-6">
+            <p className="type-sm text-gray-500">
+              Statistical analysis connecting campaign finance, voting records, and committee
+              jurisdictions using public government data.
+            </p>
+
+            {/* Finance-Jurisdiction */}
+            {financeJurisdiction && (
+              <InsightCard
+                title="Do donors match committee power?"
+                insight={financeJurisdiction}
+                keyStats={financeJurisdictionKeyStats(financeJurisdiction)}
+              />
+            )}
+            {fjLoading && !financeJurisdiction && <InsightSkeleton />}
+
+            {/* Vote-Finance */}
+            {voteFinance && (
+              <InsightCard
+                title="Do donations align with votes?"
+                insight={voteFinance}
+                keyStats={voteFinanceKeyStats(voteFinance)}
+              />
+            )}
+            {vfLoading && !voteFinance && <InsightSkeleton />}
+
+            {/* Temporal */}
+            {temporal && (
+              <>
+                <VoteShiftTimeline quarters={temporal.quarters} shifts={temporal.shifts} />
+                <InsightCard
+                  title="Has voting behavior changed?"
+                  insight={temporal}
+                  keyStats={temporalVoteKeyStats(temporal)}
+                />
+              </>
+            )}
+            {temporalLoading && !temporal && <InsightSkeleton tall />}
+
+            {/* Lobbying Pipeline */}
+            {lobbying && (
+              <>
+                <InfluenceChainTable insight={lobbying} />
+                <InsightCard
+                  title="Who lobbies this committee?"
+                  insight={lobbying}
+                  keyStats={lobbyingPipelineKeyStats(lobbying)}
+                />
+              </>
+            )}
+            {lobbyingLoading && !lobbying && primaryCommittee && <InsightSkeleton />}
+
+            {/* Influence Chain */}
+            {influenceChain && <InfluenceChainCard insight={influenceChain} />}
+            {influenceChainLoading && !influenceChain && <InsightSkeleton />}
+
+            {/* Vote Prediction */}
+            {votePrediction && <VotePredictionCard insight={votePrediction} />}
+            {votePredictionLoading && !votePrediction && <InsightSkeleton />}
+
+            {/* Stock Trades */}
+            {stock && (
+              <>
+                <StockOverlapTable insight={stock} />
+                <InsightCard
+                  title="Stock trades in committee sectors"
+                  insight={stock}
+                  keyStats={stockCommitteeKeyStats(stock)}
+                />
+              </>
+            )}
+            {stockLoading && !stock && <InsightSkeleton />}
+
+            {/* Timing Patterns */}
+            {temporalProximity && <TemporalProximityCard insight={temporalProximity} />}
+            {temporalProximityLoading && !temporalProximity && <InsightSkeleton />}
+
+            {/* What-If Analysis */}
+            <CounterfactualSection bioguideId={bioguideId} />
+
+            {/* Influence Clusters */}
+            <InfluenceClusterChart highlightBioguideId={bioguideId} />
+          </div>
+        </details>
       )}
-      {fjLoading && !financeJurisdiction && <InsightSkeleton />}
-
-      {/* Vote-Finance */}
-      {voteFinance && (
-        <InsightCard
-          title="Vote-Finance Correlation"
-          insight={voteFinance}
-          keyStats={voteFinanceKeyStats(voteFinance)}
-        />
-      )}
-      {vfLoading && !voteFinance && <InsightSkeleton />}
-
-      {/* Temporal */}
-      {temporal && (
-        <>
-          <VoteShiftTimeline quarters={temporal.quarters} shifts={temporal.shifts} />
-          <InsightCard
-            title="Voting Pattern Shifts"
-            insight={temporal}
-            keyStats={temporalVoteKeyStats(temporal)}
-          />
-        </>
-      )}
-      {temporalLoading && !temporal && <InsightSkeleton tall />}
-
-      {/* Lobbying Pipeline */}
-      {lobbying && (
-        <>
-          <InfluenceChainTable insight={lobbying} />
-          <InsightCard
-            title="Lobbying Pipeline"
-            insight={lobbying}
-            keyStats={lobbyingPipelineKeyStats(lobbying)}
-          />
-        </>
-      )}
-      {lobbyingLoading && !lobbying && primaryCommittee && <InsightSkeleton />}
-
-      {/* Influence Chain */}
-      {influenceChain && <InfluenceChainCard insight={influenceChain} />}
-      {influenceChainLoading && !influenceChain && <InsightSkeleton />}
-
-      {/* Vote Prediction */}
-      {votePrediction && <VotePredictionCard insight={votePrediction} />}
-      {votePredictionLoading && !votePrediction && <InsightSkeleton />}
-
-      {/* Stock Trades */}
-      {stock && (
-        <>
-          <StockOverlapTable insight={stock} />
-          <InsightCard
-            title="Stock Trade-Committee Overlap"
-            insight={stock}
-            keyStats={stockCommitteeKeyStats(stock)}
-          />
-        </>
-      )}
-      {stockLoading && !stock && <InsightSkeleton />}
-
-      {/* Timing Patterns */}
-      {temporalProximity && <TemporalProximityCard insight={temporalProximity} />}
-      {temporalProximityLoading && !temporalProximity && <InsightSkeleton />}
-
-      {/* What-If Analysis */}
-      <CounterfactualSection bioguideId={bioguideId} />
-
-      {/* Influence Clusters (always loads independently) */}
-      <InfluenceClusterChart highlightBioguideId={bioguideId} />
 
       {/* Initial loading state when nothing has resolved */}
       {nothingYet && (

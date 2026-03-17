@@ -33,7 +33,12 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
   const topFindings = patterns.slice(0, 2);
   const additionalFindings = patterns.slice(2);
 
-  const hasFunding = funding.totalRaised !== null || funding.topSectors.length > 0;
+  // Hide sector bars when top sector is "Other" and > 80% — showing 99% Other is worse than nothing
+  const showSectors =
+    funding.topSectors.length > 0 &&
+    !(funding.topSectors[0]?.sector === 'Other' && (funding.topSectors[0]?.pct ?? 0) > 80);
+
+  const hasFunding = funding.totalRaised !== null || showSectors;
   const hasFullAnalysis =
     voting.totalVotes > 0 ||
     oversight.jurisdictionOverlapScore !== null ||
@@ -105,8 +110,13 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
             )}
           </p>
 
-          {/* Sector bars */}
-          {funding.topSectors.length > 0 && (
+          {/* Sector bars — hidden when data is too vague (e.g. 99% "Other") */}
+          {!showSectors && funding.topSectors.length > 0 && (
+            <p className="type-xs text-gray-400">
+              Detailed funding breakdown unavailable for this representative
+            </p>
+          )}
+          {showSectors && (
             <div className="space-y-1">
               {funding.topSectors.map(s => (
                 <div key={s.sector} className="flex items-center gap-2">
