@@ -347,11 +347,11 @@ export function GraphCanvas({
             simLinks as unknown as d3.SimulationLinkDatum<SimNode>[]
           )
           .id(d => d.id)
-          .distance(100)
+          .distance(140)
       )
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('charge', d3.forceManyBody().strength(-400))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide(isMobile ? 40 : 30))
+      .force('collision', d3.forceCollide(isMobile ? 50 : 40))
       .on('tick', () => {
         linkGroup
           .attr('x1', d => (d.source as SimNode).x ?? 0)

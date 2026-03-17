@@ -11,18 +11,18 @@ import type { GraphEdgeType } from '@/types/graph';
 const EDGE_TYPE_LABELS: Record<GraphEdgeType, string> = {
   donated_to: 'Donations',
   lobbied: 'Lobbying',
-  serves_on: 'Committee Service',
+  serves_on: 'Committees',
   voted_on: 'Votes',
   sponsored: 'Sponsorship',
   oversees: 'Oversight',
   awarded_contract: 'Contracts',
-  affects_sector: 'Sector Impact',
-  in_sector: 'Sector Membership',
-  traded_stock: 'Stock Trades',
+  affects_sector: 'Industry impact',
+  in_sector: 'Industry links',
+  traded_stock: 'Stock trades',
   regulates: 'Regulations',
-  lobbying_matches: 'Lobbying Matches',
+  lobbying_matches: 'Related lobbying',
   referred_to: 'Referrals',
-  employs_donor: 'Employer Donors',
+  employs_donor: 'Donor employers',
 };
 
 const EDGE_TYPE_GROUPS: Array<{ label: string; types: GraphEdgeType[] }> = [
@@ -30,7 +30,7 @@ const EDGE_TYPE_GROUPS: Array<{ label: string; types: GraphEdgeType[] }> = [
   { label: 'Legislative', types: ['voted_on', 'sponsored', 'referred_to'] },
   { label: 'Structural', types: ['serves_on', 'oversees', 'regulates'] },
   {
-    label: 'Analysis',
+    label: 'Deeper analysis',
     types: ['affects_sector', 'in_sector', 'lobbying_matches', 'employs_donor'],
   },
 ];
@@ -63,7 +63,7 @@ export function GraphControls() {
 
       {/* Confidence slider */}
       <div className="flex items-center gap-2 ml-auto">
-        <label className="type-xs text-gray-500">Min confidence:</label>
+        <label className="type-xs text-gray-500">Data quality:</label>
         <input
           type="range"
           min={0}

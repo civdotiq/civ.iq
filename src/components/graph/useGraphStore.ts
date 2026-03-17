@@ -43,21 +43,15 @@ interface GraphState {
   reset: () => void;
 }
 
-const ALL_EDGE_TYPES = new Set<GraphEdgeType>([
+/** Edge types shown by default — Money + Legislative only, to reduce initial noise */
+const DEFAULT_EDGE_TYPES = new Set<GraphEdgeType>([
   'donated_to',
   'lobbied',
-  'serves_on',
+  'awarded_contract',
+  'traded_stock',
   'voted_on',
   'sponsored',
-  'oversees',
-  'awarded_contract',
-  'affects_sector',
-  'in_sector',
-  'traded_stock',
-  'regulates',
-  'lobbying_matches',
   'referred_to',
-  'employs_donor',
 ]);
 
 function initialState() {
@@ -67,7 +61,7 @@ function initialState() {
     expandedNodeIds: new Set<string>(),
     selectedNodeId: null as string | null,
     selectedEdgeId: null as string | null,
-    visibleEdgeTypes: new Set(ALL_EDGE_TYPES),
+    visibleEdgeTypes: new Set(DEFAULT_EDGE_TYPES),
     timeRange: { since: null as string | null, until: null as string | null },
     minConfidence: 0.5,
   };
