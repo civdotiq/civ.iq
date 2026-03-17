@@ -307,6 +307,8 @@ export default function EconomyTopicPage() {
             { href: '/topics/healthcare', label: 'Healthcare' },
             { href: '/committees', label: 'Committees' },
             { href: '/topics', label: 'All Topics' },
+            { href: '/glossary/roll-call-vote', label: 'Roll Call Votes' },
+            { href: '/legislation', label: 'Recent Legislation' },
           ]}
           lastUpdated={new Date()}
           dataSource="Congress.gov"

@@ -34,6 +34,8 @@ const CATEGORY_COLORS: Record<GlossaryCategory, { bg: string; text: string; bord
     text: 'text-emerald-700',
     border: 'border-emerald-200',
   },
+  regulatory: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+  budget: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
 };
 
 export function GlossaryClient() {

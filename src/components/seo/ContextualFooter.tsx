@@ -21,6 +21,12 @@ export interface CommitteeLink {
   role?: string;
 }
 
+export interface RecentVoteLink {
+  voteId: string;
+  title: string;
+  date: string;
+}
+
 export interface ContextualFooterProps {
   representativeName: string;
   party: string;
@@ -31,6 +37,7 @@ export interface ContextualFooterProps {
   totalCommittees?: number;
   senatorCount?: number;
   repCount?: number;
+  recentVotes?: RecentVoteLink[];
   lastUpdated?: Date;
   dataSource?: string;
 }
@@ -69,6 +76,7 @@ export function ContextualFooter({
   totalCommittees,
   senatorCount = 2,
   repCount,
+  recentVotes = [],
   lastUpdated,
   dataSource: _dataSource = 'Congress.gov',
 }: ContextualFooterProps) {
@@ -273,6 +281,28 @@ export function ContextualFooter({
               </li>
             </ul>
           </div>
+
+          {/* Recent Votes */}
+          {recentVotes.length > 0 && (
+            <div className="mb-4">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-2">
+                Recent Votes
+              </span>
+              <ul className="space-y-1">
+                {recentVotes.slice(0, 3).map(vote => (
+                  <li key={vote.voteId}>
+                    <Link
+                      href={`/vote/${vote.voteId}`}
+                      className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-0.5"
+                    >
+                      {vote.title}
+                    </Link>
+                    <span className="text-[10px] text-gray-400">{vote.date}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* By State */}
           <div>

@@ -8,6 +8,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Embeddable Widgets | CIV.IQ',
@@ -96,102 +97,157 @@ const RESIZE_SCRIPT = `<script>
 
 export default function EmbedDocsPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-blue-600">
-          Home
-        </Link>
-        <span className="mx-2">&rsaquo;</span>
-        <span className="font-medium text-gray-900">Embeddable Widgets</span>
-      </nav>
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Developers', url: 'https://civdotiq.org/developers' },
+          { name: 'Embeddable Widgets', url: 'https://civdotiq.org/embed-docs' },
+        ]}
+      />
+      {/* SoftwareApplication schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'CIV.IQ Embeddable Widgets',
+            description:
+              'Drop-in iframe widgets for live civic data. District representatives, bill trackers, and district snapshots.',
+            url: 'https://civdotiq.org/embed-docs',
+            applicationCategory: 'WebApplication',
+            operatingSystem: 'Any',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+            provider: {
+              '@type': 'Organization',
+              name: 'CIV.IQ',
+              url: 'https://civdotiq.org',
+            },
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <Link href="/developers" className="hover:text-blue-600">
+            Developers
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">Embeddable Widgets</span>
+        </nav>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">Embeddable Widgets</h1>
-      <p className="text-gray-600 mb-8 max-w-2xl">
-        Embed live civic data on your website using iframes. All widgets are free, require no API
-        key, and update automatically with real government data.
-      </p>
-
-      {/* Auto-resize section */}
-      <section className="mb-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Auto-Resizing</h2>
-        <p className="text-gray-600 mb-4">
-          Widgets send their height via{' '}
-          <code className="text-sm bg-gray-100 px-1">postMessage</code>. Add this script to your
-          page for automatic iframe resizing:
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Embeddable Widgets</h1>
+        <p className="text-gray-600 mb-8 max-w-2xl">
+          Embed live civic data on your website using iframes. All widgets are free, require no API
+          key, and update automatically with real government data.
         </p>
-        <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black mb-4">
-          <code>{RESIZE_SCRIPT}</code>
-        </pre>
-      </section>
 
-      {/* Widget docs */}
-      {WIDGETS.map((widget, index) => (
-        <section key={widget.name} className="mb-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            {index + 1}. {widget.name}
-          </h2>
-          <p className="text-gray-600 mb-4">{widget.description}</p>
-
-          {/* Parameters */}
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-            Parameters
-          </h3>
-          <table className="w-full mb-4 text-sm border-2 border-black">
-            <thead>
-              <tr className="bg-black text-white">
-                <th className="text-left p-2 font-semibold">Parameter</th>
-                <th className="text-left p-2 font-semibold">Description</th>
-                <th className="text-left p-2 font-semibold">Example</th>
-              </tr>
-            </thead>
-            <tbody>
-              {widget.params.map(param => (
-                <tr key={param.name} className="border-t border-gray-200">
-                  <td className="p-2 font-mono text-sm">{param.name}</td>
-                  <td className="p-2 text-gray-600">{param.description}</td>
-                  <td className="p-2 font-mono text-sm">{param.example}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* URL */}
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">URL</h3>
-          <pre className="bg-gray-100 p-3 mb-4 text-sm overflow-x-auto border border-gray-200">
-            <code>{`${BASE_URL}${widget.path}`}</code>
-          </pre>
-
-          {/* Embed code */}
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-            Embed Code
-          </h3>
-          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black">
-            <code>{generateIframeCode(widget)}</code>
+        {/* Auto-resize section */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Auto-Resizing</h2>
+          <p className="text-gray-600 mb-4">
+            Widgets send their height via{' '}
+            <code className="text-sm bg-gray-100 px-1">postMessage</code>. Add this script to your
+            page for automatic iframe resizing:
+          </p>
+          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black mb-4">
+            <code>{RESIZE_SCRIPT}</code>
           </pre>
         </section>
-      ))}
 
-      {/* Usage notes */}
-      <section className="mb-12 border-t-2 border-black pt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Usage Notes</h2>
-        <ul className="list-disc list-inside text-gray-600 space-y-2 text-sm">
-          <li>Widgets are delivered via iframe for complete style isolation.</li>
-          <li>All data comes from official government APIs (Congress.gov, Census Bureau).</li>
-          <li>Widgets are server-rendered and cached for 24 hours.</li>
-          <li>No JavaScript SDK or API key required.</li>
-          <li>
-            Set <code className="bg-gray-100 px-1">width=&quot;100%&quot;</code> for responsive
-            behavior.
-          </li>
-          <li>
-            For questions or issues, contact us at{' '}
-            <a href="https://github.com/civdotiq" className="text-[#3ea2d4] hover:underline">
-              github.com/civdotiq
-            </a>
-          </li>
-        </ul>
-      </section>
-    </div>
+        {/* Widget docs */}
+        {WIDGETS.map((widget, index) => (
+          <section key={widget.name} className="mb-12">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {index + 1}. {widget.name}
+            </h2>
+            <p className="text-gray-600 mb-4">{widget.description}</p>
+
+            {/* Parameters */}
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Parameters
+            </h3>
+            <table className="w-full mb-4 text-sm border-2 border-black">
+              <thead>
+                <tr className="bg-black text-white">
+                  <th className="text-left p-2 font-semibold">Parameter</th>
+                  <th className="text-left p-2 font-semibold">Description</th>
+                  <th className="text-left p-2 font-semibold">Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                {widget.params.map(param => (
+                  <tr key={param.name} className="border-t border-gray-200">
+                    <td className="p-2 font-mono text-sm">{param.name}</td>
+                    <td className="p-2 text-gray-600">{param.description}</td>
+                    <td className="p-2 font-mono text-sm">{param.example}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* URL */}
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              URL
+            </h3>
+            <pre className="bg-gray-100 p-3 mb-4 text-sm overflow-x-auto border border-gray-200">
+              <code>{`${BASE_URL}${widget.path}`}</code>
+            </pre>
+
+            {/* Embed code */}
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Embed Code
+            </h3>
+            <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black">
+              <code>{generateIframeCode(widget)}</code>
+            </pre>
+          </section>
+        ))}
+
+        {/* Usage notes */}
+        <section className="mb-12 border-t-2 border-black pt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Usage Notes</h2>
+          <ul className="list-disc list-inside text-gray-600 space-y-2 text-sm">
+            <li>Widgets are delivered via iframe for complete style isolation.</li>
+            <li>All data comes from official government APIs (Congress.gov, Census Bureau).</li>
+            <li>Widgets are server-rendered and cached for 24 hours.</li>
+            <li>No JavaScript SDK or API key required.</li>
+            <li>
+              Set <code className="bg-gray-100 px-1">width=&quot;100%&quot;</code> for responsive
+              behavior.
+            </li>
+            <li>
+              For questions or issues, contact us at{' '}
+              <a href="https://github.com/civdotiq" className="text-[#3ea2d4] hover:underline">
+                github.com/civdotiq
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        {/* Attribution */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Attribution</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            When embedding CIV.IQ widgets, please include a &ldquo;Powered by&rdquo; link:
+          </p>
+          <pre className="bg-gray-100 p-4 overflow-x-auto text-sm border border-gray-200 mb-4">
+            <code>{`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}</code>
+          </pre>
+          <p className="text-xs text-gray-500">
+            All data is sourced from official government APIs. MIT licensed.
+          </p>
+        </section>
+      </div>
+    </>
   );
 }

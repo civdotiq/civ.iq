@@ -313,6 +313,8 @@ export default function ForeignPolicyTopicPage() {
             { href: '/topics/defense', label: 'Defense & Military' },
             { href: '/topics/economy', label: 'Economy & Jobs' },
             { href: '/topics', label: 'All Topics' },
+            { href: '/glossary/roll-call-vote', label: 'Roll Call Votes' },
+            { href: '/legislation', label: 'Recent Legislation' },
           ]}
           lastUpdated={new Date()}
           dataSource="Congress.gov"

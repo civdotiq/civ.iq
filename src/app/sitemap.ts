@@ -303,6 +303,90 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   });
 
+  // ===========================================
+  // STATIC PAGES - Missing from sitemap
+  // ===========================================
+  const staticPages = [
+    { path: '/comment-periods', priority: 0.6, freq: 'daily' as const },
+    { path: '/executive-orders', priority: 0.6, freq: 'daily' as const },
+    { path: '/your-reps', priority: 0.7, freq: 'monthly' as const },
+    { path: '/influence', priority: 0.65, freq: 'weekly' as const },
+    { path: '/regulations', priority: 0.55, freq: 'daily' as const },
+    { path: '/investigate', priority: 0.5, freq: 'monthly' as const },
+    { path: '/open', priority: 0.5, freq: 'monthly' as const },
+    { path: '/developers', priority: 0.7, freq: 'monthly' as const },
+  ];
+
+  for (const page of staticPages) {
+    entries.push({
+      url: `${BASE_URL}${page.path}`,
+      lastModified: now,
+      changeFrequency: page.freq,
+      priority: page.priority,
+    });
+  }
+
+  // ===========================================
+  // VOTE PAGES - Unclaimed search space
+  // Senate and House roll call votes for 119th Congress
+  // ===========================================
+  try {
+    // Generate vote IDs for current congress session
+    // Senate votes: senate-119-1-{rollNumber}
+    // House votes: house-119-1-{rollNumber}
+    const congress = 119;
+    const session = 1;
+
+    // Fetch recent votes to determine current roll numbers
+    const [senateRes, houseRes] = await Promise.allSettled([
+      fetch(`${BASE_URL}/api/votes/recent?chamber=senate&limit=1`, {
+        next: { revalidate: 86400 },
+      }),
+      fetch(`${BASE_URL}/api/votes/recent?chamber=house&limit=1`, {
+        next: { revalidate: 86400 },
+      }),
+    ]);
+
+    let maxSenateRoll = 200; // fallback estimate
+    let maxHouseRoll = 300; // fallback estimate
+
+    if (senateRes.status === 'fulfilled' && senateRes.value.ok) {
+      const data = await senateRes.value.json();
+      const votes = data.votes || [];
+      if (votes.length > 0 && votes[0].rollNumber) {
+        maxSenateRoll = votes[0].rollNumber;
+      }
+    }
+
+    if (houseRes.status === 'fulfilled' && houseRes.value.ok) {
+      const data = await houseRes.value.json();
+      const votes = data.votes || [];
+      if (votes.length > 0 && votes[0].rollNumber) {
+        maxHouseRoll = votes[0].rollNumber;
+      }
+    }
+
+    for (let roll = 1; roll <= maxSenateRoll; roll++) {
+      entries.push({
+        url: `${BASE_URL}/vote/senate-${congress}-${session}-${roll}`,
+        lastModified: now,
+        changeFrequency: 'monthly',
+        priority: 0.55,
+      });
+    }
+
+    for (let roll = 1; roll <= maxHouseRoll; roll++) {
+      entries.push({
+        url: `${BASE_URL}/vote/house-${congress}-${session}-${roll}`,
+        lastModified: now,
+        changeFrequency: 'monthly',
+        priority: 0.55,
+      });
+    }
+  } catch {
+    // Silently fail - other entries will still be generated
+  }
+
   for (const page of mainPages) {
     entries.push({
       url: `${BASE_URL}${page.path}`,

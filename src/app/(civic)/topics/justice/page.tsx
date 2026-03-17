@@ -300,6 +300,8 @@ export default function JusticeTopicPage() {
             { href: '/topics/immigration', label: 'Immigration' },
             { href: '/topics/technology', label: 'Technology & Privacy' },
             { href: '/topics', label: 'All Topics' },
+            { href: '/glossary/roll-call-vote', label: 'Roll Call Votes' },
+            { href: '/legislation', label: 'Recent Legislation' },
           ]}
           lastUpdated={new Date()}
           dataSource="Congress.gov"

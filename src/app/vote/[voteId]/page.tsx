@@ -12,6 +12,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import {
   Calendar,
   FileText,
@@ -27,6 +28,7 @@ import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { getVoteDetailsService } from '@/lib/services/vote.service';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { VoteFooter } from '@/components/seo/VoteFooter';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -90,6 +92,54 @@ async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
   } catch (error) {
     logger.error('Error fetching vote details', error as Error, { voteId });
     return null;
+  }
+}
+
+// Generate dynamic metadata for SEO
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ voteId: string }>;
+}): Promise<Metadata> {
+  const { voteId } = await params;
+
+  try {
+    const vote = await fetchVoteDetails(voteId);
+    if (!vote) {
+      return {
+        title: 'Vote Not Found | CIV.IQ',
+        description: 'The requested vote could not be found.',
+      };
+    }
+
+    const title = `${vote.chamber} Roll Call #${vote.rollNumber}: ${vote.title} — ${vote.result} | CIV.IQ`;
+    const description = `The ${vote.chamber} voted ${vote.result.toLowerCase()} on ${vote.question}. Yeas: ${vote.yeas}, Nays: ${vote.nays}. View all member positions and party breakdown.`;
+    const url = `https://civdotiq.org/vote/${voteId}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url,
+        type: 'article',
+        siteName: 'CIV.IQ',
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+      },
+      alternates: {
+        canonical: url,
+      },
+    };
+  } catch {
+    return {
+      title: 'Vote Details | CIV.IQ',
+      description: 'View detailed vote results including member positions and party breakdown.',
+    };
   }
 }
 
@@ -609,6 +659,61 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             <span>Confidence: {voteDetail.metadata.confidence}</span>
           </p>
         </div>
+
+        {/* Contextual SEO Footer */}
+        <VoteFooter
+          chamber={voteDetail.chamber}
+          congress={voteDetail.congress}
+          rollNumber={voteDetail.rollNumber}
+          result={voteDetail.result}
+          date={voteDetail.date}
+          bill={
+            voteDetail.bill
+              ? {
+                  number: voteDetail.bill.number,
+                  type: voteDetail.bill.type,
+                  title: voteDetail.bill.title,
+                }
+              : undefined
+          }
+          notableVoters={(() => {
+            // Find crossover voters (voted against party majority)
+            const crossovers: Array<{
+              name: string;
+              bioguideId: string;
+              party: string;
+              note: string;
+            }> = [];
+            const dMajority = partyBreakdown.D.yea > partyBreakdown.D.nay ? 'Yea' : 'Nay';
+            const rMajority = partyBreakdown.R.yea > partyBreakdown.R.nay ? 'Yea' : 'Nay';
+
+            for (const member of voteDetail.members) {
+              if (crossovers.length >= 5) break;
+              if (member.position === 'Present' || member.position === 'Not Voting') continue;
+
+              const bioguideId = findBioguideId({
+                firstName: member.firstName,
+                lastName: member.lastName,
+                fullName: member.fullName,
+                state: member.state,
+                bioguideId: member.bioguideId,
+              });
+              if (!bioguideId) continue;
+
+              const partyMajority =
+                member.party === 'D' ? dMajority : member.party === 'R' ? rMajority : null;
+              if (partyMajority && member.position !== partyMajority) {
+                crossovers.push({
+                  name: `${member.firstName} ${member.lastName}`,
+                  bioguideId,
+                  party: member.party,
+                  note: `Voted ${member.position} against party`,
+                });
+              }
+            }
+            return crossovers;
+          })()}
+        />
       </div>
     </div>
   );

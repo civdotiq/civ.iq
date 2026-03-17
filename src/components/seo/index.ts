@@ -13,6 +13,9 @@ export {
   AdministrativeAreaSchema,
   DatasetSchema,
   DefinedTermSchema,
+  GovernmentServiceSchema,
+  WebAPISchema,
+  CommentPeriodEventSchema,
 } from './JsonLd';
 
 /**

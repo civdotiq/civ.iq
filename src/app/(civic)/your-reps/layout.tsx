@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next';
+import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Your Representatives',
@@ -17,5 +18,15 @@ export const metadata: Metadata = {
 };
 
 export default function YourRepsLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <GovernmentServiceSchema
+        name="Find Your Representatives"
+        description="Enter your address to find your U.S. Senators and House Representative with voting records, campaign finance, and legislative activity."
+        url="https://civdotiq.org/your-reps"
+        serviceType="Civic Information"
+      />
+      {children}
+    </>
+  );
 }

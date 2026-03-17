@@ -8,7 +8,7 @@
  */
 
 import type { Metadata } from 'next';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, WebAPISchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'API Reference | CIV.IQ',
@@ -191,8 +191,15 @@ export default function ApiDocsPage() {
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Developers', url: 'https://civdotiq.org/developers' },
           { name: 'API Reference', url: 'https://civdotiq.org/docs/api' },
         ]}
+      />
+      <WebAPISchema
+        name="CIV.IQ Public API"
+        description="Open REST API for U.S. government data including representatives, bills, votes, committees, and districts. No API key required."
+        url="https://civdotiq.org/api/v1"
+        documentation="https://civdotiq.org/docs/api"
       />
       <div className="min-h-screen bg-white">
         <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">

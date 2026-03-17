@@ -309,6 +309,8 @@ export default function AgricultureTopicPage() {
             { href: '/topics/environment', label: 'Environment & Climate' },
             { href: '/topics/economy', label: 'Economy & Jobs' },
             { href: '/topics', label: 'All Topics' },
+            { href: '/glossary/roll-call-vote', label: 'Roll Call Votes' },
+            { href: '/legislation', label: 'Recent Legislation' },
           ]}
           lastUpdated={new Date()}
           dataSource="Congress.gov"

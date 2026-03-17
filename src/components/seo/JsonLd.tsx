@@ -597,6 +597,140 @@ export function DatasetSchema({
   );
 }
 
+interface GovernmentServiceSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  provider?: string;
+  serviceType?: string;
+  areaServed?: string;
+}
+
+/**
+ * GovernmentService schema for civic tool/service pages
+ * Enables rich results for government service searches
+ */
+export function GovernmentServiceSchema({
+  name,
+  description,
+  url,
+  provider = 'CIV.IQ',
+  serviceType,
+  areaServed = 'United States',
+}: GovernmentServiceSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'GovernmentService',
+    name,
+    description,
+    url,
+    provider: {
+      '@type': 'Organization',
+      name: provider,
+      url: 'https://civdotiq.org',
+    },
+    areaServed: {
+      '@type': 'Country',
+      name: areaServed,
+    },
+    isAccessibleForFree: true,
+  };
+
+  if (serviceType) schema.serviceType = serviceType;
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface WebAPISchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  documentation?: string;
+  provider?: string;
+}
+
+/**
+ * WebAPI schema for REST API documentation
+ * Helps search engines understand API endpoints
+ */
+export function WebAPISchema({
+  name,
+  description,
+  url,
+  documentation,
+  provider = 'CIV.IQ',
+}: WebAPISchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'WebAPI',
+    name,
+    description,
+    url,
+    provider: {
+      '@type': 'Organization',
+      name: provider,
+      url: 'https://civdotiq.org',
+    },
+  };
+
+  if (documentation) schema.documentation = documentation;
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface CommentPeriodEventSchemaProps {
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  url?: string;
+  organizer?: string;
+}
+
+/**
+ * Event schema specifically for comment periods
+ * Uses endDate for Google's event carousel
+ */
+export function CommentPeriodEventSchema({
+  name,
+  description,
+  startDate,
+  endDate,
+  url,
+  organizer,
+}: CommentPeriodEventSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name,
+    startDate,
+    endDate,
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    eventStatus: 'https://schema.org/EventScheduled',
+    location: {
+      '@type': 'VirtualLocation',
+      url: url || 'https://www.regulations.gov',
+    },
+  };
+
+  if (description) schema.description = description;
+  if (url) schema.url = url;
+  if (organizer) {
+    schema.organizer = {
+      '@type': 'GovernmentOrganization',
+      name: organizer,
+    };
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
 interface DefinedTermSchemaProps {
   name: string;
   description: string;
