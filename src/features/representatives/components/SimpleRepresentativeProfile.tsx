@@ -21,6 +21,7 @@ import {
   FinanceIcon,
   NewsIcon,
   IntelligenceIcon,
+  LobbyingIcon,
 } from '@/components/icons/AicherIcons';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 
@@ -54,6 +55,14 @@ const IntelligenceTab = dynamic(
     import('@/components/intelligence/IntelligenceTab').then(mod => ({
       default: mod.IntelligenceTab,
     })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
+
+const LobbyingTab = dynamic(
+  () => import('./LobbyingTab').then(mod => ({ default: mod.LobbyingTab })),
   {
     loading: TabLoadingSpinner,
     ssr: false,
@@ -163,6 +172,12 @@ function getDataSourcesForTab(tabId: string): Array<{
     name: 'Google News',
     description: 'Recent media coverage',
   };
+  const senateLda = {
+    color: 'border-gray-600',
+    bgColor: 'bg-gray-600',
+    name: 'Senate LDA',
+    description: 'Lobbying disclosure filings',
+  };
 
   switch (tabId) {
     case 'overview':
@@ -172,6 +187,8 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [congress];
     case 'finance':
       return [fec];
+    case 'lobbying':
+      return [senateLda, fec];
     case 'intelligence':
       return [congress, fec];
     case 'news':
@@ -273,6 +290,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       setLoadedTabs(prev => new Set([...prev, activeTab]));
     }, [activeTab]);
 
+    // Memoize committee codes to avoid re-creation on every render
+    const committeeCodes = useMemo(
+      () => deriveCommitteeCodes(representative.committees),
+      [representative.committees]
+    );
+
     // Prefetch tab data on hover
     const handleTabHover = useCallback(
       (tabId: string) => {
@@ -292,7 +315,9 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                   ? 'bills'
                   : tabId === 'finance'
                     ? 'finance'
-                    : null;
+                    : tabId === 'lobbying'
+                      ? 'lobbying'
+                      : null;
             if (endpoint) {
               preload(`/api/representative/${representative.bioguideId}/${endpoint}`, () =>
                 fetch(`/api/representative/${representative.bioguideId}/${endpoint}`).then(res =>
@@ -300,10 +325,15 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                 )
               );
             }
+            // Also prefetch influence-chain data for lobbying/intelligence tabs
+            if ((tabId === 'lobbying' || tabId === 'intelligence') && committeeCodes.length > 0) {
+              const chainUrl = `/api/intelligence/representative/${representative.bioguideId}/influence-chain`;
+              preload(chainUrl, () => fetch(chainUrl).then(res => res.json()));
+            }
           }
         }, 200);
       },
-      [representative.bioguideId, loadedTabs]
+      [representative.bioguideId, loadedTabs, committeeCodes]
     );
 
     // Cleanup timeout on unmount
@@ -366,6 +396,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           description: 'Fundraising and expenditures',
         },
         {
+          id: 'lobbying',
+          label: 'Lobbying',
+          icon: <LobbyingIcon className="w-4 h-4" />,
+          description: 'Who lobbies your representative and how much they spend',
+        },
+        {
           id: 'intelligence',
           label: 'Intelligence',
           icon: <IntelligenceIcon className="w-4 h-4" />,
@@ -419,11 +455,18 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               bioguideId={representative.bioguideId}
             />
           );
+        case 'lobbying':
+          return (
+            <LobbyingTab
+              bioguideId={representative.bioguideId}
+              hasCommittees={committeeCodes.length > 0}
+            />
+          );
         case 'intelligence':
           return (
             <IntelligenceTab
               bioguideId={representative.bioguideId}
-              committeeCodes={deriveCommitteeCodes(representative.committees)}
+              committeeCodes={committeeCodes}
             />
           );
         case 'news':
@@ -437,7 +480,15 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         default:
           return <ContactInfoTab representative={representative} />;
       }
-    }, [activeTab, representative, batchData, batchLoading, batchError, summaryData]);
+    }, [
+      activeTab,
+      representative,
+      batchData,
+      batchLoading,
+      batchError,
+      summaryData,
+      committeeCodes,
+    ]);
 
     return (
       <div className="min-h-screen bg-gray-50">

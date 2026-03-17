@@ -566,6 +566,36 @@ export const IntelligenceIcon = ({ className, size = 24 }: IconProps) => (
 );
 
 /**
+ * Lobbying - Handshake (geometric)
+ * Two angular arms meeting in center, representing deal-making
+ */
+export const LobbyingIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    {/* Left arm */}
+    <rect x="2" y="10" width="8" height="2" transform="rotate(-15 2 10)" />
+    {/* Right arm */}
+    <rect x="14" y="10" width="8" height="2" transform="rotate(15 22 10)" />
+    {/* Handshake center - interlocking bars */}
+    <rect x="9" y="9" width="6" height="3" />
+    {/* Left hand */}
+    <rect x="7" y="8" width="3" height="5" />
+    {/* Right hand */}
+    <rect x="14" y="8" width="3" height="5" />
+    {/* Dollar sign below */}
+    <rect x="11" y="15" width="2" height="6" />
+    <rect x="9" y="16" width="4" height="2" />
+    <rect x="11" y="19" width="4" height="2" />
+  </svg>
+);
+
+/**
  * Export all icons as a collection
  */
 export const AicherIcons = {
@@ -598,6 +628,7 @@ export const AicherIcons = {
   ExternalLink: ExternalLinkIcon,
   News: NewsIcon,
   Intelligence: IntelligenceIcon,
+  Lobbying: LobbyingIcon,
 };
 
 export default AicherIcons;
