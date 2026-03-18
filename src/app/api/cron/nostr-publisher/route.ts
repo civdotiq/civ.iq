@@ -576,11 +576,12 @@ async function withDetectionTimeout(
   label: string,
   timeoutMs = 30000
 ): Promise<CivicEvent[]> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       fn(),
       new Promise<CivicEvent[]>(resolve => {
-        setTimeout(() => {
+        timer = setTimeout(() => {
           logger.warn(`Event detection timed out: ${label}`, {
             timeoutMs,
             operation: 'nostr_publisher',
@@ -594,6 +595,8 @@ async function withDetectionTimeout(
       operation: 'nostr_publisher',
     });
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 

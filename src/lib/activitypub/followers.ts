@@ -6,14 +6,16 @@
 /**
  * ActivityPub Follower Store
  *
- * Redis-backed follower management using per-follower keys for atomic operations.
- * Each follower is stored as an individual Redis key, eliminating race conditions
- * from the previous read-modify-write pattern on a shared JSON array.
+ * Redis-backed follower management. Stores actor IRIs of
+ * Mastodon/fediverse instances following CIV.IQ.
+ *
+ * Uses a single JSON array in Redis. The read-modify-write pattern is
+ * not atomic, but Follow requests arrive infrequently (human-initiated)
+ * so concurrent races are effectively impossible in practice.
  */
 
 import { getRedisCache } from '@/lib/cache/redis-client';
-
-const FOLLOWER_PREFIX = 'activitypub:follower:';
+import { activitypubConfig } from '@/config/activitypub.config';
 
 interface FollowerEntry {
   actorId: string;
@@ -21,46 +23,41 @@ interface FollowerEntry {
   followedAt: string;
 }
 
-/** Add a follower (atomic — single SET per follower) */
+/** Add a follower */
 export async function addFollower(actorId: string, inbox: string): Promise<void> {
   const cache = getRedisCache();
-  const key = `${FOLLOWER_PREFIX}${encodeURIComponent(actorId)}`;
-  const entry: FollowerEntry = {
+  const followers = await getFollowerEntries();
+
+  // Don't add duplicates
+  if (followers.some(f => f.actorId === actorId)) return;
+
+  followers.push({
     actorId,
     inbox,
     followedAt: new Date().toISOString(),
-  };
-  await cache.set(key, entry, 0);
+  });
+
+  await cache.set(activitypubConfig.followersKey, followers, 0);
 }
 
-/** Remove a follower (atomic — single DELETE per follower) */
+/** Remove a follower */
 export async function removeFollower(actorId: string): Promise<void> {
   const cache = getRedisCache();
-  const key = `${FOLLOWER_PREFIX}${encodeURIComponent(actorId)}`;
-  await cache.delete(key);
+  const followers = await getFollowerEntries();
+  const filtered = followers.filter(f => f.actorId !== actorId);
+  await cache.set(activitypubConfig.followersKey, filtered, 0);
 }
 
 /** Get all follower entries */
 export async function getFollowerEntries(): Promise<FollowerEntry[]> {
   const cache = getRedisCache();
-  const keys = await cache.keys(`${FOLLOWER_PREFIX}*`);
-  const entries: FollowerEntry[] = [];
-
-  for (const key of keys) {
-    const entry = await cache.get<FollowerEntry>(key);
-    if (entry) {
-      entries.push(entry);
-    }
-  }
-
-  return entries;
+  return (await cache.get<FollowerEntry[]>(activitypubConfig.followersKey)) ?? [];
 }
 
 /** Get follower count */
 export async function getFollowerCount(): Promise<number> {
-  const cache = getRedisCache();
-  const keys = await cache.keys(`${FOLLOWER_PREFIX}*`);
-  return keys.length;
+  const entries = await getFollowerEntries();
+  return entries.length;
 }
 
 /** Get all follower actor IDs */
