@@ -13,12 +13,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 const mockQuerySync = jest.fn();
-const mockClose = jest.fn();
+const mockDestroy = jest.fn();
 
 jest.mock('nostr-tools/pool', () => ({
   SimplePool: jest.fn().mockImplementation(() => ({
     querySync: mockQuerySync,
-    close: mockClose,
+    destroy: mockDestroy,
   })),
 }));
 
@@ -116,7 +116,7 @@ describe('Relay Reader — queryRelays', () => {
     const { queryRelays } = require('@/lib/nostr/relay-reader');
     await queryRelays(testPubkey);
 
-    expect(mockClose).toHaveBeenCalled();
+    expect(mockDestroy).toHaveBeenCalled();
   });
 
   test('closes pool even when all queries fail', async () => {
@@ -125,7 +125,7 @@ describe('Relay Reader — queryRelays', () => {
     const { queryRelays } = require('@/lib/nostr/relay-reader');
     await queryRelays(testPubkey);
 
-    expect(mockClose).toHaveBeenCalled();
+    expect(mockDestroy).toHaveBeenCalled();
   });
 
   test('each relay result has url, status, and eventsFound', async () => {

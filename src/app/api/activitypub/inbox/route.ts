@@ -27,13 +27,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Federation not configured' }, { status: 503 });
   }
 
+  // Read body text for digest verification
+  const bodyText = await request.text();
+
   // Verify HTTP signature
   const headers: Record<string, string> = {};
   request.headers.forEach((value, key) => {
     headers[key] = value;
   });
 
-  const verification = await verifySignature('POST', request.nextUrl.pathname, headers);
+  const requestPath = request.nextUrl.pathname + request.nextUrl.search;
+  const verification = await verifySignature('POST', requestPath, headers, bodyText);
 
   if (!verification.valid) {
     logger.warn('ActivityPub inbox: signature verification failed', {
@@ -45,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   let body: APFollowActivity | APUndoActivity;
   try {
-    body = await request.json();
+    body = JSON.parse(bodyText);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
@@ -116,6 +120,7 @@ async function handleFollow(follow: APFollowActivity): Promise<NextResponse> {
     id: `${activitypubConfig.actor.id}/accepts/${Date.now()}`,
     actor: activitypubConfig.actor.id,
     object: follow,
+    to: [follow.actor],
   };
 
   const acceptBody = JSON.stringify(accept);

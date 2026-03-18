@@ -39,7 +39,11 @@ export function buildActorDocument(): APActor {
   const { actor } = activitypubConfig;
 
   return {
-    '@context': ['https://www.w3.org/ns/activitystreams', { '@language': 'en' }],
+    '@context': [
+      'https://www.w3.org/ns/activitystreams',
+      'https://w3id.org/security/v1',
+      { '@language': 'en' },
+    ],
     type: 'Service',
     id: actor.id,
     name: actor.name,

@@ -28,8 +28,9 @@ export async function publishToRelays(
   try {
     const results = await Promise.allSettled(
       relays.map(async url => {
+        const promises = pool.publish([url], event);
         await Promise.race([
-          pool.publish([url], event),
+          Promise.all(promises),
           new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Publish timeout')), nostrConfig.publishTimeout);
           }),
@@ -65,6 +66,6 @@ export async function publishToRelays(
       eventId: event.id,
     };
   } finally {
-    pool.close(relays);
+    pool.destroy();
   }
 }

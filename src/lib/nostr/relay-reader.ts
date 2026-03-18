@@ -122,6 +122,6 @@ export async function queryRelays(
       eventIds: uniqueEventIds,
     };
   } finally {
-    pool.close(relays);
+    pool.destroy();
   }
 }

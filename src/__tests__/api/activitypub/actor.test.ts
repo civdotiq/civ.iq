@@ -30,10 +30,11 @@ describe('ActivityPub Actor', () => {
     expect(actor.publicKey.owner).toBe(actor.id);
   });
 
-  test('actor context includes ActivityStreams', () => {
+  test('actor context includes ActivityStreams and security', () => {
     const actor = buildActorDocument();
     const contexts = actor['@context'];
 
     expect(contexts).toContain('https://www.w3.org/ns/activitystreams');
+    expect(contexts).toContain('https://w3id.org/security/v1');
   });
 });

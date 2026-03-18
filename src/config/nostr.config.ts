@@ -28,7 +28,7 @@ export const nostrConfig = {
 
   // Publishing thresholds
   minRelaySuccess: 3,
-  publishTimeout: 10000,
+  publishTimeout: 5000,
 
   // NIP-23: Long-form content (parameterized replaceable)
   eventKind: 30023 as const,

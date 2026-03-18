@@ -115,6 +115,7 @@ export interface APAcceptActivity {
   id: string;
   actor: string;
   object: APFollowActivity;
+  to?: string[];
 }
 
 /** Follow Activity (incoming from remote actors) */

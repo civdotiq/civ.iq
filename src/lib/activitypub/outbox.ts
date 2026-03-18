@@ -103,6 +103,8 @@ export async function addToOutbox(activity: APCreateActivity): Promise<void> {
   await cache.set(activityKey, activity, activitypubConfig.dedupTTL);
 
   // Add to index (most recent IDs)
+  // Note: read-modify-write is not atomic, but outbox writes only happen from
+  // the daily cron job so concurrent races are extremely unlikely in practice.
   const indexKey = `${activitypubConfig.outboxKey}:index`;
   const index = (await cache.get<string[]>(indexKey)) ?? [];
   index.unshift(JSON.stringify({ id: activity.object.id, ts: timestamp }));

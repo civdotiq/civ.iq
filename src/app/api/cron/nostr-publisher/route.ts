@@ -570,16 +570,43 @@ function parseChamberFromDocClass(docClass: string): 'House' | 'Senate' | 'Joint
   return 'Joint';
 }
 
+/** Wrap a detection function with a timeout to prevent hanging on slow APIs */
+async function withDetectionTimeout(
+  fn: () => Promise<CivicEvent[]>,
+  label: string,
+  timeoutMs = 30000
+): Promise<CivicEvent[]> {
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<CivicEvent[]>(resolve => {
+        setTimeout(() => {
+          logger.warn(`Event detection timed out: ${label}`, {
+            timeoutMs,
+            operation: 'nostr_publisher',
+          });
+          resolve([]);
+        }, timeoutMs);
+      }),
+    ]);
+  } catch (error) {
+    logger.error(`Event detection failed: ${label}`, error as Error, {
+      operation: 'nostr_publisher',
+    });
+    return [];
+  }
+}
+
 /** Detect all new civic events from government APIs */
 async function detectNewEvents(): Promise<CivicEvent[]> {
   const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents, stateEvents] =
     await Promise.all([
-      detectBillEvents(),
-      detectVoteEvents(),
-      detectExecutiveOrderEvents(),
-      detectCommentPeriodEvents(),
-      detectHearingEvents(),
-      detectStateEvents(),
+      withDetectionTimeout(detectBillEvents, 'bills'),
+      withDetectionTimeout(detectVoteEvents, 'votes'),
+      withDetectionTimeout(detectExecutiveOrderEvents, 'executive-orders'),
+      withDetectionTimeout(detectCommentPeriodEvents, 'comment-periods'),
+      withDetectionTimeout(detectHearingEvents, 'hearings'),
+      withDetectionTimeout(detectStateEvents, 'state-events'),
     ]);
   return [
     ...billEvents,
@@ -654,7 +681,7 @@ export async function POST(request: NextRequest) {
         const result = await publishToRelays(signedEvent);
         relayResults.push(result);
 
-        if (result.successCount > 0) {
+        if (result.successCount >= nostrConfig.minRelaySuccess) {
           // Record in Redis dedup
           const dedupKey = `${nostrConfig.dedupPrefix}${event.id}`;
           await cache.set(
