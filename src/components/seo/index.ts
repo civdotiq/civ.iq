@@ -7,7 +7,6 @@ export {
   PersonSchema,
   GovernmentOrganizationSchema,
   BreadcrumbSchema,
-  FAQSchema,
   LegislativeEventSchema,
   LegislationSchema,
   AdministrativeAreaSchema,

@@ -137,6 +137,7 @@ async function BillContent({
           }}
           legislationType={bill.type === 'hr' || bill.type === 's' ? 'Bill' : 'Resolution'}
           url={`https://civdotiq.org/bill/${billId}`}
+          mainEntityOfPage={`https://civdotiq.org/bill/${billId}`}
         />
       )}
       <BreadcrumbSchema

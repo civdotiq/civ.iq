@@ -432,6 +432,7 @@ async function CommitteeContent({
           name={committee.name}
           description={committee.jurisdiction}
           url={`https://civdotiq.org/committee/${committeeId}`}
+          mainEntityOfPage={`https://civdotiq.org/committee/${committeeId}`}
           parentOrganization={
             committee.chamber === 'Senate'
               ? 'United States Senate'

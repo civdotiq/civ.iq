@@ -106,6 +106,7 @@ interface PersonSchemaProps {
   birthDate?: string;
   knowsAbout?: string[];
   nationality?: string;
+  mainEntityOfPage?: string;
 }
 
 /**
@@ -125,6 +126,7 @@ export function PersonSchema({
   birthDate,
   knowsAbout,
   nationality = 'United States of America',
+  mainEntityOfPage,
 }: PersonSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -133,6 +135,9 @@ export function PersonSchema({
     jobTitle,
   };
 
+  if (mainEntityOfPage) {
+    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
   if (description) schema.description = description;
   if (image) schema.image = image;
   if (url) schema.url = url;
@@ -147,7 +152,7 @@ export function PersonSchema({
 
   if (affiliation) {
     schema.affiliation = {
-      '@type': 'PoliticalParty',
+      '@type': 'Organization',
       name: affiliation,
     };
   }
@@ -196,6 +201,7 @@ interface GovernmentOrganizationSchemaProps {
     name: string;
     url?: string;
   }>;
+  mainEntityOfPage?: string;
 }
 
 /**
@@ -209,6 +215,7 @@ export function GovernmentOrganizationSchema({
   areaServed = 'United States',
   member,
   subOrganization,
+  mainEntityOfPage,
 }: GovernmentOrganizationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -224,6 +231,9 @@ export function GovernmentOrganizationSchema({
     },
   };
 
+  if (mainEntityOfPage) {
+    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
   if (description) schema.description = description;
   if (url) schema.url = url;
 
@@ -272,35 +282,6 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
       position: index + 1,
       name: item.name,
       item: item.url,
-    })),
-  };
-
-  return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
-  );
-}
-
-interface FAQSchemaProps {
-  questions: Array<{
-    question: string;
-    answer: string;
-  }>;
-}
-
-/**
- * FAQ schema for help/about pages
- */
-export function FAQSchema({ questions }: FAQSchemaProps) {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: questions.map(q => ({
-      '@type': 'Question',
-      name: q.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: q.answer,
-      },
     })),
   };
 
@@ -374,6 +355,7 @@ interface LegislationSchemaProps {
   };
   legislationType?: string;
   url?: string;
+  mainEntityOfPage?: string;
 }
 
 /**
@@ -390,6 +372,7 @@ export function LegislationSchema({
   sponsor,
   legislationType,
   url,
+  mainEntityOfPage,
 }: LegislationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -402,6 +385,9 @@ export function LegislationSchema({
     },
   };
 
+  if (mainEntityOfPage) {
+    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
   if (description) schema.description = description;
   if (datePublished) schema.datePublished = datePublished;
   if (legislationDate) schema.legislationDate = legislationDate;
@@ -438,6 +424,7 @@ interface AdministrativeAreaSchemaProps {
     longitude: number;
   };
   population?: number;
+  mainEntityOfPage?: string;
 }
 
 /**
@@ -450,6 +437,7 @@ export function AdministrativeAreaSchema({
   containedInPlace,
   geo,
   population,
+  mainEntityOfPage,
 }: AdministrativeAreaSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -457,6 +445,9 @@ export function AdministrativeAreaSchema({
     name,
   };
 
+  if (mainEntityOfPage) {
+    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
   if (description) schema.description = description;
   if (url) schema.url = url;
 

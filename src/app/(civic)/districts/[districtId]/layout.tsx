@@ -98,6 +98,7 @@ export default async function DistrictLayout({
         name={areaName}
         description={`${districtLabel} congressional district in ${stateName}. View current representative, demographics, voting history, and federal spending data.`}
         url={`https://civdotiq.org/districts/${feedDistrictId}`}
+        mainEntityOfPage={`https://civdotiq.org/districts/${feedDistrictId}`}
         containedInPlace={stateName}
       />
       <BreadcrumbSchema

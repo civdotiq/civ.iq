@@ -208,6 +208,7 @@ export default async function RepresentativeProfilePage({
         description={`${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`}
         image={representative.imageUrl}
         url={`https://civdotiq.org/representative/${bioguideId}`}
+        mainEntityOfPage={`https://civdotiq.org/representative/${bioguideId}`}
         worksFor={{
           name:
             representative.chamber === 'Senate'

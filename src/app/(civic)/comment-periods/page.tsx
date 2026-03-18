@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Loader2, MessageSquare, AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CommentPeriodEventSchema } from '@/components/seo/JsonLd';
 
 interface CommentPeriodItem {
   id: string;
@@ -18,6 +18,7 @@ interface CommentPeriodItem {
   commentUrl?: string;
   daysUntilClose?: number;
   commentsCloseOn?: string;
+  publishedDate?: string;
 }
 
 interface CommentPeriodsResponse {
@@ -181,6 +182,21 @@ export default function CommentPeriodsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Structured Data for open comment periods */}
+              {[...data.closingSoon, ...data.openComments]
+                .filter(item => item.title && item.commentsCloseOn)
+                .map(item => (
+                  <CommentPeriodEventSchema
+                    key={`schema-${item.id}`}
+                    name={item.title}
+                    description={item.summary || undefined}
+                    startDate={item.publishedDate || item.commentsCloseOn!}
+                    endDate={item.commentsCloseOn!}
+                    url={item.url || undefined}
+                    organizer={item.agency}
+                  />
+                ))}
 
               {/* Closing Soon */}
               {data.closingSoon.length > 0 && (
