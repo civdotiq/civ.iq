@@ -36,6 +36,7 @@ export default function InvestigateClient() {
 
   // Separate expansion state from selection to avoid double-click race
   const [expandNodeId, setExpandNodeId] = useState<string | null>(initialNode);
+  const [loadingLabel, setLoadingLabel] = useState<string | null>(null);
 
   // Fetch neighborhood for the node to expand
   const shouldFetch = expandNodeId && !expandedNodeIds.has(expandNodeId);
@@ -44,6 +45,7 @@ export default function InvestigateClient() {
   useEffect(() => {
     if (expandData) {
       addNeighborhood(expandData);
+      setLoadingLabel(null);
     }
   }, [expandData, addNeighborhood]);
 
@@ -67,8 +69,9 @@ export default function InvestigateClient() {
 
   // Search: reset graph and load a new root node
   const handleSearch = useCallback(
-    (nodeId: string) => {
+    (nodeId: string, label: string) => {
       reset();
+      setLoadingLabel(label);
       const url = new URL(window.location.href);
       url.searchParams.set('node', nodeId);
       window.history.pushState({}, '', url.toString());
@@ -131,16 +134,27 @@ export default function InvestigateClient() {
             >
               {isLoading && nodesArray.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="type-sm text-gray-500">Loading connections...</p>
+                  <div className="text-center">
+                    {loadingLabel && <p className="type-sm font-bold mb-2">{loadingLabel}</p>}
+                    <div
+                      className="inline-block w-6 h-6 border-2 border-gray-300 border-t-[#3ea2d4] animate-spin"
+                      style={{ borderRadius: '50%' }}
+                    />
+                    <p className="type-sm text-gray-500 mt-2">
+                      Loading connections from government sources...
+                    </p>
+                  </div>
                 </div>
               ) : nodesArray.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center max-w-md">
-                    <p className="type-sm text-gray-500 mb-2">
-                      Search for a name above to see their connections.
+                  <div className="text-center max-w-sm">
+                    <p className="type-sm font-bold mb-2">Who do you want to investigate?</p>
+                    <p className="type-sm text-gray-500 mb-4">
+                      Search for any elected official, committee, or organization to see their
+                      money, votes, and connections.
                     </p>
                     <p className="type-xs text-gray-400">
-                      Try &quot;Nancy Pelosi&quot; or &quot;Armed Services Committee&quot;
+                      Try one of the examples to the right of the search bar.
                     </p>
                   </div>
                 </div>

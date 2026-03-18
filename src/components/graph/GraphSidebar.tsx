@@ -5,7 +5,8 @@
 
 'use client';
 
-import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { getStateName } from '@/lib/data/us-states';
 import type { GraphNode, GraphEdge, GraphEdgeType } from '@/types/graph';
 
@@ -154,23 +155,36 @@ function getEmptyStateMessages(node: GraphNode, connectedEdges: GraphEdge[]): st
   return messages;
 }
 
+// ── Human-friendly type labels ──────────────────────────────────────
+
+const NODE_TYPE_LABELS: Record<string, string> = {
+  representative: 'Elected Official',
+  bill: 'Legislation',
+  committee: 'Congressional Committee',
+  agency: 'Government Agency',
+  organization: 'Organization',
+  sector: 'Industry Sector',
+  contract: 'Federal Contract',
+  regulation: 'Regulation',
+};
+
 // ── Edge grouping ───────────────────────────────────────────────────
 
 const EDGE_GROUP_LABELS: Record<string, string> = {
-  donated_to: 'Campaign Finance',
+  donated_to: 'Money In',
   lobbied: 'Lobbying',
   lobbying_matches: 'Lobbying',
-  voted_on: 'Legislative Activity',
-  sponsored: 'Legislative Activity',
-  serves_on: 'Committee Work',
-  in_sector: 'Sector Connections',
-  affects_sector: 'Sector Connections',
-  oversees: 'Government Oversight',
-  referred_to: 'Legislative Activity',
+  voted_on: 'Voting Record',
+  sponsored: 'Bills Sponsored',
+  serves_on: 'Committees',
+  in_sector: 'Industry Ties',
+  affects_sector: 'Industry Ties',
+  oversees: 'Oversight Power',
+  referred_to: 'Bills Sponsored',
   awarded_contract: 'Federal Contracts',
-  traded_stock: 'Financial Disclosures',
+  traded_stock: 'Stock Trades',
   regulates: 'Rulemaking',
-  employs_donor: 'Campaign Finance',
+  employs_donor: 'Money In',
 };
 
 function groupEdgesByCategory(edgeList: GraphEdge[]): Map<string, GraphEdge[]> {
@@ -264,6 +278,118 @@ function hasMoneyAndVotes(edges: GraphEdge[]): boolean {
   return false;
 }
 
+// ── Plain-language summary ───────────────────────────────────────────
+
+interface EdgeCounts {
+  donations: number;
+  lobbying: number;
+  votes: number;
+  sponsors: number;
+  committees: number;
+  contracts: number;
+  stocks: number;
+  donationTotal: number;
+  yeas: number;
+  nays: number;
+}
+
+function countEdges(connectedEdges: GraphEdge[]): EdgeCounts {
+  const c: EdgeCounts = {
+    donations: 0,
+    lobbying: 0,
+    votes: 0,
+    sponsors: 0,
+    committees: 0,
+    contracts: 0,
+    stocks: 0,
+    donationTotal: 0,
+    yeas: 0,
+    nays: 0,
+  };
+  for (const e of connectedEdges) {
+    switch (e.type) {
+      case 'donated_to':
+      case 'employs_donor':
+        c.donations++;
+        c.donationTotal += Number(e.properties.totalAmount ?? e.properties.amount ?? 0);
+        break;
+      case 'lobbied':
+      case 'lobbying_matches':
+        c.lobbying++;
+        break;
+      case 'voted_on': {
+        c.votes++;
+        const pos = String(e.properties.position ?? '').toLowerCase();
+        if (pos === 'yes' || pos === 'yea') c.yeas++;
+        else if (pos === 'no' || pos === 'nay') c.nays++;
+        break;
+      }
+      case 'sponsored':
+        c.sponsors++;
+        break;
+      case 'serves_on':
+        c.committees++;
+        break;
+      case 'awarded_contract':
+        c.contracts++;
+        break;
+      case 'traded_stock':
+        c.stocks++;
+        break;
+    }
+  }
+  return c;
+}
+
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n !== 1 ? 's' : ''}`;
+}
+
+function generateSummary(node: GraphNode, connectedEdges: GraphEdge[]): string[] {
+  if (connectedEdges.length === 0) {
+    return ['No public connections found yet. Double-click to load more data.'];
+  }
+
+  const c = countEdges(connectedEdges);
+  const summary: string[] = [];
+
+  if (node.type === 'representative') {
+    const name = node.properties.name as string | undefined;
+    const firstName =
+      name?.split(',')[1]?.trim()?.split(' ')[0] ?? name?.split(' ')[0] ?? 'This official';
+
+    if (c.donations > 0) {
+      const amountStr = c.donationTotal > 0 ? ` totaling ${formatCompact(c.donationTotal)}` : '';
+      summary.push(
+        `Received campaign contributions from ${plural(c.donations, 'source')}${amountStr}.`
+      );
+    }
+    if (c.lobbying > 0)
+      summary.push(`Connected to ${plural(c.lobbying, 'lobbying relationship')}.`);
+    if (c.committees > 0) summary.push(`Serves on ${plural(c.committees, 'committee')}.`);
+    if (c.votes > 0)
+      summary.push(`${plural(c.votes, 'recorded vote')} shown (${c.yeas} yes, ${c.nays} no).`);
+    if (c.sponsors > 0) summary.push(`Sponsored or co-sponsored ${plural(c.sponsors, 'bill')}.`);
+    if (c.stocks > 0) summary.push(`${plural(c.stocks, 'stock trade')} disclosed.`);
+    if (c.contracts > 0)
+      summary.push(`${plural(c.contracts, 'federal contract')} in ${firstName}'s district.`);
+  } else if (node.type === 'committee') {
+    if (c.committees > 0) summary.push(`${plural(c.committees, 'member')} shown.`);
+    if (c.lobbying > 0) summary.push(`Targeted by ${plural(c.lobbying, 'lobbying effort')}.`);
+  } else if (node.type === 'organization') {
+    if (c.donations > 0) summary.push(`Employees donated to ${plural(c.donations, 'official')}.`);
+    if (c.lobbying > 0) summary.push(`Filed ${plural(c.lobbying, 'lobbying disclosure')}.`);
+    if (c.contracts > 0) summary.push(`Received ${plural(c.contracts, 'federal contract')}.`);
+  } else if (node.type === 'bill') {
+    if (c.sponsors > 0) summary.push(`${plural(c.sponsors, 'sponsor')}.`);
+    if (c.votes > 0) summary.push(`${plural(c.votes, 'recorded vote')}.`);
+  } else {
+    summary.push(`${plural(connectedEdges.length, 'connection')} found.`);
+  }
+
+  return summary;
+}
+
 // ── Main Components ─────────────────────────────────────────────────
 
 export interface GraphSidebarProps {
@@ -289,10 +415,22 @@ export function GraphSidebar({
   if (!selectedNode && !selectedEdge) {
     return (
       <aside className="border-2 border-gray-200 dark:border-gray-700 p-4">
-        <p className="type-sm text-gray-500 mb-2">
-          Click any person, organization, or bill in the graph to see details here.
-        </p>
-        <p className="type-xs text-gray-400">Double-click to see more of their connections.</p>
+        <h3 className="type-sm font-bold mb-2">How to use this tool</h3>
+        <ol className="space-y-2 type-xs text-gray-600 dark:text-gray-400">
+          <li>
+            <span className="font-bold text-gray-800 dark:text-gray-200">1.</span> Search for any
+            elected official, committee, or organization above.
+          </li>
+          <li>
+            <span className="font-bold text-gray-800 dark:text-gray-200">2.</span> Click any shape
+            in the graph to see who they are and how they connect.
+          </li>
+          <li>
+            <span className="font-bold text-gray-800 dark:text-gray-200">3.</span> Double-click to
+            expand and see more of their network.
+          </li>
+        </ol>
+        <p className="type-xs text-gray-400 mt-4">All data comes from official public records.</p>
       </aside>
     );
   }
@@ -348,12 +486,15 @@ function NodeDetail({
   const emptyMessages = getEmptyStateMessages(node, connectedEdges);
   const edgeGroups = groupEdgesByCategory(connectedEdges);
   const showDisclaimer = hasMoneyAndVotes(connectedEdges);
+  const summaryLines = generateSummary(node, connectedEdges);
+
+  const typeLabel = NODE_TYPE_LABELS[node.type] ?? node.type;
 
   return (
     <div>
       {/* Header */}
       <div className="mb-4">
-        <span className="type-xs text-gray-500 uppercase tracking-wide">{node.type}</span>
+        <span className="type-xs text-gray-500 uppercase tracking-wide">{typeLabel}</span>
         <h3 className="aicher-heading text-lg leading-tight">{node.label}</h3>
 
         {/* Links row */}
@@ -392,78 +533,34 @@ function NodeDetail({
         </div>
       )}
 
-      {/* Connected edges grouped by category */}
-      <div className="space-y-4">
-        <h4 className="type-xs font-bold text-gray-500">
-          {connectedEdges.length} connection{connectedEdges.length !== 1 ? 's' : ''}
-        </h4>
+      {/* Plain-language summary — the hero section */}
+      {summaryLines.length > 0 && (
+        <div className="mb-4 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
+          <h4 className="type-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+            At a glance
+          </h4>
+          <ul className="space-y-1.5">
+            {summaryLines.map((line, i) => (
+              <li key={i} className="type-sm text-gray-800 dark:text-gray-200">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
+      {/* Collapsible connection groups */}
+      <div className="space-y-1">
         {Array.from(edgeGroups.entries()).map(([groupLabel, groupEdges]) => (
-          <div key={groupLabel}>
-            <h5 className="type-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-              {groupLabel}
-            </h5>
-            <div className="space-y-2">
-              {groupEdges.slice(0, 15).map(edge => {
-                const otherNodeId = edge.sourceId === node.id ? edge.targetId : edge.sourceId;
-                const otherNode = nodes.get(otherNodeId);
-
-                return (
-                  <div
-                    key={edge.id}
-                    className="border-2 border-gray-100 dark:border-gray-700 p-2 hover:border-[#3ea2d4] transition-colors"
-                  >
-                    {/* Edge label */}
-                    <p className="type-xs font-medium text-gray-800 dark:text-gray-200">
-                      {edge.label}
-                    </p>
-
-                    {/* Connected node — clickable to navigate graph */}
-                    {otherNode && (
-                      <div className="mt-1">
-                        <button
-                          onClick={() => onSelectNode?.(otherNode.id)}
-                          className="type-xs text-[#3ea2d4] hover:underline text-left"
-                          title={`Select ${otherNode.label}`}
-                        >
-                          {otherNode.label}
-                        </button>
-                        {otherNode.profileUrl && (
-                          <a
-                            href={otherNode.profileUrl}
-                            className="type-xs text-gray-400 hover:text-[#3ea2d4] ml-2"
-                            title="View full profile"
-                          >
-                            (profile)
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Source attribution */}
-                    <div className="flex items-center justify-between mt-1">
-                      <SourceLink url={edge.sourceUrl} label={edge.sourceLabel} />
-                      <span
-                        className={`type-xs font-bold ${
-                          edge.confidence >= 0.8
-                            ? 'text-[#0a9338]'
-                            : edge.confidence >= 0.6
-                              ? 'text-[#d97706]'
-                              : 'text-[#e11d07]'
-                        }`}
-                        title={CONFIDENCE_EXPLANATIONS[edge.type]}
-                      >
-                        {Math.round(edge.confidence * 100)}%
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              {groupEdges.length > 15 && (
-                <p className="type-xs text-gray-400">+{groupEdges.length - 15} more</p>
-              )}
-            </div>
-          </div>
+          <CollapsibleGroup
+            key={groupLabel}
+            label={groupLabel}
+            count={groupEdges.length}
+            edges={groupEdges}
+            centerNodeId={node.id}
+            nodes={nodes}
+            onSelectNode={onSelectNode}
+          />
         ))}
       </div>
 
@@ -502,6 +599,87 @@ function NodeDetail({
       <p className="type-xs text-gray-400 mt-4">
         Data as of {new Date(node.dataAsOf).toLocaleDateString()}
       </p>
+    </div>
+  );
+}
+
+// ── Collapsible Connection Group ─────────────────────────────────────
+
+function CollapsibleGroup({
+  label,
+  count,
+  edges: groupEdges,
+  centerNodeId,
+  nodes,
+  onSelectNode,
+}: {
+  label: string;
+  count: number;
+  edges: GraphEdge[];
+  centerNodeId: string;
+  nodes: Map<string, GraphNode>;
+  onSelectNode?: (id: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border-2 border-gray-100 dark:border-gray-700">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+      >
+        <span className="type-xs font-bold text-gray-700 dark:text-gray-300">{label}</span>
+        <span className="flex items-center gap-1">
+          <span className="type-xs text-gray-400">{count}</span>
+          {isOpen ? (
+            <ChevronDown className="w-3 h-3 text-gray-400" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-gray-400" />
+          )}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="border-t border-gray-100 dark:border-gray-700">
+          {groupEdges.slice(0, 15).map(edge => {
+            const otherNodeId = edge.sourceId === centerNodeId ? edge.targetId : edge.sourceId;
+            const otherNode = nodes.get(otherNodeId);
+
+            return (
+              <div
+                key={edge.id}
+                className="px-3 py-2 border-b border-gray-50 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <p className="type-xs font-medium text-gray-800 dark:text-gray-200">{edge.label}</p>
+                {otherNode && (
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <button
+                      onClick={() => onSelectNode?.(otherNode.id)}
+                      className="type-xs text-[#3ea2d4] hover:underline text-left"
+                    >
+                      {otherNode.label}
+                    </button>
+                    {otherNode.profileUrl && (
+                      <a
+                        href={otherNode.profileUrl}
+                        className="type-xs text-gray-400 hover:text-[#3ea2d4]"
+                      >
+                        (profile)
+                      </a>
+                    )}
+                  </div>
+                )}
+                <div className="mt-0.5">
+                  <SourceLink url={edge.sourceUrl} label={edge.sourceLabel} />
+                </div>
+              </div>
+            );
+          })}
+          {groupEdges.length > 15 && (
+            <p className="px-3 py-2 type-xs text-gray-400">+{groupEdges.length - 15} more</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

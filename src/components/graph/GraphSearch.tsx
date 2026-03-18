@@ -10,7 +10,7 @@ import { Search, User, Users, DollarSign, X } from 'lucide-react';
 import { toCanonicalId, normalizeOrgName } from '@/lib/graph/normalize';
 
 interface GraphSearchProps {
-  onSelect: (nodeId: string) => void;
+  onSelect: (nodeId: string, label: string) => void;
 }
 
 interface Representative {
@@ -135,13 +135,15 @@ export function GraphSearch({ onSelect }: GraphSearchProps) {
 
     if (result.type === 'rep') {
       const rep = result.item as Representative;
-      onSelect(toCanonicalId('representative', rep.bioguideId));
+      const partyAbbrev = getPartyAbbrev(rep.party);
+      const label = `${rep.name} (${partyAbbrev}-${rep.state})`;
+      onSelect(toCanonicalId('representative', rep.bioguideId), label);
     } else if (result.type === 'committee') {
       const committee = result.item as Committee;
-      onSelect(toCanonicalId('committee', committee.id));
+      onSelect(toCanonicalId('committee', committee.id), committee.name);
     } else if (result.type === 'fec-committee') {
       const fec = result.item as FECCommitteeResult;
-      onSelect(toCanonicalId('organization', normalizeOrgName(fec.name)));
+      onSelect(toCanonicalId('organization', normalizeOrgName(fec.name)), fec.name);
     }
   };
 
@@ -224,7 +226,7 @@ export function GraphSearch({ onSelect }: GraphSearchProps) {
             <button
               key={ex.nodeId}
               type="button"
-              onClick={() => onSelect(ex.nodeId)}
+              onClick={() => onSelect(ex.nodeId, ex.label)}
               className="px-2 py-1 type-xs border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-[#3ea2d4] hover:text-[#3ea2d4] transition-colors whitespace-nowrap"
             >
               {ex.label}
