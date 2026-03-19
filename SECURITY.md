@@ -16,7 +16,7 @@ CIV.IQ takes security seriously. This document outlines our security policies, p
 If you discover a security vulnerability, please follow these steps:
 
 1. **DO NOT** open a public issue
-2. Email security@civdotiq.org with:
+2. Email contact@civdotiq.org with:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
@@ -158,7 +158,7 @@ We use the following tools to maintain security:
 
 For security concerns, contact:
 
-- Email: security@civdotiq.org
+- Email: contact@civdotiq.org
 - Response time: Within 48 hours
 
 ## Security Enhancements

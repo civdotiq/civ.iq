@@ -39,12 +39,9 @@ next-env.d.ts
 .idea/
 .vscode/
 
-# Claude Code (keep only .claude/settings.json and CLAUDE.md)
-.claude/agents/
-.claude/session.md
-.claude/hooks/
-.claude/tdd-guard/
-.claude/settings.local.json
+# Claude Code (internal AI tooling, not for public repo)
+.claude/
+CLAUDE.md
 
 # Private strategy & grant documents
 GRANT-*.md
@@ -67,9 +64,13 @@ data-sources/
 # Large data files
 scripts/data/
 
-# ML training data (regenerated per-cycle, too large for repo)
-training-data/*.json
+# ML training data and models (regenerated per-cycle, too large for repo)
+training-data/
 models/
+
+# Stray files outside src/
+components/
+deploy/
 
 # Backup files
 *.backup
