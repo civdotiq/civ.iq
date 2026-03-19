@@ -44,6 +44,7 @@ export function registerFinanceTools(server: McpServer): void {
                 text: `No FEC data available for ${bioguideId} in cycle ${electionCycle}`,
               },
             ],
+            isError: true,
           };
         }
 

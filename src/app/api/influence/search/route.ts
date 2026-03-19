@@ -13,7 +13,7 @@ import { ApiErrors } from '@/lib/api/error-responses';
 import logger from '@/lib/logging/simple-logger';
 import type { CommitteeSearchResponse } from '@/types/influence';
 
-export const revalidate = 300; // 5-minute ISR
+export const dynamic = 'force-dynamic'; // 5-minute ISR
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -93,7 +94,7 @@ export async function GET(
         let votesData = { votes: [], totalResults: 0 };
         try {
           const votesResponse = await fetch(
-            `http://localhost:3000/api/representative/${bioguideId}/votes?limit=500`
+            `${getServerBaseUrl()}/api/representative/${bioguideId}/votes?limit=500`
           );
           if (votesResponse.ok) {
             votesData = await votesResponse.json();

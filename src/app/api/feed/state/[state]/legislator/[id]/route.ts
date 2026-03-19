@@ -27,11 +27,23 @@ export async function GET(
 
   const stateName = getStateName(stateUpper);
   if (!stateName) {
-    return NextResponse.json({ error: `Unknown state code: ${state}` }, { status: 400 });
+    return new NextResponse(
+      `<?xml version="1.0" encoding="UTF-8"?><error>Unknown state code: ${state.replace(/[<>&]/g, '')}</error>`,
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 
   if (!id) {
-    return NextResponse.json({ error: 'Legislator ID is required' }, { status: 400 });
+    return new NextResponse(
+      '<?xml version="1.0" encoding="UTF-8"?><error>Legislator ID is required</error>',
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 
   try {
@@ -87,6 +99,12 @@ export async function GET(
       state: stateUpper,
       legislatorId: id,
     });
-    return NextResponse.json({ error: 'Failed to generate legislator feed' }, { status: 500 });
+    return new NextResponse(
+      '<?xml version="1.0" encoding="UTF-8"?><error>Failed to generate legislator feed</error>',
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 }

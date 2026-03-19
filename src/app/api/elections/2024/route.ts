@@ -29,7 +29,7 @@ import {
   ELECTION_2024_METADATA,
 } from '@/lib/services/election-results.service';
 
-export const revalidate = 86400; // 24 hours — static data, rarely changes
+export const dynamic = 'force-dynamic'; // 24 hours — static data, rarely changes
 
 const VALID_TYPES = ['house', 'president', 'senate', 'governor', 'state-leg'] as const;
 type QueryType = (typeof VALID_TYPES)[number];

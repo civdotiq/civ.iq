@@ -13,7 +13,7 @@ import { logger } from '@/lib/logging/logger-edge';
 import { getSecureCorsOrigin } from '@/config/api.config';
 
 // ISR: Revalidate every 1 hour
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 // Cache for storing fetched XML data
 const voteCache = new Map<string, { data: string; timestamp: number }>();

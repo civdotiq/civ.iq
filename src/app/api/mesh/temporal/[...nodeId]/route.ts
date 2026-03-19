@@ -17,7 +17,7 @@ import logger from '@/lib/logging/simple-logger';
 import { buildTemporalProfile } from '@/lib/mesh/temporal';
 import { ApiErrors } from '@/lib/api/error-responses';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function GET(

@@ -26,6 +26,7 @@ export function registerIntelligenceTools(server: McpServer): void {
                 text: `Vote prediction analysis unavailable for ${bioguideId}. This may be due to insufficient data or the ML model not being loaded.`,
               },
             ],
+            isError: true,
           };
         }
 
@@ -56,6 +57,7 @@ export function registerIntelligenceTools(server: McpServer): void {
                 text: `Influence chain analysis unavailable for ${bioguideId}. This may be due to insufficient data.`,
               },
             ],
+            isError: true,
           };
         }
 

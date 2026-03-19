@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -158,7 +159,7 @@ async function fetchCongressionalBillsData(
 ): Promise<Partial<GovernmentServicesProfile['representation']>> {
   try {
     // Congress.gov API for bills affecting the district
-    const billsUrl = `http://localhost:3000/api/representative/${districtId.toUpperCase()}/bills`;
+    const billsUrl = `${getServerBaseUrl()}/api/representative/${districtId.toUpperCase()}/bills`;
 
     logger.info('Fetching Congressional bills data', {
       districtId,

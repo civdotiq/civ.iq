@@ -17,7 +17,7 @@ import { getCommitteesForAgency } from '@/lib/connections/committee-agency-map';
 import { getAllPolicyAreas, getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 7200;
+export const dynamic = 'force-dynamic';
 
 interface SpendingLegislationResult {
   billId: string;

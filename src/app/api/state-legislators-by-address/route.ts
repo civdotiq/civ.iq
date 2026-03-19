@@ -25,7 +25,7 @@ import {
 import logger from '@/lib/logging/simple-logger';
 
 // ISR: Revalidate every hour - addresses rarely change districts mid-session
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 interface AddressRequestBody {
   street: string;

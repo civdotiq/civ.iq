@@ -8,7 +8,7 @@ import { regulationsGovService } from '@/lib/data-sources/regulations-gov-servic
 import logger from '@/lib/logging/simple-logger';
 import type { RegCommentsResponse } from '@/types/regulations-gov';
 
-export const revalidate = 3600; // 1 hour
+export const dynamic = 'force-dynamic'; // 1 hour
 
 /**
  * Get public comments from Regulations.gov for a Federal Register document.

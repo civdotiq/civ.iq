@@ -11,6 +11,8 @@ import {
 } from '@/services/cache/background-refresh';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

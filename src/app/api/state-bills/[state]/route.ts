@@ -9,7 +9,7 @@ import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 // Bills can be cached - 24 hours for current session data
-export const revalidate = 86400; // 24 hours
+export const dynamic = 'force-dynamic'; // 24 hours
 
 interface StateBill {
   id: string;

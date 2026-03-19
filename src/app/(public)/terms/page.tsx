@@ -72,7 +72,7 @@ export default function TermsPage() {
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
                   CIV.IQ is open-source software released under the{' '}
                   <a
-                    href="https://github.com/civdotiq/civ.iq/blob/main/LICENSE"
+                    href="https://github.com/civdotiq/civic-intel-hub/blob/main/LICENSE"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-civiq-blue hover:underline"

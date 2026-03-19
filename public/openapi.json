@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "CIV.IQ Public API",
-    "description": "Open REST API for normalized U.S. government data. No API key required.",
-    "version": "1.0.0",
+    "description": "Open REST API for normalized U.S. government data — federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.",
+    "version": "1.1.0",
     "license": {
       "name": "MIT",
       "url": "https://github.com/civdotiq/civic-intel-hub/blob/main/LICENSE"
@@ -15,14 +15,14 @@
   },
   "servers": [
     {
-      "url": "https://civdotiq.org/api/v1",
+      "url": "https://civdotiq.org/api",
       "description": "Production"
     }
   ],
   "paths": {
-    "/": {
+    "/v1/": {
       "get": {
-        "summary": "API Index",
+        "summary": "API index",
         "description": "Lists all available v1 endpoints with descriptions.",
         "operationId": "getIndex",
         "tags": ["Index"],
@@ -31,16 +31,14 @@
             "description": "API index with endpoint listing",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IndexResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/IndexResponse" }
               }
             }
           }
         }
       }
     },
-    "/representatives": {
+    "/v1/representatives": {
       "get": {
         "summary": "List representatives",
         "description": "List all current members of Congress with optional filtering.",
@@ -93,7 +91,7 @@
         }
       }
     },
-    "/representatives/{bioguideId}": {
+    "/v1/representatives/{bioguideId}": {
       "get": {
         "summary": "Get representative detail",
         "description": "Get detailed info for a specific member of Congress.",
@@ -125,7 +123,7 @@
         }
       }
     },
-    "/bills": {
+    "/v1/bills": {
       "get": {
         "summary": "List bills",
         "description": "List latest bills from Congress.",
@@ -165,9 +163,7 @@
             "description": "List of bills",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BillListResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/BillListResponse" }
               }
             }
           },
@@ -175,7 +171,7 @@
         }
       }
     },
-    "/bills/{billId}": {
+    "/v1/bills/{billId}": {
       "get": {
         "summary": "Get bill detail",
         "description": "Get bill detail from Congress.gov.",
@@ -196,9 +192,7 @@
             "description": "Bill detail",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BillDetailResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/BillDetailResponse" }
               }
             }
           },
@@ -208,7 +202,7 @@
         }
       }
     },
-    "/bills/{billId}/summary": {
+    "/v1/bills/{billId}/summary": {
       "get": {
         "summary": "Get bill summary",
         "description": "Get cached AI-generated plain-language summary. Does not trigger live generation.",
@@ -229,9 +223,7 @@
             "description": "Bill summary",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BillSummaryResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/BillSummaryResponse" }
               }
             }
           },
@@ -240,7 +232,7 @@
         }
       }
     },
-    "/votes/{voteId}": {
+    "/v1/votes/{voteId}": {
       "get": {
         "summary": "Get vote detail",
         "description": "Get roll-call vote details including individual member positions.",
@@ -261,9 +253,7 @@
             "description": "Vote detail with positions",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VoteDetailResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/VoteDetailResponse" }
               }
             }
           },
@@ -273,7 +263,7 @@
         }
       }
     },
-    "/districts/{districtId}": {
+    "/v1/districts/{districtId}": {
       "get": {
         "summary": "Get district detail",
         "description": "Get district info and its representatives.",
@@ -307,7 +297,7 @@
         }
       }
     },
-    "/committees": {
+    "/v1/committees": {
       "get": {
         "summary": "List committees",
         "description": "List congressional committees.",
@@ -348,7 +338,7 @@
         }
       }
     },
-    "/committees/{committeeId}": {
+    "/v1/committees/{committeeId}": {
       "get": {
         "summary": "Get committee detail",
         "description": "Get committee detail with members and subcommittees.",
@@ -380,7 +370,7 @@
         }
       }
     },
-    "/changelog": {
+    "/v1/changelog": {
       "get": {
         "summary": "API changelog",
         "description": "Version history with change descriptions.",
@@ -391,9 +381,7 @@
             "description": "Changelog",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChangelogResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ChangelogResponse" }
               }
             }
           }
@@ -402,13 +390,1098 @@
     },
     "/mcp": {
       "post": {
-        "summary": "MCP Server (Model Context Protocol)",
-        "description": "Streamable HTTP endpoint for AI assistant integration. Provides 15 tools, 3 resources, and 3 prompt templates for civic data access. See https://modelcontextprotocol.io",
+        "summary": "MCP server",
+        "description": "Model Context Protocol endpoint for AI assistant integration. 16 tools, 3 resources, 3 prompts. See https://modelcontextprotocol.io",
         "operationId": "mcpServer",
         "tags": ["MCP"],
         "responses": {
+          "200": { "description": "MCP protocol response" }
+        }
+      }
+    },
+    "/intelligence/representative/{bioguideId}/vote-prediction": {
+      "get": {
+        "summary": "Vote prediction analysis",
+        "description": "ML-based vote prediction using XGBoost model with SHAP explanations. Shows independence score, notable deviations from predicted behavior, and key factors driving predictions.",
+        "operationId": "getVotePrediction",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
           "200": {
-            "description": "MCP protocol response"
+            "description": "Vote prediction insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/intelligence/representative/{bioguideId}/influence-chain": {
+      "get": {
+        "summary": "Influence chain analysis",
+        "description": "Traces lobbying money through contributions, committee assignments, and votes. Shows the path from lobbying organizations to legislative outcomes.",
+        "operationId": "getInfluenceChain",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Influence chain insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/intelligence/representative/{bioguideId}/temporal": {
+      "get": {
+        "summary": "Temporal voting analysis",
+        "description": "Quarterly voting pattern shifts over time. Shows how a legislator's alignment has changed across quarters.",
+        "operationId": "getTemporalAnalysis",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporal voting insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/intelligence/representative/{bioguideId}/finance-jurisdiction": {
+      "get": {
+        "summary": "Finance-jurisdiction overlap",
+        "description": "Analyzes overlap between a legislator's campaign finance sources and their committee jurisdictions.",
+        "operationId": "getFinanceJurisdiction",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Finance-jurisdiction overlap insight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/intelligence/sector/{sector}/leaderboard": {
+      "get": {
+        "summary": "Sector donation leaderboard",
+        "description": "Top recipients of campaign contributions from a specific industry sector.",
+        "operationId": "getSectorLeaderboard",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "sector",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Industry sector name (e.g., Defense, Health, Energy)",
+            "example": "Defense"
+          },
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["house", "senate"] },
+            "description": "Filter by chamber"
+          },
+          {
+            "name": "party",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["D", "R", "I"] },
+            "description": "Filter by party"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 50 },
+            "description": "Number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sector leaderboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorLeaderboardResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/intelligence/address/money-report": {
+      "get": {
+        "summary": "Money report by ZIP code",
+        "description": "Campaign finance report card for representatives serving a ZIP code.",
+        "operationId": "getMoneyReportByZip",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "zip",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^\\d{5}$" },
+            "description": "5-digit ZIP code",
+            "example": "48226"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Money report for address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MoneyReportResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Money report by address",
+        "description": "Campaign finance report card for representatives serving a street address.",
+        "operationId": "getMoneyReportByAddress",
+        "tags": ["Intelligence"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string",
+                    "example": "1600 Pennsylvania Ave"
+                  },
+                  "city": { "type": "string", "example": "Washington" },
+                  "state": { "type": "string", "example": "DC" }
+                },
+                "required": ["street", "city", "state"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Money report for address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MoneyReportResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/intelligence/address/representatives": {
+      "post": {
+        "summary": "Representatives by address",
+        "description": "Look up all federal representatives (House + Senate) for a street address.",
+        "operationId": "getRepresentativesByAddress",
+        "tags": ["Intelligence"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string",
+                    "example": "1600 Pennsylvania Ave"
+                  },
+                  "city": { "type": "string", "example": "Washington" },
+                  "state": { "type": "string", "example": "DC" }
+                },
+                "required": ["street", "city", "state"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Representatives for address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "representatives": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RepresentativeSummary"
+                      }
+                    },
+                    "state": { "type": "string" },
+                    "district": { "type": "string" },
+                    "multiDistrict": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/intelligence/influence-clusters": {
+      "get": {
+        "summary": "Influence clusters",
+        "description": "Legislators grouped by shared funding patterns. Reveals cross-party clusters with similar donor profiles.",
+        "operationId": "getInfluenceClusters",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Optional: get cluster for a specific legislator"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Influence clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "crossPartyHighlights": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/unified": {
+      "get": {
+        "summary": "Unified search",
+        "description": "Cross-domain search across representatives, bills, committees, and state legislators. Supports state prefix (e.g., CA:pelosi).",
+        "operationId": "searchUnified",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Search query. Supports state prefix (e.g., CA:pelosi)",
+            "example": "healthcare"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10, "maximum": 50 },
+            "description": "Results per category"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results across all domains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnifiedSearchResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/search/policy-area": {
+      "get": {
+        "summary": "Policy area search",
+        "description": "Cross-domain search by policy area: bills, regulations, spending, and committees.",
+        "operationId": "searchPolicyArea",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "policyArea",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Policy area name",
+            "example": "Health"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Results per category"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy area results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "policyArea": { "type": "string" },
+                    "bills": { "type": "array", "items": { "type": "object" } },
+                    "regulations": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "spending": { "type": "object", "nullable": true },
+                    "committees": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "metadata": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/geocode": {
+      "post": {
+        "summary": "Geocode address",
+        "description": "Resolve a street address to congressional district and representatives.",
+        "operationId": "geocodeAddress",
+        "tags": ["Districts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": ["address", "coordinates"],
+                    "default": "address"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "1600 Pennsylvania Ave, Washington DC"
+                  },
+                  "latitude": { "type": "number" },
+                  "longitude": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Geocoded district and representatives",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GeocodeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/districts/all": {
+      "get": {
+        "summary": "List all districts",
+        "description": "List all 435 congressional districts with demographics, political data, and representatives.",
+        "operationId": "listAllDistricts",
+        "tags": ["Districts"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 435 },
+            "description": "Results per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All districts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "districts": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/DistrictDetail" }
+                    },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/representatives/all": {
+      "get": {
+        "summary": "List all representatives",
+        "description": "List all 535 current members of Congress.",
+        "operationId": "listAllRepresentatives",
+        "tags": ["Representatives"],
+        "parameters": [
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["house", "senate"] }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "party",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["D", "R", "I"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All representatives",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "representatives": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RepresentativeSummary"
+                      }
+                    },
+                    "metadata": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/representative/{bioguideId}": {
+      "get": {
+        "summary": "Full representative profile",
+        "description": "Comprehensive profile with biography, committees, social media, contact info, and leadership roles.",
+        "operationId": "getFullRepresentativeProfile",
+        "tags": ["Representatives"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full representative profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "representative": {
+                      "$ref": "#/components/schemas/RepresentativeDetail"
+                    },
+                    "profile": { "type": "object" },
+                    "committees": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "biography": { "type": "object", "nullable": true },
+                    "socialMedia": { "type": "object", "nullable": true },
+                    "identifiers": { "type": "object" },
+                    "metadata": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/compare": {
+      "get": {
+        "summary": "Compare legislators",
+        "description": "Side-by-side comparison of voting record, campaign finance, and effectiveness for two or more legislators.",
+        "operationId": "compareLegislators",
+        "tags": ["Representatives"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Comma-separated bioguide IDs to compare (2-4)",
+            "example": "P000197,M000312"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comparison data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "votingRecord": { "type": "object" },
+                    "campaignFinance": { "type": "object" },
+                    "effectiveness": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/state-legislature/{state}": {
+      "get": {
+        "summary": "State legislature",
+        "description": "List state legislators for a given state via OpenStates.",
+        "operationId": "getStateLegislature",
+        "tags": ["States"],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "description": "Two-letter state code",
+            "example": "MI"
+          },
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["upper", "lower"] },
+            "description": "Filter by chamber (upper = Senate, lower = House/Assembly)"
+          },
+          {
+            "name": "party",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by party"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State legislators",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": { "type": "string" },
+                    "stateName": { "type": "string" },
+                    "legislators": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "totalCount": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/state-bills/{state}": {
+      "get": {
+        "summary": "State bills",
+        "description": "Search and list state legislation via OpenStates.",
+        "operationId": "getStateBills",
+        "tags": ["States"],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "description": "Two-letter state code",
+            "example": "MI"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Keyword search"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by bill status"
+          },
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["upper", "lower"] },
+            "description": "Filter by chamber"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 },
+            "description": "Results per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State bills",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": { "type": "string" },
+                    "stateName": { "type": "string" },
+                    "bills": { "type": "array", "items": { "type": "object" } },
+                    "totalCount": { "type": "integer" },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/state-legislators-by-address": {
+      "post": {
+        "summary": "State legislators by address",
+        "description": "Look up state legislators for a street address via OpenStates geocoding.",
+        "operationId": "getStateLegislatorsByAddress",
+        "tags": ["States"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "street": { "type": "string" },
+                  "city": { "type": "string" },
+                  "state": { "type": "string" },
+                  "zip": { "type": "string" }
+                },
+                "required": ["street", "city", "state"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "State legislators for address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "legislators": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "district": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/graph/neighbors/{nodeId}": {
+      "get": {
+        "summary": "Graph neighbors",
+        "description": "Get connected entities in the civic knowledge graph. Supports filtering by edge type, confidence, and temporal range.",
+        "operationId": "getGraphNeighbors",
+        "tags": ["Graph"],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Node ID in format type:identifier (e.g., rep:P000197, bill:119-hr-1)",
+            "example": "rep:P000197"
+          },
+          {
+            "name": "edgeTypes",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated edge types to include"
+          },
+          {
+            "name": "minConfidence",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "description": "Minimum confidence threshold (0-1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 },
+            "description": "Maximum edges to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Graph neighbors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "center": { "type": "object" },
+                    "edges": { "type": "array", "items": { "type": "object" } },
+                    "connectedNodes": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "metadata": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/mesh/entity/{nodeId}": {
+      "get": {
+        "summary": "Mesh entity",
+        "description": "Unified entity resolver. Returns identity, neighborhood, intelligence, and temporal context for any civic entity.",
+        "operationId": "getMeshEntity",
+        "tags": ["Graph"],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Entity ID in format type:identifier (e.g., rep:P000197)",
+            "example": "rep:P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full entity with context",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/mesh/temporal/{nodeId}": {
+      "get": {
+        "summary": "Temporal profile",
+        "description": "Quarterly time-series of edge activity and trends for an entity.",
+        "operationId": "getMeshTemporal",
+        "tags": ["Graph"],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Entity ID",
+            "example": "rep:P000197"
+          },
+          {
+            "name": "quarters",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 8,
+              "minimum": 1,
+              "maximum": 20
+            },
+            "description": "Number of quarters to include"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporal profile",
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/mesh/embed/{type}/{id}": {
+      "get": {
+        "summary": "Embeddable widget",
+        "description": "Returns self-contained HTML for iframe embedding. Supports scorecard and district widget types.",
+        "operationId": "getMeshEmbed",
+        "tags": ["Widgets"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["scorecard", "district"] },
+            "description": "Widget type"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Entity ID (bioguideId for scorecard, districtId for district)",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Self-contained HTML widget",
+            "content": {
+              "text/html": {
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/feed/member/{bioguideId}": {
+      "get": {
+        "summary": "Member activity feed",
+        "description": "Atom feed of a legislator's voting activity, committee assignments, and sponsored bills.",
+        "operationId": "getMemberFeed",
+        "tags": ["Feeds"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bioguide ID",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atom XML feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/district/{districtId}": {
+      "get": {
+        "summary": "District activity feed",
+        "description": "Atom feed of legislative activity affecting a congressional district.",
+        "operationId": "getDistrictFeed",
+        "tags": ["Feeds"],
+        "parameters": [
+          {
+            "name": "districtId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "District ID (e.g., MI-12)",
+            "example": "MI-12"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atom XML feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/bills/latest": {
+      "get": {
+        "summary": "Latest bills feed",
+        "description": "Atom feed of recently introduced or updated bills in Congress.",
+        "operationId": "getLatestBillsFeed",
+        "tags": ["Feeds"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50, "maximum": 100 },
+            "description": "Number of bills"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atom XML feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/bill/{billId}": {
+      "get": {
+        "summary": "Bill lifecycle feed",
+        "description": "Atom feed of status updates and actions for a specific bill.",
+        "operationId": "getBillFeed",
+        "tags": ["Feeds"],
+        "parameters": [
+          {
+            "name": "billId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bill ID",
+            "example": "119-hr-1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atom XML feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/committee/{committeeId}": {
+      "get": {
+        "summary": "Committee feed",
+        "description": "Atom feed of committee meetings, reports, and member updates.",
+        "operationId": "getCommitteeFeed",
+        "tags": ["Feeds"],
+        "parameters": [
+          {
+            "name": "committeeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Committee system code",
+            "example": "HSJU"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Atom XML feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": { "type": "string" }
+              }
+            }
           }
         }
       }
@@ -451,6 +1524,32 @@
           },
           "meta": { "$ref": "#/components/schemas/Meta" }
         }
+      },
+      "IntelligenceMetadata": {
+        "type": "object",
+        "description": "Common metadata for all intelligence insights",
+        "properties": {
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence score (0-1)"
+          },
+          "dataAsOf": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data freshness timestamp"
+          },
+          "methodology": {
+            "type": "string",
+            "description": "How the analysis was computed"
+          },
+          "disclaimer": {
+            "type": "string",
+            "description": "Correlation/causation disclaimer"
+          }
+        },
+        "required": ["confidence", "dataAsOf", "methodology", "disclaimer"]
       },
       "RepresentativeSummary": {
         "type": "object",
@@ -758,6 +1857,86 @@
           },
           "meta": { "$ref": "#/components/schemas/Meta" }
         }
+      },
+      "IntelligenceInsightResponse": {
+        "type": "object",
+        "description": "Standard intelligence analyzer response",
+        "properties": {
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "dataAsOf": { "type": "string", "format": "date-time" },
+          "methodology": { "type": "string" },
+          "disclaimer": { "type": "string" }
+        },
+        "required": ["confidence", "dataAsOf", "methodology", "disclaimer"]
+      },
+      "SectorLeaderboardResponse": {
+        "type": "object",
+        "properties": {
+          "sector": { "type": "string" },
+          "legislators": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "bioguideId": { "type": "string" },
+                "name": { "type": "string" },
+                "party": { "type": "string" },
+                "state": { "type": "string" },
+                "totalFromSector": { "type": "number" },
+                "percentOfTotal": { "type": "number" }
+              }
+            }
+          },
+          "metadata": { "type": "object" }
+        }
+      },
+      "MoneyReportResponse": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string" },
+          "district": { "type": "string" },
+          "representatives": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+          },
+          "aggregates": { "type": "object" },
+          "narrative": { "type": "string" },
+          "confidence": { "type": "number" },
+          "dataAsOf": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GeocodeResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "district": { "type": "string" },
+          "representatives": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+          },
+          "stateLegislators": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "stateInfo": { "type": "object" },
+          "geocoded": { "type": "object" },
+          "isMultiDistrict": { "type": "boolean" }
+        }
+      },
+      "UnifiedSearchResponse": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "totalResults": { "type": "integer" },
+          "representatives": { "type": "array", "items": { "type": "object" } },
+          "bills": { "type": "array", "items": { "type": "object" } },
+          "committees": { "type": "array", "items": { "type": "object" } },
+          "stateLegislators": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "stateBills": { "type": "array", "items": { "type": "object" } }
+        }
       }
     },
     "responses": {
@@ -794,7 +1973,7 @@
         }
       },
       "TooManyRequests": {
-        "description": "Rate limit exceeded",
+        "description": "Rate limit exceeded (60 requests/minute per IP)",
         "headers": {
           "X-RateLimit-Limit": {
             "schema": { "type": "integer" },
@@ -823,10 +2002,35 @@
   },
   "tags": [
     { "name": "Index", "description": "API discovery and versioning" },
-    { "name": "Representatives", "description": "Members of Congress" },
+    {
+      "name": "Representatives",
+      "description": "Members of Congress — federal level"
+    },
     { "name": "Bills", "description": "Legislation and AI summaries" },
     { "name": "Votes", "description": "Roll-call votes" },
-    { "name": "Districts", "description": "Congressional districts" },
-    { "name": "Committees", "description": "Congressional committees" }
+    {
+      "name": "Districts",
+      "description": "Congressional districts and geocoding"
+    },
+    { "name": "Committees", "description": "Congressional committees" },
+    {
+      "name": "Intelligence",
+      "description": "ML-powered analysis — vote prediction, influence chains, temporal shifts"
+    },
+    { "name": "Search", "description": "Cross-domain search" },
+    {
+      "name": "States",
+      "description": "State legislators and bills via OpenStates"
+    },
+    {
+      "name": "Graph",
+      "description": "Civic knowledge graph — entity resolution and connections"
+    },
+    { "name": "Feeds", "description": "Atom XML feeds for subscriptions" },
+    {
+      "name": "Widgets",
+      "description": "Embeddable HTML widgets for iframe embedding"
+    },
+    { "name": "MCP", "description": "Model Context Protocol for AI assistants" }
   ]
 }

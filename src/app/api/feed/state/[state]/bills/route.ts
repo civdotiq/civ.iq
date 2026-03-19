@@ -30,7 +30,13 @@ export async function GET(
   // Validate state code
   const stateName = getStateName(stateUpper);
   if (!stateName) {
-    return NextResponse.json({ error: `Unknown state code: ${state}` }, { status: 400 });
+    return new NextResponse(
+      `<?xml version="1.0" encoding="UTF-8"?><error>Unknown state code: ${state.replace(/[<>&]/g, '')}</error>`,
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 
   try {
@@ -69,7 +75,13 @@ export async function GET(
     });
   } catch (error) {
     logger.error('State bills feed error', error as Error, { state: stateUpper });
-    return NextResponse.json({ error: 'Failed to generate state bills feed' }, { status: 500 });
+    return new NextResponse(
+      '<?xml version="1.0" encoding="UTF-8"?><error>Failed to generate state bills feed</error>',
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 }
 

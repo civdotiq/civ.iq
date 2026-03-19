@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { CivicAlignmentInput } from '@/types/ai';
 
 export const dynamic = 'force-dynamic';
@@ -222,7 +223,7 @@ function normalizePosition(position: string): 'Yea' | 'Nay' | 'Not Voting' {
 async function fetchVotes(bioguideId: string): Promise<RawVote[]> {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/representative/${bioguideId}/votes?limit=100`
+      `${getServerBaseUrl()}/api/representative/${bioguideId}/votes?limit=100`
     );
     if (response.ok) {
       const data = await response.json();

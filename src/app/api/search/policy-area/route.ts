@@ -27,7 +27,7 @@ import type { PolicyAreaResults, JoinMetadata } from '@/types/joins';
 import type { BillStatus } from '@/types/bill';
 import { mapCongressStatus } from '@/lib/services/bill.service';
 
-export const revalidate = 7200; // 2 hours
+export const dynamic = 'force-dynamic'; // 2 hours
 
 const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
@@ -42,9 +42,7 @@ interface CongressBillListItem {
   latestAction?: { actionDate: string; text: string };
 }
 
-async function fetchBillsByPolicyArea(
-  limit: number
-): Promise<
+async function fetchBillsByPolicyArea(limit: number): Promise<
   Array<{
     id: string;
     title: string;

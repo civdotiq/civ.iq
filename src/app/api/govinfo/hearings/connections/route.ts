@@ -25,7 +25,7 @@ import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import type { GovInfoCollectionResponse, GovInfoPackage, GovInfoDocument } from '@/types/govinfo';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 7200; // 2 hours
+export const dynamic = 'force-dynamic';
 
 const GOVINFO_API = 'https://api.govinfo.gov';
 const API_KEY = process.env.GOVINFO_API_KEY ?? 'DEMO_KEY';

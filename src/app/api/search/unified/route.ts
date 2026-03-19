@@ -24,7 +24,7 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
 
 // ISR: Revalidate every 5 minutes
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 // State code to name mapping
 const STATE_CODES: Record<string, string> = {

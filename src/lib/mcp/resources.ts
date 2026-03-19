@@ -49,7 +49,7 @@ export function registerResources(server: McpServer): void {
         : variables.congress;
       const type = Array.isArray(variables.type) ? variables.type[0] : variables.type;
       const number = Array.isArray(variables.number) ? variables.number[0] : variables.number;
-      const billId = `${type}${number}-${congress}`;
+      const billId = `${congress}-${type}-${number}`;
       const bill = await fetchBillFromCongress(billId);
       if (!bill) {
         return {

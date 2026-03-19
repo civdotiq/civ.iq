@@ -122,6 +122,12 @@ export async function GET(
     });
   } catch (error) {
     logger.error('District Atom feed error', error as Error);
-    return new NextResponse('Failed to generate district feed', { status: 500 });
+    return new NextResponse(
+      '<?xml version="1.0" encoding="UTF-8"?><error>Failed to generate district feed</error>',
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }
+    );
   }
 }

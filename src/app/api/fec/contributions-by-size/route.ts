@@ -8,7 +8,7 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
 
 // ISR: Revalidate every 6 hours
-export const revalidate = 21600;
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

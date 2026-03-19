@@ -31,7 +31,7 @@ import { mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 21600; // 6 hours
+export const dynamic = 'force-dynamic'; // 6 hours
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 

@@ -22,7 +22,7 @@ import {
   getCrossPartyClusters,
 } from '@/lib/intelligence/clusters';
 
-export const revalidate = 86400; // 24 hours — data changes weekly at most
+export const dynamic = 'force-dynamic'; // 24 hours — data changes weekly at most
 
 export async function GET(request: NextRequest) {
   const bioguideId = request.nextUrl.searchParams.get('bioguideId');

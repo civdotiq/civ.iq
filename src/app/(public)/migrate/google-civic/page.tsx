@@ -622,7 +622,7 @@ export default function GoogleCivicMigrationPage() {
               Developer Hub
             </Link>
             <a
-              href="https://github.com/civdotiq/civ.iq"
+              href="https://github.com/civdotiq/civic-intel-hub"
               className="inline-block border-2 border-black px-6 py-2 text-sm font-bold hover:bg-gray-100 transition-colors"
               target="_blank"
               rel="noopener noreferrer"

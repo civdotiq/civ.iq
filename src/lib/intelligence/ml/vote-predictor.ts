@@ -393,9 +393,11 @@ export function computeShapFactors(
 
   return shapSource
     .slice(0, 8) // consider top 8 candidates
+    .filter(sf => Number.isFinite(sf.meanAbsShap) && sf.meanAbsShap >= 0)
     .map(sf => {
       const idx = featureNames.indexOf(sf.feature);
-      const featureValue = idx >= 0 ? (featureValues[idx] ?? 0) : 0;
+      const raw = idx >= 0 ? (featureValues[idx] ?? 0) : 0;
+      const featureValue = Number.isFinite(raw) ? raw : 0;
       const isActive = featureValue !== 0;
 
       let direction: ShapFactor['direction'];

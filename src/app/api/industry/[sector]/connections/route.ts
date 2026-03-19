@@ -21,7 +21,7 @@ import {
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 7200;
+export const dynamic = 'force-dynamic';
 
 interface IndustryConnectionsResponse {
   sector: string;

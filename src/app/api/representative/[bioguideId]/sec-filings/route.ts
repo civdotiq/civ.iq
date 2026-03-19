@@ -10,7 +10,7 @@ import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-serv
 import logger from '@/lib/logging/simple-logger';
 import type { SecFilingsResponse } from '@/types/sec-edgar';
 
-export const revalidate = 3600; // 1 hour
+export const dynamic = 'force-dynamic'; // 1 hour
 
 /**
  * Get SEC EDGAR filings related to a representative's stock trades.

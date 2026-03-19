@@ -9,7 +9,7 @@ import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legis
 
 // ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
 // Committee rosters change primarily at start of new legislative sessions
-export const revalidate = 259200; // 3 days
+export const dynamic = 'force-dynamic'; // 3 days
 
 /**
  * GET /api/state-legislature/[state]/committees

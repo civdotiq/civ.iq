@@ -30,7 +30,7 @@ import type {
 } from '@/types/federal-register';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 10800; // 3 hours
+export const dynamic = 'force-dynamic'; // 3 hours
 
 const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';
 

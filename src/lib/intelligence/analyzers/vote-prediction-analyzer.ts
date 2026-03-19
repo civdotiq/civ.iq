@@ -326,7 +326,10 @@ async function computePredictions(
   let deviations = 0;
   const notableDeviations: VotePredictionInsight['notableDeviations'] = [];
   // Accumulate SHAP importance per feature across predictions
-  const shapAccum = new Map<string, { total: number; count: number; lastFactor: ShapFactor }>();
+  const shapAccum = new Map<
+    string,
+    { total: number; featureValueTotal: number; count: number; humanLabel: string; feature: string }
+  >();
 
   for (const vote of data.votes) {
     if (vote.billSectors.length === 0) continue;
@@ -349,13 +352,22 @@ async function computePredictions(
     // Accumulate SHAP factors
     if (prediction.shapFactors) {
       for (const sf of prediction.shapFactors) {
+        if (!Number.isFinite(sf.importance) || sf.importance < 0) continue;
         const existing = shapAccum.get(sf.feature);
         if (existing) {
           existing.total += sf.importance;
+          existing.featureValueTotal += sf.featureValue;
           existing.count++;
-          existing.lastFactor = sf;
+          existing.humanLabel = sf.humanLabel;
+          existing.feature = sf.feature;
         } else {
-          shapAccum.set(sf.feature, { total: sf.importance, count: 1, lastFactor: sf });
+          shapAccum.set(sf.feature, {
+            total: sf.importance,
+            featureValueTotal: sf.featureValue,
+            count: 1,
+            humanLabel: sf.humanLabel,
+            feature: sf.feature,
+          });
         }
       }
     }
@@ -381,11 +393,18 @@ async function computePredictions(
   const independenceScore = confidentPredictions > 0 ? deviations / confidentPredictions : 0;
 
   // Build aggregated SHAP factors sorted by average importance
-  const aggregatedShapFactors: ShapFactor[] = Array.from(shapAccum.entries())
-    .map(([, { total, count, lastFactor }]) => ({
-      ...lastFactor,
-      importance: total / count,
-    }))
+  const aggregatedShapFactors: ShapFactor[] = Array.from(shapAccum.values())
+    .map(({ total, featureValueTotal, count, humanLabel, feature }) => {
+      const avgImportance = total / count;
+      const avgFeatureValue = featureValueTotal / count;
+      return {
+        feature,
+        humanLabel,
+        importance: avgImportance,
+        featureValue: avgFeatureValue,
+        direction: (avgFeatureValue >= 0 ? 'toward_yea' : 'toward_nay') as ShapFactor['direction'],
+      };
+    })
     .sort((a, b) => b.importance - a.importance)
     .slice(0, 5);
 
