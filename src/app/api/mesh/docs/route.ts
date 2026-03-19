@@ -16,7 +16,7 @@ import { NextResponse } from 'next/server';
 import { ensureMeshInitialized } from '@/lib/mesh/init';
 import { meshRegistry } from '@/lib/mesh/registry';
 
-export const revalidate = 86400; // 24 hours
+export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<NextResponse> {
   ensureMeshInitialized();
