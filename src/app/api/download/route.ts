@@ -15,7 +15,7 @@
 import { NextResponse } from 'next/server';
 import { DATASET_REGISTRY } from '@/lib/datasets';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const datasets = DATASET_REGISTRY.map(d => ({

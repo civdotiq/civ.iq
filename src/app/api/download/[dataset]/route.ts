@@ -18,7 +18,7 @@ import { formatDataset, getContentType } from '@/lib/datasets/format';
 import type { FormatType } from '@/types/dataset';
 import logger from '@/lib/logging/simple-logger';
 
-export const revalidate = 3600; // 1 hour ISR
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
