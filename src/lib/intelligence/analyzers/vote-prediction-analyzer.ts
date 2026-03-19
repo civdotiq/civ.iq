@@ -28,7 +28,12 @@ import {
   withTimeout,
   ANALYZER_TIMEOUT_MS,
 } from './shared';
-import { predictVote, buildFeatureVector, getModelMetadata } from '../ml/vote-predictor';
+import {
+  predictVote,
+  buildFeatureVector,
+  getModelMetadata,
+  type ShapFactor,
+} from '../ml/vote-predictor';
 import type { VotePredictionInsight, PeerComparison as PeerComparisonType } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -141,6 +146,8 @@ async function computeAndCache(
       humanLabel: getFeatureLabel(f.feature),
       importance: f.importance,
     })),
+    shapFactors:
+      predictions.aggregatedShapFactors.length > 0 ? predictions.aggregatedShapFactors : undefined,
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     dataAsOf: new Date().toISOString(),
@@ -307,6 +314,8 @@ interface PredictionResults {
   confidentPredictions: number;
   deviations: number;
   notableDeviations: VotePredictionInsight['notableDeviations'];
+  /** Aggregated SHAP factors across all confident predictions. */
+  aggregatedShapFactors: ShapFactor[];
 }
 
 async function computePredictions(
@@ -316,6 +325,8 @@ async function computePredictions(
   let confidentPredictions = 0;
   let deviations = 0;
   const notableDeviations: VotePredictionInsight['notableDeviations'] = [];
+  // Accumulate SHAP importance per feature across predictions
+  const shapAccum = new Map<string, { total: number; count: number; lastFactor: ShapFactor }>();
 
   for (const vote of data.votes) {
     if (vote.billSectors.length === 0) continue;
@@ -334,6 +345,20 @@ async function computePredictions(
     if (!prediction || prediction.predictedVote === 'uncertain') continue;
 
     confidentPredictions++;
+
+    // Accumulate SHAP factors
+    if (prediction.shapFactors) {
+      for (const sf of prediction.shapFactors) {
+        const existing = shapAccum.get(sf.feature);
+        if (existing) {
+          existing.total += sf.importance;
+          existing.count++;
+          existing.lastFactor = sf;
+        } else {
+          shapAccum.set(sf.feature, { total: sf.importance, count: 1, lastFactor: sf });
+        }
+      }
+    }
 
     if (prediction.predictedVote !== vote.position) {
       deviations++;
@@ -355,11 +380,21 @@ async function computePredictions(
 
   const independenceScore = confidentPredictions > 0 ? deviations / confidentPredictions : 0;
 
+  // Build aggregated SHAP factors sorted by average importance
+  const aggregatedShapFactors: ShapFactor[] = Array.from(shapAccum.entries())
+    .map(([, { total, count, lastFactor }]) => ({
+      ...lastFactor,
+      importance: total / count,
+    }))
+    .sort((a, b) => b.importance - a.importance)
+    .slice(0, 5);
+
   return {
     independenceScore,
     confidentPredictions,
     deviations,
     notableDeviations,
+    aggregatedShapFactors,
   };
 }
 

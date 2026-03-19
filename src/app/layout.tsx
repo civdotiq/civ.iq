@@ -117,6 +117,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Schema.org structured data */}
         <OrganizationSchema />
         <WebSiteSchema alternateName={['civdotiq.org', 'Civic Intelligence']} />
+        {/* AI-readable documentation (llmstxt.org) */}
+        <link rel="llms-txt" href="/llms.txt" />
         {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}

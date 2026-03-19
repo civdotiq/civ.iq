@@ -420,6 +420,17 @@ export interface VotePredictionInsight extends InsightBase {
     humanLabel: string;
     importance: number;
   }>;
+  /** SHAP-based feature importance with directional context for visualization. */
+  shapFactors?: Array<{
+    feature: string;
+    humanLabel: string;
+    /** Mean absolute SHAP value for this feature. */
+    importance: number;
+    /** Actual feature value for this legislator/bill. */
+    featureValue: number;
+    /** Whether this feature pushes toward yea, nay, or is neutral. */
+    direction: 'toward_yea' | 'toward_nay' | 'neutral';
+  }>;
   narrative: string;
 }
 

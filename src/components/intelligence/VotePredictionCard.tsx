@@ -7,6 +7,7 @@
 
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
+import { ShapFactorsBar } from './ShapFactorsBar';
 import type { VotePredictionInsight } from '@/lib/intelligence/types';
 
 interface VotePredictionCardProps {
@@ -62,6 +63,11 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
 
       {/* Narrative */}
       <p className="type-sm text-gray-700 leading-relaxed mb-4">{insight.narrative}</p>
+
+      {/* SHAP factors visualization */}
+      {insight.shapFactors && insight.shapFactors.length > 0 && (
+        <ShapFactorsBar factors={insight.shapFactors} />
+      )}
 
       {/* Notable deviations table */}
       {notableDeviations.length > 0 && (

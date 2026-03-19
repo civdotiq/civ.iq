@@ -78,14 +78,17 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 11 paths total', () => {
-      expect(Object.keys(paths).length).toBe(11);
+    it('should have 12 paths total', () => {
+      expect(Object.keys(paths).length).toBe(12);
     });
 
-    it('should only use GET methods', () => {
+    it('should only use GET or POST methods', () => {
+      const validMethods = ['get', 'post'];
       for (const [, pathItem] of Object.entries(paths)) {
         const methods = Object.keys(pathItem as Record<string, unknown>);
-        expect(methods).toEqual(['get']);
+        for (const method of methods) {
+          expect(validMethods).toContain(method);
+        }
       }
     });
   });

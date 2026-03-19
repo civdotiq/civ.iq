@@ -15,6 +15,36 @@ All public endpoints are currently open. API keys are used for external service 
 - `FEC_API_KEY` - Federal Election Commission data
 - `CENSUS_API_KEY` - U.S. Census Bureau data
 
+## MCP Server (Model Context Protocol)
+
+CIV.IQ provides a Model Context Protocol server for AI assistant integration.
+
+- **Endpoint**: `POST /api/mcp` (streamable HTTP transport)
+- **Spec**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
+- **15 tools**: representative lookup, bill search, campaign finance, lobbying, spending, intelligence analysis
+- **3 resources**: `civiq://legislators/{bioguideId}`, `civiq://bills/{congress}/{type}/{number}`, `civiq://districts/{stateCode}/{districtNumber}`
+- **3 prompts**: `legislator_accountability`, `bill_impact_analysis`, `policy_comparison`
+
+### Connecting
+
+Add to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "civiq": {
+      "url": "https://civdotiq.org/api/mcp"
+    }
+  }
+}
+```
+
+## AI-Readable Documentation
+
+- `/llms.txt` — concise platform description for AI assistants ([llmstxt.org](https://llmstxt.org))
+- `/llms-full.txt` — comprehensive API documentation for LLMs
+- `/openapi.json` — OpenAPI 3.0 specification
+
 ## Endpoints
 
 ### Representatives

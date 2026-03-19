@@ -399,6 +399,19 @@
           }
         }
       }
+    },
+    "/mcp": {
+      "post": {
+        "summary": "MCP Server (Model Context Protocol)",
+        "description": "Streamable HTTP endpoint for AI assistant integration. Provides 15 tools, 3 resources, and 3 prompt templates for civic data access. See https://modelcontextprotocol.io",
+        "operationId": "mcpServer",
+        "tags": ["MCP"],
+        "responses": {
+          "200": {
+            "description": "MCP protocol response"
+          }
+        }
+      }
     }
   },
   "components": {

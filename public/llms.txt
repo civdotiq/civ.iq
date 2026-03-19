@@ -1,0 +1,68 @@
+# CIV.IQ
+
+> Civic intelligence platform providing normalized U.S. government data through open APIs. No API key required. Real data only — never mock or fabricated.
+
+CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google Civic Info API, and OpenSecrets API. It aggregates data from Congress.gov, FEC, Senate LDA, USASpending, Federal Register, Census Bureau, BLS, and more into a unified, free REST API.
+
+## Core Capabilities
+
+- **Representatives**: Look up federal and state legislators by street address or state
+- **Voting Records**: House and Senate roll call votes with party alignment analysis
+- **Campaign Finance**: FEC contribution data with industry/geographic breakdowns
+- **Legislation**: Bill search, details, sponsors, cosponsors, status tracking
+- **Lobbying**: Senate LDA filings with spending and issue tracking
+- **Federal Spending**: USASpending contracts and grants by district
+- **Intelligence Analysis**: ML-driven vote prediction, influence chain analysis, finance-jurisdiction overlap detection
+- **Districts**: Demographics, economics, boundaries for all 435 congressional districts
+- **Committees**: Membership, jurisdiction, activity tracking
+- **Federal Register**: Rules, notices, executive orders search
+
+## API Access
+
+- Base URL: `https://civdotiq.org/api`
+- Versioned API: `https://civdotiq.org/api/v1`
+- OpenAPI spec: `https://civdotiq.org/openapi.json`
+- No authentication required
+- Rate limited to 60 requests/minute per IP
+
+## Key Endpoints
+
+- `GET /api/v1/representatives?state=MI&chamber=house` — list legislators
+- `GET /api/v1/representatives/{bioguideId}` — legislator detail
+- `GET /api/v1/representatives/{bioguideId}/votes` — voting record
+- `GET /api/v1/representatives/{bioguideId}/finance` — campaign finance
+- `GET /api/v1/bills?query=healthcare&congress=119` — search bills
+- `GET /api/v1/bills/{billId}` — bill detail
+- `GET /api/v1/committees` — list committees
+- `POST /api/intelligence/address/representatives` — find reps by full address
+- `GET /api/intelligence/vote-prediction/{bioguideId}` — ML vote prediction
+
+## MCP Server
+
+CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
+- Endpoint: `https://civdotiq.org/api/mcp`
+- 16 tools for representative lookup, legislation search, finance analysis
+- 3 resources for structured data access
+- 3 prompt templates for common analysis patterns
+
+## Documentation
+
+- Full API docs: [llms-full.txt](/llms-full.txt)
+- OpenAPI 3.0 spec: [openapi.json](/openapi.json)
+- API reference: [docs/API_REFERENCE.md](https://github.com/civdotiq/civic-intel-hub/blob/main/docs/API_REFERENCE.md)
+
+## Data Sources
+
+All data comes from official government sources:
+- Congress.gov API v3 (bills, members, votes)
+- FEC.gov API (campaign finance)
+- Senate LDA API (lobbying disclosures)
+- USASpending.gov API v2 (federal contracts/grants)
+- Federal Register API (rules, executive orders)
+- Census Bureau ACS (demographics)
+- Bureau of Labor Statistics (employment)
+- GovInfo.gov (hearing transcripts)
+
+## License
+
+MIT. Open source at github.com/civdotiq/civic-intel-hub

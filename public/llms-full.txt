@@ -1,0 +1,700 @@
+# CIV.IQ — Full API Documentation for LLMs
+
+> Civic intelligence platform providing normalized U.S. government data through open REST APIs.
+> No API key required. Real government data only — never mock or fabricated.
+> Fills the vacuum left by ProPublica Congress API, Google Civic Info API, and OpenSecrets API shutdowns.
+
+## Base URLs
+
+- Production: `https://civdotiq.org/api`
+- Versioned: `https://civdotiq.org/api/v1`
+- OpenAPI 3.0 spec: `https://civdotiq.org/openapi.json`
+
+## Rate Limiting
+
+- 60 requests/minute per IP address
+- Responses include `X-RateLimit-Remaining` header
+- 429 responses include `Retry-After` header
+
+## Data Freshness
+
+- Representatives: cached 24 hours, sourced from congress-legislators YAML
+- Votes: cached 1 hour (House via Congress.gov API, Senate via XML feeds)
+- Campaign finance: cached 24 hours, sourced from FEC.gov API
+- Bills: cached 6 hours, sourced from Congress.gov API v3
+- Lobbying: cached 24 hours, sourced from Senate LDA API
+- Intelligence insights: cached 7 days, recomputed on demand
+
+---
+
+## Representatives
+
+### GET /api/v1/representatives
+
+List all current members of Congress with optional filtering.
+
+**Parameters:**
+- `chamber` (string, optional): "house" or "senate"
+- `state` (string, optional): two-letter state code, e.g. "MI"
+- `party` (string, optional): "D", "R", or "I"
+- `limit` (integer, optional): results per page, default 100, max 535
+- `offset` (integer, optional): pagination offset, default 0
+
+**Example:** `GET /api/v1/representatives?state=CA&chamber=house&limit=10`
+
+**Response shape:**
+```json
+{
+  "data": [
+    {
+      "bioguideId": "P000197",
+      "name": "Nancy Pelosi",
+      "party": "Democrat",
+      "state": "CA",
+      "district": "11",
+      "chamber": "house",
+      "imageUrl": "string",
+      "phone": "string",
+      "website": "string"
+    }
+  ],
+  "pagination": { "total": 435, "limit": 10, "offset": 0, "hasMore": true }
+}
+```
+
+### GET /api/v1/representatives/{bioguideId}
+
+Get detailed info for a specific member of Congress.
+
+**Path parameter:** `bioguideId` — Congress bioguide identifier (e.g., "P000197")
+
+**Response shape:**
+```json
+{
+  "data": {
+    "bioguideId": "string",
+    "name": "string",
+    "party": "string",
+    "state": "string",
+    "district": "string",
+    "chamber": "house|senate",
+    "imageUrl": "string",
+    "office": "string",
+    "phone": "string",
+    "website": "string",
+    "socialMedia": { "twitter": "string", "facebook": "string" },
+    "committees": [{ "name": "string", "role": "string" }],
+    "termStart": "string",
+    "termEnd": "string",
+    "nextElection": "string"
+  }
+}
+```
+
+### GET /api/v1/representatives/{bioguideId}/votes
+
+Voting record for a specific legislator.
+
+**Parameters:**
+- `bioguideId` (path): Congress bioguide identifier
+- `limit` (query, optional): number of records, default 20, max 50
+
+**Data sources:** House via Congress.gov API, Senate via official XML feeds.
+
+**Response shape:**
+```json
+{
+  "votes": [
+    {
+      "voteId": "string",
+      "bill": { "number": "string", "title": "string", "congress": "string", "type": "string" },
+      "question": "string",
+      "result": "string",
+      "date": "string",
+      "position": "Yea|Nay|Present|Not Voting",
+      "chamber": "House|Senate",
+      "category": "Budget|Healthcare|Defense|Judiciary|Foreign Affairs|Other",
+      "isKeyVote": true
+    }
+  ],
+  "totalResults": 150
+}
+```
+
+### GET /api/v1/representatives/{bioguideId}/finance
+
+FEC campaign finance data for a legislator.
+
+**Parameters:**
+- `bioguideId` (path): Congress bioguide identifier
+- `cycle` (query, optional): election cycle year, default current
+
+**Data source:** FEC.gov API via bioguide-to-FEC ID mapping.
+
+**Response shape:**
+```json
+{
+  "totalRaised": 5000000,
+  "totalSpent": 4200000,
+  "cashOnHand": 800000,
+  "individualContributions": 3500000,
+  "pacContributions": 1200000,
+  "industryBreakdown": [
+    { "industry": "Finance/Insurance/Real Estate", "amount": 500000, "percentage": 10 }
+  ],
+  "geographicBreakdown": [
+    { "state": "CA", "amount": 2000000, "percentage": 40 }
+  ]
+}
+```
+
+### POST /api/intelligence/address/representatives
+
+Find representatives by full street address (resolves exact congressional district via Census Geocoder).
+
+**Request body (JSON):**
+```json
+{
+  "street": "123 Main St",
+  "city": "Detroit",
+  "state": "MI",
+  "zip": "48201"
+}
+```
+
+**Response shape:**
+```json
+{
+  "district": "MI-13",
+  "representatives": [{ "bioguideId": "string", "name": "string", "party": "string", "district": "string" }],
+  "senators": [{ "bioguideId": "string", "name": "string", "party": "string" }]
+}
+```
+
+---
+
+## Bills & Legislation
+
+### GET /api/v1/bills
+
+Search bills across Congress.
+
+**Parameters:**
+- `query` (string, optional): search term
+- `congress` (integer, optional): congress number (e.g., 119)
+- `status` (string, optional): bill status filter
+- `limit` (integer, optional): default 20, max 50
+- `offset` (integer, optional): pagination offset
+
+**Example:** `GET /api/v1/bills?query=healthcare&congress=119&limit=5`
+
+**Response shape:**
+```json
+{
+  "data": [
+    {
+      "billId": "hr1-119",
+      "number": "H.R.1",
+      "title": "string",
+      "sponsor": { "bioguideId": "string", "name": "string", "party": "string" },
+      "introducedDate": "2025-01-15",
+      "status": "string",
+      "policyArea": "string",
+      "cosponsorsCount": 42
+    }
+  ],
+  "pagination": { "total": 100, "limit": 5, "offset": 0 }
+}
+```
+
+### GET /api/bill/{billId}
+
+Detailed information about a specific bill.
+
+**Path parameter:** `billId` — e.g., "hr1-119" for H.R.1 in 119th Congress
+
+**Response shape:**
+```json
+{
+  "billId": "string",
+  "number": "string",
+  "title": "string",
+  "summary": "string",
+  "sponsor": { "bioguideId": "string", "name": "string", "party": "string", "state": "string" },
+  "cosponsors": [{ "bioguideId": "string", "name": "string" }],
+  "introducedDate": "string",
+  "committees": [{ "name": "string", "referralDate": "string" }],
+  "actions": [{ "date": "string", "text": "string", "type": "string" }],
+  "policyArea": "string",
+  "subjects": ["string"]
+}
+```
+
+---
+
+## Committees
+
+### GET /api/v1/committees
+
+List all congressional committees.
+
+**Parameters:**
+- `chamber` (string, optional): "house", "senate", or "joint"
+
+**Response shape:**
+```json
+{
+  "data": [
+    {
+      "committeeId": "HSIF",
+      "name": "Energy and Commerce Committee",
+      "chamber": "house",
+      "chair": { "bioguideId": "string", "name": "string" },
+      "memberCount": 55
+    }
+  ]
+}
+```
+
+### GET /api/committee/{committeeId}
+
+Detailed committee information.
+
+**Path parameter:** `committeeId` — e.g., "HSIF"
+
+**Response shape:**
+```json
+{
+  "committeeId": "string",
+  "name": "string",
+  "chamber": "house|senate|joint",
+  "jurisdiction": "string",
+  "chair": { "bioguideId": "string", "name": "string", "party": "string" },
+  "rankingMember": { "bioguideId": "string", "name": "string" },
+  "members": [{ "bioguideId": "string", "name": "string", "role": "string" }],
+  "subcommittees": [{ "id": "string", "name": "string" }]
+}
+```
+
+---
+
+## Campaign Finance (FEC)
+
+### GET /api/fec/candidate/{candidateId}/summary
+
+FEC financial summary for a candidate.
+
+**Path parameter:** `candidateId` — FEC candidate ID
+
+### GET /api/fec/contributions
+
+Search individual contributions.
+
+**Parameters:**
+- `candidateId` (string, optional): FEC candidate ID
+- `state` (string, optional): contributor state
+- `employer` (string, optional): contributor employer
+- `limit` (integer, optional): default 20
+
+---
+
+## Lobbying (Senate LDA)
+
+### GET /api/v1/representatives/{bioguideId}/lobbying
+
+Lobbying filings related to a legislator's committees.
+
+**Response shape:**
+```json
+{
+  "filings": [
+    {
+      "filingId": "string",
+      "registrant": "string",
+      "client": "string",
+      "amount": 500000,
+      "issues": ["Healthcare", "Budget"],
+      "period": "2025-Q1"
+    }
+  ]
+}
+```
+
+---
+
+## Federal Spending (USASpending)
+
+### GET /api/spending/{state}
+
+Federal contracts and grants in a state.
+
+**Parameters:**
+- `state` (path): two-letter state code
+- `district` (query, optional): district number
+- `type` (query, optional): "contracts" or "grants"
+
+---
+
+## Federal Register
+
+### GET /api/federal-register
+
+Search Federal Register documents.
+
+**Parameters:**
+- `query` (string, optional): search term
+- `type` (string, optional): "rule", "proposed_rule", "notice", "presidential_document"
+- `agency` (string, optional): agency name
+- `limit` (integer, optional): default 20
+
+**Response shape:**
+```json
+{
+  "results": [
+    {
+      "documentNumber": "string",
+      "title": "string",
+      "type": "Rule",
+      "agency": "string",
+      "publicationDate": "2025-03-01",
+      "abstractText": "string",
+      "htmlUrl": "string"
+    }
+  ]
+}
+```
+
+---
+
+## Districts
+
+### GET /api/districts/{districtId}
+
+Comprehensive district information.
+
+**Path parameter:** `districtId` — e.g., "CA-12", "MI-07"
+
+**Response shape:**
+```json
+{
+  "districtId": "CA-12",
+  "state": "California",
+  "number": "12",
+  "representative": { "bioguideId": "string", "name": "string", "party": "string" },
+  "demographics": {
+    "population": 760000,
+    "medianAge": 38.5,
+    "medianIncome": 85000,
+    "raceEthnicity": { "white": 45, "black": 12, "hispanic": 25, "asian": 15 },
+    "education": { "bachelors": 35, "graduate": 18 }
+  },
+  "geography": {
+    "counties": ["string"],
+    "majorCities": ["string"],
+    "centroid": [37.7749, -122.4194]
+  }
+}
+```
+
+### GET /api/districts/{districtId}/economic-profile
+
+Economic and infrastructure data.
+
+**Data sources:** BLS (employment), FCC (broadband), Census (demographics).
+
+### GET /api/districts/{districtId}/services-health
+
+Education, healthcare, and public health data.
+
+---
+
+## Intelligence & Analysis
+
+ML-powered analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
+
+### GET /api/intelligence/vote-prediction/{bioguideId}
+
+XGBoost model predicts votes based on donor profile. Returns independence score — how often the legislator votes against their donor-predicted position.
+
+**Response shape:**
+```json
+{
+  "bioguideId": "string",
+  "independenceScore": {
+    "score": 0.35,
+    "confidentPredictions": 87,
+    "deviations": 30,
+    "peerPercentile": 72
+  },
+  "modelAccuracy": 0.78,
+  "notableDeviations": [
+    {
+      "billId": "string",
+      "billTitle": "string",
+      "predictedVote": "yea",
+      "actualVote": "nay",
+      "yeaProbability": 0.85,
+      "billSectors": ["Health"]
+    }
+  ],
+  "shapFactors": [
+    {
+      "feature": "donor_pct_health",
+      "humanLabel": "Health sector donations",
+      "importance": 0.15,
+      "featureValue": 0.23,
+      "direction": "toward_yea"
+    }
+  ],
+  "narrative": "string",
+  "confidence": 0.82,
+  "methodology": "string",
+  "disclaimer": "string"
+}
+```
+
+### GET /api/intelligence/representative/{bioguideId}/influence-chain
+
+Traces lobbying money through contributions, committee assignments, and votes.
+
+**Response shape:**
+```json
+{
+  "bioguideId": "string",
+  "chains": [
+    {
+      "organization": "string",
+      "lobbyingSpending": 500000,
+      "contributionAmount": 25000,
+      "billId": "string",
+      "billTitle": "string",
+      "vote": "yea",
+      "textSimilarity": 0.72,
+      "chainConfidence": 0.65
+    }
+  ],
+  "totalChainsDetected": 12
+}
+```
+
+### GET /api/intelligence/representative/{bioguideId}/finance-jurisdiction
+
+Overlap between campaign donors' industry sectors and committee jurisdictions.
+
+### GET /api/intelligence/representative/{bioguideId}/vote-finance
+
+Correlation between campaign donors (by sector) and voting record.
+
+### GET /api/intelligence/representative/{bioguideId}/temporal-votes
+
+Temporal shifts in party-line voting alignment over calendar quarters.
+
+### GET /api/intelligence/committee/{committeeId}/lobbying-pipeline
+
+Lobbying expenditures to committee activity to legislative output.
+
+### GET /api/intelligence/representative/{bioguideId}/stock-committee
+
+Stock trades in sectors regulated by the legislator's committees.
+
+### GET /api/intelligence/bill/{billId}
+
+Sponsor/cosponsor funding analysis and related lobbying for a bill.
+
+### GET /api/intelligence/sector/{sector}/leaderboard
+
+Legislators ranked by voting alignment with a specific industry sector.
+
+**Parameters:**
+- `sector` (path): industry sector name
+- `chamber` (query, optional): "house" or "senate"
+- `party` (query, optional): "D", "R", or "I"
+
+### POST /api/intelligence/address/money-report
+
+Money-in-politics report card for representatives at a given address.
+
+**Body:** `{ "address": "123 Main St, Detroit, MI 48201" }`
+
+### GET /api/intelligence/address/money-report?zip={zip}
+
+Money-in-politics report card by ZIP code.
+
+---
+
+## Party Alignment
+
+### GET /api/representative/{bioguideId}/party-alignment
+
+How often a legislator votes with their party.
+
+**Response shape:**
+```json
+{
+  "alignment": { "withParty": 145, "againstParty": 12, "percentage": 92.4 },
+  "comparison": { "partyAverage": 89.1, "chamberAverage": 85.3 },
+  "notableVotes": [{ "billNumber": "string", "title": "string", "memberVote": "Nay", "partyMajority": "Yea" }]
+}
+```
+
+---
+
+## State Government
+
+### GET /api/state-legislature/{state}
+
+State legislators via OpenStates GraphQL API.
+
+### GET /api/state-bills/{state}
+
+State legislation search.
+
+### GET /api/state-executives/{state}
+
+Governor and state executives via Wikidata SPARQL.
+
+### GET /api/state-judiciary/{state}
+
+State supreme court justices.
+
+---
+
+## Search
+
+### GET /api/search?q={query}
+
+Unified search across representatives, bills, committees, and districts.
+
+---
+
+## Comparison
+
+### GET /api/compare?ids={bioguideId1},{bioguideId2}
+
+Side-by-side legislator comparison (voting, finance, committees).
+
+---
+
+## Graph Network
+
+### GET /api/graph/neighbors/{nodeId}
+
+Civic knowledge graph — find related entities (legislators, bills, committees, organizations).
+
+---
+
+## MCP Server (Model Context Protocol)
+
+CIV.IQ provides a Model Context Protocol server for AI assistant integration.
+
+**Endpoint:** `https://civdotiq.org/api/mcp`
+**Transport:** Streamable HTTP (GET for SSE, POST for messages)
+
+### Tools (16)
+
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `lookup_representatives` | Find legislators by full street address (Census Geocoder) | street, city, state, zip? |
+| `list_state_delegation` | List all federal legislators for a state | state |
+| `get_representative_profile` | Detailed legislator profile | bioguideId |
+| `compare_legislators` | Side-by-side comparison | bioguideIds[] |
+| `search_legislation` | Search bills | query?, congress?, limit? |
+| `get_bill_details` | Full bill information | billId |
+| `get_vote_record` | Roll call vote details | voteId |
+| `get_voting_history` | Legislator's voting record | bioguideId, limit? |
+| `get_campaign_finance` | FEC finance data | bioguideId |
+| `search_lobbying` | Senate LDA filings | query?, registrantName? |
+| `get_federal_spending` | USASpending data | state?, district? |
+| `get_committee_info` | Committee details | committeeId |
+| `get_federal_register` | Federal Register search | query?, type? |
+| `get_district_info` | District demographics | stateCode, districtNumber |
+| `analyze_vote_prediction` | ML vote prediction | bioguideId |
+| `get_influence_chain` | Money-to-vote tracing | bioguideId |
+
+### Resources (3)
+
+| URI Pattern | Description |
+|-------------|-------------|
+| `civiq://legislators/{bioguideId}` | Representative profile JSON |
+| `civiq://bills/{congress}/{type}/{number}` | Bill detail JSON |
+| `civiq://districts/{stateCode}/{districtNumber}` | District info JSON |
+
+### Prompts (3)
+
+| Prompt | Description |
+|--------|-------------|
+| `legislator_accountability` | Finance + voting + committee data combined |
+| `bill_impact_analysis` | Bill details + sponsor funding + lobbying |
+| `policy_comparison` | Cross-legislator position comparison |
+
+---
+
+## Common Response Patterns
+
+### Error responses
+
+All endpoints return errors in this shape:
+```json
+{
+  "error": "Human-readable error message",
+  "reason": "Technical detail",
+  "status": 404
+}
+```
+
+### Data provenance
+
+Intelligence endpoints include provenance metadata:
+```json
+{
+  "confidence": 0.82,
+  "dataAsOf": "2025-03-15T00:00:00Z",
+  "methodology": "Description of computation method",
+  "disclaimer": "Correlation != causation disclaimer",
+  "source": "ai-generated|statistical-fallback"
+}
+```
+
+### Pagination
+
+List endpoints use offset-based pagination:
+```json
+{
+  "pagination": {
+    "total": 435,
+    "limit": 20,
+    "offset": 0,
+    "hasMore": true
+  }
+}
+```
+
+---
+
+## Data Sources & Provenance
+
+| Domain | Source | Update Frequency |
+|--------|--------|-----------------|
+| Members of Congress | congress-legislators (GitHub YAML) | Daily |
+| House votes | Congress.gov API v3 | Hourly |
+| Senate votes | senate.gov XML feeds | Hourly |
+| Bills | Congress.gov API v3 | 6 hours |
+| Campaign finance | FEC.gov API | Daily |
+| Lobbying | Senate LDA API v1 | Daily |
+| Federal spending | USASpending.gov API v2 | Daily |
+| Federal Register | Federal Register API v1 | 6 hours |
+| Demographics | Census Bureau ACS 5-year | Annual |
+| Employment | Bureau of Labor Statistics | Monthly |
+| State government | OpenStates GraphQL | Daily |
+| State executives | Wikidata SPARQL | Weekly |
+| Hearing transcripts | GovInfo.gov API | Daily |
+
+---
+
+## Important Notes
+
+- All data is sourced from official U.S. government APIs
+- No data is fabricated — if a source is unavailable, the response returns empty arrays or null
+- Intelligence analysis never claims causation, only correlation and patterns
+- ML model accuracy is always disclosed alongside predictions
+- The platform is open source under MIT license

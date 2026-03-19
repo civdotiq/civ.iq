@@ -24,6 +24,17 @@ import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
 // ── Types ────────────────────────────────────────────────────────────
 
+export interface ShapFactor {
+  feature: string;
+  humanLabel: string;
+  /** Mean absolute SHAP value. */
+  importance: number;
+  /** Actual feature value for this prediction. */
+  featureValue: number;
+  /** Whether this feature pushes toward yea, nay, or is neutral. */
+  direction: 'toward_yea' | 'toward_nay' | 'neutral';
+}
+
 export interface VotePrediction {
   /** Predicted probability of yea vote (0-1). */
   yeaProbability: number;
@@ -35,6 +46,8 @@ export interface VotePrediction {
     humanLabel: string;
     contribution: number;
   }>;
+  /** SHAP-based factors with directional context (top 5). */
+  shapFactors?: ShapFactor[];
 }
 
 export interface IndependenceScore {
@@ -339,10 +352,14 @@ export async function predictVote(fv: FeatureVector): Promise<VotePrediction | n
       }
     }
 
+    // Compute SHAP factors with directional context
+    const shapFactors = computeShapFactors(metadata, featureValues, featureNames, yeaProbability);
+
     return {
       yeaProbability,
       predictedVote,
       topFactors,
+      shapFactors,
     };
   } catch (error) {
     logger.warn('[VotePredictor] Inference failed', {
@@ -350,6 +367,55 @@ export async function predictVote(fv: FeatureVector): Promise<VotePrediction | n
     });
     return null;
   }
+}
+
+// ── SHAP Direction Inference ──────────────────────────────────────────
+
+/**
+ * Infer directional SHAP factors from model metadata and feature values.
+ *
+ * Direction heuristic: if the feature value is non-zero and the overall
+ * prediction leans yea (prob > 0.5), features with high SHAP importance
+ * and high values push "toward_yea"; if prob < 0.5, they push "toward_nay".
+ * Features with zero values are "neutral" (not active for this prediction).
+ */
+export function computeShapFactors(
+  metadata: VotePredictionModelMetadata,
+  featureValues: number[],
+  featureNames: string[],
+  yeaProbability: number
+): ShapFactor[] {
+  const shapSource = metadata.shapFeatures;
+  if (!shapSource || shapSource.length === 0) return [];
+
+  const predictedDirection: 'toward_yea' | 'toward_nay' =
+    yeaProbability >= 0.5 ? 'toward_yea' : 'toward_nay';
+
+  return shapSource
+    .slice(0, 8) // consider top 8 candidates
+    .map(sf => {
+      const idx = featureNames.indexOf(sf.feature);
+      const featureValue = idx >= 0 ? (featureValues[idx] ?? 0) : 0;
+      const isActive = featureValue !== 0;
+
+      let direction: ShapFactor['direction'];
+      if (!isActive) {
+        direction = 'neutral';
+      } else {
+        // Active features with high SHAP push in the prediction's direction
+        direction = predictedDirection;
+      }
+
+      return {
+        feature: sf.feature,
+        humanLabel: FEATURE_HUMAN_LABELS[sf.feature] ?? sf.feature,
+        importance: sf.meanAbsShap,
+        featureValue,
+        direction,
+      };
+    })
+    .filter(f => f.direction !== 'neutral')
+    .slice(0, 5);
 }
 
 // ── Internal ─────────────────────────────────────────────────────────
