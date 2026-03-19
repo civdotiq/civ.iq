@@ -1,0 +1,101 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Mark Sandford",
+    "email": "contact@civdotiq.org",
+    "description": "CIV.IQ is a civic intelligence platform that connects 19 government data sources to give citizens organized, nonpartisan information about their elected officials. The platform uses machine learning and statistical analysis to surface vote-finance correlations, influence chains, and bill-lobbying similarity from public records. Every insight carries a confidence score, methodology disclosure, and citation to the original government source. Open source, no editorializing, no causation claims.",
+    "webpageUrl": {
+      "url": "https://civdotiq.org"
+    }
+  },
+  "projects": [
+    {
+      "guid": "civiq",
+      "name": "CIV.IQ",
+      "description": "Civic intelligence platform serving 198 API endpoints across 19 government data sources (Congress.gov, FEC, USASpending, Senate lobbying disclosures, Federal Register, OpenStates, Census Bureau, and more). Covers all 535 federal legislators and 50 states. ML-powered vote prediction, influence chain tracing, bill-lobbying similarity, and temporal pattern detection — all from verified public data.",
+      "webpageUrl": {
+        "url": "https://civdotiq.org"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/civdotiq/civ.iq"
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": [
+        "civic-tech",
+        "government-transparency",
+        "open-data",
+        "machine-learning",
+        "democracy",
+        "accountability",
+        "open-source",
+        "public-interest-ai"
+      ]
+    },
+    {
+      "guid": "civic-statistics",
+      "name": "@civiq/civic-statistics",
+      "description": "Open-source npm package providing statistical analysis primitives for civic data — correlation analysis, peer comparison, confidence scoring, and baseline calculations designed for government accountability research.",
+      "webpageUrl": {
+        "url": "https://www.npmjs.com/package/@civiq/civic-statistics"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/civdotiq/civ.iq"
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": ["statistics", "civic-tech", "open-data", "npm-package"]
+    },
+    {
+      "guid": "entity-resolution",
+      "name": "@civiq/entity-resolution",
+      "description": "Open-source npm package for entity matching across inconsistent government databases — resolving identities between FEC filings, Congress.gov records, lobbying disclosures, and committee data.",
+      "webpageUrl": {
+        "url": "https://www.npmjs.com/package/@civiq/entity-resolution"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/civdotiq/civ.iq"
+      },
+      "licenses": ["spdx:MIT"],
+      "tags": [
+        "entity-resolution",
+        "civic-tech",
+        "government-data",
+        "npm-package"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/civdotiq",
+        "description": "GitHub Sponsors"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "monthly-support",
+        "status": "active",
+        "name": "Monthly support for CIV.IQ development and infrastructure",
+        "description": "Recurring funding for server costs, API rate limits, and continued development of civic intelligence tools",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "one-time-grant",
+        "status": "active",
+        "name": "One-time grant or donation",
+        "description": "Grant funding for state-level intelligence expansion, infrastructure hardening, and open-source package development",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": ["github-sponsors"]
+      }
+    ]
+  }
+}
