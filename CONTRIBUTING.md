@@ -48,12 +48,12 @@ We are committed to providing a welcoming and inclusive environment for all cont
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/civdotiq/civic-intel-hub.git
-   cd civic-intel-hub
+   git clone https://github.com/civdotiq/civ.iq.git
+   cd civ.iq
    ```
 3. Add the upstream repository:
    ```bash
-   git remote add upstream https://github.com/civdotiq/civic-intel-hub.git
+   git remote add upstream https://github.com/civdotiq/civ.iq.git
    ```
 
 ### Development Setup
@@ -382,8 +382,8 @@ Look for issues labeled `good-first-issue` or `help-wanted` in the GitHub issue 
 
 ## Questions?
 
-- **General questions**: Open a [GitHub Discussion](https://github.com/civdotiq/civic-intel-hub/discussions)
-- **Bug reports**: Open an [Issue](https://github.com/civdotiq/civic-intel-hub/issues)
+- **General questions**: Open a [GitHub Discussion](https://github.com/civdotiq/civ.iq/discussions)
+- **Bug reports**: Open an [Issue](https://github.com/civdotiq/civ.iq/issues)
 - **Email**: mark@marksandford.dev
 
 ## License

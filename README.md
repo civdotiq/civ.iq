@@ -43,6 +43,17 @@ All data comes from government APIs. All analysis is statistical, with confidenc
 
 **Nostr Publishing**: Civic events (new bills, votes, hearings) are signed and published to the Nostr network for decentralized, verifiable distribution.
 
+## Developer integrations
+
+| Integration                                            | What it provides                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| [OpenAPI spec](public/openapi.json)                    | 39 paths, 29 schemas — generate clients in any language         |
+| [@civiq/sdk](packages/sdk)                             | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
+| [MCP server](/api/mcp)                                 | 16 tools for AI assistants (Claude, Cursor, etc.)               |
+| [Atom feeds](/api/feed/bills/latest)                   | RSS-compatible feeds for bills, members, districts, committees  |
+| [Embeddable widgets](https://civdotiq.org/open/embeds) | Drop-in HTML for legislator cards, district lookup, bill status |
+| [llms.txt](public/llms.txt)                            | AI-discoverable documentation                                   |
+
 ## Data sources
 
 | Source                     | What it provides                                            |
@@ -60,10 +71,8 @@ All data comes from government APIs. All analysis is statistical, with confidenc
 | Bureau of Labor Statistics | Employment, wages, labor force data                         |
 | SEC EDGAR                  | Financial disclosures, stock trades (STOCK Act)             |
 | Wikidata SPARQL            | State executives, judiciary, biographies                    |
-| FollowTheMoney.org         | State campaign finance data                                 |
 | FRED                       | Federal Reserve economic indicators                         |
 | Regulations.gov            | Public comments on proposed rules                           |
-| GDELT v2                   | News aggregation                                            |
 | Census TIGER/Line          | Congressional and state district boundaries                 |
 
 No data is fabricated, scraped, or generated.
@@ -71,8 +80,8 @@ No data is fabricated, scraped, or generated.
 ## Setup
 
 ```bash
-git clone https://github.com/civdotiq/civic-intel-hub.git
-cd civic-intel-hub
+git clone https://github.com/civdotiq/civ.iq.git
+cd civ.iq
 npm install
 cp .env.example .env.local
 ```
@@ -94,7 +103,6 @@ GOOGLE_GENERATIVE_AI_API_KEY= # aistudio.google.com/apikey (AI summaries)
 # Optional (enhanced features)
 FRED_API_KEY=           # fredaccount.stlouisfed.org/apikeys
 DATA_GOV_API_KEY=       # api.data.gov/signup (Regulations.gov)
-FOLLOWTHEMONEY_API_KEY= # followthemoney.org/our-data/apis
 GOVINFO_API_KEY=        # api.govinfo.gov/docs
 ```
 
@@ -129,8 +137,9 @@ src/
 ├── hooks/                    # Custom React hooks
 └── types/                    # TypeScript definitions
 packages/
-├── civic-statistics/         # @civiq/civic-statistics (npm package)
-└── entity-resolution/        # @civiq/entity-resolution (npm package)
+├── sdk/                      # @civiq/sdk (TypeScript API client)
+├── civic-statistics/         # @civiq/civic-statistics (confidence scoring, correlation)
+└── entity-resolution/        # @civiq/entity-resolution (entity matching, deduplication)
 ```
 
 ## Stack
@@ -168,8 +177,9 @@ Every insight carries: confidence score (0–1), data-as-of timestamp, methodolo
 
 ### Open-source packages
 
-Two packages are extracted as standalone npm workspace packages:
+Three packages are extracted as standalone npm workspace packages:
 
+- **@civiq/sdk** — TypeScript API client with typed methods for all 39 endpoints, error hierarchy, custom fetch injection
 - **@civiq/civic-statistics** — Confidence scoring, peer comparison, correlation (Spearman/Pearson), anomaly detection, sample size enforcement
 - **@civiq/entity-resolution** — Committee alias resolution, ticker-to-industry mapping, FEC recipient deduplication
 
