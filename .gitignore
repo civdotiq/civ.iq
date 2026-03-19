@@ -39,9 +39,22 @@ next-env.d.ts
 .idea/
 .vscode/
 
-# Claude Code local settings
+# Claude Code (keep only .claude/settings.json and CLAUDE.md)
+.claude/agents/
+.claude/session.md
+.claude/hooks/
+.claude/tdd-guard/
 .claude/settings.local.json
-.claude/hooks/*/tsconfig-cache.json
+
+# Private strategy & grant documents
+GRANT-*.md
+2026_funding_opportunities.md
+STRATEGY-*.md
+PLAN-ml-*.md
+PLAN-next-*.md
+
+# Stray docs in scripts
+scripts/*.md
 *.swp
 *.swo
 *~
@@ -80,6 +93,9 @@ test-*/
 # Session logs
 logs/
 *.log
+.session.log
+.project-identity
+.cache/
 
 # Temporary directories
 temp/
