@@ -13,7 +13,7 @@
 import { NextResponse } from 'next/server';
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 
-export const revalidate = 86400; // 24 hours — static data
+export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<NextResponse> {
   const policyAreas = getAllPolicyAreas().sort();
