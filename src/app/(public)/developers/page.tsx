@@ -38,6 +38,12 @@ interface DevCard {
 
 const DEV_CARDS: DevCard[] = [
   {
+    title: 'Migrate from Google Civic',
+    description: 'Google shut down the Representatives API. Switch to CIV.IQ — free, no key.',
+    href: '/migrate/google-civic',
+    detail: 'Drop-in replacement, code examples',
+  },
+  {
     title: 'Open Data',
     description: 'Bulk datasets, Atom feeds, and open protocols for civic data.',
     href: '/open',

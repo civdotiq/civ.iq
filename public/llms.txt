@@ -45,6 +45,10 @@ CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
 - 3 resources for structured data access
 - 3 prompt templates for common analysis patterns
 
+## Migration
+
+- **Google Civic Info API users**: The Representatives API was shut down March 2025. CIV.IQ is a free drop-in replacement. See [migration guide](/migrate/google-civic).
+
 ## Documentation
 
 - Full API docs: [llms-full.txt](/llms-full.txt)
