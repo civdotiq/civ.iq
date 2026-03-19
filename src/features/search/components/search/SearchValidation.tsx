@@ -18,7 +18,7 @@ interface SearchValidationProps {
 
 export function SearchValidation({
   onValidSearch,
-  placeholder = 'Enter ZIP code or address',
+  placeholder = 'Enter your address (e.g., 123 Main St, City, State)',
   className = '',
 }: SearchValidationProps) {
   const [query, setQuery] = useState('');
@@ -28,7 +28,7 @@ export function SearchValidation({
   const validateAndSearch = useCallback(
     async (searchQuery: string) => {
       if (!searchQuery.trim()) {
-        setError('Please enter a ZIP code or address');
+        setError('Please enter your home address');
         return;
       }
 
@@ -56,7 +56,7 @@ export function SearchValidation({
         } else if (err instanceof InvalidAddressError) {
           setError(err.userMessage + '. ' + err.helpText);
         } else {
-          setError('Please enter a valid ZIP code or full address');
+          setError('Please enter a valid address (e.g., 123 Main St, City, State)');
         }
       } finally {
         setIsValidating(false);
@@ -194,7 +194,7 @@ interface SmartSearchInputProps {
 
 export function EnhancedSmartSearchInput({
   onSearch,
-  placeholder = 'Enter ZIP code or address',
+  placeholder = 'Enter your address (e.g., 123 Main St, City, State)',
   className = '',
   showRecentSearches = false,
   showExamples = false,

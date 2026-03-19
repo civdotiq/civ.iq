@@ -28,7 +28,7 @@ interface SmartSearchInputProps {
 export function SmartSearchInput({
   initialValue = '',
   onSearch,
-  placeholder = 'Enter ZIP code or full address',
+  placeholder = 'Enter your address (e.g., 123 Main St, City, State)',
   className = '',
   showRecentSearches = true,
   showExamples = true,

@@ -25,7 +25,7 @@ export default function NotFound() {
               <li className="flex items-start">
                 <span className="text-civiq-red mr-2 font-bold">&bull;</span>
                 <Link href="/" className="text-civiq-blue hover:text-civiq-blue/80">
-                  Search by ZIP code or address
+                  Search by address
                 </Link>
               </li>
               <li className="flex items-start">

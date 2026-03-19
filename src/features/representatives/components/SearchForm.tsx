@@ -48,7 +48,7 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
               type="text"
               value={zipCode}
               onChange={e => setZipCode(e.target.value)}
-              placeholder="Enter ZIP code to find your representatives..."
+              placeholder="Enter your home address to find your representatives..."
               pattern="\d{5}(-\d{4})?"
               className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             />

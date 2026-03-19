@@ -12,8 +12,6 @@ interface RepresentativeLookupFormProps {
   className?: string;
 }
 
-type LookupMode = 'address' | 'zip';
-
 interface RepIdentity {
   bioguideId: string;
   name: string;
@@ -85,22 +83,16 @@ const US_STATES = [
 ] as const;
 
 export function RepresentativeLookupForm({ className = '' }: RepresentativeLookupFormProps) {
-  const [mode, setMode] = useState<LookupMode>('address');
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [zip, setZip] = useState('');
-  const [zipOnly, setZipOnly] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RepresentativesResult | null>(null);
 
-  function canSubmitAddress(): boolean {
+  function canSubmit(): boolean {
     return street.trim().length > 0 && city.trim().length > 0 && state.length > 0;
-  }
-
-  function canSubmitZip(): boolean {
-    return /^\d{5}$/.test(zipOnly.trim());
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -110,24 +102,16 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
     setLoading(true);
 
     try {
-      let response: Response;
-
-      if (mode === 'address') {
-        response = await fetch('/api/intelligence/address/representatives', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            street: street.trim(),
-            city: city.trim(),
-            state,
-            zip: zip.trim() || undefined,
-          }),
-        });
-      } else {
-        response = await fetch(
-          `/api/intelligence/address/representatives?zip=${encodeURIComponent(zipOnly.trim())}`
-        );
-      }
+      const response = await fetch('/api/intelligence/address/representatives', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          street: street.trim(),
+          city: city.trim(),
+          state,
+          zip: zip.trim() || undefined,
+        }),
+      });
 
       if (!response.ok) {
         const body = await response.json().catch(() => null);
@@ -142,7 +126,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
       setError(
         err instanceof Error
           ? err.message
-          : "We couldn't find representatives for that address. Try a full street address with ZIP code."
+          : "We couldn't find representatives for that address. Please check the street address, city, and state."
       );
     } finally {
       setLoading(false);
@@ -157,116 +141,73 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
 
   return (
     <div className={className}>
-      {/* Mode toggle */}
-      <div className="flex gap-0 mb-4">
-        <button
-          type="button"
-          onClick={() => setMode('address')}
-          className={`px-4 py-3 min-h-[44px] type-sm aicher-heading border-2 ${
-            mode === 'address'
-              ? 'border-gray-900 bg-gray-900 text-white'
-              : 'border-gray-300 bg-white text-gray-700'
-          }`}
-        >
-          Full Address
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('zip')}
-          className={`px-4 py-3 min-h-[44px] type-sm aicher-heading border-2 border-l-0 ${
-            mode === 'zip'
-              ? 'border-gray-900 bg-gray-900 text-white'
-              : 'border-gray-300 bg-white text-gray-700'
-          }`}
-        >
-          Quick ZIP Lookup
-        </button>
-      </div>
-
       <form onSubmit={handleSubmit}>
-        {mode === 'address' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-            <div className="sm:col-span-2">
-              <label htmlFor="rep-street" className={labelClasses}>
-                Street Address
-              </label>
-              <input
-                id="rep-street"
-                type="text"
-                value={street}
-                onChange={e => setStreet(e.target.value)}
-                placeholder="123 Main St"
-                className={inputClasses}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="rep-city" className={labelClasses}>
-                City
-              </label>
-              <input
-                id="rep-city"
-                type="text"
-                value={city}
-                onChange={e => setCity(e.target.value)}
-                placeholder="Washington"
-                className={inputClasses}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="rep-state" className={labelClasses}>
-                State
-              </label>
-              <select
-                id="rep-state"
-                value={state}
-                onChange={e => setState(e.target.value)}
-                className={inputClasses}
-                required
-              >
-                <option value="">Select state</option>
-                {US_STATES.map(s => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="rep-zip" className={labelClasses}>
-                ZIP Code (optional)
-              </label>
-              <input
-                id="rep-zip"
-                type="text"
-                value={zip}
-                onChange={e => setZip(e.target.value)}
-                placeholder="20001"
-                className={inputClasses}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="mb-4">
-            <label htmlFor="rep-zip-only" className={labelClasses}>
-              ZIP Code
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div className="sm:col-span-2">
+            <label htmlFor="rep-street" className={labelClasses}>
+              Street Address
             </label>
             <input
-              id="rep-zip-only"
+              id="rep-street"
               type="text"
-              value={zipOnly}
-              onChange={e => setZipOnly(e.target.value)}
-              placeholder="20001"
-              className={`${inputClasses} max-w-xs`}
+              value={street}
+              onChange={e => setStreet(e.target.value)}
+              placeholder="123 Main St"
+              className={inputClasses}
               required
             />
           </div>
-        )}
+          <div>
+            <label htmlFor="rep-city" className={labelClasses}>
+              City
+            </label>
+            <input
+              id="rep-city"
+              type="text"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              placeholder="Washington"
+              className={inputClasses}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="rep-state" className={labelClasses}>
+              State
+            </label>
+            <select
+              id="rep-state"
+              value={state}
+              onChange={e => setState(e.target.value)}
+              className={inputClasses}
+              required
+            >
+              <option value="">Select state</option>
+              {US_STATES.map(s => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="rep-zip" className={labelClasses}>
+              ZIP Code (optional)
+            </label>
+            <input
+              id="rep-zip"
+              type="text"
+              value={zip}
+              onChange={e => setZip(e.target.value)}
+              placeholder="20001"
+              className={inputClasses}
+            />
+          </div>
+        </div>
 
         <button
           type="submit"
-          disabled={loading || (mode === 'address' ? !canSubmitAddress() : !canSubmitZip())}
+          disabled={loading || !canSubmit()}
           className={buttonClasses}
         >
           {loading ? 'Finding your representatives...' : 'Find My Representatives'}
@@ -297,7 +238,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
             {result.multiDistrict && (
               <span className="text-gray-400">
                 {' '}
-                (this ZIP code spans multiple districts — showing primary)
+                (multiple districts found — showing primary)
               </span>
             )}
           </p>

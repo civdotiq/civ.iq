@@ -20,7 +20,7 @@ import type {
 export default function AddressAutocomplete({
   onSelect,
   onChange,
-  placeholder = 'Enter address or ZIP code',
+  placeholder = 'Enter your address',
   className,
   defaultValue = '',
   disabled = false,
