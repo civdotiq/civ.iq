@@ -25,7 +25,7 @@ import { mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
 
-export const revalidate = 3600; // 1 hour
+export const dynamic = 'force-dynamic';
 
 interface LifecycleBill {
   id: string;
