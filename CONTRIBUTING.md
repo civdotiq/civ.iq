@@ -384,7 +384,7 @@ Look for issues labeled `good-first-issue` or `help-wanted` in the GitHub issue 
 
 - **General questions**: Open a [GitHub Discussion](https://github.com/civdotiq/civ.iq/discussions)
 - **Bug reports**: Open an [Issue](https://github.com/civdotiq/civ.iq/issues)
-- **Email**: mark@marksandford.dev
+- **Email**: contact@civdotiq.org
 
 ## License
 

@@ -254,4 +254,4 @@ Use it, modify it, distribute it. Include the copyright notice. Provide visible 
 
 ---
 
-Mark Sandford - mark@marksandford.dev
+Mark Sandford - contact@civdotiq.org
