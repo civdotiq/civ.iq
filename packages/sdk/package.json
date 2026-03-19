@@ -1,0 +1,42 @@
+{
+  "name": "@civiq/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript client for the CIV.IQ civic data API — representatives, bills, votes, committees, intelligence analysis",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "author": "Mark Sandford",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/civdotiq/civic-intel-hub"
+  },
+  "keywords": [
+    "civic",
+    "government",
+    "congress",
+    "api",
+    "sdk",
+    "representatives",
+    "legislation",
+    "civic-tech",
+    "civiq"
+  ]
+}

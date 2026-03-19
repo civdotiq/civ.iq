@@ -1,0 +1,1 @@
+{"version":3,"file":"votes.js","sourceRoot":"","sources":["../../src/resources/votes.ts"],"names":[],"mappings":"AAGA,MAAM,OAAO,aAAa;IACxB,YAA6B,IAAgB;QAAhB,SAAI,GAAJ,IAAI,CAAY;IAAG,CAAC;IAEjD,mEAAmE;IACnE,GAAG,CAAC,MAAc;QAChB,OAAO,IAAI,CAAC,IAAI,CAAC,GAAG,CAAC,aAAa,kBAAkB,CAAC,MAAM,CAAC,EAAE,CAAC,CAAC;IAClE,CAAC;CACF"}
