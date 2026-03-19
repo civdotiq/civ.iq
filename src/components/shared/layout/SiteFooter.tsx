@@ -29,6 +29,15 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
         {/* Open Protocols */}
         <div className="flex flex-wrap justify-center gap-x-grid-3 gap-y-grid-1 text-xs sm:text-sm mb-grid-2">
           <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Open Protocols:</span>
+          <a
+            href="https://github.com/civdotiq/civ.iq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            GitHub
+          </a>
+          <span className={separatorClass}>•</span>
           <Link href="/feeds/bills" className={linkClass}>
             RSS Feeds
           </Link>
