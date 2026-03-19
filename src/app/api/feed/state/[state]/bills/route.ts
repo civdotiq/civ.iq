@@ -31,7 +31,7 @@ export async function GET(
   const stateName = getStateName(stateUpper);
   if (!stateName) {
     return new NextResponse(
-      `<?xml version="1.0" encoding="UTF-8"?><error>Unknown state code: ${state.replace(/[<>&]/g, '')}</error>`,
+      `<?xml version="1.0" encoding="UTF-8"?><error>Unknown state code: ${state.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</error>`,
       {
         status: 400,
         headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },

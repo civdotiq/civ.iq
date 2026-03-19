@@ -15,7 +15,13 @@ export function registerFinanceTools(server: McpServer): void {
     'Get FEC campaign finance data for a legislator including total raised/spent, PAC contributions, and industry breakdown.',
     {
       bioguideId: z.string().describe('Congress bioguide identifier'),
-      cycle: z.number().optional().describe('Election cycle year, default current'),
+      cycle: z
+        .number()
+        .int()
+        .min(1990)
+        .max(2030)
+        .optional()
+        .describe('Election cycle year, default current'),
     },
     async ({ bioguideId, cycle }) => {
       try {
@@ -62,7 +68,13 @@ export function registerFinanceTools(server: McpServer): void {
     'search_lobbying',
     'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes.',
     {
-      year: z.number().optional().describe('Filing year, default current'),
+      year: z
+        .number()
+        .int()
+        .min(1990)
+        .max(2030)
+        .optional()
+        .describe('Filing year, default current'),
       quarter: z.number().min(1).max(4).optional().describe('Quarter (1-4), default most recent'),
     },
     async ({ year, quarter }) => {

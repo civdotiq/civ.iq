@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,7 @@ interface TimelineStats {
 
 async function fetchBillsData(committeeId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/committee/${committeeId}/bills`);
     if (!response.ok) return [];
     const data = await response.json();
@@ -60,7 +61,7 @@ async function fetchBillsData(committeeId: string) {
 
 async function fetchReportsData(committeeId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/committee/${committeeId}/reports`);
     if (!response.ok) return [];
     const data = await response.json();

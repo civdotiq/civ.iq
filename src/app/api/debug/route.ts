@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -78,10 +79,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Get base URL from request or environment
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = `${protocol}://${host}`;
+    // Get base URL from environment
+    const baseUrl = getServerBaseUrl();
 
     // Test representative Bernie Sanders (I-VT)
     const testBioguideId = 'S000033';

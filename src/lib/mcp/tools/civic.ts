@@ -49,7 +49,7 @@ export function registerCivicTools(server: McpServer): void {
         .string()
         .optional()
         .describe('Agency slug (e.g., "environmental-protection-agency", "department-of-defense")'),
-      limit: z.number().optional().describe('Max results, default 20'),
+      limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
     },
     async ({ query, type, agency, limit }) => {
       try {

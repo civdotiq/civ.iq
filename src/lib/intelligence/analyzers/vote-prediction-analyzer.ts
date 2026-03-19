@@ -328,7 +328,14 @@ async function computePredictions(
   // Accumulate SHAP importance per feature across predictions
   const shapAccum = new Map<
     string,
-    { total: number; featureValueTotal: number; count: number; humanLabel: string; feature: string }
+    {
+      total: number;
+      featureValueTotal: number;
+      count: number;
+      humanLabel: string;
+      feature: string;
+      yeaVotes: number;
+    }
   >();
 
   for (const vote of data.votes) {
@@ -360,6 +367,7 @@ async function computePredictions(
           existing.count++;
           existing.humanLabel = sf.humanLabel;
           existing.feature = sf.feature;
+          existing.yeaVotes += sf.direction === 'toward_yea' ? 1 : 0;
         } else {
           shapAccum.set(sf.feature, {
             total: sf.importance,
@@ -367,6 +375,7 @@ async function computePredictions(
             count: 1,
             humanLabel: sf.humanLabel,
             feature: sf.feature,
+            yeaVotes: sf.direction === 'toward_yea' ? 1 : 0,
           });
         }
       }
@@ -394,15 +403,16 @@ async function computePredictions(
 
   // Build aggregated SHAP factors sorted by average importance
   const aggregatedShapFactors: ShapFactor[] = Array.from(shapAccum.values())
-    .map(({ total, featureValueTotal, count, humanLabel, feature }) => {
-      const avgImportance = total / count;
-      const avgFeatureValue = featureValueTotal / count;
+    .map(entry => {
+      const { total, featureValueTotal, count, humanLabel, feature, yeaVotes } = entry;
+      const avgImportance = count > 0 ? total / count : 0;
+      const avgFeatureValue = count > 0 ? featureValueTotal / count : 0;
       return {
         feature,
         humanLabel,
         importance: avgImportance,
         featureValue: avgFeatureValue,
-        direction: (avgFeatureValue >= 0 ? 'toward_yea' : 'toward_nay') as ShapFactor['direction'],
+        direction: (yeaVotes > count / 2 ? 'toward_yea' : 'toward_nay') as ShapFactor['direction'],
       };
     })
     .sort((a, b) => b.importance - a.importance)

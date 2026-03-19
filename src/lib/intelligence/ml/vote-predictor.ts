@@ -388,8 +388,12 @@ export function computeShapFactors(
   const shapSource = metadata.shapFeatures;
   if (!shapSource || shapSource.length === 0) return [];
 
+  const safeYeaProb =
+    Number.isFinite(yeaProbability) && yeaProbability >= 0 && yeaProbability <= 1
+      ? yeaProbability
+      : 0.5;
   const predictedDirection: 'toward_yea' | 'toward_nay' =
-    yeaProbability >= 0.5 ? 'toward_yea' : 'toward_nay';
+    safeYeaProb >= 0.5 ? 'toward_yea' : 'toward_nay';
 
   return shapSource
     .slice(0, 8) // consider top 8 candidates

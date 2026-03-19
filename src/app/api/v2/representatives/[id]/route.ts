@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 // ISR: Revalidate every 1 day
@@ -381,7 +382,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const includeOptions = getIncludeOptions(query.include);
 
     // Fetch additional data if requested
-    const baseUrl = request.url.split('/api/')[0] || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const additionalData = await fetchAdditionalData(upperBioguideId!, includeOptions, baseUrl);
 
     // Format the representative data based on requested format

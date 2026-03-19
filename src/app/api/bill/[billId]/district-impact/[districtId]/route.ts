@@ -16,6 +16,7 @@ import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summar
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { EconomicProfile, GovernmentServicesProfile } from '@/types/district-enhancements';
 
 export const dynamic = 'force-dynamic';
@@ -171,7 +172,7 @@ async function fetchBillSummary(
     }
 
     // Fallback: fetch from summary API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/bill/${billId}/summary`, {
       signal: AbortSignal.timeout(15000),
     });
@@ -204,7 +205,7 @@ async function fetchBillSummary(
  */
 async function fetchEconomicProfile(districtId: string): Promise<EconomicProfile> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/districts/${districtId}/economic-profile`, {
       signal: AbortSignal.timeout(10000),
     });
@@ -251,7 +252,7 @@ async function fetchEconomicProfile(districtId: string): Promise<EconomicProfile
  */
 async function fetchGovernmentSpending(districtId: string): Promise<GovernmentServicesProfile> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/districts/${districtId}/government-spending`, {
       signal: AbortSignal.timeout(10000),
     });

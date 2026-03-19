@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Cache warming can take time
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const results: { endpoint: string; success: boolean; duration: number; error?: string }[] = [];
 
     // Endpoints to warm — ordered by priority

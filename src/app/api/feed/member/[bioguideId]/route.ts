@@ -21,12 +21,18 @@ export async function GET(
     const { bioguideId } = await params;
 
     if (!bioguideId || !/^[A-Z]\d{6}$/i.test(bioguideId)) {
-      return new NextResponse('Invalid bioguide ID', { status: 400 });
+      return new NextResponse(
+        '<?xml version="1.0" encoding="UTF-8"?><error>Invalid bioguide ID</error>',
+        { status: 400, headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' } }
+      );
     }
 
     const rep = await getEnhancedRepresentative(bioguideId);
     if (!rep) {
-      return new NextResponse('Representative not found', { status: 404 });
+      return new NextResponse(
+        '<?xml version="1.0" encoding="UTF-8"?><error>Representative not found</error>',
+        { status: 404, headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' } }
+      );
     }
 
     const entries: AtomEntry[] = [];

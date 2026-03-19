@@ -15,6 +15,7 @@ import { SpendingNarrativeGenerator } from '@/features/legislation/services/ai/s
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { DistrictSpending } from '@/types/ai';
 
 export const dynamic = 'force-dynamic';
@@ -122,7 +123,7 @@ export async function GET(
  */
 async function fetchDistrictSpending(districtId: string): Promise<DistrictSpending | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/spending/district/${districtId}`, {
       signal: AbortSignal.timeout(15000),
     });

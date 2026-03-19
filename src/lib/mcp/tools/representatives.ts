@@ -19,8 +19,12 @@ export function registerRepresentativeTools(server: McpServer): void {
         .string()
         .describe('Street address (e.g., "123 Main St") — required for district-level lookup'),
       city: z.string().describe('City name'),
-      state: z.string().describe('Two-letter state code (e.g., MI)'),
-      zip: z.string().optional().describe('5-digit ZIP code — improves geocoding accuracy'),
+      state: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
+      zip: z
+        .string()
+        .regex(/^\d{5}$/)
+        .optional()
+        .describe('5-digit ZIP code — improves geocoding accuracy'),
     },
     async ({ street, city, state, zip }) => {
       try {

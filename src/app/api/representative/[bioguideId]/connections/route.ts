@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 import {
   getAgenciesForCommittees,
   getTopicsForCommittees,
@@ -135,9 +136,7 @@ async function fetchDistrictSpending(
   const districtId = `${state}-${district.padStart(2, '0')}`;
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/spending/district/${districtId}`
-    );
+    const response = await fetch(`${getServerBaseUrl()}/api/spending/district/${districtId}`);
 
     if (!response.ok) return null;
 
@@ -185,7 +184,7 @@ async function fetchRelevantHearings(
   try {
     const chamberParam = chamber === 'Senate' ? 'senate' : 'house';
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/govinfo/hearings?chamber=${chamberParam}&page_size=50`
+      `${getServerBaseUrl()}/api/govinfo/hearings?chamber=${chamberParam}&page_size=50`
     );
 
     if (!response.ok) return [];
@@ -230,9 +229,7 @@ async function fetchRelevantCommentPeriods(
   topics: string[]
 ): Promise<OpenCommentPeriod[]> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/federal-register/comment-periods`
-    );
+    const response = await fetch(`${getServerBaseUrl()}/api/federal-register/comment-periods`);
 
     if (!response.ok) return [];
 
@@ -289,9 +286,7 @@ async function fetchRelevantCommentPeriods(
  */
 async function fetchStateLegislators(state: string): Promise<StateLegislator[]> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/state-legislature/${state}`
-    );
+    const response = await fetch(`${getServerBaseUrl()}/api/state-legislature/${state}`);
 
     if (!response.ok) return [];
 
@@ -333,9 +328,7 @@ async function fetchCityCouncils(
 
   for (const city of cities) {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/city/${city}/council?active=true`
-      );
+      const response = await fetch(`${getServerBaseUrl()}/api/city/${city}/council?active=true`);
 
       if (!response.ok) continue;
 

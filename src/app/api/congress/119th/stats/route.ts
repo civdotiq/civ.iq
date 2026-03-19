@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,10 +83,8 @@ export async function GET(request: NextRequest) {
 
     logger.info('Request parameters', { chamber });
 
-    // Get base URL from request headers for fetching static files
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = `${protocol}://${host}`;
+    // Get base URL for fetching static files
+    const baseUrl = getServerBaseUrl();
 
     // Fetch pre-built statistics from public directory
     const statsFileUrl = `${baseUrl}/data/congress-stats.json`;

@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSecureCorsOrigin } from '@/config/api.config';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -201,9 +202,7 @@ export async function GET(
     }
 
     // Get base URL for fetching static files
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = getServerBaseUrl();
 
     // Load manifest for validation
     const manifest = await loadManifest(baseUrl);

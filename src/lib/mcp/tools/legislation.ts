@@ -14,12 +14,12 @@ export function registerLegislationTools(server: McpServer): void {
     'search_legislation',
     'Search for bills in Congress. Returns bill ID, title, sponsor, status, and policy area. Note: Congress.gov does not support keyword search — results are sorted by most recent activity. Filter by subject or sponsor after retrieval.',
     {
-      congress: z.number().optional().describe('Congress number (e.g., 119)'),
+      congress: z.number().int().min(1).max(120).optional().describe('Congress number (e.g., 119)'),
       type: z
         .enum(['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'])
         .optional()
         .describe('Bill type filter'),
-      limit: z.number().optional().describe('Max results, default 20'),
+      limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
     },
     async ({ congress, type, limit }) => {
       try {
@@ -120,7 +120,7 @@ export function registerLegislationTools(server: McpServer): void {
     {
       bioguideId: z.string().describe('Congress bioguide identifier'),
       chamber: z.enum(['House', 'Senate']).describe('Chamber of the legislator'),
-      limit: z.number().optional().describe('Max votes to return, default 20'),
+      limit: z.number().int().min(1).max(50).optional().describe('Max votes to return, default 20'),
     },
     async ({ bioguideId, chamber, limit }) => {
       try {
@@ -148,8 +148,20 @@ export function registerLegislationTools(server: McpServer): void {
     'get_vote_record',
     'Get details about a specific House roll call vote including all member positions. Note: only House votes are available via this tool.',
     {
-      congress: z.number().optional().describe('Congress number, default 119'),
-      session: z.number().optional().describe('Session number, default current'),
+      congress: z
+        .number()
+        .int()
+        .min(1)
+        .max(120)
+        .optional()
+        .describe('Congress number, default 119'),
+      session: z
+        .number()
+        .int()
+        .min(1)
+        .max(2)
+        .optional()
+        .describe('Session number, default current'),
       rollCallNumber: z.number().describe('Roll call number'),
     },
     async ({ congress, session, rollCallNumber }) => {

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -85,7 +86,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
     if (addressComponents.zip) {
       try {
         const zipResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/representatives-multi-district?zip=${addressComponents.zip}`
+          `${getServerBaseUrl()}/api/representatives-multi-district?zip=${addressComponents.zip}`
         );
         if (zipResponse.ok) {
           const zipData = await zipResponse.json();

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
 export const dynamic = 'force-dynamic';
@@ -29,10 +30,8 @@ export async function GET(request: NextRequest) {
     const metadata = await cachedFetch(
       cacheKey,
       async (): Promise<DistrictMetadataResponse> => {
-        // Get base URL from request headers for fetching static files
-        const protocol = request.headers.get('x-forwarded-proto') || 'http';
-        const host = request.headers.get('host') || 'localhost:3000';
-        const baseUrl = `${protocol}://${host}`;
+        // Get base URL for fetching static files
+        const baseUrl = getServerBaseUrl();
 
         // Try to load from the REAL Census data file first, fall back to demo
         const realDataUrl = `${baseUrl}/data/districts/district_metadata_real.json`;
