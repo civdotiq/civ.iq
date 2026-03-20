@@ -62,7 +62,7 @@ const US_STATES = [
 const EXAMPLE_REPS = [
   { id: 'J000294', name: 'Hakeem Jeffries', title: 'House Minority Leader' },
   { id: 'T000250', name: 'John Thune', title: 'Senate Majority Leader' },
-  { id: 'J000289', name: 'Mike Johnson', title: 'Speaker of the House' },
+  { id: 'J000299', name: 'Mike Johnson', title: 'Speaker of the House' },
 ];
 
 export default function QuickStartPaths() {
