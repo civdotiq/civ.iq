@@ -8,7 +8,7 @@
  * - Comprehensive page coverage
  */
 
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
