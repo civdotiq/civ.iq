@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Googlebot-Image
+Allow: /photos/
+
+Sitemap: https://civdotiq.org/sitemap.xml
+Sitemap: https://civdotiq.org/sitemap-images.xml
