@@ -32,24 +32,29 @@ const ACTOR_CACHE_TTL = 3600; // 1 hour
 export function signRequest(
   method: string,
   targetUrl: string,
-  body: string
+  body?: string
 ): SignatureHeaders | null {
   const privateKey = getPrivateKeyPem();
   if (!privateKey) return null;
 
   const url = new URL(targetUrl);
   const date = new Date().toUTCString();
+  const hasBody = body !== undefined && body !== '';
 
-  // Compute digest of body
-  const digest = `SHA-256=${crypto.createHash('sha256').update(body).digest('base64')}`;
-
-  // Build signing string
-  const signingString = [
+  // Build signing string — omit digest for bodiless requests (GET/HEAD)
+  const signingParts = [
     `(request-target): ${method.toLowerCase()} ${url.pathname}${url.search}`,
     `host: ${url.host}`,
     `date: ${date}`,
-    `digest: ${digest}`,
-  ].join('\n');
+  ];
+
+  let digest = '';
+  if (hasBody) {
+    digest = `SHA-256=${crypto.createHash('sha256').update(body).digest('base64')}`;
+    signingParts.push(`digest: ${digest}`);
+  }
+
+  const signingString = signingParts.join('\n');
 
   // Sign with RSA-SHA256
   const signer = crypto.createSign('RSA-SHA256');
@@ -57,10 +62,14 @@ export function signRequest(
   const signature = signer.sign(privateKey, 'base64');
 
   const keyId = activitypubConfig.actor.keyId;
+  const signedHeaderList = hasBody
+    ? '(request-target) host date digest'
+    : '(request-target) host date';
+
   const signatureHeader = [
     `keyId="${keyId}"`,
     `algorithm="rsa-sha256"`,
-    `headers="(request-target) host date digest"`,
+    `headers="${signedHeaderList}"`,
     `signature="${signature}"`,
   ].join(',');
 
@@ -83,8 +92,18 @@ async function fetchActorCached(actorUrl: string): Promise<{ publicKeyPem?: stri
   }
 
   try {
+    // Sign the GET request so instances with authorized_fetch / secure mode accept it
+    const sigHeaders = signRequest('GET', actorUrl);
+    const fetchHeaders: Record<string, string> = {
+      Accept: 'application/activity+json, application/ld+json',
+    };
+    if (sigHeaders) {
+      fetchHeaders['Signature'] = sigHeaders.Signature;
+      fetchHeaders['Date'] = sigHeaders.Date;
+    }
+
     const actorResponse = await fetch(actorUrl, {
-      headers: { Accept: 'application/activity+json, application/ld+json' },
+      headers: fetchHeaders,
       signal: AbortSignal.timeout(10000),
     });
 
@@ -171,7 +190,9 @@ export async function verifySignature(
     return { valid: false, error: 'Incomplete Signature header' };
   }
 
-  if (algorithm !== 'rsa-sha256') {
+  // Accept both 'rsa-sha256' and 'hs2019' (Mastodon 4.x sends hs2019,
+  // which is RSA-SHA256 under the hood per draft-cavage-http-signatures §2)
+  if (algorithm !== 'rsa-sha256' && algorithm !== 'hs2019') {
     return { valid: false, error: `Unsupported algorithm: ${algorithm}` };
   }
 

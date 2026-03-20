@@ -98,9 +98,9 @@ export async function addToOutbox(activity: APCreateActivity): Promise<void> {
   const cache = getRedisCache();
   const timestamp = new Date(activity.published).getTime();
 
-  // Store individual activity
+  // Store individual activity (outbox is public record — use long TTL)
   const activityKey = `${activitypubConfig.outboxKey}:${activity.object.id}`;
-  await cache.set(activityKey, activity, activitypubConfig.dedupTTL);
+  await cache.set(activityKey, activity, activitypubConfig.outboxTTL);
 
   // Add to index (most recent IDs)
   // Note: read-modify-write is not atomic, but outbox writes only happen from
@@ -111,7 +111,7 @@ export async function addToOutbox(activity: APCreateActivity): Promise<void> {
 
   // Trim to max items
   const trimmed = index.slice(0, activitypubConfig.maxOutboxItems);
-  await cache.set(indexKey, trimmed, activitypubConfig.dedupTTL);
+  await cache.set(indexKey, trimmed, activitypubConfig.outboxTTL);
 }
 
 /** Get outbox items (paginated) */

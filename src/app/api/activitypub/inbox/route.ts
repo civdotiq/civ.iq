@@ -84,11 +84,20 @@ async function handleFollow(follow: APFollowActivity): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid follow target' }, { status: 400 });
   }
 
-  // Fetch the remote actor to get their inbox
+  // Fetch the remote actor to get their inbox (signed for secure-mode instances)
   let inbox: string;
   try {
+    const sigHeaders = signRequest('GET', actorId);
+    const fetchHeaders: Record<string, string> = {
+      Accept: 'application/activity+json',
+    };
+    if (sigHeaders) {
+      fetchHeaders['Signature'] = sigHeaders.Signature;
+      fetchHeaders['Date'] = sigHeaders.Date;
+    }
+
     const actorRes = await fetch(actorId, {
-      headers: { Accept: 'application/activity+json' },
+      headers: fetchHeaders,
       signal: AbortSignal.timeout(10000),
     });
 

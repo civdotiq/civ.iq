@@ -11,10 +11,11 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getRedisCache } from '@/lib/cache/redis-client';
 import { getNostrKeypair } from '@/lib/nostr';
+import { queryRelays } from '@/lib/nostr/relay-reader';
 import { nostrConfig } from '@/config/nostr.config';
 import { getFollowerCount } from '@/lib/activitypub/followers';
+import { getOutboxItems } from '@/lib/activitypub/outbox';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -24,36 +25,26 @@ export async function GET() {
     const keypair = getNostrKeypair();
     const configured = keypair !== null;
 
-    // Count recent publishes by scanning dedup keys
-    let recentPublishes = 0;
-    const eventTypeCounts: Record<string, number> = {};
-
+    // Query relays directly for the authoritative event count
+    let confirmedOnRelays = 0;
+    let relaysResponding = 0;
     if (configured) {
       try {
-        const cache = getRedisCache();
-        const dedupKeys = await cache.keys(`${nostrConfig.dedupPrefix}*`);
-        recentPublishes = dedupKeys.length;
-
-        // Categorize by event type from key patterns
-        for (const key of dedupKeys) {
-          const suffix = key.replace(nostrConfig.dedupPrefix, '');
-          let eventType = 'unknown';
-
-          if (suffix.startsWith('state-vote-')) eventType = 'state-vote';
-          else if (suffix.startsWith('state-bill-intro-')) eventType = 'state-bill-introduced';
-          else if (suffix.startsWith('state-bill-action-')) eventType = 'state-bill-action';
-          else if (suffix.startsWith('vote-')) eventType = 'vote-record';
-          else if (suffix.startsWith('eo-')) eventType = 'executive-order';
-          else if (suffix.startsWith('comment-')) eventType = 'comment-period';
-          else if (suffix.startsWith('hearing-')) eventType = 'hearing';
-          else if (suffix.includes('-introduced')) eventType = 'bill-introduced';
-          else if (suffix.includes('-action-')) eventType = 'bill-action';
-
-          eventTypeCounts[eventType] = (eventTypeCounts[eventType] ?? 0) + 1;
-        }
+        const relayResult = await queryRelays(keypair.publicKey);
+        confirmedOnRelays = relayResult.totalUniqueEvents;
+        relaysResponding = relayResult.relayResults.filter(r => r.status === 'ok').length;
       } catch {
-        // Redis unavailable — report what we can without it
+        // Relay queries failed — report 0
       }
+    }
+
+    // Get ActivityPub outbox count
+    let outboxItems = 0;
+    try {
+      const { total } = await getOutboxItems(0, 0);
+      outboxItems = total;
+    } catch {
+      // Redis unavailable
     }
 
     const response = {
@@ -68,8 +59,9 @@ export async function GET() {
         dedupTTLDays: nostrConfig.dedupTTL / (24 * 60 * 60),
       },
       recentActivity: {
-        publishedEvents: recentPublishes,
-        byType: eventTypeCounts,
+        confirmedOnRelays,
+        relaysResponding,
+        outboxItems,
       },
       statesCovered: {
         count: nostrConfig.enabledStates.length,
@@ -101,7 +93,7 @@ export async function GET() {
 
     logger.info('Nostr status requested', {
       configured,
-      recentPublishes,
+      confirmedOnRelays,
       operation: 'nostr_status',
     });
 

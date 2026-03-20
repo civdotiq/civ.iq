@@ -72,7 +72,7 @@ export function OpenDataStrip({
   items.push(
     <a
       key="nostr"
-      href="https://njump.me/civiq@civdotiq.org"
+      href="https://nostr.com/civiq@civdotiq.org"
       target="_blank"
       rel="noopener noreferrer"
       className="hover:text-gray-600"

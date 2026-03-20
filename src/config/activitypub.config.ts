@@ -44,7 +44,8 @@ export const activitypubConfig = {
   outboxKey: 'activitypub:outbox',
 
   /** TTLs in seconds */
-  dedupTTL: 30 * 24 * 60 * 60, // 30 days
+  dedupTTL: 30 * 24 * 60 * 60, // 30 days (for dedup keys only)
+  outboxTTL: 365 * 24 * 60 * 60, // 1 year (outbox is public record, must persist)
 
   /** Rate limit for inbox (follows per minute) */
   inboxRateLimit: 30,

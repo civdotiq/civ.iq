@@ -29,7 +29,7 @@ import type {
 import type { FederalRegisterAPIResponse } from '@/types/federal-register';
 import type { GovInfoCollectionResponse } from '@/types/govinfo';
 import { detectStateEvents } from '@/lib/nostr/state-event-detector';
-import { publishRelayList } from '@/lib/nostr/relay-list';
+import { publishProfileMetadata, publishRelayList } from '@/lib/nostr/relay-list';
 import {
   civicEventToNote,
   wrapInCreate,
@@ -651,6 +651,14 @@ export async function POST(request: NextRequest) {
     // Publish NIP-65 relay list (Kind 10002, replaceable — safe every run)
     await publishRelayList(keypair.privateKey).catch(err =>
       logger.warn('NIP-65 relay list publish failed', {
+        error: err instanceof Error ? err.message : 'Unknown',
+        operation: 'nostr_publisher',
+      })
+    );
+
+    // Publish NIP-01 profile metadata (Kind 0, replaceable — safe every run)
+    await publishProfileMetadata(keypair.privateKey).catch(err =>
+      logger.warn('NIP-01 profile metadata publish failed', {
         error: err instanceof Error ? err.message : 'Unknown',
         operation: 'nostr_publisher',
       })

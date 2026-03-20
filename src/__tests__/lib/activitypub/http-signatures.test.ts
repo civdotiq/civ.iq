@@ -223,7 +223,7 @@ describe('HTTP Signatures', () => {
     test('unsupported algorithm fails', async () => {
       const result = await verifySignature('POST', '/inbox', {
         signature:
-          'keyId="https://example.com/actor#key",algorithm="hs2019",headers="(request-target)",signature="abc"',
+          'keyId="https://example.com/actor#key",algorithm="ed25519",headers="(request-target)",signature="abc"',
       });
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Unsupported algorithm');
