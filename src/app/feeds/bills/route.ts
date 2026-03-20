@@ -18,8 +18,7 @@ import {
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
 
-// ISR: Revalidate every hour
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 interface Bill {
   number: string;
