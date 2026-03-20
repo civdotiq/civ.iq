@@ -69,8 +69,8 @@ training-data/
 models/
 
 # Stray files outside src/
-components/
-deploy/
+/components/
+/deploy/
 
 # Internal development docs (session notes, debug guides, implementation summaries)
 docs/internal/

@@ -378,6 +378,8 @@ export interface BillIntelligenceInsight extends InsightBase {
   bipartisanCosponsorship?: boolean;
   /** Top lobbying organizations by name. */
   topLobbyingOrgs?: string[];
+  /** ML-classified sectors with confidence scores from embedding classifier. */
+  classifiedSectors?: Array<{ sector: IndustrySector; confidence: number }>;
   /** Lobbying filings with high language similarity to this bill. */
   lobbyingSimilarity?: BillLobbyingSimilarity;
 }

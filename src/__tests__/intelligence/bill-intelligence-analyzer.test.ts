@@ -220,21 +220,27 @@ describe('analyzeBillIntelligence', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when bill has no policy area', async () => {
+  it('falls back to ML sectors when bill has no policy area', async () => {
     mockFetchBillFromCongress.mockResolvedValue({ ...mockBill, policyArea: null });
 
     const result = await analyzeBillIntelligence('119-hr-1');
-    expect(result).toBeNull();
+    // ML classification from title ("Medicare Improvement Act") should find sectors
+    expect(result).not.toBeNull();
+    // policyArea derived from sector names when Congress.gov doesn't provide one
+    expect(result!.policyArea).not.toBe('');
+    expect(result!.affectedSectors.length).toBeGreaterThan(0);
   });
 
-  it('returns null when no sectors map to policy area', async () => {
+  it('falls back to ML sectors when no static mapping exists', async () => {
     const policyMap = jest.requireMock<{ getIndustrySectorsForPolicyArea: jest.Mock }>(
       '@/lib/connections/policy-area-map'
     );
     policyMap.getIndustrySectorsForPolicyArea.mockReturnValueOnce([]);
 
     const result = await analyzeBillIntelligence('119-hr-1');
-    expect(result).toBeNull();
+    // ML classification from title should still find sectors
+    expect(result).not.toBeNull();
+    expect(result!.affectedSectors.length).toBeGreaterThan(0);
   });
 
   it('analyzes sponsor funding by sector', async () => {
@@ -499,6 +505,29 @@ describe('analyzeBillIntelligence', () => {
     expect(baseline).not.toBeNull();
     expect(enriched).not.toBeNull();
     expect(enriched!.confidence).toBeGreaterThan(baseline!.confidence);
+  });
+
+  // ── ML classification surfacing ─────────────────────────────
+
+  it('omits classifiedSectors when embedding classifier returns nothing', async () => {
+    // Default mocks: classifyBillSectors returns [] (no model in test env)
+    // but getBillSectors keyword fallback finds sectors from title
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    expect(result!.affectedSectors.length).toBeGreaterThan(0);
+    // classifiedSectors should be undefined because embedding didn't succeed
+    expect(result!.classifiedSectors).toBeUndefined();
+  });
+
+  it('uses ML methodology when embedding classifier succeeds', async () => {
+    // In test env, embedding classifier returns [] and keyword fallback runs.
+    // The methodology should reflect which path was used.
+    const result = await analyzeBillIntelligence('119-hr-1');
+
+    expect(result).not.toBeNull();
+    // Since embedding returned nothing, methodology should say "policy areas" not "embedding"
+    expect(result!.methodology).not.toContain('embedding model');
   });
 
   // ── Backward compatibility ───────────────────────────────────

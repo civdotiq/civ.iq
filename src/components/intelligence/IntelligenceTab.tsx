@@ -22,6 +22,7 @@ import { InfluenceChainCard } from './InfluenceChainCard';
 import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
 import { TemporalProximityCard } from './TemporalProximityCard';
+import { AnomalyFlagsDisplay } from './AnomalyFlagsDisplay';
 import { CounterfactualSection } from '@/components/mesh/CounterfactualSection';
 import type { TemporalProximityInsight } from '@/lib/intelligence/analyzers/temporal-proximity-analyzer';
 import type {
@@ -242,6 +243,11 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
               />
             )}
             {fjLoading && !financeJurisdiction && <InsightSkeleton />}
+
+            {/* Anomaly Flags — plain-language funding outliers */}
+            {financeJurisdiction?.peerComparison?.anomalies && (
+              <AnomalyFlagsDisplay anomalies={financeJurisdiction.peerComparison.anomalies} />
+            )}
 
             {/* Vote-Finance */}
             {voteFinance && (

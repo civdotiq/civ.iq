@@ -31,8 +31,10 @@ import {
   findCommitteeMapping,
   generateInsightNarrative,
   withTimeout,
+  getBillSectors,
   ANALYZER_TIMEOUT_MS,
 } from './shared';
+import { classifyBillSectors } from '../embeddings';
 import { confidenceScore } from '../statistics/civic-stats';
 import type { BillIntelligenceInsight } from '../types';
 import type { Bill, BillVote } from '@/types/bill';
@@ -93,17 +95,38 @@ async function computeAndCache(
   }
 
   const policyArea = bill.policyArea;
-  if (!policyArea) {
-    logger.info('[BillIntelligence] No policy area for bill', { billId });
+
+  // 3. Map policy area to industry sectors
+  // Step A: Try embedding classifier (gives both sectors AND confidence scores for UI)
+  const mlClassification = await classifyBillSectors(bill.title).catch(
+    () => [] as Array<{ sector: IndustrySector; confidence: number }>
+  );
+  const mlSectors = mlClassification.map(c => c.sector);
+
+  // Step B: Only run broader fallback chain if embedding returned nothing
+  let affectedSectors: IndustrySector[];
+  let usedMLClassification = false;
+
+  if (mlSectors.length > 0) {
+    affectedSectors = mlSectors;
+    usedMLClassification = true;
+  } else {
+    // Broader fallback: embedding → zero-shot → keyword inference
+    const mlFallback = await getBillSectors(bill.number || billId, bill.title).catch(
+      () => [] as IndustrySector[]
+    );
+    const staticSectors = policyArea ? getIndustrySectorsForPolicyArea(policyArea) : [];
+    affectedSectors = mlFallback.length > 0 ? mlFallback : staticSectors;
+  }
+
+  if (affectedSectors.length === 0) {
+    logger.info('[BillIntelligence] No sectors from ML or static', { billId });
     return null;
   }
 
-  // 3. Map policy area to industry sectors
-  const affectedSectors = getIndustrySectorsForPolicyArea(policyArea);
-  if (affectedSectors.length === 0) {
-    logger.info('[BillIntelligence] No sector mapping for policy area', { billId, policyArea });
-    return null;
-  }
+  // Confidence-scored sectors for the UI — only when affectedSectors came from
+  // the same ML classification, so pills and analysis always agree
+  const classifiedSectors = usedMLClassification ? mlClassification : [];
 
   // 4. Analyze sponsor, cosponsors, enrichment, and lobbying — all in parallel
   const sponsorBioguide = bill.sponsor.representative.bioguideId;
@@ -137,7 +160,9 @@ async function computeAndCache(
       )
     ),
     getRelatedLobbyingData(bill.committees),
-    fetchLobbyingSimilarity(billId, bill.title, policyArea).catch(() => null),
+    policyArea
+      ? fetchLobbyingSimilarity(billId, bill.title, policyArea).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   const validCosponsorResults = cosponsorResults.filter(
@@ -186,9 +211,11 @@ async function computeAndCache(
   });
 
   // 8. Generate narrative with enriched context
+  // Use policyArea when available; fall back to sector names so narrative reads naturally
+  const effectivePolicyArea = policyArea ?? affectedSectors.slice(0, 2).join(' and ');
   const { narrative, source } = await generateNarrative(
     bill.title,
-    policyArea,
+    effectivePolicyArea,
     affectedSectors,
     sponsorAnalysis,
     cosponsorSummary,
@@ -202,7 +229,7 @@ async function computeAndCache(
   const insight: BillIntelligenceInsight = {
     billId,
     billTitle: bill.title,
-    policyArea,
+    policyArea: effectivePolicyArea,
     affectedSectors,
     sponsorAnalysis,
     cosponsorSummary,
@@ -213,7 +240,9 @@ async function computeAndCache(
     dataAsOf: new Date().toISOString(),
     methodology:
       'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
-      'Sectors mapped via Congress.gov policy areas. ' +
+      (usedMLClassification
+        ? 'Sectors identified by analyzing the bill text with an embedding model. '
+        : 'Sectors mapped via Congress.gov policy areas. ') +
       'Lobbying data from Senate LDA disclosures matched to bill committees.' +
       (storyContext.voteOutcome ? ' Vote data from Congress.gov roll calls.' : '') +
       (storyContext.fiscalImpact ? ' Fiscal estimates from CBO.' : ''),
@@ -231,6 +260,7 @@ async function computeAndCache(
     topLobbyingOrgs:
       storyContext.topLobbyingOrgNames.length > 0 ? storyContext.topLobbyingOrgNames : undefined,
     lobbyingSimilarity: lobbyingSimilarity ?? undefined,
+    classifiedSectors: classifiedSectors.length > 0 ? classifiedSectors : undefined,
   };
 
   // 9. Cache
@@ -476,7 +506,7 @@ async function getRelatedLobbyingData(
 
 // ── Lobbying Similarity ──────────────────────────────────────────────
 
-async function fetchLobbyingSimilarity(billId: string, billTitle: string, policyArea: string) {
+async function fetchLobbyingSimilarity(billId: string, billTitle: string, _policyArea: string) {
   try {
     // Fetch recent lobbying filings for the bill's policy area
     const currentYear = new Date().getFullYear();

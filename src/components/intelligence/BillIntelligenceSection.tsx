@@ -8,6 +8,7 @@
 import useSWR from 'swr';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { BillIntelligenceInsight } from '@/lib/intelligence/types';
 
 interface BillIntelligenceSectionProps {
@@ -86,9 +87,21 @@ function getHeadline(data: BillIntelligenceInsight): {
 
   // Not notable: no meaningful connections found
   return {
-    text: `No notable funding connections found between this bill's sponsors and the ${data.affectedSectors.slice(0, 3).join(', ')} ${data.affectedSectors.length === 1 ? 'sector' : 'sectors'} it affects.`,
+    text: `No notable funding connections found between this bill's sponsors and the ${data.affectedSectors.slice(0, 3).map(displaySector).join(', ')} ${data.affectedSectors.length === 1 ? 'sector' : 'sectors'} it affects.`,
     notable: false,
   };
+}
+
+function getSectorConfidenceStyles(confidence: number): string {
+  if (confidence >= 0.65) return 'border-gray-900 text-gray-900';
+  if (confidence >= 0.45) return 'border-gray-400 text-gray-600';
+  return 'border-gray-300 text-gray-400';
+}
+
+function getConfidenceLabel(confidence: number): string {
+  if (confidence >= 0.65) return 'Strong match';
+  if (confidence >= 0.45) return 'Likely match';
+  return 'Possible match';
 }
 
 function formatDollars(amount: number): string {
@@ -203,12 +216,34 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
       {/* Sector context — inline, not prominent */}
       <div className="flex flex-wrap gap-2 mb-4">
         <span className="type-xs text-gray-400">Related sectors:</span>
-        {data.affectedSectors.slice(0, 6).map(sector => (
-          <span key={sector} className="border-2 border-gray-200 px-2 py-0.5 type-xs text-gray-500">
-            {sector}
-          </span>
-        ))}
+        {data.classifiedSectors && data.classifiedSectors.length > 0
+          ? data.classifiedSectors.slice(0, 6).map(cs => {
+              const styles = getSectorConfidenceStyles(cs.confidence);
+              return (
+                <span
+                  key={cs.sector}
+                  className={`border-2 px-2 py-0.5 type-xs ${styles}`}
+                  aria-label={`${displaySector(cs.sector)}: ${getConfidenceLabel(cs.confidence)}`}
+                >
+                  {displaySector(cs.sector)}
+                </span>
+              );
+            })
+          : data.affectedSectors.slice(0, 6).map(sector => (
+              <span
+                key={sector}
+                className="border-2 border-gray-200 px-2 py-0.5 type-xs text-gray-500"
+              >
+                {displaySector(sector)}
+              </span>
+            ))}
       </div>
+      {data.classifiedSectors && data.classifiedSectors.length > 0 && (
+        <p className="type-xs text-gray-400 mb-4">
+          We identified these sectors by analyzing the bill&apos;s text. Darker labels indicate a
+          stronger match.
+        </p>
+      )}
 
       {/* AI narrative — the full explanation */}
       <p className="type-sm text-gray-600 leading-relaxed">{data.narrative}</p>

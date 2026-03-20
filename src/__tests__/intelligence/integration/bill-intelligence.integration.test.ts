@@ -252,14 +252,19 @@ describe('Integration: GET /api/intelligence/bill/[billId]', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 404 when bill has no policy area', async () => {
+  it('falls back to ML classification when bill has no policy area', async () => {
     mockFetchBillFromCongress.mockResolvedValue({ ...mockBill, policyArea: null });
 
     const res = await GET(
       mockRequest('http://localhost/') as never,
       mockParams({ billId: '119-hr-1' })
     );
-    expect(res.status).toBe(404);
+    // ML classification from bill title should produce a result
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    // policyArea derived from ML-detected sectors when Congress.gov doesn't provide one
+    expect(data.policyArea).toBeTruthy();
+    expect(data.affectedSectors.length).toBeGreaterThan(0);
   });
 
   it('handles sponsor with no FEC mapping gracefully', async () => {
