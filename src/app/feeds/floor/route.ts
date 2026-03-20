@@ -18,8 +18,8 @@ import {
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
 
-// ISR: Revalidate every 15 minutes (floor activity changes frequently)
-export const revalidate = 900;
+// Must be force-dynamic: self-fetches /api/floor-schedule which isn't available during Vercel prerender
+export const dynamic = 'force-dynamic';
 
 interface FloorItem {
   id?: string;
