@@ -242,6 +242,14 @@ const DATASET_KEYWORDS: Record<string, string[]> = {
     'PAC',
     'election funding',
   ],
+  'election-results-2024': [
+    '2024 election',
+    'election results',
+    'precinct data',
+    'House races',
+    'presidential election',
+    'vote totals',
+  ],
 };
 
 const DATASET_SAME_AS: Record<string, string> = {
@@ -251,6 +259,7 @@ const DATASET_SAME_AS: Record<string, string> = {
   'recent-votes': 'https://api.congress.gov/v3/summaries',
   'vote-positions': 'https://api.congress.gov/v3/member',
   'campaign-finance': 'https://api.open.fec.gov/v1/candidates',
+  'election-results-2024': 'https://github.com/MEDSL/2024-elections-official',
 };
 
 export default function OpenDataPage() {
@@ -285,7 +294,6 @@ export default function OpenDataPage() {
           source={dataset.source}
           sourceUrl={dataset.sourceUrl}
           temporalCoverage="2025-01/2027-01"
-          dateModified={new Date().toISOString()}
           keywords={DATASET_KEYWORDS[dataset.slug]}
           variableMeasured={dataset.columnLabels}
           includedInDataCatalog={{ name: 'CIV.IQ Bulk Datasets', url: `${BASE_URL}/api/download` }}
@@ -321,11 +329,11 @@ export default function OpenDataPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">Bulk Datasets</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">10</div>
+            <div className="text-3xl font-bold">{ENDPOINTS.length}</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">REST Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">8</div>
+            <div className="text-3xl font-bold">{FEEDS.length}</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">Atom Feeds</div>
           </div>
           <div className="border-2 border-black p-grid-3">
@@ -479,7 +487,8 @@ export default function OpenDataPage() {
         <section className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">REST API</h2>
           <p className="text-gray-600 mb-grid-3">
-            10 endpoints covering representatives, bills, votes, districts, and committees.
+            {ENDPOINTS.length} endpoints covering representatives, bills, votes, districts, and
+            committees.
           </p>
           <div className="mb-grid-3">
             <span className="text-sm text-gray-500 uppercase tracking-wider">Base URL</span>
