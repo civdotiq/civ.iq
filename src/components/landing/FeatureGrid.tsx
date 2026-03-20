@@ -88,11 +88,6 @@ const features: Feature[] = [
 export default function FeatureGrid() {
   return (
     <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 pt-grid-2 sm:pt-grid-4 pb-grid-4 sm:pb-grid-6">
-      {/* Accent Banner - Tier 1 high impact */}
-      <div className="accent-banner accent-banner-green accent-banner-straight mb-grid-4 sm:mb-grid-6">
-        <span>Who Represents You?</span>
-      </div>
-
       <div className="mb-grid-3 sm:mb-grid-4 text-center">
         <h2 className="accent-display text-2xl sm:text-4xl text-black mb-grid-1 sm:mb-grid-2">
           What You Can Do

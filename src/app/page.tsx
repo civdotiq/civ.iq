@@ -35,8 +35,8 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xs sm:text-xl text-gray-600 max-w-2xl mx-auto px-grid-1 sm:px-0">
-              Connect with your federal representatives through real government data from
-              Congress.gov, FEC, and Census Bureau
+              See how your representatives vote, who funds them, and what they sponsor — all from
+              public government data.
             </p>
           </div>
 
@@ -46,8 +46,43 @@ export default function HomePage() {
           {/* Data Sources */}
           <div className="mt-grid-2 sm:mt-grid-4 text-center">
             <p className="text-xs sm:text-sm text-gray-500 px-grid-2">
-              Federal data from Congress.gov, FEC, and Census Bureau. State legislature data from
-              Open States.
+              Federal data from{' '}
+              <a
+                href="https://www.congress.gov"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-civiq-blue hover:underline"
+              >
+                Congress.gov
+              </a>
+              ,{' '}
+              <a
+                href="https://www.fec.gov"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-civiq-blue hover:underline"
+              >
+                FEC
+              </a>
+              , and{' '}
+              <a
+                href="https://www.census.gov"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-civiq-blue hover:underline"
+              >
+                Census Bureau
+              </a>
+              . State legislature data from{' '}
+              <a
+                href="https://openstates.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-civiq-blue hover:underline"
+              >
+                Open States
+              </a>
+              .
             </p>
             <p className="text-xs text-gray-400 mt-grid-1">
               All data available via{' '}
