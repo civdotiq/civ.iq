@@ -79,7 +79,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
               <div className="font-semibold text-[14pt] tracking-tight">
                 CIV<span className="text-[#1976d2]">.</span>IQ
               </div>
-              <div>civiq.org</div>
+              <div>civdotiq.org</div>
             </div>
           </header>
 
@@ -184,7 +184,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
               </span>
               <span>Based on NCSS C3 Framework standards</span>
             </div>
-            <div>CIV.IQ Education Resources · civiq.org/education · CC BY 4.0</div>
+            <div>CIV.IQ Education Resources · civdotiq.org/education · CC BY 4.0</div>
           </footer>
         </div>
 

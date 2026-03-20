@@ -354,7 +354,7 @@ export const getCongressionalDistrictFromAddress = async (
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'CIV.IQ/1.0 (https://civiq.org; contact@civiq.org)',
+        'User-Agent': 'CIV.IQ/1.0 (https://civdotiq.org; contact@civdotiq.org)',
         Accept: 'application/json',
       },
     });

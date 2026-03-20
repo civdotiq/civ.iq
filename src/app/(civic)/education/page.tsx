@@ -213,7 +213,7 @@ export default function EducationPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-gray-200 pb-2">
               Scope &amp; Sequence
             </h2>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-8">
               {gradeLevels.map(level => {
                 const info = GRADE_LEVEL_INFO[level];
                 const colors = GRADE_BAND_COLORS[level];
@@ -222,11 +222,11 @@ export default function EducationPage() {
                 return (
                   <div key={level}>
                     <h3
-                      className={`text-sm font-bold ${colors.text} mb-3 pb-1 border-b-2 ${colors.border}`}
+                      className={`text-sm font-bold ${colors.text} mb-4 pb-1 border-b-2 ${colors.border}`}
                     >
                       {info.label} ({info.grades})
                     </h3>
-                    <ol className="space-y-2">
+                    <ol className="space-y-3">
                       {lessons.map((lesson, i) => (
                         <li key={lesson.id}>
                           <Link
@@ -236,14 +236,16 @@ export default function EducationPage() {
                             <span className="text-xs font-mono text-gray-400 mt-0.5 w-4 text-right flex-shrink-0">
                               {i + 1}
                             </span>
-                            <span className="text-sm text-gray-700 group-hover:text-[#3ea2d4] group-hover:underline">
-                              {lesson.title}
-                            </span>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 flex-shrink-0 mt-0.5 ${TOPIC_COLORS[lesson.topic] || 'bg-gray-100 text-gray-600'}`}
-                            >
-                              {LESSON_TOPICS[lesson.topic]}
-                            </span>
+                            <div>
+                              <span className="text-sm text-gray-700 group-hover:text-[#3ea2d4] group-hover:underline">
+                                {lesson.title}
+                              </span>
+                              <span
+                                className={`ml-2 text-[10px] px-1.5 py-0.5 inline-block ${TOPIC_COLORS[lesson.topic] || 'bg-gray-100 text-gray-600'}`}
+                              >
+                                {LESSON_TOPICS[lesson.topic]}
+                              </span>
+                            </div>
                           </Link>
                         </li>
                       ))}
