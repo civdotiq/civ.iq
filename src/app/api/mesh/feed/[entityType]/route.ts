@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getNostrKeypair } from '@/lib/nostr/keys';
 import { queryRelays } from '@/lib/nostr/relay-reader';
-import { GRAPH_NODE_TYPES, type GraphNodeType } from '@/types/graph';
+import { GRAPH_NODE_TYPES } from '@/types/graph';
 import { ApiErrors } from '@/lib/api/error-responses';
 
 export const dynamic = 'force-dynamic';

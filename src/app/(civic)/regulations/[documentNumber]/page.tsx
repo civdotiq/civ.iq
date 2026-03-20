@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { AlertCircle, RefreshCw, ExternalLink, FileText } from 'lucide-react';
+import { AlertCircle, ExternalLink, FileText } from 'lucide-react';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 import { PreambleInsightsSection } from '@/components/intelligence/PreambleInsightsSection';

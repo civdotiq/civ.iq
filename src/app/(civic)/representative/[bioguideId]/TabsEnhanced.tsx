@@ -18,6 +18,10 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeContactForm } from '@/features/representatives/components/RepresentativeContactForm';
 import { FinanceJurisdictionSection } from '@/features/campaign-finance/components/FinanceJurisdictionSection';
 
+// Loose type for untyped API response data rendered in dynamic tabs
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiData = Record<string, any>;
+
 interface CongressBill {
   type?: string;
   number?: string;
@@ -51,7 +55,7 @@ interface TabsEnhancedProps {
   serverData?: {
     bills?: unknown[];
     votes?: unknown[];
-    finance?: Record<string, unknown>;
+    finance?: ApiData;
     news?: unknown[];
   };
 }
@@ -61,7 +65,7 @@ function ProfileContent({
   data,
   representative,
 }: {
-  data: Record<string, any>;
+  data: ApiData;
   representative: EnhancedRepresentative;
 }) {
   if (!data) return null;
@@ -143,7 +147,7 @@ function ProfileContent({
 }
 
 // Enhanced component for Bills tab
-function BillsContent({ data }: { data: Record<string, any> }) {
+function BillsContent({ data }: { data: ApiData }) {
   // Handle different data structures from API
   let bills: CongressBill[] = [];
   if (data?.sponsoredLegislation && Array.isArray(data.sponsoredLegislation)) {
@@ -217,9 +221,9 @@ function BillsContent({ data }: { data: Record<string, any> }) {
 }
 
 // Enhanced component for Votes tab
-function VotesContent({ data }: { data: Record<string, any> }) {
+function VotesContent({ data }: { data: ApiData }) {
   const votes = data?.votes as CongressVote[] | undefined;
-  const votingPattern = data?.votingPattern as Record<string, unknown>;
+  const votingPattern = data?.votingPattern as ApiData;
 
   if (!votes || votes.length === 0) {
     return <div className="text-gray-500">No voting records available</div>;
@@ -307,11 +311,11 @@ function VotesContent({ data }: { data: Record<string, any> }) {
 }
 
 // Enhanced component for Finance tab
-function FinanceContent({ data, bioguideId }: { data: Record<string, any>; bioguideId: string }) {
+function FinanceContent({ data, bioguideId }: { data: ApiData; bioguideId: string }) {
   // Handle FEC API structure
-  const summary = data?.financial_summary?.[0] || (data?.summary as Record<string, unknown>);
+  const summary = data?.financial_summary?.[0] || (data?.summary as ApiData);
   const topContributors = data?.top_contributors || (data?.topContributors as unknown[]);
-  const candidateInfo = data?.candidate_info as Record<string, unknown>;
+  const candidateInfo = data?.candidate_info as ApiData;
 
   if (!summary && !candidateInfo) {
     return <div className="text-gray-500">No campaign finance data available</div>;
@@ -385,7 +389,7 @@ function FinanceContent({ data, bioguideId }: { data: Record<string, any>; biogu
 
 export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnhancedProps) {
   const [activeTab, setActiveTab] = useState('profile');
-  const [data, setData] = useState<Record<string, unknown> | null>(null);
+  const [data, setData] = useState<ApiData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -417,7 +421,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         switch (activeTab) {
           case 'profile':
             // Just show the representative data we already have
-            setData(representative as unknown as Record<string, unknown>);
+            setData(representative as unknown as ApiData);
             setLoading(false);
             return;
 
@@ -560,12 +564,12 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         {data !== null && !loading && !error && (
           <div>
             {activeTab === 'profile' && (
-              <ProfileContent data={data as Record<string, any>} representative={representative} />
+              <ProfileContent data={data as ApiData} representative={representative} />
             )}
-            {activeTab === 'bills' && <BillsContent data={data as Record<string, any>} />}
-            {activeTab === 'votes' && <VotesContent data={data as Record<string, any>} />}
+            {activeTab === 'bills' && <BillsContent data={data as ApiData} />}
+            {activeTab === 'votes' && <VotesContent data={data as ApiData} />}
             {activeTab === 'finance' && (
-              <FinanceContent data={data as Record<string, any>} bioguideId={bioguideId} />
+              <FinanceContent data={data as ApiData} bioguideId={bioguideId} />
             )}
             {activeTab === 'news' && (
               <div className="-mx-6 -my-6">
