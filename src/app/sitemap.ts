@@ -11,6 +11,7 @@
 import { MetadataRoute } from 'next';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
+import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -257,6 +258,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
+    });
+  }
+
+  // ===========================================
+  // EDUCATION LESSON PAGES - Individual lesson detail
+  // ===========================================
+  for (const lesson of EDUCATION_CURRICULUM) {
+    entries.push({
+      url: `${BASE_URL}/education/${lesson.id.toLowerCase()}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.55,
     });
   }
 

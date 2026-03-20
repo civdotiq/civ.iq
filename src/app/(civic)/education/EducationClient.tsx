@@ -396,6 +396,14 @@ function LessonCard({
                 {c3Standards.length} C3 standards
               </span>
             )}
+            <Link
+              href={`/education/${lesson.id.toLowerCase()}`}
+              className="flex items-center gap-1 text-civiq-blue hover:underline"
+              onClick={e => e.stopPropagation()}
+            >
+              Full Lesson
+              <ExternalLink className="w-3 h-3" />
+            </Link>
           </div>
         </div>
         <ChevronRight
@@ -635,8 +643,15 @@ function LessonCard({
 
           {/* Download Buttons */}
           <div className="pt-4 border-t border-gray-200 flex flex-wrap gap-3">
-            <button
+            <Link
+              href={`/education/${lesson.id.toLowerCase()}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
+            >
+              View Full Lesson
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+            <button
+              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black text-gray-900 font-medium hover:bg-gray-50 transition-colors"
               onClick={() => onPrintLesson(lesson)}
             >
               <Download className="w-4 h-4" />

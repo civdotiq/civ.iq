@@ -365,6 +365,47 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       'Worksheet E3: My District Map',
       'Colored pencils for map drawing',
     ],
+    procedure: [
+      {
+        phase: 'Introduction',
+        duration: '8 minutes',
+        instructions: [
+          'Review: "We found our representatives. But HOW does the government decide which representative is YOURS?"',
+          'Ask: "Does everyone in our state share the same House representative?"',
+          'Introduce: "The country is divided into DISTRICTS — like puzzle pieces. Your district decides your representative."',
+        ],
+      },
+      {
+        phase: 'Guided Practice',
+        duration: '15 minutes',
+        instructions: [
+          'Display CIV.IQ Districts page on projector',
+          'Navigate to your state and zoom into your district',
+          'Trace the boundary together: "Everything INSIDE this line is our district"',
+          'Find your school location on the map',
+          'Click a neighboring district: "This district has a DIFFERENT representative"',
+          'Compare: Same state, different district, different representative',
+        ],
+      },
+      {
+        phase: 'Independent Practice',
+        duration: '12 minutes',
+        instructions: [
+          'Students complete Worksheet E3: sketch district shape, mark school location',
+          'Identify and record 2 neighboring districts and their representatives',
+          'Check the geographic type of their district (urban, suburban, rural)',
+        ],
+      },
+      {
+        phase: 'Closing',
+        duration: '5 minutes',
+        instructions: [
+          'Share: "What shape is our district? Were you surprised?"',
+          'Key takeaway: WHERE you live determines WHO represents you',
+          'Preview: "Next time we\'ll learn how representatives turn ideas into laws"',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'Map Exploration',
@@ -525,6 +566,48 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       'Worksheet E5: Writing to My Representative',
       'Sample student letters',
     ],
+    procedure: [
+      {
+        phase: 'Introduction',
+        duration: '8 minutes',
+        instructions: [
+          'Review: "We\'ve learned who our representatives are and what they do. But how do THEY know what WE want?"',
+          'Ask: "If you wanted to tell the principal something, how would you do it?"',
+          'Transition: "Representatives WANT to hear from you — it\'s their job to listen"',
+          'Introduce the word "constituent" — a person who lives in a representative\'s district',
+        ],
+      },
+      {
+        phase: 'Guided Practice',
+        duration: '12 minutes',
+        instructions: [
+          "Navigate to a representative's profile on CIV.IQ",
+          'Find the contact section: office address, phone, website',
+          'Discuss each method: "When would you use a letter? A phone call? An email?"',
+          'Model writing a short letter together on the board',
+          'Structure: Greeting → Introduce yourself → State your concern → Make a request → Closing',
+        ],
+      },
+      {
+        phase: 'Independent Practice',
+        duration: '15 minutes',
+        instructions: [
+          'Brainstorm issues as a class (list on board)',
+          'Students choose one issue they care about',
+          'Students write their own message on Worksheet E5',
+          'Circulate to help with spelling and format',
+        ],
+      },
+      {
+        phase: 'Closing',
+        duration: '5 minutes',
+        instructions: [
+          'Volunteers share their messages',
+          'Discussion: "Should we actually send these? What might happen?"',
+          'Key takeaway: Citizens have the RIGHT and POWER to contact their representatives',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'Find Contact Information',
@@ -619,6 +702,46 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
       'Computer/tablet access',
       'Worksheet M1: Congress Structure Analysis',
       'Congress comparison chart (blank)',
+    ],
+    procedure: [
+      {
+        phase: 'Opening',
+        duration: '10 minutes',
+        instructions: [
+          'Question: "Why TWO chambers instead of one?"',
+          'Quick comparison: House = proportional representation (population), Senate = equal representation (2 per state)',
+          'Preview: "Today we investigate HOW Congress organizes its work"',
+        ],
+      },
+      {
+        phase: 'Investigation',
+        duration: '20 minutes',
+        instructions: [
+          'Navigate to CIV.IQ Committees page',
+          'Each student selects one committee to investigate',
+          'Record: chair, ranking member, number of members, jurisdiction',
+          'Navigate to representative profiles to find leadership positions',
+          'Record leadership roles: Speaker, Majority/Minority Leaders, Whips',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '12 minutes',
+        instructions: [
+          'Complete Worksheet M1: House vs Senate comparison chart',
+          'Compare one House committee to its Senate counterpart',
+          'Identify which party controls each chamber and what that means for committee chairs',
+        ],
+      },
+      {
+        phase: 'Wrap-up',
+        duration: '8 minutes',
+        instructions: [
+          'Share findings: "What surprised you about how Congress is organized?"',
+          'Discuss: Why divide work among committees instead of having everyone vote on everything?',
+          'Key takeaway: Congress is an organized system — understanding its structure helps us follow legislation',
+        ],
+      },
     ],
     activities: [
       {
@@ -799,6 +922,47 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
       'Party alignment',
     ],
     materials: ['Computer/tablet access', 'Worksheet M3: Voting Record Analysis', 'Calculator'],
+    procedure: [
+      {
+        phase: 'Opening',
+        duration: '8 minutes',
+        instructions: [
+          'Question: "If you wanted to know what a representative REALLY cares about, where would you look?"',
+          'Introduce: "Voting records are the most concrete evidence of what representatives support"',
+          'Vocabulary review: roll call vote, yea, nay, present, not voting, party-line vote',
+        ],
+      },
+      {
+        phase: 'Investigation',
+        duration: '18 minutes',
+        instructions: [
+          "Navigate to a representative's Votes tab on CIV.IQ",
+          'Model reading one vote: bill title, their vote, party majority position, result',
+          'Students record 10 recent votes on Worksheet M3',
+          'Calculate: How many times did they vote with their party?',
+          'Convert to percentage: "That\'s their party alignment rate"',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Students select a second representative from a different party',
+          'Compare voting patterns between the two representatives',
+          'Look for bipartisan votes where both voted the same way',
+          'Record patterns and observations on worksheet',
+        ],
+      },
+      {
+        phase: 'Wrap-up',
+        duration: '9 minutes',
+        instructions: [
+          'Discussion: Is voting with your party good or bad?',
+          'Key distinction: Voting records show WHAT happened, not WHY',
+          'Preview: "In high school, you\'ll calculate these metrics across many representatives"',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'Examine Individual Votes',
@@ -890,6 +1054,36 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
           'Vocabulary introduction: individual contributions, PAC, campaign committee',
         ],
       },
+      {
+        phase: 'Exploration',
+        duration: '20 minutes',
+        instructions: [
+          "Navigate to a representative's Finance tab on CIV.IQ",
+          'Walk through data together: total raised, total spent, cash on hand',
+          'Examine contribution breakdown: individual vs PAC',
+          'Find top contributing industries',
+          'Students record data on Worksheet M4',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Students find a second representative from a different party',
+          'Record the same finance data for comparison',
+          'Look for patterns: Do they raise from the same industries?',
+          'Key reminder: We can find patterns but cannot prove WHY from data alone',
+        ],
+      },
+      {
+        phase: 'Wrap-up',
+        duration: '10 minutes',
+        instructions: [
+          'Share observations: "What patterns did you notice?"',
+          'Discussion: Why is it important that this data is PUBLIC?',
+          'Key takeaway: Transparency allows citizens to follow the money — but correlation is not causation',
+        ],
+      },
     ],
     activities: [
       {
@@ -967,6 +1161,46 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
       'Computer/tablet access',
       'Worksheet M5: Federal vs. State Comparison',
       'State legislature fact sheet',
+    ],
+    procedure: [
+      {
+        phase: 'Opening',
+        duration: '10 minutes',
+        instructions: [
+          'Question: "Why do we need state governments if we already have a federal government?"',
+          'Introduce federalism: the division of power between national and state governments',
+          'Vocabulary review: reserved powers, concurrent powers, bicameral, unicameral',
+          'Preview: "Today we compare your state legislature to the U.S. Congress"',
+        ],
+      },
+      {
+        phase: 'Exploration',
+        duration: '15 minutes',
+        instructions: [
+          'Navigate to CIV.IQ State Legislature section for your state',
+          'Record key structural details: number of chambers, legislators, term lengths',
+          'Use address lookup to find YOUR state legislators',
+          'Explore one state legislator profile — compare to federal profiles',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Complete Worksheet M5: side-by-side comparison of Congress and state legislature',
+          'Categorize powers as federal, state, or shared',
+          'Identify what makes your state legislature unique (Nebraska is unicameral)',
+        ],
+      },
+      {
+        phase: 'Wrap-up',
+        duration: '10 minutes',
+        instructions: [
+          'Share findings: "What surprised you about your state legislature?"',
+          'Discussion: What issues are handled better at the state vs. federal level?',
+          'Key takeaway: Federalism means citizens have multiple levels of representation',
+        ],
+      },
     ],
     activities: [
       {
@@ -1048,6 +1282,46 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
       'Computer/tablet access',
       'Worksheet M6: District Demographics',
       'US map showing district types',
+    ],
+    procedure: [
+      {
+        phase: 'Opening',
+        duration: '8 minutes',
+        instructions: [
+          'Question: "What do you think your neighborhood has in common with the rest of your congressional district?"',
+          'Introduce Census data: "The government counts every person every 10 years — this data helps us understand our communities"',
+          'Preview: "Today we investigate WHO lives in your district and how that might affect representation"',
+        ],
+      },
+      {
+        phase: 'Exploration',
+        duration: '18 minutes',
+        instructions: [
+          'Navigate to your district on CIV.IQ',
+          'Record key data points: population, median income, poverty rate, education levels',
+          'Classify district type: urban, suburban, rural, or mixed',
+          'Students record data on Worksheet M6',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Find a VERY DIFFERENT district (urban vs rural, or different region)',
+          'Record the same data points for the comparison district',
+          'On worksheet, analyze: How might these differences affect what voters care about?',
+          'Predict: Would you expect these two representatives to vote the same way?',
+        ],
+      },
+      {
+        phase: 'Wrap-up',
+        duration: '9 minutes',
+        instructions: [
+          'Share comparisons: "What was the biggest difference you found?"',
+          'Discussion: What issues might be MORE important in your district vs the comparison?',
+          'Key takeaway: Representatives serve diverse communities — understanding your district helps you understand your representative',
+        ],
+      },
     ],
     activities: [
       {
@@ -1237,6 +1511,48 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Worksheet H2: Campaign Finance Analysis',
       'Industry category guide',
     ],
+    procedure: [
+      {
+        phase: 'Framing',
+        duration: '12 minutes',
+        instructions: [
+          'Claim to investigate: "Committee members receive more money from industries they regulate"',
+          'Question: How would we test this? What data do we need?',
+          'Review FEC data structure: Total receipts → Individual → PAC → Industry breakdown',
+          'Key vocabulary: PAC, Super PAC, bundling, leadership PAC, contribution limits',
+        ],
+      },
+      {
+        phase: 'Data Collection',
+        duration: '25 minutes',
+        instructions: [
+          'Select one committee to analyze (Finance, Energy, or Agriculture)',
+          'For 5 committee members, navigate to their CIV.IQ Finance tab',
+          'Record on Worksheet H2: name, party, top 3 contributing industries',
+          'For each member, find one vote relevant to their top industry',
+          'Record how they voted on that issue',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Look for patterns across the 5 members',
+          'Consider alternative explanations: Do members join committees BECAUSE of their district, not donations?',
+          'Identify data limitations: Sample size, timing, other variables',
+          'Write evidence-based analysis paragraph on worksheet',
+        ],
+      },
+      {
+        phase: 'Discussion',
+        duration: '13 minutes',
+        instructions: [
+          'Share findings: What patterns emerged?',
+          'Debate: "Does money buy votes, or does money follow votes?"',
+          'Key takeaway: Data reveals patterns; responsible analysis acknowledges alternative explanations',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'FEC Data Structure',
@@ -1322,6 +1638,47 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Spreadsheet for data collection',
       'Calculator',
     ],
+    procedure: [
+      {
+        phase: 'Framing',
+        duration: '10 minutes',
+        instructions: [
+          'Question: "What factors predict how a representative votes?"',
+          'Introduce metrics: party unity score, success rate',
+          'Explain selection strategy: same state/different parties OR same party/different regions',
+          'Review data collection plan: 3 representatives, 15 votes each',
+        ],
+      },
+      {
+        phase: 'Data Collection',
+        duration: '25 minutes',
+        instructions: [
+          'Students select 3 representatives using their chosen strategy',
+          "Navigate to each representative's Votes tab on CIV.IQ",
+          'Record 15 votes per representative on Worksheet H3',
+          'Note whether each vote was bipartisan or party-line',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Calculate party unity scores for each representative',
+          'Calculate success rates for each representative',
+          'Look for patterns: region, seniority, district competitiveness',
+          'Write analysis paragraph connecting metrics to explanatory factors',
+        ],
+      },
+      {
+        phase: 'Discussion',
+        duration: '10 minutes',
+        instructions: [
+          'Share findings across groups',
+          'Compare: Do patterns differ on major vs. minor legislation?',
+          'Key takeaway: Systematic data collection reveals patterns invisible in individual votes',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'Data Collection',
@@ -1397,6 +1754,47 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Worksheet H4: Representation Analysis',
       'Current Congress demographic data',
       'US Census demographic data',
+    ],
+    procedure: [
+      {
+        phase: 'Framing',
+        duration: '10 minutes',
+        instructions: [
+          'Question: "Does Congress look like America? Should it?"',
+          'Define two theories: descriptive representation (demographic similarity) vs. substantive representation (policy alignment)',
+          "This is a VALUES question informed by data — data doesn't settle it",
+        ],
+      },
+      {
+        phase: 'Data Collection',
+        duration: '20 minutes',
+        instructions: [
+          'Navigate to CIV.IQ representative listings',
+          'Collect aggregate data: gender breakdown, age distribution, professional backgrounds',
+          'Compare to Census population data',
+          'Record on Worksheet H4: Congressional % vs Population % for each category',
+          'Identify most over- and under-represented groups',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          "Compare YOUR representative's demographics to YOUR district",
+          'Consider: Does "matching" matter? What might matter MORE?',
+          'Prepare position for seminar discussion with evidence',
+        ],
+      },
+      {
+        phase: 'Discussion',
+        duration: '20 minutes',
+        instructions: [
+          'Structured seminar: Does descriptive representation matter?',
+          'Round 1: Present initial positions with evidence',
+          'Round 2: Respond to strongest counter-argument',
+          "Key takeaway: Multiple valid perspectives exist — data informs the debate but doesn't settle it",
+        ],
+      },
     ],
     activities: [
       {
@@ -1483,6 +1881,47 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Worksheet H5: State Comparison Analysis',
       'State legislature fact sheet',
     ],
+    procedure: [
+      {
+        phase: 'Framing',
+        duration: '8 minutes',
+        instructions: [
+          'Introduce concept: "Laboratories of democracy" — states experiment with different approaches',
+          'Question: "Why do state legislatures vary so much?"',
+          'Preview: Collect structural data on 4 states, then track one policy across them',
+        ],
+      },
+      {
+        phase: 'Data Collection',
+        duration: '22 minutes',
+        instructions: [
+          'Select 4 diverse states (vary by size, region, party control)',
+          'Navigate to CIV.IQ State Legislature pages for each',
+          'Record on Worksheet H5: legislators, terms, session type, salary, population',
+          'Select one policy topic (minimum wage, education funding, gun laws, etc.)',
+          'For each state, find current law and recent legislation on that topic',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '18 minutes',
+        instructions: [
+          'Look for patterns: What state characteristics predict structure?',
+          'Look for patterns: Does party control predict policy position?',
+          'Develop hypotheses and identify supporting evidence',
+          'Consider alternative explanations and confounding variables',
+        ],
+      },
+      {
+        phase: 'Discussion',
+        duration: '12 minutes',
+        instructions: [
+          'Share hypotheses across groups',
+          'Debate: Full-time vs. part-time legislatures — tradeoffs?',
+          'Key takeaway: State variation creates natural experiments for understanding governance',
+        ],
+      },
+    ],
     activities: [
       {
         title: 'Structure Comparison',
@@ -1567,6 +2006,49 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Worksheet H6: Research Project Framework',
       'Research Project Guide',
       'Presentation rubric',
+    ],
+    procedure: [
+      {
+        phase: 'Phase 1: Research Design',
+        duration: '1 class period',
+        instructions: [
+          'Brainstorm civic research questions as a class',
+          'Model refining a vague question into a testable one',
+          'Students propose their own research question on Worksheet H6',
+          'Requirements: testable with CIV.IQ data, specific, original, avoids causal claims',
+          'Teacher reviews and approves each question before students proceed',
+        ],
+      },
+      {
+        phase: 'Phase 2: Data Collection',
+        duration: '1 class period',
+        instructions: [
+          'Students execute their data collection plan',
+          'Minimum requirements: 15 data points, at least 2 variables, documented sources',
+          'Use the data collection tracker on Worksheet H6',
+          'Teacher circulates to check quality and offer guidance',
+        ],
+      },
+      {
+        phase: 'Phase 3: Analysis & Writing',
+        duration: '1 class period',
+        instructions: [
+          'Students analyze collected data for patterns',
+          'Write 2-3 page research summary: introduction, methods, findings, analysis, limitations',
+          'Key requirement: explicitly state what the data CANNOT prove',
+          'Record key findings and limitations on Worksheet H6',
+        ],
+      },
+      {
+        phase: 'Phase 4: Presentation & Peer Review',
+        duration: '1 class period',
+        instructions: [
+          'Brief presentations (3-5 minutes each)',
+          'Present: question, data collection method, findings, limitations',
+          'Classmates provide constructive feedback using structured form',
+          'Students record feedback and identify follow-up questions',
+        ],
+      },
     ],
     activities: [
       {
@@ -1655,6 +2137,46 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
       'Worksheet H7: Information Evaluation',
       'Examples of misleading political graphics',
       'Claim verification checklist',
+    ],
+    procedure: [
+      {
+        phase: 'Framing',
+        duration: '10 minutes',
+        instructions: [
+          'Show example of misleading political graphic (axis manipulation, cherry-picked data)',
+          'Question: "How do you know when to trust civic information?"',
+          'Introduce source hierarchy: primary government data > academic research > news reporting > opinion > social media',
+        ],
+      },
+      {
+        phase: 'Data Collection',
+        duration: '20 minutes',
+        instructions: [
+          'Present 4 political claims about Congress',
+          'For each claim: What data would verify it? Navigate CIV.IQ to check',
+          'Record verification status on Worksheet H7',
+          'Rank source types by reliability with reasoning',
+        ],
+      },
+      {
+        phase: 'Analysis',
+        duration: '15 minutes',
+        instructions: [
+          'Examine examples of misleading political graphics',
+          'For each: Identify the manipulation tactic and explain how to fix it',
+          'Find one real political claim online and attempt to verify using CIV.IQ data',
+          'Record: claim, verification status, data used',
+        ],
+      },
+      {
+        phase: 'Discussion',
+        duration: '10 minutes',
+        instructions: [
+          'Share verification results',
+          'Build class list: "Our principles for evaluating civic information"',
+          'Key takeaway: Primary government data is the gold standard — always check the original source',
+        ],
+      },
     ],
     activities: [
       {
@@ -1841,6 +2363,353 @@ export const WORKSHEETS: Worksheet[] = [
       { label: 'An issue I care about', type: 'text' },
       { label: 'Why I care about this', type: 'textarea', rows: 2 },
       { label: 'My message (use separate paper if needed)', type: 'textarea', rows: 6 },
+    ],
+  },
+  {
+    id: 'worksheet-M1',
+    lessonId: 'M1',
+    title: 'Congress Structure Analysis',
+    gradeLevel: 'middle',
+    fields: [
+      {
+        label: 'House of Representatives',
+        type: 'table',
+        columns: ['Feature', 'Details'],
+        rows: 5,
+      },
+      { label: 'Senate', type: 'table', columns: ['Feature', 'Details'], rows: 5 },
+      { label: 'Committee Name', type: 'text' },
+      { label: 'Committee Chair', type: 'text' },
+      { label: 'Ranking Member', type: 'text' },
+      { label: 'Number of Members', type: 'text' },
+      { label: 'Committee Jurisdiction', type: 'textarea', rows: 2 },
+      { label: 'Comparison: House vs Senate Committee', type: 'textarea', rows: 3 },
+      { label: 'Which party controls the House?', type: 'text' },
+      { label: 'Which party controls the Senate?', type: 'text' },
+      { label: 'Why does Congress divide work among committees?', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-M2',
+    lessonId: 'M2',
+    title: 'Bill Tracker',
+    gradeLevel: 'middle',
+    fields: [
+      { label: 'Bill Number', type: 'text', placeholder: 'H.R. 000 or S. 000' },
+      { label: 'Bill Title', type: 'text' },
+      { label: 'Sponsor Name', type: 'text' },
+      { label: 'Sponsor Party', type: 'text' },
+      { label: 'Number of Cosponsors', type: 'text' },
+      { label: 'Committee Referred To', type: 'text' },
+      {
+        label: 'Current Stage',
+        type: 'checkbox',
+        options: [
+          'Introduced',
+          'Committee Referral',
+          'Committee Action',
+          'Floor Debate',
+          'Passed One Chamber',
+          'Conference',
+          'Presidential Action',
+        ],
+      },
+      { label: 'Most Recent Action', type: 'textarea', rows: 2 },
+      { label: 'Successful Bill Number', type: 'text' },
+      { label: 'Successful Bill Title', type: 'text' },
+      { label: 'What was different about its journey?', type: 'textarea', rows: 3 },
+      { label: 'Why do most bills fail?', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-M3',
+    lessonId: 'M3',
+    title: 'Voting Record Analysis',
+    gradeLevel: 'middle',
+    fields: [
+      { label: 'Representative Name', type: 'text' },
+      { label: 'Party', type: 'text' },
+      { label: 'State/District', type: 'text' },
+      {
+        label: 'Vote Data (10 votes)',
+        type: 'table',
+        columns: ['Bill/Issue', 'Their Vote', 'Party Majority', 'Result'],
+        rows: 10,
+      },
+      { label: 'Votes with party (out of 10)', type: 'text' },
+      { label: 'Party alignment percentage', type: 'text' },
+      { label: 'Second Representative Name', type: 'text' },
+      { label: 'Second Representative Party', type: 'text' },
+      { label: 'Patterns I noticed', type: 'textarea', rows: 3 },
+      { label: 'When might a representative vote against their party?', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-M4',
+    lessonId: 'M4',
+    title: 'Campaign Finance Basics',
+    gradeLevel: 'middle',
+    fields: [
+      { label: 'Representative Name', type: 'text' },
+      { label: 'Total Raised', type: 'text', placeholder: '$0' },
+      { label: 'Total Spent', type: 'text', placeholder: '$0' },
+      { label: 'Cash on Hand', type: 'text', placeholder: '$0' },
+      { label: 'Individual Contributions', type: 'text', placeholder: '$0' },
+      { label: 'PAC Contributions', type: 'text', placeholder: '$0' },
+      { label: 'Top Contributing Industry #1', type: 'text' },
+      { label: 'Top Contributing Industry #2', type: 'text' },
+      { label: 'Top Contributing Industry #3', type: 'text' },
+      { label: 'Second Representative for Comparison', type: 'text' },
+      { label: 'Comparison observations', type: 'textarea', rows: 3 },
+      { label: 'Why is campaign finance data public?', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-M5',
+    lessonId: 'M5',
+    title: 'Federal vs. State Comparison',
+    gradeLevel: 'middle',
+    fields: [
+      { label: 'Your State', type: 'text' },
+      {
+        label: 'Comparison Chart',
+        type: 'table',
+        columns: ['Feature', 'U.S. Congress', 'Your State Legislature'],
+        rows: 6,
+      },
+      { label: 'Number of state legislators (upper chamber)', type: 'text' },
+      { label: 'Number of state legislators (lower chamber)', type: 'text' },
+      { label: 'Term length (upper)', type: 'text' },
+      { label: 'Term length (lower)', type: 'text' },
+      { label: 'State legislator name', type: 'text' },
+      { label: 'State legislator party', type: 'text' },
+      {
+        label: 'Powers categorization',
+        type: 'table',
+        columns: ['Power/Responsibility', 'Federal', 'State', 'Shared'],
+        rows: 5,
+      },
+      { label: 'Why have both federal AND state governments?', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-M6',
+    lessonId: 'M6',
+    title: 'District Demographics',
+    gradeLevel: 'middle',
+    fields: [
+      { label: 'Your District (State-Number)', type: 'text' },
+      { label: 'Representative Name', type: 'text' },
+      { label: 'Population', type: 'text' },
+      { label: 'Median Household Income', type: 'text', placeholder: '$0' },
+      { label: 'Poverty Rate', type: 'text', placeholder: '0%' },
+      { label: 'College Education Rate', type: 'text', placeholder: '0%' },
+      {
+        label: 'District Type',
+        type: 'checkbox',
+        options: ['Urban', 'Suburban', 'Rural', 'Mixed'],
+      },
+      { label: 'Comparison District (State-Number)', type: 'text' },
+      { label: 'Comparison Population', type: 'text' },
+      { label: 'Comparison Median Income', type: 'text', placeholder: '$0' },
+      { label: 'Comparison District Type', type: 'text' },
+      { label: 'How might these differences affect voter priorities?', type: 'textarea', rows: 3 },
+    ],
+  },
+  {
+    id: 'worksheet-H1',
+    lessonId: 'H1',
+    title: 'Civic Research Design',
+    gradeLevel: 'high',
+    fields: [
+      { label: 'Initial topic of interest', type: 'text' },
+      { label: 'Vague question (first draft)', type: 'textarea', rows: 2 },
+      { label: 'Refined research question (testable)', type: 'textarea', rows: 2 },
+      {
+        label: 'Data sources needed',
+        type: 'checkbox',
+        options: [
+          'Congress.gov (bills/votes)',
+          'FEC (campaign finance)',
+          'Census Bureau (demographics)',
+          'OpenStates (state data)',
+          'Other',
+        ],
+      },
+      { label: 'What this data CAN tell us', type: 'textarea', rows: 2 },
+      { label: 'What this data CANNOT tell us', type: 'textarea', rows: 2 },
+      { label: 'Potential confounding variables', type: 'textarea', rows: 2 },
+      { label: 'How will you avoid claiming causation?', type: 'textarea', rows: 2 },
+      {
+        label: 'Source evaluation',
+        type: 'table',
+        columns: ['Source', 'Type (Primary/Secondary)', 'Strengths', 'Limitations'],
+        rows: 4,
+      },
+      { label: 'Final research question', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-H2',
+    lessonId: 'H2',
+    title: 'Campaign Finance Analysis',
+    gradeLevel: 'high',
+    fields: [
+      { label: 'Committee selected for analysis', type: 'text' },
+      { label: 'Policy area of this committee', type: 'text' },
+      {
+        label: 'Member finance data',
+        type: 'table',
+        columns: [
+          'Member Name',
+          'Party',
+          'Top Industry #1',
+          'Top Industry #2',
+          'Top Industry #3',
+          'Relevant Vote',
+          'How Voted',
+        ],
+        rows: 5,
+      },
+      { label: 'Patterns observed across members', type: 'textarea', rows: 3 },
+      { label: 'Alternative explanations for patterns', type: 'textarea', rows: 2 },
+      { label: 'Data limitations', type: 'textarea', rows: 2 },
+      { label: 'Evidence-based analysis paragraph', type: 'textarea', rows: 6 },
+    ],
+  },
+  {
+    id: 'worksheet-H3',
+    lessonId: 'H3',
+    title: 'Voting Pattern Analysis',
+    gradeLevel: 'high',
+    fields: [
+      { label: 'Representative 1 (Name, Party, State)', type: 'text' },
+      { label: 'Representative 2 (Name, Party, State)', type: 'text' },
+      { label: 'Representative 3 (Name, Party, State)', type: 'text' },
+      {
+        label: 'Vote data collection',
+        type: 'table',
+        columns: ['Vote/Bill', 'Rep 1', 'Rep 2', 'Rep 3', 'Bipartisan?'],
+        rows: 15,
+      },
+      { label: 'Rep 1: Party unity score (votes with party / total)', type: 'text' },
+      { label: 'Rep 2: Party unity score', type: 'text' },
+      { label: 'Rep 3: Party unity score', type: 'text' },
+      { label: 'Rep 1: Success rate (votes with winning side / total)', type: 'text' },
+      { label: 'Rep 2: Success rate', type: 'text' },
+      { label: 'Rep 3: Success rate', type: 'text' },
+      {
+        label: 'Factors explaining differences (region, seniority, district)',
+        type: 'textarea',
+        rows: 3,
+      },
+      { label: 'Analysis paragraph with evidence', type: 'textarea', rows: 5 },
+    ],
+  },
+  {
+    id: 'worksheet-H4',
+    lessonId: 'H4',
+    title: 'Representation Analysis',
+    gradeLevel: 'high',
+    fields: [
+      {
+        label: 'Congressional vs. national demographics',
+        type: 'table',
+        columns: ['Category', 'U.S. Population %', 'Congress %', 'Difference'],
+        rows: 6,
+      },
+      { label: 'Most overrepresented group', type: 'text' },
+      { label: 'Most underrepresented group', type: 'text' },
+      { label: 'Your representative demographics', type: 'textarea', rows: 2 },
+      { label: 'Your district demographics', type: 'textarea', rows: 2 },
+      {
+        label: 'Does your representative "match" your district? Why or why not?',
+        type: 'textarea',
+        rows: 2,
+      },
+      { label: 'Descriptive representation: definition and importance', type: 'textarea', rows: 2 },
+      { label: 'Substantive representation: definition and importance', type: 'textarea', rows: 2 },
+      { label: 'Seminar preparation: Your position with evidence', type: 'textarea', rows: 4 },
+    ],
+  },
+  {
+    id: 'worksheet-H5',
+    lessonId: 'H5',
+    title: 'State Comparison Analysis',
+    gradeLevel: 'high',
+    fields: [
+      {
+        label: 'State structure comparison',
+        type: 'table',
+        columns: ['Feature', 'State 1', 'State 2', 'State 3', 'State 4'],
+        rows: 8,
+      },
+      { label: 'State 1 name', type: 'text' },
+      { label: 'State 2 name', type: 'text' },
+      { label: 'State 3 name', type: 'text' },
+      { label: 'State 4 name', type: 'text' },
+      { label: 'Policy topic selected', type: 'text' },
+      {
+        label: 'Policy tracking',
+        type: 'table',
+        columns: ['State', 'Current Law', 'Recent Bill', 'Status'],
+        rows: 4,
+      },
+      { label: 'Hypothesis: What predicts legislative structure?', type: 'textarea', rows: 2 },
+      { label: 'Hypothesis: What predicts policy position?', type: 'textarea', rows: 2 },
+      { label: 'Evidence supporting your hypotheses', type: 'textarea', rows: 3 },
+    ],
+  },
+  {
+    id: 'worksheet-H6',
+    lessonId: 'H6',
+    title: 'Research Project Framework',
+    gradeLevel: 'high',
+    fields: [
+      { label: 'Phase 1: Research Question', type: 'textarea', rows: 2 },
+      { label: 'Why is this question important?', type: 'textarea', rows: 2 },
+      { label: 'Data sources you will use', type: 'textarea', rows: 2 },
+      { label: 'Phase 2: Data Collection Plan', type: 'textarea', rows: 2 },
+      { label: 'Variables being measured', type: 'text' },
+      { label: 'Minimum data points to collect', type: 'text', placeholder: '15+' },
+      {
+        label: 'Data collection tracker',
+        type: 'table',
+        columns: ['Data Point', 'Variable 1', 'Variable 2', 'Source'],
+        rows: 15,
+      },
+      { label: 'Phase 3: Key Findings', type: 'textarea', rows: 3 },
+      { label: 'Limitations of your research', type: 'textarea', rows: 2 },
+      { label: 'Phase 4: Presentation Outline', type: 'textarea', rows: 3 },
+      { label: 'Peer feedback received', type: 'textarea', rows: 2 },
+      { label: 'Follow-up questions for future research', type: 'textarea', rows: 2 },
+    ],
+  },
+  {
+    id: 'worksheet-H7',
+    lessonId: 'H7',
+    title: 'Information Evaluation',
+    gradeLevel: 'high',
+    fields: [
+      {
+        label: 'Source reliability ranking',
+        type: 'table',
+        columns: ['Source Type', 'Reliability (1-5)', 'Reasoning'],
+        rows: 5,
+      },
+      { label: 'Claim 1', type: 'text' },
+      { label: 'Claim 1 verification: Data used and finding', type: 'textarea', rows: 2 },
+      { label: 'Claim 2', type: 'text' },
+      { label: 'Claim 2 verification: Data used and finding', type: 'textarea', rows: 2 },
+      { label: 'Claim 3', type: 'text' },
+      { label: 'Claim 3 verification: Data used and finding', type: 'textarea', rows: 2 },
+      { label: 'Claim 4', type: 'text' },
+      { label: 'Claim 4 verification: Data used and finding', type: 'textarea', rows: 2 },
+      { label: 'Misleading data example: What tactic was used?', type: 'textarea', rows: 2 },
+      { label: 'How would you fix it to be accurate?', type: 'textarea', rows: 2 },
+      { label: 'Real-world claim found online', type: 'text' },
+      { label: 'Verification status and data used', type: 'textarea', rows: 3 },
+      { label: 'My principles for evaluating civic information', type: 'textarea', rows: 3 },
     ],
   },
 ];
@@ -2363,4 +3232,22 @@ export function getRubricByGradeLevel(gradeLevel: GradeLevel): AssessmentRubric 
 
 export function getC3StandardsByLesson(lessonId: string): C3Standard[] {
   return C3_STANDARDS.filter(s => s.lessons.includes(lessonId));
+}
+
+export function getLessonBySlug(slug: string): Lesson | undefined {
+  return EDUCATION_CURRICULUM.find(l => l.id.toLowerCase() === slug.toLowerCase());
+}
+
+export function getAdjacentLessons(lessonId: string): {
+  prev: Lesson | undefined;
+  next: Lesson | undefined;
+} {
+  const lesson = getLessonById(lessonId);
+  if (!lesson) return { prev: undefined, next: undefined };
+  const gradeLessons = EDUCATION_CURRICULUM.filter(l => l.gradeLevel === lesson.gradeLevel);
+  const index = gradeLessons.findIndex(l => l.id === lessonId);
+  return {
+    prev: index > 0 ? gradeLessons[index - 1] : undefined,
+    next: index < gradeLessons.length - 1 ? gradeLessons[index + 1] : undefined,
+  };
 }
