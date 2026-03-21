@@ -39,7 +39,7 @@ export default function SearchForm() {
           setError({
             type: 'invalid_zip',
             message: 'Invalid ZIP code format',
-            suggestion: 'Please enter a valid 5-digit ZIP code (e.g., 90210)',
+            suggestion: 'Please enter your full home address (e.g., 123 Main St, Detroit, MI)',
           });
           setIsLoading(false);
           return;
@@ -82,7 +82,7 @@ export default function SearchForm() {
         setError({
           type: 'invalid_zip',
           message: 'Search term too short',
-          suggestion: 'Please enter at least 3 characters or a valid ZIP code',
+          suggestion: 'Please enter at least 3 characters or a full address',
         });
         setIsLoading(false);
         return;
@@ -124,7 +124,7 @@ export default function SearchForm() {
       setError({
         type: 'geolocation',
         message: 'Location service unavailable',
-        suggestion: 'Please enter your address or ZIP code manually.',
+        suggestion: 'Please enter your address manually.',
       });
       return;
     }
@@ -181,14 +181,14 @@ export default function SearchForm() {
           setError({
             type: 'api_error',
             message: 'Location service unavailable',
-            suggestion: 'Please enter your address or ZIP code manually.',
+            suggestion: 'Please enter your address manually.',
           });
         } else if (error.message === 'NO_LOCATION_DATA') {
           setError({
             type: 'geolocation',
             message: 'Could not determine location',
             suggestion:
-              'Unable to find your location from your IP address. Please enter your address or ZIP code manually.',
+              'Unable to find your location from your IP address. Please enter your address manually.',
           });
         } else {
           setError({
@@ -201,7 +201,7 @@ export default function SearchForm() {
         setError({
           type: 'geolocation',
           message: 'Location detection failed',
-          suggestion: 'Please enter your address or ZIP code manually.',
+          suggestion: 'Please enter your address manually.',
         });
       }
     }
@@ -224,7 +224,7 @@ export default function SearchForm() {
             placeholder="Enter address"
             disabled={isLoading}
             defaultValue={searchInput}
-            ariaLabel="Search by address or ZIP code"
+            ariaLabel="Search by address"
             className="pl-grid-4 sm:pl-grid-5 pr-grid-8 sm:pr-grid-12"
           />
           <button
@@ -288,10 +288,10 @@ export default function SearchForm() {
             </svg>
             <div className="flex-1">
               <p className="font-bold uppercase tracking-aicher text-xs sm:text-sm">
-                Multi-District ZIP Code
+                Multiple Districts Found
               </p>
               <p className="mt-grid-1 text-xs sm:text-sm">
-                This ZIP spans multiple districts. Use advanced search to select yours.
+                Your address may span multiple districts. Use advanced search to select yours.
               </p>
               <button
                 onClick={handleAdvancedSearch}

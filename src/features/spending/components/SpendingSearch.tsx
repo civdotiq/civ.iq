@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { US_STATES } from '@/lib/data/us-states';
-import type { ZipDistrictMapping } from '@/lib/data/zip-district-mapping-119th';
+import AddressAutocomplete from '@/components/search/AddressAutocomplete';
 
 interface SpendingSearchProps {
   onDistrictSelected: (districtId: string) => void;
   initialDistrict?: string;
+}
+
+interface SearchResult {
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
 }
 
 const STATES_WITH_DISTRICTS = Object.entries(US_STATES)
@@ -18,37 +23,58 @@ export default function SpendingSearch({
   onDistrictSelected,
   initialDistrict,
 }: SpendingSearchProps) {
-  const [zip, setZip] = useState('');
-  const [zipError, setZipError] = useState<string | null>(null);
-  const [multiDistricts, setMultiDistricts] = useState<ZipDistrictMapping[]>([]);
+  const [addressInput, setAddressInput] = useState('');
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedState, setSelectedState] = useState('');
   const [districtNumber, setDistrictNumber] = useState('');
 
-  const handleZipSearch = useCallback(() => {
-    setZipError(null);
-    setMultiDistricts([]);
+  const handleAddressSearch = useCallback(async () => {
+    setAddressError(null);
 
-    const trimmed = zip.trim();
-    if (!/^\d{5}$/.test(trimmed)) {
-      setZipError('Enter a valid 5-digit ZIP code.');
+    const trimmed = addressInput.trim();
+    if (!trimmed) {
+      setAddressError('Enter your home address to find your congressional district.');
       return;
     }
 
-    const districts = getAllDistrictsForZip(trimmed);
-    if (districts.length === 0) {
-      setZipError('No congressional district found for this ZIP code.');
-      return;
-    }
+    setIsSearching(true);
 
-    if (districts.length === 1) {
-      const d = districts[0];
-      if (d) {
-        onDistrictSelected(`${d.state}-${d.district}`);
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&limit=5`);
+
+      if (!response.ok) {
+        throw new Error('Search failed');
       }
-    } else {
-      setMultiDistricts(districts);
+
+      const data: { results: SearchResult[] } = await response.json();
+
+      // Find the House representative to get the district
+      const houseRep = data.results?.find(r => r.chamber === 'House' && r.state && r.district);
+
+      if (houseRep?.state && houseRep.district) {
+        onDistrictSelected(`${houseRep.state}-${houseRep.district}`);
+        return;
+      }
+
+      // If we found any results with state info, use that (at-large districts)
+      const anyRep = data.results?.find(r => r.state);
+      if (anyRep?.state) {
+        onDistrictSelected(`${anyRep.state}-00`);
+        return;
+      }
+
+      setAddressError(
+        'Could not determine congressional district from this address. Try the state and district selector below.'
+      );
+    } catch {
+      setAddressError(
+        'Address lookup failed. Please try again or use the state and district selector below.'
+      );
+    } finally {
+      setIsSearching(false);
     }
-  }, [zip, onDistrictSelected]);
+  }, [addressInput, onDistrictSelected]);
 
   const handleStateDistrictSearch = useCallback(() => {
     if (!selectedState || !districtNumber) return;
@@ -58,60 +84,42 @@ export default function SpendingSearch({
 
   return (
     <div className="space-y-6">
-      {/* ZIP code search */}
+      {/* Address search */}
       <div>
         <label
-          htmlFor="zip-input"
+          htmlFor="address-input"
           className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
         >
-          Search by ZIP Code
+          Search by Address
         </label>
         <div className="flex gap-2">
-          <input
-            id="zip-input"
-            type="text"
-            inputMode="numeric"
-            maxLength={5}
-            value={zip}
-            onChange={e => {
-              setZip(e.target.value.replace(/\D/g, ''));
-              setZipError(null);
-              setMultiDistricts([]);
-            }}
-            onKeyDown={e => e.key === 'Enter' && handleZipSearch()}
-            placeholder="e.g. 10001"
-            className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] px-4 py-2 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 w-40 focus:outline-none focus:border-[#3ea2d4]"
-          />
+          <div className="flex-1 border-2 border-black dark:border-[#333333]">
+            <AddressAutocomplete
+              onSelect={address => {
+                setAddressInput(address);
+                setAddressError(null);
+              }}
+              onChange={value => {
+                setAddressInput(value);
+                setAddressError(null);
+              }}
+              placeholder="e.g. 123 Main St, Detroit, MI"
+              ariaLabel="Enter your home address to find your congressional district"
+            />
+          </div>
           <button
-            onClick={handleZipSearch}
-            className="bg-[#3ea2d4] text-white border-2 border-black dark:border-[#333333] px-6 py-2 font-semibold hover:bg-[#2d8ab8] transition-colors"
+            onClick={handleAddressSearch}
+            disabled={isSearching || !addressInput.trim()}
+            className="bg-[#3ea2d4] text-white border-2 border-black dark:border-[#333333] px-6 py-2 font-semibold hover:bg-[#2d8ab8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Search
+            {isSearching ? 'Searching...' : 'Search'}
           </button>
         </div>
-        {zipError && <p className="text-sm text-[#e11d07] mt-2">{zipError}</p>}
+        {addressError && <p className="text-sm text-[#e11d07] mt-2">{addressError}</p>}
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Your address is used only to determine your congressional district and is not stored.
+        </p>
       </div>
-
-      {/* Multi-district disambiguation */}
-      {multiDistricts.length > 1 && (
-        <div className="border-2 border-[#3ea2d4] bg-white dark:bg-[#222226] p-4">
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            This ZIP code spans multiple districts. Select one:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {multiDistricts.map(d => (
-              <button
-                key={`${d.state}-${d.district}`}
-                onClick={() => onDistrictSelected(`${d.state}-${d.district}`)}
-                className="border-2 border-black dark:border-[#333333] px-4 py-2 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-[#2a2a2e] transition-colors text-gray-900 dark:text-gray-100"
-              >
-                {d.state}-{d.district}
-                {d.primary && <span className="ml-1 text-xs text-gray-400">(primary)</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* State/district dropdown fallback */}
       <div>

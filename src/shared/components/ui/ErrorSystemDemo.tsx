@@ -54,7 +54,7 @@ export function ErrorSystemDemo() {
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Search Validation</h3>
         <p className="text-gray-600">
-          Try entering invalid ZIP codes or addresses to see specific error messages:
+          Try entering invalid addresses to see specific error messages:
         </p>
 
         <div className="max-w-md">

@@ -83,7 +83,7 @@ function SpendingPageContent() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
             See how federal dollars flow to each congressional district through contracts and
-            grants. Search by ZIP code or select a state and district.
+            grants. Search by address or select a state and district.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ function SpendingPageContent() {
         {!districtId && !loading && !error && (
           <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-8 text-center">
             <p className="text-gray-500 dark:text-gray-400">
-              Enter a ZIP code or select a state and district above to view federal spending data.
+              Enter your address or select a state and district above to view federal spending data.
             </p>
           </div>
         )}

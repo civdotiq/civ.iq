@@ -167,8 +167,8 @@ const ELEMENTARY_LESSONS: Lesson[] = [
         duration: '15 minutes',
         instructions: [
           'Display CIV.IQ homepage on projector',
-          'Point to ZIP code search box',
-          'Enter classroom ZIP code together',
+          'Point to address search box',
+          'Enter school address together',
           'Results page appears with 3 representatives',
           'Walk through each: "This is one of our Senators. Senators represent our whole STATE."',
           '"This is our other Senator. Every state has exactly TWO senators."',
@@ -200,10 +200,10 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       {
         title: 'Find Your Representatives',
         description:
-          "Use CIV.IQ to look up representatives by entering your school's ZIP code. Record the names of your U.S. Representative and two Senators.",
+          "Use CIV.IQ to look up representatives by entering your school's address. Record the names of your U.S. Representative and two Senators.",
         duration: '15 minutes',
         type: 'guided-practice',
-        civiqFeature: 'ZIP Code Lookup',
+        civiqFeature: 'Address Lookup',
         civiqPath: '/',
       },
       {
@@ -2254,7 +2254,7 @@ export const WORKSHEETS: Worksheet[] = [
     title: 'My Representatives',
     gradeLevel: 'elementary',
     fields: [
-      { label: 'My ZIP code', type: 'text', placeholder: '00000' },
+      { label: 'My home address', type: 'text', placeholder: '123 Main St, City, State' },
       { label: 'Senator 1 Name', type: 'text' },
       {
         label: 'Senator 1 Party',

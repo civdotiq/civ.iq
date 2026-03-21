@@ -116,7 +116,7 @@ const faqItems = [
   {
     question: 'How do I find my representatives?',
     answer:
-      'You can find your representatives by entering your ZIP code on the CIV.IQ homepage. Each U.S. citizen is represented by 2 Senators (representing the entire state) and 1 Representative (representing their congressional district).',
+      'You can find your representatives by entering your home address on the CIV.IQ homepage. Each U.S. citizen is represented by 2 Senators (representing the entire state) and 1 Representative (representing their congressional district).',
   },
 ];
 

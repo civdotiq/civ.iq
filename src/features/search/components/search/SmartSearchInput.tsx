@@ -168,7 +168,7 @@ export function SmartSearchInput({
               focus:outline-none focus:ring-2 focus:ring-civiq-blue/50
             `}
             disabled={isLoading}
-            aria-label="Search by ZIP code or address"
+            aria-label="Search by address"
             aria-describedby="search-hint"
           />
 

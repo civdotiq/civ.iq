@@ -333,9 +333,11 @@ export function suggestCorrections(input: string, classification: Classification
     // Check if it looks like a partial ZIP
     const digits = input.replace(/\D/g, '');
     if (digits.length === 4) {
-      suggestions.push(`Did you mean to enter a 5-digit ZIP code?`);
+      suggestions.push(`For accurate results, enter your full home address instead`);
     } else if (digits.length === 3) {
-      suggestions.push(`ZIP codes are 5 digits. Try entering more digits.`);
+      suggestions.push(
+        `For accurate results, enter your full home address (e.g., 123 Main St, City, State).`
+      );
     }
 
     // Check if missing state

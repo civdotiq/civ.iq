@@ -182,7 +182,7 @@ export function ServiceWorkerRegistration() {
     if (swState.registration) {
       const importantRoutes = [
         '/representatives',
-        '/api/representatives?zip=10001', // Sample ZIP for prefetch
+        '/api/representatives', // Prefetch representatives page
       ];
 
       // Delay prefetch to not interfere with initial load

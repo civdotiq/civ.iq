@@ -144,7 +144,7 @@ export default function RepresentativeNotFound() {
               </Link>{' '}
               or{' '}
               <Link href="/" className="text-civiq-blue hover:text-civiq-blue/80">
-                search by ZIP code
+                search by address
               </Link>
               .
             </p>

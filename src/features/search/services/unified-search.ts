@@ -255,7 +255,7 @@ async function handleAmbiguousSearch(
   // Neither worked - provide helpful error
   const suggestions = [];
   if (digits.length > 0 && digits.length < 5) {
-    suggestions.push('Enter a complete 5-digit ZIP code');
+    suggestions.push('Enter your full home address for accurate district lookup');
   }
   if (!input.includes(',')) {
     suggestions.push('For addresses, include city and state (e.g., "123 Main St, Detroit, MI")');
@@ -269,7 +269,7 @@ async function handleAmbiguousSearch(
     suggestions,
     error: {
       code: 'AMBIGUOUS_INPUT',
-      message: 'Unable to find location. Please enter a ZIP code or full address.',
+      message: 'Unable to find location. Please enter your full home address.',
       details: { classification, suggestions },
     },
   };

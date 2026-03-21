@@ -83,7 +83,7 @@ export function SearchValidation({
     if (value.trim()) {
       const isZipCode = /^\d+$/.test(value.trim());
       if (isZipCode && value.length > 5) {
-        setError('ZIP codes are 5 digits only');
+        setError('For best results, enter your full home address instead of a ZIP code');
       }
     }
   };
@@ -98,7 +98,7 @@ export function SearchValidation({
       if (trimmed.length < 5) {
         return (
           <div className="text-xs text-gray-500 mt-1">
-            ZIP codes are 5 digits (e.g., 48201, 10001)
+            For accurate results, enter your full home address (e.g., 123 Main St, Detroit, MI)
           </div>
         );
       }
@@ -165,18 +165,18 @@ export function SearchValidation({
         <span className="font-medium">Examples:</span>
         <button
           type="button"
-          onClick={() => setQuery('48201')}
+          onClick={() => setQuery('123 Main St, Detroit, MI')}
           className="ml-2 text-civiq-blue hover:underline"
         >
-          48201
+          123 Main St, Detroit, MI
         </button>
         <span className="mx-1">•</span>
         <button
           type="button"
-          onClick={() => setQuery('1600 Pennsylvania Ave, Washington DC')}
+          onClick={() => setQuery('1600 Pennsylvania Ave, Washington, DC')}
           className="text-civiq-blue hover:underline"
         >
-          1600 Pennsylvania Ave, Washington DC
+          1600 Pennsylvania Ave, Washington, DC
         </button>
       </div>
     </form>
@@ -237,9 +237,9 @@ export function EnhancedSmartSearchInput({
   );
 
   const examples = [
-    { label: 'Detroit', value: '48201' },
-    { label: 'Manhattan', value: '10001' },
-    { label: 'Full Address', value: '123 Main St, Detroit MI' },
+    { label: 'Detroit', value: '123 Main St, Detroit, MI' },
+    { label: 'Manhattan', value: '350 5th Ave, New York, NY' },
+    { label: 'Washington DC', value: '1600 Pennsylvania Ave, Washington, DC' },
   ];
 
   return (

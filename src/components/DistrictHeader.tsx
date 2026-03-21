@@ -252,7 +252,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
           <h3 className="text-lg font-semibold text-gray-900">No District Information</h3>
         </div>
         <p className="text-sm text-gray-700">
-          Enter a ZIP code to see congressional district information.
+          Enter your address to see congressional district information.
         </p>
       </div>
     );
