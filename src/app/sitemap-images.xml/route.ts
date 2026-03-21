@@ -10,8 +10,7 @@ import * as path from 'path';
 
 const BASE_URL = 'https://civdotiq.org';
 
-export const dynamic = 'force-static';
-export const revalidate = 86400; // Regenerate daily
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   // Read photo files from public/photos
