@@ -21,101 +21,108 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function OgImage() {
-  // Load logo as base64
-  let logoSrc = '';
   try {
-    const logoPath = join(process.cwd(), 'public/images/civiq-logo.png');
-    const logoBuffer = readFileSync(logoPath);
-    logoSrc = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-  } catch {
-    // Skip logo if unavailable
-  }
+    // Load logo as base64
+    let logoSrc = '';
+    try {
+      const logoPath = join(process.cwd(), 'public/images/civiq-logo.png');
+      const logoBuffer = readFileSync(logoPath);
+      logoSrc = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+    } catch {
+      // Skip logo if unavailable during prerender
+    }
 
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: 1200,
-          height: 630,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#ffffff',
-          border: '2px solid #000000',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
-      >
-        {/* Red accent bar */}
-        <div style={{ width: '100%', height: 8, backgroundColor: '#e11d07', display: 'flex' }} />
-
-        {/* Main content */}
+    return new ImageResponse(
+      (
         <div
           style={{
-            flex: 1,
+            width: 1200,
+            height: 630,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '48px 80px',
+            backgroundColor: '#ffffff',
+            border: '2px solid #000000',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
         >
-          {/* Logo */}
-          {logoSrc && <img src={logoSrc} width={96} height={96} style={{ marginBottom: 32 }} />}
+          {/* Red accent bar */}
+          <div style={{ width: '100%', height: 8, backgroundColor: '#e11d07', display: 'flex' }} />
 
-          {/* Title */}
+          {/* Main content */}
           <div
             style={{
-              fontSize: 72,
-              fontWeight: 700,
-              color: '#000000',
-              letterSpacing: '-1px',
+              flex: 1,
               display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '48px 80px',
             }}
           >
-            CIV.IQ
+            {/* Logo */}
+            {logoSrc && <img src={logoSrc} width={96} height={96} style={{ marginBottom: 32 }} />}
+
+            {/* Title */}
+            <div
+              style={{
+                fontSize: 72,
+                fontWeight: 700,
+                color: '#000000',
+                letterSpacing: '-1px',
+                display: 'flex',
+              }}
+            >
+              CIV.IQ
+            </div>
+
+            {/* Tagline */}
+            <div
+              style={{
+                fontSize: 36,
+                fontWeight: 700,
+                color: '#333333',
+                marginTop: 16,
+                display: 'flex',
+              }}
+            >
+              Who Represents You?
+            </div>
+
+            {/* Description */}
+            <div
+              style={{
+                fontSize: 22,
+                color: '#666666',
+                marginTop: 24,
+                textAlign: 'center',
+                display: 'flex',
+              }}
+            >
+              Real government data. 535 Members of Congress. 50 State Legislatures.
+            </div>
           </div>
 
-          {/* Tagline */}
+          {/* Footer */}
           <div
             style={{
-              fontSize: 36,
-              fontWeight: 700,
-              color: '#333333',
-              marginTop: 16,
               display: 'flex',
+              justifyContent: 'center',
+              padding: '16px 0',
+              borderTop: '2px solid #000000',
             }}
           >
-            Who Represents You?
-          </div>
-
-          {/* Description */}
-          <div
-            style={{
-              fontSize: 22,
-              color: '#666666',
-              marginTop: 24,
-              textAlign: 'center',
-              display: 'flex',
-            }}
-          >
-            Real government data. 535 Members of Congress. 50 State Legislatures.
+            <div style={{ fontSize: 20, color: '#999999', display: 'flex' }}>civdotiq.org</div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '16px 0',
-            borderTop: '2px solid #000000',
-          }}
-        >
-          <div style={{ fontSize: 20, color: '#999999', display: 'flex' }}>civdotiq.org</div>
-        </div>
-      </div>
-    ),
-    {
-      ...size,
-    }
-  );
+      ),
+      {
+        ...size,
+      }
+    );
+  } catch {
+    // Fallback: return a minimal valid response if ImageResponse fails during prerender
+    return new Response('CIV.IQ', {
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
 }
