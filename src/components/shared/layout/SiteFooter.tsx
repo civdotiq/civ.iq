@@ -57,6 +57,10 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           <Link href="/developers#bulk-data" className={linkClass}>
             Bulk Data
           </Link>
+          <span className={separatorClass}>•</span>
+          <Link href="/open" className={linkClass}>
+            Open Data
+          </Link>
         </div>
 
         {/* Open Protocols */}
@@ -103,10 +107,6 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           <span className={separatorClass}>•</span>
           <Link href="/education" className={linkClass}>
             Education
-          </Link>
-          <span className={separatorClass}>•</span>
-          <Link href="/open" className={linkClass}>
-            Open Data
           </Link>
           <span className={separatorClass}>•</span>
           <Link href="/privacy" className={linkClass}>
