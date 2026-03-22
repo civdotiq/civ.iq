@@ -18,8 +18,7 @@ import { SpendingNarrativeSection } from '@/features/spending/components/Spendin
 import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import { EconomicIndicatorsSection } from '@/features/districts/components/EconomicIndicatorsSection';
-// TODO: Re-enable after fixing EPA/CMS/FDIC service bugs (data returning zeroes)
-// import { CommunityProfileSection } from '@/features/districts/components/CommunityProfileSection';
+import { CommunityProfileSection } from '@/features/districts/components/CommunityProfileSection';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -279,8 +278,8 @@ export default function DistrictPage() {
             {/* Economic Indicators */}
             <EconomicIndicatorsSection districtId={districtId} />
 
-            {/* TODO: Re-enable after fixing EPA/CMS/FDIC service bugs */}
-            {/* <CommunityProfileSection districtId={districtId} /> */}
+            {/* Community Profile */}
+            <CommunityProfileSection districtId={districtId} />
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />
