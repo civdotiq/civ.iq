@@ -38,14 +38,14 @@ export async function generateMetadata({
 
   if (!parsed) {
     return {
-      title: 'Congressional District | CIV.IQ',
+      title: 'Congressional District',
       description: 'Explore congressional district demographics, representatives, and voting data.',
     };
   }
 
   const stateName = getStateName(parsed.state) || parsed.state;
   const districtLabel = parsed.district === 'AL' ? 'At-Large' : `District ${parsed.district}`;
-  const title = `${stateName} ${districtLabel} | Congressional District | CIV.IQ`;
+  const title = `${stateName} ${districtLabel} | Congressional District`;
   const description = `Explore ${stateName}'s ${districtLabel} congressional district. View demographics, current representative, voting history, and campaign finance data.`;
 
   // Build canonical feed URL for hyphenated format

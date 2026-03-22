@@ -44,10 +44,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const glossaryTerm = slugToTerm(termSlug);
 
   if (!glossaryTerm) {
-    return { title: 'Term Not Found | CIV.IQ Glossary' };
+    return { title: 'Term Not Found' };
   }
 
-  const title = `What is a ${glossaryTerm.term}? Definition & Explanation | CIV.IQ`;
+  const title = `What is a ${glossaryTerm.term}? Definition & Explanation`;
   const description = `${glossaryTerm.definition.slice(0, 155)}...`;
 
   return {

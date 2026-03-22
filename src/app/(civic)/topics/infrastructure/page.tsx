@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Infrastructure Legislation & Policy | CIV.IQ',
+  title: 'Infrastructure Legislation & Policy',
   description:
     'Track infrastructure legislation in Congress. Transportation, broadband, water systems, energy grid, aviation, and the committees that shape infrastructure policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'highway funding',
   ],
   openGraph: {
-    title: 'Infrastructure Legislation & Policy | CIV.IQ',
+    title: 'Infrastructure Legislation & Policy',
     description:
       'Track infrastructure legislation in Congress. Transportation, broadband, water systems, and energy grid policy.',
     type: 'website',

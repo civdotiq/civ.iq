@@ -90,12 +90,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const lesson = getLessonBySlug(lessonId);
 
   if (!lesson) {
-    return { title: 'Lesson Not Found | CIV.IQ Education' };
+    return { title: 'Lesson Not Found' };
   }
 
   const gradeInfo = GRADE_LEVEL_INFO[lesson.gradeLevel];
   const topicLabel = LESSON_TOPICS[lesson.topic];
-  const title = `${lesson.title} - ${gradeInfo.label} Civics Lesson | CIV.IQ Education`;
+  const title = `${lesson.title} - ${gradeInfo.label} Civics Lesson`;
   const description = `${lesson.overview.slice(0, 150)}... Grade ${gradeInfo.grades} | ${lesson.duration}`;
 
   return {

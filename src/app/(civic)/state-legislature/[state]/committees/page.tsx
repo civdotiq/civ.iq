@@ -131,7 +131,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     : getStateLegislatureType(state.toUpperCase());
 
   return {
-    title: `${state.toUpperCase()} ${chamberName} Committees | CIV.IQ`,
+    title: `${state.toUpperCase()} ${chamberName} Committees`,
     description: `Browse committees in the ${legislatureName}. View committee leadership, membership rosters, and jurisdiction information.`,
     openGraph: {
       title: `${state.toUpperCase()} ${chamberName} Committees`,

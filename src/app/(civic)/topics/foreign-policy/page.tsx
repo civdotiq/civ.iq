@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Foreign Policy Legislation | CIV.IQ',
+  title: 'Foreign Policy Legislation',
   description:
     'Track foreign policy legislation in Congress. International relations, treaties, foreign aid, sanctions, diplomacy, and international organization bills and the committees that shape U.S. foreign policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'AUKUS',
   ],
   openGraph: {
-    title: 'Foreign Policy Legislation | CIV.IQ',
+    title: 'Foreign Policy Legislation',
     description:
       'Track foreign policy legislation in Congress. International relations, treaties, foreign aid, and sanctions.',
     type: 'website',

@@ -1,6 +1,22 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
+  description:
+    'CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, and 18 official data sources. All data from official government APIs — no mock data, no bias.',
+  openGraph: {
+    title: 'About CIV.IQ',
+    description:
+      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 18 government data sources.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://civdotiq.org/about',
+  },
+};
 
 export default function AboutPage() {
   return (

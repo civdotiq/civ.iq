@@ -156,7 +156,7 @@ export async function generateMetadata({
     if (legislator) {
       const chamberName = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
       return {
-        title: `${legislator.name} - ${chamberName} | ${state.toUpperCase()} | CIV.IQ`,
+        title: `${legislator.name} - ${chamberName} | ${state.toUpperCase()}`,
         description: `View detailed information about ${legislator.name}, ${chamberName} for ${state.toUpperCase()} District ${legislator.district}`,
       };
     }
@@ -165,7 +165,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `State Legislator | ${state.toUpperCase()} | CIV.IQ`,
+    title: `State Legislator | ${state.toUpperCase()}`,
     description: `View detailed information about state legislator ${legislatorId} from ${state.toUpperCase()}`,
   };
 }

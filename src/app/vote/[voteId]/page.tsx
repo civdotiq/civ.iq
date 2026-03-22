@@ -107,12 +107,12 @@ export async function generateMetadata({
     const vote = await fetchVoteDetails(voteId);
     if (!vote) {
       return {
-        title: 'Vote Not Found | CIV.IQ',
+        title: 'Vote Not Found',
         description: 'The requested vote could not be found.',
       };
     }
 
-    const title = `${vote.chamber} Roll Call #${vote.rollNumber}: ${vote.title} — ${vote.result} | CIV.IQ`;
+    const title = `${vote.chamber} Roll Call #${vote.rollNumber}: ${vote.title} — ${vote.result}`;
     const description = `The ${vote.chamber} voted ${vote.result.toLowerCase()} on ${vote.question}. Yeas: ${vote.yeas}, Nays: ${vote.nays}. View all member positions and party breakdown.`;
     const url = `https://civdotiq.org/vote/${voteId}`;
 
@@ -127,7 +127,7 @@ export async function generateMetadata({
         siteName: 'CIV.IQ',
       },
       twitter: {
-        card: 'summary',
+        card: 'summary_large_image',
         title,
         description,
       },
@@ -137,7 +137,7 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: 'Vote Details | CIV.IQ',
+      title: 'Vote Details',
       description: 'View detailed vote results including member positions and party breakdown.',
     };
   }

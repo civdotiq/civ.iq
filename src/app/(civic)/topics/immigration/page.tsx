@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Immigration Legislation & Policy | CIV.IQ',
+  title: 'Immigration Legislation & Policy',
   description:
     'Track immigration legislation in Congress. Border security, legal immigration, asylum, workforce visas, citizenship, and the committees that shape immigration policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'immigration reform',
   ],
   openGraph: {
-    title: 'Immigration Legislation & Policy | CIV.IQ',
+    title: 'Immigration Legislation & Policy',
     description:
       'Track immigration legislation in Congress. Border security, legal immigration, asylum, and workforce visas.',
     type: 'website',

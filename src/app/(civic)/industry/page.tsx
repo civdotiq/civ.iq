@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Industries | CIV.IQ',
+  title: 'Industries',
   description:
     'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',
 };

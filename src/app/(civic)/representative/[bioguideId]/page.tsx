@@ -280,27 +280,30 @@ export async function generateMetadata({
     // Fetch representative data for rich metadata
     const representative = await getRepresentativeData(bioguideId);
 
-    const title = `${representative.name} (${representative.party}-${representative.state}) | CIV.IQ`;
-    const description = `Campaign finance, voting records, and legislative activity for ${representative.name}. Real government data from official sources.`;
+    const title = `${representative.name} (${representative.party}-${representative.state})`;
+    const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
+    const districtLabel = representative.district ? `, District ${representative.district}` : '';
+    const committeeNote = representative.committees?.length
+      ? `. Serves on ${representative.committees.length} committee${representative.committees.length === 1 ? '' : 's'}`
+      : '';
+    const description = `${representative.party} ${chamberLabel} ${representative.name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
     const url = `https://civdotiq.org/representative/${bioguideId}`;
 
-    // Build OG image URL - use trading card image when ?card= param present
+    // Build OG image URL - default to profile card, override with specific card type
     const cardType = resolvedSearchParams.card;
     const isValidCard =
       cardType && VALID_CARD_TYPES.includes(cardType as (typeof VALID_CARD_TYPES)[number]);
-    let ogImageUrl: string | undefined;
-
-    if (isValidCard) {
-      ogImageUrl = `https://civdotiq.org/api/card/${bioguideId}?type=${cardType}`;
-      if (cardType === 'vote' && resolvedSearchParams.billId) {
-        ogImageUrl += `&billId=${encodeURIComponent(resolvedSearchParams.billId)}`;
-      }
+    const effectiveCardType = isValidCard ? cardType : 'profile';
+    let ogImageUrl = `https://civdotiq.org/api/card/${bioguideId}?type=${effectiveCardType}`;
+    if (effectiveCardType === 'vote' && resolvedSearchParams.billId) {
+      ogImageUrl += `&billId=${encodeURIComponent(resolvedSearchParams.billId)}`;
     }
 
     return {
       title,
       description,
       alternates: {
+        canonical: url,
         types: {
           'application/atom+xml': `/api/feed/member/${bioguideId}`,
         },
@@ -311,24 +314,20 @@ export async function generateMetadata({
         url,
         siteName: 'CIV.IQ',
         type: 'profile',
-        ...(ogImageUrl && {
-          images: [{ url: ogImageUrl, width: 1200, height: 630 }],
-        }),
+        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       },
       twitter: {
-        card: isValidCard ? ('summary_large_image' as const) : ('summary' as const),
+        card: 'summary_large_image' as const,
         title,
         description,
         site: '@civdotiq',
-        ...(ogImageUrl && {
-          images: [ogImageUrl],
-        }),
+        images: [ogImageUrl],
       },
     };
   } catch {
     // Fallback metadata if representative data fetch fails
     return {
-      title: `Representative ${bioguideId} | CIV.IQ`,
+      title: `Representative ${bioguideId}`,
       description: `View detailed information about federal representative ${bioguideId}`,
     };
   }

@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Healthcare Legislation & Policy | CIV.IQ',
+  title: 'Healthcare Legislation & Policy',
   description:
     'Track healthcare legislation in Congress. Medicare, Medicaid, ACA, drug pricing, public health bills, and the committees that shape health policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'prescription drugs Congress',
   ],
   openGraph: {
-    title: 'Healthcare Legislation & Policy | CIV.IQ',
+    title: 'Healthcare Legislation & Policy',
     description:
       'Track healthcare legislation in Congress. Medicare, Medicaid, ACA, drug pricing, and public health bills.',
     type: 'website',

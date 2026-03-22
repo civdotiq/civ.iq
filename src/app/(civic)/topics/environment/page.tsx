@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Environment & Climate Legislation | CIV.IQ',
+  title: 'Environment & Climate Legislation',
   description:
     'Track environmental legislation in Congress. Climate change, clean energy, conservation, water quality, air quality bills and the committees that shape environmental policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'endangered species',
   ],
   openGraph: {
-    title: 'Environment & Climate Legislation | CIV.IQ',
+    title: 'Environment & Climate Legislation',
     description:
       'Track environmental legislation in Congress. Climate change, clean energy, conservation, and water quality policy.',
     type: 'website',

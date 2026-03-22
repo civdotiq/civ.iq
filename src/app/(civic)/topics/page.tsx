@@ -15,7 +15,7 @@ import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Legislative Topics - Policy Areas & Issues | CIV.IQ',
+  title: 'Legislative Topics - Policy Areas & Issues',
   description:
     'Explore legislative topics including healthcare, economy, education, environment, and more. Find related bills, committees, and representatives for each policy area.',
   keywords: [

@@ -7,11 +7,11 @@ import { Metadata } from 'next';
 import { BreadcrumbSchema, GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Open Comment Periods | CIV.IQ',
+  title: 'Open Comment Periods',
   description:
     'Track open federal comment periods. See which regulations are accepting public comments, deadlines, and how to participate in the rulemaking process.',
   openGraph: {
-    title: 'Open Comment Periods | CIV.IQ',
+    title: 'Open Comment Periods',
     description:
       'Track open federal comment periods. See which regulations are accepting public comments, deadlines, and how to participate in the rulemaking process.',
     type: 'website',

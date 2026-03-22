@@ -45,9 +45,10 @@ export const metadata: Metadata = {
     siteName: 'CIV.IQ',
     locale: 'en_US',
     type: 'website',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'CIV.IQ: Who Represents You?',
     description:
       'Find your federal, state, and local representatives. Track bills, votes, campaign finance, and more.',

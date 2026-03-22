@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
     : `Information about bill ${billId}`;
 
   return {
-    title: `${title} | CIV.IQ`,
+    title,
     description,
     alternates: {
       types: {
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
       type: 'website',
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
     },

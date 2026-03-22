@@ -11,11 +11,11 @@ import Link from 'next/link';
 import { BreadcrumbSchema, WebAPISchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Developers | CIV.IQ — Free Civic Data API, Widgets & Open Data',
+  title: 'Developers — Free Civic Data API, Widgets & Open Data',
   description:
     'Build with CIV.IQ: free REST API, embeddable widgets, Atom feeds, and bulk datasets for U.S. government data. No API key required. MIT licensed.',
   openGraph: {
-    title: 'Developers | CIV.IQ — Free Civic Data API, Widgets & Open Data',
+    title: 'Developers — Free Civic Data API, Widgets & Open Data',
     description:
       'Build with CIV.IQ: free REST API, embeddable widgets, Atom feeds, and bulk datasets for U.S. government data. No API key required. MIT licensed.',
     type: 'website',

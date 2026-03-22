@@ -142,10 +142,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     const committeeInfo = await fecApiService.getCommitteeInfo(committeeId);
     if (!committeeInfo) {
-      return { title: `Committee ${committeeId} | CIV.IQ` };
+      return { title: `Committee ${committeeId}` };
     }
 
-    const title = `${committeeInfo.name} - Campaign Contributions | CIV.IQ`;
+    const title = `${committeeInfo.name} - Campaign Contributions`;
     const description = `See where ${committeeInfo.name} sends money. View all Congressional recipients, amounts, and party breakdown for the ${cycle} cycle.`;
 
     return {
@@ -167,7 +167,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     };
   } catch {
     return {
-      title: `Committee | CIV.IQ`,
+      title: 'Committee',
       description: 'View committee campaign contributions and recipients.',
     };
   }

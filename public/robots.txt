@@ -7,5 +7,32 @@ Disallow: /admin/
 User-agent: Googlebot-Image
 Allow: /photos/
 
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
 Sitemap: https://civdotiq.org/sitemap.xml
 Sitemap: https://civdotiq.org/sitemap-images.xml

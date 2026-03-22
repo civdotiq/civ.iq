@@ -15,7 +15,7 @@ import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'U.S. States - State Legislatures & Congressional Delegations | CIV.IQ',
+  title: 'U.S. States - State Legislatures & Congressional Delegations',
   description:
     'Complete guide to all 50 U.S. state legislatures and federal congressional delegations. Find state legislators, senators, representatives, and government information. Real government data.',
   keywords: [

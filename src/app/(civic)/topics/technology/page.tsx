@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Technology & Privacy Legislation | CIV.IQ',
+  title: 'Technology & Privacy Legislation',
   description:
     'Track technology legislation in Congress. Big tech regulation, data privacy, artificial intelligence, cybersecurity, social media, and broadband access bills and the committees that shape tech policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'CHIPS Act',
   ],
   openGraph: {
-    title: 'Technology & Privacy Legislation | CIV.IQ',
+    title: 'Technology & Privacy Legislation',
     description:
       'Track technology legislation in Congress. Big tech regulation, data privacy, AI, and cybersecurity.',
     type: 'website',

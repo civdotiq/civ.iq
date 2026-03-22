@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Agriculture Legislation & Policy | CIV.IQ',
+  title: 'Agriculture Legislation & Policy',
   description:
     'Track agriculture legislation in Congress. Farm policy, food safety, rural development, nutrition programs, conservation, and forestry bills and the committees that shape agricultural policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'agriculture committee',
   ],
   openGraph: {
-    title: 'Agriculture Legislation & Policy | CIV.IQ',
+    title: 'Agriculture Legislation & Policy',
     description:
       'Track agriculture legislation in Congress. Farm policy, food safety, rural development, and nutrition programs.',
     type: 'website',

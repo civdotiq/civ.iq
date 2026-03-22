@@ -66,13 +66,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!legislator) {
     return {
-      title: 'Legislator Not Found | CIV.IQ',
+      title: 'Legislator Not Found',
       description: 'State legislator profile not found',
     };
   }
 
   const chamber = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
-  const title = `${legislator.name} - ${chamber} | CIV.IQ`;
+  const title = `${legislator.name} - ${chamber}`;
   const description = `View ${legislator.name}'s profile, sponsored bills, voting record, and contact information. ${chamber} representing District ${legislator.district} in ${state.toUpperCase()}.`;
 
   return {

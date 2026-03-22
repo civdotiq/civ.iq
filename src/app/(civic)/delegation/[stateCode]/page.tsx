@@ -26,11 +26,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const stateName = getStateName(stateCode.toUpperCase());
 
   if (!stateName) {
-    return { title: 'State Not Found | CIV.IQ' };
+    return { title: 'State Not Found' };
   }
 
   return {
-    title: `${stateName} Congressional Delegation | CIV.IQ`,
+    title: `${stateName} Congressional Delegation`,
     description: `View all U.S. Senators and Representatives from ${stateName}. Complete federal delegation with contact information and committee assignments.`,
   };
 }

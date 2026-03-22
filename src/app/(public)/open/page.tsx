@@ -15,7 +15,7 @@ import { DATASET_REGISTRY } from '@/lib/datasets';
 import { DatasetSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Open Data | CIV.IQ',
+  title: 'Open Data',
   description:
     'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. No API key required. MIT licensed.',
 };

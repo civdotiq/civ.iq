@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Embeddable Widgets | CIV.IQ',
+  title: 'Embeddable Widgets',
   description:
     'Embed CIV.IQ civic data widgets on your website. District representatives, bill trackers, and district snapshots — free, no API key required.',
 };

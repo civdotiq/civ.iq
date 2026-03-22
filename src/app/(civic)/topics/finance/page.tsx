@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Banking & Finance Legislation | CIV.IQ',
+  title: 'Banking & Finance Legislation',
   description:
     'Track banking and finance legislation in Congress. Banking regulation, consumer protection, housing policy, securities, cryptocurrency, and insurance bills and the committees that shape financial policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'CFPB',
   ],
   openGraph: {
-    title: 'Banking & Finance Legislation | CIV.IQ',
+    title: 'Banking & Finance Legislation',
     description:
       'Track banking and finance legislation in Congress. Banking regulation, consumer protection, housing, and cryptocurrency.',
     type: 'website',

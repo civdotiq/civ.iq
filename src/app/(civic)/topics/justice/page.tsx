@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Criminal Justice Legislation & Policy | CIV.IQ',
+  title: 'Criminal Justice Legislation & Policy',
   description:
     'Track criminal justice legislation in Congress. Policing reform, sentencing reform, courts, civil rights, prison reform, and gun violence prevention bills and the committees that shape justice policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'First Step Act',
   ],
   openGraph: {
-    title: 'Criminal Justice Legislation & Policy | CIV.IQ',
+    title: 'Criminal Justice Legislation & Policy',
     description:
       'Track criminal justice legislation in Congress. Policing reform, sentencing, courts, and civil rights.',
     type: 'website',

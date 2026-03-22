@@ -7,11 +7,11 @@ import { Metadata } from 'next';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Executive Orders | CIV.IQ',
+  title: 'Executive Orders',
   description:
     'Browse executive orders and presidential actions. Track new directives, see which agencies are affected, and understand their impact on federal policy.',
   openGraph: {
-    title: 'Executive Orders | CIV.IQ',
+    title: 'Executive Orders',
     description:
       'Browse executive orders and presidential actions. Track new directives, see which agencies are affected, and understand their impact on federal policy.',
     type: 'website',

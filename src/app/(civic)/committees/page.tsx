@@ -13,7 +13,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Congressional Committees | CIV.IQ',
+  title: 'Congressional Committees',
   description:
     'Browse all House, Senate, and Joint committees in the U.S. Congress. Explore their jurisdictions, leadership, and responsibilities.',
   openGraph: {

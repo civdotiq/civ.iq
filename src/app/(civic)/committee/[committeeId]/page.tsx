@@ -126,7 +126,7 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
     : `Information about ${getCommitteeDisplayName(committeeId)}`;
 
   return {
-    title: `${title} | CIV.IQ`,
+    title,
     description,
     alternates: {
       types: {
@@ -139,7 +139,7 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
       type: 'website',
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
     },

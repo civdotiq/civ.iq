@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Defense & Military Legislation | CIV.IQ',
+  title: 'Defense & Military Legislation',
   description:
     'Track defense legislation in Congress. NDAA, military personnel, veterans benefits, defense procurement, nuclear security, and the committees that shape defense policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'nuclear security',
   ],
   openGraph: {
-    title: 'Defense & Military Legislation | CIV.IQ',
+    title: 'Defense & Military Legislation',
     description:
       'Track defense legislation in Congress. NDAA, military personnel, veterans benefits, and defense procurement.',
     type: 'website',

@@ -16,7 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
-  title: 'Economy & Jobs Legislation | CIV.IQ',
+  title: 'Economy & Jobs Legislation',
   description:
     'Track economic legislation in Congress. Tax policy, employment, trade, small business, and financial regulation bills and the committees that shape economic policy.',
   keywords: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     'unemployment',
   ],
   openGraph: {
-    title: 'Economy & Jobs Legislation | CIV.IQ',
+    title: 'Economy & Jobs Legislation',
     description:
       'Track economic legislation in Congress. Tax policy, employment, trade, and financial regulation.',
     type: 'website',

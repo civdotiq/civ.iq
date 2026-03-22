@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     '119th Congress',
   ],
   openGraph: {
-    title: 'United States Congress | CIV.IQ',
+    title: 'United States Congress',
     description:
       'Complete guide to the 119th United States Congress. Find all Senators, Representatives, and committees.',
     type: 'website',
