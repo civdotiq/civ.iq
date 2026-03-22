@@ -250,6 +250,11 @@ export function FinanceTab({
         whether money shaped any vote.
       </p>
 
+      <p className="text-xs text-gray-400 mb-grid-2">
+        Campaign finance data from FEC.gov for the {displayCycle} cycle. Filing reports are
+        typically 20 to 90 days behind real time.
+      </p>
+
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <h2 className="text-xl font-bold">Campaign Finance</h2>
         <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium border border-gray-300">
