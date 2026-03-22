@@ -36,7 +36,7 @@ describe('MCP Server', () => {
     await expect(initializeMcpServer(server)).resolves.not.toThrow();
   });
 
-  it('registers all 33 tools', async () => {
+  it('registers all 38 tools', async () => {
     await initializeMcpServer(server);
 
     const expectedTools = [
@@ -75,10 +75,16 @@ describe('MCP Server', () => {
       'analyze_pharma_regulatory_influence',
       'search_healthcare_providers',
       'get_district_healthcare_profile',
+      // Sprint 4: NHTSA + Open Payments
+      'search_vehicle_recalls',
+      'search_vehicle_complaints',
+      'search_open_payments',
+      'get_district_pharma_payments',
+      'analyze_health_industry_influence',
     ];
 
     // The fact that initializeMcpServer completes successfully means all tools registered
-    expect(expectedTools.length).toBe(33);
+    expect(expectedTools.length).toBe(38);
   });
 });
 

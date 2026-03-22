@@ -4,7 +4,7 @@
  */
 
 /**
- * MCP Health Tools (FDA + CMS)
+ * MCP Health Tools (FDA + CMS + Open Payments)
  *
  * FDA:
  *   Tier 1: search_fda_recalls
@@ -14,12 +14,18 @@
  * CMS:
  *   Tier 1: search_healthcare_providers
  *   Tier 2: get_district_healthcare_profile
+ *
+ * Open Payments:
+ *   Tier 1: search_open_payments
+ *   Tier 2: get_district_pharma_payments
+ *   Tier 3: analyze_health_industry_influence
  */
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fdaService } from '@/lib/data-sources/fda-service';
 import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
+import { openPaymentsService } from '@/lib/data-sources/open-payments-service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { entitiesMatch } from '@civiq/entity-resolution';
@@ -570,6 +576,332 @@ export function registerHealthTools(server: McpServer): void {
         };
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: Open Payments search ────────────────────────────────
+  server.tool(
+    'search_open_payments',
+    'Search CMS Open Payments for pharma/device manufacturer payments to physicians by state, company, or payment type. Returns payer, recipient specialty, amount, payment nature, and associated product.',
+    {
+      state: z.string().length(2).optional().describe('Two-letter state code (e.g., CA)'),
+      company: z.string().optional().describe('Manufacturer/GPO name to search'),
+      paymentType: z
+        .string()
+        .optional()
+        .describe('Nature of payment (e.g., "Food and Beverage", "Consulting Fee")'),
+      limit: z.number().int().min(1).max(200).optional().describe('Max results (default 50)'),
+    },
+    async ({ state, company, paymentType, limit }) => {
+      try {
+        if (!state && !company && !paymentType) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Please provide at least a state, company, or payment type to search.',
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const payments = await openPaymentsService.searchPayments({
+          state,
+          company,
+          paymentType,
+          limit: Math.min(limit ?? 50, 200),
+        });
+
+        if (payments.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No Open Payments records found for the given criteria.',
+              },
+            ],
+          };
+        }
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(payments, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: District pharma payments ────────────────────────────
+  server.tool(
+    'get_district_pharma_payments',
+    "Industry payments to physicians in a congressional district: top pharma/device companies, recipient specialties, payment types, and amounts. Cross-references with representative's Health committee membership.",
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+
+        // Get representative
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        // Get state-level payment aggregates
+        const paymentAggs = await openPaymentsService.getPaymentAggregates(state);
+
+        if (!paymentAggs) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No Open Payments data available for ${state}.`,
+              },
+            ],
+          };
+        }
+
+        // Check Health committee membership
+        const healthCommittees = districtRep
+          ? (districtRep.committees ?? []).filter(c => {
+              const name = c.name.toLowerCase();
+              return (
+                name.includes('health') ||
+                name.includes('energy and commerce') ||
+                name.includes('help') ||
+                name.includes('ways and means')
+              );
+            })
+          : [];
+
+        const profile = {
+          district: `${state}-${districtStr}`,
+          representative: districtRep
+            ? {
+                name: districtRep.name,
+                party: districtRep.party,
+                bioguideId: districtRep.bioguideId,
+              }
+            : null,
+          pharmaPayments: {
+            totalPayments: paymentAggs.totalPayments,
+            totalAmount: paymentAggs.totalAmount,
+            topCompanies: paymentAggs.byCompany.slice(0, 15),
+            topSpecialties: paymentAggs.bySpecialty.slice(0, 10),
+            paymentTypes: paymentAggs.byNature.slice(0, 10),
+          },
+          committeeOverlap: {
+            healthRelatedCommittees: healthCommittees.map(c => c.name),
+            hasHealthOversight: healthCommittees.length > 0,
+          },
+          note: 'Open Payments data aggregated at state level. District-level patterns approximate.',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['CMS Open Payments', 'Congress.gov (committees)'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 3: Health industry influence analysis ──────────────────
+  server.tool(
+    'analyze_health_industry_influence',
+    'Cross-reference top pharma companies making Open Payments in a state with lobbying registrants (entity resolution fuzzy match) and campaign contributions to the district representative. Checks voting patterns on health/drug pricing legislation. Shows correlations only — not causation.',
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., NJ)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+
+        // Get representative
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        if (!districtRep) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No representative found for ${state}-${districtStr}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get top pharma payers in the state
+        const paymentAggs = await openPaymentsService.getPaymentAggregates(state);
+        const topCompanies = paymentAggs?.byCompany.slice(0, 20) ?? [];
+
+        if (topCompanies.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No Open Payments data available for ${state}.`,
+              },
+            ],
+          };
+        }
+
+        // Get lobbying data for health-related topics
+        let healthLobbying: Awaited<ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>> =
+          [];
+        try {
+          healthLobbying = await senateLobbyingAPI.getCommitteeLobbyingData([
+            'Health',
+            'HELP',
+            'Energy and Commerce',
+          ]);
+        } catch (e) {
+          logger.warn('Could not fetch lobbying data for health industry analysis', {
+            error: (e as Error).message,
+          });
+        }
+
+        // Extract all lobbying registrant/client names
+        const lobbyingEntities = new Set<string>();
+        for (const committee of healthLobbying) {
+          for (const filing of committee.filings) {
+            lobbyingEntities.add(filing.company);
+          }
+        }
+
+        // Entity resolution: match Open Payments companies to lobbying registrants
+        const companyLobbyingMatches: Array<{
+          payerCompany: string;
+          paymentCount: number;
+          totalPaymentAmount: number;
+          lobbyingMatch: string;
+        }> = [];
+        for (const company of topCompanies) {
+          for (const lobbyist of lobbyingEntities) {
+            if (entitiesMatch({ name: company.company }, { name: lobbyist })) {
+              companyLobbyingMatches.push({
+                payerCompany: company.company,
+                paymentCount: company.count,
+                totalPaymentAmount: company.totalAmount,
+                lobbyingMatch: lobbyist,
+              });
+              break; // One match per company is sufficient
+            }
+          }
+        }
+
+        // Get FEC contributions to district rep
+        const fecId = getFECIdFromBioguide(districtRep.bioguideId);
+        let contributionContext: unknown = null;
+        if (fecId) {
+          try {
+            const electionCycle =
+              new Date().getFullYear() % 2 === 0
+                ? new Date().getFullYear()
+                : new Date().getFullYear() + 1;
+            contributionContext = await fecApiService.getFinancialSummary(fecId, electionCycle);
+          } catch (e) {
+            logger.warn('FEC contribution lookup failed for health industry analysis', {
+              error: (e as Error).message,
+            });
+          }
+        }
+
+        // Check Health committee membership
+        const healthCommittees = (districtRep.committees ?? []).filter(c => {
+          const name = c.name.toLowerCase();
+          return (
+            name.includes('health') ||
+            name.includes('energy and commerce') ||
+            name.includes('help') ||
+            name.includes('ways and means')
+          );
+        });
+
+        // Get recent health legislation
+        let healthBills: unknown[] = [];
+        try {
+          healthBills = await fetchHealthBills(10);
+        } catch (e) {
+          logger.warn('Health legislation search failed', {
+            error: (e as Error).message,
+          });
+        }
+
+        const analysis = {
+          district: `${state}-${districtStr}`,
+          representative: {
+            name: districtRep.name,
+            party: districtRep.party,
+            bioguideId: districtRep.bioguideId,
+          },
+          openPayments: {
+            topPayersInState: topCompanies.slice(0, 10),
+            totalStatePayments: paymentAggs?.totalPayments ?? 0,
+            totalStateAmount: paymentAggs?.totalAmount ?? 0,
+          },
+          entityResolution: {
+            companiesMatchedToLobbying: companyLobbyingMatches,
+            matchCount: companyLobbyingMatches.length,
+            totalCompaniesChecked: topCompanies.length,
+          },
+          campaignFinance: {
+            fecId: fecId ?? 'No FEC mapping',
+            financialSummary: contributionContext,
+          },
+          committeeOverlap: {
+            healthRelatedCommittees: healthCommittees.map(c => c.name),
+            hasHealthOversight: healthCommittees.length > 0,
+          },
+          lobbyingContext: {
+            healthRelatedLobbying: healthLobbying.map(l => ({
+              committee: l.committee,
+              totalSpending: l.totalSpending,
+              companyCount: l.companyCount,
+              topFilers: l.filings.slice(0, 5),
+            })),
+          },
+          recentHealthLegislation: healthBills,
+          relevantPolicyArea: 'Health',
+          disclaimer:
+            'This analysis shows correlations between pharma industry payments, lobbying activity, ' +
+            'and political activity. Correlations do not imply causation. All data sourced from public government records.',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: [
+              'CMS Open Payments',
+              'Senate LDA (lobbying)',
+              'FEC (campaign finance)',
+              '@civiq/entity-resolution',
+              'Congress.gov (committees, legislation)',
+            ],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

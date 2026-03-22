@@ -4,7 +4,7 @@
  */
 
 /**
- * MCP Safety Tools (FEMA + FBI + CFPB + HUD)
+ * MCP Safety Tools (FEMA + FBI + CFPB + HUD + NHTSA)
  *
  * FEMA:
  *   Tier 1: search_fema_disasters
@@ -22,6 +22,10 @@
  * HUD Housing:
  *   Tier 1: get_housing_affordability
  *   Tier 2: get_district_housing_profile
+ *
+ * NHTSA Vehicle Safety:
+ *   Tier 1: search_vehicle_recalls
+ *   Tier 1: search_vehicle_complaints
  */
 
 import { z } from 'zod';
@@ -30,6 +34,7 @@ import { femaService } from '@/lib/data-sources/fema-service';
 import { fbiUcrService } from '@/lib/data-sources/fbi-ucr-service';
 import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
 import { hudService } from '@/lib/data-sources/hud-service';
+import { nhtsaService } from '@/lib/data-sources/nhtsa-service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { STATE_FIPS } from '@/app/api/districts/census-helpers';
@@ -824,6 +829,103 @@ export function registerSafetyTools(server: McpServer): void {
         };
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: NHTSA vehicle recall search ─────────────────────────
+  server.tool(
+    'search_vehicle_recalls',
+    'Search NHTSA vehicle recalls by make, model, and/or year. Returns campaign number, affected component, safety summary, consequence, remedy, and whether to park the vehicle immediately.',
+    {
+      make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
+      model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
+      year: z.number().int().min(1966).max(2030).optional().describe('Model year'),
+    },
+    async ({ make, model, year }) => {
+      try {
+        if (!make && !model && !year) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Please provide at least a make, model, or year to search recalls.',
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const recalls = await nhtsaService.searchRecalls({ make, model, year });
+
+        if (recalls.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No NHTSA vehicle recalls found for the given criteria.',
+              },
+            ],
+          };
+        }
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(recalls, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: NHTSA vehicle complaint search ──────────────────────
+  server.tool(
+    'search_vehicle_complaints',
+    'Search NHTSA consumer complaints about vehicles by make, model, and/or component. Returns incident details including injuries, deaths, crashes, fires, and complaint summary.',
+    {
+      make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
+      model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
+      component: z
+        .string()
+        .optional()
+        .describe('Vehicle component (e.g., STEERING, BRAKES, AIR BAGS)'),
+    },
+    async ({ make, model, component }) => {
+      try {
+        if (!make && !model) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Please provide at least a make or model to search complaints.',
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const complaints = await nhtsaService.searchComplaints({ make, model, component });
+
+        if (complaints.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No NHTSA vehicle complaints found for the given criteria.',
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(complaints, null, 2) }],
+        };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
