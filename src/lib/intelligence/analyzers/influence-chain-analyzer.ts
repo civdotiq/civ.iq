@@ -689,7 +689,16 @@ function assembleChains(
 
     for (const vote of matchingVotes) {
       const links = buildChainLinks(org, contribution, rep, vote);
-      const chainConfidence = Math.min(...links.map(l => l.confidence));
+      const hasContributionEvidence = contribution !== undefined;
+      let chainConfidence = Math.min(...links.map(l => l.confidence));
+
+      // Chains without contribution evidence are misleading to citizens —
+      // they show lobbying → committee → bill → vote links but no evidence
+      // that money actually flowed to this representative. Cap confidence
+      // below MIN_CHAIN_CONFIDENCE so these chains are filtered out.
+      if (!hasContributionEvidence) {
+        chainConfidence = Math.min(chainConfidence, 0.4);
+      }
 
       const votePosition = normalizeVotePosition(vote.position);
 
@@ -703,6 +712,7 @@ function assembleChains(
         textSimilarity: null, // Step 6: null for now
         links,
         chainConfidence,
+        hasContributionEvidence,
       });
     }
   }

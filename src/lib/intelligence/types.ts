@@ -478,6 +478,8 @@ export interface InfluenceChain {
   textSimilarity: number | null;
   links: InfluenceChainLink[];
   chainConfidence: number;
+  /** Whether FEC contribution data links money to this representative. */
+  hasContributionEvidence: boolean;
 }
 
 export interface InfluenceChainInsight extends InsightBase {

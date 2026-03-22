@@ -184,17 +184,14 @@ describe('analyzeInfluenceChains', () => {
     expect(mockFetchRecentFilings).not.toHaveBeenCalled();
   });
 
-  it('returns null when no FEC mapping exists', async () => {
+  it('returns null when no FEC mapping exists (no contribution evidence)', async () => {
     mockGetFECIdFromBioguide.mockReturnValue(null);
 
     const result = await analyzeInfluenceChains(BIO_ID);
 
-    // Should still attempt to build chains (FEC is optional for contribution link)
-    // but contribution matches will be empty
-    // Result depends on whether chains still pass confidence threshold without contributions
-    if (result) {
-      expect(result.chains.every(c => c.contributionAmount === 0)).toBe(true);
-    }
+    // Without FEC mapping, no chains have contribution evidence.
+    // Chain confidence is capped at 0.4 (below 0.5 threshold), so all are filtered out.
+    expect(result).toBeNull();
   });
 
   it('returns cached insight on cache hit', async () => {
@@ -339,6 +336,23 @@ describe('analyzeInfluenceChains', () => {
 
     expect(mockGetSenateMemberVotes).toHaveBeenCalled();
     expect(mockGetHouseMemberVotes).not.toHaveBeenCalled();
+  });
+
+  it('filters out chains without contribution evidence (no FEC mapping)', async () => {
+    // When getFECIdFromBioguide returns null, no contribution links exist.
+    // All chains should be capped at 0.4 confidence (below 0.5 threshold)
+    // and filtered out, because showing "influence chains" without evidence
+    // of money flowing to the rep is misleading.
+    mockGetFECIdFromBioguide.mockReturnValue(null);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    // Either null (no chains pass threshold) or all chains have contribution evidence
+    if (result) {
+      expect(result.chains).toHaveLength(0);
+    } else {
+      expect(result).toBeNull();
+    }
   });
 
   it('returns null when lobbying filings do not match rep committees', async () => {
