@@ -28,6 +28,7 @@ interface CommunityProfile {
   environment: {
     epaFacilities: number;
     facilitiesWithViolations: number;
+    significantViolations: number;
     violationRate: number | null;
   };
   health: {
@@ -91,7 +92,7 @@ function SourceLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 text-[10px] text-[#3ea2d4] hover:underline mt-2"
+      className="inline-flex items-center gap-1 text-[10px] text-[#3ea2d4] hover:underline mt-3"
     >
       {label}
       <ExternalLink className="h-2.5 w-2.5" />
@@ -116,7 +117,7 @@ function DataCard({
 }) {
   return (
     <div className="border-2 border-black p-4">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <div className={color}>{icon}</div>
         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{title}</h3>
       </div>
@@ -161,10 +162,11 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
     return (
       <div className="bg-white border-2 border-black p-4 sm:p-8 animate-pulse">
         <div className="h-6 bg-gray-200 w-48 mb-6" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="border-2 border-gray-200 p-4">
               <div className="h-4 bg-gray-200 w-24 mb-3" />
+              <div className="h-8 bg-gray-100 w-full mb-2" />
               <div className="space-y-2">
                 <div className="h-3 bg-gray-200 w-full" />
                 <div className="h-3 bg-gray-200 w-3/4" />
@@ -226,7 +228,7 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {hasEnvironment && (
           <DataCard
             icon={<Factory className="h-4 w-4" />}
@@ -235,18 +237,24 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://echo.epa.gov/facilities/facility-search/results?p_st=${state}`}
             sourceLabel="EPA ECHO"
           >
-            <div className="space-y-2">
+            <p className="text-xs text-gray-600 mb-3">
+              {data.environment.facilitiesWithViolations > 0
+                ? `${formatCount(data.environment.facilitiesWithViolations)} of ${formatCount(data.environment.epaFacilities)} EPA-regulated facilities in ${state} have compliance violations on record.`
+                : `${formatCount(data.environment.epaFacilities)} EPA-regulated facilities in ${state}, none with current violations.`}
+              {data.environment.significantViolations > 0 &&
+                ` ${data.environment.significantViolations} are flagged as significant.`}
+            </p>
+            <div className="space-y-1.5">
               <Metric
                 value={formatCount(data.environment.epaFacilities)}
                 label="Regulated facilities"
               />
-              <Metric
-                value={data.environment.facilitiesWithViolations}
-                label="Active violations"
-                highlight={data.environment.facilitiesWithViolations > 0}
-              />
-              {data.environment.violationRate !== null && (
-                <Metric value={`${data.environment.violationRate}%`} label="Violation rate" />
+              {data.environment.facilitiesWithViolations > 0 && (
+                <Metric
+                  value={data.environment.facilitiesWithViolations}
+                  label="With violations"
+                  highlight
+                />
               )}
             </div>
           </DataCard>
@@ -260,11 +268,20 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://www.medicare.gov/care-compare/?providerType=Hospital&state=${state}`}
             sourceLabel="CMS Hospital Compare"
           >
-            <div className="space-y-2">
+            <p className="text-xs text-gray-600 mb-3">
+              {state} has {data.health.hospitals} hospitals
+              {data.health.avgHospitalRating !== null
+                ? ` averaging ${data.health.avgHospitalRating} out of 5 stars for quality`
+                : ''}
+              {data.health.nursingHomes > 0
+                ? ` and ${data.health.nursingHomes} nursing homes.`
+                : '.'}
+            </p>
+            <div className="space-y-1.5">
               <Metric value={data.health.hospitals} label="Hospitals" />
               <Metric value={data.health.nursingHomes} label="Nursing homes" />
               {data.health.avgHospitalRating !== null && (
-                <Metric value={`${data.health.avgHospitalRating}/5 avg`} label="Quality rating" />
+                <Metric value={`${data.health.avgHospitalRating}/5`} label="Avg quality rating" />
               )}
             </div>
           </DataCard>
@@ -278,15 +295,22 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://www.fema.gov/disaster/declarations?field_dv2_state_territory_tribal_value=${state}`}
             sourceLabel="FEMA / CFPB"
           >
-            <div className="space-y-2">
+            <p className="text-xs text-gray-600 mb-3">
+              {data.safety.recentDisasters > 0
+                ? `${data.safety.recentDisasters} federal disaster declarations in ${state} in the last 5 years.`
+                : `No federal disaster declarations in ${state} in the last 5 years.`}
+              {data.safety.consumerComplaints !== null && data.safety.consumerComplaints > 0
+                ? ` ${formatCount(data.safety.consumerComplaints)} consumer complaints filed with the CFPB.`
+                : ''}
+            </p>
+            <div className="space-y-1.5">
               <Metric value={data.safety.recentDisasters} label="Disasters (5 yr)" />
-              {data.safety.consumerComplaints !== null && (
+              {data.safety.consumerComplaints !== null && data.safety.consumerComplaints > 0 && (
                 <Metric
                   value={formatCount(data.safety.consumerComplaints)}
-                  label="Consumer complaints"
+                  label="CFPB complaints"
                 />
               )}
-              <Metric value={data.safety.totalDisasters} label="All-time disasters" />
             </div>
           </DataCard>
         )}
@@ -299,13 +323,24 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://www.eia.gov/state/?sid=${state}`}
             sourceLabel="EIA"
           >
-            <div className="space-y-2">
-              {data.energy.renewablePercentage !== null && (
-                <Metric value={`${data.energy.renewablePercentage}%`} label="Renewable energy" />
-              )}
+            <p className="text-xs text-gray-600 mb-3">
+              {data.energy.topSources.length > 0
+                ? `${state} generates electricity primarily from ${data.energy.topSources
+                    .slice(0, 2)
+                    .map(s => s.source.toLowerCase())
+                    .join(' and ')}.`
+                : `Energy production data for ${state}.`}
+              {data.energy.renewablePercentage !== null
+                ? ` ${data.energy.renewablePercentage}% comes from renewable sources.`
+                : ''}
+            </p>
+            <div className="space-y-1.5">
               {data.energy.topSources.slice(0, 2).map((s, i) => (
                 <Metric key={s.source} value={s.source} label={`#${i + 1} source`} />
               ))}
+              {data.energy.renewablePercentage !== null && (
+                <Metric value={`${data.energy.renewablePercentage}%`} label="Renewable" />
+              )}
             </div>
           </DataCard>
         )}
@@ -318,15 +353,20 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://collegescorecard.ed.gov/search/?state=${state}`}
             sourceLabel="College Scorecard / NIH"
           >
-            <div className="space-y-2">
+            <p className="text-xs text-gray-600 mb-3">
+              {data.education.totalColleges > 0
+                ? `${data.education.totalColleges} colleges and universities in ${state} (${data.education.publicColleges} public).`
+                : ''}
+              {data.education.nihGrants > 0
+                ? ` ${data.education.nihGrants} active NIH research grants totaling ${formatDollars(data.education.nihTotalFunding)}.`
+                : ''}
+            </p>
+            <div className="space-y-1.5">
               {data.education.totalColleges > 0 && (
-                <Metric
-                  value={data.education.totalColleges}
-                  label={`Colleges (${data.education.publicColleges} public)`}
-                />
+                <Metric value={data.education.totalColleges} label="Colleges" />
               )}
               {data.education.nihGrants > 0 && (
-                <Metric value={data.education.nihGrants} label="Active NIH grants" />
+                <Metric value={data.education.nihGrants} label="NIH grants" />
               )}
               {data.education.nihTotalFunding > 0 && (
                 <Metric value={formatDollars(data.education.nihTotalFunding)} label="NIH funding" />
@@ -343,11 +383,14 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceUrl={`https://www.fdic.gov/bank/statistical/`}
             sourceLabel="FDIC BankFind"
           >
-            <div className="space-y-2">
-              <Metric value={data.banking.fdicInstitutions} label="FDIC institutions" />
-              {data.banking.totalAssets > 0 && (
-                <Metric value={formatDollars(data.banking.totalAssets)} label="Total assets" />
-              )}
+            <p className="text-xs text-gray-600 mb-3">
+              {data.banking.fdicInstitutions} FDIC-insured banks serve {state}
+              {data.banking.totalDeposits > 0
+                ? ` holding ${formatDollars(data.banking.totalDeposits)} in deposits.`
+                : '.'}
+            </p>
+            <div className="space-y-1.5">
+              <Metric value={data.banking.fdicInstitutions} label="Banks" />
               {data.banking.totalDeposits > 0 && (
                 <Metric value={formatDollars(data.banking.totalDeposits)} label="Total deposits" />
               )}

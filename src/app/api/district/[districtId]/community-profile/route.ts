@@ -80,10 +80,15 @@ export async function GET(
           10
         : null;
 
-    // Count EPA violations
-    const facilitiesWithViolations = epaFacilities.filter(
-      f => f.sncFlag === 'Y' || f.complianceStatus.toLowerCase().includes('violation')
-    ).length;
+    // Count EPA violations — must exclude "No Violation Identified"
+    const facilitiesWithViolations = epaFacilities.filter(f => {
+      if (f.sncFlag === 'Y') return true;
+      const status = (f.complianceStatus ?? '').toLowerCase();
+      return status === 'violation identified' || status === 'significant violation';
+    }).length;
+
+    // Count significant non-compliance specifically
+    const significantViolations = epaFacilities.filter(f => f.sncFlag === 'Y').length;
 
     // Recent disasters (last 5 years)
     const currentYear = new Date().getFullYear();
@@ -113,6 +118,7 @@ export async function GET(
       environment: {
         epaFacilities: epaFacilities.length,
         facilitiesWithViolations,
+        significantViolations,
         violationRate:
           epaFacilities.length > 0
             ? Math.round((facilitiesWithViolations / epaFacilities.length) * 1000) / 10

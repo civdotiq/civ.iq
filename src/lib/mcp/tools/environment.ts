@@ -133,9 +133,11 @@ export function registerEnvironmentTools(server: McpServer): void {
         // Filter TRI by county FIPS
         const districtTri = toxicReleases.filter(t => countyFipsList.includes(t.countyFips));
 
-        const activeViolations = districtFacilities.filter(
-          f => f.sncFlag === 'Y' || f.complianceStatus.toLowerCase().includes('violation')
-        );
+        const activeViolations = districtFacilities.filter(f => {
+          if (f.sncFlag === 'Y') return true;
+          const status = (f.complianceStatus ?? '').toLowerCase();
+          return status === 'violation identified' || status === 'significant violation';
+        });
 
         const profile = {
           district: `${state}-${districtStr}`,
