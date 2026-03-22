@@ -17,6 +17,46 @@
 import { getLogger } from './logger';
 
 /**
+ * Common abbreviations used in FEC/lobbying data.
+ * Maps normalized short forms to canonical full names.
+ */
+const COMMON_ABBREVIATIONS: Record<string, string> = {
+  jnj: 'johnson and johnson',
+  jj: 'johnson and johnson',
+  'j and j': 'johnson and johnson',
+  gm: 'general motors',
+  ge: 'general electric',
+  ibm: 'international business machines',
+  att: 'at and t',
+  'at t': 'at and t',
+  jpmorgan: 'jpmorgan chase',
+  jpm: 'jpmorgan chase',
+  bofa: 'bank of america',
+  pg: 'procter and gamble',
+  'p and g': 'procter and gamble',
+  msft: 'microsoft',
+  amzn: 'amazon',
+  goog: 'alphabet',
+  aapl: 'apple',
+  pfizer: 'pfizer',
+  raytheon: 'raytheon technologies',
+  lockmart: 'lockheed martin',
+  ba: 'boeing',
+};
+
+/**
+ * Expand a cleaned name using the abbreviation map.
+ * Returns the canonical form if found, otherwise returns the original.
+ */
+function expandAbbreviation(cleanedName: string): string {
+  const lower = cleanedName.toLowerCase();
+  if (COMMON_ABBREVIATIONS[lower]) {
+    return COMMON_ABBREVIATIONS[lower].toUpperCase();
+  }
+  return cleanedName;
+}
+
+/**
  * Standardized entity record with normalized name and metadata
  */
 export interface StandardizedEntity {
@@ -56,6 +96,8 @@ function cleanNameForMatching(name: string): string {
       .toUpperCase()
       // Remove common suffixes
       .replace(/\s+(INC\.?|LLC\.?|LLP\.?|CORP\.?|CORPORATION|COMPANY|CO\.?|LTD\.?)$/i, '')
+      // Normalize ampersand to AND before stripping punctuation
+      .replace(/&/g, ' AND ')
       // Remove punctuation except spaces
       .replace(/[^\w\s]/g, '')
       // Normalize multiple spaces
@@ -200,8 +242,17 @@ export function entitiesMatch(
     return true;
   }
 
-  // Calculate similarity
-  const similarity = similarityRatio(name1, name2);
+  // Expand common abbreviations before similarity comparison
+  const expanded1 = expandAbbreviation(name1);
+  const expanded2 = expandAbbreviation(name2);
+
+  // Re-check exact match after expansion
+  if (expanded1 === expanded2) {
+    return true;
+  }
+
+  // Calculate similarity using expanded forms
+  const similarity = similarityRatio(expanded1, expanded2);
 
   // High similarity threshold for base match
   if (similarity < threshold) {

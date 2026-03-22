@@ -14,6 +14,8 @@ const customJestConfig = {
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
     '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/packages/**/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/packages/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
