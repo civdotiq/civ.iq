@@ -129,44 +129,6 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* Principles */}
-          <div className="mb-grid-8">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
-              Principles
-            </h2>
-            <div className="space-y-grid-3">
-              <div className="border-b border-gray-100 pb-grid-2">
-                <span className="font-medium text-black">Real data only.</span>{' '}
-                <span className="text-gray-600 text-sm">
-                  If data is unavailable, we say so. Every number links to its government source.
-                </span>
-              </div>
-              <div className="border-b border-gray-100 pb-grid-2">
-                <span className="font-medium text-black">Nonpartisan.</span>{' '}
-                <span className="text-gray-600 text-sm">
-                  No editorial position. We surface patterns and let citizens draw conclusions.
-                </span>
-              </div>
-              <div className="border-b border-gray-100 pb-grid-2">
-                <span className="font-medium text-black">Transparent methodology.</span>{' '}
-                <span className="text-gray-600 text-sm">
-                  Every analysis shows its confidence score, data sources, and disclaimers.
-                  Correlation is never presented as causation.
-                </span>
-              </div>
-              <div className="border-b border-gray-100 pb-grid-2">
-                <span className="font-medium text-black">Open.</span>{' '}
-                <span className="text-gray-600 text-sm">
-                  Open source (MIT). Data available via{' '}
-                  <Link href="/open" className="text-civiq-blue hover:underline">
-                    public API, RSS, Nostr, and the Fediverse
-                  </Link>
-                  . No account required.
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* Epistemic Limits */}
           <div className="mb-grid-8">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
