@@ -4,16 +4,22 @@
  */
 
 /**
- * MCP Environment Tools
+ * MCP Environment Tools (EPA + NOAA)
  *
- * Tier 1: search_epa_facilities — raw EPA ECHO query
- * Tier 2: get_district_environmental_profile — district-joined EPA data
- * Tier 3: analyze_environmental_influence — cross-referenced with lobbying/finance
+ * EPA:
+ *   Tier 1: search_epa_facilities
+ *   Tier 2: get_district_environmental_profile
+ *   Tier 3: analyze_environmental_influence
+ *
+ * NOAA:
+ *   Tier 1: get_climate_data
+ *   Tier 2: get_state_climate_profile
  */
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
+import { noaaService } from '@/lib/data-sources/noaa-service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { sicToSector } from '@civiq/entity-resolution';
@@ -287,6 +293,145 @@ export function registerEnvironmentTools(server: McpServer): void {
         };
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: NOAA climate data ───────────────────────────────────
+  server.tool(
+    'get_climate_data',
+    'NOAA climate normals for a state: average temperature, min/max temperatures, precipitation, and snowfall from 30-year normal period. Requires NOAA_TOKEN.',
+    {
+      state: z.string().length(2).describe('Two-letter state code (e.g., CO)'),
+    },
+    async ({ state }) => {
+      try {
+        const normals = await noaaService.getClimateNormals(state);
+
+        if (!normals) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No NOAA climate data available. NOAA_TOKEN may not be configured.',
+              },
+            ],
+          };
+        }
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(normals, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: State climate profile ───────────────────────────────
+  server.tool(
+    'get_state_climate_profile',
+    "Climate profile for a state: NOAA climate normals, severe weather event history, and the state delegation's Environment committee membership for climate policy context.",
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., FL)'),
+      year: z
+        .number()
+        .int()
+        .min(2000)
+        .max(2030)
+        .optional()
+        .describe('Year for severe weather events (default: last year)'),
+    },
+    async ({ stateCode, year }) => {
+      try {
+        const state = stateCode.toUpperCase();
+
+        // Fetch climate normals and severe weather in parallel
+        const [normals, severeWeather] = await Promise.all([
+          noaaService.getClimateNormals(state),
+          noaaService.getSevereWeatherEvents(state, year),
+        ]);
+
+        // Get state delegation environment committee members
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const stateDelegation = allReps.filter(r => r.state === state);
+        const envMembers = stateDelegation.filter(r =>
+          (r.committees ?? []).some(c => {
+            const name = c.name.toLowerCase();
+            return (
+              name.includes('environment') ||
+              name.includes('natural resources') ||
+              name.includes('climate') ||
+              name.includes('energy')
+            );
+          })
+        );
+
+        // Aggregate severe weather by type
+        const eventTypeCounts: Record<string, number> = {};
+        let totalInjuries = 0;
+        let totalDeaths = 0;
+        let totalPropertyDamage = 0;
+        for (const e of severeWeather) {
+          eventTypeCounts[e.eventType] = (eventTypeCounts[e.eventType] ?? 0) + 1;
+          totalInjuries += e.injuries;
+          totalDeaths += e.deaths;
+          totalPropertyDamage += e.damageProperty;
+        }
+
+        const topEventTypes = Object.entries(eventTypeCounts)
+          .sort(([, a], [, b]) => b - a)
+          .map(([type, count]) => ({ type, count }));
+
+        const profile = {
+          state,
+          climateNormals: normals,
+          severeWeather: {
+            year: year ?? new Date().getFullYear() - 1,
+            totalEvents: severeWeather.length,
+            totalInjuries,
+            totalDeaths,
+            totalPropertyDamage,
+            topEventTypes: topEventTypes.slice(0, 10),
+            recentEvents: severeWeather.slice(0, 20),
+          },
+          delegation: {
+            environmentCommitteeMembers: envMembers.map(r => ({
+              name: r.name,
+              party: r.party,
+              chamber: r.chamber,
+              bioguideId: r.bioguideId,
+              committees: (r.committees ?? [])
+                .filter(c => {
+                  const name = c.name.toLowerCase();
+                  return (
+                    name.includes('environment') ||
+                    name.includes('natural resources') ||
+                    name.includes('climate') ||
+                    name.includes('energy')
+                  );
+                })
+                .map(c => c.name),
+            })),
+          },
+          relevantPolicyArea: 'Environmental Protection',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: [
+              'NOAA CDO (Climate Normals)',
+              'NOAA Storm Events',
+              'Congress.gov (committees)',
+            ],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
