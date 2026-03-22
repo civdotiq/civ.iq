@@ -6,7 +6,7 @@ import { BreadcrumbSchema, OrganizationSchema, AboutPageSchema } from '@/compone
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
   description:
-    'CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, and 18 official data sources. All data from official government APIs — no mock data, no bias.',
+    'CIV.IQ organizes government data about elected officials from 18 official sources — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures, nonpartisan.',
   openGraph: {
     title: 'About CIV.IQ',
     description:
@@ -66,9 +66,10 @@ export default function AboutPage() {
               <br />
               representatives.
             </h1>
-            <p className="text-lg text-gray-600 max-w-md">
-              Federal and state government data, organized for public use. All information sourced
-              from official government APIs. Nothing is fabricated.
+            <p className="text-lg text-gray-600 max-w-lg">
+              Information about who represents you is spread across dozens of government websites in
+              different formats. CIV.IQ brings it together as a civic utility should: organized,
+              accessible, and nonpartisan.
             </p>
           </div>
 
@@ -113,6 +114,21 @@ export default function AboutPage() {
             </div>
           </div>
 
+          {/* Why CIV.IQ */}
+          <div className="mb-grid-8">
+            <p className="text-gray-600 max-w-lg">
+              Votes, campaign contributions, lobbying filings, committee records, federal spending —
+              this data exists in the public record, but it sits in isolated databases that no
+              regular citizen has the time or skill to connect. Lobbyists and political consultants
+              connect it every day. Citizens cannot. CIV.IQ corrects that asymmetry.
+            </p>
+            <p className="text-gray-600 max-w-lg mt-grid-3">
+              Type in your address and it opens up a whole world of information: who represents you
+              at every level, how they vote, the money behind them, and how it all compares to their
+              peers. Your address is the key.
+            </p>
+          </div>
+
           {/* Principles */}
           <div className="mb-grid-8">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
@@ -122,7 +138,7 @@ export default function AboutPage() {
               <div className="border-b border-gray-100 pb-grid-2">
                 <span className="font-medium text-black">Real data only.</span>{' '}
                 <span className="text-gray-600 text-sm">
-                  If data is unavailable, we say so. Nothing is generated or estimated.
+                  If data is unavailable, we say so. Every number links to its government source.
                 </span>
               </div>
               <div className="border-b border-gray-100 pb-grid-2">
