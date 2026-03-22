@@ -433,9 +433,25 @@ async function fetchRepresentative(bioguideId: string): Promise<RepData | null> 
 
 // ── Step 3: Fetch Lobbying Orgs ─────────────────────────────────────
 
+// Process-level cache for aggregated filings (avoids re-fetching for each rep)
+let cachedFilings: import('@/lib/data-sources/senate-lobbying-api').LobbyingFiling[] | null = null;
+let cachedFilingsTimestamp = 0;
+const FILING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in-memory
+
+/** Reset in-memory filing cache (exposed for testing) */
+export function _resetFilingsCache(): void {
+  cachedFilings = null;
+  cachedFilingsTimestamp = 0;
+}
+
 async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
   try {
-    const filings = await senateLobbyingAPI.fetchRecentFilings();
+    const now = Date.now();
+    if (!cachedFilings || now - cachedFilingsTimestamp > FILING_CACHE_TTL) {
+      cachedFilings = await senateLobbyingAPI.fetchRecentFilings();
+      cachedFilingsTimestamp = now;
+    }
+    const filings = cachedFilings;
     if (filings.length === 0) return [];
 
     // Filter filings that target this representative's committees

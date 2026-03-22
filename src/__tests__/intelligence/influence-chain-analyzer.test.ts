@@ -99,7 +99,10 @@ jest.mock('@/lib/connections/policy-area-map', () => ({
   }),
 }));
 
-import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import {
+  analyzeInfluenceChains,
+  _resetFilingsCache,
+} from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 
 // ── Test Data ─────────────────────────────────────────────────────
 
@@ -148,6 +151,7 @@ function makeVotes(count: number) {
 describe('analyzeInfluenceChains', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    _resetFilingsCache();
 
     // Default: cache miss
     mockRedisGet.mockResolvedValue(null);
@@ -374,5 +378,14 @@ describe('analyzeInfluenceChains', () => {
 
     const result = await analyzeInfluenceChains(BIO_ID);
     expect(result).toBeNull();
+  });
+
+  it('caches lobbying filings in-memory across multiple calls', async () => {
+    // First call fetches filings
+    await analyzeInfluenceChains(BIO_ID);
+    // Second call with a different bioguide should reuse cached filings
+    await analyzeInfluenceChains('B000944');
+
+    expect(mockFetchRecentFilings).toHaveBeenCalledTimes(1);
   });
 });
