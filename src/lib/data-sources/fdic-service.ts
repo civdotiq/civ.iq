@@ -22,7 +22,7 @@ import type {
   RawFdicFailure,
 } from '@/types/fdic';
 
-const FDIC_BASE = 'https://banks.data.fdic.gov/api';
+const FDIC_BASE = 'https://api.fdic.gov/banks';
 
 const MIN_REQUEST_INTERVAL_MS = 300;
 let lastRequestTime = 0;
@@ -45,19 +45,19 @@ function transformInstitution(raw: RawFdicInstitution): FdicInstitution {
   const d = raw.data;
   return {
     certNumber: d.CERT ?? 0,
-    institutionName: d.INSTNAME ?? '',
+    institutionName: d.INSTNAME ?? d.NAME ?? '',
     city: d.CITY ?? '',
     state: d.STALP ?? '',
     zip: d.ZIP ?? '',
     county: d.COUNTY ?? '',
-    institutionClass: d.INSTCAT ?? '',
+    institutionClass: d.BKCLASS ?? d.INSTCAT ?? '',
     charterClass: d.CHRTAGNT ?? '',
     totalAssets: d.ASSET ?? null,
     totalDeposits: d.DEP ?? null,
     numberOfOffices: d.OFFDOM ?? null,
     established: d.ESTYMD ?? null,
     activeFlag: d.ACTIVE === 1,
-    regulatorName: d.REGAGENT ?? '',
+    regulatorName: d.REGAGNT ?? d.REGAGENT ?? '',
     fdicInsured: true,
   };
 }
@@ -103,8 +103,8 @@ export class FdicService {
           filters.push('ACTIVE:1');
 
           const filterStr = filters.join(' AND ');
-          const fields = 'CERT,INSTNAME,CITY,STALP,ZIP,COUNTY,INSTCAT,CHRTAGNT,ASSET,DEP,OFFDOM,ESTYMD,ACTIVE,REGAGENT,FDICREGN';
-          const url = `${FDIC_BASE}/financials?filters=${encodeURIComponent(filterStr)}&fields=${fields}&sort_by=ASSET&sort_order=DESC&limit=${Math.min(limit, 100)}`;
+          const fields = 'CERT,NAME,CITY,STALP,ZIP,COUNTY,BKCLASS,CHRTAGNT,ASSET,DEP,OFFDOM,ESTYMD,ACTIVE,REGAGNT';
+          const url = `${FDIC_BASE}/institutions?filters=${encodeURIComponent(filterStr)}&fields=${fields}&sort_by=ASSET&sort_order=DESC&limit=${Math.min(limit, 100)}`;
 
           logger.info('FDIC institution search', { state, name, city });
           const response = await rateLimitedFetch(url);

@@ -60,20 +60,22 @@ export interface FdicApiResponse<T> {
 export interface RawFdicInstitution {
   data: {
     CERT: number;
-    INSTNAME: string;
+    NAME: string;
+    INSTNAME?: string;
     CITY: string;
     STALP: string;
     ZIP: string;
     COUNTY: string;
-    INSTCAT: string;
+    BKCLASS: string;
+    INSTCAT?: string;
     CHRTAGNT: string;
     ASSET: number | null;
     DEP: number | null;
     OFFDOM: number | null;
     ESTYMD: string | null;
     ACTIVE: number;
-    REGAGENT: string;
-    FDICREGN: string;
+    REGAGNT: string;
+    REGAGENT?: string;
   };
 }
 

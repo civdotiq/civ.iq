@@ -94,6 +94,7 @@ export class EpaEchoService {
           const searchParams = new URLSearchParams({
             output: 'JSON',
             p_st: state.toUpperCase(),
+            p_act: 'Y', // Active facilities only (avoids queryset limit exceeded error)
             responseset: String(Math.min(limit, 100)),
           });
           if (zip) searchParams.set('p_zip', zip);
