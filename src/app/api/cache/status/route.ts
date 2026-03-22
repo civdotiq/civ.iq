@@ -7,6 +7,8 @@ import { NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/cache/status
  *

@@ -11,6 +11,8 @@ import { timingSafeEqual } from 'crypto';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Verify admin access using timing-safe comparison
  * Prevents timing attacks that could leak token information

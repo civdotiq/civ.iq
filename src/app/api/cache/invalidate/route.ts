@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unifiedCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/cache/invalidate
  *

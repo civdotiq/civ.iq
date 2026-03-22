@@ -13,6 +13,8 @@
 import { NextResponse } from 'next/server';
 import { getOutboxItems } from '@/lib/activitypub/outbox';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const { total } = await getOutboxItems(0, 0);
 

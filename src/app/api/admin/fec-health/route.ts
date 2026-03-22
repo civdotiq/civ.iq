@@ -13,6 +13,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 function isAuthorized(request: NextRequest): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
   const authHeader = request.headers.get('authorization');

@@ -8,6 +8,8 @@ import { govCache } from '@/services/cache';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const startTime = Date.now();

@@ -8,6 +8,8 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import logger from '@/lib/logging/simple-logger';
 import { getFileCache } from '@/lib/cache/file-cache';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Warmup endpoint to pre-fetch and cache critical data
  * This can be called on server startup or periodically to keep caches warm

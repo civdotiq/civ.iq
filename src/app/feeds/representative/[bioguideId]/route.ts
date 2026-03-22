@@ -22,7 +22,7 @@ import {
 } from '@/lib/feeds/atom-generator';
 
 // ISR: Revalidate every 30 minutes
-export const revalidate = 1800;
+export const dynamic = 'force-dynamic';
 
 interface RouteParams {
   params: Promise<{ bioguideId: string }>;

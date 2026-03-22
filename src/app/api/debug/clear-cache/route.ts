@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { logger } from '@/lib/logging/logger-edge';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   // Block debug endpoint outside local development
   if (process.env.NODE_ENV !== 'development' || process.env.VERCEL) {
