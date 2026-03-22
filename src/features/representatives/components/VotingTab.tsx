@@ -347,6 +347,11 @@ const VotingTabComponent = React.memo(
 
     return (
       <div data-testid="voting-record">
+        <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
+          Roll call votes only. Voice votes and committee votes are not shown here. This also skips
+          the talks that shape what reaches the floor.
+        </p>
+
         {/* AI Vote Pattern Analysis */}
         <VotePatternSection bioguideId={bioguideId} />
 

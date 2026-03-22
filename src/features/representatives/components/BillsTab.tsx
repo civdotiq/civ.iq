@@ -208,6 +208,11 @@ export const BillsTab = React.memo(
 
     return (
       <div>
+        <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
+          Shows bills and their status. Does not show how hard your representative worked on each
+          one. A bill filed for show looks the same as one built over years.
+        </p>
+
         <h2 className="text-xl font-bold mb-6">Legislative Activity</h2>
 
         {/* Enhanced Filters Section */}

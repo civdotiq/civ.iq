@@ -245,6 +245,11 @@ export function FinanceTab({
 
   return (
     <div>
+      <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
+        Shows reported campaign donations. We cannot show who meets with your representative or
+        whether money shaped any vote.
+      </p>
+
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <h2 className="text-xl font-bold">Campaign Finance</h2>
         <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium border border-gray-300">
