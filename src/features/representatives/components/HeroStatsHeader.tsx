@@ -17,6 +17,7 @@ interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
   stats: {
     billsSponsored?: number;
+    billsEnacted?: number;
     votesParticipated?: number;
     totalRaised?: number;
     attendanceRate?: number | null;
@@ -300,6 +301,9 @@ export function HeroStatsHeader({
                   <div className="text-3xl font-bold text-gray-900">
                     {stats.billsSponsored !== undefined ? stats.billsSponsored : '—'}
                   </div>
+                  {stats.billsSponsored !== undefined && stats.billsSponsored > 0 && (
+                    <div className="text-sm text-gray-500">{stats.billsEnacted ?? 0} enacted</div>
+                  )}
                   <div className="text-xs text-gray-500 mt-1">Current Congress</div>
                 </>
               )}

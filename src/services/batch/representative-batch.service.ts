@@ -604,6 +604,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
   const cached = await govCache.get<{
     billsSponsored?: number;
     billsCosponsored?: number;
+    billsEnacted?: number;
     totalRaised?: number;
     votesParticipated?: number;
     attendanceRate?: number | null;
@@ -656,6 +657,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
           ?.currentCongress?.count ??
         0,
       billsCosponsored: (billsData as { cosponsoredCount?: number })?.cosponsoredCount ?? 0,
+      billsEnacted: (billsData as { enactedCount?: number })?.enactedCount ?? 0,
       totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
       votesParticipated:
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
@@ -672,6 +674,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     return {
       billsSponsored: 0,
       billsCosponsored: 0,
+      billsEnacted: 0,
       totalRaised: 0,
       votesParticipated: undefined,
       attendanceRate: null,
