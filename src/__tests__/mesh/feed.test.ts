@@ -37,7 +37,11 @@ jest.mock('nostr-tools/pure', () => ({
   }),
 }));
 
-import { publishCivicIntelligence, entityTypeFromId } from '@/lib/mesh/protocol/feed';
+import {
+  publishCivicIntelligence,
+  retractCivicIntelligence,
+  entityTypeFromId,
+} from '@/lib/mesh/protocol/feed';
 import type { InsightBase } from '@/lib/intelligence/types';
 
 const mockInsight: InsightBase = {
@@ -150,5 +154,80 @@ describe('publishCivicIntelligence', () => {
     await publishCivicIntelligence('rep:A000360', 'test', mockInsight, {});
     const event = mockPublish.mock.calls[0][0];
     expect(event.kind).toBe(30078);
+  });
+});
+
+describe('retractCivicIntelligence', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('creates a Kind 5 deletion event referencing the original event ID', async () => {
+    mockGetKeypair.mockReturnValue({
+      privateKey: new Uint8Array(32),
+      publicKey: 'mock-pubkey',
+    });
+    mockPublish.mockResolvedValue({
+      successCount: 3,
+      failureCount: 0,
+      successes: ['relay1', 'relay2', 'relay3'],
+      failures: [],
+      eventId: 'mock-event-id-123',
+    });
+
+    const result = await retractCivicIntelligence(
+      'abc123def456',
+      'Data correction: updated source'
+    );
+
+    expect(result).toBe('mock-event-id-123');
+    expect(mockPublish).toHaveBeenCalledTimes(1);
+
+    const signedEvent = mockPublish.mock.calls[0][0];
+    expect(signedEvent.kind).toBe(5);
+    expect(signedEvent.tags).toEqual([['e', 'abc123def456']]);
+    expect(signedEvent.content).toBe('Data correction: updated source');
+  });
+
+  it('signs the event before publishing', async () => {
+    mockGetKeypair.mockReturnValue({
+      privateKey: new Uint8Array(32),
+      publicKey: 'mock-pubkey',
+    });
+    mockPublish.mockResolvedValue({
+      successCount: 1,
+      failureCount: 0,
+      successes: ['relay1'],
+      failures: [],
+      eventId: 'mock-event-id-123',
+    });
+
+    await retractCivicIntelligence('abc123', 'reason');
+
+    const signedEvent = mockPublish.mock.calls[0][0];
+    expect(signedEvent.id).toBe('mock-event-id-123');
+    expect(signedEvent.sig).toBe('mock-sig');
+    expect(signedEvent.pubkey).toBe('mock-pubkey');
+  });
+
+  it('returns null when no keypair is configured', async () => {
+    mockGetKeypair.mockReturnValue(null);
+
+    const result = await retractCivicIntelligence('abc123', 'reason');
+
+    expect(result).toBeNull();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  it('returns null on publish failure', async () => {
+    mockGetKeypair.mockReturnValue({
+      privateKey: new Uint8Array(32),
+      publicKey: 'mock-pubkey',
+    });
+    mockPublish.mockRejectedValue(new Error('Network error'));
+
+    const result = await retractCivicIntelligence('abc123', 'reason');
+
+    expect(result).toBeNull();
   });
 });

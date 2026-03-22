@@ -23,6 +23,9 @@ import logger from '@/lib/logging/simple-logger';
 /** NIP-78 application-specific data kind */
 const CIVIC_INTELLIGENCE_KIND = 30078;
 
+/** NIP-09 deletion event kind */
+const DELETION_KIND = 5;
+
 /** Minimum confidence to publish — low-confidence insights are not broadcast */
 const MIN_PUBLISH_CONFIDENCE = 0.6;
 
@@ -116,6 +119,47 @@ function buildCivicIntelligenceEvent(
       payload,
     }),
   };
+}
+
+/**
+ * Retract a previously published civic intelligence event using NIP-09 deletion.
+ *
+ * Creates a Kind 5 event referencing the original event ID in an 'e' tag,
+ * signs it, and publishes to the relay pool. Returns the deletion event ID,
+ * or null if retraction was skipped (no keypair or relay failure).
+ */
+export async function retractCivicIntelligence(
+  eventId: string,
+  reason: string
+): Promise<string | null> {
+  const keypair = getNostrKeypair();
+  if (!keypair) {
+    logger.warn('[Mesh:Feed] No Nostr keypair configured, skipping retraction');
+    return null;
+  }
+
+  const event = {
+    kind: DELETION_KIND,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [['e', eventId]],
+    content: reason,
+  };
+
+  const signed = finalizeEvent(event, keypair.privateKey);
+
+  try {
+    const result = await publishToRelays(signed);
+    logger.info('[Mesh:Feed] Retracted civic intelligence event', {
+      originalEventId: eventId,
+      deletionEventId: signed.id,
+      reason,
+      relays: result.successCount,
+    });
+    return signed.id;
+  } catch (err) {
+    logger.error('[Mesh:Feed] Retraction failed', err as Error, { eventId, reason });
+    return null;
+  }
 }
 
 /**
