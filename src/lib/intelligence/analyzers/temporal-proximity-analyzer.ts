@@ -18,7 +18,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { confidenceScore } from '@/lib/intelligence/statistics/civic-stats';
-import { generateInsightNarrative } from '@/lib/intelligence/analyzers/shared';
+import { freshestDate, generateInsightNarrative } from '@/lib/intelligence/analyzers/shared';
 import type { InsightBase } from '@/lib/intelligence/types';
 import type { GraphNeighborhood, GraphEdge } from '@/types/graph';
 
@@ -64,6 +64,7 @@ export async function analyzeTemporalProximity(
   bioguideId: string
 ): Promise<TemporalProximityInsight> {
   const now = new Date().toISOString();
+  const edgeDates = neighborhood.edges.map(e => e.temporal?.date).filter((d): d is string => !!d);
   const patterns: TemporalPattern[] = [];
 
   // Pattern 1: Contribution → Vote
@@ -110,7 +111,7 @@ export async function analyzeTemporalProximity(
     totalPatternsDetected,
     narrative,
     confidence,
-    dataAsOf: now,
+    dataAsOf: freshestDate(...edgeDates),
     methodology:
       'Temporal proximity analysis: edges with dates are compared within configurable windows. ' +
       'Proximity score = 1 - (daysBetween / windowDays). Significance based on instance count and proximity.',

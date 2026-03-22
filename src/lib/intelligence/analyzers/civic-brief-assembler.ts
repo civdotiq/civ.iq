@@ -22,6 +22,7 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector } from '@civiq/entity-resolution';
 import {
   findCommitteeMapping,
+  freshestDate,
   getCurrentElectionCycle,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
@@ -154,7 +155,7 @@ async function computeAndCache(
     patterns,
     summary,
     confidence,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(fjInsight?.dataAsOf, icInsight?.dataAsOf),
     methodology: METHODOLOGY,
     disclaimer: DISCLAIMER,
     source,

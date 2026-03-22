@@ -48,6 +48,20 @@ export async function withTimeout<T>(
   return Promise.race([promise, timeout]);
 }
 
+// ── Source Data Freshness ──────────────────────────────────────────
+
+/**
+ * Returns the most recent ISO date string from a list of candidate timestamps.
+ * Filters out undefined/null/empty values. Falls back to current time if none valid.
+ * Use this for `dataAsOf` — it should reflect the freshest *source data*, not analysis time.
+ */
+export function freshestDate(...dates: (string | undefined | null)[]): string {
+  const valid = dates.filter((d): d is string => !!d && !isNaN(Date.parse(d)));
+  if (valid.length === 0) return new Date().toISOString();
+  valid.sort((a, b) => Date.parse(b) - Date.parse(a));
+  return valid[0]!;
+}
+
 // ── FEC Election Cycle ──────────────────────────────────────────────
 
 /**

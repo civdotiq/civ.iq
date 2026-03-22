@@ -26,6 +26,7 @@ import { batchVotingService } from '@/features/representatives/services/batch-vo
 import { getPolicyAreasForSector } from '@/lib/connections/policy-area-map';
 import {
   getCurrentElectionCycle,
+  freshestDate,
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
@@ -184,7 +185,8 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
-    dataAsOf: new Date().toISOString(),
+    // TODO: extract freshest vote date from processRecipientVotes
+    dataAsOf: freshestDate(),
     methodology:
       'PAC recipients identified via FEC disbursement data. ' +
       'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +

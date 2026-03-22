@@ -29,6 +29,7 @@ import {
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import {
   getCurrentElectionCycle,
+  freshestDate,
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
@@ -382,7 +383,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(...votes.map(v => v.date)),
     methodology:
       'Traces lobbying filings → campaign contributions → committee membership → ' +
       'bill sector classification → voting records. Organization names matched via ' +

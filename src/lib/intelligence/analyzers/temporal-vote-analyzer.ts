@@ -24,7 +24,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { generateInsightNarrative } from './shared';
+import { freshestDate, generateInsightNarrative } from './shared';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   confidenceScore,
@@ -343,7 +343,7 @@ export async function analyzeTemporalVotes(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(...data.votes.map(v => v.date)),
     methodology:
       'Party alignment computed by comparing each vote to the party majority position ' +
       'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +

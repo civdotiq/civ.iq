@@ -23,6 +23,7 @@ import { batchVotingService } from '@/features/representatives/services/batch-vo
 import { confidenceScore, peerComparison, MIN_PEERS } from '../statistics/civic-stats';
 import {
   getCurrentElectionCycle,
+  freshestDate,
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
@@ -150,7 +151,7 @@ async function computeAndCache(
       predictions.aggregatedShapFactors.length > 0 ? predictions.aggregatedShapFactors : undefined,
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(...data.votes.map(v => v.date)),
     methodology:
       'XGBoost model trained on real vote records and campaign finance data. ' +
       'Independence score = fraction of confident predictions where the legislator ' +

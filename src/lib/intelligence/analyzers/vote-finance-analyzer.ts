@@ -32,6 +32,7 @@ import {
 } from '../statistics/civic-stats';
 import {
   getCurrentElectionCycle,
+  freshestDate,
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
@@ -131,7 +132,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(...data.votes.map(v => v.date)),
     methodology:
       'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
       'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +

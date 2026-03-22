@@ -18,6 +18,12 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
     (_sys: string, _user: string, fallback: string, _label: string) =>
       Promise.resolve({ narrative: fallback, source: 'statistical-fallback' as const })
   ),
+  freshestDate: (...dates: (string | undefined | null)[]) => {
+    const valid = dates.filter((d): d is string => !!d && !isNaN(Date.parse(d)));
+    if (valid.length === 0) return new Date().toISOString();
+    valid.sort((a, b) => Date.parse(b) - Date.parse(a));
+    return valid[0]!;
+  },
 }));
 
 function makeNode(id: string): GraphNode {

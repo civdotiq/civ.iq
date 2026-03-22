@@ -30,6 +30,7 @@ import { peerComparisonWithAnomalies, confidenceScore, MIN_PEERS } from '../stat
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
+  freshestDate,
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
@@ -135,7 +136,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(data.freshestContributionDate),
     methodology:
       'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
       'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',
@@ -171,6 +172,7 @@ interface FetchedData {
   committeeCodes: string[];
   sectorDonations: Map<IndustrySector, number>;
   totalDonations: number;
+  freshestContributionDate?: string;
 }
 
 async function fetchData(bioguideId: string): Promise<FetchedData | null> {
@@ -206,6 +208,16 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     return null;
   }
 
+  // Track freshest contribution date before aggregation loses individual dates
+  const freshestContributionDate =
+    contributions.reduce<string>(
+      (max, c) =>
+        !max || (c.contribution_receipt_date && c.contribution_receipt_date > max)
+          ? (c.contribution_receipt_date ?? max)
+          : max,
+      ''
+    ) || undefined;
+
   // Aggregate contributions by sector
   const sectorAggregation = aggregateByIndustrySector(contributions);
   const sectorDonations = new Map<IndustrySector, number>();
@@ -236,6 +248,7 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     committeeCodes,
     sectorDonations,
     totalDonations,
+    freshestContributionDate,
   };
 }
 

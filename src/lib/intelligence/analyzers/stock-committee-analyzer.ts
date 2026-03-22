@@ -40,6 +40,7 @@ import type {
 import type { TickerResolution } from '../types';
 import {
   findCommitteeMapping,
+  freshestDate,
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
@@ -140,7 +141,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate)),
     methodology:
       'Stock trades from House Clerk STOCK Act disclosures matched to committee jurisdiction sectors. ' +
       'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +

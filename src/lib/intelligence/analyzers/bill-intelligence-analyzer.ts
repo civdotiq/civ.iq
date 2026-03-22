@@ -29,6 +29,7 @@ import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
+  freshestDate,
   generateInsightNarrative,
   withTimeout,
   getBillSectors,
@@ -237,7 +238,7 @@ async function computeAndCache(
     relatedLobbyingOrgs: lobbyingOrgs,
     narrative,
     confidence: conf,
-    dataAsOf: new Date().toISOString(),
+    dataAsOf: freshestDate(bill.introducedDate, bill.status.lastAction.date),
     methodology:
       'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +
       (usedMLClassification
