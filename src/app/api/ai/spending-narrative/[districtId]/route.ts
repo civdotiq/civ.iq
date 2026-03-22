@@ -8,6 +8,8 @@
  *
  * Returns AI-generated narrative of federal spending in a congressional district.
  * Translates USASpending.gov data into community context.
+ *
+ * Calls the spending service directly — no self-referencing HTTP fetch.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,7 +17,7 @@ import { SpendingNarrativeGenerator } from '@/features/legislation/services/ai/s
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
-import { getServerBaseUrl } from '@/lib/server-url';
+import { parseDistrictId, getDistrictSpending } from '@/lib/services/spending.service';
 import type { DistrictSpending } from '@/types/ai';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +36,7 @@ export async function GET(
       required: true,
       minLength: 3,
       maxLength: 10,
-      pattern: /^[A-Z]{2}-\d{1,2}$/i,
+      pattern: /^[A-Z]{2}-(\d{1,2}|AL|00)$/i,
     });
 
     if (districtIdErrors.length > 0) {
@@ -51,10 +53,17 @@ export async function GET(
       operation: 'spending_narrative_api',
     });
 
-    // Fetch spending data from USASpending.gov via existing API
-    const spending = await fetchDistrictSpending(normalizedDistrictId);
+    // Call spending service directly — no self-referencing HTTP fetch
+    const parsed = parseDistrictId(normalizedDistrictId);
+    if (!parsed) {
+      return NextResponse.json({ error: 'Invalid district ID format' }, { status: 400 });
+    }
 
-    if (!spending) {
+    const result = await getDistrictSpending(parsed.state, parsed.district);
+
+    const totalAmount = result.aggregate?.total ?? result.contractTotal + result.grantTotal;
+
+    if (totalAmount === 0 && result.contracts.length === 0 && result.grants.length === 0) {
       return NextResponse.json(
         {
           error: 'Spending data not found',
@@ -62,6 +71,37 @@ export async function GET(
         },
         { status: 404 }
       );
+    }
+
+    // Transform to DistrictSpending shape for the narrative generator
+    const spending: DistrictSpending = {
+      totalAmount,
+      categories: [],
+      topContracts: [],
+    };
+
+    if (result.contractTotal > 0) {
+      spending.categories.push({
+        name: 'Federal Contracts',
+        amount: result.contractTotal,
+        percentage: totalAmount > 0 ? Math.round((result.contractTotal / totalAmount) * 100) : 0,
+      });
+    }
+
+    if (result.grantTotal > 0) {
+      spending.categories.push({
+        name: 'Federal Grants',
+        amount: result.grantTotal,
+        percentage: totalAmount > 0 ? Math.round((result.grantTotal / totalAmount) * 100) : 0,
+      });
+    }
+
+    for (const contract of result.contracts.slice(0, 5)) {
+      spending.topContracts.push({
+        recipient: contract.recipientName || 'Federal contractor',
+        amount: contract.amount || 0,
+        description: contract.description || '',
+      });
     }
 
     // Generate spending narrative
@@ -115,74 +155,5 @@ export async function GET(
       },
       { status: 500 }
     );
-  }
-}
-
-/**
- * Fetch district spending data from working USASpending district API
- */
-async function fetchDistrictSpending(districtId: string): Promise<DistrictSpending | null> {
-  try {
-    const baseUrl = getServerBaseUrl();
-    const response = await fetch(`${baseUrl}/api/spending/district/${districtId}`, {
-      signal: AbortSignal.timeout(15000),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-
-    if (!data.success || !data.summary) {
-      return null;
-    }
-
-    const { summary, recentContracts } = data;
-    const totalAmount = summary.totalSpending || 0;
-
-    // Build categories from contract/grant breakdown
-    const categories: DistrictSpending['categories'] = [];
-
-    if (summary.contractSpending > 0) {
-      categories.push({
-        name: 'Federal Contracts',
-        amount: summary.contractSpending,
-        percentage:
-          totalAmount > 0 ? Math.round((summary.contractSpending / totalAmount) * 100) : 0,
-      });
-    }
-
-    if (summary.grantSpending > 0) {
-      categories.push({
-        name: 'Federal Grants',
-        amount: summary.grantSpending,
-        percentage: totalAmount > 0 ? Math.round((summary.grantSpending / totalAmount) * 100) : 0,
-      });
-    }
-
-    // Map recent contracts to topContracts
-    const topContracts: DistrictSpending['topContracts'] = [];
-    if (recentContracts?.length) {
-      for (const contract of recentContracts.slice(0, 5)) {
-        topContracts.push({
-          recipient: contract.recipientName || 'Federal contractor',
-          amount: contract.amount || 0,
-          description: contract.description || '',
-        });
-      }
-    }
-
-    return {
-      totalAmount,
-      categories,
-      topContracts,
-    };
-  } catch (error) {
-    logger.warn('Failed to fetch district spending', {
-      districtId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return null;
   }
 }

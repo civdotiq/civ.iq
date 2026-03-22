@@ -107,7 +107,10 @@ export async function buildDistrictProfile(districtId: string): Promise<District
     if (rep.chamber === 'Senate') return true;
     if (rep.chamber !== 'House') return false;
     if (isAtLarge) return !rep.district || rep.district === '0' || rep.district === '00';
-    return rep.district === district;
+    // Normalize both sides — YAML stores "2", URL parsing gives "02"
+    const repNum = parseInt(rep.district ?? '', 10);
+    const targetNum = parseInt(district, 10);
+    return !isNaN(repNum) && !isNaN(targetNum) && repNum === targetNum;
   });
 
   if (districtReps.length === 0) {
@@ -488,21 +491,17 @@ interface BillData {
 
 async function fetchDistrictBills(districtId: string): Promise<BillData | null> {
   try {
-    // Use AbortSignal.timeout to prevent deadlock when the server
-    // handles this request on the same worker thread that is already
-    // processing the parent /api/mesh/district request (self-referencing fetch).
-    const response = await fetch(
-      `${getInternalBaseUrl()}/api/district/${districtId}/bills?limit=20`,
-      {
-        headers: { 'User-Agent': 'CIV.IQ/1.0' },
-        signal: AbortSignal.timeout(15_000),
-      }
-    );
-    if (!response.ok) return null;
-    const data = await response.json();
+    // Direct function call — NO self-referencing HTTP fetch.
+    const { getDistrictBills } = await import('@/lib/services/district-bills.service');
+    const parsed = districtId.match(/^([A-Z]{2})-(.+)$/i);
+    if (!parsed) return null;
+    const state = (parsed[1] ?? '').toUpperCase();
+    const district = (parsed[2] ?? '').toUpperCase();
+    const result = await getDistrictBills(state, district, 20);
+    if (!result) return null;
     return {
-      bills: data.bills ?? [],
-      relevantPolicyAreas: data.relevantPolicyAreas ?? [],
+      bills: result.bills,
+      relevantPolicyAreas: result.relevantPolicyAreas,
     };
   } catch {
     return null;
@@ -691,13 +690,6 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   }
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
   return denominator === 0 ? 0 : dotProduct / denominator;
-}
-
-function getInternalBaseUrl(): string {
-  if (typeof window !== 'undefined') return '';
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
 }
 
 // Re-export for external use
