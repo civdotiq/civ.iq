@@ -232,6 +232,57 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
         </div>
       </AicherSidebarCard>
 
+      {/* District Offices */}
+      {representative.contact?.districtOffices &&
+        representative.contact.districtOffices.length > 0 && (
+          <AicherSidebarCard title="District Offices" icon={Building}>
+            <div className="space-y-3">
+              {representative.contact.districtOffices.map((office, index) => (
+                <div
+                  key={index}
+                  className="border-gray-200 pb-3"
+                  style={{
+                    borderBottomWidth:
+                      index < (representative.contact?.districtOffices?.length ?? 0) - 1
+                        ? '2px'
+                        : 0,
+                    paddingBottom: 'calc(var(--grid) * 1.5)',
+                  }}
+                >
+                  <div className="type-sm text-gray-900 mb-1">{office.address}</div>
+                  {office.phone && (
+                    <a
+                      href={`tel:${office.phone}`}
+                      className="flex items-center gap-1 type-sm text-[#3ea2d4] hover:underline"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      <Phone className="w-3 h-3" />
+                      {office.phone}
+                    </a>
+                  )}
+                  {office.fax && (
+                    <div
+                      className="type-xs text-gray-500"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      Fax: {office.fax}
+                    </div>
+                  )}
+                  {office.hours && (
+                    <div
+                      className="flex items-center gap-1 type-xs text-gray-500"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      <Clock className="w-3 h-3" />
+                      {office.hours}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </AicherSidebarCard>
+        )}
+
       {/* Term Information */}
       <AicherSidebarCard title="Current Term" icon={Calendar}>
         <div className="space-y-3">

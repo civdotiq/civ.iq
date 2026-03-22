@@ -304,6 +304,31 @@ export interface CongressCommitteeMembership {
   }>;
 }
 
+// District office data from legislators-district-offices.yaml
+export interface CongressDistrictOffice {
+  id: string;
+  address: string;
+  suite?: string;
+  building?: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone?: string;
+  fax?: string;
+  hours?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface CongressDistrictOfficeEntry {
+  id: {
+    bioguide: string;
+    govtrack?: number;
+    thomas?: string;
+  };
+  offices: CongressDistrictOffice[];
+}
+
 export interface CongressCommittee {
   thomas_id: string;
   house_committee_id?: string;
@@ -573,6 +598,78 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
 }
 
 /**
+ * Fetch district office data from legislators-district-offices.yaml
+ * Source: unitedstates/congress-legislators
+ */
+async function fetchDistrictOffices(): Promise<CongressDistrictOfficeEntry[]> {
+  return persistentCachedFetch(
+    'congress-legislators-district-offices',
+    async () => {
+      try {
+        logger.info('Fetching district offices from congress-legislators');
+
+        await githubRateLimiter.waitIfNeeded();
+
+        const response = await fetch(
+          `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-district-offices.yaml`,
+          { signal: AbortSignal.timeout(60000) }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch district offices: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const yamlText = await response.text();
+        const data = yaml.load(yamlText) as CongressDistrictOfficeEntry[];
+
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid YAML format: expected array of district office entries');
+        }
+
+        logger.info('Successfully fetched district offices', {
+          count: data.length,
+        });
+
+        return data;
+      } catch (error) {
+        logger.error('Error fetching district offices', error as Error);
+        return [];
+      }
+    },
+    6 * 60 * 60 * 1000 // 6 hours cache
+  );
+}
+
+/**
+ * Get district offices for a representative by bioguide ID
+ */
+function getDistrictOfficesForMember(
+  bioguideId: string,
+  districtOffices: CongressDistrictOfficeEntry[]
+): Array<{ address: string; phone?: string; fax?: string }> {
+  const entry = districtOffices.find(d => d.id.bioguide === bioguideId);
+  if (!entry?.offices?.length) {
+    return [];
+  }
+
+  return entry.offices.map(office => {
+    const parts = [office.address];
+    if (office.suite) parts.push(office.suite);
+    if (office.building) parts.push(office.building);
+    parts.push(`${office.city}, ${office.state} ${office.zip}`);
+
+    return {
+      address: parts.join(', '),
+      phone: office.phone,
+      fax: office.fax,
+      hours: office.hours,
+    };
+  });
+}
+
+/**
  * Fetch committee membership data
  */
 export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
@@ -702,12 +799,14 @@ export async function getEnhancedRepresentative(
   bioguideId: string
 ): Promise<EnhancedRepresentative | null> {
   try {
-    const [legislators, socialMedia, committeeMemberships, committees] = await Promise.all([
-      fetchCurrentLegislators(),
-      fetchSocialMediaData(),
-      fetchCommitteeMemberships(),
-      fetchCommittees(),
-    ]);
+    const [legislators, socialMedia, committeeMemberships, committees, districtOffices] =
+      await Promise.all([
+        fetchCurrentLegislators(),
+        fetchSocialMediaData(),
+        fetchCommitteeMemberships(),
+        fetchCommittees(),
+        fetchDistrictOffices(),
+      ]);
 
     // Find the legislator by bioguide ID in current data
     let legislator = legislators.find(l => l.id.bioguide === bioguideId);
@@ -878,6 +977,17 @@ export async function getEnhancedRepresentative(
           }
         : undefined,
 
+      contact: {
+        dcOffice: currentTerm.office
+          ? {
+              address: currentTerm.office,
+              phone: currentTerm.phone,
+            }
+          : undefined,
+        districtOffices: getDistrictOfficesForMember(bioguideId, districtOffices),
+        contactForm: currentTerm.contact_form,
+      },
+
       ids: {
         govtrack: legislator.id.govtrack,
         opensecrets: legislator.id.opensecrets,
@@ -915,9 +1025,10 @@ export async function getEnhancedRepresentative(
 export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
   try {
     logger.debug('Starting to fetch all enhanced representatives data');
-    const [legislators, socialMedia] = await Promise.all([
+    const [legislators, socialMedia, districtOffices] = await Promise.all([
       fetchCurrentLegislators(),
       fetchSocialMediaData(),
+      fetchDistrictOffices(),
     ]);
 
     logger.debug('Fetched legislators and social media data', {
@@ -1101,6 +1212,17 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
                 mastodon: social.social.mastodon,
               }
             : undefined,
+
+          contact: {
+            dcOffice: currentTerm.office
+              ? {
+                  address: currentTerm.office,
+                  phone: currentTerm.phone,
+                }
+              : undefined,
+            districtOffices: getDistrictOfficesForMember(bioguideId, districtOffices),
+            contactForm: currentTerm.contact_form,
+          },
 
           ids: {
             govtrack: legislator.id.govtrack,
