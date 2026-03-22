@@ -276,16 +276,15 @@ export default function StatesHubPage() {
           <FAQSection faqs={faqItems} />
         </section>
 
-        {/* Contextual Footer - Ulm Style */}
         <ExploreFooter
+          variant="state"
           currentSection="State Legislatures"
           relatedLinks={[
-            { href: '/congress', label: 'U.S. Congress' },
-            { href: '/districts', label: 'Districts' },
+            { href: '/state-bills', label: 'State Bill Search' },
+            { href: '/state-districts', label: 'State Districts' },
             { href: '/glossary', label: 'Glossary' },
           ]}
           lastUpdated={new Date()}
-          dataSource="OpenStates"
         />
       </main>
     </div>

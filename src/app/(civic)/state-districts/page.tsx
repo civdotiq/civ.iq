@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getAllStateLegislatures, getTotalSeats } from '@/lib/data/static-state-legislatures';
 import { getStateName } from '@/lib/data/us-states';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 
 export default function StateDistrictsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,6 +185,17 @@ export default function StateDistrictsPage() {
             PMTiles for fast loading.
           </div>
         </div>
+
+        <ExploreFooter
+          variant="state"
+          currentSection="State Districts"
+          relatedLinks={[
+            { href: '/states', label: 'All 50 States' },
+            { href: '/state-bills', label: 'State Bill Search' },
+            { href: '/glossary', label: 'Glossary' },
+          ]}
+          lastUpdated={new Date()}
+        />
       </main>
     </>
   );

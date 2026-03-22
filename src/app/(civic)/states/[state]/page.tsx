@@ -14,6 +14,7 @@ import { scaleBand, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { lineRadial, curveLinearClosed } from 'd3-shape';
 import Link from 'next/link';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 
 // Types
 interface StateData {
@@ -829,6 +830,18 @@ export default function StateOverviewPage() {
             </>
           )}
         </div>
+
+        <ExploreFooter
+          variant="state"
+          currentSection="State Overview"
+          relatedLinks={[
+            { href: '/states', label: 'All 50 States' },
+            { href: '/state-bills', label: 'State Bill Search' },
+            { href: '/state-districts', label: 'State Districts' },
+            { href: '/glossary', label: 'Glossary' },
+          ]}
+          lastUpdated={new Date()}
+        />
       </main>
     </div>
   );

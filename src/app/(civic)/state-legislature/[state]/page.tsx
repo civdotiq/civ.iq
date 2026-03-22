@@ -23,6 +23,7 @@ import {
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 
 interface StateLegislator {
   id: string;
@@ -625,6 +626,18 @@ export default function StateLegislaturePage() {
 
           {activeTab === 'judiciary' && <StateJudiciaryTab state={state} />}
         </div>
+
+        <ExploreFooter
+          variant="state"
+          currentSection="State Legislature"
+          relatedLinks={[
+            { href: '/states', label: 'All 50 States' },
+            { href: '/state-bills', label: 'State Bill Search' },
+            { href: '/state-districts', label: 'State Districts' },
+            { href: '/glossary', label: 'Glossary' },
+          ]}
+          lastUpdated={new Date()}
+        />
       </main>
     </div>
   );
