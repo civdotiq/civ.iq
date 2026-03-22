@@ -34,8 +34,18 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
       chamber: 'House',
       state: 'MI',
       district: '05',
-      committees: [{ name: 'Appropriations', role: 'Member' }],
+      committees: [],
     },
+  ]),
+  fetchCommitteeMemberships: jest.fn().mockResolvedValue([
+    {
+      bioguide: 'S000480',
+      committees: [{ thomas_id: 'HSAS', title: 'Member' }],
+    },
+  ]),
+  fetchCommittees: jest.fn().mockResolvedValue([
+    { thomas_id: 'HSAS', name: 'Armed Services' },
+    { thomas_id: 'HSAP', name: 'Appropriations' },
   ]),
 }));
 
@@ -46,29 +56,43 @@ const mockSpendingResponse = {
   ],
 };
 
-const mockCongressResponse = {
+// Bill list response — does NOT include policyArea or introducedDate (matches real API)
+const mockCongressListResponse = {
   bills: [
     {
       congress: 119,
       type: 'HR',
       number: 100,
       title: 'National Defense Authorization Act',
-      introducedDate: '2025-01-15',
-      policyArea: { name: 'Armed Forces and National Security' },
+      updateDate: '2025-02-01',
       latestAction: { actionDate: '2025-02-01', text: 'Referred to Committee' },
-      url: 'https://congress.gov/bill/119/hr/100',
+      url: 'https://api.congress.gov/v3/bill/119/hr/100?format=json',
     },
     {
       congress: 119,
       type: 'S',
       number: 50,
       title: 'Education Improvement Act',
-      introducedDate: '2025-01-20',
-      policyArea: { name: 'Education' },
+      updateDate: '2025-02-05',
       latestAction: { actionDate: '2025-02-05', text: 'Introduced' },
-      url: 'https://congress.gov/bill/119/s/50',
+      url: 'https://api.congress.gov/v3/bill/119/s/50?format=json',
     },
   ],
+};
+
+// Individual bill detail responses — include policyArea and introducedDate
+const mockBillDetail100 = {
+  bill: {
+    policyArea: { name: 'Armed Forces and National Security' },
+    introducedDate: '2025-01-15',
+  },
+};
+
+const mockBillDetail50 = {
+  bill: {
+    policyArea: { name: 'Education' },
+    introducedDate: '2025-01-20',
+  },
 };
 
 describe('/api/district/[districtId]/bills', () => {
@@ -82,8 +106,22 @@ describe('/api/district/[districtId]/bills', () => {
       if (urlStr.includes('usaspending.gov')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(mockSpendingResponse) });
       }
+      // Individual bill detail endpoints (contain /hr/ or /s/ with bill number)
+      if (urlStr.match(/congress\.gov\/v3\/bill\/\d+\/\w+\/\d+\?/)) {
+        if (urlStr.includes('/hr/100')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBillDetail100) });
+        }
+        if (urlStr.includes('/s/50')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBillDetail50) });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ bill: {} }) });
+      }
+      // Bill list endpoint
+      if (urlStr.includes('congress.gov/v3/bill/119')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockCongressListResponse) });
+      }
       if (urlStr.includes('congress.gov')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockCongressResponse) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
     });

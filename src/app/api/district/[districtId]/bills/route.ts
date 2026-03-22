@@ -26,7 +26,11 @@ import {
   getTopicsForCommittee,
 } from '@/lib/connections/committee-agency-map';
 import { getAllPolicyAreas, getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
-import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import {
+  getAllEnhancedRepresentatives,
+  fetchCommitteeMemberships,
+  fetchCommittees,
+} from '@/features/representatives/services/congress.service';
 import { mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
@@ -62,15 +66,25 @@ interface DistrictBillsResponse {
   metadata: JoinMetadata;
 }
 
+/**
+ * Congress.gov /v3/bill/{congress} list response item.
+ * Note: The list endpoint does NOT return policyArea or introducedDate.
+ * Those fields are only available from individual bill detail endpoints.
+ */
 interface CongressBillListItem {
   congress: number;
   type: string;
   number: number;
   title: string;
-  introducedDate: string;
-  policyArea?: { name: string };
+  updateDate?: string;
   latestAction?: { actionDate: string; text: string };
   url: string;
+}
+
+/** Individual bill detail from /v3/bill/{congress}/{type}/{number} */
+interface CongressBillDetail {
+  policyArea?: { name: string };
+  introducedDate?: string;
 }
 
 function parseDistrictId(districtId: string): { state: string; district: string } | null {
@@ -132,6 +146,78 @@ function agencyNameToSlug(name: string): string {
     .replace(/[^a-z\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-');
+}
+
+/**
+ * Fetch policyArea for a batch of bills from their detail endpoints.
+ * Returns a Map of "type-number" → policyArea name.
+ * Limits concurrent requests to avoid rate limiting.
+ */
+async function fetchBillPolicyAreas(
+  bills: CongressBillListItem[],
+  headers: Record<string, string>,
+  maxBills: number = 25
+): Promise<Map<string, CongressBillDetail>> {
+  const details = new Map<string, CongressBillDetail>();
+  const batch = bills.slice(0, maxBills);
+
+  const results = await Promise.allSettled(
+    batch.map(async bill => {
+      const key = `${bill.type}-${bill.number}`;
+      try {
+        const detailUrl = `https://api.congress.gov/v3/bill/${bill.congress}/${bill.type.toLowerCase()}/${bill.number}?format=json`;
+        const res = await fetch(detailUrl, {
+          headers,
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) return { key, detail: {} as CongressBillDetail };
+        const data = await res.json();
+        return {
+          key,
+          detail: {
+            policyArea: data.bill?.policyArea,
+            introducedDate: data.bill?.introducedDate,
+          } as CongressBillDetail,
+        };
+      } catch {
+        return { key, detail: {} as CongressBillDetail };
+      }
+    })
+  );
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      details.set(result.value.key, result.value.detail);
+    }
+  }
+
+  return details;
+}
+
+/**
+ * Get committee names for a representative using the congress-legislators
+ * YAML data (committee-membership-current.yaml + committees-current.yaml).
+ * The Congress.gov member API does not return committee assignments.
+ */
+async function getRepCommitteeNames(bioguideId: string): Promise<string[]> {
+  try {
+    const [memberships, committees] = await Promise.all([
+      fetchCommitteeMemberships(),
+      fetchCommittees(),
+    ]);
+
+    const memberRecord = memberships.find(m => m.bioguide === bioguideId);
+    if (!memberRecord?.committees) return [];
+
+    return memberRecord.committees
+      .map(membership => {
+        const committee = committees.find(c => c.thomas_id === membership.thomas_id);
+        return committee?.name;
+      })
+      .filter((name): name is string => !!name);
+  } catch {
+    return [];
+  }
 }
 
 export async function GET(
@@ -214,20 +300,9 @@ export async function GET(
           'X-API-Key': process.env.CONGRESS_API_KEY || '',
         };
 
-        // Fetch member committees (for +2 scoring) and bills in parallel
+        // Fetch rep committees (from YAML data) and recent bills in parallel
         const memberCommitteesFetch = rep?.bioguideId
-          ? fetch(`https://api.congress.gov/v3/member/${rep.bioguideId}?format=json`, {
-              headers: congressHeaders,
-              signal: AbortSignal.timeout(8000),
-            })
-              .then(async res => {
-                if (!res.ok) return [];
-                const data = await res.json();
-                return (data.member?.committees ?? [])
-                  .map((c: { name?: string }) => c.name)
-                  .filter((n: string | undefined): n is string => !!n);
-              })
-              .catch(() => [] as string[])
+          ? getRepCommitteeNames(rep.bioguideId)
           : Promise.resolve([] as string[]);
 
         const billsFetch = fetch(billUrl.toString(), { headers: congressHeaders })
@@ -262,23 +337,22 @@ export async function GET(
         const relevantPolicyAreas = [...spendingPolicyAreas];
         const policyAreaLower = new Set(relevantPolicyAreas.map(pa => pa.toLowerCase()));
 
-        // Step 5: Score each bill
-        const scored: DistrictBill[] = [];
+        // Step 5: First pass — score by keyword matching (+1, +2 paths)
+        // The list endpoint does NOT include policyArea, so we pre-filter
+        // by keyword match first, then fetch details for the top candidates.
+        const keywordScored: Array<{
+          bill: CongressBillListItem;
+          score: number;
+          reasons: string[];
+        }> = [];
 
         for (const bill of allBills) {
           let score = 0;
           const reasons: string[] = [];
 
-          const billPolicyArea = bill.policyArea?.name;
-
-          // +3: policyArea maps to an agency with district spending
-          if (billPolicyArea && policyAreaLower.has(billPolicyArea.toLowerCase())) {
-            score += 3;
-            reasons.push(`Policy area "${billPolicyArea}" linked to district spending`);
-          }
+          const titleLower = bill.title.toLowerCase();
 
           // +2: topic keyword match from rep's committees
-          const titleLower = bill.title.toLowerCase();
           const hasRepTopicMatch = [...repTopics].some(t => titleLower.includes(t));
           if (hasRepTopicMatch) {
             score += 2;
@@ -292,7 +366,40 @@ export async function GET(
             reasons.push('Matches district spending topics');
           }
 
+          // Keep all bills — even score=0 might get +3 from policyArea
+          keywordScored.push({ bill, score, reasons });
+        }
+
+        // Sort by keyword score desc so we fetch details for the best candidates
+        keywordScored.sort((a, b) => b.score - a.score);
+
+        // Step 6: Fetch policyArea from individual bill details for top candidates
+        // We fetch details for the top 25 bills to get policyArea for +3 scoring
+        const topCandidates = keywordScored.slice(0, 25);
+        const billDetails = await fetchBillPolicyAreas(
+          topCandidates.map(c => c.bill),
+          congressHeaders,
+          25
+        );
+
+        // Step 7: Final scoring with policyArea
+        const scored: DistrictBill[] = [];
+
+        for (const { bill, score: keywordScore, reasons } of topCandidates) {
+          let score = keywordScore;
+          const finalReasons = [...reasons];
+          const detailKey = `${bill.type}-${bill.number}`;
+          const detail = billDetails.get(detailKey);
+          const billPolicyArea = detail?.policyArea?.name;
+
+          // +3: policyArea maps to an agency with district spending
+          if (billPolicyArea && policyAreaLower.has(billPolicyArea.toLowerCase())) {
+            score += 3;
+            finalReasons.push(`Policy area "${billPolicyArea}" linked to district spending`);
+          }
+
           if (score > 0) {
+            const actionDate = bill.latestAction?.actionDate ?? bill.updateDate ?? '';
             scored.push({
               id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
               title: bill.title,
@@ -301,11 +408,11 @@ export async function GET(
               congress: bill.congress,
               status: mapCongressStatus(bill.latestAction?.text) ?? 'introduced',
               policyArea: billPolicyArea ?? null,
-              introducedDate: bill.introducedDate,
-              latestActionDate: bill.latestAction?.actionDate ?? bill.introducedDate,
+              introducedDate: detail?.introducedDate ?? actionDate,
+              latestActionDate: actionDate,
               latestActionText: bill.latestAction?.text ?? 'Introduced',
               relevanceScore: score,
-              relevanceReasons: reasons,
+              relevanceReasons: finalReasons,
               url: bill.url,
             });
           }

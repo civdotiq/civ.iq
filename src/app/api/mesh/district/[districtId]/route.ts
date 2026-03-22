@@ -26,9 +26,9 @@ export async function GET(
 ): Promise<NextResponse> {
   const { districtId } = await params;
 
-  if (!districtId || !/^[A-Z]{2}-(\d{1,2}|Senate)$/i.test(districtId)) {
+  if (!districtId || !/^[A-Z]{2}-(\d{1,2}|AL|STATE|Senate)$/i.test(districtId)) {
     return ApiErrors.validation(
-      'Invalid district ID format. Expected: "ST-DD" (e.g., "CA-12") or "ST-Senate"'
+      'Invalid district ID format. Expected: "ST-DD" (e.g., "CA-12"), "ST-AL", or "ST-STATE"'
     );
   }
 

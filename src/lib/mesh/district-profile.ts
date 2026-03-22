@@ -96,10 +96,18 @@ export async function buildDistrictProfile(districtId: string): Promise<District
   ]);
 
   // Find district representatives (House + both Senators)
+  // For STATE-level pages, only senators. For House districts,
+  // match by district number. At-large districts (AL) match reps
+  // with district "0", "00", or undefined.
+  const isStateLevel = district === 'STATE';
+  const isAtLarge = district === 'AL';
   const districtReps = allReps.filter(rep => {
     if (rep.state !== state) return false;
+    if (isStateLevel) return rep.chamber === 'Senate';
     if (rep.chamber === 'Senate') return true;
-    return rep.chamber === 'House' && rep.district === district;
+    if (rep.chamber !== 'House') return false;
+    if (isAtLarge) return !rep.district || rep.district === '0' || rep.district === '00';
+    return rep.district === district;
   });
 
   if (districtReps.length === 0) {
@@ -378,6 +386,17 @@ async function fetchDistrictSpending(
     const startDate = `${fiscalYear - 1}-10-01`;
     const endDate = `${fiscalYear}-09-30`;
 
+    // Normalize district for USASpending API (expects numeric codes)
+    // At-large (AL) -> "00", STATE -> statewide query, numeric -> padded
+    const spendingDistrict =
+      district === 'AL' ? '00' : district === 'STATE' ? '90' : district.padStart(2, '0');
+
+    // For STATE-level queries, use state-only filter (no district constraint)
+    const locationFilter =
+      district === 'STATE'
+        ? { country: 'USA', state }
+        : { country: 'USA', state, district_current: spendingDistrict };
+
     // Fetch top agencies and aggregate in parallel
     const [agencyResponse, aggregateResponse] = await Promise.all([
       fetch(`${USASPENDING_API}/search/spending_by_award/`, {
@@ -393,7 +412,7 @@ async function fetchDistrictSpending(
           sort: 'Award Amount',
           order: 'desc',
           filters: {
-            place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
+            place_of_performance_locations: [locationFilter],
             time_period: [{ start_date: startDate, end_date: endDate }],
             award_type_codes: ['A', 'B', 'C', 'D', '02', '03', '04', '05'],
           },
@@ -407,8 +426,8 @@ async function fetchDistrictSpending(
         },
         body: JSON.stringify({
           scope: 'place_of_performance',
-          geo_layer: 'district',
-          geo_layer_filters: [`${state}${district}`],
+          geo_layer: district === 'STATE' ? 'state' : 'district',
+          geo_layer_filters: [district === 'STATE' ? state : `${state}${spendingDistrict}`],
           filters: {
             time_period: [{ start_date: startDate, end_date: endDate }],
           },
@@ -469,10 +488,14 @@ interface BillData {
 
 async function fetchDistrictBills(districtId: string): Promise<BillData | null> {
   try {
+    // Use AbortSignal.timeout to prevent deadlock when the server
+    // handles this request on the same worker thread that is already
+    // processing the parent /api/mesh/district request (self-referencing fetch).
     const response = await fetch(
       `${getInternalBaseUrl()}/api/district/${districtId}/bills?limit=20`,
       {
         headers: { 'User-Agent': 'CIV.IQ/1.0' },
+        signal: AbortSignal.timeout(15_000),
       }
     );
     if (!response.ok) return null;
@@ -648,11 +671,11 @@ async function buildAlignmentHistory(bioguideIds: string[]): Promise<TemporalBuc
 // ── Utility ──────────────────────────────────────────────────────
 
 function parseDistrictId(districtId: string): { state: string; district: string } | null {
-  const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|Senate)$/i);
+  const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|STATE|Senate)$/i);
   if (!match) return null;
   return {
     state: (match[1] ?? '').toUpperCase(),
-    district: match[2] ?? '',
+    district: (match[2] ?? '').toUpperCase(),
   };
 }
 

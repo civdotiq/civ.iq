@@ -192,11 +192,11 @@ describe('/api/spending/district/[districtId]', () => {
       expect([200, 400]).toContain(response.status);
     });
 
-    it('should return 400 for single digit district without padding', async () => {
+    it('should accept and zero-pad single digit district numbers', async () => {
       const request = createMockRequest('http://localhost:3000/api/spending/district/CA-5');
       const response = await GET(request, { params: Promise.resolve({ districtId: 'CA-5' }) });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
     });
   });
 

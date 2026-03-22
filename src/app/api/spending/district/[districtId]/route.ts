@@ -26,11 +26,12 @@ const GRANT_CODES = ['02', '03', '04', '05'];
  * Parse district ID (e.g., "MI-05") into state and district number
  */
 function parseDistrictId(districtId: string): { state: string; district: string } | null {
-  const match = districtId.match(/^([A-Z]{2})-(\d{2})$/i);
+  const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|00)$/i);
   if (!match) return null;
+  const district = match[2] ?? '';
   return {
     state: match[1]?.toUpperCase() ?? '',
-    district: match[2] ?? '',
+    district: district.match(/^\d+$/) ? district.padStart(2, '0') : '00',
   };
 }
 
