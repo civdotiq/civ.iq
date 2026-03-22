@@ -252,7 +252,6 @@ export default function TopicsHubPage() {
             { href: '/bills/latest', label: 'Recent Bills' },
             { href: '/congress', label: 'U.S. Congress' },
           ]}
-          lastUpdated={new Date()}
           dataSource="Congress.gov"
         />
       </main>

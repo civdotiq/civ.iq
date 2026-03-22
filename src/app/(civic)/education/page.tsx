@@ -319,7 +319,6 @@ export default function EducationPage() {
               { href: '/topics', label: 'Policy Topics' },
               { href: '/data-sources', label: 'Data Sources' },
             ]}
-            lastUpdated={new Date()}
             dataSource="CIV.IQ Curriculum"
           />
         </div>

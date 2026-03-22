@@ -840,7 +840,6 @@ export default function StateOverviewPage() {
             { href: '/state-districts', label: 'State Districts' },
             { href: '/glossary', label: 'Glossary' },
           ]}
-          lastUpdated={new Date()}
         />
       </main>
     </div>

@@ -231,7 +231,6 @@ export default async function GlossaryTermPage({ params }: PageProps) {
             { href: '/topics', label: 'Policy Topics' },
             { href: '/education', label: 'Civic Education' },
           ]}
-          lastUpdated={new Date()}
           dataSource="CIV.IQ Civic Glossary"
         />
       </main>

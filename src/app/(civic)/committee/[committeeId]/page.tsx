@@ -501,7 +501,6 @@ async function CommitteeContent({
           chairBioguideId={committee.leadership.chair?.representative.bioguideId}
           rankingMemberName={committee.leadership.rankingMember?.representative.name}
           rankingMemberBioguideId={committee.leadership.rankingMember?.representative.bioguideId}
-          lastUpdated={new Date()}
         />
         <OpenDataStrip
           feedUrl={`/api/feed/committee/${committeeId}`}

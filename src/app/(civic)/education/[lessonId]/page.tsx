@@ -481,7 +481,6 @@ export default async function LessonPage({ params }: PageProps) {
             { href: '/congress', label: 'U.S. Congress' },
             { href: '/topics', label: 'Policy Topics' },
           ]}
-          lastUpdated={new Date()}
           dataSource="CIV.IQ Education Curriculum"
         />
       </main>

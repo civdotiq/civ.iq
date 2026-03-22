@@ -255,7 +255,6 @@ export default async function RepresentativeProfilePage({
             chamber={representative.chamber}
             committees={committeeLinks}
             totalCommittees={representative.committees?.length}
-            lastUpdated={new Date()}
             dataSource="Congress.gov API"
           />
           <OpenDataStrip

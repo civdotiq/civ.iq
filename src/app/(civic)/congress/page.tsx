@@ -324,7 +324,6 @@ export default function CongressHubPage() {
             { href: '/committees', label: 'Committees' },
             { href: '/topics', label: 'Policy Topics' },
           ]}
-          lastUpdated={new Date()}
           dataSource="Congress.gov"
         />
       </main>

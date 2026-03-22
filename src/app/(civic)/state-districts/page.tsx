@@ -194,7 +194,6 @@ export default function StateDistrictsPage() {
             { href: '/state-bills', label: 'State Bill Search' },
             { href: '/glossary', label: 'Glossary' },
           ]}
-          lastUpdated={new Date()}
         />
       </main>
     </>

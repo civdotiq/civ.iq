@@ -411,7 +411,6 @@ export default function DistrictPage() {
             representativeParty={district.representative.party}
             population={district.demographics?.population}
             cookPVI={district.political?.cookPVI}
-            lastUpdated={new Date()}
           />
           <OpenDataStrip
             feedUrl={`/api/feed/district/${districtId}`}

@@ -324,7 +324,6 @@ export default function FinanceTopicPage() {
             { href: '/glossary/roll-call-vote', label: 'Roll Call Votes' },
             { href: '/legislation', label: 'Recent Legislation' },
           ]}
-          lastUpdated={new Date()}
           dataSource="Congress.gov"
         />
       </main>
