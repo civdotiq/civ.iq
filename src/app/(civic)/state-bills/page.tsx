@@ -79,7 +79,11 @@ export default function StateBillsSearchPage() {
         }
 
         const data = await response.json();
-        return data.bills || [];
+        // Attach state code to each bill since the API doesn't include it per-bill
+        return (data.bills || []).map((bill: StateBill) => ({
+          ...bill,
+          state: bill.state || stateCode.toLowerCase(),
+        }));
       });
 
       const results = await Promise.all(fetchPromises);

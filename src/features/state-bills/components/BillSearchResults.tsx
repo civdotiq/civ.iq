@@ -145,7 +145,7 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
           return (
             <Link
               key={bill.id}
-              href={`/state-bills/${bill.state}/${encodeBase64Url(bill.id)}`}
+              href={`/state-bills/${bill.state ?? 'unknown'}/${encodeBase64Url(bill.id)}`}
               className="block bg-white border-2 border-black hover:border-civiq-blue transition-all group"
             >
               <div className="p-6">
@@ -154,7 +154,7 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="inline-block px-2 py-1 bg-gray-900 text-white text-xs font-bold">
-                        {bill.state.toUpperCase()}
+                        {bill.state?.toUpperCase() ?? ''}
                       </span>
                       <span className="font-mono text-sm font-bold text-gray-900">
                         {bill.identifier}
