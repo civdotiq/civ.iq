@@ -53,6 +53,9 @@ export interface ShareData {
     billsEnacted?: number;
     topAreas?: string[];
 
+    // Attendance stats
+    attendanceRate?: number | null;
+
     // Committee stats
     committeeCount?: number;
     leadershipRoles?: string[];

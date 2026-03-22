@@ -606,6 +606,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     billsCosponsored?: number;
     totalRaised?: number;
     votesParticipated?: number;
+    attendanceRate?: number | null;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -640,6 +641,13 @@ export async function getRepresentativeSummary(bioguideId: string) {
         ? votesSummary.value.data.votes
         : null;
 
+    // Compute attendance rate from fetched votes
+    const votesArray = (votesData as { votes?: Array<{ position?: string }> })?.votes ?? [];
+    const totalRollCalls = votesArray.length;
+    const participated = votesArray.filter(v => v.position !== 'Not Voting').length;
+    const attendanceRate =
+      totalRollCalls > 0 ? Math.round((participated / totalRollCalls) * 100) : null;
+
     const result = {
       billsSponsored:
         (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
@@ -653,6 +661,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
         (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
         0,
+      attendanceRate,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -665,6 +674,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
       billsCosponsored: 0,
       totalRaised: 0,
       votesParticipated: undefined,
+      attendanceRate: null,
       lastUpdated: new Date().toISOString(),
     };
   }

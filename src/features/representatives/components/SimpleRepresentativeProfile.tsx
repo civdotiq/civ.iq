@@ -503,7 +503,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                     batchData?.data?.bills?.totalSponsored ??
                     batchData?.data?.bills?.currentCongress?.count)
                   : undefined,
-                committees: representative.committees?.length ?? 0,
+                attendanceRate: summaryData?.success ? summaryData.data?.attendanceRate : null,
                 totalRaised: summaryData?.success
                   ? summaryData.data?.totalRaised
                   : batchData?.success
