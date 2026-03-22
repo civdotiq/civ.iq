@@ -5,6 +5,7 @@
 
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getDataGovApiKey, dataGovRateLimitedFetch } from './data-gov-rate-limiter';
 import type {
   RegDocument,
   RegDocumentDetail,
@@ -18,27 +19,11 @@ import type {
 
 const BASE_URL = 'https://api.regulations.gov/v4';
 
-// Regulations.gov rate limit: ~3 req/s
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL_MS = 400;
-
-function getApiKey(): string | null {
-  return process.env.DATA_GOV_API_KEY ?? null;
-}
-
 async function rateLimitedFetch(url: string, apiKey: string): Promise<Response> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL_MS) {
-    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest));
-  }
-  lastRequestTime = Date.now();
-
-  return fetch(url, {
+  return dataGovRateLimitedFetch(url, {
     headers: {
       'X-Api-Key': apiKey,
       Accept: 'application/vnd.api+json',
-      'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
     },
   });
 }
@@ -65,7 +50,7 @@ export class RegulationsGovService {
    * Search for documents on Regulations.gov
    */
   async searchDocuments(filters: RegDocFilters): Promise<RegDocument[]> {
-    const apiKey = getApiKey();
+    const apiKey = getDataGovApiKey();
     if (!apiKey) {
       logger.warn('DATA_GOV_API_KEY not configured');
       return [];
@@ -113,7 +98,7 @@ export class RegulationsGovService {
    * Get a single document by ID
    */
   async getDocument(documentId: string): Promise<RegDocumentDetail | null> {
-    const apiKey = getApiKey();
+    const apiKey = getDataGovApiKey();
     if (!apiKey) {
       logger.warn('DATA_GOV_API_KEY not configured');
       return null;
@@ -158,7 +143,7 @@ export class RegulationsGovService {
     docketId: string,
     opts?: { pageSize?: number; pageNumber?: number; sortBy?: string }
   ): Promise<{ comments: RegComment[]; total: number; totalPages: number }> {
-    const apiKey = getApiKey();
+    const apiKey = getDataGovApiKey();
     if (!apiKey) {
       logger.warn('DATA_GOV_API_KEY not configured');
       return { comments: [], total: 0, totalPages: 0 };
@@ -209,7 +194,7 @@ export class RegulationsGovService {
    * Get comment statistics for a docket
    */
   async getCommentStats(docketId: string): Promise<RegCommentStats | null> {
-    const apiKey = getApiKey();
+    const apiKey = getDataGovApiKey();
     if (!apiKey) return null;
 
     const cacheKey = `regs-comment-stats:${docketId}`;
@@ -263,7 +248,7 @@ export class RegulationsGovService {
    * Get a docket by ID
    */
   async getDocket(docketId: string): Promise<RegDocket | null> {
-    const apiKey = getApiKey();
+    const apiKey = getDataGovApiKey();
     if (!apiKey) {
       logger.warn('DATA_GOV_API_KEY not configured');
       return null;

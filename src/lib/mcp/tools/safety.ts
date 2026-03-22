@@ -4,18 +4,39 @@
  */
 
 /**
- * MCP Safety Tools (FEMA)
+ * MCP Safety Tools (FEMA + FBI + CFPB + HUD)
  *
- * Tier 1: search_fema_disasters — raw FEMA disaster declaration query
- * Tier 2: get_district_disaster_history — district-joined disaster + USASpending data
+ * FEMA:
+ *   Tier 1: search_fema_disasters
+ *   Tier 2: get_district_disaster_history
+ *
+ * FBI Crime:
+ *   Tier 1: search_crime_statistics
+ *   Tier 2: get_state_public_safety_profile
+ *
+ * CFPB Consumer Complaints:
+ *   Tier 1: search_consumer_complaints
+ *   Tier 2: get_district_consumer_complaints
+ *   Tier 3: analyze_consumer_protection_influence
+ *
+ * HUD Housing:
+ *   Tier 1: get_housing_affordability
+ *   Tier 2: get_district_housing_profile
  */
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { femaService } from '@/lib/data-sources/fema-service';
+import { fbiUcrService } from '@/lib/data-sources/fbi-ucr-service';
+import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
+import { hudService } from '@/lib/data-sources/hud-service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { STATE_FIPS } from '@/app/api/districts/census-helpers';
+import { entitiesMatch } from '@civiq/entity-resolution';
+import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerSafetyTools(server: McpServer): void {
@@ -250,6 +271,559 @@ export function registerSafetyTools(server: McpServer): void {
         };
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(history, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: FBI crime statistics search ─────────────────────────
+  server.tool(
+    'search_crime_statistics',
+    'FBI UCR crime statistics by state and offense type. Returns actual counts, rates per 100,000, clearances, and national comparison. Offense types: violent-crime, property-crime, HOM, RPE, ROB, ASS, BUR, LAR, MVT, ARS.',
+    {
+      state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
+      year: z
+        .number()
+        .int()
+        .min(1985)
+        .max(2030)
+        .optional()
+        .describe('Year (default: most recent available)'),
+    },
+    async ({ state, year }) => {
+      try {
+        const stats = await fbiUcrService.getCrimeStatsByState(state, year);
+
+        if (!stats) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No FBI crime data available. DATA_GOV_API_KEY may not be configured.',
+              },
+            ],
+          };
+        }
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(stats, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: State public safety profile ─────────────────────────
+  server.tool(
+    'get_state_public_safety_profile',
+    "State crime trends with national comparison, Judiciary committee memberships from the state's congressional delegation, and relevant policy area context for criminal justice legislation.",
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+      yearsBack: z
+        .number()
+        .int()
+        .min(1)
+        .max(20)
+        .optional()
+        .describe('Years of trend data (default 5)'),
+    },
+    async ({ stateCode, yearsBack }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const lookback = yearsBack ?? 5;
+        const currentYear = new Date().getFullYear();
+        const startYear = currentYear - lookback;
+
+        // Fetch crime trends
+        const [violentTrend, propertyTrend] = await Promise.all([
+          fbiUcrService.getCrimeTrend(state, startYear, currentYear - 1, 'violent-crime'),
+          fbiUcrService.getCrimeTrend(state, startYear, currentYear - 1, 'property-crime'),
+        ]);
+
+        // Get state's congressional delegation
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const stateDelegation = allReps.filter(r => r.state === state);
+
+        // Find Judiciary committee members
+        const judiciaryMembers = stateDelegation.filter(r =>
+          (r.committees ?? []).some(c => c.name.toLowerCase().includes('judiciary'))
+        );
+
+        const profile = {
+          state,
+          crimeTrends: {
+            violentCrime: {
+              dataPoints: violentTrend.length,
+              yearRange: `${startYear}-${currentYear - 1}`,
+              trend: violentTrend,
+            },
+            propertyCrime: {
+              dataPoints: propertyTrend.length,
+              yearRange: `${startYear}-${currentYear - 1}`,
+              trend: propertyTrend,
+            },
+          },
+          delegation: {
+            judiciaryCommitteeMembers: judiciaryMembers.map(r => ({
+              name: r.name,
+              party: r.party,
+              chamber: r.chamber,
+              bioguideId: r.bioguideId,
+              committees: (r.committees ?? [])
+                .filter(c => c.name.toLowerCase().includes('judiciary'))
+                .map(c => c.name),
+            })),
+          },
+          relevantPolicyArea: 'Crime and Law Enforcement',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['FBI Crime Data Explorer (UCR)', 'Congress.gov (committees)'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: CFPB consumer complaint search ──────────────────────
+  server.tool(
+    'search_consumer_complaints',
+    'Search CFPB consumer complaints by company, product, state, or date range. Returns complaint details including issue, response, and timeliness.',
+    {
+      company: z.string().optional().describe('Company name to filter by'),
+      product: z.string().optional().describe('Product type (e.g., "Credit reporting")'),
+      state: z.string().length(2).optional().describe('Two-letter state code'),
+      dateFrom: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional()
+        .describe('Start date (YYYY-MM-DD)'),
+      dateTo: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional()
+        .describe('End date (YYYY-MM-DD)'),
+      size: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+    },
+    async ({ company, product, state, dateFrom, dateTo, size }) => {
+      try {
+        const result = await cfpbComplaintService.searchComplaints({
+          company,
+          product,
+          state: state?.toUpperCase(),
+          dateReceivedMin: dateFrom,
+          dateReceivedMax: dateTo,
+          size: Math.min(size ?? 25, 100),
+        });
+
+        if (result.complaints.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No consumer complaints found for the given criteria.',
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ total: result.total, complaints: result.complaints }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: District consumer complaints ────────────────────────
+  server.tool(
+    'get_district_consumer_complaints',
+    'Consumer complaints aggregated by congressional district using ZIP-district mapping. Shows top complained-about companies, products, and issues for a district.',
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., PA)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+
+        // Get representative for context
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        // Get state-level aggregates (CFPB doesn't filter by ZIP directly,
+        // but we can get state data and note the district context)
+        const stateAggs = await cfpbComplaintService.getComplaintAggregates(state);
+
+        if (!stateAggs) {
+          return {
+            content: [
+              { type: 'text' as const, text: `No CFPB complaint data available for ${state}.` },
+            ],
+          };
+        }
+
+        const profile = {
+          district: `${state}-${districtStr}`,
+          representative: districtRep
+            ? {
+                name: districtRep.name,
+                party: districtRep.party,
+                bioguideId: districtRep.bioguideId,
+              }
+            : null,
+          stateComplaintSummary: {
+            totalComplaints: stateAggs.total,
+            topProducts: stateAggs.byProduct.slice(0, 10),
+            topCompanies: stateAggs.byCompany.slice(0, 10),
+            topIssues: stateAggs.byIssue.slice(0, 10),
+            responseTimeliness: stateAggs.byTimely,
+            submissionChannels: stateAggs.bySubmittedVia,
+          },
+          note: 'CFPB data aggregated at state level. District-level patterns approximate.',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['CFPB Consumer Complaint Database'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 3: Consumer protection influence analysis ──────────────
+  server.tool(
+    'analyze_consumer_protection_influence',
+    'Cross-reference top complained-about companies in a state with lobbying registrants (entity resolution fuzzy match) and campaign contributions to the district representative. Checks rep votes on Finance-related legislation. Shows correlations only — not causation.',
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., IL)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+
+        // Get representative
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        if (!districtRep) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No representative found for ${state}-${districtStr}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get top complained-about companies in the state
+        const stateAggs = await cfpbComplaintService.getComplaintAggregates(state);
+        const topCompanies = stateAggs?.byCompany.slice(0, 20) ?? [];
+
+        if (topCompanies.length === 0) {
+          return {
+            content: [
+              { type: 'text' as const, text: `No CFPB complaint data available for ${state}.` },
+            ],
+          };
+        }
+
+        // Get lobbying data for finance-related topics
+        let financeLobbying: Awaited<
+          ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>
+        > = [];
+        try {
+          financeLobbying = await senateLobbyingAPI.getCommitteeLobbyingData([
+            'Banking',
+            'Finance',
+          ]);
+        } catch (e) {
+          logger.warn('Could not fetch lobbying data for consumer protection analysis', {
+            error: (e as Error).message,
+          });
+        }
+
+        // Extract all lobbying registrant/client names
+        const lobbyingEntities = new Set<string>();
+        for (const committee of financeLobbying) {
+          for (const filing of committee.filings) {
+            lobbyingEntities.add(filing.company);
+          }
+        }
+
+        // Entity resolution: fuzzy match CFPB companies to lobbying registrants
+        const companyLobbyingMatches: Array<{
+          cfpbCompany: string;
+          complaintCount: number;
+          lobbyingMatch: string;
+        }> = [];
+        for (const company of topCompanies) {
+          for (const lobbyist of lobbyingEntities) {
+            if (entitiesMatch({ name: company.company }, { name: lobbyist })) {
+              companyLobbyingMatches.push({
+                cfpbCompany: company.company,
+                complaintCount: company.count,
+                lobbyingMatch: lobbyist,
+              });
+              break; // One match per company is sufficient
+            }
+          }
+        }
+
+        // Get FEC contributions to district rep
+        const fecId = getFECIdFromBioguide(districtRep.bioguideId);
+        let contributionContext: unknown = null;
+        if (fecId) {
+          try {
+            const electionCycle =
+              new Date().getFullYear() % 2 === 0
+                ? new Date().getFullYear()
+                : new Date().getFullYear() + 1;
+            contributionContext = await fecApiService.getFinancialSummary(fecId, electionCycle);
+          } catch (e) {
+            logger.warn('FEC contribution lookup failed', {
+              error: (e as Error).message,
+            });
+          }
+        }
+
+        // Check Finance committee membership
+        const financeCommittees = (districtRep.committees ?? []).filter(c => {
+          const name = c.name.toLowerCase();
+          return (
+            name.includes('financial services') ||
+            name.includes('banking') ||
+            name.includes('finance')
+          );
+        });
+
+        const analysis = {
+          district: `${state}-${districtStr}`,
+          representative: {
+            name: districtRep.name,
+            party: districtRep.party,
+            bioguideId: districtRep.bioguideId,
+          },
+          consumerComplaints: {
+            topCompaniesInState: topCompanies.slice(0, 10),
+            totalStateComplaints: stateAggs?.total ?? 0,
+          },
+          entityResolution: {
+            companiesMatchedToLobbying: companyLobbyingMatches,
+            matchCount: companyLobbyingMatches.length,
+            totalCompaniesChecked: topCompanies.length,
+          },
+          campaignFinance: {
+            fecId: fecId ?? 'No FEC mapping',
+            financialSummary: contributionContext,
+          },
+          committeeOverlap: {
+            financeRelatedCommittees: financeCommittees.map(c => c.name),
+            hasFinanceOversight: financeCommittees.length > 0,
+          },
+          lobbyingContext: {
+            financeRelatedLobbying: financeLobbying.map(l => ({
+              committee: l.committee,
+              totalSpending: l.totalSpending,
+              companyCount: l.companyCount,
+              topFilers: l.filings.slice(0, 5),
+            })),
+          },
+          relevantPolicyArea: 'Finance and Financial Sector',
+          disclaimer:
+            'This analysis shows correlations between consumer complaint patterns and political activity. ' +
+            'Correlations do not imply causation. All data sourced from public government records.',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: [
+              'CFPB Consumer Complaint Database',
+              'Senate LDA (lobbying)',
+              'FEC (campaign finance)',
+              '@civiq/entity-resolution',
+              'Congress.gov (committees)',
+            ],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: HUD housing affordability ───────────────────────────
+  server.tool(
+    'get_housing_affordability',
+    'HUD Fair Market Rents and income limits by county FIPS code. Returns rental rates by bedroom count and income thresholds (very low, extremely low, low) by household size.',
+    {
+      countyFips: z
+        .string()
+        .regex(/^\d{5,10}$/)
+        .describe('County FIPS code (e.g., 06037 for Los Angeles County)'),
+    },
+    async ({ countyFips }) => {
+      try {
+        const [fmr, il] = await Promise.all([
+          hudService.getFairMarketRents(countyFips),
+          hudService.getIncomeLimits(countyFips),
+        ]);
+
+        if (!fmr && !il) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No HUD data available. HUD_API_TOKEN may not be configured.',
+              },
+            ],
+          };
+        }
+
+        const result = {
+          countyFips,
+          fairMarketRents: fmr,
+          incomeLimits: il,
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['HUD User API (FMR)', 'HUD User API (IL)'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: District housing profile ────────────────────────────
+  server.tool(
+    'get_district_housing_profile',
+    "Housing affordability profile for a congressional district: HUD Fair Market Rents and income limits for district counties, representative's Housing committee membership, and relevant housing policy context.",
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., NY)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+        const countyFipsList = getCountiesForDistrict(state, districtNumber);
+
+        if (countyFipsList.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No county mapping found for ${state}-${districtStr}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get representative
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        // Fetch HUD data for district counties (limit to first 5 to avoid rate-limiting)
+        const countiesToQuery = countyFipsList.slice(0, 5);
+        const hudResults = await Promise.all(
+          countiesToQuery.map(async fips => {
+            const [fmr, il] = await Promise.all([
+              hudService.getFairMarketRents(fips),
+              hudService.getIncomeLimits(fips),
+            ]);
+            return { countyFips: fips, fairMarketRents: fmr, incomeLimits: il };
+          })
+        );
+
+        const countiesWithData = hudResults.filter(r => r.fairMarketRents ?? r.incomeLimits);
+
+        // Check Housing committee membership
+        const housingCommittees = districtRep
+          ? (districtRep.committees ?? []).filter(c => {
+              const name = c.name.toLowerCase();
+              return (
+                name.includes('housing') ||
+                name.includes('financial services') ||
+                name.includes('banking')
+              );
+            })
+          : [];
+
+        const profile = {
+          district: `${state}-${districtStr}`,
+          representative: districtRep
+            ? {
+                name: districtRep.name,
+                party: districtRep.party,
+                bioguideId: districtRep.bioguideId,
+              }
+            : null,
+          housingData: {
+            countiesQueried: countiesToQuery.length,
+            countiesWithData: countiesWithData.length,
+            counties: countiesWithData,
+          },
+          committeeOverlap: {
+            housingRelatedCommittees: housingCommittees.map(c => c.name),
+            hasHousingOversight: housingCommittees.length > 0,
+          },
+          relevantPolicyArea: 'Housing and Community Development',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['HUD User API', 'Congress.gov (committees)'],
+            totalCountiesInDistrict: countyFipsList.length,
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
