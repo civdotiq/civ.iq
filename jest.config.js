@@ -47,6 +47,7 @@ const customJestConfig = {
     '<rootDir>/tests/utils/',
     '<rootDir>/tests/fixtures/',
     '<rootDir>/src/.*test-helpers.*',
+    '<rootDir>/packages/sdk/',
   ],
   // Add explicit ignore for the duplicate package.json
   rootDir: '.',
