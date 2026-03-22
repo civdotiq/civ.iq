@@ -48,7 +48,7 @@ export const MIN_PAC_RECIPIENTS = 3;
 export const MIN_RELEVANT_VOTES = 3;
 
 /** Minimum peers for meaningful comparison. */
-export const MIN_PEERS = 3;
+export const MIN_PEERS = 5;
 
 // ── Correlation ──────────────────────────────────────────────────────
 
@@ -124,7 +124,8 @@ export function peerComparison(
   peerValues: number[],
   peerGroupLabel: string
 ): PeerComparison | null {
-  if (peerValues.length < MIN_PEERS) {
+  // Hard floor: fewer than 2 peers is never useful
+  if (peerValues.length < 2) {
     return null;
   }
 
@@ -137,6 +138,8 @@ export function peerComparison(
     peerCount: peerValues.length,
     peerGroupLabel,
     percentileRank: Math.round(percentile),
+    // Flag when peer group is too small for reliable percentile ranking
+    ...(peerValues.length < MIN_PEERS ? { lowPeerCount: true } : {}),
   };
 }
 

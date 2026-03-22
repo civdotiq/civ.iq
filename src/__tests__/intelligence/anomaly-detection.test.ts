@@ -305,10 +305,22 @@ describe('anomaly detection', () => {
       expect(result!.anomalies!.flags[0]!.modifiedZScore).toBeCloseTo(174.7, 0);
     });
 
-    it('returns null when insufficient peers for base comparison', () => {
+    it('returns result with lowPeerCount when 2-4 peers', () => {
       const result = peerComparisonWithAnomalies(
         0.5,
-        [0.3, 0.4], // Below MIN_PEERS
+        [0.3, 0.4], // Below MIN_PEERS but >= 2
+        'Test peers'
+      );
+
+      expect(result).not.toBeNull();
+      expect(result!.lowPeerCount).toBe(true);
+      expect(result!.peerCount).toBe(2);
+    });
+
+    it('returns null when fewer than 2 peers', () => {
+      const result = peerComparisonWithAnomalies(
+        0.5,
+        [0.3], // Below hard floor of 2
         'Test peers'
       );
 

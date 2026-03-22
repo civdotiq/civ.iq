@@ -33,7 +33,7 @@ describe('civic-statistics package', () => {
       expect(MIN_FILINGS_LOBBYING).toBe(5);
       expect(MIN_PAC_RECIPIENTS).toBe(3);
       expect(MIN_RELEVANT_VOTES).toBe(3);
-      expect(MIN_PEERS).toBe(3);
+      expect(MIN_PEERS).toBe(5);
     });
   });
 
@@ -116,12 +116,12 @@ describe('civic-statistics package', () => {
   // ── peerComparison ──────────────────────────────────────────────
 
   describe('peerComparison', () => {
-    it('returns null when fewer than MIN_PEERS', () => {
-      const result = peerComparison(0.5, [0.3, 0.4], 'test peers');
+    it('returns null when fewer than 2 peers', () => {
+      const result = peerComparison(0.5, [0.3], 'test peers');
       expect(result).toBeNull();
     });
 
-    it('returns valid comparison with enough peers', () => {
+    it('returns result with lowPeerCount flag for 2-4 peers', () => {
       const result = peerComparison(0.7, [0.3, 0.5, 0.6], 'committee peers');
       expect(result).not.toBeNull();
       expect(result!.value).toBe(0.7);
@@ -130,21 +130,30 @@ describe('civic-statistics package', () => {
       expect(result!.peerAverage).toBeCloseTo(0.4667, 3);
       expect(result!.percentileRank).toBeGreaterThanOrEqual(0);
       expect(result!.percentileRank).toBeLessThanOrEqual(100);
+      expect(result!.lowPeerCount).toBe(true);
+    });
+
+    it('returns valid comparison with enough peers (>= MIN_PEERS)', () => {
+      const result = peerComparison(0.7, [0.3, 0.4, 0.5, 0.6, 0.8], 'committee peers');
+      expect(result).not.toBeNull();
+      expect(result!.value).toBe(0.7);
+      expect(result!.peerCount).toBe(5);
+      expect(result!.lowPeerCount).toBeUndefined();
     });
 
     it('computes percentile rank correctly', () => {
       // Value is highest → should be high percentile
-      const result = peerComparison(1.0, [0.1, 0.2, 0.3], 'test');
+      const result = peerComparison(1.0, [0.1, 0.2, 0.3, 0.4, 0.5], 'test');
       expect(result!.percentileRank).toBe(100);
     });
 
     it('computes percentile rank for lowest value', () => {
-      const result = peerComparison(0.0, [0.5, 0.6, 0.7], 'test');
+      const result = peerComparison(0.0, [0.5, 0.6, 0.7, 0.8, 0.9], 'test');
       expect(result!.percentileRank).toBe(0);
     });
 
     it('handles ties in peer group', () => {
-      const result = peerComparison(0.5, [0.5, 0.5, 0.5], 'test');
+      const result = peerComparison(0.5, [0.5, 0.5, 0.5, 0.5, 0.5], 'test');
       expect(result).not.toBeNull();
       expect(result!.peerAverage).toBe(0.5);
     });
@@ -224,8 +233,8 @@ describe('civic-statistics package', () => {
     });
 
     it('enforces peers threshold', () => {
-      expect(meetsSampleSize(3, 'peers')).toBe(true);
-      expect(meetsSampleSize(2, 'peers')).toBe(false);
+      expect(meetsSampleSize(5, 'peers')).toBe(true);
+      expect(meetsSampleSize(4, 'peers')).toBe(false);
     });
 
     it('enforces filings threshold', () => {

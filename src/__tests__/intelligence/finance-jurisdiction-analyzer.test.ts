@@ -174,14 +174,16 @@ describe('analyzeFinanceJurisdiction', () => {
       'overlap-score:HSEN:A000001',
       'overlap-score:HSEN:A000002',
       'overlap-score:HSEN:A000003',
+      'overlap-score:HSEN:A000004',
+      'overlap-score:HSEN:A000005',
     ]);
-    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6]);
+    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6, 0.45, 0.55]);
 
     const result = await analyzeFinanceJurisdiction('P000197');
 
     expect(result).not.toBeNull();
     expect(mockRedisMget).toHaveBeenCalled();
-    expect(result!.peerComparison.peerCount).toBe(3);
+    expect(result!.peerComparison.peerCount).toBe(5);
   });
 
   it('recomputes confidence after peer comparison', async () => {
@@ -189,8 +191,10 @@ describe('analyzeFinanceJurisdiction', () => {
       'overlap-score:HSEN:A000001',
       'overlap-score:HSEN:A000002',
       'overlap-score:HSEN:A000003',
+      'overlap-score:HSEN:A000004',
+      'overlap-score:HSEN:A000005',
     ]);
-    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6]);
+    mockRedisMget.mockResolvedValue([0.4, 0.5, 0.6, 0.45, 0.55]);
 
     const result = await analyzeFinanceJurisdiction('P000197');
 

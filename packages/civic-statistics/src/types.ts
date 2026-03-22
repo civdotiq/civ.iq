@@ -19,6 +19,8 @@ export interface PeerComparison {
   peerGroupLabel: string;
   /** Percentile rank within the peer group (0-100). */
   percentileRank: number;
+  /** True when peer count is >= 2 but < MIN_PEERS — percentile rank is unreliable. */
+  lowPeerCount?: boolean;
   /** Anomaly detection results, present when sector-level data available. */
   anomalies?: AnomalyResult;
 }

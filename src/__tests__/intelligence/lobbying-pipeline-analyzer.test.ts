@@ -71,6 +71,18 @@ jest.mock('@/lib/connections/committee-agency-map', () => ({
       chamber: 'House',
       topics: ['Finance'],
     },
+    {
+      committeeCode: 'HSJU',
+      committeeName: 'Judiciary',
+      chamber: 'House',
+      topics: ['Law'],
+    },
+    {
+      committeeCode: 'HSAS',
+      committeeName: 'Armed Services',
+      chamber: 'House',
+      topics: ['Defense'],
+    },
   ],
 }));
 
@@ -177,7 +189,7 @@ describe('analyzeLobbyingPipeline', () => {
   });
 
   it('uses mget for peer comparison', async () => {
-    mockRedisMget.mockResolvedValue([100000, 200000, 300000]);
+    mockRedisMget.mockResolvedValue([100000, 200000, 300000, 150000, 250000]);
 
     const result = await analyzeLobbyingPipeline('HSEN');
 
