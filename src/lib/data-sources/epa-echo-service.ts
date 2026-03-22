@@ -1,0 +1,301 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * EPA ECHO Service
+ *
+ * Queries EPA Enforcement and Compliance History Online (ECHO) data:
+ * - Facility search via ECHO REST Services
+ * - Violations via Detailed Facility Report (DFR)
+ * - Superfund sites via EPA GIS Feature Service
+ * - Toxic Release Inventory via Envirofacts
+ *
+ * No API key required for any endpoint.
+ */
+
+import { cachedFetch } from '@/lib/cache';
+import logger from '@/lib/logging/simple-logger';
+import type {
+  EpaFacility,
+  EpaViolation,
+  SuperfundSite,
+  ToxicRelease,
+  EchoSearchResponse,
+  EchoQidResponse,
+  DfrViolationsResponse,
+  GisFeatureResponse,
+  TriFacilityResponse,
+} from '@/types/epa';
+
+const ECHO_BASE = 'https://echodata.epa.gov/echo';
+const GIS_BASE = 'https://geopub.epa.gov/arcgis/rest/services/EMEF/efpoints/MapServer/0/query';
+const TRI_BASE = 'https://data.epa.gov/efservice';
+
+const MIN_REQUEST_INTERVAL_MS = 200;
+let lastRequestTime = 0;
+const CACHE_TTL = 21600; // 6 hours
+
+async function rateLimitedFetch(url: string): Promise<Response> {
+  const now = Date.now();
+  const elapsed = now - lastRequestTime;
+  if (elapsed < MIN_REQUEST_INTERVAL_MS) {
+    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL_MS - elapsed));
+  }
+  lastRequestTime = Date.now();
+  return fetch(url, {
+    headers: { 'User-Agent': 'CIV.IQ (civdotiq.org)' },
+    signal: AbortSignal.timeout(30_000),
+  });
+}
+
+function transformFacility(raw: Record<string, string | null>): EpaFacility {
+  return {
+    registryId: raw['RegistryID'] ?? '',
+    name: raw['FacName'] ?? '',
+    street: raw['FacStreet'] ?? '',
+    city: raw['FacCity'] ?? '',
+    state: raw['FacState'] ?? '',
+    zip: raw['FacZip'] ?? '',
+    county: raw['FacCounty'] ?? '',
+    latitude: raw['FacLat'] ? parseFloat(raw['FacLat']) : null,
+    longitude: raw['FacLong'] ? parseFloat(raw['FacLong']) : null,
+    sicCodes: raw['FacSICCodes'] ?? '',
+    naicsCodes: raw['FacNAICSCodes'] ?? '',
+    complianceStatus: raw['FacComplianceStatus'] ?? 'Unknown',
+    sncFlag: raw['FacSNCFlg'] ?? 'N',
+    totalPenalties: raw['FacTotalPenalties'] ?? '$0',
+    inspectionCount: raw['FacInspectionCount'] ? parseInt(raw['FacInspectionCount'], 10) : 0,
+    formalActionCount: raw['FacFormalActionCount'] ? parseInt(raw['FacFormalActionCount'], 10) : 0,
+    triReleasesTransfers: raw['TRIReleasesTransfers'] ?? null,
+  };
+}
+
+export class EpaEchoService {
+  /**
+   * Search EPA-regulated facilities by state, ZIP, or SIC code.
+   * Uses the two-step ECHO REST pattern: search → get_qid.
+   */
+  async searchFacilities(params: {
+    state: string;
+    zip?: string;
+    sicCode?: string;
+    limit?: number;
+  }): Promise<EpaFacility[]> {
+    const { state, zip, sicCode, limit = 20 } = params;
+    const cacheKey = `epa-facilities:${state}:${zip ?? ''}:${sicCode ?? ''}:${limit}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          // Step 1: Search to get a QID
+          const searchParams = new URLSearchParams({
+            output: 'JSON',
+            p_st: state.toUpperCase(),
+            responseset: String(Math.min(limit, 100)),
+          });
+          if (zip) searchParams.set('p_zip', zip);
+          if (sicCode) searchParams.set('p_sic', sicCode);
+
+          const searchUrl = `${ECHO_BASE}/echo_rest_services.get_facilities?${searchParams}`;
+          logger.info('EPA ECHO facility search', { state, zip, sicCode });
+
+          const searchResponse = await rateLimitedFetch(searchUrl);
+          if (!searchResponse.ok) {
+            throw new Error(`ECHO API returned ${searchResponse.status}`);
+          }
+
+          const searchData: EchoSearchResponse = await searchResponse.json();
+          const qid = searchData.Results?.QueryID;
+          if (!qid || searchData.Results?.QueryRows === '0') return [];
+
+          // Step 2: Fetch facility data using QID
+          const qidParams = new URLSearchParams({
+            output: 'JSON',
+            qid,
+            qcolumns: '1,2,3,4,5,6,7,15,16,17,18,34,36,41,54,60,68',
+            responseset: String(Math.min(limit, 100)),
+          });
+
+          const qidUrl = `${ECHO_BASE}/echo_rest_services.get_qid?${qidParams}`;
+          const qidResponse = await rateLimitedFetch(qidUrl);
+          if (!qidResponse.ok) {
+            throw new Error(`ECHO QID API returned ${qidResponse.status}`);
+          }
+
+          const qidData: EchoQidResponse = await qidResponse.json();
+          const facilities = qidData.Results?.Facilities ?? [];
+          return facilities.map(transformFacility);
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.searchFacilities failed', error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * Get violations for a specific facility by registry ID.
+   * Uses the DFR (Detailed Facility Report) API.
+   */
+  async getFacilityViolations(registryId: string): Promise<EpaViolation[]> {
+    const cacheKey = `epa-violations:${registryId}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const url = `${ECHO_BASE}/dfr_rest_services.get_dfr?p_id=${encodeURIComponent(registryId)}&output=JSON`;
+          logger.info('EPA DFR violation fetch', { registryId });
+
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) {
+            if (response.status === 404) return [];
+            throw new Error(`DFR API returned ${response.status}`);
+          }
+
+          const data: DfrViolationsResponse = await response.json();
+          const sources = data.Results?.ViolationsEnforcementActions?.Sources ?? [];
+          const violations: EpaViolation[] = [];
+
+          for (const source of sources) {
+            for (const v of source.Violations ?? []) {
+              violations.push({
+                sourceId: v.SourceID ?? '',
+                violationId: v.ViolationID ?? '',
+                federalRule: v.FederalRule ?? '',
+                contaminantName: v.ContaminantName ?? '',
+                violationCategoryCode: v.ViolationCategoryCode ?? '',
+                violationCategoryDesc: v.ViolationCategoryDesc ?? '',
+                compliancePeriodBeginDate: v.CompliancePeriodBeginDate ?? null,
+                compliancePeriodEndDate: v.CompliancePeriodEndDate ?? null,
+                status: v.Status ?? 'Unknown',
+                enforcementActions: (v.EnforcementActions ?? []).map(a => ({
+                  actionId: a.ActionID ?? '',
+                  actionType: a.ActionType ?? '',
+                  actionDate: a.ActionDate ?? '',
+                  penaltyAmount: a.PenaltyAmount ?? null,
+                })),
+              });
+            }
+          }
+
+          return violations;
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.getFacilityViolations failed', error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * Get Superfund (NPL) sites by state via EPA GIS Feature Service.
+   */
+  async getSuperfundSites(state: string): Promise<SuperfundSite[]> {
+    const cacheKey = `epa-superfund:${state.toUpperCase()}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const params = new URLSearchParams({
+            where: `state_code='${state.toUpperCase()}'`,
+            outFields: '*',
+            f: 'json',
+            resultRecordCount: '500',
+          });
+
+          const url = `${GIS_BASE}?${params}`;
+          logger.info('EPA Superfund site search', { state });
+
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) {
+            throw new Error(`EPA GIS API returned ${response.status}`);
+          }
+
+          const data: GisFeatureResponse = await response.json();
+          return (data.features ?? []).map(f => {
+            const a = f.attributes;
+            return {
+              registryId: String(a['registry_id'] ?? ''),
+              siteId: String(a['site_id'] ?? ''),
+              name: String(a['primary_name'] ?? ''),
+              address: String(a['location_address'] ?? ''),
+              city: String(a['city_name'] ?? ''),
+              county: String(a['county_name'] ?? ''),
+              state: String(a['state_code'] ?? ''),
+              epaRegion: String(a['epa_region'] ?? ''),
+              zip: String(a['postal_code'] ?? ''),
+              latitude: typeof a['latitude'] === 'number' ? a['latitude'] : null,
+              longitude: typeof a['longitude'] === 'number' ? a['longitude'] : null,
+            };
+          });
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.getSuperfundSites failed', error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * Get Toxic Release Inventory (TRI) facilities by state and optional county.
+   * Uses EPA Envirofacts REST API.
+   */
+  async getToxicReleases(state: string, county?: string): Promise<ToxicRelease[]> {
+    const cacheKey = `epa-tri:${state.toUpperCase()}:${county ?? ''}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          let url = `${TRI_BASE}/tri_facility/state_abbr/${state.toUpperCase()}`;
+          if (county) {
+            url += `/county_name/${encodeURIComponent(county.toUpperCase())}`;
+          }
+          url += '/rows/0:999/JSON';
+
+          logger.info('EPA TRI facility search', { state, county });
+
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) {
+            if (response.status === 404) return [];
+            throw new Error(`Envirofacts API returned ${response.status}`);
+          }
+
+          const data: TriFacilityResponse[] = await response.json();
+          if (!Array.isArray(data)) return [];
+
+          return data.map(f => ({
+            facilityId: f.tri_facility_id ?? '',
+            facilityName: f.facility_name ?? '',
+            street: f.street_address ?? '',
+            city: f.city_name ?? '',
+            county: f.county_name ?? '',
+            state: f.state_abbr ?? '',
+            zip: f.zip_code ?? '',
+            countyFips: f.state_county_fips_code ?? '',
+            epaRegion: f.region ?? '',
+            latitude: f.pref_latitude ? parseFloat(f.pref_latitude) : null,
+            longitude: f.pref_longitude ? parseFloat(f.pref_longitude) : null,
+            parentCompany: f.standardized_parent_company ?? f.parent_co_name ?? null,
+            epaRegistryId: f.epa_registry_id ?? null,
+            isClosed: f.fac_closed_ind === '1',
+          }));
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.getToxicReleases failed', error as Error);
+      return [];
+    }
+  }
+}
+
+export const epaEchoService = new EpaEchoService();

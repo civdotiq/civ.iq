@@ -16,6 +16,8 @@ import { registerLegislationTools } from './tools/legislation';
 import { registerFinanceTools } from './tools/finance';
 import { registerIntelligenceTools } from './tools/intelligence';
 import { registerCivicTools } from './tools/civic';
+import { registerEnvironmentTools } from './tools/environment';
+import { registerSafetyTools } from './tools/safety';
 import { registerResources } from './resources';
 import { registerPrompts } from './prompts';
 
@@ -26,6 +28,8 @@ export async function initializeMcpServer(server: McpServer): Promise<void> {
   registerFinanceTools(server);
   registerIntelligenceTools(server);
   registerCivicTools(server);
+  registerEnvironmentTools(server);
+  registerSafetyTools(server);
 
   // Register resources and prompts
   registerResources(server);
