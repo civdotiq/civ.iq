@@ -119,6 +119,11 @@ const CONFIDENCE_EXPLANATIONS: Record<GraphEdgeType, string> = {
   lobbying_matches: 'Text similarity between lobbying issues and legislation.',
   referred_to: 'Official committee referral from Congress.gov.',
   employs_donor: 'FEC employer field matching.',
+  located_in_district: 'Geocoded facility address matched to congressional district.',
+  violates_regulation: 'EPA ECHO enforcement and compliance records.',
+  receives_grant: 'USASpending.gov federal grant award records.',
+  complained_against: 'CFPB consumer complaint database records.',
+  declared_in: 'FEMA disaster declaration records.',
 };
 
 // ── Empty-state messaging ───────────────────────────────────────────

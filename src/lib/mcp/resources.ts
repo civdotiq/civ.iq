@@ -7,6 +7,15 @@ import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
+import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
+import { femaService } from '@/lib/data-sources/fema-service';
+import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
+import { eiaService } from '@/lib/data-sources/eia-service';
+import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-service';
+import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
+import { fdicService } from '@/lib/data-sources/fdic-service';
+import { openPaymentsService } from '@/lib/data-sources/open-payments-service';
 
 export function registerResources(server: McpServer): void {
   // Legislator profile resource
@@ -100,6 +109,205 @@ export function registerResources(server: McpServer): void {
         return {
           contents: [
             { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(data, null, 2) },
+          ],
+        };
+      } catch {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: 'application/json',
+              text: '{"error":"Service unavailable"}',
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // District environment resource
+  server.resource(
+    'district-environment',
+    new ResourceTemplate('civiq://districts/{stateCode}/{districtNumber}/environment', {
+      list: undefined,
+    }),
+    {
+      description:
+        'Environmental profile for a congressional district (EPA facilities, violations)',
+      mimeType: 'application/json',
+    },
+    async (uri, variables) => {
+      const state =
+        (Array.isArray(variables.stateCode)
+          ? variables.stateCode[0]
+          : variables.stateCode
+        )?.toUpperCase() ?? '';
+      try {
+        const facilities = await epaEchoService.searchFacilities({ state, limit: 50 });
+        const superfund = await epaEchoService.getSuperfundSites(state);
+        const result = {
+          state,
+          facilities: facilities.length,
+          violations: facilities.filter(f => f.sncFlag === 'Y').length,
+          superfundSites: superfund.length,
+          topFacilities: facilities.slice(0, 10),
+        };
+        return {
+          contents: [
+            { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: 'application/json',
+              text: '{"error":"Service unavailable"}',
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // District health resource
+  server.resource(
+    'district-health',
+    new ResourceTemplate('civiq://districts/{stateCode}/{districtNumber}/health', {
+      list: undefined,
+    }),
+    {
+      description:
+        'Healthcare profile for a congressional district (hospitals, nursing homes, pharma payments)',
+      mimeType: 'application/json',
+    },
+    async (uri, variables) => {
+      const state =
+        (Array.isArray(variables.stateCode)
+          ? variables.stateCode[0]
+          : variables.stateCode
+        )?.toUpperCase() ?? '';
+      try {
+        const [hospitals, nursingHomes, payments] = await Promise.all([
+          cmsProviderService.searchHospitals(state),
+          cmsProviderService.searchNursingHomes(state),
+          openPaymentsService.getPaymentAggregates(state).catch(() => null),
+        ]);
+        const result = {
+          state,
+          hospitals: hospitals.length,
+          nursingHomes: nursingHomes.length,
+          pharmaPayments: payments
+            ? { total: payments.totalPayments, amount: payments.totalAmount }
+            : null,
+        };
+        return {
+          contents: [
+            { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: 'application/json',
+              text: '{"error":"Service unavailable"}',
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // District safety resource
+  server.resource(
+    'district-safety',
+    new ResourceTemplate('civiq://districts/{stateCode}/{districtNumber}/safety', {
+      list: undefined,
+    }),
+    {
+      description:
+        'Safety profile for a congressional district (FEMA disasters, consumer complaints)',
+      mimeType: 'application/json',
+    },
+    async (uri, variables) => {
+      const state =
+        (Array.isArray(variables.stateCode)
+          ? variables.stateCode[0]
+          : variables.stateCode
+        )?.toUpperCase() ?? '';
+      try {
+        const [disasters, complaints] = await Promise.all([
+          femaService.searchDisasters({ state, limit: 20 }),
+          cfpbComplaintService.getComplaintAggregates(state).catch(() => null),
+        ]);
+        const result = {
+          state,
+          recentDisasters: disasters.length,
+          consumerComplaints: complaints?.total ?? 0,
+          topComplaintProducts: complaints?.byProduct.slice(0, 5) ?? [],
+        };
+        return {
+          contents: [
+            { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(result, null, 2) },
+          ],
+        };
+      } catch {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: 'application/json',
+              text: '{"error":"Service unavailable"}',
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // District economy resource
+  server.resource(
+    'district-economy',
+    new ResourceTemplate('civiq://districts/{stateCode}/{districtNumber}/economy', {
+      list: undefined,
+    }),
+    {
+      description:
+        'Economy profile for a congressional district (energy, education, research, banking)',
+      mimeType: 'application/json',
+    },
+    async (uri, variables) => {
+      const state =
+        (Array.isArray(variables.stateCode)
+          ? variables.stateCode[0]
+          : variables.stateCode
+        )?.toUpperCase() ?? '';
+      try {
+        const [energy, colleges, grants, banks] = await Promise.all([
+          eiaService.getStateEnergyProfile(state).catch(() => null),
+          collegeScorecardService.searchInstitutions({ state, limit: 10 }).catch(() => []),
+          nihReporterService.searchGrants({ state, limit: 10 }).catch(() => []),
+          fdicService.searchInstitutions({ state, limit: 10 }).catch(() => []),
+        ]);
+        const result = {
+          state,
+          energy: energy
+            ? {
+                renewablePercentage: energy.renewablePercentage,
+                topSources: energy.topSources.slice(0, 3),
+              }
+            : null,
+          colleges: colleges.length,
+          nihGrants: grants.length,
+          nihTotalFunding: grants.reduce((s, g) => s + g.awardAmount, 0),
+          fdicInstitutions: banks.length,
+        };
+        return {
+          contents: [
+            { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(result, null, 2) },
           ],
         };
       } catch {

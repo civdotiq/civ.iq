@@ -52,6 +52,11 @@ const ADVANCED_LABELS: Record<GraphEdgeType, string> = {
   lobbying_matches: 'Related lobbying',
   referred_to: 'Referrals',
   employs_donor: 'Donor employers',
+  located_in_district: 'Located In District',
+  violates_regulation: 'Violates Regulation',
+  receives_grant: 'Receives Grant',
+  complained_against: 'Complained Against',
+  declared_in: 'Declared In',
 };
 
 function isPresetActive(presetTypes: GraphEdgeType[], visible: Set<GraphEdgeType>): boolean {

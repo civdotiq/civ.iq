@@ -117,7 +117,7 @@ const POLICY_AREA_MAPPINGS: PolicyAreaMapping[] = [
     policyArea: 'Energy',
     topics: ['energy', 'natural resources'],
     industrySectors: [IndustrySector.ENERGY_NATURAL_RESOURCES],
-    agencySlugs: ['department-of-energy'],
+    agencySlugs: ['department-of-energy', 'energy-information-administration'],
     federalRegisterKeywords: ['energy', 'nuclear', 'renewable', 'oil', 'gas', 'electricity'],
   },
   {
@@ -149,6 +149,8 @@ const POLICY_AREA_MAPPINGS: PolicyAreaMapping[] = [
       'department-of-the-treasury',
       'securities-and-exchange-commission',
       'federal-reserve-system',
+      'federal-deposit-insurance-corporation',
+      'consumer-financial-protection-bureau',
     ],
     federalRegisterKeywords: ['financial', 'banking', 'securities', 'credit', 'dodd-frank'],
   },
@@ -170,7 +172,11 @@ const POLICY_AREA_MAPPINGS: PolicyAreaMapping[] = [
     policyArea: 'Health',
     topics: ['health', 'public health'],
     industrySectors: [IndustrySector.HEALTH],
-    agencySlugs: ['department-of-health-and-human-services'],
+    agencySlugs: [
+      'department-of-health-and-human-services',
+      'centers-for-medicare-and-medicaid-services',
+      'national-institutes-of-health',
+    ],
     federalRegisterKeywords: [
       'health',
       'medicare',

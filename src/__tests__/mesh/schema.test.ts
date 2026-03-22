@@ -98,6 +98,10 @@ describe('Civic Mesh Schema', () => {
       sector: 'sector',
       contract: 'contract',
       regulation: 'reg',
+      facility: 'fac',
+      disaster: 'dis',
+      institution: 'inst',
+      complaint: 'cmp',
     };
 
     for (const schema of Object.values(ENTITY_SCHEMAS)) {

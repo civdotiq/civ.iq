@@ -22,6 +22,10 @@ export const GRAPH_NODE_TYPES = [
   'sector',
   'contract',
   'regulation',
+  'facility',
+  'disaster',
+  'institution',
+  'complaint',
 ] as const;
 
 export type GraphNodeType = (typeof GRAPH_NODE_TYPES)[number];
@@ -43,6 +47,11 @@ export const GRAPH_EDGE_TYPES = [
   'lobbying_matches',
   'referred_to',
   'employs_donor',
+  'located_in_district',
+  'violates_regulation',
+  'receives_grant',
+  'complained_against',
+  'declared_in',
 ] as const;
 
 export type GraphEdgeType = (typeof GRAPH_EDGE_TYPES)[number];

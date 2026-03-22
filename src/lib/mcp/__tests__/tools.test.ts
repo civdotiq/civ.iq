@@ -36,7 +36,7 @@ describe('MCP Server', () => {
     await expect(initializeMcpServer(server)).resolves.not.toThrow();
   });
 
-  it('registers all 46 tools', async () => {
+  it('registers all 53 tools', async () => {
     await initializeMcpServer(server);
 
     const expectedTools = [
@@ -90,10 +90,18 @@ describe('MCP Server', () => {
       'get_district_research_profile',
       'get_climate_data',
       'get_state_climate_profile',
+      // Sprint 6: FDIC + Treasury + Cross-domain Intelligence
+      'search_fdic_institutions',
+      'get_district_banking_profile',
+      'get_federal_fiscal_data',
+      'get_federal_debt_context',
+      'analyze_district_comprehensive',
+      'analyze_industry_regulatory_landscape',
+      'analyze_policy_area_ecosystem',
     ];
 
     // The fact that initializeMcpServer completes successfully means all tools registered
-    expect(expectedTools.length).toBe(46);
+    expect(expectedTools.length).toBe(53);
   });
 });
 

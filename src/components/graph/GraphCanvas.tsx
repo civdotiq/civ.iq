@@ -37,6 +37,10 @@ const NODE_COLORS: Record<GraphNodeType, string> = {
   sector: '#d1d5db',
   contract: '#6b7280',
   regulation: '#4b5563',
+  facility: '#6b7280',
+  disaster: '#ef4444',
+  institution: '#8b5cf6',
+  complaint: '#f59e0b',
 };
 
 const EDGE_COLORS: Record<GraphEdgeType, string> = {
@@ -54,6 +58,11 @@ const EDGE_COLORS: Record<GraphEdgeType, string> = {
   lobbying_matches: '#d97706',
   referred_to: '#9ca3af',
   employs_donor: '#0a9338',
+  located_in_district: '#6b7280',
+  violates_regulation: '#ef4444',
+  receives_grant: '#8b5cf6',
+  complained_against: '#f59e0b',
+  declared_in: '#ef4444',
 };
 
 const NODE_RADIUS: Record<GraphNodeType, number> = {
@@ -65,6 +74,10 @@ const NODE_RADIUS: Record<GraphNodeType, number> = {
   sector: 14,
   contract: 8,
   regulation: 8,
+  facility: 5,
+  disaster: 6,
+  institution: 5,
+  complaint: 4,
 };
 
 // ── Simulation Node Type ────────────────────────────────────────────

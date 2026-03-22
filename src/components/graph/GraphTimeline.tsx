@@ -39,6 +39,11 @@ const EDGE_COLORS: Record<GraphEdgeType, string> = {
   lobbying_matches: '#d97706',
   referred_to: '#9ca3af',
   employs_donor: '#0a9338',
+  located_in_district: '#6b7280',
+  violates_regulation: '#ef4444',
+  receives_grant: '#8b5cf6',
+  complained_against: '#f59e0b',
+  declared_in: '#ef4444',
 };
 
 const SIGNIFICANCE_COLORS: Record<string, string> = {

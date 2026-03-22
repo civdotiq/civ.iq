@@ -4,7 +4,7 @@
  */
 
 /**
- * MCP Economy Tools (EIA + College Scorecard + NIH Reporter)
+ * MCP Economy Tools (EIA + College Scorecard + NIH Reporter + FDIC + Treasury)
  *
  * EIA Energy:
  *   Tier 1: get_state_energy_profile
@@ -17,6 +17,14 @@
  * NIH Reporter:
  *   Tier 1: search_nih_grants
  *   Tier 2: get_district_research_profile
+ *
+ * FDIC BankFind:
+ *   Tier 1: search_fdic_institutions
+ *   Tier 2: get_district_banking_profile
+ *
+ * Treasury Fiscal Data:
+ *   Tier 1: get_federal_fiscal_data
+ *   Tier 1: get_federal_debt_context
  */
 
 import { z } from 'zod';
@@ -24,6 +32,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { eiaService } from '@/lib/data-sources/eia-service';
 import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-service';
 import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
+import { fdicService } from '@/lib/data-sources/fdic-service';
+import { treasuryFiscalService } from '@/lib/data-sources/treasury-fiscal-service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { entitiesMatch } from '@civiq/entity-resolution';
@@ -598,6 +608,244 @@ export function registerEconomyTools(server: McpServer): void {
         };
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: FDIC institution search ─────────────────────────────
+  server.tool(
+    'search_fdic_institutions',
+    'Search FDIC-insured banks and financial institutions by state, name, or city. Returns total assets, deposits, number of offices, charter class, and regulator.',
+    {
+      state: z.string().length(2).optional().describe('Two-letter state code (e.g., NY)'),
+      name: z.string().optional().describe('Institution name (partial match)'),
+      city: z.string().optional().describe('City name'),
+      limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+    },
+    async ({ state, name, city, limit }) => {
+      try {
+        if (!state && !name && !city) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Please provide at least a state, name, or city.',
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const institutions = await fdicService.searchInstitutions({
+          state,
+          name,
+          city,
+          limit: Math.min(limit ?? 25, 100),
+        });
+
+        if (institutions.length === 0) {
+          return {
+            content: [
+              { type: 'text' as const, text: 'No FDIC institutions found for the given criteria.' },
+            ],
+          };
+        }
+
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(institutions, null, 2) }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 2: District banking profile ────────────────────────────
+  server.tool(
+    'get_district_banking_profile',
+    "Banking landscape for a congressional district: FDIC-insured institutions, total deposits/assets, recent bank failures, and representative's Banking/Financial Services committee membership.",
+    {
+      stateCode: z.string().length(2).describe('Two-letter state code (e.g., GA)'),
+      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+    },
+    async ({ stateCode, districtNumber }) => {
+      try {
+        const state = stateCode.toUpperCase();
+        const districtStr = String(districtNumber).padStart(2, '0');
+        const countyFipsList = getCountiesForDistrict(state, districtNumber);
+
+        if (countyFipsList.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No county mapping found for ${state}-${districtStr}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get representative
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        const districtRep = allReps.find(
+          r => r.state === state && r.district === districtStr && r.chamber === 'House'
+        );
+
+        // Get state banks and failures in parallel
+        const [institutions, failures] = await Promise.all([
+          fdicService.searchInstitutions({ state, limit: 50 }),
+          fdicService.getBankFailures({ state, startYear: new Date().getFullYear() - 10 }),
+        ]);
+
+        // Compute summary
+        const totalAssets = institutions.reduce((sum, i) => sum + (i.totalAssets ?? 0), 0);
+        const totalDeposits = institutions.reduce((sum, i) => sum + (i.totalDeposits ?? 0), 0);
+
+        // Check Banking committee membership
+        const bankingCommittees = districtRep
+          ? (districtRep.committees ?? []).filter(c => {
+              const name = c.name.toLowerCase();
+              return (
+                name.includes('financial services') ||
+                name.includes('banking') ||
+                name.includes('finance')
+              );
+            })
+          : [];
+
+        const profile = {
+          district: `${state}-${districtStr}`,
+          representative: districtRep
+            ? {
+                name: districtRep.name,
+                party: districtRep.party,
+                bioguideId: districtRep.bioguideId,
+              }
+            : null,
+          banking: {
+            totalInstitutions: institutions.length,
+            totalAssets,
+            totalDeposits,
+            topByAssets: institutions.slice(0, 10).map(i => ({
+              name: i.institutionName,
+              city: i.city,
+              totalAssets: i.totalAssets,
+              totalDeposits: i.totalDeposits,
+              offices: i.numberOfOffices,
+            })),
+            recentFailures: failures.slice(0, 10),
+            failureCount: failures.length,
+          },
+          committeeOverlap: {
+            bankingRelatedCommittees: bankingCommittees.map(c => c.name),
+            hasBankingOversight: bankingCommittees.length > 0,
+          },
+          relevantPolicyArea: 'Finance and Financial Sector',
+          note: 'FDIC data aggregated at state level. District-level patterns approximate.',
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['FDIC BankFind', 'Congress.gov (committees)'],
+            totalCountiesInDistrict: countyFipsList.length,
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: Federal fiscal data ─────────────────────────────────
+  server.tool(
+    'get_federal_fiscal_data',
+    'Federal fiscal overview from Treasury: national debt, monthly revenue by category, and spending by category. Returns current figures and fiscal year totals.',
+    {
+      year: z
+        .number()
+        .int()
+        .min(2000)
+        .max(2030)
+        .optional()
+        .describe('Fiscal year for revenue/spending (default: current year)'),
+    },
+    async ({ year }) => {
+      try {
+        const [debt, revenue, spending] = await Promise.all([
+          treasuryFiscalService.getFederalDebt(),
+          treasuryFiscalService.getMonthlyRevenue(year),
+          treasuryFiscalService.getSpendingByCategory(year),
+        ]);
+
+        const result = {
+          federalDebt: debt,
+          revenue: {
+            year: year ?? new Date().getFullYear(),
+            records: revenue.length,
+            data: revenue.slice(0, 20),
+          },
+          spending: {
+            year: year ?? new Date().getFullYear(),
+            records: spending.length,
+            data: spending.slice(0, 20),
+          },
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['Treasury Fiscal Data (Debt to the Penny, MTS)'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+      } catch (error) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── Tier 1: Federal debt context ────────────────────────────────
+  server.tool(
+    'get_federal_debt_context',
+    'Current federal debt with context: total public debt outstanding, debt held by public vs intragovernmental holdings, and record date. Useful for fiscal policy discussions.',
+    {},
+    async () => {
+      try {
+        const debt = await treasuryFiscalService.getFederalDebt();
+
+        if (!debt) {
+          return {
+            content: [{ type: 'text' as const, text: 'Federal debt data currently unavailable.' }],
+          };
+        }
+
+        const context = {
+          ...debt,
+          formatted: {
+            totalDebt: `$${(debt.totalPublicDebtOutstanding / 1_000_000_000_000).toFixed(2)} trillion`,
+            debtHeldByPublic: `$${(debt.debtHeldByPublic / 1_000_000_000_000).toFixed(2)} trillion`,
+            intragovernmental: `$${(debt.intragovernmentalHoldings / 1_000_000_000_000).toFixed(2)} trillion`,
+          },
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSources: ['Treasury Fiscal Data (Debt to the Penny)'],
+          },
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(context, null, 2) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

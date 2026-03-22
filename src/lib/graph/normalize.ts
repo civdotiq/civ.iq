@@ -28,6 +28,10 @@ const TYPE_PREFIXES: Record<GraphNodeType, string> = {
   sector: 'sector',
   contract: 'contract',
   regulation: 'reg',
+  facility: 'fac',
+  disaster: 'dis',
+  institution: 'inst',
+  complaint: 'cmp',
 };
 
 const PREFIX_TO_TYPE: Record<string, GraphNodeType> = Object.fromEntries(

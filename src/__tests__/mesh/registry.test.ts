@@ -51,9 +51,9 @@ describe('Civic Mesh Registry', () => {
     }
   }
 
-  it('registers all 8 entity types', () => {
+  it('registers all 12 entity types', () => {
     registerAllWithMocks();
-    expect(meshRegistry.size).toBe(8);
+    expect(meshRegistry.size).toBe(12);
     for (const nodeType of GRAPH_NODE_TYPES) {
       expect(meshRegistry.isRegistered(nodeType)).toBe(true);
     }
@@ -87,16 +87,16 @@ describe('Civic Mesh Registry', () => {
     expect(meshRegistry.hasHydrator('regulation')).toBe(false);
   });
 
-  it('getAllSchemas returns all 8', () => {
+  it('getAllSchemas returns all 12', () => {
     registerAllWithMocks();
     const schemas = meshRegistry.getAllSchemas();
-    expect(schemas.length).toBe(8);
+    expect(schemas.length).toBe(12);
   });
 
-  it('getRegisteredTypes returns all 8 node types', () => {
+  it('getRegisteredTypes returns all 12 node types', () => {
     registerAllWithMocks();
     const types = meshRegistry.getRegisteredTypes();
-    expect(types.length).toBe(8);
+    expect(types.length).toBe(12);
     for (const nodeType of GRAPH_NODE_TYPES) {
       expect(types).toContain(nodeType);
     }

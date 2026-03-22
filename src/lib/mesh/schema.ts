@@ -356,6 +356,112 @@ export const REGULATION_SCHEMA: EntitySchema = {
   ],
 };
 
+export const FACILITY_SCHEMA: EntitySchema = {
+  nodeType: 'facility',
+  displayName: 'Facility',
+  description: 'A regulated facility tracked by EPA ECHO',
+  primaryKey: 'registryId',
+  idPrefix: 'fac',
+  properties: {
+    name: { type: 'string', required: true, description: 'Facility name' },
+    registryId: { type: 'string', required: true, description: 'EPA Registry ID' },
+    state: { type: 'string', required: false, description: 'Two-letter state code' },
+    city: { type: 'string', required: false, description: 'City name' },
+  },
+  relationships: [
+    {
+      edgeType: 'located_in_district',
+      targetType: 'representative',
+      direction: 'outgoing',
+      description: 'Located in congressional district',
+    },
+    {
+      edgeType: 'violates_regulation',
+      targetType: 'regulation',
+      direction: 'outgoing',
+      description: 'Has regulatory violations',
+    },
+  ],
+};
+
+export const DISASTER_SCHEMA: EntitySchema = {
+  nodeType: 'disaster',
+  displayName: 'Disaster Declaration',
+  description: 'A FEMA disaster declaration',
+  primaryKey: 'disasterNumber',
+  idPrefix: 'dis',
+  properties: {
+    title: { type: 'string', required: true, description: 'Disaster title' },
+    disasterNumber: { type: 'string', required: true, description: 'FEMA disaster number' },
+    state: { type: 'string', required: false, description: 'Two-letter state code' },
+    declarationType: {
+      type: 'string',
+      required: false,
+      description: 'Declaration type (DR, EM, FM)',
+    },
+  },
+  relationships: [
+    {
+      edgeType: 'declared_in',
+      targetType: 'representative',
+      direction: 'outgoing',
+      description: 'Declared in congressional district',
+    },
+    {
+      edgeType: 'receives_grant',
+      targetType: 'organization',
+      direction: 'outgoing',
+      description: 'Disaster grants awarded',
+    },
+  ],
+};
+
+export const INSTITUTION_SCHEMA: EntitySchema = {
+  nodeType: 'institution',
+  displayName: 'Financial Institution',
+  description: 'A financial institution subject to CFPB or HUD oversight',
+  primaryKey: 'name',
+  idPrefix: 'inst',
+  properties: {
+    name: { type: 'string', required: true, description: 'Institution name' },
+  },
+  relationships: [
+    {
+      edgeType: 'complained_against',
+      targetType: 'institution',
+      direction: 'incoming',
+      description: 'Has consumer complaints',
+    },
+    {
+      edgeType: 'receives_grant',
+      targetType: 'institution',
+      direction: 'incoming',
+      description: 'Receives HUD housing grants',
+    },
+  ],
+};
+
+export const COMPLAINT_SCHEMA: EntitySchema = {
+  nodeType: 'complaint',
+  displayName: 'Consumer Complaint',
+  description: 'A CFPB consumer complaint record',
+  primaryKey: 'complaintId',
+  idPrefix: 'cmp',
+  properties: {
+    complaintId: { type: 'string', required: true, description: 'CFPB complaint ID' },
+    product: { type: 'string', required: false, description: 'Financial product type' },
+    issue: { type: 'string', required: false, description: 'Complaint issue category' },
+  },
+  relationships: [
+    {
+      edgeType: 'complained_against',
+      targetType: 'institution',
+      direction: 'outgoing',
+      description: 'Filed against financial institution',
+    },
+  ],
+};
+
 // ── Schema Collection ─────────────────────────────────────────────────
 
 /** All entity schemas, indexed by node type */
@@ -368,6 +474,10 @@ export const ENTITY_SCHEMAS: Record<GraphNodeType, EntitySchema> = {
   sector: SECTOR_SCHEMA,
   contract: CONTRACT_SCHEMA,
   regulation: REGULATION_SCHEMA,
+  facility: FACILITY_SCHEMA,
+  disaster: DISASTER_SCHEMA,
+  institution: INSTITUTION_SCHEMA,
+  complaint: COMPLAINT_SCHEMA,
 };
 
 /** Get schema for a node type. Returns undefined for unknown types. */
