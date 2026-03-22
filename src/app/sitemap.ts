@@ -9,6 +9,9 @@
  */
 
 import type { MetadataRoute } from 'next';
+
+export const dynamic = 'force-dynamic';
+
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
