@@ -67,7 +67,7 @@ async function getCommitteeProfile(
       recipients,
       metadata: {
         cycle,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: totals?.coverage_end_date ?? new Date().toISOString(),
         totalRecipients: recipients.length,
         resolvedRecipients: recipients.filter(r => r.bioguideId !== null).length,
         fecTransparencyLink: `https://www.fec.gov/data/committee/${committeeId}/`,

@@ -118,7 +118,10 @@ async function computeAndCache(
   }
 
   // 5. Fetch votes and classify per recipient
-  const recipientVotes = await fetchAndClassifyRecipientVotes(recipients, classification.sector);
+  const { records: recipientVotes, freshestVoteDate } = await fetchAndClassifyRecipientVotes(
+    recipients,
+    classification.sector
+  );
 
   // Drop recipients below MIN_RELEVANT_VOTES
   const qualifiedRecipients = recipientVotes.filter(r => r.relevantVoteCount >= MIN_RELEVANT_VOTES);
@@ -185,8 +188,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
-    // TODO: extract freshest vote date from processRecipientVotes
-    dataAsOf: freshestDate(),
+    dataAsOf: freshestDate(freshestVoteDate),
     methodology:
       'PAC recipients identified via FEC disbursement data. ' +
       'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
@@ -275,14 +277,21 @@ async function resolveRecipients(committeeId: string): Promise<LinkedRecipient[]
 async function fetchAndClassifyRecipientVotes(
   recipients: LinkedRecipient[],
   pacSector: IndustrySector
-): Promise<PACRecipientVoteRecord[]> {
+): Promise<{ records: PACRecipientVoteRecord[]; freshestVoteDate: string | undefined }> {
   const records: PACRecipientVoteRecord[] = [];
+  let freshestVoteDate: string | undefined;
 
   for (const recipient of recipients) {
     try {
-      const record = await processRecipientVotes(recipient, pacSector);
-      if (record) {
-        records.push(record);
+      const result = await processRecipientVotes(recipient, pacSector);
+      if (result) {
+        records.push(result.record);
+        if (
+          result.latestVoteDate &&
+          (!freshestVoteDate || result.latestVoteDate > freshestVoteDate)
+        ) {
+          freshestVoteDate = result.latestVoteDate;
+        }
       }
     } catch (error) {
       logger.warn('[PACVotes] Failed to process recipient votes', {
@@ -292,13 +301,13 @@ async function fetchAndClassifyRecipientVotes(
     }
   }
 
-  return records;
+  return { records, freshestVoteDate };
 }
 
 async function processRecipientVotes(
   recipient: LinkedRecipient,
   pacSector: IndustrySector
-): Promise<PACRecipientVoteRecord | null> {
+): Promise<{ record: PACRecipientVoteRecord; latestVoteDate: string | undefined } | null> {
   // Fetch votes from both sessions of the 119th Congress
   const fetchSession = async (session: 1 | 2) =>
     recipient.chamber === 'House'
@@ -320,6 +329,7 @@ async function processRecipientVotes(
   let relevantNay = 0;
   let baselineYeaSum = 0;
   let baselineCount = 0;
+  const voteDates: string[] = [];
 
   for (const vote of rawVotes) {
     if (!vote.bill || (vote.position !== 'Yea' && vote.position !== 'Nay')) continue;
@@ -332,6 +342,7 @@ async function processRecipientVotes(
     // This vote is relevant to the PAC sector
     if (vote.position === 'Yea') relevantYea++;
     else relevantNay++;
+    if (vote.date) voteDates.push(vote.date);
 
     // Get party baseline for this vote
     if (vote.rollCallNumber) {
@@ -353,18 +364,20 @@ async function processRecipientVotes(
 
   const yeaRate = relevantYea / totalRelevant;
   const partyBaselineYeaRate = baselineCount > 0 ? baselineYeaSum / baselineCount : yeaRate;
-
   return {
-    bioguideId: recipient.bioguideId,
-    name: recipient.name,
-    party: recipient.party,
-    state: recipient.state,
-    chamber: recipient.chamber,
-    amountReceived: recipient.amountReceived,
-    relevantVoteCount: totalRelevant,
-    yeaRate,
-    partyBaselineYeaRate,
-    differenceFromBaseline: yeaRate - partyBaselineYeaRate,
+    record: {
+      bioguideId: recipient.bioguideId,
+      name: recipient.name,
+      party: recipient.party,
+      state: recipient.state,
+      chamber: recipient.chamber,
+      amountReceived: recipient.amountReceived,
+      relevantVoteCount: totalRelevant,
+      yeaRate,
+      partyBaselineYeaRate,
+      differenceFromBaseline: yeaRate - partyBaselineYeaRate,
+    },
+    latestVoteDate: voteDates.length > 0 ? freshestDate(...voteDates) : undefined,
   };
 }
 

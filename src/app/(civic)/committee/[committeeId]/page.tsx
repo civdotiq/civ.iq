@@ -296,7 +296,7 @@ async function CommitteeContent({
                 href={`/investigate?node=cmte:${committeeId}`}
                 className="inline-flex items-center px-4 py-2 border-2 border-[#3ea2d4] text-[#3ea2d4] type-sm font-bold hover:bg-[#3ea2d4] hover:text-white transition-colors"
               >
-                Investigate connections
+                Explore connections
               </Link>
             </div>
           </div>

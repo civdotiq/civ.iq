@@ -209,7 +209,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   return (
     <div className="space-y-6">
       <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
-        Patterns found in public records. Cannot measure intent or private dealings.
+        Patterns found in public records. Cannot measure intent, relationships, or private dealings.
       </p>
 
       {/* Tier 1: Civic Brief — always visible */}
