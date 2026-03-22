@@ -167,6 +167,62 @@ export default function AboutPage() {
             </div>
           </div>
 
+          {/* Epistemic Limits */}
+          <div className="mb-grid-8">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
+              What This Data Cannot Tell You
+            </h2>
+            <div className="space-y-grid-3">
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Private talks.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Congress members negotiate behind closed doors. You see only the public votes and
+                  statements.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Bills that never get a vote.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Leaders can block bills without a vote. You cannot tell which bills died this way.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">
+                  How well your representative helps people.
+                </span>{' '}
+                <span className="text-gray-600 text-sm">
+                  We show contact info but not how fast or well the office handles your problems.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Who meets with your representative.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Lobbying reports list some meetings. Most access leaves no public record.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Which votes matter most.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Some votes are symbolic. Others change law. We show all votes the same way.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Staff quality.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Most daily work in Congress happens through staff. We have no data on staff
+                  performance.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Whether money changed a vote.</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  We show contributions and votes side by side. We cannot tell you if one caused the
+                  other.
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Data Sources */}
           <div className="mb-grid-8">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
