@@ -117,7 +117,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Schema.org structured data */}
         <OrganizationSchema />
-        <WebSiteSchema alternateName={['civdotiq.org', 'Civic Intelligence']} />
+        <WebSiteSchema
+          alternateName={['civdotiq.org', 'Civic Intelligence']}
+          searchAction={{
+            target: 'https://civdotiq.org/search?q={search_term_string}',
+            queryInput: 'required name=search_term_string',
+          }}
+        />
         {/* AI-readable documentation (llmstxt.org) */}
         <link rel="llms-txt" href="/llms.txt" />
         {/* Google Analytics */}

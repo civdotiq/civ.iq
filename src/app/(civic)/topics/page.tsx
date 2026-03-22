@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Legislative Topics - Policy Areas & Issues',
@@ -157,6 +157,23 @@ export default function TopicsHubPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Legislative Topics"
+        description="Explore legislative topics including healthcare, economy, education, environment, and more. Find related bills, committees, and representatives for each policy area."
+        url="https://civdotiq.org/topics"
+        hasPart={TOPICS.map(t => ({
+          name: t.name,
+          url: `https://civdotiq.org/topics/${t.id}`,
+        }))}
+      />
+      <ItemListSchema
+        name="Legislative Topics"
+        url="https://civdotiq.org/topics"
+        items={TOPICS.map(t => ({
+          name: t.name,
+          url: `https://civdotiq.org/topics/${t.id}`,
+        }))}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-8">

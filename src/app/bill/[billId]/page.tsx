@@ -10,7 +10,7 @@ import { getBillDisplayStatus } from '@/types/bill';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { LegislationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { LegislationSchema, BreadcrumbSchema, SpeakableSchema } from '@/components/seo/JsonLd';
 
 interface BillPageProps {
   params: Promise<{ billId: string }>;
@@ -150,6 +150,12 @@ async function BillContent({
           },
         ]}
       />
+      {bill && (
+        <SpeakableSchema
+          url={`https://civdotiq.org/bill/${billId}`}
+          cssSelectors={['[data-speakable="bill-summary"]']}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb navigation */}

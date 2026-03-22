@@ -59,6 +59,10 @@ interface WebSiteSchemaProps {
   name?: string;
   url?: string;
   alternateName?: string[];
+  searchAction?: {
+    target: string;
+    queryInput: string;
+  };
 }
 
 /**
@@ -69,6 +73,7 @@ export function WebSiteSchema({
   name = 'CIV.IQ',
   url = 'https://civdotiq.org',
   alternateName,
+  searchAction,
 }: WebSiteSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -80,6 +85,17 @@ export function WebSiteSchema({
 
   if (alternateName && alternateName.length > 0) {
     schema.alternateName = alternateName;
+  }
+
+  if (searchAction) {
+    schema.potentialAction = {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: searchAction.target,
+      },
+      'query-input': searchAction.queryInput,
+    };
   }
 
   return (
@@ -753,6 +769,387 @@ export function DefinedTermSchema({ name, description, url, termSet }: DefinedTe
       ...(termSet.url && { url: termSet.url }),
     };
   }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface ProfilePageSchemaProps {
+  person: {
+    name: string;
+    jobTitle: string;
+    description?: string;
+    image?: string;
+    sameAs?: string[];
+    affiliation?: string;
+    birthDate?: string;
+    knowsAbout?: string[];
+    worksFor?: { name: string; url?: string };
+    memberOf?: Array<{ name: string; url?: string }>;
+  };
+  url: string;
+}
+
+/**
+ * ProfilePage schema wrapping a Person as mainEntity
+ * Used on representative and legislator profile pages
+ */
+export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
+  const personData: Record<string, unknown> = {
+    '@type': 'Person',
+    name: person.name,
+    jobTitle: person.jobTitle,
+  };
+
+  if (person.description) personData.description = person.description;
+  if (person.image) personData.image = person.image;
+  if (person.birthDate) personData.birthDate = person.birthDate;
+
+  if (person.affiliation) {
+    personData.affiliation = { '@type': 'Organization', name: person.affiliation };
+  }
+
+  if (person.worksFor) {
+    personData.worksFor = {
+      '@type': 'GovernmentOrganization',
+      name: person.worksFor.name,
+      ...(person.worksFor.url && { url: person.worksFor.url }),
+    };
+  }
+
+  if (person.memberOf && person.memberOf.length > 0) {
+    personData.memberOf = person.memberOf.map(org => ({
+      '@type': 'Organization',
+      name: org.name,
+      ...(org.url && { url: org.url }),
+    }));
+  }
+
+  if (person.sameAs && person.sameAs.length > 0) {
+    personData.sameAs = person.sameAs;
+  }
+
+  if (person.knowsAbout && person.knowsAbout.length > 0) {
+    personData.knowsAbout = person.knowsAbout;
+  }
+
+  personData.nationality = { '@type': 'Country', name: 'United States of America' };
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    '@id': url,
+    url,
+    mainEntity: personData,
+  };
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface ItemListSchemaProps {
+  name: string;
+  description?: string;
+  url?: string;
+  items: Array<{
+    name: string;
+    url: string;
+    position?: number;
+    image?: string;
+  }>;
+  itemType?: string;
+}
+
+/**
+ * ItemList schema for listing/index pages
+ * Enables carousel rich results in Google
+ */
+export function ItemListSchema({ name, description, url, items, itemType }: ItemListSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: item.position ?? index + 1,
+      name: item.name,
+      url: item.url,
+      ...(item.image && { image: item.image }),
+      ...(itemType && {
+        item: {
+          '@type': itemType,
+          name: item.name,
+          url: item.url,
+        },
+      }),
+    })),
+  };
+
+  if (description) schema.description = description;
+  if (url) schema.url = url;
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface CollectionPageSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  hasPart?: Array<{ name: string; url: string }>;
+}
+
+/**
+ * CollectionPage schema for index/hub pages
+ * Signals to search engines this is a curated collection
+ */
+export function CollectionPageSchema({
+  name,
+  description,
+  url,
+  hasPart,
+}: CollectionPageSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url,
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': 'https://civdotiq.org/#website',
+    },
+  };
+
+  if (hasPart && hasPart.length > 0) {
+    schema.hasPart = hasPart.map(part => ({
+      '@type': 'WebPage',
+      name: part.name,
+      url: part.url,
+    }));
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface LearningResourceSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  educationalLevel?: string;
+  learningResourceType?: string;
+  teaches?: string[];
+  timeRequired?: string;
+  educationalAlignment?: Array<{
+    alignmentType: string;
+    educationalFramework: string;
+    targetName: string;
+  }>;
+  keywords?: string[];
+}
+
+/**
+ * LearningResource schema for education lesson pages
+ * Enables education rich results
+ */
+export function LearningResourceSchema({
+  name,
+  description,
+  url,
+  educationalLevel,
+  learningResourceType = 'lesson plan',
+  teaches,
+  timeRequired,
+  educationalAlignment,
+  keywords,
+}: LearningResourceSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'LearningResource',
+    name,
+    description,
+    url,
+    learningResourceType,
+    provider: {
+      '@type': 'Organization',
+      name: 'CIV.IQ',
+      url: 'https://civdotiq.org',
+    },
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+  };
+
+  if (educationalLevel) schema.educationalLevel = educationalLevel;
+  if (timeRequired) schema.timeRequired = timeRequired;
+
+  if (teaches && teaches.length > 0) {
+    schema.teaches = teaches;
+  }
+
+  if (keywords && keywords.length > 0) {
+    schema.keywords = keywords;
+  }
+
+  if (educationalAlignment && educationalAlignment.length > 0) {
+    schema.educationalAlignment = educationalAlignment.map(a => ({
+      '@type': 'AlignmentObject',
+      alignmentType: a.alignmentType,
+      educationalFramework: a.educationalFramework,
+      targetName: a.targetName,
+    }));
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface DataCatalogSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  datasets?: Array<{
+    name: string;
+    description: string;
+    url: string;
+  }>;
+}
+
+/**
+ * DataCatalog schema for the /open data page
+ * Wraps multiple datasets into a catalog
+ */
+export function DataCatalogSchema({ name, description, url, datasets }: DataCatalogSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'DataCatalog',
+    name,
+    description,
+    url,
+    provider: {
+      '@type': 'Organization',
+      name: 'CIV.IQ',
+      url: 'https://civdotiq.org',
+    },
+  };
+
+  if (datasets && datasets.length > 0) {
+    schema.dataset = datasets.map(d => ({
+      '@type': 'Dataset',
+      name: d.name,
+      description: d.description,
+      url: d.url,
+    }));
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface SoftwareSourceCodeSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  codeRepository?: string;
+  programmingLanguage?: string[];
+  runtimePlatform?: string;
+}
+
+/**
+ * SoftwareSourceCode schema for /developers page
+ * Describes the open-source project and its APIs
+ */
+export function SoftwareSourceCodeSchema({
+  name,
+  description,
+  url,
+  codeRepository,
+  programmingLanguage,
+  runtimePlatform,
+}: SoftwareSourceCodeSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareSourceCode',
+    name,
+    description,
+    url,
+    author: {
+      '@type': 'Organization',
+      name: 'CIV.IQ',
+      url: 'https://civdotiq.org',
+    },
+  };
+
+  if (codeRepository) schema.codeRepository = codeRepository;
+  if (runtimePlatform) schema.runtimePlatform = runtimePlatform;
+
+  if (programmingLanguage && programmingLanguage.length > 0) {
+    schema.programmingLanguage = programmingLanguage;
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface AboutPageSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+}
+
+/**
+ * AboutPage schema for /about
+ * Signals this is the canonical about page for the organization
+ */
+export function AboutPageSchema({ name, description, url }: AboutPageSchemaProps) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name,
+    description,
+    url,
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': 'https://civdotiq.org/#website',
+    },
+    about: {
+      '@type': 'Organization',
+      '@id': 'https://civdotiq.org/#organization',
+    },
+  };
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface SpeakableSchemaProps {
+  url: string;
+  cssSelectors: string[];
+}
+
+/**
+ * Speakable schema for Google Assistant readback
+ * Identifies which parts of the page are suitable for audio playback
+ */
+export function SpeakableSchema({ url, cssSelectors }: SpeakableSchemaProps) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': url,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: cssSelectors,
+    },
+  };
 
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />

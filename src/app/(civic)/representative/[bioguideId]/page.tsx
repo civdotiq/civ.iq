@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
-import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
@@ -202,25 +202,30 @@ export default async function RepresentativeProfilePage({
   return (
     <>
       {/* Structured Data for SEO */}
-      <PersonSchema
-        name={representative.name}
-        jobTitle={`${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`}
-        description={`${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`}
-        image={representative.imageUrl}
+      <ProfilePageSchema
         url={`https://civdotiq.org/representative/${bioguideId}`}
-        mainEntityOfPage={`https://civdotiq.org/representative/${bioguideId}`}
-        worksFor={{
-          name:
-            representative.chamber === 'Senate'
-              ? 'United States Senate'
-              : 'United States House of Representatives',
-          url: representative.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
+        person={{
+          name: representative.name,
+          jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
+          description: `${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`,
+          image: representative.imageUrl,
+          worksFor: {
+            name:
+              representative.chamber === 'Senate'
+                ? 'United States Senate'
+                : 'United States House of Representatives',
+            url: representative.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
+          },
+          memberOf,
+          sameAs: sameAs.length > 0 ? sameAs : undefined,
+          affiliation: representative.party,
+          birthDate: representative.bio?.birthday,
+          knowsAbout: representative.committees?.map(c => c.name),
         }}
-        memberOf={memberOf}
-        sameAs={sameAs.length > 0 ? sameAs : undefined}
-        affiliation={representative.party}
-        birthDate={representative.bio?.birthday}
-        knowsAbout={representative.committees?.map(c => c.name)}
+      />
+      <SpeakableSchema
+        url={`https://civdotiq.org/representative/${bioguideId}`}
+        cssSelectors={['[data-speakable="rep-summary"]']}
       />
       <BreadcrumbSchema
         items={[

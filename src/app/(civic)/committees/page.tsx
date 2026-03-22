@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { Users, Building2, Scale, ChevronDown } from 'lucide-react';
 import committeesData from '@/data/committees-with-subcommittees.json';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 // Fully static page - no revalidation needed
 export const dynamic = 'force-static';
@@ -196,6 +196,20 @@ export default function CommitteesPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Committees', url: 'https://civdotiq.org/committees' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Congressional Committees"
+        description="All House, Senate, and Joint committees in the U.S. Congress with jurisdictions and subcommittees."
+        url="https://civdotiq.org/committees"
+      />
+      <ItemListSchema
+        name="Congressional Committees"
+        url="https://civdotiq.org/committees"
+        items={[...houseCommittees, ...senateCommittees, ...jointCommittees].map(c => ({
+          name: c.name,
+          url: `https://civdotiq.org/committee/${c.code}`,
+        }))}
+        itemType="GovernmentOrganization"
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}

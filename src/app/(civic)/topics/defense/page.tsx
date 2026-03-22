@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -147,6 +147,11 @@ export default function DefenseTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Defense & Military', url: 'https://civdotiq.org/topics/defense' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Defense & Military Legislation"
+        description="Track defense legislation including national defense, veterans affairs, and military spending."
+        url="https://civdotiq.org/topics/defense"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

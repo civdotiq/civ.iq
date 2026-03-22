@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -138,6 +138,11 @@ export default function JusticeTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Criminal Justice', url: 'https://civdotiq.org/topics/justice' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Criminal Justice Legislation"
+        description="Track criminal justice legislation including policing reform, sentencing, courts, and civil rights."
+        url="https://civdotiq.org/topics/justice"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

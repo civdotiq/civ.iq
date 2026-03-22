@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -141,6 +141,11 @@ export default function HealthcareTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Healthcare', url: 'https://civdotiq.org/topics/healthcare' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Healthcare Legislation & Policy"
+        description="Track healthcare legislation in Congress including Medicare, Medicaid, ACA, drug pricing, and public health."
+        url="https://civdotiq.org/topics/healthcare"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

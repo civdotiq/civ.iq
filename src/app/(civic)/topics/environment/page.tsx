@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -153,6 +153,11 @@ export default function EnvironmentTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Environment & Climate', url: 'https://civdotiq.org/topics/environment' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Environment & Climate Legislation"
+        description="Track environmental legislation including climate change, EPA, clean energy, and conservation."
+        url="https://civdotiq.org/topics/environment"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

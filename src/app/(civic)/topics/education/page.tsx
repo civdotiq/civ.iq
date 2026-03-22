@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -138,6 +138,11 @@ export default function EducationTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Education', url: 'https://civdotiq.org/topics/education' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Education Legislation & Policy"
+        description="Track education legislation including K-12, higher education, student loans, and early childhood."
+        url="https://civdotiq.org/topics/education"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

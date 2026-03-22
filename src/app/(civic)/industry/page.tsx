@@ -5,7 +5,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Industries',
@@ -34,6 +34,23 @@ export default function IndustryIndexPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Industries', url: 'https://civdotiq.org/industry' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Industry Sectors"
+        description="Track how industry sectors connect to federal legislation, congressional committees, and government agencies."
+        url="https://civdotiq.org/industry"
+        hasPart={SECTORS.map(s => ({
+          name: s.name,
+          url: `https://civdotiq.org/industry/${s.slug}`,
+        }))}
+      />
+      <ItemListSchema
+        name="Industry Sectors"
+        url="https://civdotiq.org/industry"
+        items={SECTORS.map(s => ({
+          name: s.name,
+          url: `https://civdotiq.org/industry/${s.slug}`,
+        }))}
       />
       <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
         <main className="container mx-auto px-4 py-8">

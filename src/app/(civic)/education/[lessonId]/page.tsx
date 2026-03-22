@@ -13,7 +13,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, LearningResourceSchema } from '@/components/seo/JsonLd';
 import {
   EDUCATION_CURRICULUM,
   LESSON_TOPICS,
@@ -49,6 +49,14 @@ const GRADE_COLORS: Record<
     accent: '#e11d07',
   },
 };
+
+// Convert duration string like "30-40 minutes" to ISO 8601 (e.g. "PT40M")
+function durationToISO(duration: string): string {
+  const match = duration.match(/(\d+)(?:\s*-\s*(\d+))?\s*min/i);
+  if (!match) return 'PT45M';
+  const minutes = match[2] ? parseInt(match[2]) : parseInt(match[1] ?? '45');
+  return `PT${minutes}M`;
+}
 
 // Resolve a URL slug to a lesson (case-insensitive match on lesson ID)
 function getLessonBySlug(slug: string): Lesson | undefined {
@@ -152,6 +160,20 @@ export default async function LessonPage({ params }: PageProps) {
             url: `https://civdotiq.org/education/${lesson.id.toLowerCase()}`,
           },
         ]}
+      />
+      <LearningResourceSchema
+        name={lesson.title}
+        description={lesson.overview}
+        url={`https://civdotiq.org/education/${lesson.id.toLowerCase()}`}
+        educationalLevel={`${gradeInfo.label} (${gradeInfo.grades})`}
+        teaches={lesson.objectives.map(o => o.text)}
+        timeRequired={durationToISO(lesson.duration)}
+        keywords={lesson.vocabulary}
+        educationalAlignment={c3Standards.map(s => ({
+          alignmentType: 'teaches',
+          educationalFramework: 'NCSS C3 Framework',
+          targetName: `${s.code}: ${s.description}`,
+        }))}
       />
 
       <main className="max-w-4xl mx-auto px-4 py-8">

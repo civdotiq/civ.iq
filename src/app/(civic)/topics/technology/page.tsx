@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -145,6 +145,11 @@ export default function TechnologyTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Technology & Privacy', url: 'https://civdotiq.org/topics/technology' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Technology & Privacy Legislation"
+        description="Track technology legislation including big tech regulation, data privacy, AI, and cybersecurity."
+        url="https://civdotiq.org/topics/technology"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

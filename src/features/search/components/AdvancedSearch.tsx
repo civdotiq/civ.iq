@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Search, Filter, MapPin, Users, Calendar, DollarSign, FileText, X } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
@@ -38,8 +39,11 @@ interface Representative {
 }
 
 export function AdvancedSearch() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') ?? '';
+
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
+    query: initialQuery,
     party: 'all',
     chamber: 'all',
     state: '',

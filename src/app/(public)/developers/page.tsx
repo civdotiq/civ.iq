@@ -8,7 +8,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BreadcrumbSchema, WebAPISchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, WebAPISchema, SoftwareSourceCodeSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Developers — Free Civic Data API, Widgets & Open Data',
@@ -77,6 +77,14 @@ export default function DevelopersPage() {
         description="Open REST API for U.S. government data including representatives, bills, votes, committees, and districts. No API key required."
         url="https://civdotiq.org/api/v1"
         documentation="https://civdotiq.org/docs/api"
+      />
+      <SoftwareSourceCodeSchema
+        name="CIV.IQ"
+        description="Open-source civic intelligence platform providing access to federal and state government data through REST API, Atom feeds, and embeddable widgets."
+        url="https://civdotiq.org/developers"
+        codeRepository="https://github.com/civdotiq/civic-intel-hub"
+        programmingLanguage={['TypeScript', 'React', 'Next.js']}
+        runtimePlatform="Node.js"
       />
       {/* DataCatalog schema */}
       <script

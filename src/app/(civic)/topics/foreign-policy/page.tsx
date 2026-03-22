@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
@@ -148,6 +148,11 @@ export default function ForeignPolicyTopicPage() {
           { name: 'Topics', url: 'https://civdotiq.org/topics' },
           { name: 'Foreign Policy', url: 'https://civdotiq.org/topics/foreign-policy' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Foreign Policy Legislation"
+        description="Track foreign policy legislation including international relations, treaties, and foreign aid."
+        url="https://civdotiq.org/topics/foreign-policy"
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

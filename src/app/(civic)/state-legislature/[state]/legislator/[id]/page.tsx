@@ -12,7 +12,7 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
-import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
 
 interface PageProps {
@@ -122,29 +122,31 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
   return (
     <div className="min-h-screen bg-white">
       {/* Structured Data for SEO */}
-      <PersonSchema
-        name={legislator.name}
-        jobTitle={`${chamber} - ${stateName} District ${legislator.district}`}
-        description={`${legislator.party} ${chamber} representing District ${legislator.district} in ${stateName}`}
-        image={legislator.photo_url ?? undefined}
+      <ProfilePageSchema
         url={`https://civdotiq.org/state-legislature/${state}/legislator/${id}`}
-        worksFor={{
-          name: `${stateName} State Legislature`,
+        person={{
+          name: legislator.name,
+          jobTitle: `${chamber} - ${stateName} District ${legislator.district}`,
+          description: `${legislator.party} ${chamber} representing District ${legislator.district} in ${stateName}`,
+          image: legislator.photo_url ?? undefined,
+          worksFor: {
+            name: `${stateName} State Legislature`,
+          },
+          affiliation: legislator.party ?? undefined,
+          memberOf: legislator.committees?.map(c => ({
+            name: c.name,
+          })),
+          sameAs: [
+            legislator.contact?.socialMedia?.twitter
+              ? `https://twitter.com/${legislator.contact.socialMedia.twitter}`
+              : '',
+            legislator.contact?.socialMedia?.facebook
+              ? `https://facebook.com/${legislator.contact.socialMedia.facebook}`
+              : '',
+            legislator.links?.[0]?.url ?? '',
+          ].filter(Boolean),
+          knowsAbout: legislator.committees?.map(c => c.name),
         }}
-        affiliation={legislator.party ?? undefined}
-        memberOf={legislator.committees?.map(c => ({
-          name: c.name,
-        }))}
-        sameAs={[
-          legislator.contact?.socialMedia?.twitter
-            ? `https://twitter.com/${legislator.contact.socialMedia.twitter}`
-            : '',
-          legislator.contact?.socialMedia?.facebook
-            ? `https://facebook.com/${legislator.contact.socialMedia.facebook}`
-            : '',
-          legislator.links?.[0]?.url ?? '',
-        ].filter(Boolean)}
-        knowsAbout={legislator.committees?.map(c => c.name)}
       />
       <BreadcrumbSchema
         items={[

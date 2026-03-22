@@ -9,7 +9,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import {
+  GovernmentOrganizationSchema,
+  BreadcrumbSchema,
+  ItemListSchema,
+} from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'United States Congress | Senators, Representatives & Committees',
@@ -142,6 +146,15 @@ export default function CongressHubPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Congress', url: 'https://civdotiq.org/congress' },
         ]}
+      />
+      <ItemListSchema
+        name="State Congressional Delegations"
+        url="https://civdotiq.org/congress"
+        description="All 50 state delegations in the 119th United States Congress"
+        items={STATES.map(s => ({
+          name: `${s.name} Congressional Delegation`,
+          url: `https://civdotiq.org/state-legislature/${s.code.toLowerCase()}`,
+        }))}
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

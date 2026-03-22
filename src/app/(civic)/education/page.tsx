@@ -9,7 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { EducationClient } from './EducationClient';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import {
   EDUCATION_CURRICULUM,
   GRADE_LEVEL_INFO,
@@ -82,6 +82,24 @@ export default function EducationPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Civic Education', url: 'https://civdotiq.org/education' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Civic Education Curriculum"
+        description="21 standards-aligned civics lessons for K-12 educators using real government data."
+        url="https://civdotiq.org/education"
+        hasPart={EDUCATION_CURRICULUM.map(l => ({
+          name: l.title,
+          url: `https://civdotiq.org/education/${l.id.toLowerCase()}`,
+        }))}
+      />
+      <ItemListSchema
+        name="Civics Lesson Plans"
+        url="https://civdotiq.org/education"
+        items={EDUCATION_CURRICULUM.map(l => ({
+          name: l.title,
+          url: `https://civdotiq.org/education/${l.id.toLowerCase()}`,
+        }))}
+        itemType="LearningResource"
       />
       <main className="min-h-screen bg-white">
         {/* Hero Section */}

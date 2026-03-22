@@ -12,7 +12,7 @@ import type { Metadata } from 'next';
 import { nostrConfig } from '@/config/nostr.config';
 import { activitypubConfig } from '@/config/activitypub.config';
 import { DATASET_REGISTRY } from '@/lib/datasets';
-import { DatasetSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { DatasetSchema, BreadcrumbSchema, DataCatalogSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Open Data',
@@ -273,6 +273,16 @@ export default function OpenDataPage() {
           { name: 'Home', url: `${BASE_URL}` },
           { name: 'Open Data', url: `${BASE_URL}/open` },
         ]}
+      />
+      <DataCatalogSchema
+        name="CIV.IQ Open Data Catalog"
+        description="Bulk civic datasets available for free download in CSV and JSON formats. Congressional members, bills, votes, campaign finance, and more."
+        url="https://civdotiq.org/open"
+        datasets={DATASET_REGISTRY.map(d => ({
+          name: d.name,
+          description: d.description,
+          url: `https://civdotiq.org/api/download/${d.slug}`,
+        }))}
       />
       {/* Schema.org Dataset markup for each bulk dataset */}
       {DATASET_REGISTRY.map(dataset => (

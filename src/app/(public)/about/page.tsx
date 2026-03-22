@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, OrganizationSchema, AboutPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
@@ -28,6 +28,11 @@ export default function AboutPage() {
         ]}
       />
       <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures, 39,000+ ZIP codes, and machine-learning analysis of money-in-politics patterns." />
+      <AboutPageSchema
+        name="About CIV.IQ"
+        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, and 18 official data sources."
+        url="https://civdotiq.org/about"
+      />
       <div className="min-h-screen aicher-background">
         <div className="max-w-3xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
           <nav className="text-sm text-gray-500 mb-6">

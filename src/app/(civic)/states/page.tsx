@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'U.S. States - State Legislatures & Congressional Delegations',
@@ -155,6 +155,24 @@ export default function StatesHubPage() {
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'States', url: 'https://civdotiq.org/states' },
         ]}
+      />
+      <CollectionPageSchema
+        name="U.S. States"
+        description="Complete guide to all 50 U.S. state legislatures and federal congressional delegations."
+        url="https://civdotiq.org/states"
+        hasPart={STATES.map(s => ({
+          name: s.name,
+          url: `https://civdotiq.org/state-legislature/${s.code.toLowerCase()}`,
+        }))}
+      />
+      <ItemListSchema
+        name="U.S. States"
+        url="https://civdotiq.org/states"
+        items={STATES.map(s => ({
+          name: s.name,
+          url: `https://civdotiq.org/state-legislature/${s.code.toLowerCase()}`,
+        }))}
+        itemType="AdministrativeArea"
       />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
