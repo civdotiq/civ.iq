@@ -203,6 +203,36 @@ function similarityRatio(a: string, b: string): number {
   return 1 - levenshteinDistance(a, b) / maxLen;
 }
 
+/** Minimum token-level similarity to count as a match (handles typos like northrop/northrup) */
+const TOKEN_SIMILARITY_THRESHOLD = 0.75;
+
+/**
+ * Validate that two normalized names share enough word tokens.
+ * Levenshtein can rate "American Health Association" and "American Heart
+ * Association" at ~0.90 similarity because only one character differs,
+ * but they are entirely different organizations. Token overlap catches
+ * this: "Health" vs "Heart" = 0.6 similarity, below the token threshold.
+ *
+ * Each token from the shorter name must find a close match (>= 0.75
+ * similarity) in the longer name. At least `threshold` fraction of the
+ * shorter name's tokens must match.
+ */
+export function validateTokenOverlap(a: string, b: string, threshold: number = 0.7): boolean {
+  const tokensA = a.split(/\s+/).filter(t => t.length > 0);
+  const tokensB = b.split(/\s+/).filter(t => t.length > 0);
+
+  if (tokensA.length === 0 || tokensB.length === 0) return false;
+
+  const [shorter, longer] =
+    tokensA.length <= tokensB.length ? [tokensA, tokensB] : [tokensB, tokensA];
+
+  const matches = shorter.filter(token =>
+    longer.some(other => similarityRatio(token, other) >= TOKEN_SIMILARITY_THRESHOLD)
+  ).length;
+
+  return matches / shorter.length >= threshold;
+}
+
 /**
  * Normalize an organization name for fuzzy matching.
  * Strips common corporate suffixes and whitespace.
@@ -565,7 +595,11 @@ async function fetchContributionMatches(
         }
       }
 
-      if (bestRatio >= FUZZY_MATCH_THRESHOLD && bestEmployer.length > 0) {
+      if (
+        bestRatio >= FUZZY_MATCH_THRESHOLD &&
+        bestEmployer.length > 0 &&
+        validateTokenOverlap(normalizedOrg, bestEmployer)
+      ) {
         matches.set(org.name, {
           organization: org.name,
           amount: bestAmount,
