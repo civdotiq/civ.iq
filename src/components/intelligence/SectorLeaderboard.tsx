@@ -73,11 +73,11 @@ function formatCompactDollars(amount: number): string {
   return `$${Math.round(amount)}`;
 }
 
-/** Alignment score color based on threshold. */
+/** Score intensity: darker gray = higher value. Neutral, non-editorial. */
 function alignmentColor(score: number): string {
-  if (score > 60) return 'text-red-600';
-  if (score >= 30) return 'text-amber-600';
-  return 'text-gray-500';
+  if (score > 60) return 'text-gray-900';
+  if (score >= 30) return 'text-gray-600';
+  return 'text-gray-400';
 }
 
 const fetcher = (url: string) =>

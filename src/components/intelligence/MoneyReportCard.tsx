@@ -38,28 +38,22 @@ function formatDate(iso: string): string {
   }
 }
 
-/**
- * Color coding for correlation/overlap metrics.
- * Green < 30%, amber 30-60%, red > 60%.
- */
+/** Metric intensity: darker gray = higher value. Neutral, non-editorial. */
 function metricColor(value: number | null): string {
   if (value === null) return 'text-gray-400';
   const pct = value * 100;
-  if (pct < 30) return 'text-[#0a9338]';
-  if (pct <= 60) return 'text-amber-600';
-  return 'text-[#e11d07]';
+  if (pct > 60) return 'text-gray-900';
+  if (pct >= 30) return 'text-gray-600';
+  return 'text-gray-400';
 }
 
-/**
- * Color coding for independence score (inverted).
- * Green > 60%, amber 30-60%, red < 30%.
- */
+/** Divergence intensity: darker gray = higher value. Neutral, non-editorial. */
 function independenceColor(value: number | null): string {
   if (value === null) return 'text-gray-400';
   const pct = value * 100;
-  if (pct > 60) return 'text-[#0a9338]';
-  if (pct >= 30) return 'text-amber-600';
-  return 'text-[#e11d07]';
+  if (pct > 60) return 'text-gray-900';
+  if (pct >= 30) return 'text-gray-600';
+  return 'text-gray-400';
 }
 
 function partyDotColor(party: string): string {
