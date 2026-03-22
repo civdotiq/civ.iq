@@ -49,6 +49,8 @@ export interface TraversalResult {
   depthMap: Record<string, number>;
   /** Whether traversal was truncated by limit */
   truncated: boolean;
+  /** The depth level at which truncation first occurred */
+  truncatedAt?: number;
   /** Total nodes discovered before filtering by nodeTypes */
   totalDiscovered: number;
 }
@@ -89,6 +91,7 @@ export async function traverseMesh(
   const collectedEdges = new Map<string, GraphEdge>();
   let totalDiscovered = 0;
   let truncated = false;
+  let truncatedAt: number | undefined;
 
   // BFS queue
   const queue: BFSEntry[] = [{ nodeId: startId, depth: 0 }];
@@ -140,6 +143,9 @@ export async function traverseMesh(
         // Check limit
         if (collectedNodes.size >= limit) {
           truncated = true;
+          if (truncatedAt === undefined) {
+            truncatedAt = current.depth + 1;
+          }
           continue;
         }
 
@@ -173,6 +179,7 @@ export async function traverseMesh(
     edges: Array.from(collectedEdges.values()),
     depthMap,
     truncated,
+    truncatedAt,
     totalDiscovered,
   };
 }

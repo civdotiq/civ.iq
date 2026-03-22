@@ -241,4 +241,39 @@ describe('Civic Mesh Traversal', () => {
     expect(result!.nodes.find(n => n.id === 'rep:A')).toBeUndefined();
     expect(result!.origin.id).toBe('rep:A');
   });
+
+  it('sets truncated and truncatedAt when node count hits absolute max limit', async () => {
+    // Build a dense graph: hub connects to 210 orgs at depth 1,
+    // each org connects to a sector at depth 2
+    const hub = makeNode('rep:HUB', 'representative', 'Hub Rep');
+    const orgs: GraphNode[] = [];
+    const hubEdges: GraphEdge[] = [];
+
+    for (let i = 0; i < 210; i++) {
+      const org = makeNode(`org:O${i}`, 'organization', `Org ${i}`);
+      orgs.push(org);
+      hubEdges.push(makeEdge('rep:HUB', `org:O${i}`, 'donated_to'));
+    }
+
+    mockHydrate.mockImplementation(async (nodeId: string) => {
+      if (nodeId === 'rep:HUB') {
+        return makeNeighborhood(hub, hubEdges, orgs);
+      }
+      // Each org connects back to hub only
+      const idx = nodeId.startsWith('org:O') ? parseInt(nodeId.slice(5), 10) : -1;
+      if (idx >= 0 && idx < orgs.length) {
+        const org = orgs[idx]!;
+        return makeNeighborhood(org, [hubEdges[idx]!], [hub]);
+      }
+      return null;
+    });
+
+    // Use maxDepth 2 and no explicit limit (defaults to 50, but use absolute max)
+    const result = await traverseMesh('rep:HUB', { maxDepth: 2, limit: 200 });
+    expect(result).not.toBeNull();
+    expect(result!.truncated).toBe(true);
+    expect(result!.truncatedAt).toBe(1);
+    expect(result!.nodes.length).toBe(200);
+    expect(result!.totalDiscovered).toBeGreaterThan(200);
+  });
 });

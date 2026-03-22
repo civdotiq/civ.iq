@@ -39,6 +39,8 @@ export interface MeshEntityResponse {
     nodes: GraphNode[];
     edges: GraphEdge[];
     completeness: NeighborhoodCompleteness;
+    truncated?: boolean;
+    truncatedAt?: number;
   };
   intelligence: {
     insights: Record<string, InsightBase | null>;
