@@ -36,6 +36,7 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
 // ── Imports ───────────────────────────────────────────────────────
 
 import { buildSectorLeaderboard } from '@/lib/intelligence/analyzers/sector-leaderboard-analyzer';
+import logger from '@/lib/logging/simple-logger';
 import type { SectorLeaderboardResponse } from '@/lib/intelligence/types';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
@@ -126,6 +127,7 @@ describe('buildSectorLeaderboard', () => {
         includedMembers: 0,
         excludedMembers: 0,
       },
+      dataAvailability: { cachedInsights: 100, minimumRequired: 50, status: 'sufficient' },
       generatedAt: '2026-01-15T00:00:00.000Z',
       dataAsOf: '2026-01-15T00:00:00.000Z',
     };
@@ -267,5 +269,37 @@ describe('buildSectorLeaderboard', () => {
     expect(result!.entries[1].sectorAlignmentScore).toBe(0.8);
     // Stats still reflect all included members (3), not just the limited entries
     expect(result!.stats.includedMembers).toBe(3);
+  });
+
+  it('returns null and logs warning when Redis has no cached insights', async () => {
+    mockRedisKeys.mockResolvedValue([]);
+
+    const result = await buildSectorLeaderboard(SECTOR);
+
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[SectorLeaderboard] No cached insights found — leaderboard unavailable until representative pages warm the cache'
+    );
+  });
+
+  it('returns partial dataAvailability when fewer than 50 insights exist', async () => {
+    const insights = [
+      makeInsight('A000001', 0.8),
+      makeInsight('B000002', 0.6),
+      makeInsight('C000003', 0.9),
+      makeInsight('D000004', 0.7),
+    ];
+    // We have no E000005 rep mock, so use only 4 with existing reps
+    setupInsightKeys('A000001', 'B000002', 'C000003', 'D000004');
+    setupMget(...insights);
+
+    const result = await buildSectorLeaderboard(SECTOR);
+
+    expect(result).not.toBeNull();
+    expect(result!.dataAvailability).toEqual({
+      cachedInsights: 4,
+      minimumRequired: 50,
+      status: 'partial',
+    });
   });
 });

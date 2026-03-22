@@ -549,6 +549,11 @@ export interface SectorLeaderboardResponse {
     includedMembers: number;
     excludedMembers: number;
   };
+  dataAvailability: {
+    cachedInsights: number;
+    minimumRequired: number;
+    status: 'sufficient' | 'partial' | 'empty';
+  };
   generatedAt: string;
   dataAsOf: string;
 }

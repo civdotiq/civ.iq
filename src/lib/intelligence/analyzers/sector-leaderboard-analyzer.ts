@@ -66,7 +66,9 @@ export async function buildSectorLeaderboard(
   // 2. Scan cached vote-finance insights
   const insights = await loadVoteFinanceInsights();
   if (insights.length === 0) {
-    logger.info('[SectorLeaderboard] No vote-finance insights found');
+    logger.warn(
+      '[SectorLeaderboard] No cached insights found — leaderboard unavailable until representative pages warm the cache'
+    );
     return null;
   }
 
@@ -95,6 +97,9 @@ export async function buildSectorLeaderboard(
       billsVotedOn: sectorCorrelation.billsVotedOn,
     });
   }
+
+  const insightCount = insights.length;
+  const MINIMUM_REQUIRED = 50;
 
   if (candidates.length === 0) {
     logger.info('[SectorLeaderboard] No candidates with sufficient data', { sector });
@@ -149,6 +154,13 @@ export async function buildSectorLeaderboard(
       }, firstInsight.dataAsOf)
     : new Date().toISOString();
 
+  const dataAvailability: SectorLeaderboardResponse['dataAvailability'] = {
+    cachedInsights: insightCount,
+    minimumRequired: MINIMUM_REQUIRED,
+    status:
+      insightCount === 0 ? 'empty' : insightCount < MINIMUM_REQUIRED ? 'partial' : 'sufficient',
+  };
+
   const response: SectorLeaderboardResponse = {
     sector,
     sectorLabel: sector as string,
@@ -156,6 +168,7 @@ export async function buildSectorLeaderboard(
     party: party === 'all' ? null : party,
     entries,
     stats,
+    dataAvailability,
     generatedAt: new Date().toISOString(),
     dataAsOf,
   };
