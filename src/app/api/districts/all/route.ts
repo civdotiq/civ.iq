@@ -359,7 +359,16 @@ export async function GET(request: NextRequest) {
         'West Virginia': 'WV',
         Wisconsin: 'WI',
         Wyoming: 'WY',
+        // Territories (non-voting delegates)
+        'District of Columbia': 'DC',
+        'Puerto Rico': 'PR',
+        Guam: 'GU',
+        'American Samoa': 'AS',
+        'Virgin Islands': 'VI',
+        'Northern Mariana Islands': 'MP',
       };
+
+      const TERRITORY_CODES = new Set(['DC', 'PR', 'GU', 'AS', 'VI', 'MP']);
 
       const stateAbbr = stateMapping[member.state] || member.state;
       const districtKey = `${stateAbbr}-${districtNumber}`;
@@ -417,6 +426,7 @@ export async function GET(request: NextRequest) {
           counties: [], // Would need additional API calls
           majorCities: [], // Would need additional API calls
         },
+        votingMember: !TERRITORY_CODES.has(stateAbbr),
       };
 
       districtsMap.set(districtKey, district);

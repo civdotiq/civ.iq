@@ -77,7 +77,7 @@ function getDistrictLean(pvi: string): { text: string; color: string; bgColor: s
 
 export function DistrictCard({ district }: { district: District }) {
   const lean = getDistrictLean(district.political.cookPVI);
-  const districtHref = `/districts/${district.state}-${district.number}`;
+  const districtHref = `/districts/${district.id}`;
   const repHref = `/representative/${district.representative.bioguideId}`;
   const partyLabel = district.representative.party === 'D' ? 'Democrat' : 'Republican';
   const partyColor = district.representative.party === 'D' ? 'text-[#0a9338]' : 'text-[#e11d07]';

@@ -42,6 +42,7 @@ interface District {
     counties: string[];
     majorCities: string[];
   };
+  votingMember?: boolean;
 }
 
 export function DemographicsDashboard({
@@ -66,8 +67,12 @@ export function DemographicsDashboard({
       : districts;
 
   // Calculate only meaningful, reliable statistics
+  const votingDistricts = filteredDistricts.filter(d => d.votingMember !== false);
+  const nonVotingDistricts = filteredDistricts.filter(d => d.votingMember === false);
   const stats = {
     totalDistricts: filteredDistricts.length,
+    votingDistricts: votingDistricts.length,
+    nonVotingDistricts: nonVotingDistricts.length,
     democraticDistricts: filteredDistricts.filter(d => d.representative.party === 'D').length,
     republicanDistricts: filteredDistricts.filter(d => d.representative.party === 'R').length,
     totalPopulation: filteredDistricts.reduce((sum, d) => sum + d.demographics.population, 0),
@@ -91,8 +96,11 @@ export function DemographicsDashboard({
     .sort((a, b) => a.demographics.population - b.demographics.population)
     .slice(0, 5);
 
-  const demPercent = ((stats.democraticDistricts / stats.totalDistricts) * 100).toFixed(0);
-  const repPercent = ((stats.republicanDistricts / stats.totalDistricts) * 100).toFixed(0);
+  const partyTotal = stats.democraticDistricts + stats.republicanDistricts;
+  const demPercent =
+    partyTotal > 0 ? ((stats.democraticDistricts / partyTotal) * 100).toFixed(0) : '0';
+  const repPercent =
+    partyTotal > 0 ? ((stats.republicanDistricts / partyTotal) * 100).toFixed(0) : '0';
 
   const isStateView = selectedState && selectedState !== 'all';
 
@@ -105,12 +113,19 @@ export function DemographicsDashboard({
 
       {/* Primary stats - the essential numbers */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        {/* Total Districts with party breakdown */}
+        {/* Total Districts with voting/non-voting breakdown */}
         <div className="col-span-2 sm:col-span-1 bg-gray-50 p-4 sm:p-5">
-          <div className="text-3xl sm:text-4xl font-bold text-gray-900">{stats.totalDistricts}</div>
-          <div className="text-sm text-gray-600 mt-1">
-            {isStateView ? 'Districts' : 'Total Districts'}
+          <div className="text-3xl sm:text-4xl font-bold text-gray-900">
+            {stats.votingDistricts}
           </div>
+          <div className="text-sm text-gray-600 mt-1">
+            {isStateView ? 'Districts' : 'Voting Districts'}
+          </div>
+          {!isStateView && stats.nonVotingDistricts > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              + {stats.nonVotingDistricts} non-voting
+            </div>
+          )}
         </div>
 
         {/* Population */}
@@ -171,12 +186,12 @@ export function DemographicsDashboard({
                 {topByPopulation.map((district, index) => (
                   <Link
                     key={district.id}
-                    href={`/districts/${district.state}-${district.number}`}
+                    href={`/districts/${district.id}`}
                     className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
                   >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
-                      {district.state}-{district.number}
+                      {district.id}
                     </span>
                     <span className="font-medium text-gray-900 tabular-nums">
                       {district.demographics.population.toLocaleString()}
@@ -198,12 +213,12 @@ export function DemographicsDashboard({
                 {smallestByPopulation.map((district, index) => (
                   <Link
                     key={district.id}
-                    href={`/districts/${district.state}-${district.number}`}
+                    href={`/districts/${district.id}`}
                     className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
                   >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
-                      {district.state}-{district.number}
+                      {district.id}
                     </span>
                     <span className="font-medium text-gray-900 tabular-nums">
                       {district.demographics.population.toLocaleString()}
@@ -225,12 +240,12 @@ export function DemographicsDashboard({
                 {topByIncome.map((district, index) => (
                   <Link
                     key={district.id}
-                    href={`/districts/${district.state}-${district.number}`}
+                    href={`/districts/${district.id}`}
                     className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
                   >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
-                      {district.state}-{district.number}
+                      {district.id}
                     </span>
                     <span className="font-medium text-gray-900 tabular-nums">
                       ${(district.demographics.medianIncome / 1000).toFixed(0)}k

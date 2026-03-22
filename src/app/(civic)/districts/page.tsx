@@ -71,7 +71,9 @@ export default function DistrictsPage() {
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const matchesDistrict = `${district.state}-${district.number}`.toLowerCase().includes(query);
+      const matchesDistrict =
+        district.id.toLowerCase().includes(query) ||
+        `${district.state}-${district.number}`.toLowerCase().includes(query);
       const matchesRepName = district.representative.name.toLowerCase().includes(query);
       const matchesState = district.state.toLowerCase().includes(query);
       const matchesCities = district.geography.majorCities.some(city =>
