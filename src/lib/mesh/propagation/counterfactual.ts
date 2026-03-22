@@ -21,7 +21,7 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { predictVote, buildFeatureVector } from '@/lib/intelligence/ml/vote-predictor';
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
-import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
 const CACHE_TTL = 3600; // 1 hour
@@ -99,8 +99,7 @@ export async function runCounterfactual(
   const maskedProfile = maskDonorProfile(donorProfile, maskSectors);
 
   // Get rep info
-  const allReps = await getAllEnhancedRepresentatives();
-  const rep = allReps.find(r => r.bioguideId === bioguideId);
+  const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) return null;
 
   // Compute per-sector sensitivity by running predictions with/without each masked sector
