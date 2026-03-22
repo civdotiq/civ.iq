@@ -187,7 +187,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
       {!isLoading && data?.stats && (
         <div className="border-2 border-gray-200 p-3 mb-4 flex flex-wrap gap-4">
           <div>
-            <span className="type-xs text-gray-500">Mean alignment</span>
+            <span className="type-xs text-gray-500">Mean sector vote rate</span>
             <div className="aicher-heading type-2xl text-gray-900">
               {data.stats.mean.toFixed(1)}%
             </div>
@@ -225,7 +225,9 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
                 <th className="type-xs text-gray-500 font-medium text-left p-2 w-14 hidden sm:table-cell">
                   State
                 </th>
-                <th className="type-xs text-gray-500 font-medium text-right p-2 w-24">Alignment</th>
+                <th className="type-xs text-gray-500 font-medium text-right p-2 w-24">
+                  Sector vote rate
+                </th>
                 <th className="type-xs text-gray-500 font-medium text-right p-2 w-24 hidden sm:table-cell">
                   Donations
                 </th>
@@ -283,8 +285,8 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
 
       {/* Disclaimer */}
       <p className="type-xs text-gray-400 mt-3">
-        Alignment scores reflect voting patterns on sector-relevant legislation relative to campaign
-        contributions. Correlation does not indicate causation or improper behavior.
+        Sector vote rates reflect voting patterns on sector-relevant bills relative to campaign
+        donations. Correlation does not indicate causation or improper behavior.
       </p>
     </div>
   );

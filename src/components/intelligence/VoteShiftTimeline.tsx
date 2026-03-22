@@ -24,7 +24,7 @@ interface VoteShiftTimelineProps {
 
 interface ChartDataPoint {
   quarter: string;
-  alignment: number;
+  partyLineRate: number;
   rollingAverage: number | null;
   isShift: boolean;
 }
@@ -33,7 +33,9 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
   if (quarters.length === 0) {
     return (
       <div className="bg-white border-2 border-gray-200 p-6">
-        <h3 className="aicher-heading type-lg text-gray-900 mb-4">Party Alignment Over Time</h3>
+        <h3 className="aicher-heading type-lg text-gray-900 mb-4">
+          Party-line voting rate over time
+        </h3>
         <div className="flex items-center justify-center h-48 text-center">
           <p className="type-sm text-gray-500">Insufficient voting data for timeline</p>
         </div>
@@ -45,7 +47,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
 
   const chartData: ChartDataPoint[] = quarters.map(q => ({
     quarter: q.quarter,
-    alignment: Math.round(q.alignmentScore * 1000) / 10,
+    partyLineRate: Math.round(q.alignmentScore * 1000) / 10,
     rollingAverage: q.rollingAverage !== null ? Math.round(q.rollingAverage * 1000) / 10 : null,
     isShift: shiftQuarters.has(q.quarter),
   }));
@@ -54,7 +56,9 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
 
   return (
     <div className="bg-white border-2 border-gray-900 p-4 sm:p-6">
-      <h3 className="aicher-heading type-lg text-gray-900 mb-4">Party Alignment Over Time</h3>
+      <h3 className="aicher-heading type-lg text-gray-900 mb-4">
+        Party-line voting rate over time
+      </h3>
       <ResponsiveContainer width="100%" height={240}>
         <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -63,17 +67,17 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
           <Tooltip
             formatter={(value: number, name: string) => [
               `${value.toFixed(1)}%`,
-              name === 'alignment' ? 'Quarterly alignment' : 'Rolling average',
+              name === 'partyLineRate' ? 'Quarterly rate' : 'Rolling average',
             ]}
             labelFormatter={(label: string) => label}
           />
           <Line
             type="monotone"
-            dataKey="alignment"
+            dataKey="partyLineRate"
             stroke="#3ea2d4"
             strokeWidth={2}
             dot={{ r: 3, fill: '#3ea2d4', stroke: '#3ea2d4' }}
-            name="alignment"
+            name="partyLineRate"
           />
           <Line
             type="monotone"
@@ -89,7 +93,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
             <ReferenceDot
               key={point.quarter}
               x={point.quarter}
-              y={point.alignment}
+              y={point.partyLineRate}
               r={6}
               fill="#e11d07"
               stroke="#e11d07"
@@ -100,7 +104,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
       <div className="flex flex-wrap items-center gap-4 mt-3 type-xs text-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block w-4 h-0.5" style={{ backgroundColor: '#3ea2d4' }} />
-          Quarterly alignment
+          Quarterly rate
         </span>
         <span className="flex items-center gap-1">
           <span

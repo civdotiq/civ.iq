@@ -35,7 +35,7 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-4">
-        <h3 className="aicher-heading type-lg text-gray-900">Voting Independence Analysis</h3>
+        <h3 className="aicher-heading type-lg text-gray-900">Voting pattern analysis</h3>
         <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
@@ -43,7 +43,7 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         <div className="border-2 border-gray-200 p-3">
           <div className="aicher-heading type-2xl text-gray-900">{pctIndependent}%</div>
-          <div className="type-xs text-gray-500 aicher-heading-wide">Independence score</div>
+          <div className="type-xs text-gray-500 aicher-heading-wide">Prediction divergence</div>
         </div>
         <div className="border-2 border-gray-200 p-3">
           <div className="aicher-heading type-2xl text-gray-900">
@@ -124,7 +124,7 @@ export function votePredictionKeyStats(
 ): Array<{ label: string; value: string }> {
   return [
     {
-      label: 'Independence score',
+      label: 'Prediction divergence',
       value: `${(insight.independenceScore.score * 100).toFixed(0)}%`,
     },
     {

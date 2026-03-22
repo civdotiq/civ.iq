@@ -102,12 +102,12 @@ export default function InvestigateClient() {
             Home
           </a>
           <span className="mx-2">/</span>
-          <span>Investigate</span>
+          <span>Connections</span>
         </nav>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="aicher-heading text-2xl mb-2">Investigate Connections</h1>
+          <h1 className="aicher-heading text-2xl mb-2">Explore Connections</h1>
           <p className="type-sm text-gray-600 dark:text-gray-400 mb-2">
             See who funds, lobbies, and works with your elected officials. All data comes from
             official government sources including FEC.gov, Senate lobbying disclosures, and
@@ -148,7 +148,7 @@ export default function InvestigateClient() {
               ) : nodesArray.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center max-w-sm">
-                    <p className="type-sm font-bold mb-2">Who do you want to investigate?</p>
+                    <p className="type-sm font-bold mb-2">Search for a representative</p>
                     <p className="type-sm text-gray-500 mb-4">
                       Search for any elected official, committee, or organization to see their
                       money, votes, and connections.

@@ -181,7 +181,7 @@ export function temporalVoteKeyStats(
 
   const stats: Array<{ label: string; value: string }> = [
     {
-      label: 'Avg alignment',
+      label: 'Avg sector vote rate',
       value: `${(avgAlignment * 100).toFixed(1)}%`,
     },
     {

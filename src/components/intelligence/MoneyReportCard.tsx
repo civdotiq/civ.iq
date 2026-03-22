@@ -149,8 +149,8 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
                   {formatPct(rep.independenceScore)}
                 </div>
                 <div className="type-xs text-gray-500 aicher-heading-wide leading-tight">
-                  Independence
-                  <br className="sm:hidden" /> Score
+                  Prediction
+                  <br className="sm:hidden" /> divergence
                 </div>
               </div>
             </div>
@@ -192,13 +192,13 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
                   {formatPct(aggregates.mostIndependent.value)}
                 </div>
                 <div className="type-xs text-gray-500 aicher-heading-wide">
-                  Most independent ({aggregates.mostIndependent.name})
+                  Highest divergence ({aggregates.mostIndependent.name})
                 </div>
               </>
             ) : (
               <>
                 <div className="aicher-heading type-2xl text-gray-400">N/A</div>
-                <div className="type-xs text-gray-500 aicher-heading-wide">Most independent</div>
+                <div className="type-xs text-gray-500 aicher-heading-wide">Highest divergence</div>
               </>
             )}
           </div>
@@ -209,13 +209,13 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
                   {formatPct(aggregates.leastIndependent.value)}
                 </div>
                 <div className="type-xs text-gray-500 aicher-heading-wide">
-                  Least independent ({aggregates.leastIndependent.name})
+                  Lowest divergence ({aggregates.leastIndependent.name})
                 </div>
               </>
             ) : (
               <>
                 <div className="aicher-heading type-2xl text-gray-400">N/A</div>
-                <div className="type-xs text-gray-500 aicher-heading-wide">Least independent</div>
+                <div className="type-xs text-gray-500 aicher-heading-wide">Lowest divergence</div>
               </>
             )}
           </div>

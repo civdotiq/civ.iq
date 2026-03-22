@@ -308,7 +308,7 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
             href={`/investigate?node=rep:${representative.bioguideId}`}
             className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 border-2 border-[#3ea2d4] text-[#3ea2d4] hover:bg-[#3ea2d4] hover:text-white"
           >
-            Investigate connections
+            Explore connections
           </a>
         </div>
       </AicherSidebarCard>
