@@ -60,6 +60,8 @@ export interface CascadeResult {
   affectedReps: CascadeRepEffect[];
   totalFlips: number;
   repsAnalyzed: number;
+  repsScanned: number;
+  partial: boolean;
   confidence: number;
   methodology: string;
   disclaimer: string;
@@ -67,7 +69,10 @@ export interface CascadeResult {
 
 // ── Public API ───────────────────────────────────────────────────────
 
-export async function simulateCascade(query: CascadeQuery): Promise<CascadeResult | null> {
+export async function simulateCascade(
+  query: CascadeQuery,
+  deadlineMs: number = 50_000
+): Promise<CascadeResult | null> {
   const { sector, changePercent } = query;
   const cacheKey = `mesh:cascade:${sector}:${changePercent}`;
   const cache = getRedisCache();
@@ -77,6 +82,7 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
 
   logger.info('[Cascade] Simulating', { sector, changePercent });
 
+  const startTime = Date.now();
   const allReps = await getAllEnhancedRepresentatives();
 
   // Phase 1: Fetch vote-finance data in parallel batches to find exposed reps
@@ -88,13 +94,32 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
     totalDonations: number;
   }> = [];
 
+  let repsScanned = 0;
+  let partial = false;
+
   for (let i = 0; i < allReps.length; i += BATCH_SIZE) {
+    // Wall-clock deadline check: stop fetching if we're running out of time
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= deadlineMs) {
+      partial = true;
+      logger.warn('[Cascade] Wall-clock deadline reached, returning partial results', {
+        sector,
+        elapsed,
+        deadlineMs,
+        repsScanned,
+        totalReps: allReps.length,
+      });
+      break;
+    }
+
     const batch = allReps.slice(i, i + BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(rep =>
         withTimeout(analyzeVoteFinance(rep.bioguideId), 10_000, `Cascade:VF:${rep.bioguideId}`)
       )
     );
+
+    repsScanned += batch.length;
 
     for (let j = 0; j < results.length; j++) {
       const result = results[j]!;
@@ -156,7 +181,9 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
     changePercent,
     affectedReps: affectedReps.slice(0, 50),
     totalFlips,
-    repsAnalyzed: allReps.length,
+    repsAnalyzed: exposedReps.length,
+    repsScanned,
+    partial,
     confidence: affectedReps.length > 0 ? Math.min(affectedReps.length / 20, 0.85) : 0,
     methodology:
       'Perturbs sector funding by the specified percentage, renormalizes remaining sectors, ' +
@@ -164,7 +191,10 @@ export async function simulateCascade(query: CascadeQuery): Promise<CascadeResul
     disclaimer: DISCLAIMER,
   };
 
-  await cache.set(cacheKey, result, CACHE_TTL).catch(() => {});
+  // Only cache complete results — partial results should be recomputed
+  if (!partial) {
+    await cache.set(cacheKey, result, CACHE_TTL).catch(() => {});
+  }
   return result;
 }
 
