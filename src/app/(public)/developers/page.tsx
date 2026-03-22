@@ -38,31 +38,37 @@ const INTEGRATION_CARDS = [
   {
     title: 'REST API',
     detail: '181 endpoints, no auth',
+    description: 'Public JSON endpoints for representatives, bills, votes, and districts.',
     href: '/docs/api',
   },
   {
     title: 'MCP Server',
     detail: '54 tools, 9 domains',
+    description: 'Connect AI agents to live civic data via the Model Context Protocol.',
     href: '#mcp',
   },
   {
     title: 'TypeScript SDK',
     detail: '9 resource classes',
+    description: 'Typed client for all CIV.IQ endpoints. Node.js, Deno, and browser.',
     href: '#sdk',
   },
   {
     title: 'Embed Widgets',
     detail: '3 widget types',
+    description: 'Drop-in iframes for live civic data on any website.',
     href: '/embed-docs',
   },
   {
     title: 'Atom Feeds',
     detail: '8 feed types',
+    description: 'Subscribe to legislative updates in any RSS/Atom reader.',
     href: '#feeds',
   },
   {
     title: 'Bulk Data',
     detail: `${DATASET_REGISTRY.length} datasets, CSV/JSON`,
+    description: 'Download complete datasets. No account required.',
     href: '#bulk-data',
   },
 ];
@@ -108,18 +114,6 @@ const MCP_PROMPTS = [
     name: 'environmental_justice',
     description: 'Environmental justice analysis for a congressional district',
   },
-];
-
-const SDK_CLASSES = [
-  'representatives',
-  'legislation',
-  'finance',
-  'intelligence',
-  'civic',
-  'environment',
-  'health',
-  'safety',
-  'economy',
 ];
 
 const FEEDS = [
@@ -175,7 +169,7 @@ export default function DevelopersPage() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-[#3ea2d4]">
@@ -185,75 +179,82 @@ export default function DevelopersPage() {
           <span className="font-medium text-gray-900">Developers</span>
         </nav>
 
-        {/* Hero */}
-        <header className="mb-12 border-b-2 border-black pb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Build with CIV.IQ</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mb-6">
-            Free civic data for developers, journalists, researchers, and AI agents. No API key. MIT
-            licensed.
-          </p>
-          <div className="flex flex-wrap gap-grid-4">
-            <div className="border-2 border-black p-grid-3">
-              <div className="text-2xl font-bold">181</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">API Endpoints</div>
-            </div>
-            <div className="border-2 border-black p-grid-3">
-              <div className="text-2xl font-bold">54</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">MCP Tools</div>
-            </div>
-            <div className="border-2 border-black p-grid-3">
-              <div className="text-2xl font-bold">{DATASET_REGISTRY.length}</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">Bulk Datasets</div>
-            </div>
-            <div className="border-2 border-black p-grid-3">
-              <div className="text-2xl font-bold">MIT</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">License</div>
-            </div>
+        {/* Header */}
+        <h1 className="text-4xl font-bold text-gray-900 mb-grid-2">Build with CIV.IQ</h1>
+        <p className="text-lg text-gray-600 mb-grid-3">
+          Free civic data for developers, journalists, researchers, and AI agents.
+        </p>
+        <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
+          No API key. No account. No tracking. Every endpoint, dataset, and protocol on this page is
+          free and open under the MIT license.
+        </p>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-3 mb-grid-8">
+          <div className="border-2 border-black p-grid-3">
+            <div className="text-3xl font-bold">181</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">API Endpoints</div>
           </div>
-        </header>
+          <div className="border-2 border-black p-grid-3">
+            <div className="text-3xl font-bold">54</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">MCP Tools</div>
+          </div>
+          <div className="border-2 border-black p-grid-3">
+            <div className="text-3xl font-bold">{DATASET_REGISTRY.length}</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">Bulk Datasets</div>
+          </div>
+          <div className="border-2 border-black p-grid-3">
+            <div className="text-3xl font-bold">MIT</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">License</div>
+          </div>
+        </div>
 
         {/* Quick Start */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Start</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-grid-3">
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">curl</p>
-              <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black">
-                <code>{`curl https://civdotiq.org/api/v1/representatives\\
-  ?state=MI&chamber=house`}</code>
-              </pre>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">TypeScript SDK</p>
-              <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black">
-                <code>{`npm install @civiq/sdk
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Quick Start</h2>
+          <p className="text-gray-600 mb-grid-3">
+            No API key, no registration. Paste this into a terminal:
+          </p>
+
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
+            curl https://civdotiq.org/api/v1/representatives?state=MI&amp;chamber=house
+          </pre>
+
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">TypeScript SDK</span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
+              {`npm install @civiq/sdk
 
 import { CivIQ } from '@civiq/sdk';
 const civiq = new CivIQ();
-const reps = await civiq.representatives
-  .list({ state: 'MI', chamber: 'house' });`}</code>
-              </pre>
-            </div>
+const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' });`}
+            </pre>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+
+          <p className="text-xs text-gray-500">
             Returns JSON. No authentication required. Cached for 1 hour.
           </p>
         </section>
 
         {/* Integration Cards */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Integrations</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-grid-3">
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Integrations</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Six ways to access civic data, from REST to AI-native protocols.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3">
             {INTEGRATION_CARDS.map(card => (
               <Link
                 key={card.title}
                 href={card.href}
-                className="border-2 border-black p-grid-3 hover:bg-gray-50 transition-colors group"
+                className="border-2 border-gray-200 p-grid-3 hover:border-black transition-colors group"
               >
                 <h3 className="font-bold text-gray-900 group-hover:text-[#3ea2d4] mb-1">
                   {card.title}
                 </h3>
-                <span className="text-xs text-gray-500 uppercase tracking-wider">
+                <p className="text-sm text-gray-600 mb-grid-2">{card.description}</p>
+                <span className="text-xs text-gray-400 uppercase tracking-wider">
                   {card.detail}
                 </span>
               </Link>
@@ -262,9 +263,9 @@ const reps = await civiq.representatives
         </section>
 
         {/* MCP Server */}
-        <section id="mcp" className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">MCP Server</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section id="mcp" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">MCP Server</h2>
+          <p className="text-gray-600 mb-grid-3">
             Connect AI agents to live civic data via the{' '}
             <a
               href="https://modelcontextprotocol.io"
@@ -277,108 +278,114 @@ const reps = await civiq.representatives
             . 54 tools across 9 domains, plus resources and prompt templates.
           </p>
 
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-            Configuration (Claude Desktop / Cursor)
-          </p>
-          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black mb-6">
-            <code>{`{
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Configuration (Claude Desktop / Cursor)
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
+              {`{
   "mcpServers": {
     "civiq": {
       "url": "https://civdotiq.org/api/mcp"
     }
   }
-}`}</code>
-          </pre>
-
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Tool Domains</p>
-          <div className="border-2 border-gray-200 overflow-x-auto mb-6">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">Domain</th>
-                  <th className="text-left p-grid-2 font-semibold">Example Tools</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MCP_DOMAINS.map(row => (
-                  <tr key={row.domain} className="border-b border-gray-100">
-                    <td className="p-grid-2 font-medium">{row.domain}</td>
-                    <td className="p-grid-2 text-gray-600 font-mono text-xs">{row.examples}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+}`}
+            </pre>
           </div>
 
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Resources</p>
-          <div className="border-2 border-gray-200 overflow-x-auto mb-6">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">URI</th>
-                  <th className="text-left p-grid-2 font-semibold">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MCP_RESOURCES.map(r => (
-                  <tr key={r.uri} className="border-b border-gray-100">
-                    <td className="p-grid-2 font-mono text-xs whitespace-nowrap">{r.uri}</td>
-                    <td className="p-grid-2 text-gray-600">{r.description}</td>
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">Tool Domains</span>
+            <div className="border-2 border-gray-200 overflow-x-auto mt-1">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
+                  <tr>
+                    <th className="text-left p-grid-2 font-semibold">Domain</th>
+                    <th className="text-left p-grid-2 font-semibold">Example Tools</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {MCP_DOMAINS.map(row => (
+                    <tr key={row.domain} className="border-b border-gray-100">
+                      <td className="p-grid-2 font-medium">{row.domain}</td>
+                      <td className="p-grid-2 text-gray-600 font-mono text-xs">{row.examples}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Prompt Templates</p>
-          <div className="border-2 border-gray-200 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">Prompt</th>
-                  <th className="text-left p-grid-2 font-semibold">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MCP_PROMPTS.map(p => (
-                  <tr key={p.name} className="border-b border-gray-100">
-                    <td className="p-grid-2 font-mono text-xs whitespace-nowrap">{p.name}</td>
-                    <td className="p-grid-2 text-gray-600">{p.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-grid-3">
+            <div>
+              <span className="text-sm text-gray-500 uppercase tracking-wider">Resources</span>
+              <div className="border-2 border-gray-200 overflow-x-auto mt-1">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {MCP_RESOURCES.map(r => (
+                      <tr key={r.uri} className="border-b border-gray-100">
+                        <td className="p-grid-2 font-mono text-xs">{r.uri}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <span className="text-sm text-gray-500 uppercase tracking-wider">
+                Prompt Templates
+              </span>
+              <div className="border-2 border-gray-200 overflow-x-auto mt-1">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {MCP_PROMPTS.map(p => (
+                      <tr key={p.name} className="border-b border-gray-100">
+                        <td className="p-grid-2">
+                          <code className="font-mono text-xs">{p.name}</code>
+                          <span className="block text-xs text-gray-500 mt-0.5">
+                            {p.description}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* TypeScript SDK */}
-        <section id="sdk" className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">TypeScript SDK</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section id="sdk" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">TypeScript SDK</h2>
+          <p className="text-gray-600 mb-grid-3">
             Typed client for all CIV.IQ endpoints. Works in Node.js, Deno, and the browser.
           </p>
 
-          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black mb-4">
-            <code>{`npm install @civiq/sdk
-
-import { CivIQ } from '@civiq/sdk';
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
+            {`import { CivIQ } from '@civiq/sdk';
 const civiq = new CivIQ();
 
-// List representatives
 const reps = await civiq.representatives.list({ state: 'MI' });
-
-// Get a bill
 const bill = await civiq.legislation.getBill('hr1-119');
-
-// Vote prediction
-const prediction = await civiq.intelligence
-  .votePrediction('B001230', 'hr1-119');`}</code>
+const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119');`}
           </pre>
 
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Resource Classes</p>
-          <div className="flex flex-wrap gap-grid-1 mb-4">
-            {SDK_CLASSES.map(cls => (
-              <code key={cls} className="bg-gray-100 px-grid-2 py-1 text-xs font-mono">
+          <div className="flex flex-wrap gap-grid-1 mb-grid-3">
+            {[
+              'representatives',
+              'legislation',
+              'finance',
+              'intelligence',
+              'civic',
+              'environment',
+              'health',
+              'safety',
+              'economy',
+            ].map(cls => (
+              <code
+                key={cls}
+                className="bg-gray-50 border border-gray-200 px-grid-2 py-1 text-xs font-mono"
+              >
                 civiq.{cls}
               </code>
             ))}
@@ -405,14 +412,14 @@ const prediction = await civiq.intelligence
         </section>
 
         {/* Atom Feeds */}
-        <section id="feeds" className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Atom Feeds</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section id="feeds" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Atom Feeds</h2>
+          <p className="text-gray-600 mb-grid-3">
             Subscribe to civic updates in any RSS/Atom reader. All feeds return{' '}
-            <code className="text-xs">application/atom+xml</code>.
+            <code className="text-sm">application/atom+xml</code>.
           </p>
 
-          <div className="border-2 border-gray-200 overflow-x-auto mb-4">
+          <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b-2 border-gray-200">
                 <tr>
@@ -431,60 +438,51 @@ const prediction = await civiq.intelligence
             </table>
           </div>
 
-          <Link href="/open#feeds" className="inline-block text-sm text-[#3ea2d4] hover:underline">
+          <Link href="/open#feeds" className="text-sm text-[#3ea2d4] underline hover:no-underline">
             Full feed documentation on Open Data portal
           </Link>
         </section>
 
         {/* Bulk Data Downloads */}
-        <section id="bulk-data" className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Bulk Data Downloads</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Download complete datasets as CSV or JSON. No account required.
+        <section id="bulk-data" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Bulk Data Downloads</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Download complete datasets as CSV or JSON. Updated hourly from official government
+            sources. No account required.
           </p>
 
-          <div className="border-2 border-gray-200 overflow-x-auto mb-4">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
-                <tr>
-                  <th className="text-left p-grid-2 font-semibold">Dataset</th>
-                  <th className="text-left p-grid-2 font-semibold">Rows</th>
-                  <th className="text-left p-grid-2 font-semibold">Source</th>
-                  <th className="text-left p-grid-2 font-semibold">Freshness</th>
-                  <th className="text-left p-grid-2 font-semibold">Download</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DATASET_REGISTRY.map(dataset => (
-                  <tr key={dataset.slug} className="border-b border-gray-100">
-                    <td className="p-grid-2 font-medium">{dataset.name}</td>
-                    <td className="p-grid-2 text-gray-600 whitespace-nowrap">
-                      {dataset.approximateRows}
-                    </td>
-                    <td className="p-grid-2 text-gray-600">{dataset.source}</td>
-                    <td className="p-grid-2 text-gray-500 text-xs">{dataset.freshness}</td>
-                    <td className="p-grid-2 whitespace-nowrap">
-                      <a
-                        href={`/api/download/${dataset.slug}?format=csv`}
-                        className="text-[#3ea2d4] underline hover:no-underline text-xs mr-2"
-                      >
-                        CSV
-                      </a>
-                      <a
-                        href={`/api/download/${dataset.slug}?format=json`}
-                        className="text-[#3ea2d4] underline hover:no-underline text-xs"
-                      >
-                        JSON
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3 mb-grid-3">
+            {DATASET_REGISTRY.map(dataset => (
+              <div key={dataset.slug} className="border-2 border-gray-200 p-grid-3">
+                <h3 className="font-bold text-base mb-1">{dataset.name}</h3>
+                <p className="text-sm text-gray-600 mb-grid-2">{dataset.description}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">
+                    {dataset.approximateRows} rows
+                  </span>
+                  <span className="text-xs text-gray-500">{dataset.source}</span>
+                </div>
+                <div className="text-xs text-gray-400 mb-grid-2">{dataset.freshness}</div>
+                <div className="flex gap-grid-2">
+                  <a
+                    href={`/api/download/${dataset.slug}?format=csv`}
+                    className="flex-1 text-center text-sm font-medium border-2 border-black px-grid-2 py-1 hover:bg-black hover:text-white transition-colors"
+                  >
+                    CSV
+                  </a>
+                  <a
+                    href={`/api/download/${dataset.slug}?format=json`}
+                    className="flex-1 text-center text-sm font-medium border-2 border-black px-grid-2 py-1 hover:bg-black hover:text-white transition-colors"
+                  >
+                    JSON
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm border-2 border-black mb-2">
-            <code>curl -O https://civdotiq.org/api/download/congress-members?format=csv</code>
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-1">
+            curl -O https://civdotiq.org/api/download/congress-members?format=csv
           </pre>
           <p className="text-xs text-gray-500">
             Catalog endpoint: <code className="text-xs">GET /api/download</code>
@@ -492,55 +490,74 @@ const prediction = await civiq.intelligence
         </section>
 
         {/* AI & Machine Readable */}
-        <section className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">AI &amp; Machine Readable</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-3">
-              <span className="font-medium w-32">MCP Server</span>
-              <Link
-                href="#mcp"
-                className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
-              >
-                /api/mcp
-              </Link>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-medium w-32">OpenAPI 3.0</span>
-              <a
-                href="/openapi.json"
-                className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
-              >
-                /openapi.json
-              </a>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-medium w-32">llms.txt</span>
-              <a
-                href="/llms.txt"
-                className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
-              >
-                /llms.txt
-              </a>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-medium w-32">llms-full.txt</span>
-              <a
-                href="/llms-full.txt"
-                className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
-              >
-                /llms-full.txt
-              </a>
-            </div>
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">AI &amp; Machine Readable</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Machine-readable specs and AI-optimized content for LLMs, agents, and crawlers.
+          </p>
+          <div className="border-2 border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-medium">MCP Server</td>
+                  <td className="p-grid-2">
+                    <Link
+                      href="#mcp"
+                      className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
+                    >
+                      /api/mcp
+                    </Link>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-medium">OpenAPI 3.0</td>
+                  <td className="p-grid-2">
+                    <a
+                      href="/openapi.json"
+                      className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
+                    >
+                      /openapi.json
+                    </a>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-medium">llms.txt</td>
+                  <td className="p-grid-2">
+                    <a
+                      href="/llms.txt"
+                      className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
+                    >
+                      /llms.txt
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2 font-medium">llms-full.txt</td>
+                  <td className="p-grid-2">
+                    <a
+                      href="/llms-full.txt"
+                      className="text-[#3ea2d4] underline hover:no-underline font-mono text-xs"
+                    >
+                      /llms-full.txt
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
         {/* Open Protocols */}
-        <section className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Open Protocols</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-grid-3">
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Open Protocols</h2>
+          <p className="text-gray-600 mb-grid-3">
+            CIV.IQ publishes to decentralized networks so civic records exist independently of this
+            website.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-grid-3">
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">Nostr</h3>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 mb-grid-2">
                 NIP-05: civiq@civdotiq.org. Signed civic events published to relays.
               </p>
               <Link
@@ -552,7 +569,7 @@ const prediction = await civiq.intelligence
             </div>
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">ActivityPub</h3>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 mb-grid-2">
                 @civiq@civdotiq.org. Federation with the Fediverse.
               </p>
               <Link
@@ -564,7 +581,7 @@ const prediction = await civiq.intelligence
             </div>
             <div className="border-2 border-gray-200 p-grid-3">
               <h3 className="font-bold mb-1">GitHub</h3>
-              <p className="text-sm text-gray-600 mb-2">Open source, MIT license.</p>
+              <p className="text-sm text-gray-600 mb-grid-2">Open source, MIT license.</p>
               <a
                 href="https://github.com/civdotiq/civ.iq"
                 target="_blank"
@@ -578,33 +595,37 @@ const prediction = await civiq.intelligence
         </section>
 
         {/* npm Packages */}
-        <section className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">npm Packages</h2>
-          <div className="space-y-4">
-            <div className="border-2 border-gray-200 p-grid-3">
-              <code className="text-sm font-bold">@civiq/sdk</code>
-              <p className="text-sm text-gray-600 mt-1">
-                TypeScript client for all CIV.IQ API endpoints.
-              </p>
-            </div>
-            <div className="border-2 border-gray-200 p-grid-3">
-              <code className="text-sm font-bold">@civiq/civic-statistics</code>
-              <p className="text-sm text-gray-600 mt-1">
-                Correlation, peer comparison, confidence scoring for civic data analysis.
-              </p>
-            </div>
-            <div className="border-2 border-gray-200 p-grid-3">
-              <code className="text-sm font-bold">@civiq/entity-resolution</code>
-              <p className="text-sm text-gray-600 mt-1">
-                Committee/agency matching, industry taxonomy, and entity disambiguation.
-              </p>
-            </div>
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">npm Packages</h2>
+          <div className="border-2 border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/sdk</td>
+                  <td className="p-grid-2 text-gray-600">
+                    TypeScript client for all CIV.IQ API endpoints.
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/civic-statistics</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Correlation, peer comparison, confidence scoring.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/entity-resolution</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Committee/agency matching, industry taxonomy.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
         {/* Resources */}
-        <section className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Resources</h2>
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Resources</h2>
           <div className="flex flex-wrap gap-x-grid-4 gap-y-grid-2 text-sm">
             <Link href="/docs/api" className="text-[#3ea2d4] underline hover:no-underline">
               API Reference
@@ -628,13 +649,13 @@ const prediction = await civiq.intelligence
         </section>
 
         {/* Attribution */}
-        <section className="mb-12 border-t-2 border-black pt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Attribution</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Attribution</h2>
+          <p className="text-sm text-gray-600 mb-grid-3">
             Using CIV.IQ data? We appreciate a link back. Copy this HTML:
           </p>
-          <pre className="bg-gray-100 p-4 overflow-x-auto text-sm border border-gray-200 mb-4">
-            <code>{`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}</code>
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-1">
+            {`<a href="https://civdotiq.org" rel="dofollow">Powered by CIV.IQ</a>`}
           </pre>
           <p className="text-xs text-gray-500">
             All data is sourced from official government APIs. CIV.IQ is MIT licensed.
