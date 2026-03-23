@@ -143,3 +143,13 @@ validation-results.json
 # Development artifacts in root
 gemini-analyzer.md
 .env.local.backup
+build-stderr.txt
+build-stdout.txt
+
+# Audit/planning scratch files
+INTEGRITY_AUDIT.md
+INTEGRITY_AUDIT_IMPLEMENTATION.md
+INTELLIGENCE_AUDIT_PLAN.md
+INTELLIGENCE_AUDIT_PROMPTS.md
+PROMPTS-mcp-expansion.md
+REMEDIATION_PROMPT.md
