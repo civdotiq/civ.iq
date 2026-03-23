@@ -50,8 +50,8 @@ import * as path from 'path';
 const CONGRESS = 119;
 const MAX_VOTES_PER_LEGISLATOR = 200;
 const MAX_CONTRIBUTIONS = 500;
-const BATCH_SIZE_LEGISLATORS = 10;
-const BATCH_DELAY_MS = 2000; // 2s between batches (Congress.gov rate limit)
+const BATCH_SIZE_LEGISLATORS = 3; // Small batches to avoid FEC 429 rate limits
+const BATCH_DELAY_MS = 10_000; // 10s between batches (FEC rate limit is the bottleneck)
 const FEC_BATCH_DELAY_MS = 6000; // 6s between FEC batches (1000/hr limit = 3.6s min)
 const PER_LEGISLATOR_TIMEOUT_MS = 600_000; // 10 min max per legislator (Senate XML parsing is very slow)
 const SAVE_EVERY_N_BATCHES = 5; // Write partial results every 5 batches
