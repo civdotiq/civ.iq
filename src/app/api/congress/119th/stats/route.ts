@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { getServerBaseUrl } from '@/lib/server-url';
+import fs from 'fs/promises';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,25 +84,18 @@ export async function GET(request: NextRequest) {
 
     logger.info('Request parameters', { chamber });
 
-    // Get base URL for fetching static files
-    const baseUrl = getServerBaseUrl();
-
-    // Fetch pre-built statistics from public directory
-    const statsFileUrl = `${baseUrl}/data/congress-stats.json`;
+    // Read pre-built statistics directly from the filesystem
+    // (avoids self-referential HTTP fetch which fails on Vercel/cold starts)
+    const statsFilePath = path.join(process.cwd(), 'public', 'data', 'congress-stats.json');
 
     let statsData;
     try {
-      logger.debug('Fetching congress stats from URL', { url: statsFileUrl });
-      const response = await fetch(statsFileUrl);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      statsData = await response.json();
+      logger.debug('Reading congress stats from file', { path: statsFilePath });
+      const fileContents = await fs.readFile(statsFilePath, 'utf-8');
+      statsData = JSON.parse(fileContents);
     } catch (fileError) {
-      logger.error('Failed to fetch congress statistics file', {
-        url: statsFileUrl,
+      logger.error('Failed to read congress statistics file', {
+        path: statsFilePath,
         error: fileError,
       });
 
