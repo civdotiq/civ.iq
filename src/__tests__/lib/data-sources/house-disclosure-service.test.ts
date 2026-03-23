@@ -409,6 +409,46 @@ describe('HouseDisclosureService', () => {
       });
     });
 
+    describe('2a: late filing detection', () => {
+      it('computes daysToDisclose from transactionDate to filingDate', async () => {
+        // Filing date 02/15/2025, trade 1 on 01/10/2025 = 36 days, trade 2 on 01/12/2025 = 34 days
+        const trades = await parseFixture(service, FIXTURE_BASIC_TWO_TRADES);
+
+        expect(trades[0].daysToDisclose).toBe(36);
+        expect(trades[0].isLateFiling).toBe(false);
+        expect(trades[1].daysToDisclose).toBe(34);
+        expect(trades[1].isLateFiling).toBe(false);
+      });
+
+      it('flags trades filed more than 45 days after transaction', async () => {
+        // Filing date 04/01/2025, trade on 01/10/2025 = 81 days → late
+        const lateFiling: HouseClerkFiling = {
+          ...DEFAULT_FILING,
+          filingDate: '04/01/2025',
+          docId: '20099999',
+        };
+        const trades = await parseFixture(service, FIXTURE_BASIC_TWO_TRADES, lateFiling);
+
+        expect(trades[0].daysToDisclose).toBe(81); // Jan 10 → Apr 1
+        expect(trades[0].isLateFiling).toBe(true);
+        expect(trades[1].daysToDisclose).toBe(79); // Jan 12 → Apr 1
+        expect(trades[1].isLateFiling).toBe(true);
+      });
+
+      it('sets daysToDisclose to 0 for paper filings', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(Buffer.from('pdf')),
+        });
+        mockPdfParse.mockResolvedValue({ text: '   \n  \n  ', numpages: 2 });
+
+        const trades = await service.parsePtrPdf('99999', 2025, DEFAULT_FILING);
+
+        expect(trades[0].daysToDisclose).toBe(0);
+        expect(trades[0].isLateFiling).toBe(false);
+      });
+    });
+
     describe('edge cases', () => {
       it('detects short text as paper filing (no IDOwnerAsset headers)', async () => {
         const trades = await parseFixture(service, 'Some random text without any headers');

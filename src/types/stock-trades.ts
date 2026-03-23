@@ -86,6 +86,8 @@ export interface StockTrade {
   amount: string;
   capitalGainsOver200: boolean;
   isPaperFiling: boolean;
+  daysToDisclose: number;
+  isLateFiling: boolean;
   sourceUrl: string;
 }
 

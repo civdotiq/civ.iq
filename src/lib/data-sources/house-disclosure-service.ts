@@ -152,6 +152,8 @@ export class HouseDisclosureService {
             amount: '$0 - $0',
             capitalGainsOver200: false,
             isPaperFiling: true,
+            daysToDisclose: 0,
+            isLateFiling: false,
             sourceUrl: url,
           }];
         }
@@ -333,6 +335,9 @@ export class HouseDisclosureService {
         ? null
         : ticker;
 
+      const transactionDate = this.parseDate(dates[0]!);
+      const daysToDisclose = this.computeDaysToDisclose(transactionDate, filingDate);
+
       trades.push({
         filingId: docId,
         bioguideId: '', // Resolved later
@@ -344,11 +349,13 @@ export class HouseDisclosureService {
         assetType,
         assetTypeLabel,
         transactionType,
-        transactionDate: this.parseDate(dates[0]!),
+        transactionDate,
         filingDate,
         amount,
         capitalGainsOver200: false, // Not reliably extractable from text
         isPaperFiling: false,
+        daysToDisclose,
+        isLateFiling: daysToDisclose > 45,
         sourceUrl,
       });
     }
@@ -360,6 +367,18 @@ export class HouseDisclosureService {
     });
 
     return trades;
+  }
+
+  /**
+   * Compute calendar days between transaction date and filing date.
+   * Returns 0 if either date is unparseable.
+   */
+  private computeDaysToDisclose(transactionDate: string, filingDate: string): number {
+    const txn = new Date(transactionDate + 'T00:00:00');
+    const filed = new Date(filingDate + 'T00:00:00');
+    if (isNaN(txn.getTime()) || isNaN(filed.getTime())) return 0;
+    const diffMs = filed.getTime() - txn.getTime();
+    return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
   }
 
   /**
