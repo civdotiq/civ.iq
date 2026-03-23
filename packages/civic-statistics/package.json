@@ -19,7 +19,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "simple-statistics": "^7.8.0"
+    "simple-statistics": "^7.8.9"
   },
   "devDependencies": {
     "typescript": "^5.8.0"
