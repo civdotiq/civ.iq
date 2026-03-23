@@ -1,4 +1,5 @@
 import { CircuitBreaker, CircuitBreakerState } from '../circuit-breaker';
+import { RateLimitError } from '../api/rate-limit-handler';
 
 // Mock stale response cache
 const mockGetStaleResponse = jest.fn();
@@ -135,6 +136,42 @@ describe('CircuitBreaker', () => {
       await breaker.execute(() => Promise.resolve('ok'), { cacheKey: 'k' });
 
       expect(mockGetStaleResponse).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rate limit exclusion', () => {
+    it('does not increment failure count on RateLimitError', async () => {
+      const breaker = createBreaker({ failureThreshold: 2 });
+
+      // Throw RateLimitError multiple times — should NOT open the circuit
+      for (let i = 0; i < 5; i++) {
+        await breaker
+          .execute(() => Promise.reject(new RateLimitError('https://api.example.com', 30, 3)))
+          .catch(() => {});
+      }
+
+      expect(breaker.getState()).toBe(CircuitBreakerState.CLOSED);
+      expect(breaker.getStats().failureCount).toBe(0);
+      expect(breaker.getStats().recentFailures).toBe(0);
+    });
+
+    it('still throws the RateLimitError to the caller', async () => {
+      const breaker = createBreaker();
+
+      await expect(
+        breaker.execute(() =>
+          Promise.reject(new RateLimitError('https://api.example.com', null, 3))
+        )
+      ).rejects.toThrow(RateLimitError);
+    });
+
+    it('counts non-rate-limit errors normally', async () => {
+      const breaker = createBreaker({ failureThreshold: 2 });
+
+      await breaker.execute(() => Promise.reject(new Error('server error'))).catch(() => {});
+      await breaker.execute(() => Promise.reject(new Error('server error'))).catch(() => {});
+
+      expect(breaker.getState()).toBe(CircuitBreakerState.OPEN);
     });
   });
 

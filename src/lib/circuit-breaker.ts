@@ -5,6 +5,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getStaleResponse, storeResponse } from '@/lib/cache/stale-response-cache';
+import { RateLimitError } from '@/lib/api/rate-limit-handler';
 
 export enum CircuitBreakerState {
   CLOSED = 'CLOSED', // Normal operation
@@ -90,7 +91,11 @@ export class CircuitBreaker {
 
       return result;
     } catch (error) {
-      this.onFailure();
+      // Rate limit errors (429) should not trip the circuit breaker —
+      // the upstream service is healthy, just throttling us.
+      if (!(error instanceof RateLimitError)) {
+        this.onFailure();
+      }
       throw error;
     }
   }
