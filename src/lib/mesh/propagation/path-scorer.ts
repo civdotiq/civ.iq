@@ -148,7 +148,11 @@ function computeDollarWeight(edge: GraphEdge): number {
         ? edge.properties.spending
         : 0;
 
-  if (amount <= 0) return 0.1;
+  // Inferred edges (sector-based fallback) have no dollar amounts.
+  // Use their confidence as a reasonable proxy instead of the 0.1 penalty.
+  if (amount <= 0) {
+    return edge.properties.inferred ? edge.confidence : 0.1;
+  }
 
   return Math.log10(amount + 1) / MAX_DOLLAR_LOG;
 }

@@ -356,12 +356,13 @@ function inferCommitteesFromSector(
       sourceLabel: 'Inferred from sector classification',
     });
 
+    const currentYear = new Date().getFullYear();
     edges.push({
       id: toEdgeId(orgId, 'lobbied', committeeId),
       type: 'lobbied',
       sourceId: orgId,
       targetId: committeeId,
-      label: `Lobbied ${cmte.name} (inferred)`,
+      label: `Lobbied ${cmte.name} (inferred from sector)`,
       properties: {
         inferred: true,
         sector: result.sector,
@@ -369,6 +370,10 @@ function inferCommitteesFromSector(
       },
       weight: 0.3,
       confidence: 0.5,
+      temporal: {
+        date: `${currentYear}-01-01`,
+        period: `${currentYear} (inferred)`,
+      },
       dataAsOf,
       sourceLabel: 'Inferred from sector classification',
     });
