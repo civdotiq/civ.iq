@@ -277,6 +277,39 @@ export class SenateDisclosureService {
   }
 
   /**
+   * Get all senator trades grouped by bioguide ID.
+   * Uses the bulk dataset (single cached fetch), much faster than per-member calls.
+   */
+  async getAllSenatorTrades(): Promise<Map<string, StockTrade[]>> {
+    const senators = await this.fetchAllSenatorData();
+    const result = new Map<string, StockTrade[]>();
+
+    for (const senator of senators) {
+      const bioguideId = senator.bioguide?.toUpperCase();
+      if (!bioguideId || !senator.transactions?.length) continue;
+
+      const trades = senator.transactions
+        .map(txn => this.mapTransaction(txn, bioguideId, senator))
+        .filter(t => !t.isPaperFiling || t.ticker !== null);
+
+      // Deduplicate by filing + asset + date
+      const seen = new Set<string>();
+      const deduped = trades.filter(trade => {
+        const key = `${trade.filingId}:${trade.assetDescription}:${trade.transactionDate}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      if (deduped.length > 0) {
+        result.set(bioguideId, deduped);
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Check if a bioguide ID has data in the Senate Stock Watcher dataset.
    */
   async hasMemberData(bioguideId: string): Promise<boolean> {

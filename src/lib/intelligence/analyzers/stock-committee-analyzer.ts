@@ -36,6 +36,7 @@ import type {
   StockCommitteeInsight,
   FlaggedTrade,
   CommitteeTradeOverlap,
+  SectorTradeCount,
   PeerComparison,
 } from '../types';
 import type { TickerResolution } from '../types';
@@ -132,6 +133,7 @@ async function computeAndCache(
     expectedOverlapRate: stats.expectedOverlapRate,
     committees: stats.committees,
     flaggedTrades: stats.flaggedTrades,
+    tradesBySector: stats.tradesBySector,
     peerComparison: peer ?? {
       value: stats.overlapRate,
       peerAverage: stats.overlapRate,
@@ -307,6 +309,7 @@ interface ComputedStats {
   expectedOverlapRate: number;
   flaggedTrades: FlaggedTrade[];
   committees: CommitteeTradeOverlap[];
+  tradesBySector: SectorTradeCount[];
   confidence: number;
 }
 
@@ -396,11 +399,27 @@ function computeStatistics(data: FetchedData): ComputedStats {
   const signalStrength = Math.min(Math.abs(overlapRatio - 1) * 2, 1);
   const confidence = Math.round(baseConfidence * (0.5 + signalStrength * 0.5) * 100) / 100;
 
+  // Build full sector breakdown for visualization
+  const sectorCounts = new Map<IndustrySector, number>();
+  for (const trade of data.resolvedTrades) {
+    const sector = trade.resolution.sector;
+    sectorCounts.set(sector, (sectorCounts.get(sector) ?? 0) + 1);
+  }
+
+  const tradesBySector: SectorTradeCount[] = [...sectorCounts.entries()]
+    .map(([sector, tradeCount]) => ({
+      sector,
+      tradeCount,
+      overlapsCommittee: uniqueJurisdictionSectors.has(sector),
+    }))
+    .sort((a, b) => b.tradeCount - a.tradeCount);
+
   return {
     overlapRate,
     expectedOverlapRate,
     flaggedTrades,
     committees,
+    tradesBySector,
     confidence,
   };
 }

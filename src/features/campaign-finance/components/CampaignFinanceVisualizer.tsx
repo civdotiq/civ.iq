@@ -29,6 +29,8 @@ import { useResponsiveChartHeight } from '../../../hooks/useResponsiveChartHeigh
 import { CHART_COLORS } from '../../../lib/constants/chart-colors';
 import { StockTradesSection } from './StockTradesSection';
 import { SecFilingsSection } from './SecFilingsSection';
+import { TradeSectorBreakdown } from '@/components/intelligence/TradeSectorBreakdown';
+import { StockTradeRankBadge } from '@/components/intelligence/StockTradeRankBadge';
 
 // Chart colors - using centralized brand palette
 const COLORS = CHART_COLORS;
@@ -1633,8 +1635,12 @@ export function CampaignFinanceVisualizer({
           {/* Stock Trades Tab - STOCK Act Disclosures */}
           {activeTab === 'stock-trades' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">STOCK Act Disclosures</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">STOCK Act Disclosures</h3>
+                <StockTradeRankBadge bioguideId={_bioguideId} />
+              </div>
               <StockTradesSection bioguideId={_bioguideId} />
+              <TradeSectorBreakdown bioguideId={_bioguideId} />
               <SecFilingsSection bioguideId={_bioguideId} />
             </div>
           )}

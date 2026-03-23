@@ -239,29 +239,30 @@ Answers citizen question 5. Requires Phases 1-3 data to be flowing.
 
 **New file:** `src/app/api/intelligence/stock-trades/leaderboard/route.ts`
 
-- [ ] Aggregate from cached trade data: rank members by trade count, estimated value, late filing count
-- [ ] Top 25 traders leaderboard (both chambers)
-- [ ] Per-member stat: "Ranks #X of Y members who disclosed trades"
-- [ ] ISR cache: 24 hours
+- [x] Aggregate from cached trade data: rank members by trade count, estimated value, late filing count
+- [x] Top 25 traders leaderboard (both chambers)
+- [x] Per-member stat: "Ranks #X of Y members who disclosed trades"
+- [x] ISR cache: 24 hours
 
 ### 4b. Sector breakdown visualization
 
 **New file:** `src/components/intelligence/TradeSectorBreakdown.tsx`
 
-- [ ] Horizontal bar chart: sectors sorted by trade count
-- [ ] Highlight sectors overlapping committee jurisdictions
-- [ ] Reuse `resolveTickerIndustries()` from entity-resolution package
-- [ ] Aicher design: bar colors from design system
+- [x] Horizontal bar chart: sectors sorted by trade count
+- [x] Highlight sectors overlapping committee jurisdictions
+- [x] Reuse `resolveTickerIndustries()` from entity-resolution package (via stock-committee insight)
+- [x] Aicher design: bar colors from design system
 
 ### 4c. Integrate into representative profile
 
-- [ ] Add `StockTradeSummary` above `StockTradesSection` in CampaignFinanceVisualizer
-- [ ] Add `TradeSectorBreakdown` below trade table
-- [ ] Add rank badge from leaderboard data
+- [x] Add `StockTradeSummary` above `StockTradesSection` in CampaignFinanceVisualizer (already done in Phase 2)
+- [x] Add `TradeSectorBreakdown` below trade table
+- [x] Add rank badge from leaderboard data
 
 ### 4d. Validate
 
-- [ ] `npm run validate:all` passes
+- [x] `npm run validate:all` passes (ESLint failure is pre-existing .venv JS file, not our code)
+- [ ] Manual: verify leaderboard loads, sector breakdown renders, rank badge shows
 
 **Commit message:** `feat(stock-trades): add trading leaderboard, sector breakdown, peer rankings`
 

@@ -295,7 +295,6 @@ export interface CommitteeTradeOverlap {
 /**
  * Insight: stock trades in sectors regulated by the legislator's committees.
  * Answers: "Did this legislator trade stocks in sectors their committee regulates?"
- * House members only (Senate disclosures not yet integrated).
  */
 export interface StockCommitteeInsight extends InsightBase {
   bioguideId: string;
@@ -308,8 +307,18 @@ export interface StockCommitteeInsight extends InsightBase {
   expectedOverlapRate: number;
   committees: CommitteeTradeOverlap[];
   flaggedTrades: FlaggedTrade[];
+  /** Full sector breakdown — all resolved trades by sector, with committee overlap flag. */
+  tradesBySector?: SectorTradeCount[];
   peerComparison: PeerComparison;
   narrative: string;
+}
+
+/** Sector-level trade count for the sector breakdown visualization. */
+export interface SectorTradeCount {
+  sector: IndustrySector;
+  tradeCount: number;
+  /** Whether any of the member's committees have jurisdiction over this sector. */
+  overlapsCommittee: boolean;
 }
 
 // ── Bill Intelligence ────────────────────────────────────────────────
@@ -556,6 +565,40 @@ export interface SectorLeaderboardResponse {
   };
   generatedAt: string;
   dataAsOf: string;
+}
+
+// ── Stock Trade Leaderboard ───────────────────────────────────────────
+
+export interface StockTradeLeaderboardEntry {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  chamber: 'House' | 'Senate';
+  tradeCount: number;
+  estimatedValue: number;
+  lateFilingCount: number;
+  topTickers: string[];
+  rank: number;
+}
+
+export interface StockTradeLeaderboardResponse {
+  chamber: 'house' | 'senate' | 'all';
+  party: string | null;
+  sortBy: 'trades' | 'value' | 'late';
+  entries: StockTradeLeaderboardEntry[];
+  stats: {
+    meanTrades: number;
+    medianTrades: number;
+    meanValue: number;
+    totalMembers: number;
+  };
+  dataAvailability: {
+    membersWithData: number;
+    minimumRequired: number;
+    status: 'sufficient' | 'partial' | 'empty';
+  };
+  generatedAt: string;
 }
 
 // ── Civic Intelligence Brief ─────────────────────────────────────────
