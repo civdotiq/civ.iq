@@ -1255,6 +1255,129 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
   }
 }
 
+// Congress.gov API member response types
+interface CongressApiMember {
+  bioguideId: string;
+  name: string; // "Last, First" format
+  partyName: string;
+  state: string; // Full state name (e.g., "California")
+  district?: number;
+  depiction?: {
+    imageUrl?: string;
+    attribution?: string;
+  };
+  terms?: {
+    item?: Array<{
+      chamber: string; // "House of Representatives" or "Senate"
+      startYear: number;
+    }>;
+  };
+  url?: string;
+}
+
+/**
+ * Transform a Congress.gov API member into an EnhancedRepresentative
+ */
+function transformCongressApiMember(
+  member: CongressApiMember,
+  stateCode: string
+): EnhancedRepresentative {
+  // Parse "Last, First" name format
+  const commaIdx = member.name.indexOf(', ');
+  const lastName = commaIdx >= 0 ? member.name.slice(0, commaIdx) : member.name;
+  const firstName = commaIdx >= 0 ? member.name.slice(commaIdx + 2) : '';
+
+  const termItems = member.terms?.item ?? [];
+  // Congress.gov returns most-recent term first
+  const latestTerm = termItems[0];
+  const chamber: 'House' | 'Senate' = latestTerm?.chamber === 'Senate' ? 'Senate' : 'House';
+
+  // Map "Democratic" → "Democrat" to match YAML convention
+  const partyMap: Record<string, string> = {
+    Democratic: 'Democrat',
+  };
+  const party = partyMap[member.partyName] ?? member.partyName;
+
+  const termType: 'sen' | 'rep' = chamber === 'Senate' ? 'sen' : 'rep';
+  const { votingMember, role } = determineVotingStatusAndRole(stateCode, termType);
+
+  const currentYear = new Date().getFullYear();
+  // Earliest same-chamber term for years in office
+  const sameChamberTerms = termItems.filter(t =>
+    chamber === 'Senate' ? t.chamber === 'Senate' : t.chamber !== 'Senate'
+  );
+  const earliestYear =
+    sameChamberTerms.length > 0 ? Math.min(...sameChamberTerms.map(t => t.startYear)) : currentYear;
+
+  return {
+    bioguideId: member.bioguideId,
+    name: `${firstName} ${lastName}`.trim(),
+    firstName,
+    lastName,
+    party,
+    state: stateCode,
+    district: member.district?.toString(),
+    chamber,
+    title: chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+    votingMember,
+    role,
+    imageUrl: `/api/representative-photo/${member.bioguideId}`,
+    yearsInOffice: currentYear - earliestYear,
+    terms: termItems.map(t => ({
+      congress: '',
+      startYear: t.startYear.toString(),
+      endYear: '',
+      chamber: t.chamber === 'Senate' ? 'Senate' : 'House',
+    })),
+    committees: [],
+  };
+}
+
+/**
+ * Get representatives for a specific state using Congress.gov API.
+ * Much lighter than loading all 535 members when only one state is needed.
+ * Falls back to getAllEnhancedRepresentatives() filter if API key is unavailable.
+ */
+export async function getRepresentativesByState(
+  stateCode: string
+): Promise<EnhancedRepresentative[]> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) {
+    logger.warn('No CONGRESS_API_KEY, falling back to full member load for state filter', {
+      stateCode,
+    });
+    const all = await getAllEnhancedRepresentatives();
+    return all.filter(rep => rep.state === stateCode);
+  }
+
+  return cachedFetch(
+    `congress-members-by-state-${stateCode}`,
+    async () => {
+      const url = new URL(`https://api.congress.gov/v3/member/${stateCode}`);
+      url.searchParams.set('currentMember', 'true');
+      url.searchParams.set('limit', '60');
+      url.searchParams.set('format', 'json');
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CIV.IQ/2.0',
+          'X-API-Key': apiKey,
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Congress.gov member API error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as { members?: CongressApiMember[] };
+      return (data.members ?? []).map(m => transformCongressApiMember(m, stateCode));
+    },
+    3600 // 1 hour, matches representatives.list TTL
+  );
+}
+
 /**
  * Get OpenSecrets ID for improved FEC matching
  */

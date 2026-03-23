@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import { getRepresentativesByState } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
   try {
     logger.info('Fetching representative by district', { state, district });
 
-    // Get all representatives
-    const allReps = await getAllEnhancedRepresentatives();
+    // Get representatives for this state only (not all 535)
+    const stateReps = await getRepresentativesByState(state);
 
     // Filter for the specific district
-    const districtReps = allReps.filter(
-      rep => rep.state === state && rep.district === district && rep.chamber === 'House'
+    const districtReps = stateReps.filter(
+      rep => rep.district === district && rep.chamber === 'House'
     );
 
     // Add senators for the state
-    const senators = allReps.filter(rep => rep.state === state && rep.chamber === 'Senate');
+    const senators = stateReps.filter(rep => rep.chamber === 'Senate');
 
     const representatives = [...districtReps, ...senators];
 
