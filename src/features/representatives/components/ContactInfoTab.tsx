@@ -40,6 +40,25 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
             <CommitteeMembershipsCard representative={representative} />
           </div>
 
+          {/* Caucus Memberships */}
+          {representative.caucuses && representative.caucuses.length > 0 && (
+            <div className="aicher-card p-grid-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-2">
+                Caucus Memberships
+              </h3>
+              <ul>
+                {representative.caucuses.map(caucus => (
+                  <li
+                    key={caucus}
+                    className="text-sm text-gray-700 py-grid-1 border-b border-gray-100 last:border-0"
+                  >
+                    {caucus}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Federal Service History */}
           <div>
             <ServiceTermsCard representative={representative} />
