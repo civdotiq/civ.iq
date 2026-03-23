@@ -249,6 +249,26 @@ export function FinanceTab({
         Shows reported campaign donations. We cannot show who meets with your representative or
         whether money shaped any vote.
       </p>
+      <p className="type-xs text-gray-400 mb-grid-3 pl-grid-2">
+        Learn more:{' '}
+        <a
+          href="https://www.fec.gov/data/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          FEC.gov data explorer
+        </a>
+        {' · '}
+        <a
+          href="https://www.opensecrets.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          OpenSecrets
+        </a>
+      </p>
 
       <p className="text-xs text-gray-400 mb-grid-2">
         Campaign finance data from FEC.gov for the {displayCycle} cycle. Filing reports are

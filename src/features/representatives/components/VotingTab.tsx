@@ -351,6 +351,26 @@ const VotingTabComponent = React.memo(
           Roll call votes only. Voice votes and committee votes are not shown here. This also skips
           the talks that shape what reaches the floor.
         </p>
+        <p className="type-xs text-gray-400 mb-grid-3 pl-grid-2">
+          Learn more:{' '}
+          <a
+            href="https://www.congress.gov/roll-call-votes"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            Congress.gov roll call votes
+          </a>
+          {' · '}
+          <a
+            href="https://www.govtrack.us"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            GovTrack voting records
+          </a>
+        </p>
 
         {/* AI Vote Pattern Analysis */}
         <VotePatternSection bioguideId={bioguideId} />

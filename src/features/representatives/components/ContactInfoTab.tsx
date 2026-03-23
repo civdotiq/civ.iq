@@ -108,6 +108,26 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
             )}
           </div>
         </div>
+        <p className="type-xs text-gray-400 mt-grid-2 pl-grid-2">
+          Learn more:{' '}
+          <a
+            href="https://www.house.gov/representatives/find-your-representative"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            House.gov
+          </a>
+          {' · '}
+          <a
+            href="https://www.senate.gov/senators/senators-contact.htm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            Senate.gov
+          </a>
+        </p>
       </div>
     </div>
   );
