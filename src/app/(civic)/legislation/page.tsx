@@ -64,6 +64,10 @@ export default function LegislationPage() {
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [policyAreaFilter, setPolicyAreaFilter] = useState<string>('');
   const [availablePolicyAreas, setAvailablePolicyAreas] = useState<string[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const PAGE_SIZE = 250;
 
   // Fetch bills from API
   useEffect(() => {
@@ -71,7 +75,7 @@ export default function LegislationPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/bills/latest?limit=50');
+        const response = await fetch(`/api/bills/latest?limit=${PAGE_SIZE}`);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -81,6 +85,7 @@ export default function LegislationPage() {
         const billsData = data.bills || [];
         setBills(billsData);
         setFilteredBills(billsData);
+        setHasMore(billsData.length >= PAGE_SIZE);
 
         // Extract unique policy areas for filter dropdown
         const policyAreas = billsData
@@ -97,6 +102,35 @@ export default function LegislationPage() {
 
     fetchBills();
   }, []);
+
+  // Load more bills
+  async function loadMore() {
+    try {
+      setLoadingMore(true);
+      const response = await fetch(`/api/bills/latest?limit=${PAGE_SIZE}&offset=${bills.length}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data: BillsApiResponse = await response.json();
+      const newBills = data.bills || [];
+      const combined = [...bills, ...newBills];
+      setBills(combined);
+      setHasMore(newBills.length >= PAGE_SIZE);
+
+      // Update policy areas with any new ones
+      const policyAreas = combined
+        .map(bill => bill.policyArea?.name)
+        .filter((area): area is string => !!area);
+      const uniqueAreas = [...new Set(policyAreas)].sort();
+      setAvailablePolicyAreas(uniqueAreas);
+    } catch {
+      // Silently fail — user can retry
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   // Filter bills when search or filters change
   useEffect(() => {
@@ -351,6 +385,26 @@ export default function LegislationPage() {
                   </div>
                 </Link>
               ))}
+
+              {/* Show more button */}
+              {hasMore && (
+                <div className="text-center pt-4">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="border-2 border-gray-300 px-8 py-2 text-sm font-medium hover:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loadingMore ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </span>
+                    ) : (
+                      `Show more bills`
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

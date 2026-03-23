@@ -4,6 +4,8 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { getStaleResponse, storeResponse } from '@/lib/cache/stale-response-cache';
+import { RateLimitError } from '@/lib/api/rate-limit-handler';
 
 export enum CircuitBreakerState {
   CLOSED = 'CLOSED', // Normal operation
@@ -19,6 +21,19 @@ export interface CircuitBreakerOptions {
   name: string; // Circuit breaker identifier
 }
 
+export interface ExecuteOptions {
+  /** Key for stale response cache lookup/storage */
+  cacheKey?: string;
+  /** Source label stored with cached response (defaults to circuit breaker name) */
+  cacheSource?: string;
+}
+
+export interface CircuitBreakerResult<T> {
+  data: T;
+  stale: boolean;
+  staleSince?: string;
+}
+
 export class CircuitBreaker {
   private state: CircuitBreakerState = CircuitBreakerState.CLOSED;
   private failureCount: number = 0;
@@ -28,7 +43,20 @@ export class CircuitBreaker {
 
   constructor(private options: CircuitBreakerOptions) {}
 
-  async execute<T>(operation: () => Promise<T>): Promise<T> {
+  /** Execute without stale fallback (original signature, backward compatible) */
+  async execute<T>(operation: () => Promise<T>): Promise<T>;
+  /** Execute with stale fallback — returns result wrapper with staleness metadata */
+  async execute<T>(
+    operation: () => Promise<T>,
+    options: ExecuteOptions
+  ): Promise<CircuitBreakerResult<T>>;
+  async execute<T>(
+    operation: () => Promise<T>,
+    options?: ExecuteOptions
+  ): Promise<T | CircuitBreakerResult<T>> {
+    const cacheKey = options?.cacheKey;
+    const cacheSource = options?.cacheSource ?? this.options.name;
+
     // Check if we should fail fast
     if (this.state === CircuitBreakerState.OPEN) {
       if (this.shouldAttemptReset()) {
@@ -36,6 +64,17 @@ export class CircuitBreaker {
         this.successCount = 0;
         logger.info(`Circuit breaker ${this.options.name} moving to HALF_OPEN state`);
       } else {
+        // Try stale cache before throwing
+        if (cacheKey) {
+          const stale = await getStaleResponse<T>(cacheKey);
+          if (stale) {
+            logger.info(`Circuit breaker ${this.options.name} OPEN — serving stale response`, {
+              cacheKey,
+              fetchedAt: stale.fetchedAt,
+            });
+            return { data: stale.data, stale: true, staleSince: stale.fetchedAt };
+          }
+        }
         throw new Error(`Circuit breaker ${this.options.name} is OPEN - failing fast`);
       }
     }
@@ -43,9 +82,20 @@ export class CircuitBreaker {
     try {
       const result = await operation();
       this.onSuccess();
+
+      // Store successful response for future stale fallback
+      if (cacheKey) {
+        storeResponse(cacheKey, result, cacheSource).catch(() => {});
+        return { data: result, stale: false };
+      }
+
       return result;
     } catch (error) {
-      this.onFailure();
+      // Rate limit errors (429) should not trip the circuit breaker —
+      // the upstream service is healthy, just throttling us.
+      if (!(error instanceof RateLimitError)) {
+        this.onFailure();
+      }
       throw error;
     }
   }

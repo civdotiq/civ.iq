@@ -22,6 +22,7 @@ import {
   NewsIcon,
   IntelligenceIcon,
   LobbyingIcon,
+  SpeechIcon,
 } from '@/components/icons/AicherIcons';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 
@@ -63,6 +64,14 @@ const IntelligenceTab = dynamic(
 
 const LobbyingTab = dynamic(
   () => import('./LobbyingTab').then(mod => ({ default: mod.LobbyingTab })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
+
+const SpeechesTab = dynamic(
+  () => import('./SpeechesTab').then(mod => ({ default: mod.SpeechesTab })),
   {
     loading: TabLoadingSpinner,
     ssr: false,
@@ -189,6 +198,15 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [fec];
     case 'lobbying':
       return [senateLda, fec];
+    case 'speeches':
+      return [
+        {
+          color: 'border-gray-600',
+          bgColor: 'bg-gray-600',
+          name: 'GovInfo.gov',
+          description: 'Congressional Record (CREC)',
+        },
+      ];
     case 'intelligence':
       return [congress, fec];
     case 'news':
@@ -402,6 +420,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           description: 'Who lobbies your representative and how much they spend',
         },
         {
+          id: 'speeches',
+          label: 'Floor Speeches',
+          icon: <SpeechIcon className="w-4 h-4" />,
+          description: 'Floor speeches from the Congressional Record',
+        },
+        {
           id: 'intelligence',
           label: 'Intelligence',
           icon: <IntelligenceIcon className="w-4 h-4" />,
@@ -462,6 +486,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               hasCommittees={committeeCodes.length > 0}
             />
           );
+        case 'speeches':
+          return <SpeechesTab bioguideId={representative.bioguideId} />;
         case 'intelligence':
           return (
             <IntelligenceTab
@@ -503,7 +529,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                     batchData?.data?.bills?.totalSponsored ??
                     batchData?.data?.bills?.currentCongress?.count)
                   : undefined,
-                committees: representative.committees?.length ?? 0,
+                billsEnacted: summaryData?.success ? summaryData.data?.billsEnacted : undefined,
+                attendanceRate: summaryData?.success ? summaryData.data?.attendanceRate : null,
                 totalRaised: summaryData?.success
                   ? summaryData.data?.totalRaised
                   : batchData?.success

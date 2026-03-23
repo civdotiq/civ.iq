@@ -10,21 +10,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Crown } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import {
-  LegislationIcon,
-  VoteIcon,
-  FinanceIcon,
-  CommitteeIcon,
-} from '@/components/icons/AicherIcons';
+import { LegislationIcon, VoteIcon, FinanceIcon } from '@/components/icons/AicherIcons';
 import { ShareIconButton } from '@/components/shared/social/ShareButton';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
   stats: {
     billsSponsored?: number;
+    billsEnacted?: number;
     votesParticipated?: number;
     totalRaised?: number;
-    committees?: number;
+    attendanceRate?: number | null;
   };
   loading?: boolean;
   onStatClick?: (tabId: string) => void;
@@ -211,7 +207,7 @@ export function HeroStatsHeader({
                   stats: {
                     billsSponsored: stats.billsSponsored,
                     totalRaised: stats.totalRaised,
-                    committeeCount: stats.committees,
+                    attendanceRate: stats.attendanceRate,
                   },
                 }}
               />
@@ -305,6 +301,9 @@ export function HeroStatsHeader({
                   <div className="text-3xl font-bold text-gray-900">
                     {stats.billsSponsored !== undefined ? stats.billsSponsored : '—'}
                   </div>
+                  {stats.billsSponsored !== undefined && stats.billsSponsored > 0 && (
+                    <div className="text-sm text-gray-500">{stats.billsEnacted ?? 0} enacted</div>
+                  )}
                   <div className="text-xs text-gray-500 mt-1">Current Congress</div>
                 </>
               )}
@@ -360,17 +359,17 @@ export function HeroStatsHeader({
               )}
             </button>
 
-            {/* Committees */}
+            {/* Attendance */}
             <button
-              onClick={() => onStatClick?.('overview')}
-              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
+              onClick={() => onStatClick?.('voting')}
+              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-green transition-colors cursor-pointer text-left"
               type="button"
-              aria-label="View committee memberships"
+              aria-label="View attendance record"
             >
               <div className="flex items-center gap-2 mb-2">
-                <CommitteeIcon className="w-4 h-4 text-civiq-blue" />
+                <VoteIcon className="w-4 h-4 text-civiq-green" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                  Committees
+                  Attendance
                 </span>
               </div>
               {loading ? (
@@ -378,9 +377,9 @@ export function HeroStatsHeader({
               ) : (
                 <>
                   <div className="text-3xl font-bold text-gray-900">
-                    {stats.committees !== undefined ? stats.committees : '—'}
+                    {stats.attendanceRate != null ? `${stats.attendanceRate}%` : 'N/A'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Current</div>
+                  <div className="text-xs text-gray-500 mt-1">Roll call participation</div>
                 </>
               )}
             </button>

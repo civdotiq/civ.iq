@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import type { EnhancedRepresentative } from '@/types/representative';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
@@ -17,6 +18,22 @@ import {
   extractDistrictFromResult,
   parseAddressComponents,
 } from '@/lib/census-geocoder';
+
+// Singleton in-memory cache for representative data.
+// First search loads all reps; subsequent searches reuse for the TTL window.
+let _cachedReps: EnhancedRepresentative[] | null = null;
+let _cacheTs = 0;
+const REP_CACHE_TTL = 3600 * 1000; // 1 hour, matches representatives.list TTL
+
+async function getCachedRepresentatives(): Promise<EnhancedRepresentative[]> {
+  const now = Date.now();
+  if (_cachedReps && now - _cacheTs < REP_CACHE_TTL) {
+    return _cachedReps;
+  }
+  _cachedReps = await getAllEnhancedRepresentatives();
+  _cacheTs = Date.now();
+  return _cachedReps;
+}
 
 interface SearchFilters {
   query?: string;
@@ -129,7 +146,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
     }
 
     // Get representatives for the found districts
-    const representatives = await getAllEnhancedRepresentatives();
+    const representatives = await getCachedRepresentatives();
     const results: SearchResult[] = [];
 
     for (const district of districts) {
@@ -206,7 +223,7 @@ async function performSearch(filters: SearchFilters): Promise<{
     }
 
     // Get all representatives
-    const representatives = await getAllEnhancedRepresentatives();
+    const representatives = await getCachedRepresentatives();
 
     if (!representatives || representatives.length === 0) {
       return { results: [], totalResults: 0, page: 1, totalPages: 0 };

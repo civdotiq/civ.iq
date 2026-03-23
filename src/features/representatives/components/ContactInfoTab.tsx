@@ -40,6 +40,25 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
             <CommitteeMembershipsCard representative={representative} />
           </div>
 
+          {/* Caucus Memberships */}
+          {representative.caucuses && representative.caucuses.length > 0 && (
+            <div className="aicher-card p-grid-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-2">
+                Caucus Memberships
+              </h3>
+              <ul>
+                {representative.caucuses.map(caucus => (
+                  <li
+                    key={caucus}
+                    className="text-sm text-gray-700 py-grid-1 border-b border-gray-100 last:border-0"
+                  >
+                    {caucus}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Federal Service History */}
           <div>
             <ServiceTermsCard representative={representative} />
@@ -47,7 +66,7 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
         </div>
       </div>
 
-      {/* Full-width Need Help Section */}
+      {/* Constituent Services Explainer */}
       <div
         className="bg-blue-50 aicher-border border-civiq-blue"
         style={{ padding: 'calc(var(--grid) * 3)', marginTop: 'calc(var(--grid) * 2)' }}
@@ -59,22 +78,56 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
               className="aicher-heading type-lg text-gray-900"
               style={{ marginBottom: 'calc(var(--grid) * 2)' }}
             >
-              Need Help?
+              What Your {representative.chamber === 'Senate' ? "Senator's" : "Representative's"}{' '}
+              Office Can Help With
             </h3>
             <p className="type-sm text-gray-700 leading-relaxed mb-3">
-              Having trouble reaching your representative? Contact information is updated regularly
-              from official sources.
+              Your {representative.chamber === 'Senate' ? "senator's" : "representative's"} office
+              can help when you have trouble with a federal agency. They handle issues with the VA,
+              Social Security, the IRS, and passports. They help with visa and green card cases
+              through USCIS (U.S. Citizenship and Immigration Services). They also set up Capitol
+              tours and put your name forward for service schools.
             </p>
-            <a
-              href="https://www.house.gov/representatives/find-your-representative"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-civiq-blue hover:underline type-sm font-semibold aicher-heading-wide"
-            >
-              Find alternative contact methods →
-            </a>
+            {representative.chamber === 'Senate' && (
+              <p className="type-sm text-gray-700 leading-relaxed mb-3">
+                Your senator&apos;s office can also answer questions about court picks and federal
+                job picks.
+              </p>
+            )}
+            {(representative.currentTerm?.contactForm ?? representative.contact?.contactForm) && (
+              <a
+                href={
+                  representative.currentTerm?.contactForm ?? representative.contact?.contactForm
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-civiq-blue hover:underline type-sm font-semibold aicher-heading-wide"
+              >
+                Contact this office online →
+              </a>
+            )}
           </div>
         </div>
+        <p className="type-xs text-gray-400 mt-grid-2 pl-grid-2">
+          Learn more:{' '}
+          <a
+            href="https://www.house.gov/representatives/find-your-representative"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            House.gov
+          </a>
+          {' · '}
+          <a
+            href="https://www.senate.gov/senators/senators-contact.htm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            Senate.gov
+          </a>
+        </p>
       </div>
     </div>
   );

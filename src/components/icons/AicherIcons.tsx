@@ -596,6 +596,33 @@ export const LobbyingIcon = ({ className, size = 24 }: IconProps) => (
 );
 
 /**
+ * Speech/Microphone - Geometric microphone with stand
+ */
+export const SpeechIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="square"
+    strokeLinejoin="miter"
+    className={className}
+  >
+    {/* Microphone body */}
+    <rect x="9" y="2" width="6" height="10" rx="0" />
+    {/* Sound waves */}
+    <path d="M6 9v2c0 3.3 2.7 6 6 6s6-2.7 6-6V9" />
+    {/* Stand */}
+    <line x1="12" y1="17" x2="12" y2="21" />
+    {/* Base */}
+    <line x1="8" y1="21" x2="16" y2="21" />
+  </svg>
+);
+
+/**
  * Export all icons as a collection
  */
 export const AicherIcons = {
@@ -629,6 +656,7 @@ export const AicherIcons = {
   News: NewsIcon,
   Intelligence: IntelligenceIcon,
   Lobbying: LobbyingIcon,
+  Speech: SpeechIcon,
 };
 
 export default AicherIcons;

@@ -9,8 +9,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MapPin, Users, Building, Phone, Mail, ExternalLink, Calendar, Clock } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import type { RaceResult } from '@/types/elections';
 import { AicherSidebarCard } from './AicherSidebarCard';
 import { StateMapCard } from './StateMapCard';
+import { HOUSE_RESULTS_2024 } from '@/data/election-results-house';
+import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
 
 interface OverviewSidebarProps {
   representative: EnhancedRepresentative;
@@ -132,6 +135,21 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
     setTermProgress(getTermProgress());
   }, [representative.chamber, representative.currentTerm]);
 
+  // Look up election results for this representative
+  const getElectionResult = (): RaceResult | null => {
+    if (representative.chamber === 'House') {
+      const dist =
+        representative.district === 'AL' ? '00' : (representative.district ?? '').padStart(2, '0');
+      const key = `${representative.state}-${dist}`;
+      return HOUSE_RESULTS_2024[key] ?? null;
+    }
+    // Senate
+    const key = `${representative.state}-SENATE`;
+    return STATEWIDE_RESULTS_2024[key] ?? null;
+  };
+
+  const electionResult = getElectionResult();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--grid) * 2)' }}>
       {/* District Information */}
@@ -232,6 +250,57 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
         </div>
       </AicherSidebarCard>
 
+      {/* District Offices */}
+      {representative.contact?.districtOffices &&
+        representative.contact.districtOffices.length > 0 && (
+          <AicherSidebarCard title="District Offices" icon={Building}>
+            <div className="space-y-3">
+              {representative.contact.districtOffices.map((office, index) => (
+                <div
+                  key={index}
+                  className="border-gray-200 pb-3"
+                  style={{
+                    borderBottomWidth:
+                      index < (representative.contact?.districtOffices?.length ?? 0) - 1
+                        ? '2px'
+                        : 0,
+                    paddingBottom: 'calc(var(--grid) * 1.5)',
+                  }}
+                >
+                  <div className="type-sm text-gray-900 mb-1">{office.address}</div>
+                  {office.phone && (
+                    <a
+                      href={`tel:${office.phone}`}
+                      className="flex items-center gap-1 type-sm text-[#3ea2d4] hover:underline"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      <Phone className="w-3 h-3" />
+                      {office.phone}
+                    </a>
+                  )}
+                  {office.fax && (
+                    <div
+                      className="type-xs text-gray-500"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      Fax: {office.fax}
+                    </div>
+                  )}
+                  {office.hours && (
+                    <div
+                      className="flex items-center gap-1 type-xs text-gray-500"
+                      style={{ marginTop: 'calc(var(--grid) * 0.5)' }}
+                    >
+                      <Clock className="w-3 h-3" />
+                      {office.hours}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </AicherSidebarCard>
+        )}
+
       {/* Term Information */}
       <AicherSidebarCard title="Current Term" icon={Calendar}>
         <div className="space-y-3">
@@ -278,6 +347,72 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
           )}
         </div>
       </AicherSidebarCard>
+
+      {/* Last Election */}
+      {electionResult && (
+        <AicherSidebarCard title="Last Election (2024)" icon={Users}>
+          <div className="space-y-3">
+            {/* Margin of victory */}
+            <div>
+              <div className="aicher-heading-wide type-xs text-gray-600 mb-1">
+                Margin of Victory
+              </div>
+              <div className="type-sm font-bold text-gray-900">
+                {electionResult.winner === 'D'
+                  ? 'D'
+                  : electionResult.winner === 'R'
+                    ? 'R'
+                    : electionResult.winner}
+                {' +'}
+                {electionResult.margin.toFixed(1)}%
+              </div>
+            </div>
+
+            {/* Two-party vote split bar */}
+            {(electionResult.demPct > 0 || electionResult.repPct > 0) && (
+              <div>
+                <div className="aicher-heading-wide type-xs text-gray-600 mb-1">Two-Party Vote</div>
+                <div className="flex w-full h-5 border-2 border-black overflow-hidden">
+                  {electionResult.demPct > 0 && (
+                    <div
+                      className="h-full flex items-center justify-center type-xs font-bold text-white"
+                      style={{
+                        width: `${(electionResult.demPct / (electionResult.demPct + electionResult.repPct)) * 100}%`,
+                        backgroundColor: '#0a9338',
+                      }}
+                    >
+                      {electionResult.demPct >= 10 ? `${electionResult.demPct.toFixed(1)}%` : ''}
+                    </div>
+                  )}
+                  {electionResult.repPct > 0 && (
+                    <div
+                      className="h-full flex items-center justify-center type-xs font-bold text-white"
+                      style={{
+                        width: `${(electionResult.repPct / (electionResult.demPct + electionResult.repPct)) * 100}%`,
+                        backgroundColor: '#e11d07',
+                      }}
+                    >
+                      {electionResult.repPct >= 10 ? `${electionResult.repPct.toFixed(1)}%` : ''}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between type-xs text-gray-500 mt-1">
+                  <span style={{ color: '#0a9338' }}>D {electionResult.demPct.toFixed(1)}%</span>
+                  <span style={{ color: '#e11d07' }}>R {electionResult.repPct.toFixed(1)}%</span>
+                </div>
+              </div>
+            )}
+
+            {/* Total turnout */}
+            <div>
+              <div className="aicher-heading-wide type-xs text-gray-600 mb-1">Total Turnout</div>
+              <div className="type-sm font-medium text-gray-900">
+                {electionResult.total.toLocaleString()} votes
+              </div>
+            </div>
+          </div>
+        </AicherSidebarCard>
+      )}
 
       {/* Quick Actions */}
       <AicherSidebarCard title="Quick Actions" icon={Clock}>

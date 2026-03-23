@@ -604,8 +604,10 @@ export async function getRepresentativeSummary(bioguideId: string) {
   const cached = await govCache.get<{
     billsSponsored?: number;
     billsCosponsored?: number;
+    billsEnacted?: number;
     totalRaised?: number;
     votesParticipated?: number;
+    attendanceRate?: number | null;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -640,6 +642,13 @@ export async function getRepresentativeSummary(bioguideId: string) {
         ? votesSummary.value.data.votes
         : null;
 
+    // Compute attendance rate from fetched votes
+    const votesArray = (votesData as { votes?: Array<{ position?: string }> })?.votes ?? [];
+    const totalRollCalls = votesArray.length;
+    const participated = votesArray.filter(v => v.position !== 'Not Voting').length;
+    const attendanceRate =
+      totalRollCalls > 0 ? Math.round((participated / totalRollCalls) * 100) : null;
+
     const result = {
       billsSponsored:
         (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
@@ -648,11 +657,13 @@ export async function getRepresentativeSummary(bioguideId: string) {
           ?.currentCongress?.count ??
         0,
       billsCosponsored: (billsData as { cosponsoredCount?: number })?.cosponsoredCount ?? 0,
+      billsEnacted: (billsData as { enactedCount?: number })?.enactedCount ?? 0,
       totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
       votesParticipated:
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
         (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
         0,
+      attendanceRate,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -663,8 +674,10 @@ export async function getRepresentativeSummary(bioguideId: string) {
     return {
       billsSponsored: 0,
       billsCosponsored: 0,
+      billsEnacted: 0,
       totalRaised: 0,
       votesParticipated: undefined,
+      attendanceRate: null,
       lastUpdated: new Date().toISOString(),
     };
   }

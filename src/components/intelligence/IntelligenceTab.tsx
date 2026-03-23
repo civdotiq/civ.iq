@@ -211,6 +211,26 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
         Patterns found in public records. Cannot measure intent, relationships, or private dealings.
       </p>
+      <p className="type-xs text-gray-400 mb-grid-3 pl-grid-2">
+        Learn more:{' '}
+        <a
+          href="https://projects.propublica.org/represent/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          ProPublica Represent
+        </a>
+        {' · '}
+        <a
+          href="https://www.govtrack.us"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          GovTrack analysis
+        </a>
+      </p>
 
       {/* Tier 1: Civic Brief — always visible */}
       {civicBrief && <CivicBriefCard insight={civicBrief} />}

@@ -12,7 +12,10 @@ import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidat
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES } from '@/lib/data/us-states';
-import { getHouseResult2024 } from '@/lib/services/election-results.service';
+import {
+  getHouseResult2024,
+  getHouseElectionHistory,
+} from '@/lib/services/election-results.service';
 
 // Type for Census Gazetteer data
 interface GazetteerDistrict {
@@ -71,6 +74,7 @@ interface DistrictDetails {
       margin: number;
       turnout: number;
     };
+    electionHistory?: import('@/types/elections').HouseElectionHistory;
     registeredVoters: number;
   };
   geography: {
@@ -1960,6 +1964,10 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
           }
           return { winner: 'Data unavailable', margin: 0, turnout: 0 };
         })(),
+        electionHistory: getHouseElectionHistory(
+          representative.state,
+          representative.district || '00'
+        ),
         registeredVoters: 0,
       },
       geography,

@@ -21,9 +21,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const sortParam = searchParams.get('sort') || 'updateDate+desc';
     const sort = validSorts.includes(sortParam) ? sortParam : 'updateDate+desc';
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 250);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
     const response = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&sort=${sort}`,
+      `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&offset=${offset}&sort=${sort}`,
       {
         headers: {
           Accept: 'application/json',
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           generatedAt: new Date().toISOString(),
           queryParams: {
             limit,
+            offset,
             sort,
           },
         },

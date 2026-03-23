@@ -5,9 +5,10 @@
 
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Users, Building2, Scale, ChevronDown } from 'lucide-react';
+import { Users, Building2, Scale } from 'lucide-react';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import CommitteeFilter from './CommitteeFilter';
 
 // Fully static page - no revalidation needed
 export const dynamic = 'force-static';
@@ -99,90 +100,6 @@ function getCommitteesFromStaticData(): {
   return { houseCommittees, senateCommittees, jointCommittees, totalSubcommittees };
 }
 
-// Committee card component with collapsible subcommittees
-function CommitteeCard({ committee }: { committee: Committee }) {
-  const hasSubcommittees = committee.subcommittees.length > 0;
-
-  return (
-    <div className="bg-white border-2 border-black">
-      <Link
-        href={`/committee/${committee.code}`}
-        className="block p-6 hover:bg-gray-50 transition-colors group"
-      >
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-            {committee.name}
-          </h3>
-          <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 uppercase tracking-wide">
-            {committee.type}
-          </span>
-        </div>
-        <p className="text-sm text-gray-600 line-clamp-2">{committee.jurisdiction}</p>
-      </Link>
-
-      {hasSubcommittees && (
-        <details className="border-t-2 border-gray-200">
-          <summary className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 select-none">
-            <span>{committee.subcommittees.length} Subcommittees</span>
-            <ChevronDown className="w-4 h-4 transition-transform details-chevron" />
-          </summary>
-          <ul className="px-6 pb-4 space-y-1">
-            {committee.subcommittees.map(sub => (
-              <li key={sub.code} className="text-sm pl-4 border-l-2 border-gray-200">
-                <Link
-                  href={`/committee/${sub.code}`}
-                  className="text-gray-600 hover:text-blue-600 hover:underline transition-colors"
-                >
-                  {sub.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-    </div>
-  );
-}
-
-// Chamber section component
-function ChamberSection({
-  id,
-  title,
-  committees,
-  icon: Icon,
-  color,
-}: {
-  id: string;
-  title: string;
-  committees: Committee[];
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-}) {
-  const totalSubs = committees.reduce((sum, c) => sum + c.subcommittees.length, 0);
-
-  return (
-    <section id={id} className="mb-12 scroll-mt-8">
-      <div className="flex items-center mb-6">
-        <div className={`${color} p-3 mr-4`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="text-sm text-gray-600">
-            {committees.length} committees &middot; {totalSubs} subcommittees
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-4">
-        {committees.map(committee => (
-          <CommitteeCard key={committee.code} committee={committee} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 // Main page component - fully static
 export default function CommitteesPage() {
   const { houseCommittees, senateCommittees, jointCommittees, totalSubcommittees } =
@@ -263,38 +180,9 @@ export default function CommitteesPage() {
           </Link>
         </div>
 
-        {/* House Committees */}
-        {houseCommittees.length > 0 && (
-          <ChamberSection
-            id="house"
-            title="House Committees"
-            committees={houseCommittees}
-            icon={Building2}
-            color="bg-blue-600"
-          />
-        )}
-
-        {/* Senate Committees */}
-        {senateCommittees.length > 0 && (
-          <ChamberSection
-            id="senate"
-            title="Senate Committees"
-            committees={senateCommittees}
-            icon={Scale}
-            color="bg-green-600"
-          />
-        )}
-
-        {/* Joint Committees */}
-        {jointCommittees.length > 0 && (
-          <ChamberSection
-            id="joint"
-            title="Joint Committees"
-            committees={jointCommittees}
-            icon={Users}
-            color="bg-[#3ea2d4]"
-          />
-        )}
+        <CommitteeFilter
+          committees={[...houseCommittees, ...senateCommittees, ...jointCommittees]}
+        />
 
         {/* Info Box */}
         <div className="bg-gray-50 border-2 border-gray-200 p-6 mt-12">

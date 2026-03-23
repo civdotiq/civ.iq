@@ -62,6 +62,31 @@ export function freshestDate(...dates: (string | undefined | null)[]): string {
   return valid[0]!;
 }
 
+/**
+ * Returns the oldest (least recent) ISO date string from a list of candidate timestamps.
+ * Use for composite insights that are only as fresh as their stalest constituent source.
+ */
+export function oldestDate(...dates: (string | undefined | null)[]): string {
+  const valid = dates.filter((d): d is string => !!d && !isNaN(Date.parse(d)));
+  if (valid.length === 0) return new Date().toISOString();
+  valid.sort((a, b) => Date.parse(a) - Date.parse(b));
+  return valid[0]!;
+}
+
+/**
+ * Convert a lobbying filing's year + period into an ISO end-of-quarter date string.
+ * Senate LDA filings use period names like "first_quarter", "second_quarter", etc.
+ */
+export function filingPeriodEndDate(year: number, period: string | undefined | null): string {
+  if (!period) return `${year}-12-31`;
+  const q = period.toLowerCase();
+  if (q.includes('first') || q === 'q1') return `${year}-03-31`;
+  if (q.includes('second') || q === 'q2') return `${year}-06-30`;
+  if (q.includes('third') || q === 'q3') return `${year}-09-30`;
+  // fourth_quarter, mid-year, year-end, or unknown → December 31
+  return `${year}-12-31`;
+}
+
 // ── FEC Election Cycle ──────────────────────────────────────────────
 
 /**

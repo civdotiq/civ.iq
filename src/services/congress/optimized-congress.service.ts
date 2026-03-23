@@ -596,6 +596,7 @@ type BillsSummaryResult = {
   currentCongress: { count: number; congress: number };
   cosponsoredCount: number;
   totalCareer: number;
+  enactedCount: number;
   recentBills: Array<{ title: string; date: string; type: string }>;
 };
 
@@ -637,15 +638,20 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
 
   try {
     // Fetch sponsored bills and cosponsored count in parallel
+    // Use limit 250 to capture all bills for accurate enacted count (cached for 1 hour)
     const [currentData, cosponsoredCount] = await Promise.all([
       getOptimizedBillsByMember({
         bioguideId,
-        limit: 10,
+        limit: 250,
         page: 1,
         congress: 119,
       }),
       fetchCosponsoredCount(bioguideId),
     ]);
+
+    const enactedCount = currentData.bills.filter(bill =>
+      bill.status?.toLowerCase().includes('enacted')
+    ).length;
 
     const result: BillsSummaryResult = {
       currentCongress: {
@@ -654,6 +660,7 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
       },
       cosponsoredCount,
       totalCareer: currentData.pagination.total,
+      enactedCount,
       recentBills: currentData.bills.slice(0, 5).map(bill => ({
         title: bill.title,
         date: bill.introducedDate,
@@ -669,6 +676,7 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
       currentCongress: { count: 0, congress: 119 },
       cosponsoredCount: 0,
       totalCareer: 0,
+      enactedCount: 0,
       recentBills: [],
     };
   }

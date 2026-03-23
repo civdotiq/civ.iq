@@ -212,6 +212,26 @@ export const BillsTab = React.memo(
           Shows bills and their status. Does not show how hard your representative worked on each
           one. A bill filed for show looks the same as one built over years.
         </p>
+        <p className="type-xs text-gray-400 mb-grid-3 pl-grid-2">
+          Learn more:{' '}
+          <a
+            href="https://www.congress.gov/search"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            Congress.gov legislation search
+          </a>
+          {' · '}
+          <a
+            href="https://crsreports.congress.gov"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3ea2d4] hover:underline"
+          >
+            CRS Reports
+          </a>
+        </p>
 
         <h2 className="text-xl font-bold mb-6">Legislative Activity</h2>
 
