@@ -20,7 +20,14 @@ export type {
 } from './counterfactual';
 
 export { scoreInfluence, scoreEdge } from './path-scorer';
-export type { ScoredPath, InfluenceScore, EdgeScore } from './path-scorer';
+export type {
+  ScoredPath,
+  InfluenceScore,
+  EdgeScore,
+  PathNodeInfo,
+  PathStep,
+  PathSummary,
+} from './path-scorer';
 
 export { simulateCascade, perturbSectorFunding } from './cascade';
 export type { CascadeQuery, CascadeResult, CascadeRepEffect } from './cascade';

@@ -70,7 +70,14 @@ export type {
 } from './propagation/counterfactual';
 
 export { scoreInfluence, scoreEdge } from './propagation/path-scorer';
-export type { ScoredPath, InfluenceScore, EdgeScore } from './propagation/path-scorer';
+export type {
+  ScoredPath,
+  InfluenceScore,
+  EdgeScore,
+  PathNodeInfo,
+  PathStep,
+  PathSummary,
+} from './propagation/path-scorer';
 
 export { simulateCascade, perturbSectorFunding } from './propagation/cascade';
 export type { CascadeQuery, CascadeResult, CascadeRepEffect } from './propagation/cascade';
