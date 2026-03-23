@@ -21,7 +21,13 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { freshestDate, generateInsightNarrative, withTimeout, ANALYZER_TIMEOUT_MS } from './shared';
+import {
+  freshestDate,
+  filingPeriodEndDate,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+} from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
@@ -156,7 +162,7 @@ async function computeAndCache(
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
     dataAsOf: freshestDate(
       ...stats.issueAlignments.flatMap(a => a.matchedBills.map(b => b.introducedDate)),
-      ...data.matchedFilings.map(f => `${f.filingYear}-12-31`)
+      ...data.matchedFilings.map(f => filingPeriodEndDate(f.filingYear, f.filingPeriod))
     ),
     methodology:
       'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +

@@ -132,7 +132,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
-    dataAsOf: freshestDate(...data.votes.map(v => v.date)),
+    dataAsOf: freshestDate(...data.votes.map(v => v.date), data.freshestContributionDate),
     methodology:
       'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
       'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
@@ -167,6 +167,7 @@ interface FetchedData {
   votes: VoteWithIndustries[];
   sectorDonations: Map<IndustrySector, number>;
   totalDonations: number;
+  freshestContributionDate: string | undefined;
 }
 
 async function fetchData(bioguideId: string): Promise<FetchedData | null> {
@@ -211,6 +212,17 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     totalDonations += entry.totalAmount;
   }
 
+  // Track freshest FEC contribution date for source freshness
+  let freshestContributionDate: string | undefined;
+  for (const c of contributions) {
+    if (
+      c.contribution_receipt_date &&
+      (!freshestContributionDate || c.contribution_receipt_date > freshestContributionDate)
+    ) {
+      freshestContributionDate = c.contribution_receipt_date;
+    }
+  }
+
   return {
     name: rep.name,
     party: rep.party,
@@ -219,6 +231,7 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     votes,
     sectorDonations,
     totalDonations,
+    freshestContributionDate,
   };
 }
 

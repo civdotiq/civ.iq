@@ -30,6 +30,7 @@ import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-
 import {
   getCurrentElectionCycle,
   freshestDate,
+  filingPeriodEndDate,
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
@@ -325,7 +326,7 @@ async function computeAndCache(
   if (!rep) return null;
 
   // 3. Fetch and filter lobbying filings
-  const lobbyingOrgs = await fetchLobbyingOrgs(rep);
+  const { orgs: lobbyingOrgs, freshestFilingDate } = await fetchLobbyingOrgs(rep);
   if (lobbyingOrgs.length === 0) {
     logger.info('[InfluenceChain] No lobbying orgs targeting rep committees', { bioguideId });
     return null;
@@ -383,7 +384,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
-    dataAsOf: freshestDate(...votes.map(v => v.date)),
+    dataAsOf: freshestDate(...votes.map(v => v.date), freshestFilingDate),
     methodology:
       'Traces lobbying filings → campaign contributions → committee membership → ' +
       'bill sector classification → voting records. Organization names matched via ' +
@@ -445,7 +446,9 @@ export function _resetFilingsCache(): void {
   cachedFilingsTimestamp = 0;
 }
 
-async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
+async function fetchLobbyingOrgs(
+  rep: RepData
+): Promise<{ orgs: LobbyingOrgSummary[]; freshestFilingDate: string | undefined }> {
   try {
     const now = Date.now();
     if (!cachedFilings || now - cachedFilingsTimestamp > FILING_CACHE_TTL) {
@@ -453,14 +456,21 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
       cachedFilingsTimestamp = now;
     }
     const filings = cachedFilings;
-    if (filings.length === 0) return [];
+    if (filings.length === 0) return { orgs: [], freshestFilingDate: undefined };
 
     // Filter filings that target this representative's committees
     const orgMap = new Map<string, LobbyingOrgSummary>();
+    let freshestFilingDate: string | undefined;
 
     for (const filing of filings) {
       const { directMatch, resolved, matchedCommittees } = matchFilingToCommittees(filing, rep);
       if (!directMatch && !resolved) continue;
+
+      // Track freshest filing date from matched filings
+      const fDate = filingPeriodEndDate(filing.filingYear, filing.filingPeriod);
+      if (!freshestFilingDate || fDate > freshestFilingDate) {
+        freshestFilingDate = fDate;
+      }
 
       const orgName = filing.client.name;
       const existing = orgMap.get(orgName);
@@ -488,14 +498,15 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
     }
 
     // Sort by total spending, take top organizations
-    return Array.from(orgMap.values())
+    const orgs = Array.from(orgMap.values())
       .sort((a, b) => b.totalSpending - a.totalSpending)
       .slice(0, 50);
+    return { orgs, freshestFilingDate };
   } catch (error) {
     logger.warn('[InfluenceChain] Lobbying fetch failed', {
       error: (error as Error).message,
     });
-    return [];
+    return { orgs: [], freshestFilingDate: undefined };
   }
 }
 
