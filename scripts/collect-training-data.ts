@@ -12,9 +12,11 @@
  *   training-data/bill-lobbying-pairs.json  (~5K-10K records)
  *   training-data/metadata.json             (collection stats)
  *
- * Usage: npm run collect:training-data
- *        npm run collect:training-data -- --incremental
- *        npm run collect:training-data -- --with-bill-text
+ * Usage: npx tsx scripts/collect-training-data.ts
+ *        npx tsx scripts/collect-training-data.ts --cycle=2024
+ *        npx tsx scripts/collect-training-data.ts --incremental
+ *        npx tsx scripts/collect-training-data.ts --max=10
+ *        npx tsx scripts/collect-training-data.ts --with-bill-text
  */
 
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
@@ -24,7 +26,11 @@ import { aggregateByIndustrySector, IndustrySector } from '@/lib/fec/industry-ta
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getBillSectors, getCurrentElectionCycle } from '@/lib/intelligence/analyzers/shared';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
-import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
+import {
+  getIndustrySectorsForPolicyArea,
+  getPolicyAreasForSector,
+} from '@/lib/connections/policy-area-map';
+import { getPolicyAreasForLDAIssue } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import type {
   VoteDonorRecord,
@@ -39,11 +45,11 @@ import * as path from 'path';
 // ── Configuration ────────────────────────────────────────────────────
 
 const CONGRESS = 119;
-const MAX_VOTES_PER_LEGISLATOR = 50;
+const MAX_VOTES_PER_LEGISLATOR = 200;
 const MAX_CONTRIBUTIONS = 500;
 const BATCH_SIZE_LEGISLATORS = 10;
 const BATCH_DELAY_MS = 2000; // 2s between batches (Congress.gov rate limit)
-const FEC_BATCH_DELAY_MS = 4000; // 4s between FEC batches
+const FEC_BATCH_DELAY_MS = 6000; // 6s between FEC batches (1000/hr limit = 3.6s min)
 const PER_LEGISLATOR_TIMEOUT_MS = 300_000; // 5 min max per legislator (vote classification is slow)
 const SAVE_EVERY_N_BATCHES = 5; // Write partial results every 5 batches
 const LOBBYING_QUARTERS = 8; // Last 8 quarters
@@ -51,6 +57,10 @@ const OUTPUT_DIR = path.resolve(process.cwd(), 'training-data');
 
 const isIncremental = process.argv.includes('--incremental');
 const withBillText = process.argv.includes('--with-bill-text');
+const cliCycle =
+  parseInt(process.argv.find(a => a.startsWith('--cycle='))?.split('=')[1] ?? '0') || 0;
+const maxLegislators =
+  parseInt(process.argv.find(a => a.startsWith('--max='))?.split('=')[1] ?? '0') || Infinity;
 
 // Cache bill metadata to avoid redundant fetches across legislators
 const billMetadataCache = new Map<
@@ -72,6 +82,30 @@ function log(msg: string, data?: Record<string, unknown>) {
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** Retry with exponential backoff for rate-limited APIs. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxAttempts = 3,
+  baseDelayMs = 5000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const msg = (error as Error).message ?? '';
+      const isRateLimited = msg.includes('429') || msg.includes('rate') || msg.includes('Too Many');
+      if (attempt === maxAttempts || !isRateLimited) throw error;
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      log(
+        `[${label}] Rate limited, retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`
+      );
+      await sleep(delay);
+    }
+  }
+  throw new Error(`[${label}] Exhausted ${maxAttempts} retries`);
 }
 
 function normalizeParty(party: string): 'D' | 'R' | 'I' {
@@ -142,13 +176,14 @@ async function collectTrainingData() {
   const allReps = await getAllEnhancedRepresentatives();
   log('Fetched legislators', { total: allReps.length });
 
-  // Filter to voting members only (exclude non-voting delegates)
-  // Note: House members only for now — Senate XML parsing is too slow for bulk collection
-  // Senate can be added later with a dedicated Senate vote fetcher
-  const legislators = allReps.filter(r => r.votingMember && r.chamber === 'House');
-  log('Voting House members', { count: legislators.length });
+  // Filter to voting members (exclude non-voting delegates)
+  const allVoting = allReps.filter(r => r.votingMember);
+  const legislators = allVoting.slice(0, maxLegislators);
+  log('Voting members', { total: allVoting.length, processing: legislators.length });
 
-  const cycle = getCurrentElectionCycle();
+  // Use CLI --cycle flag, or default to 2024 (complete FEC data)
+  const cycle = cliCycle || 2024;
+  log('FEC election cycle', { cycle });
   let voteDonorRecords: VoteDonorRecord[] = [];
   let donorProfiles: DonorProfileVector[] = [];
   let legislatorsProcessed = 0;
@@ -172,12 +207,18 @@ async function collectTrainingData() {
     }
   }
 
-  // Step 2a: Pre-warm House vote cache (single API call, subsequent legislators use cache)
-  const sampleHouseRep = legislators[0];
+  // Step 2a: Pre-warm vote caches for each chamber
+  const sampleHouseRep = legislators.find(r => r.chamber === 'House');
+  const sampleSenateRep = legislators.find(r => r.chamber === 'Senate');
   if (sampleHouseRep) {
     log('Warming House vote cache...');
     await fetchLegislatorVotes(sampleHouseRep.bioguideId, 'House');
     log('House vote cache warmed');
+  }
+  if (sampleSenateRep) {
+    log('Warming Senate vote cache...');
+    await fetchLegislatorVotes(sampleSenateRep.bioguideId, 'Senate');
+    log('Senate vote cache warmed');
   }
 
   const sortedLegislators = legislators;
@@ -580,18 +621,23 @@ async function collectBillLobbyingPairs(
     }
   }
 
-  // Fetch each quarter
+  // Fetch each quarter with retry for rate limiting
   for (const q of quartersToFetch) {
     try {
-      const filings = await senateLobbyingAPI.fetchFilingsByQuarter(q.year, q.quarter);
+      const filings = await withRetry(
+        () => senateLobbyingAPI.fetchFilingsByQuarter(q.year, q.quarter),
+        `LDA Q${q.quarter} ${q.year}`,
+        3,
+        5000
+      );
       allFilings.push(...filings);
       log(`Fetched lobbying Q${q.quarter} ${q.year}`, { filings: filings.length });
     } catch (error) {
-      log(`Failed to fetch lobbying Q${q.quarter} ${q.year}`, {
+      log(`Failed to fetch lobbying Q${q.quarter} ${q.year} after retries`, {
         error: (error as Error).message,
       });
     }
-    await sleep(1000); // 1s between lobbying API calls
+    await sleep(3000); // 3s between lobbying API calls (Senate LDA rate limits aggressively)
   }
 
   log(`Total lobbying filings fetched: ${allFilings.length}`);
@@ -600,23 +646,36 @@ async function collectBillLobbyingPairs(
   const pairs: BillLobbyingPair[] = [];
 
   for (const [, bill] of uniqueBills) {
-    // Find lobbying filings whose issues overlap with the bill's sectors
-    const billSectorKeywords = bill.sectors.flatMap(sector => {
-      // Get policy areas for this sector to find keyword matches
-      const policyAreas = getRelatedKeywords(sector);
-      return policyAreas;
-    });
+    // Get policy areas for the bill's sectors
+    const billPolicyAreas = new Set(
+      bill.sectors.flatMap(sector => getPolicyAreasForSector(sector))
+    );
 
     for (const filing of allFilings) {
-      if (!filing.specific_issues?.length) continue;
+      if (!filing.issues?.length && !filing.specific_issues?.length) continue;
 
-      const issueText = (Array.isArray(filing.specific_issues) ? filing.specific_issues : [])
-        .join(' ')
-        .toLowerCase();
+      // Match via LDA issue codes → policy areas (structured matching)
+      let isMatch = false;
+      if (filing.issues?.length) {
+        for (const issue of filing.issues) {
+          const filingPolicyAreas = getPolicyAreasForLDAIssue(issue.code);
+          if (filingPolicyAreas.some(pa => billPolicyAreas.has(pa))) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
 
-      // Check if any bill sector keywords appear in the lobbying issue text
-      const matches = billSectorKeywords.some(kw => issueText.includes(kw));
-      if (!matches) continue;
+      // Fallback: keyword matching on specific_issues text
+      if (!isMatch && filing.specific_issues?.length) {
+        const issueText = (Array.isArray(filing.specific_issues) ? filing.specific_issues : [])
+          .join(' ')
+          .toLowerCase();
+        const billKeywords = bill.sectors.flatMap(sector => getRelatedKeywords(sector));
+        isMatch = billKeywords.some(kw => issueText.includes(kw));
+      }
+
+      if (!isMatch) continue;
 
       // Fetch bill text snippet if --with-bill-text flag is set
       let billTextSnippet = '';
