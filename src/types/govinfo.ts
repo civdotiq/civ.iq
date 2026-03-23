@@ -168,3 +168,110 @@ export interface GovInfoPackageSummary {
   relatedLink?: string;
   granulesLink?: string;
 }
+
+// Congressional Record granule member
+export interface CRECGranuleMember {
+  bioGuideId: string;
+  memberName: string;
+  role: string;
+  party: string;
+  state: string;
+  chamber: 'H' | 'S';
+  congress: number;
+}
+
+// Congressional Record granule from GovInfo API
+export interface CRECGranule {
+  granuleId: string;
+  granuleClass: 'HOUSE' | 'SENATE' | 'EXTENSIONS' | 'DAILYDIGEST';
+  subGranuleClass: string;
+  title: string;
+  packageId: string;
+  dateIssued: string;
+  members: CRECGranuleMember[];
+  committees: Array<{
+    authorityId: string;
+    chamber: string;
+    committeeName: string;
+    type: string;
+  }>;
+  references: Array<{
+    collectionCode: string;
+    type: string;
+    number: string;
+    congress: string;
+  }>;
+  download: {
+    txtLink?: string;
+    pdfLink?: string;
+    modsLink?: string;
+  };
+}
+
+// Congressional Record granules list response
+export interface CRECGranulesResponse {
+  count: number;
+  offset: number;
+  pageSize: number;
+  nextPage: string | null;
+  previousPage: string | null;
+  granules: CRECGranule[];
+}
+
+// Congressional Record search result
+export interface CRECSearchResult {
+  title: string;
+  packageId: string;
+  granuleId: string;
+  collectionCode: string;
+  dateIssued: string;
+  lastModified: string;
+  category: string;
+  download: {
+    txtLink?: string;
+    pdfLink?: string;
+  };
+}
+
+// Congressional Record search response
+export interface CRECSearchResponse {
+  count: number;
+  offsetMark: string;
+  nextOffsetMark: string | null;
+  results: CRECSearchResult[];
+}
+
+// Processed floor speech for UI consumption
+export interface FloorSpeech {
+  id: string;
+  title: string;
+  date: string;
+  chamber: 'House' | 'Senate';
+  section: 'HOUSE' | 'SENATE' | 'EXTENSIONS';
+  category: string;
+  relatedBills: Array<{
+    type: string;
+    number: string;
+    congress: number;
+  }>;
+  pdfUrl: string | null;
+  govInfoUrl: string;
+}
+
+// Speeches API response
+export interface SpeechesResponse {
+  success: boolean;
+  speeches: FloorSpeech[];
+  pagination: {
+    total: number;
+    pageSize: number;
+    hasMore: boolean;
+  };
+  metadata: {
+    bioguideId: string;
+    memberName: string;
+    dataSource: string;
+    dataAsOf: string;
+  };
+  error?: string;
+}
