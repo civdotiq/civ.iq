@@ -163,7 +163,9 @@ async function hydrateLobbyingFilings(
     const rawFilings = await senateLobbyingAPI.fetchFilingsForOrganization(orgName);
 
     if (rawFilings.length === 0) {
-      return { nodes, edges };
+      // API may have failed (rate limited, timeout). Fall back to sector-based
+      // committee inference so the path tracer still produces edges.
+      return inferCommitteesFromSector(orgId, orgName, dataAsOf);
     }
 
     // Aggregate lobbying data per committee across all filings
@@ -304,6 +306,80 @@ async function hydrateLobbyingFilings(
       error: String(error),
     });
   }
+
+  return { nodes, edges };
+}
+
+/**
+ * Fallback when LDA API returns no filings (rate limited, down, etc.).
+ * Uses entity-resolution sector classification to infer the most likely
+ * LDA issue code, then maps to committees via LDA_ISSUE_TO_COMMITTEES.
+ * Confidence is lower (0.5) since this is a heuristic inference.
+ */
+function inferCommitteesFromSector(
+  orgId: string,
+  orgName: string,
+  dataAsOf: string
+): { nodes: GraphNode[]; edges: GraphEdge[] } {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  const SECTOR_TO_ISSUE: Record<string, string> = {
+    Defense: 'DEF',
+    Healthcare: 'HCR',
+    Energy: 'ENE',
+    Finance: 'FIN',
+    Technology: 'TEC',
+    Transportation: 'TRA',
+    Agriculture: 'AGR',
+    'Real Estate': 'FIN',
+    Telecommunications: 'TEC',
+    Pharmaceuticals: 'HCR',
+  };
+
+  const result = categorizeContribution(orgName);
+  const issueCode = SECTOR_TO_ISSUE[result.sector] ?? SECTOR_TO_ISSUE[result.category];
+  if (!issueCode) return { nodes, edges };
+
+  const committees = LDA_ISSUE_TO_COMMITTEES[issueCode];
+  if (!committees) return { nodes, edges };
+
+  for (const cmte of committees) {
+    const committeeId = toCanonicalId('committee', cmte.code);
+    nodes.push({
+      id: committeeId,
+      type: 'committee',
+      label: formatNodeLabel('committee', { name: cmte.name }),
+      properties: { name: cmte.name, committeeCode: cmte.code },
+      dataAsOf,
+      profileUrl: `/committee/${cmte.code}`,
+      sourceLabel: 'Inferred from sector classification',
+    });
+
+    edges.push({
+      id: toEdgeId(orgId, 'lobbied', committeeId),
+      type: 'lobbied',
+      sourceId: orgId,
+      targetId: committeeId,
+      label: `Lobbied ${cmte.name} (inferred)`,
+      properties: {
+        inferred: true,
+        sector: result.sector,
+        issueCode,
+      },
+      weight: 0.3,
+      confidence: 0.5,
+      dataAsOf,
+      sourceLabel: 'Inferred from sector classification',
+    });
+  }
+
+  logger.info('[Graph:Org] Used sector-based committee fallback', {
+    orgName,
+    sector: result.sector,
+    issueCode,
+    committees: committees.map(c => c.code),
+  });
 
   return { nodes, edges };
 }

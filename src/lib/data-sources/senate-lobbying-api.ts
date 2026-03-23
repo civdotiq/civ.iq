@@ -193,7 +193,7 @@ export class SenateLobbyingAPI {
     orgName: string,
     options?: { maxPages?: number }
   ): Promise<RawLDAFiling[]> {
-    const maxPages = options?.maxPages ?? 5;
+    const maxPages = options?.maxPages ?? 3;
     const cacheKey = `lobbying-org:${orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
     try {
@@ -203,24 +203,56 @@ export class SenateLobbyingAPI {
           const allFilings: RawLDAFiling[] = [];
           const seenUuids = new Set<string>();
 
-          // Search both registrant and client names (orgs may be either)
-          for (const field of ['registrant_name', 'client_name'] as const) {
+          // Search registrant first (most orgs file as registrant).
+          // Only fall back to client_name if registrant yields nothing.
+          const fields = ['registrant_name', 'client_name'] as const;
+
+          for (const field of fields) {
             let page = 1;
             let hasMore = true;
 
             while (hasMore && page <= maxPages) {
               const url =
                 `${this.baseUrl}/filings/?${field}=${encodeURIComponent(orgName)}` +
-                `&page=${page}&page_size=25`;
+                `&page=${page}&page_size=50`;
 
-              const response = await fetch(url, {
-                headers: {
-                  Accept: 'application/json',
-                  'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
-                },
-              });
+              let response: Response;
+              try {
+                response = await fetch(url, {
+                  headers: {
+                    Accept: 'application/json',
+                    'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+                  },
+                  signal: AbortSignal.timeout(15_000),
+                });
+              } catch {
+                // Timeout or network error — stop paginating this field
+                logger.warn('[SenateLDA] Request timeout/network error', { field, orgName, page });
+                break;
+              }
 
-              if (!response.ok) {
+              // Handle rate limiting with a single retry after the wait period
+              if (response.status === 429) {
+                const retryBody = await response.text().catch(() => '');
+                const waitMatch = retryBody.match(/(\d+)\s*second/);
+                const waitSec = waitMatch ? Math.min(parseInt(waitMatch[1]!, 10), 15) : 10;
+                logger.info('[SenateLDA] Rate limited, waiting', { waitSec, field, orgName });
+                await new Promise(r => setTimeout(r, waitSec * 1000));
+
+                // Single retry
+                try {
+                  response = await fetch(url, {
+                    headers: {
+                      Accept: 'application/json',
+                      'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+                    },
+                    signal: AbortSignal.timeout(15_000),
+                  });
+                } catch {
+                  break;
+                }
+                if (!response.ok) break;
+              } else if (!response.ok) {
                 logger.warn('[SenateLDA] Org filing search failed', {
                   status: response.status,
                   field,
@@ -233,7 +265,6 @@ export class SenateLobbyingAPI {
               if (!data?.results || !Array.isArray(data.results)) break;
 
               for (const raw of data.results as RawLDAFiling[]) {
-                // Deduplicate across registrant/client searches
                 if (!seenUuids.has(raw.filing_uuid)) {
                   seenUuids.add(raw.filing_uuid);
                   allFilings.push(raw);
@@ -243,6 +274,9 @@ export class SenateLobbyingAPI {
               hasMore = data.next !== null;
               page++;
             }
+
+            // If registrant search found results, skip client search
+            if (allFilings.length > 0) break;
           }
 
           logger.info('[SenateLDA] Fetched org filings', {
@@ -251,7 +285,7 @@ export class SenateLobbyingAPI {
           });
           return allFilings;
         },
-        24 * 60 * 60 // 24 hours
+        24 * 60 * 60 // 24 hours (seconds)
       );
     } catch (error) {
       logger.error('[SenateLDA] fetchFilingsForOrganization failed', error as Error, { orgName });
