@@ -20,7 +20,7 @@
     "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "typescript": "^5.8.0"
+    "typescript": "^5.9.3"
   },
   "license": "MIT",
   "author": "Mark Sandford",
