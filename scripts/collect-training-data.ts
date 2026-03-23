@@ -19,6 +19,9 @@
  *        npx tsx scripts/collect-training-data.ts --with-bill-text
  */
 
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -50,7 +53,7 @@ const MAX_CONTRIBUTIONS = 500;
 const BATCH_SIZE_LEGISLATORS = 10;
 const BATCH_DELAY_MS = 2000; // 2s between batches (Congress.gov rate limit)
 const FEC_BATCH_DELAY_MS = 6000; // 6s between FEC batches (1000/hr limit = 3.6s min)
-const PER_LEGISLATOR_TIMEOUT_MS = 300_000; // 5 min max per legislator (vote classification is slow)
+const PER_LEGISLATOR_TIMEOUT_MS = 600_000; // 10 min max per legislator (Senate XML parsing is very slow)
 const SAVE_EVERY_N_BATCHES = 5; // Write partial results every 5 batches
 const LOBBYING_QUARTERS = 8; // Last 8 quarters
 const OUTPUT_DIR = path.resolve(process.cwd(), 'training-data');
@@ -221,7 +224,11 @@ async function collectTrainingData() {
     log('Senate vote cache warmed');
   }
 
-  const sortedLegislators = legislators;
+  // Process House first (fast), then Senate (slow XML parsing)
+  const sortedLegislators = [...legislators].sort((a, b) => {
+    if (a.chamber === b.chamber) return 0;
+    return a.chamber === 'House' ? -1 : 1;
+  });
 
   // Step 2b: Process legislators in batches
   const totalLegislators = sortedLegislators.length;
