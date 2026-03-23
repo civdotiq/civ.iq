@@ -24,6 +24,7 @@ import type {
   SectorLeaderboardResponse,
 } from '../types';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { trackInsightCacheHit, withInsightTracking } from './shared';
 
 /** Redis cache TTL: 24 hours */
 const CACHE_TTL = 24 * 60 * 60;
@@ -57,12 +58,26 @@ export async function buildSectorLeaderboard(
     const cached = await getRedisCache().get<SectorLeaderboardResponse>(cacheKey);
     if (cached) {
       logger.info('[SectorLeaderboard] Cache hit', { sector, chamber, party });
+      trackInsightCacheHit('sector-leaderboard');
       return cached;
     }
   } catch {
     // Cache miss or error — continue
   }
 
+  // 2-8. Scan, filter, enrich, rank, cache — tracked
+  return withInsightTracking('sector-leaderboard', () =>
+    computeLeaderboard(sector, chamber as 'house' | 'senate' | 'all', party, limit, cacheKey)
+  );
+}
+
+async function computeLeaderboard(
+  sector: IndustrySector,
+  chamber: 'house' | 'senate' | 'all',
+  party: string,
+  limit: number,
+  cacheKey: string
+): Promise<SectorLeaderboardResponse | null> {
   // 2. Scan cached vote-finance insights
   const insights = await loadVoteFinanceInsights();
   if (insights.length === 0) {

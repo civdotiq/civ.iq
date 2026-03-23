@@ -23,6 +23,7 @@ import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-m
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { classifyBillSectors } from '@/lib/intelligence/embeddings';
 import { classifyBillSectorsZeroShot } from '@/lib/intelligence/embeddings';
+import { trackInsightRun, type AnalyzerName } from '@/lib/analytics/insight-tracker';
 
 // ── Timeout Wrapper ─────────────────────────────────────────────────
 
@@ -223,4 +224,63 @@ export async function generateInsightNarrative(
   }
 
   return { narrative: statisticalFallback, source: 'statistical-fallback' };
+}
+
+// ── Insight Quality Tracking ──────────────────────────────────────────
+
+export function trackInsightCacheHit(analyzerName: AnalyzerName): void {
+  trackInsightRun({
+    analyzer: analyzerName,
+    outcome: 'success',
+    latencyMs: 0,
+    cacheHit: true,
+  });
+}
+
+export async function withInsightTracking<T>(
+  analyzerName: AnalyzerName,
+  fn: () => Promise<T | null>
+): Promise<T | null> {
+  const start = Date.now();
+  try {
+    const result = await fn();
+    const latencyMs = Date.now() - start;
+
+    if (result === null) {
+      trackInsightRun({
+        analyzer: analyzerName,
+        outcome: 'insufficient-data',
+        latencyMs,
+        cacheHit: false,
+      });
+      return null;
+    }
+
+    const obj = result as Record<string, unknown>;
+    const confidence = typeof obj.confidence === 'number' ? obj.confidence : undefined;
+    const narrativeSource =
+      obj.source === 'ai-generated' || obj.source === 'statistical-fallback'
+        ? (obj.source as 'ai-generated' | 'statistical-fallback')
+        : undefined;
+
+    trackInsightRun({
+      analyzer: analyzerName,
+      outcome: 'success',
+      confidence,
+      narrativeSource,
+      latencyMs,
+      cacheHit: false,
+    });
+    return result;
+  } catch (error) {
+    const latencyMs = Date.now() - start;
+    const isTimeout = error instanceof Error && error.message.includes('timed out');
+    trackInsightRun({
+      analyzer: analyzerName,
+      outcome: isTimeout ? 'timeout' : 'failure',
+      latencyMs,
+      cacheHit: false,
+    });
+    throw error;
+  }
 }

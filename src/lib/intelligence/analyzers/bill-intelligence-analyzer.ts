@@ -34,6 +34,8 @@ import {
   withTimeout,
   getBillSectors,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import { classifyBillSectors } from '../embeddings';
 import { confidenceScore } from '../statistics/civic-stats';
@@ -74,6 +76,7 @@ export async function analyzeBillIntelligence(
     const cached = await getRedisCache().get<BillIntelligenceInsight>(cacheKey);
     if (cached) {
       logger.info('[BillIntelligence] Cache hit', { billId });
+      trackInsightCacheHit('bill-intelligence');
       return cached;
     }
   } catch {
@@ -81,7 +84,9 @@ export async function analyzeBillIntelligence(
   }
 
   // 2-9. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(billId, cacheKey), ANALYZER_TIMEOUT_MS, 'BillIntelligence');
+  return withInsightTracking('bill-intelligence', () =>
+    withTimeout(computeAndCache(billId, cacheKey), ANALYZER_TIMEOUT_MS, 'BillIntelligence')
+  );
 }
 
 async function computeAndCache(

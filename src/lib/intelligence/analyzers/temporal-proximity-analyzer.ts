@@ -19,6 +19,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { confidenceScore } from '@/lib/intelligence/statistics/civic-stats';
 import { freshestDate, generateInsightNarrative } from '@/lib/intelligence/analyzers/shared';
+import { trackInsightRun } from '@/lib/analytics/insight-tracker';
 import type { InsightBase } from '@/lib/intelligence/types';
 import type { GraphNeighborhood, GraphEdge } from '@/types/graph';
 
@@ -63,6 +64,7 @@ export async function analyzeTemporalProximity(
   neighborhood: GraphNeighborhood,
   bioguideId: string
 ): Promise<TemporalProximityInsight> {
+  const _trackStart = Date.now();
   const now = new Date().toISOString();
   const edgeDates = neighborhood.edges.map(e => e.temporal?.date).filter((d): d is string => !!d);
   const patterns: TemporalPattern[] = [];
@@ -104,6 +106,15 @@ export async function analyzeTemporalProximity(
   });
 
   const { narrative, source } = await generateNarrative(patterns);
+
+  trackInsightRun({
+    analyzer: 'temporal-proximity',
+    outcome: 'success',
+    confidence,
+    narrativeSource: source,
+    latencyMs: Date.now() - _trackStart,
+    cacheHit: false,
+  });
 
   return {
     bioguideId,

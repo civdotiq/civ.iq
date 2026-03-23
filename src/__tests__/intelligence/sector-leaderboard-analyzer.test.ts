@@ -28,6 +28,11 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+jest.mock('@/lib/intelligence/analyzers/shared', () => ({
+  trackInsightCacheHit: jest.fn(),
+  withInsightTracking: jest.fn((_name: string, fn: () => Promise<unknown>) => fn()),
+}));
+
 const mockGetEnhancedRepresentative = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),

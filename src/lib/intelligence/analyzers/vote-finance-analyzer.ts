@@ -37,6 +37,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
@@ -69,6 +71,7 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
     const cached = await getRedisCache().get<VoteFinanceInsight>(cacheKey);
     if (cached) {
       logger.info('[VoteFinance] Cache hit', { bioguideId });
+      trackInsightCacheHit('vote-finance');
       return cached;
     }
   } catch {
@@ -76,7 +79,9 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
   }
 
   // 2-6. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'VoteFinance');
+  return withInsightTracking('vote-finance', () =>
+    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'VoteFinance')
+  );
 }
 
 async function computeAndCache(

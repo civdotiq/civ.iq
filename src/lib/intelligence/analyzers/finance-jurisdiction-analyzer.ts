@@ -34,6 +34,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
@@ -65,6 +67,7 @@ export async function analyzeFinanceJurisdiction(
     const cached = await getRedisCache().get<FinanceJurisdictionInsight>(cacheKey);
     if (cached) {
       logger.info('[FinanceJurisdiction] Cache hit', { bioguideId });
+      trackInsightCacheHit('finance-jurisdiction');
       return cached;
     }
   } catch {
@@ -72,10 +75,8 @@ export async function analyzeFinanceJurisdiction(
   }
 
   // 2-6. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(
-    computeAndCache(bioguideId, cacheKey),
-    ANALYZER_TIMEOUT_MS,
-    'FinanceJurisdiction'
+  return withInsightTracking('finance-jurisdiction', () =>
+    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'FinanceJurisdiction')
   );
 }
 

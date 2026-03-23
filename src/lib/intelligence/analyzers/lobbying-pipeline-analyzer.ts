@@ -21,7 +21,14 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
-import { freshestDate, generateInsightNarrative, withTimeout, ANALYZER_TIMEOUT_MS } from './shared';
+import {
+  freshestDate,
+  generateInsightNarrative,
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
+} from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
@@ -80,6 +87,7 @@ export async function analyzeLobbyingPipeline(
     const cached = await getRedisCache().get<LobbyingPipelineInsight>(cacheKey);
     if (cached) {
       logger.info('[LobbyingPipeline] Cache hit', { committeeCode });
+      trackInsightCacheHit('lobbying-pipeline');
       return cached;
     }
   } catch {
@@ -87,10 +95,8 @@ export async function analyzeLobbyingPipeline(
   }
 
   // 2-8. Validate, fetch, compute, narrate, cache — all under timeout
-  return withTimeout(
-    computeAndCache(committeeCode, cacheKey),
-    ANALYZER_TIMEOUT_MS,
-    'LobbyingPipeline'
+  return withInsightTracking('lobbying-pipeline', () =>
+    withTimeout(computeAndCache(committeeCode, cacheKey), ANALYZER_TIMEOUT_MS, 'LobbyingPipeline')
   );
 }
 

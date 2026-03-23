@@ -24,7 +24,12 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { freshestDate, generateInsightNarrative } from './shared';
+import {
+  freshestDate,
+  generateInsightNarrative,
+  trackInsightCacheHit,
+  withInsightTracking,
+} from './shared';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   confidenceScore,
@@ -287,12 +292,21 @@ export async function analyzeTemporalVotes(
     const cached = await getRedisCache().get<TemporalVoteInsight>(cacheKey);
     if (cached) {
       logger.info('[TemporalVotes] Cache hit', { bioguideId });
+      trackInsightCacheHit('temporal-votes');
       return cached;
     }
   } catch {
     // Cache miss or error — continue to computation
   }
 
+  // 2-8. Compute — tracked
+  return withInsightTracking('temporal-votes', () => computeAndCache(bioguideId, cacheKey));
+}
+
+async function computeAndCache(
+  bioguideId: string,
+  cacheKey: string
+): Promise<TemporalVoteInsight | null> {
   // 2. Fetch data
   const data = await fetchData(bioguideId);
   if (!data) return null;

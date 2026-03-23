@@ -18,7 +18,13 @@ import { cache } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
-import { withTimeout, ANALYZER_TIMEOUT_MS, generateInsightNarrative } from './shared';
+import {
+  withTimeout,
+  ANALYZER_TIMEOUT_MS,
+  generateInsightNarrative,
+  trackInsightCacheHit,
+  withInsightTracking,
+} from './shared';
 import { extractEntities } from '@/lib/intelligence/embeddings/civic-ner';
 import type { CivicEntity } from '@/lib/intelligence/embeddings/types';
 import {
@@ -63,6 +69,7 @@ export async function extractPreambleFacts(
     const cached = await cache.get<PreambleExtractionInsight>(cacheKey);
     if (cached) {
       logger.info('[PreambleExtractor] Cache hit', { documentNumber });
+      trackInsightCacheHit('federal-register');
       return cached;
     }
   } catch {
@@ -70,10 +77,8 @@ export async function extractPreambleFacts(
   }
 
   // 2. Compute with timeout
-  return withTimeout(
-    computeAndCache(documentNumber, cacheKey),
-    ANALYZER_TIMEOUT_MS,
-    'PreambleExtractor'
+  return withInsightTracking('federal-register', () =>
+    withTimeout(computeAndCache(documentNumber, cacheKey), ANALYZER_TIMEOUT_MS, 'PreambleExtractor')
   );
 }
 

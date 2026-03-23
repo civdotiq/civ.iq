@@ -26,6 +26,8 @@ import {
   getCurrentElectionCycle,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import { getTopicsForCommittee } from '@/lib/connections/committee-agency-map';
@@ -67,6 +69,7 @@ export async function assembleCivicBrief(bioguideId: string): Promise<CivicBrief
     const cached = await getRedisCache().get<CivicBriefInsight>(cacheKey);
     if (cached) {
       logger.info('[CivicBrief] Cache hit', { bioguideId });
+      trackInsightCacheHit('civic-brief');
       return cached;
     }
   } catch {
@@ -74,7 +77,9 @@ export async function assembleCivicBrief(bioguideId: string): Promise<CivicBrief
   }
 
   // 2-7. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'CivicBrief');
+  return withInsightTracking('civic-brief', () =>
+    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'CivicBrief')
+  );
 }
 
 // ── Core Pipeline ────────────────────────────────────────────────────

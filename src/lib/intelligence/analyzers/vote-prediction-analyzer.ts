@@ -28,6 +28,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import {
   predictVote,
@@ -77,6 +79,7 @@ export async function analyzeVotePrediction(
     const cached = await getRedisCache().get<VotePredictionInsight>(cacheKey);
     if (cached) {
       logger.info('[VotePrediction] Cache hit', { bioguideId });
+      trackInsightCacheHit('vote-prediction');
       return cached;
     }
   } catch {
@@ -84,10 +87,12 @@ export async function analyzeVotePrediction(
   }
 
   // 2-6. Compute under timeout
-  return withTimeout(
-    computeAndCache(bioguideId, cacheKey, metadata),
-    ANALYZER_TIMEOUT_MS,
-    'VotePrediction'
+  return withInsightTracking('vote-prediction', () =>
+    withTimeout(
+      computeAndCache(bioguideId, cacheKey, metadata),
+      ANALYZER_TIMEOUT_MS,
+      'VotePrediction'
+    )
   );
 }
 

@@ -31,6 +31,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import {
   confidenceScore,
@@ -76,6 +78,7 @@ export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsig
     const cached = await getRedisCache().get<PACVoteInsight>(cacheKey);
     if (cached) {
       logger.info('[PACVotes] Cache hit', { committeeId });
+      trackInsightCacheHit('pac-votes');
       return cached;
     }
   } catch {
@@ -83,7 +86,9 @@ export async function analyzePACVotes(committeeId: string): Promise<PACVoteInsig
   }
 
   // 2-8. Classify, resolve, fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(committeeId, cacheKey), ANALYZER_TIMEOUT_MS, 'PACVotes');
+  return withInsightTracking('pac-votes', () =>
+    withTimeout(computeAndCache(committeeId, cacheKey), ANALYZER_TIMEOUT_MS, 'PACVotes')
+  );
 }
 
 async function computeAndCache(

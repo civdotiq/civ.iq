@@ -34,6 +34,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 import type {
   InfluenceChainInsight,
@@ -265,6 +267,7 @@ export async function analyzeInfluenceChains(
     const cached = await getRedisCache().get<InfluenceChainInsight>(cacheKey);
     if (cached) {
       logger.info('[InfluenceChain] Cache hit', { bioguideId });
+      trackInsightCacheHit('influence-chains');
       return cached;
     }
   } catch {
@@ -272,7 +275,9 @@ export async function analyzeInfluenceChains(
   }
 
   // 2-10. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'InfluenceChain');
+  return withInsightTracking('influence-chains', () =>
+    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'InfluenceChain')
+  );
 }
 
 // ── Internal Types ──────────────────────────────────────────────────

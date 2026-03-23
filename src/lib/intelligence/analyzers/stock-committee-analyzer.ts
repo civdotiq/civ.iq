@@ -46,6 +46,8 @@ import {
   generateInsightNarrative,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
+  trackInsightCacheHit,
+  withInsightTracking,
 } from './shared';
 
 /** Redis cache TTL: 7 days */
@@ -80,6 +82,7 @@ export async function analyzeStockCommittee(
     const cached = await getRedisCache().get<StockCommitteeInsight>(cacheKey);
     if (cached) {
       logger.info('[StockCommittee] Cache hit', { bioguideId });
+      trackInsightCacheHit('stock-committee');
       return cached;
     }
   } catch {
@@ -87,7 +90,9 @@ export async function analyzeStockCommittee(
   }
 
   // 2-6. Fetch, compute, narrate, cache — all under timeout
-  return withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'StockCommittee');
+  return withInsightTracking('stock-committee', () =>
+    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'StockCommittee')
+  );
 }
 
 async function computeAndCache(
