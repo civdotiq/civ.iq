@@ -101,7 +101,8 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
     return null;
   }
 
-  const trades = data.trades;
+  const paperFilings = data.trades.filter(t => t.isPaperFiling);
+  const trades = data.trades.filter(t => !t.isPaperFiling);
   const displayedTrades = showAll ? trades : trades.slice(0, SHOW_INITIALLY);
   const hasMore = trades.length > SHOW_INITIALLY;
 
@@ -115,6 +116,34 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
         Securities transactions reported under the STOCK Act of 2012
         {data.metadata.coveragePeriod && ` (${data.metadata.coveragePeriod})`}
       </p>
+
+      {/* Paper filing notice */}
+      {paperFilings.length > 0 && (
+        <div className="mb-4 border-2 border-gray-300 bg-gray-50 p-4">
+          <p className="text-sm font-medium text-gray-700 mb-1">
+            Paper Filing{paperFilings.length > 1 ? 's' : ''}
+          </p>
+          <p className="text-sm text-gray-500 mb-2">
+            This member files paper disclosures. Individual trades cannot be extracted
+            automatically. View the original filing for details.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {paperFilings.map(pf => (
+              <a
+                key={pf.filingId}
+                href={pf.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-civiq-blue hover:underline"
+                aria-label={`View paper filing ${pf.filingId}`}
+              >
+                Filing {pf.filingId}
+                <ExternalLink className="w-3 h-3" aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Trade count summary */}
       <div className="mb-4 text-sm text-gray-500">

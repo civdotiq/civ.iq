@@ -25,6 +25,7 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import type { StockTrade, HouseClerkFiling } from '@/types/stock-trades';
+import { ASSET_TYPE_CODES } from '@/types/stock-trades';
 
 const BASE_URL = 'https://disclosures-clerk.house.gov';
 const USER_AGENT = 'CIV.IQ/1.0 (Civic Information Platform)';
@@ -132,6 +133,29 @@ export class HouseDisclosureService {
         const pdf = await pdfParse(buffer);
         const text = pdf.text;
 
+        // 1e: Detect image-based (scanned paper) PDFs — pdf-parse returns near-empty text
+        if (text.trim().length < 50 && pdf.numpages > 0) {
+          logger.info('Detected paper filing (image-based PDF)', { docId, textLength: text.trim().length });
+          return [{
+            filingId: docId,
+            bioguideId: '',
+            memberName: `${filing.first} ${filing.last}`,
+            stateDistrict: filing.stateDst,
+            owner: 'Self',
+            assetDescription: 'Paper filing — view original disclosure',
+            ticker: null,
+            assetType: 'OT',
+            assetTypeLabel: 'Other',
+            transactionType: 'Purchase',
+            transactionDate: filing.filingDate ? this.parseDate(filing.filingDate) : `${year}-01-01`,
+            filingDate: filing.filingDate ? this.parseDate(filing.filingDate) : `${year}-01-01`,
+            amount: '$0 - $0',
+            capitalGainsOver200: false,
+            isPaperFiling: true,
+            sourceUrl: url,
+          }];
+        }
+
         return this.extractTradesFromText(text, docId, year, filing, url);
       },
       604800 // 7 days in seconds — filed PDFs never change
@@ -232,7 +256,13 @@ export class HouseDisclosureService {
       ? this.parseDate(filing.filingDate)
       : `${year}-01-01`;
 
-    for (const block of blocks) {
+    for (let block of blocks) {
+      // 1a: Strip leading D: and S O: artifact lines from page-boundary bleeds
+      // These appear when a page break occurs mid-trade and the D:/S O: lines
+      // from the previous trade spill into the start of the next block
+      block = block.replace(/^(?:D\s{2,}:[^\n]*\n)+/, '');
+      block = block.replace(/^(?:S\s{2,}O\s*:[^\n]*\n)+/, '');
+
       // Must have a dollar amount range to be a trade
       const amountMatch = block.match(/(\$[\d,]+)\s*-\s*(\$[\d,]+)/);
       if (!amountMatch) continue;
@@ -249,25 +279,34 @@ export class HouseDisclosureService {
       // Asset type: two uppercase letters in brackets, e.g. [ST], [OP]
       const assetTypeMatch = block.match(/\[([A-Z]{2})\]/);
       const assetType = assetTypeMatch ? assetTypeMatch[1]! : 'ST';
+      const assetTypeLabel = ASSET_TYPE_CODES[assetType] ?? assetType;
 
-      // Transaction type: after [XX], possibly on next line
+      // 1c: Transaction type — anchored to the [XX] asset type bracket on the cleaned block
       let transactionType = 'Purchase';
-      const txnMatch = block.match(/\[[A-Z]{2}\][\s\n]*(S \(partial\)|S|P|E)/);
+      const txnMatch = block.match(/\[[A-Z]{2}\][\s\n]*(S \(partial\)|S \(full\)|S|P|E)/);
       if (txnMatch) {
         const t = txnMatch[1]!;
         if (t === 'P') transactionType = 'Purchase';
         else if (t === 'S') transactionType = 'Sale';
+        else if (t === 'S (full)') transactionType = 'Sale (Full)';
         else if (t === 'S (partial)') transactionType = 'Sale (Partial)';
         else if (t === 'E') transactionType = 'Exchange';
       }
 
-      // Owner: SP=Spouse, JT=Joint, DC=Dependent Child, else Self
+      // 1b: Owner detection — run on the cleaned block (after D: stripping)
       const trimmed = block.replace(/^[\s\n]+/, '');
       let owner = 'Self';
       let ownerLen = 0;
       if (/^SP[A-Z]/.test(trimmed)) { owner = 'Spouse'; ownerLen = 2; }
       else if (/^JT[A-Z]/.test(trimmed)) { owner = 'Joint'; ownerLen = 2; }
       else if (/^DC[A-Z]/.test(trimmed)) { owner = 'Dependent Child'; ownerLen = 2; }
+      // Fallback: scan first line for owner prefix anywhere (page-boundary artifacts)
+      if (owner === 'Self' && ownerLen === 0) {
+        const firstLine = trimmed.split('\n')[0] ?? '';
+        if (/SP[A-Z]/.test(firstLine)) { owner = 'Spouse'; }
+        else if (/JT[A-Z]/.test(firstLine)) { owner = 'Joint'; }
+        else if (/DC[A-Z]/.test(firstLine)) { owner = 'Dependent Child'; }
+      }
 
       // Asset description: text between owner prefix and ticker/bracket
       const afterOwner = trimmed.slice(ownerLen);
@@ -289,6 +328,11 @@ export class HouseDisclosureService {
         }
       }
 
+      // Don't confuse ticker with asset type code (e.g. AB stock vs AB=Asset-Backed)
+      const resolvedTicker = ticker && ticker === assetType && ASSET_TYPE_CODES[ticker]
+        ? null
+        : ticker;
+
       trades.push({
         filingId: docId,
         bioguideId: '', // Resolved later
@@ -296,13 +340,15 @@ export class HouseDisclosureService {
         stateDistrict: filing.stateDst,
         owner,
         assetDescription: assetDescription || 'Unknown Asset',
-        ticker,
+        ticker: resolvedTicker,
         assetType,
+        assetTypeLabel,
         transactionType,
         transactionDate: this.parseDate(dates[0]!),
         filingDate,
         amount,
         capitalGainsOver200: false, // Not reliably extractable from text
+        isPaperFiling: false,
         sourceUrl,
       });
     }
