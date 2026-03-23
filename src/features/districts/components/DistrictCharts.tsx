@@ -44,6 +44,24 @@ interface DistrictChartsProps {
         margin: number;
         turnout: number;
       };
+      electionHistory?: {
+        districtId: string;
+        entries: Array<{
+          year: number;
+          result: {
+            dem: number;
+            rep: number;
+            other: number;
+            total: number;
+            winner: string;
+            margin: number;
+            demPct: number;
+            repPct: number;
+          };
+          redistricted: boolean;
+        }>;
+        redistrictingYear: number;
+      };
     };
   };
 }
@@ -228,16 +246,33 @@ export function ElectionHistoryChart({
   currentMargin,
   winner,
   turnout,
+  electionHistory,
 }: {
   currentPVI: string;
   currentMargin: number;
   winner?: string;
   turnout?: number;
+  electionHistory?: {
+    entries: Array<{
+      year: number;
+      result: {
+        winner: string;
+        margin: number;
+        demPct: number;
+        repPct: number;
+        total: number;
+      };
+      redistricted: boolean;
+    }>;
+    redistrictingYear: number;
+  };
 }) {
   const hasRealData = winner && winner !== 'Data unavailable';
   const pviMatch = currentPVI?.match(/^([DR])\+/);
+  const entries = electionHistory?.entries ?? [];
+  const hasHistory = entries.length > 1;
 
-  // Determine display values
+  // Determine display values for the latest election
   const winnerLabel = hasRealData
     ? winner
     : pviMatch?.[1] === 'D'
@@ -249,37 +284,145 @@ export function ElectionHistoryChart({
   const winnerColor =
     winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? '#0a9338' : '#e11d07';
 
-  const isDemWinner = winnerLabel === 'Democrat' || winnerLabel === 'Democratic';
-  const demBar = hasRealData ? (isDemWinner ? 50 + currentMargin / 2 : 50 - currentMargin / 2) : 0;
-  const repBar = hasRealData ? (isDemWinner ? 50 - currentMargin / 2 : 50 + currentMargin / 2) : 0;
-
   return (
     <div className="bg-white border-2 border-black p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">2024 Election Results</h3>
-      {hasRealData ? (
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        {hasHistory ? 'Election History (2014-2024)' : '2024 Election Results'}
+      </h3>
+
+      {hasHistory ? (
         <>
+          {/* Multi-year margin chart */}
+          <div className="space-y-2">
+            {entries.map((entry, idx) => {
+              const isDem = entry.result.winner === 'D';
+              const barColor = isDem ? '#0a9338' : '#e11d07';
+              const barWidth = Math.min(Math.abs(entry.result.margin) * 2, 100);
+              const prevEntry = idx > 0 ? entries[idx - 1] : null;
+              const showRedistrictLine = prevEntry && !prevEntry.redistricted && entry.redistricted;
+
+              return (
+                <div key={entry.year}>
+                  {showRedistrictLine && (
+                    <div className="flex items-center gap-2 my-2">
+                      <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+                      <span className="text-xs text-gray-400">Redistricted</span>
+                      <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500 w-10 text-right tabular-nums">
+                      {entry.year}
+                    </span>
+                    <div className="flex-1 flex items-center">
+                      {/* Center-aligned margin bar */}
+                      <div className="w-full h-5 bg-gray-100 border border-black relative">
+                        {/* Center line */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300" />
+                        {/* Margin bar */}
+                        <div
+                          className="absolute top-0 bottom-0"
+                          style={{
+                            backgroundColor: barColor,
+                            width: `${barWidth}%`,
+                            left: isDem ? `${50 - barWidth}%` : '50%',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span
+                      className="text-xs tabular-nums w-16 text-right"
+                      style={{ color: barColor }}
+                    >
+                      {isDem ? 'D' : 'R'}+{Math.abs(entry.result.margin).toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-3 pt-2 border-t border-gray-200">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 border border-black" style={{ backgroundColor: '#0a9338' }} />
+              <span className="text-xs text-gray-500">Democrat</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 border border-black" style={{ backgroundColor: '#e11d07' }} />
+              <span className="text-xs text-gray-500">Republican</span>
+            </div>
+          </div>
+
+          {/* Latest result summary */}
+          {hasRealData && (
+            <div className="mt-3 space-y-1">
+              <p className="text-sm text-gray-700">
+                2024: <strong style={{ color: winnerColor }}>{winner}</strong> won by{' '}
+                <strong>{Math.abs(currentMargin).toFixed(1)}%</strong>
+              </p>
+              {turnout && turnout > 0 ? (
+                <p className="text-sm text-gray-500">{turnout.toLocaleString()} total votes cast</p>
+              ) : null}
+            </div>
+          )}
+
+          <p className="text-xs text-gray-400 mt-2">
+            Source:{' '}
+            <a
+              href="https://electionlab.mit.edu/data"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] hover:underline"
+            >
+              MIT Election Data + Science Lab (MEDSL)
+            </a>
+            . Districts changed after the 2020 Census.
+          </p>
+        </>
+      ) : hasRealData ? (
+        <>
+          {/* Single-year view (fallback) */}
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span style={{ color: '#0a9338', fontWeight: 600 }}>Democrat</span>
-                <span style={{ color: '#0a9338' }}>{demBar.toFixed(1)}%</span>
+                <span style={{ color: '#0a9338' }}>
+                  {(winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
+                    ? 50 + currentMargin / 2
+                    : 50 - currentMargin / 2
+                  ).toFixed(1)}
+                  %
+                </span>
               </div>
               <div className="w-full bg-gray-100 h-6 border border-black">
                 <div
                   className="h-full"
-                  style={{ width: `${demBar}%`, backgroundColor: '#0a9338' }}
+                  style={{
+                    width: `${winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? 50 + currentMargin / 2 : 50 - currentMargin / 2}%`,
+                    backgroundColor: '#0a9338',
+                  }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span style={{ color: '#e11d07', fontWeight: 600 }}>Republican</span>
-                <span style={{ color: '#e11d07' }}>{repBar.toFixed(1)}%</span>
+                <span style={{ color: '#e11d07' }}>
+                  {(winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
+                    ? 50 - currentMargin / 2
+                    : 50 + currentMargin / 2
+                  ).toFixed(1)}
+                  %
+                </span>
               </div>
               <div className="w-full bg-gray-100 h-6 border border-black">
                 <div
                   className="h-full"
-                  style={{ width: `${repBar}%`, backgroundColor: '#e11d07' }}
+                  style={{
+                    width: `${winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? 50 - currentMargin / 2 : 50 + currentMargin / 2}%`,
+                    backgroundColor: '#e11d07',
+                  }}
                 />
               </div>
             </div>
@@ -414,6 +557,7 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
           currentMargin={districtData.political.lastElection.margin}
           winner={districtData.political.lastElection.winner}
           turnout={districtData.political.lastElection.turnout}
+          electionHistory={districtData.political.electionHistory}
         />
       </div>
 

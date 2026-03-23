@@ -56,3 +56,17 @@ export interface ElectionMetadata {
   coveredStates: string[];
   missingStates: string[];
 }
+
+/** A single year's House result for a district, used in election history */
+export interface HouseElectionHistoryEntry {
+  year: number;
+  result: RaceResult;
+  redistricted: boolean;
+}
+
+/** Multi-year election history for a district */
+export interface HouseElectionHistory {
+  districtId: string;
+  entries: HouseElectionHistoryEntry[];
+  redistrictingYear: number;
+}

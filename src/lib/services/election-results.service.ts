@@ -14,11 +14,18 @@ import { HOUSE_RESULTS_2024 } from '@/data/election-results-house';
 import { STATEWIDE_RESULTS_2024 } from '@/data/election-results-statewide';
 import { STATE_LEG_RESULTS_2024 } from '@/data/election-results-state-leg';
 import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
+import {
+  HOUSE_ELECTION_HISTORY,
+  REDISTRICTING_YEAR,
+  ELECTION_YEARS,
+} from '@/data/election-history-house';
 import type {
   RaceResultFull,
   RaceResultUnavailable,
   RaceResultOrUnavailable,
   ElectionOffice,
+  HouseElectionHistory,
+  HouseElectionHistoryEntry,
 } from '@/types/elections';
 
 function stateInDataset(state: string): boolean {
@@ -127,4 +134,43 @@ export function getStateLegResult2024(districtKey: string): RaceResultOrUnavaila
   return toFull(result, office, districtKey);
 }
 
-export { ELECTION_2024_METADATA };
+/**
+ * Look up multi-year House election history for a district (2014-2024).
+ *
+ * Returns results for all available years. Note the redistricting boundary:
+ * districts from 2014-2020 use pre-redistricting boundaries, and districts
+ * from 2022-2024 use post-redistricting boundaries. The districtId may not
+ * represent the same geographic area across this boundary.
+ *
+ * @param state Two-letter state code (e.g., 'PA')
+ * @param district District number as string (e.g., '07' or '7')
+ */
+export function getHouseElectionHistory(state: string, district: string): HouseElectionHistory {
+  const stateUpper = state.toUpperCase();
+  const distNorm = String(parseInt(district, 10) || 0).padStart(2, '0');
+  const key = `${stateUpper}-${distNorm}`;
+
+  const entries: HouseElectionHistoryEntry[] = [];
+
+  for (const year of ELECTION_YEARS) {
+    const yearData = HOUSE_ELECTION_HISTORY[year];
+    if (!yearData) continue;
+
+    const result = yearData[key];
+    if (!result) continue;
+
+    entries.push({
+      year,
+      result,
+      redistricted: year >= REDISTRICTING_YEAR,
+    });
+  }
+
+  return {
+    districtId: key,
+    entries,
+    redistrictingYear: REDISTRICTING_YEAR,
+  };
+}
+
+export { ELECTION_2024_METADATA, ELECTION_YEARS, REDISTRICTING_YEAR };
