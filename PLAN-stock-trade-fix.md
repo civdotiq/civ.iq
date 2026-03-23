@@ -184,18 +184,18 @@ Fills the biggest coverage gap. Answers citizen question 6.
 
 **New file:** `src/lib/data-sources/senate-disclosure-service.ts`
 
-- [ ] Fetch pre-parsed JSON from Senate Stock Watcher GitHub repo
-- [ ] Map to `StockTrade` type (normalize field names, dates, amounts to match House format)
-- [ ] Resolve Senator names to bioguide IDs using existing `RepresentativesCoreService`
-- [ ] Compute `daysToDisclose` and `isLateFiling` (same as House)
-- [ ] Cache: 24 hours
-- [ ] `dataSource: 'senate-stock-watcher'` in metadata
+- [x] Fetch pre-parsed JSON from Senate Stock Watcher GitHub repo
+- [x] Map to `StockTrade` type (normalize field names, dates, amounts to match House format)
+- [x] Resolve Senator names to bioguide IDs using existing `RepresentativesCoreService`
+- [x] Compute `daysToDisclose` and `isLateFiling` (same as House)
+- [x] Cache: 24 hours
+- [x] `dataSource: 'senate-stock-watcher'` in metadata
 
 ### 3b. Data source attribution
 
 **File:** `src/components/shared/ui/DataSourceAttribution.tsx` (add new entry)
 
-- [ ] Add `DATA_SOURCES.SENATE_STOCK_WATCHER` with:
+- [x] Add `DATA_SOURCES.SENATE_STOCK_WATCHER` with:
   - name: "Senate Stock Watcher"
   - note: "Derived from Senate Office of Public Records electronic financial disclosures. Senate Stock Watcher is an independent open-source project, not an official government service."
   - url: link to the GitHub repo
@@ -204,27 +204,27 @@ Fills the biggest coverage gap. Answers citizen question 6.
 
 **File:** `src/app/api/representative/[bioguideId]/stock-trades/route.ts`
 
-- [ ] Remove Senate early-return (lines 59-78)
-- [ ] When `chamber === 'Senate'`, call `senateDisclosureService.getTradesForMember(bioguideId)`
-- [ ] Use Senate-specific metadata and data source attribution
+- [x] Remove Senate early-return (lines 59-78)
+- [x] When `chamber === 'Senate'`, call `senateDisclosureService.getTradesForMember(bioguideId)`
+- [x] Use Senate-specific metadata and data source attribution
 
 ### 3d. Enable stock-committee analyzer for Senate
 
 **File:** `src/lib/intelligence/analyzers/stock-committee-analyzer.ts`
 
-- [ ] Remove `if (rep.chamber !== 'House') return null` gate
-- [ ] Verify `getTopicsForCommittee()` handles Senate committee names
-- [ ] Update peer comparison key from `House:{state}` to `{chamber}:{state}`
+- [x] Remove `if (rep.chamber !== 'House') return null` gate
+- [x] Verify `getTopicsForCommittee()` handles Senate committee names
+- [x] Update peer comparison key from `House:{state}` to `{chamber}:{state}`
 
 ### 3e. Tests
 
-- [ ] Test Senate data service with mock JSON fixture
-- [ ] Test API route returns trades for Senate bioguide IDs
-- [ ] Test stock-committee analyzer works for Senate members
+- [x] Test Senate data service with mock JSON fixture
+- [x] Test API route returns trades for Senate bioguide IDs
+- [x] Test stock-committee analyzer works for Senate members
 
 ### 3f. Validate
 
-- [ ] `npm run validate:all` passes
+- [x] `npm run validate:all` passes (ESLint failure is pre-existing .venv JS file, not our code)
 - [ ] Manual: Tuberville, Ossoff, Hickenlooper should return trade data
 
 **Commit message:** `feat(stock-trades): add Senate disclosures via Senate Stock Watcher`

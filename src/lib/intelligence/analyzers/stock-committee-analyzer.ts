@@ -10,7 +10,7 @@
  * oversees. Answers: "Did this legislator trade stocks in sectors
  * their committee regulates?"
  *
- * House members only (Senate disclosures not yet integrated).
+ * Supports both House (via House Clerk) and Senate (via Senate Stock Watcher) members.
  *
  * Flow: check cache -> fetch data -> compute statistics -> AI narrative -> cache -> fallback
  * Pattern: CivicAlignmentAnalyzer (src/features/legislation/services/ai/civic-alignment-analyzer.ts)
@@ -21,6 +21,7 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
+import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
 import { resolveTickerIndustries } from '@/lib/intelligence/entity-resolution/ticker-industry-resolver';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getTopicsForCommittee } from '@/lib/connections/committee-agency-map';
@@ -143,7 +144,9 @@ async function computeAndCache(
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
     dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate)),
     methodology:
-      'Stock trades from House Clerk STOCK Act disclosures matched to committee jurisdiction sectors. ' +
+      `Stock trades from STOCK Act disclosures ` +
+      `(${data.chamber === 'Senate' ? 'Senate Stock Watcher' : 'House Clerk'}) ` +
+      'matched to committee jurisdiction sectors. ' +
       'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
       'Expected overlap rate = jurisdiction sectors / 13 total sectors.',
     disclaimer: DISCLAIMER,
@@ -181,6 +184,7 @@ interface FetchedData {
   name: string;
   party: string;
   state: string;
+  chamber: 'House' | 'Senate';
   totalTrades: number;
   resolvedTrades: ResolvedTrade[];
   committees: CommitteeJurisdiction[];
@@ -189,15 +193,9 @@ interface FetchedData {
 }
 
 async function fetchData(bioguideId: string): Promise<FetchedData | null> {
-  // Validate: must be a House member
   const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) {
     logger.info('[StockCommittee] Representative not found', { bioguideId });
-    return null;
-  }
-
-  if (rep.chamber !== 'House') {
-    logger.info('[StockCommittee] Senate member, skipping', { bioguideId });
     return null;
   }
 
@@ -206,12 +204,17 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     return null;
   }
 
-  // Fetch stock trades
+  const chamber = rep.chamber === 'Senate' ? ('Senate' as const) : ('House' as const);
+
+  // Fetch stock trades from the appropriate service
   let allTrades;
   try {
-    allTrades = await houseDisclosureService.getTradesForMember(bioguideId);
+    allTrades =
+      chamber === 'Senate'
+        ? await senateDisclosureService.getTradesForMember(bioguideId)
+        : await houseDisclosureService.getTradesForMember(bioguideId);
   } catch {
-    logger.warn('[StockCommittee] Trade fetch failed', { bioguideId });
+    logger.warn('[StockCommittee] Trade fetch failed', { bioguideId, chamber });
     return null;
   }
 
@@ -289,6 +292,7 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
     name: rep.name,
     party: rep.party,
     state: rep.state,
+    chamber,
     totalTrades: allTrades.length,
     resolvedTrades,
     committees,
@@ -408,7 +412,7 @@ async function cacheOverlapRate(
   overlapRate: number,
   data: FetchedData
 ): Promise<void> {
-  const key = `stock-overlap:House:${data.state}:${bioguideId}`;
+  const key = `stock-overlap:${data.chamber}:${data.state}:${bioguideId}`;
   try {
     await getRedisCache().set(key, overlapRate, CACHE_TTL);
   } catch {
@@ -421,7 +425,7 @@ async function computePeerComparison(
   overlapRate: number,
   data: FetchedData
 ): Promise<PeerComparison | null> {
-  const pattern = `stock-overlap:House:${data.state}:*`;
+  const pattern = `stock-overlap:${data.chamber}:${data.state}:*`;
 
   try {
     const keys = await getRedisCache().keys(pattern);
@@ -433,7 +437,7 @@ async function computePeerComparison(
 
     if (peerScores.length < MIN_PEERS) return null;
 
-    return peerComparison(overlapRate, peerScores, `${data.state} House delegation`);
+    return peerComparison(overlapRate, peerScores, `${data.state} ${data.chamber} delegation`);
   } catch {
     return null;
   }
@@ -462,9 +466,9 @@ async function generateNarrative(
     ? `Peer comparison: This legislator's overlap rate is ${(stats.overlapRate * 100).toFixed(1)}%. ` +
       `The average for ${peer.peerGroupLabel} is ${(peer.peerAverage * 100).toFixed(1)}% ` +
       `(${peer.peerCount} peers, percentile rank: ${peer.percentileRank}).`
-    : 'No peer comparison available yet (insufficient data from other House members in this state).';
+    : `No peer comparison available yet (insufficient data from other ${data.chamber} members in this state).`;
 
-  const userPrompt = `LEGISLATOR: ${data.name} (${data.party}-${data.state}), House
+  const userPrompt = `LEGISLATOR: ${data.name} (${data.party}-${data.state}), ${data.chamber}
 
 STOCK TRADES: ${data.totalTrades} total, ${data.resolvedTrades.length} with resolvable tickers, ${stats.flaggedTrades.length} in committee jurisdiction sectors.
 

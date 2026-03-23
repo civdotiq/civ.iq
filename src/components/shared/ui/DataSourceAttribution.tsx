@@ -94,6 +94,15 @@ export const DATA_SOURCES = {
     sourceUrl: 'https://disclosures-clerk.house.gov/',
     reliability: 'high' as const,
   },
+  SENATE_STOCK_WATCHER: {
+    sourceName: 'Senate Stock Watcher',
+    sourceUrl: 'https://github.com/timothycarambat/senate-stock-watcher-data',
+    sourceContext: 'Senate Office of Public Records',
+    reliability: 'medium' as const,
+    disclaimer:
+      'Derived from Senate Office of Public Records electronic financial disclosures. ' +
+      'Senate Stock Watcher is an independent open-source project, not an official government service.',
+  },
 } as const;
 
 export function DataSourceAttribution({
@@ -259,4 +268,13 @@ export function HouseClerkAttribution(
   props: Omit<DataSourceAttributionProps, 'sourceName' | 'sourceUrl' | 'reliability'>
 ) {
   return <DataSourceAttribution {...DATA_SOURCES.HOUSE_CLERK} {...props} />;
+}
+
+export function SenateStockWatcherAttribution(
+  props: Omit<
+    DataSourceAttributionProps,
+    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext' | 'disclaimer'
+  >
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.SENATE_STOCK_WATCHER} {...props} />;
 }

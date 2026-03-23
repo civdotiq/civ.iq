@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
+import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { circuitBreakers } from '@/lib/circuit-breaker';
@@ -14,21 +15,25 @@ import type { StockTradeResponse } from '@/types/stock-trades';
 export const revalidate = 3600;
 
 /**
- * Get STOCK Act financial disclosure data for a House representative
+ * Get STOCK Act financial disclosure data for a member of Congress
  *
- * Fetches Periodic Transaction Reports (PTRs) from the U.S. House Office
- * of the Clerk, showing what stocks, bonds, and other securities a member
- * has personally traded.
+ * Fetches Periodic Transaction Reports (PTRs) showing what stocks,
+ * bonds, and other securities a member has personally traded.
+ *
+ * - House: U.S. House Office of the Clerk
+ * - Senate: Senate Stock Watcher (derived from Senate eFD filings)
  *
  * @param _request - Next.js request object (unused)
  * @param params - Route parameters containing bioguideId
  * @returns JSON response with stock trade data
  *
  * @example
- * GET /api/representative/P000197/stock-trades
+ * GET /api/representative/P000197/stock-trades  // House member
+ * GET /api/representative/T000476/stock-trades  // Senator
  * Returns: { trades: [...], member: {...}, metadata: {...} }
  *
  * @see {@link https://disclosures-clerk.house.gov} House Clerk Disclosures
+ * @see {@link https://efdsearch.senate.gov} Senate eFD Search
  */
 export async function GET(
   _request: NextRequest,
@@ -44,7 +49,7 @@ export async function GET(
       return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
     }
 
-    // Get representative data to confirm they exist and are House members
+    // Get representative data to confirm they exist
     const repData = await getEnhancedRepresentative(bioguideId);
 
     if (!repData) {
@@ -56,43 +61,36 @@ export async function GET(
       ? `${repData.state}${repData.district.padStart(2, '0')}`
       : `${repData.state}00`;
 
-    // Senate members — return empty with note (House-only for now)
-    if (repData.chamber === 'Senate') {
-      const response: StockTradeResponse = {
-        trades: [],
-        member: { bioguideId, name: repData.name, stateDistrict },
-        metadata: {
-          dataSource: 'house-clerk-disclosures',
-          lastUpdated: new Date().toISOString(),
-          totalFilings: 0,
-          coveragePeriod: 'N/A',
-          note: 'STOCK Act disclosures for Senators are filed through the Senate Office of Public Records and are not yet available in this system. House member disclosures are available.',
-        },
-      };
+    const isSenate = repData.chamber === 'Senate';
 
-      return NextResponse.json(response, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-        },
-      });
-    }
-
-    // Fetch stock trades via circuit breaker
-    const trades = await circuitBreakers.houseClerk.execute(async () => {
-      return houseDisclosureService.getTradesForMember(bioguideId);
-    });
+    // Fetch stock trades via appropriate service + circuit breaker
+    const trades = isSenate
+      ? await circuitBreakers.senateStockWatcher.execute(async () => {
+          const senateTrades = await senateDisclosureService.getTradesForMember(bioguideId);
+          // Backfill stateDistrict on Senate trades (not in source data)
+          return senateTrades.map(t => ({ ...t, stateDistrict }));
+        })
+      : await circuitBreakers.houseClerk.execute(async () => {
+          return houseDisclosureService.getTradesForMember(bioguideId);
+        });
 
     const currentYear = new Date().getFullYear();
     const response: StockTradeResponse = {
       trades,
       member: { bioguideId, name: repData.name, stateDistrict },
       metadata: {
-        dataSource: 'house-clerk-disclosures',
+        dataSource: isSenate ? 'senate-stock-watcher' : 'house-clerk-disclosures',
         lastUpdated: new Date().toISOString(),
         totalFilings: new Set(trades.map(t => t.filingId)).size,
-        coveragePeriod: `${currentYear - 1}-${currentYear}`,
-        note:
-          trades.length > 0
+        coveragePeriod: isSenate ? '2012-2021' : `${currentYear - 1}-${currentYear}`,
+        note: isSenate
+          ? trades.length > 0
+            ? 'Data from STOCK Act Periodic Transaction Reports filed with the Senate Office of Public Records. ' +
+              'Parsed by Senate Stock Watcher, an independent open-source project. ' +
+              'Transactions over $1,000 must be disclosed within 45 days.'
+            : 'No STOCK Act financial disclosures found for this Senator in the Senate Stock Watcher dataset. ' +
+              'This may mean the Senator had no reportable transactions or their filings were not electronically processed.'
+          : trades.length > 0
             ? 'Data from STOCK Act Periodic Transaction Reports filed with the U.S. House Office of the Clerk. Transactions over $1,000 must be disclosed within 45 days.'
             : 'No STOCK Act financial disclosures found for this representative. Disclosures are required under the STOCK Act of 2012 for securities transactions over $1,000.',
       },
@@ -103,6 +101,7 @@ export async function GET(
       bioguideId,
       processingTime,
       tradeCount: trades.length,
+      chamber: repData.chamber,
     });
 
     return NextResponse.json(response, {
@@ -125,12 +124,12 @@ export async function GET(
         trades: [],
         member: { bioguideId, name: 'Unknown', stateDistrict: '' },
         metadata: {
-          dataSource: isCircuitOpen ? 'house-clerk-circuit-open' : 'house-clerk-error',
+          dataSource: isCircuitOpen ? 'circuit-open' : 'service-error',
           lastUpdated: new Date().toISOString(),
           totalFilings: 0,
           coveragePeriod: 'Error',
           note: isCircuitOpen
-            ? 'STOCK Act disclosure data is temporarily unavailable. The House Clerk service may be experiencing issues. Please try again later.'
+            ? 'STOCK Act disclosure data is temporarily unavailable. The data service may be experiencing issues. Please try again later.'
             : 'STOCK Act disclosure data is temporarily unavailable due to a service error. Please try again later.',
         },
       } satisfies StockTradeResponse,

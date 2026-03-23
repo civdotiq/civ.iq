@@ -57,6 +57,13 @@ jest.mock('@/lib/data-sources/house-disclosure-service', () => ({
   },
 }));
 
+const mockSenateGetTradesForMember = jest.fn();
+jest.mock('@/lib/data-sources/senate-disclosure-service', () => ({
+  senateDisclosureService: {
+    getTradesForMember: (...args: unknown[]) => mockSenateGetTradesForMember(...args),
+  },
+}));
+
 const mockResolveTickerIndustries = jest.fn();
 jest.mock('@/lib/intelligence/entity-resolution/ticker-industry-resolver', () => ({
   resolveTickerIndustries: (...args: unknown[]) => mockResolveTickerIndustries(...args),
@@ -105,6 +112,15 @@ const mockHouseRep = {
   state: 'CA',
   chamber: 'House',
   committees: [{ name: 'Energy and Commerce', role: 'Member' }],
+};
+
+const mockSenateRep = {
+  bioguideId: 'T000476',
+  name: 'Tommy Tuberville',
+  party: 'Republican',
+  state: 'AL',
+  chamber: 'Senate',
+  committees: [{ name: 'Armed Services', role: 'Member' }],
 };
 
 const mockTrades = [
@@ -186,6 +202,7 @@ describe('analyzeStockCommittee', () => {
     mockRedisMget.mockResolvedValue([]);
     mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
     mockGetTradesForMember.mockResolvedValue(mockTrades);
+    mockSenateGetTradesForMember.mockResolvedValue(mockTrades);
     mockResolveTickerIndustries.mockResolvedValue(buildResolutionMap());
   });
 
@@ -198,11 +215,30 @@ describe('analyzeStockCommittee', () => {
     expect(mockGetTradesForMember).not.toHaveBeenCalled();
   });
 
-  it('returns null for Senate members', async () => {
-    mockGetEnhancedRepresentative.mockResolvedValue({ ...mockHouseRep, chamber: 'Senate' });
+  it('fetches trades from Senate service for Senate members', async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue(mockSenateRep);
+    mockSenateGetTradesForMember.mockResolvedValue(mockTrades);
 
-    const result = await analyzeStockCommittee('S000001');
-    expect(result).toBeNull();
+    const result = await analyzeStockCommittee('T000476');
+
+    expect(mockSenateGetTradesForMember).toHaveBeenCalledWith('T000476');
+    expect(mockGetTradesForMember).not.toHaveBeenCalled();
+    expect(result).not.toBeNull();
+    expect(result!.methodology).toContain('Senate Stock Watcher');
+  });
+
+  it('uses chamber-specific peer comparison key for Senate', async () => {
+    mockGetEnhancedRepresentative.mockResolvedValue(mockSenateRep);
+    mockSenateGetTradesForMember.mockResolvedValue(mockTrades);
+
+    await analyzeStockCommittee('T000476');
+
+    // Should cache with Senate:AL key, not House:AL
+    expect(mockRedisSet).toHaveBeenCalledWith(
+      expect.stringContaining('stock-overlap:Senate:AL:'),
+      expect.any(Number),
+      expect.any(Number)
+    );
   });
 
   it('uses batch ticker resolution', async () => {
