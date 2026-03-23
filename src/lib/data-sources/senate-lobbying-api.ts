@@ -32,6 +32,31 @@ export interface LobbyingFiling {
   specific_issues: string[];
 }
 
+/**
+ * Raw filing structure from the Senate LDA API v1.
+ *
+ * Key difference from LobbyingFiling: `government_entities` lives inside
+ * `lobbying_activities[]` as `{id, name}` objects — not at the top level.
+ * `lobbying_activities[].general_issue_code` carries the issue sector codes
+ * (e.g., "DEF" for defense, "HCR" for healthcare).
+ */
+export interface RawLDAFiling {
+  filing_uuid: string;
+  filing_year: number;
+  filing_period: string;
+  income: string | null;
+  expenses: string | null;
+  registrant: { id: number; name: string };
+  client: { id: number; name: string };
+  lobbying_activities: Array<{
+    general_issue_code: string;
+    general_issue_code_display: string;
+    description: string;
+    government_entities: Array<{ id: number; name: string }>;
+    lobbyists: Array<{ name: string; covered_official_position?: string }>;
+  }>;
+}
+
 export interface CommitteeLobbyingData {
   committee: string;
   totalSpending: number;
@@ -110,7 +135,7 @@ export class SenateLobbyingAPI {
 
           return data.results as LobbyingFiling[];
         },
-        7 * 24 * 60 * 60 * 1000 // 7 days cache - lobbying data is quarterly
+        7 * 24 * 60 * 60 // 7 days cache (seconds) - lobbying data is quarterly
       );
     } catch (error) {
       logger.error('Failed to fetch Senate lobbying data', error as Error, {
@@ -154,6 +179,84 @@ export class SenateLobbyingAPI {
     });
 
     return allFilings;
+  }
+
+  /**
+   * Fetch lobbying filings for a specific organization by name.
+   *
+   * Uses the Senate LDA API's `registrant_name` and `client_name` filters
+   * rather than downloading all filings and filtering client-side.
+   * Paginates through results (up to maxPages) and returns the raw API
+   * structure so callers can access `lobbying_activities[].government_entities`.
+   */
+  async fetchFilingsForOrganization(
+    orgName: string,
+    options?: { maxPages?: number }
+  ): Promise<RawLDAFiling[]> {
+    const maxPages = options?.maxPages ?? 5;
+    const cacheKey = `lobbying-org:${orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const allFilings: RawLDAFiling[] = [];
+          const seenUuids = new Set<string>();
+
+          // Search both registrant and client names (orgs may be either)
+          for (const field of ['registrant_name', 'client_name'] as const) {
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore && page <= maxPages) {
+              const url =
+                `${this.baseUrl}/filings/?${field}=${encodeURIComponent(orgName)}` +
+                `&page=${page}&page_size=25`;
+
+              const response = await fetch(url, {
+                headers: {
+                  Accept: 'application/json',
+                  'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+                },
+              });
+
+              if (!response.ok) {
+                logger.warn('[SenateLDA] Org filing search failed', {
+                  status: response.status,
+                  field,
+                  orgName,
+                });
+                break;
+              }
+
+              const data = await response.json();
+              if (!data?.results || !Array.isArray(data.results)) break;
+
+              for (const raw of data.results as RawLDAFiling[]) {
+                // Deduplicate across registrant/client searches
+                if (!seenUuids.has(raw.filing_uuid)) {
+                  seenUuids.add(raw.filing_uuid);
+                  allFilings.push(raw);
+                }
+              }
+
+              hasMore = data.next !== null;
+              page++;
+            }
+          }
+
+          logger.info('[SenateLDA] Fetched org filings', {
+            orgName,
+            count: allFilings.length,
+          });
+          return allFilings;
+        },
+        24 * 60 * 60 // 24 hours
+      );
+    } catch (error) {
+      logger.error('[SenateLDA] fetchFilingsForOrganization failed', error as Error, { orgName });
+      return [];
+    }
   }
 
   /**

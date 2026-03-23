@@ -27,7 +27,85 @@ import { toCanonicalId, toEdgeId, formatNodeLabel, normalizeOrgName } from '../n
 import type { GraphNode, GraphEdge } from '@/types/graph';
 import type { HydrationSource } from '../types';
 
-const MAX_DISBURSEMENT_RECIPIENTS = 20;
+/**
+ * Map LDA general issue codes to the congressional committee codes most likely
+ * to have jurisdiction. This is the fallback when government_entities are too
+ * generic (e.g., just "SENATE" / "HOUSE OF REPRESENTATIVES").
+ *
+ * Source: Senate LDA issue code taxonomy + committee jurisdiction mappings.
+ */
+const LDA_ISSUE_TO_COMMITTEES: Record<string, Array<{ code: string; name: string }>> = {
+  DEF: [
+    { code: 'SSAS', name: 'Armed Services' },
+    { code: 'HSAS', name: 'Armed Services' },
+  ],
+  BUD: [
+    { code: 'SSAP', name: 'Appropriations' },
+    { code: 'HSAP', name: 'Appropriations' },
+  ],
+  TAX: [
+    { code: 'SSFI', name: 'Finance' },
+    { code: 'HSWM', name: 'Ways and Means' },
+  ],
+  HCR: [
+    { code: 'SSHR', name: 'Health, Education, Labor, and Pensions' },
+    { code: 'HSIF', name: 'Energy and Commerce' },
+  ],
+  ENV: [
+    { code: 'SSEV', name: 'Environment and Public Works' },
+    { code: 'HSII', name: 'Natural Resources' },
+  ],
+  TRD: [
+    { code: 'SSFI', name: 'Finance' },
+    { code: 'HSWM', name: 'Ways and Means' },
+  ],
+  TEC: [
+    { code: 'SSCM', name: 'Commerce, Science, and Transportation' },
+    { code: 'HSSY', name: 'Science, Space, and Technology' },
+  ],
+  AER: [
+    { code: 'SSCM', name: 'Commerce, Science, and Transportation' },
+    { code: 'HSPW', name: 'Transportation and Infrastructure' },
+  ],
+  NAT: [
+    { code: 'SSFR', name: 'Foreign Relations' },
+    { code: 'HSFA', name: 'Foreign Affairs' },
+  ],
+  LBR: [
+    { code: 'SSHR', name: 'Health, Education, Labor, and Pensions' },
+    { code: 'HSED', name: 'Education and Workforce' },
+  ],
+  INT: [
+    { code: 'SSFR', name: 'Foreign Relations' },
+    { code: 'HSFA', name: 'Foreign Affairs' },
+  ],
+  FIN: [
+    { code: 'SSBK', name: 'Banking, Housing, and Urban Affairs' },
+    { code: 'HSBA', name: 'Financial Services' },
+  ],
+  TRA: [
+    { code: 'SSCM', name: 'Commerce, Science, and Transportation' },
+    { code: 'HSPW', name: 'Transportation and Infrastructure' },
+  ],
+  ENE: [
+    { code: 'SSEN', name: 'Energy and Natural Resources' },
+    { code: 'HSIF', name: 'Energy and Commerce' },
+  ],
+  AGR: [
+    { code: 'SSAF', name: 'Agriculture, Nutrition, and Forestry' },
+    { code: 'HSAG', name: 'Agriculture' },
+  ],
+  IMM: [
+    { code: 'SSJU', name: 'Judiciary' },
+    { code: 'HSJU', name: 'Judiciary' },
+  ],
+  HOM: [
+    { code: 'SSGA', name: 'Homeland Security and Governmental Affairs' },
+    { code: 'HSHM', name: 'Homeland Security' },
+  ],
+};
+
+const MAX_DISBURSEMENT_RECIPIENTS = 50;
 
 interface HydrationPlan {
   center: GraphNode;
@@ -81,21 +159,14 @@ async function hydrateLobbyingFilings(
   const edges: GraphEdge[] = [];
 
   try {
-    const filings = await senateLobbyingAPI.fetchRecentFilings();
-    const orgNameUpper = orgName.toUpperCase();
+    // Use targeted API call instead of fetching all filings
+    const rawFilings = await senateLobbyingAPI.fetchFilingsForOrganization(orgName);
 
-    // Find filings from this org (matching registrant or client name)
-    const matched = filings.filter(f => {
-      const registrant = f.registrant?.name?.toUpperCase() ?? '';
-      const client = f.client?.name?.toUpperCase() ?? '';
-      return registrant.includes(orgNameUpper) || client.includes(orgNameUpper);
-    });
-
-    if (matched.length === 0) {
+    if (rawFilings.length === 0) {
       return { nodes, edges };
     }
 
-    // Aggregate lobbying data per committee across all matched filings
+    // Aggregate lobbying data per committee across all filings
     const committeeAggregates = new Map<
       string,
       {
@@ -109,39 +180,75 @@ async function hydrateLobbyingFilings(
       }
     >();
 
-    const totalSpending = matched.reduce((sum, f) => sum + (f.income ?? f.expenses ?? 0), 0);
+    const totalSpending = rawFilings.reduce(
+      (sum, f) => sum + parseFloat(f.income ?? f.expenses ?? '0'),
+      0
+    );
 
-    for (const filing of matched) {
-      if (!filing.government_entities || filing.government_entities.length === 0) {
-        continue;
+    for (const filing of rawFilings) {
+      const filingAmount = parseFloat(filing.income ?? filing.expenses ?? '0');
+      const activities = filing.lobbying_activities ?? [];
+
+      // Tier 1: Try entity resolution from government_entities nested in activities
+      const allEntityNames: string[] = [];
+      const allIssueCodes: string[] = [];
+
+      for (const activity of activities) {
+        const entityNames = (activity.government_entities ?? []).map(e => e.name);
+        allEntityNames.push(...entityNames);
+        if (activity.general_issue_code) {
+          allIssueCodes.push(activity.general_issue_code);
+        }
       }
 
-      const resolutions = resolveFilingEntities(filing.government_entities);
-      const committees = getResolvedCommittees(resolutions);
-      const filingAmount = filing.income ?? filing.expenses ?? 0;
+      const resolutions = resolveFilingEntities(allEntityNames);
+      let committees = getResolvedCommittees(resolutions);
+
+      // Tier 2: If entity resolution yielded nothing (entities were too generic
+      // like "SENATE" / "HOUSE OF REPRESENTATIVES"), infer committees from
+      // LDA issue codes. Confidence is lower since this is an inference.
+      if (committees.length === 0 && allIssueCodes.length > 0) {
+        const issueCommittees = new Map<string, { committeeName: string; confidence: number }>();
+        for (const issueCode of allIssueCodes) {
+          const mapped = LDA_ISSUE_TO_COMMITTEES[issueCode];
+          if (!mapped) continue;
+          for (const cmte of mapped) {
+            const existing = issueCommittees.get(cmte.code);
+            if (!existing || existing.confidence < 0.7) {
+              issueCommittees.set(cmte.code, {
+                committeeName: cmte.name,
+                confidence: 0.7,
+              });
+            }
+          }
+        }
+        committees = Array.from(issueCommittees.entries()).map(([committeeCode, data]) => ({
+          committeeCode,
+          committeeName: data.committeeName,
+          confidence: data.confidence,
+        }));
+      }
 
       for (const cmte of committees) {
         const existing = committeeAggregates.get(cmte.committeeCode);
-        const issues = (filing.issues ?? []).map(i => i.code).filter(Boolean);
-
         if (existing) {
           existing.totalAmount += filingAmount;
           existing.filingCount += 1;
-          for (const code of issues) existing.issueCodes.add(code);
+          for (const code of allIssueCodes) existing.issueCodes.add(code);
           existing.bestConfidence = Math.max(existing.bestConfidence, cmte.confidence);
-          if (filing.filingYear > existing.latestYear) {
-            existing.latestYear = filing.filingYear;
-            existing.latestPeriod = filing.filingPeriod ?? '';
+          if (filing.filing_year > existing.latestYear) {
+            existing.latestYear = filing.filing_year;
+            existing.latestPeriod = filing.filing_period ?? '';
           }
         } else {
           committeeAggregates.set(cmte.committeeCode, {
             committeeName: cmte.committeeName,
             totalAmount: filingAmount,
             filingCount: 1,
-            issueCodes: new Set(issues),
+            issueCodes: new Set(allIssueCodes),
             bestConfidence: cmte.confidence,
-            latestYear: filing.filingYear,
-            latestPeriod: filing.filingPeriod ?? '',
+            latestYear: filing.filing_year,
+            latestPeriod: filing.filing_period ?? '',
           });
         }
       }
@@ -311,15 +418,48 @@ async function hydrateDonations(
     // Find the max disbursement for weight normalization
     const maxTotal = Math.max(...disbursements.results.map(d => d.total));
 
-    for (const disbursement of disbursements.results) {
-      // recipient_id is an FEC candidate ID (e.g., H8FL15126) — resolve to bioguideId
-      const fecCandidateId = disbursement.recipient_id;
-      if (!fecCandidateId) continue;
+    // Batch-resolve committee IDs → candidate IDs in parallel instead of
+    // sequential awaits (up to 50 FEC API calls).
+    const recipientsWithIds = disbursements.results.filter(d => d.recipient_id);
+    const committeeIds = recipientsWithIds
+      .map(d => d.recipient_id)
+      .filter((id): id is string => typeof id === 'string' && id.startsWith('C'));
+    const uniqueCommitteeIds = [...new Set(committeeIds)];
 
-      const bioguideId = getBioguideFromFEC(fecCandidateId);
-      // Use bioguideId for consistent node IDs, fall back to FEC ID if unmapped
-      const nodeIdentifier = bioguideId ?? fecCandidateId;
-      const recipientNodeId = toCanonicalId('representative', nodeIdentifier);
+    const candidateIdMap = new Map<string, string | null>();
+    const batchResults = await Promise.all(
+      uniqueCommitteeIds.map(async cid => {
+        const ids = await fecApiService.getCommitteeCandidateIds(cid);
+        return [cid, ids[0] ?? null] as const;
+      })
+    );
+    for (const [cid, candidateId] of batchResults) {
+      candidateIdMap.set(cid, candidateId);
+    }
+
+    // Deduplicate — multiple disbursements can resolve to the same bioguide
+    const seenBioguides = new Set<string>();
+
+    for (const disbursement of recipientsWithIds) {
+      const recipientId = disbursement.recipient_id;
+
+      // Resolve to FEC candidate ID
+      let fecCandidateId: string | null;
+      if (recipientId.startsWith('C')) {
+        fecCandidateId = candidateIdMap.get(recipientId) ?? null;
+      } else {
+        fecCandidateId = recipientId;
+      }
+
+      const bioguideId = fecCandidateId ? getBioguideFromFEC(fecCandidateId) : null;
+
+      // Skip recipients we cannot resolve to a known legislator —
+      // party committees (DCCC, RNC, etc.) and unmapped candidates
+      // create dead-end nodes that the BFS cannot traverse.
+      if (!bioguideId || seenBioguides.has(bioguideId)) continue;
+      seenBioguides.add(bioguideId);
+
+      const recipientNodeId = toCanonicalId('representative', bioguideId);
 
       nodes.push({
         id: recipientNodeId,
@@ -329,14 +469,12 @@ async function hydrateDonations(
         }),
         properties: {
           name: disbursement.recipient_name,
-          bioguideId: bioguideId ?? undefined,
-          fecCandidateId,
+          bioguideId,
+          fecCandidateId: fecCandidateId ?? undefined,
         },
         dataAsOf,
-        profileUrl: bioguideId ? `/representative/${bioguideId}` : undefined,
-        sourceUrl: bioguideId
-          ? `https://bioguide.congress.gov/search/bio/${bioguideId}`
-          : undefined,
+        profileUrl: `/representative/${bioguideId}`,
+        sourceUrl: `https://bioguide.congress.gov/search/bio/${bioguideId}`,
         sourceLabel: 'FEC disbursement records',
       });
 

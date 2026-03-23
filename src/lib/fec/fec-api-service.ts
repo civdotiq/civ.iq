@@ -1464,6 +1464,39 @@ export class FECApiService {
       return [];
     }
   }
+
+  /**
+   * Look up an FEC committee by ID and return its candidate_ids.
+   *
+   * Principal campaign committees (e.g., "LARSON FOR CONGRESS") have a
+   * candidate_ids array linking to the candidate (e.g., ["H8CT01046"]).
+   * Party committees and PACs return an empty array.
+   */
+  async getCommitteeCandidateIds(committeeId: string): Promise<string[]> {
+    const cacheKey = `fec:committee-candidates:${committeeId}`;
+
+    const cached = await govCache.get<string[]>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const response = await this.makeRequest<FECApiResponse<{ candidate_ids: string[] }>>(
+        `/committee/${committeeId}/`
+      );
+
+      const candidateIds = response.results?.[0]?.candidate_ids ?? [];
+
+      await govCache.set(cacheKey, candidateIds, {
+        ttl: 7 * 24 * 60 * 60 * 1000, // 7 days — committee-candidate links rarely change
+        source: 'fec-committee-candidates',
+        dataType: 'finance',
+      });
+
+      return candidateIds;
+    } catch (error) {
+      logger.warn(`[FEC API] Failed to look up committee ${committeeId}:`, error);
+      return [];
+    }
+  }
 }
 
 // Lazy singleton instance - only created when first accessed (avoids build-time errors)
