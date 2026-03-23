@@ -53,7 +53,7 @@
     "process-election-data": "tsx scripts/process-election-data.ts",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
     "generate:embeddings": "tsx scripts/generate-sector-embeddings.ts",
-    "collect:training-data": "tsx scripts/collect-training-data.ts",
+    "collect:training-data": "DOTENV_CONFIG_PATH=.env.local tsx -r dotenv/config scripts/collect-training-data.ts",
     "security:audit": "[ -f package-lock.json ] && npm audit --audit-level=moderate || echo 'Skipping audit: no lockfile'",
     "security:full": "npm run security:audit",
     "preinstall": "echo 'Skipping security audit for deployment'",

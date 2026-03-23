@@ -64,9 +64,11 @@ data-sources/
 # Large data files
 scripts/data/
 
-# ML training data and models (regenerated per-cycle, too large for repo)
+# ML training data (regenerated per-cycle, too large for repo)
 training-data/
-models/
+
+# Python virtual environments
+.venv/
 
 # Stray files outside src/
 /components/

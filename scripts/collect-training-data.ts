@@ -39,11 +39,13 @@ import * as path from 'path';
 // ── Configuration ────────────────────────────────────────────────────
 
 const CONGRESS = 119;
-const MAX_VOTES_PER_LEGISLATOR = 200;
+const MAX_VOTES_PER_LEGISLATOR = 50;
 const MAX_CONTRIBUTIONS = 500;
 const BATCH_SIZE_LEGISLATORS = 10;
 const BATCH_DELAY_MS = 2000; // 2s between batches (Congress.gov rate limit)
 const FEC_BATCH_DELAY_MS = 4000; // 4s between FEC batches
+const PER_LEGISLATOR_TIMEOUT_MS = 300_000; // 5 min max per legislator (vote classification is slow)
+const SAVE_EVERY_N_BATCHES = 5; // Write partial results every 5 batches
 const LOBBYING_QUARTERS = 8; // Last 8 quarters
 const OUTPUT_DIR = path.resolve(process.cwd(), 'training-data');
 
@@ -141,18 +143,49 @@ async function collectTrainingData() {
   log('Fetched legislators', { total: allReps.length });
 
   // Filter to voting members only (exclude non-voting delegates)
-  const legislators = allReps.filter(r => r.votingMember);
-  log('Voting members', { count: legislators.length });
+  // Note: House members only for now — Senate XML parsing is too slow for bulk collection
+  // Senate can be added later with a dedicated Senate vote fetcher
+  const legislators = allReps.filter(r => r.votingMember && r.chamber === 'House');
+  log('Voting House members', { count: legislators.length });
 
   const cycle = getCurrentElectionCycle();
-  const voteDonorRecords: VoteDonorRecord[] = [];
-  const donorProfiles: DonorProfileVector[] = [];
+  let voteDonorRecords: VoteDonorRecord[] = [];
+  let donorProfiles: DonorProfileVector[] = [];
   let legislatorsProcessed = 0;
   let legislatorsSkipped = 0;
 
-  // Step 2: Process legislators in batches
-  for (let i = 0; i < legislators.length; i += BATCH_SIZE_LEGISLATORS) {
-    const batch = legislators.slice(i, i + BATCH_SIZE_LEGISLATORS);
+  // In incremental mode, also load existing vote-donor records from partial saves
+  if (isIncremental && existingBioguideIds.size > 0) {
+    try {
+      voteDonorRecords = JSON.parse(
+        fs.readFileSync(path.join(OUTPUT_DIR, 'vote-donor-records.json'), 'utf-8')
+      ) as VoteDonorRecord[];
+      donorProfiles = JSON.parse(
+        fs.readFileSync(path.join(OUTPUT_DIR, 'donor-profiles.json'), 'utf-8')
+      ) as DonorProfileVector[];
+      log('Incremental mode: loaded existing data', {
+        records: voteDonorRecords.length,
+        profiles: donorProfiles.length,
+      });
+    } catch {
+      // Partial saves may not exist — start fresh
+    }
+  }
+
+  // Step 2a: Pre-warm House vote cache (single API call, subsequent legislators use cache)
+  const sampleHouseRep = legislators[0];
+  if (sampleHouseRep) {
+    log('Warming House vote cache...');
+    await fetchLegislatorVotes(sampleHouseRep.bioguideId, 'House');
+    log('House vote cache warmed');
+  }
+
+  const sortedLegislators = legislators;
+
+  // Step 2b: Process legislators in batches
+  const totalLegislators = sortedLegislators.length;
+  for (let i = 0; i < totalLegislators; i += BATCH_SIZE_LEGISLATORS) {
+    const batch = sortedLegislators.slice(i, i + BATCH_SIZE_LEGISLATORS);
 
     const batchResults = await Promise.allSettled(
       batch.map(async rep => {
@@ -162,7 +195,16 @@ async function collectTrainingData() {
         }
 
         try {
-          return await processLegislator(rep, cycle);
+          // Per-legislator timeout to prevent hangs on slow API calls
+          return await Promise.race([
+            processLegislator(rep, cycle),
+            new Promise<null>((_, reject) =>
+              setTimeout(
+                () => reject(new Error(`Timeout after ${PER_LEGISLATOR_TIMEOUT_MS / 1000}s`)),
+                PER_LEGISLATOR_TIMEOUT_MS
+              )
+            ),
+          ]);
         } catch (error) {
           log(`Error processing ${rep.bioguideId}`, {
             error: (error as Error).message,
@@ -181,14 +223,29 @@ async function collectTrainingData() {
       }
     }
 
-    const progress = Math.min(i + BATCH_SIZE_LEGISLATORS, legislators.length);
-    log(`Progress: ${progress}/${legislators.length} legislators`, {
+    const batchNumber = Math.floor(i / BATCH_SIZE_LEGISLATORS) + 1;
+    const progress = Math.min(i + BATCH_SIZE_LEGISLATORS, totalLegislators);
+    log(`Progress: ${progress}/${totalLegislators} legislators`, {
       records: voteDonorRecords.length,
       profiles: donorProfiles.length,
     });
 
+    // Save partial results periodically so progress isn't lost on crash/kill
+    if (batchNumber % SAVE_EVERY_N_BATCHES === 0 && voteDonorRecords.length > 0) {
+      log('Saving intermediate results...');
+      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+      fs.writeFileSync(
+        path.join(OUTPUT_DIR, 'vote-donor-records.json'),
+        JSON.stringify(voteDonorRecords, null, 2)
+      );
+      fs.writeFileSync(
+        path.join(OUTPUT_DIR, 'donor-profiles.json'),
+        JSON.stringify(donorProfiles, null, 2)
+      );
+    }
+
     // Rate limit delay between batches
-    if (i + BATCH_SIZE_LEGISLATORS < legislators.length) {
+    if (i + BATCH_SIZE_LEGISLATORS < totalLegislators) {
       await sleep(BATCH_DELAY_MS);
     }
   }
@@ -342,58 +399,67 @@ async function processLegislator(
     topSectors,
   };
 
-  // Build vote-donor records
-  const records: VoteDonorRecord[] = [];
+  // Build vote-donor records — process votes in parallel batches for speed
   const yearsInOffice = rep.yearsInOffice ?? 0;
   const committeeCodes = (rep.committees ?? []).map(c => c.name);
 
-  for (const vote of rawVotes) {
-    // Only include yea/nay votes
+  // Filter to yea/nay votes first
+  const eligibleVotes = rawVotes.filter(vote => {
     const position = vote.position.toLowerCase();
-    if (position !== 'yea' && position !== 'yes' && position !== 'nay' && position !== 'no') {
-      continue;
-    }
+    return position === 'yea' || position === 'yes' || position === 'nay' || position === 'no';
+  });
 
-    const normalizedVote: 'yea' | 'nay' = position === 'yea' || position === 'yes' ? 'yea' : 'nay';
+  // Process votes in parallel batches of 20 (bill classification is the bottleneck)
+  const VOTE_BATCH_SIZE = 20;
+  const records: VoteDonorRecord[] = [];
 
-    // Classify bill sectors
-    const billId = vote.bill
-      ? `${vote.bill.type}${vote.bill.number}-${vote.bill.congress}`
-      : vote.voteId;
-    const billTitle = vote.bill?.title ?? vote.question;
+  for (let vi = 0; vi < eligibleVotes.length; vi += VOTE_BATCH_SIZE) {
+    const voteBatch = eligibleVotes.slice(vi, vi + VOTE_BATCH_SIZE);
+    const batchRecords = await Promise.all(
+      voteBatch.map(async vote => {
+        const position = vote.position.toLowerCase();
+        const normalizedVote: 'yea' | 'nay' =
+          position === 'yea' || position === 'yes' ? 'yea' : 'nay';
 
-    let billSectors: IndustrySector[] = [];
-    try {
-      billSectors = await getBillSectors(billId, billTitle);
-    } catch {
-      // Sector classification failed — record with empty sectors
-    }
+        const billId = vote.bill
+          ? `${vote.bill.type}${vote.bill.number}-${vote.bill.congress}`
+          : vote.voteId;
+        const billTitle = vote.bill?.title ?? vote.question;
 
-    // Fetch bill metadata (cached across legislators)
-    const billMeta = await fetchBillMetadata(
-      vote.bill ? `${vote.bill.congress}-${vote.bill.type}-${vote.bill.number}` : '',
-      normalizeParty(rep.party)
+        let billSectors: IndustrySector[] = [];
+        try {
+          billSectors = await getBillSectors(billId, billTitle);
+        } catch {
+          // Sector classification failed — record with empty sectors
+        }
+
+        const billMeta = await fetchBillMetadata(
+          vote.bill ? `${vote.bill.congress}-${vote.bill.type}-${vote.bill.number}` : '',
+          normalizeParty(rep.party)
+        );
+
+        return {
+          bioguideId,
+          billId,
+          voteId: vote.voteId,
+          vote: normalizedVote,
+          party: normalizeParty(rep.party),
+          chamber: rep.chamber,
+          state: rep.state,
+          yearsInOffice,
+          committeeCodes,
+          donorProfile: distribution,
+          totalDonations,
+          billSectors,
+          billPolicyArea: billMeta?.policyArea ?? '',
+          sponsorParty: billMeta?.sponsorParty ?? normalizeParty(rep.party),
+          cosponsorCount: billMeta?.cosponsorCount ?? 0,
+          voteDate: vote.date,
+          electionCycle: cycle,
+        } as VoteDonorRecord;
+      })
     );
-
-    records.push({
-      bioguideId,
-      billId,
-      voteId: vote.voteId,
-      vote: normalizedVote,
-      party: normalizeParty(rep.party),
-      chamber: rep.chamber,
-      state: rep.state,
-      yearsInOffice,
-      committeeCodes,
-      donorProfile: distribution,
-      totalDonations,
-      billSectors,
-      billPolicyArea: billMeta?.policyArea ?? '',
-      sponsorParty: billMeta?.sponsorParty ?? normalizeParty(rep.party),
-      cosponsorCount: billMeta?.cosponsorCount ?? 0,
-      voteDate: vote.date,
-      electionCycle: cycle,
-    });
+    records.push(...batchRecords);
   }
 
   return { records, profile };

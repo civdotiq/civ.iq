@@ -1106,7 +1106,7 @@ export class BatchVotingService {
         const cacheKey = `senate-vote-${congress}-${session}-${result.value.rollCallNumber}`;
         const ttlHours = this.getSenateVoteCacheTTL(result.value.rollCallNumber);
 
-        this.cache.set(cacheKey, result.value, ttlHours * 3600); // Convert hours to seconds
+        this.cache.set(cacheKey, result.value, ttlHours * 3600 * 1000); // Convert hours to ms
 
         logger.debug('Cached Senate vote', {
           rollCallNumber: result.value.rollCallNumber,
