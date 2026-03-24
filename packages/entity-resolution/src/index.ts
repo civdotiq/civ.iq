@@ -67,6 +67,21 @@ export {
   getAllLDAIssueCodes,
 } from './lda-issue-policy-map';
 
+// ── Company Entity Resolution ────────────────────────────────────────
+export {
+  resolveCompanyName,
+  resolveCompanyNames,
+  normalizeCompanyName,
+  companiesMatch,
+  validateTokenOverlap,
+  similarityRatio,
+} from './company-entity-resolver';
+export type { ResolvedCompany } from './company-entity-resolver';
+
+// ── Company Alias Table ─────────────────────────────────────────────
+export { COMPANY_ALIAS_TABLE, findCompanyByAlias } from './company-alias-table';
+export type { CompanyAlias } from './company-alias-table';
+
 // ── FEC Entity Resolution ────────────────────────────────────────────
 export {
   entitiesMatch,

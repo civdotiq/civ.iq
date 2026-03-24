@@ -46,6 +46,11 @@ import type {
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import type { LobbyingFiling } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  normalizeCompanyName,
+  similarityRatio,
+  validateTokenOverlap,
+} from '@civiq/entity-resolution';
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
@@ -152,102 +157,6 @@ const DISCLAIMER =
   'This analysis traces public data through lobbying filings, campaign contributions, ' +
   'and voting records. Lobbying and campaign contributions are legal. These patterns do ' +
   'not indicate wrongdoing or improper behavior. Correlation does not indicate causation.';
-
-// ── Levenshtein Distance ────────────────────────────────────────────
-
-/**
- * Compute Levenshtein distance between two strings.
- * Returns the minimum number of single-character edits needed.
- */
-function levenshteinDistance(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-
-  if (m === 0) return n;
-  if (n === 0) return m;
-
-  // Flat array with typed accessor to satisfy strict indexing
-  const width = n + 1;
-  const flat = new Int32Array((m + 1) * width);
-
-  const get = (i: number, j: number): number => flat[i * width + j] as number;
-  const set = (i: number, j: number, v: number): void => {
-    flat[i * width + j] = v;
-  };
-
-  for (let i = 0; i <= m; i++) set(i, 0, i);
-  for (let j = 0; j <= n; j++) set(0, j, j);
-
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      set(
-        i,
-        j,
-        Math.min(
-          get(i - 1, j) + 1, // deletion
-          get(i, j - 1) + 1, // insertion
-          get(i - 1, j - 1) + cost // substitution
-        )
-      );
-    }
-  }
-
-  return get(m, n);
-}
-
-/**
- * Compute similarity ratio between two strings (0-1).
- * 1.0 = identical, 0.0 = completely different.
- */
-function similarityRatio(a: string, b: string): number {
-  const maxLen = Math.max(a.length, b.length);
-  if (maxLen === 0) return 1.0;
-  return 1 - levenshteinDistance(a, b) / maxLen;
-}
-
-/** Minimum token-level similarity to count as a match (handles typos like northrop/northrup) */
-const TOKEN_SIMILARITY_THRESHOLD = 0.75;
-
-/**
- * Validate that two normalized names share enough word tokens.
- * Levenshtein can rate "American Health Association" and "American Heart
- * Association" at ~0.90 similarity because only one character differs,
- * but they are entirely different organizations. Token overlap catches
- * this: "Health" vs "Heart" = 0.6 similarity, below the token threshold.
- *
- * Each token from the shorter name must find a close match (>= 0.75
- * similarity) in the longer name. At least `threshold` fraction of the
- * shorter name's tokens must match.
- */
-export function validateTokenOverlap(a: string, b: string, threshold: number = 0.7): boolean {
-  const tokensA = a.split(/\s+/).filter(t => t.length > 0);
-  const tokensB = b.split(/\s+/).filter(t => t.length > 0);
-
-  if (tokensA.length === 0 || tokensB.length === 0) return false;
-
-  const [shorter, longer] =
-    tokensA.length <= tokensB.length ? [tokensA, tokensB] : [tokensB, tokensA];
-
-  const matches = shorter.filter(token =>
-    longer.some(other => similarityRatio(token, other) >= TOKEN_SIMILARITY_THRESHOLD)
-  ).length;
-
-  return matches / shorter.length >= threshold;
-}
-
-/**
- * Normalize an organization name for fuzzy matching.
- * Strips common corporate suffixes and whitespace.
- */
-function normalizeOrgName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\b(inc|llc|corp|lp|llp|ltd|co|company|corporation|incorporated)\b\.?/gi, '')
-    .replace(/[.,]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ');
-}
 
 // ── Main Analyzer ───────────────────────────────────────────────────
 
@@ -578,7 +487,7 @@ async function fetchContributionMatches(
       const employer = c.contributor_employer;
       if (!employer) continue;
 
-      const normalized = normalizeOrgName(employer);
+      const normalized = normalizeCompanyName(employer);
       if (normalized.length === 0) continue;
 
       const existing = employerContributions.get(normalized) ?? 0;
@@ -590,7 +499,7 @@ async function fetchContributionMatches(
 
     // For each lobbying org, find matching employer contributions
     for (const org of lobbyingOrgs) {
-      const normalizedOrg = normalizeOrgName(org.name);
+      const normalizedOrg = normalizeCompanyName(org.name);
       if (normalizedOrg.length === 0) continue;
 
       // Check exact match first

@@ -11,67 +11,7 @@
  * acts as a second gate to prevent wrong-org attribution.
  */
 
-// Mock dependencies pulled in by the influence-chain-analyzer import chain
-jest.mock('@/lib/logging/simple-logger', () => ({
-  __esModule: true,
-  default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-}));
-
-jest.mock('@/lib/ai/provider', () => ({
-  generateAIText: jest.fn(),
-}));
-
-jest.mock('@/lib/ai/plain-language', () => ({
-  PLAIN_LANGUAGE_RULES: '',
-  PLAIN_LANGUAGE_SYSTEM_PROMPT: '',
-}));
-
-jest.mock('@/features/legislation/services/ai/reading-level-validator', () => ({
-  ReadingLevelValidator: { meetsTarget: jest.fn().mockReturnValue(true) },
-}));
-
-jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
-  BillSummaryCache: { getSummary: jest.fn() },
-}));
-
-jest.mock('@/lib/cache/redis-client', () => ({
-  getRedisCache: () => ({ get: jest.fn(), set: jest.fn(), keys: jest.fn(), mget: jest.fn() }),
-}));
-
-jest.mock('@/features/representatives/services/congress.service', () => ({
-  getEnhancedRepresentative: jest.fn(),
-}));
-
-jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
-  getFECIdFromBioguide: jest.fn(),
-}));
-
-jest.mock('@/lib/fec/fec-api-service', () => ({
-  fecApiService: { getSampleContributions: jest.fn() },
-}));
-
-jest.mock('@/features/representatives/services/batch-voting-service', () => ({
-  batchVotingService: { getHouseMemberVotes: jest.fn(), getSenateMemberVotes: jest.fn() },
-}));
-
-jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
-  senateLobbyingAPI: { fetchRecentFilings: jest.fn() },
-}));
-
-jest.mock('@/lib/intelligence/entity-resolution/lobbying-committee-resolver', () => ({
-  resolveFilingEntities: jest.fn(),
-  getResolvedCommittees: jest.fn(),
-}));
-
-jest.mock('@/lib/connections/committee-agency-map', () => ({
-  ALL_COMMITTEE_MAPPINGS: [],
-}));
-
-jest.mock('@/lib/connections/policy-area-map', () => ({
-  getIndustrySectorsForPolicyArea: jest.fn().mockReturnValue([]),
-}));
-
-import { validateTokenOverlap } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import { validateTokenOverlap } from '@civiq/entity-resolution';
 
 describe('validateTokenOverlap', () => {
   it('rejects "american health association" vs "american heart association"', () => {
