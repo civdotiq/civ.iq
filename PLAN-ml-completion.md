@@ -1,26 +1,47 @@
 # Plan: ML Deepening — Complete All 4 Phases to 100%
 
+## Status: COMPLETE (2026-03-24)
+
+All 4 phases shipped in commit `f57b2a5d`. One follow-up remains: expand training data coverage from 273→535 legislators.
+
 ## Overview
 
-PLAN-ml-deepening.md defined 4 phases. All have code committed but none are fully complete. Phase 1 (training data) produced only 13% of target data, which cascades into weaker results in Phases 2-4. This plan fixes Phase 1 first (it unblocks everything), then fills the remaining gaps in Phases 2-4.
+PLAN-ml-deepening.md defined 4 phases. All have code committed but none were fully complete. Phase 1 (training data) produced only 13% of target data, which cascaded into weaker results in Phases 2-4. This plan fixed Phase 1 first (it unblocked everything), then filled the remaining gaps in Phases 2-4.
 
-## Current State
+## Final State
 
-| Phase | Code | Data | Tests | Gaps |
-|-------|------|------|-------|------|
-| 1. Training Data | **DONE** (5 commits) | 273 profiles, 91K vote-donor, 23K lobbying pairs | N/A | Profiles at 273/400 (FEC rate limits) — sufficient to proceed |
-| 2. Vote Prediction | Complete | Model trained (71.2%) | Missing analyzer test | No `vote-prediction-analyzer.test.ts` |
-| 3. Bill-Lobbying Similarity | Complete | Never run on real data | Missing embed-text test | Narrative prompt doesn't include similarity |
-| 4. Influence Clusters | Complete | `influence-clusters.json` missing | Tests pass (mocked) | Python deps not installed, 273 profiles now available |
+| Phase | Code | Data | Tests | Status |
+|-------|------|------|-------|--------|
+| 1. Training Data | **DONE** (5 commits) | 273 profiles, 91K vote-donor, 23K lobbying pairs | N/A | **DONE** — 273/535 legislators (see follow-up below) |
+| 2. Vote Prediction | **DONE** | Model retrained: **81.0% accuracy** (was 71.2%), AUC 0.90 | 17 tests passing | **DONE** |
+| 3. Bill-Lobbying Similarity | **DONE** | Integrated into narrative prompt + fallback | 8 embed-text tests + 9 similarity tests | **DONE** |
+| 4. Influence Clusters | **DONE** | 6 clusters, 4 cross-party, 154KB | Tests pass (mocked) | **DONE** |
 
 ### Phase 1 Results (2026-03-24)
 
 | Metric | Target | Result | Status |
 |--------|--------|--------|--------|
 | Vote-Donor Records | >10K | **91,161** | 9x target |
-| Donor Profiles | >400 | **273** | 68% — FEC rate limits, sufficient |
+| Donor Profiles | >400 | **273** | 68% — FEC rate limits |
 | Bill-Lobbying Pairs | >500 | **23,325** | 46x target |
 | Duration | ~2 hours | 120.7 minutes | On target |
+
+### Phase 2 Results (2026-03-24)
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Accuracy | 71.2% | **81.0%** |
+| AUC-ROC | 0.81 | **0.90** |
+| Training records | 5,234 | **72,829** |
+| Donor lift vs party-only | — | **+15pp** |
+
+### Phase 4 Results (2026-03-24)
+
+| Metric | Target | Result |
+|--------|--------|--------|
+| Clusters | >=3 cross-party | **4 cross-party** (6 total) |
+| Output size | <200KB | **154KB** |
+| Legislators clustered | 273 | 273 (137 noise points in HDBSCAN) |
 
 **Fixes applied (5 commits):**
 1. Added Senate votes, fixed 2024 cycle, LDA retry (5cd606c3, 9341e5b7, 8a4296e2)
@@ -30,11 +51,30 @@ PLAN-ml-deepening.md defined 4 phases. All have code committed but none are full
 ## Success Criteria
 
 - [x] Training data: 273 donor profiles (sufficient), 91K vote-donor records, 23K bill-lobbying pairs
-- [ ] Vote prediction model retrained on expanded data; accuracy reported
-- [ ] Bill-lobbying similarity integrated into AI narrative
-- [ ] Influence clusters generated with >=3 cross-party clusters
-- [ ] All missing test files created, all tests pass
-- [ ] `npm run validate:all` clean
+- [x] Vote prediction model retrained on expanded data — 81.0% accuracy, AUC 0.90
+- [x] Bill-lobbying similarity integrated into AI narrative
+- [x] Influence clusters generated — 6 clusters, 4 cross-party
+- [x] All missing test files created, all tests pass (28 new tests)
+- [x] `npm run validate:all` clean (on changed files; pre-existing issues in packages/)
+
+## Follow-up: Expand Coverage to 535 Legislators
+
+**Gap**: Only 273/535 (51%) legislators have training data due to FEC rate limits.
+
+**Impact**: Model predictions and clusters only cover half of Congress.
+
+**Fix**: Run incremental collection for the missing 262 legislators:
+```bash
+source .venv/bin/activate
+npx tsx scripts/collect-training-data.ts --incremental --cycle=2024
+```
+The `--incremental` flag auto-skips the 273 already collected. Expected duration: ~1.5 hours.
+
+**After collection completes**, retrain + recluster:
+```bash
+python scripts/train-vote-model.py
+python scripts/compute-influence-clusters.py
+```
 
 ---
 

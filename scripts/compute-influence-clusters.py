@@ -183,7 +183,7 @@ def main():
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
-        json.dump(output, f, indent=2)
+        json.dump(output, f, separators=(",", ":"))
 
     file_size = OUTPUT_PATH.stat().st_size
     print(f"\nOutput: {OUTPUT_PATH} ({file_size / 1024:.1f} KB)")

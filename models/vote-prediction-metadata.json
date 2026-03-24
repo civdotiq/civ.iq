@@ -1,10 +1,10 @@
 {
   "modelVersion": "1.0.0",
-  "trainedAt": "2026-03-24T02:18:04.309054",
-  "trainingRecords": 72829,
-  "testAccuracy": 0.8102225616408466,
-  "testAUC": 0.9021634006738923,
-  "partyOnlyAccuracy": 0.660429849443596,
+  "trainedAt": "2026-03-24T19:36:20.737816",
+  "trainingRecords": 137314,
+  "testAccuracy": 0.8030210425216101,
+  "testAUC": 0.9011103732408584,
+  "partyOnlyAccuracy": 0.6529293634855496,
   "featureNames": [
     "donor_pct_agribusiness",
     "donor_pct_communications_electronics",
@@ -45,181 +45,181 @@
   "topFeatures": [
     {
       "feature": "party_R",
-      "importance": 0.18676309287548065
-    },
-    {
-      "feature": "chamber_Senate",
-      "importance": 0.0809984803199768
+      "importance": 0.11759732663631439
     },
     {
       "feature": "sponsor_same_party",
-      "importance": 0.06517700105905533
+      "importance": 0.1103939563035965
     },
     {
       "feature": "bill_affects_defense",
-      "importance": 0.06020846962928772
+      "importance": 0.07196441292762756
     },
     {
       "feature": "bill_affects_finance_insurance_real_estate",
-      "importance": 0.054900988936424255
-    },
-    {
-      "feature": "bill_affects_transportation",
-      "importance": 0.05254761129617691
+      "importance": 0.0639125257730484
     },
     {
       "feature": "bill_affects_construction",
-      "importance": 0.04767123609781265
+      "importance": 0.05680076777935028
+    },
+    {
+      "feature": "chamber_Senate",
+      "importance": 0.05282244458794594
+    },
+    {
+      "feature": "bill_affects_labor",
+      "importance": 0.04868650808930397
+    },
+    {
+      "feature": "bill_affects_transportation",
+      "importance": 0.04542302340269089
+    },
+    {
+      "feature": "bill_affects_other",
+      "importance": 0.04306502640247345
     },
     {
       "feature": "bill_affects_lawyers__lobbyists",
-      "importance": 0.04440460354089737
-    },
-    {
-      "feature": "bill_affects_agribusiness",
-      "importance": 0.04438693821430206
-    },
-    {
-      "feature": "party_D",
-      "importance": 0.041754938662052155
+      "importance": 0.042962778359651566
     }
   ],
   "shapFeatures": [
     {
-      "feature": "party_R",
-      "meanAbsShap": 0.6231361627578735
+      "feature": "sponsor_same_party",
+      "meanAbsShap": 0.6972399353981018
     },
     {
-      "feature": "sponsor_same_party",
-      "meanAbsShap": 0.5898594260215759
+      "feature": "party_R",
+      "meanAbsShap": 0.4689338207244873
     },
     {
       "feature": "bill_cosponsor_count",
-      "meanAbsShap": 0.34144875407218933
+      "meanAbsShap": 0.38775166869163513
     },
     {
       "feature": "bill_affects_finance_insurance_real_estate",
-      "meanAbsShap": 0.2859438359737396
+      "meanAbsShap": 0.28644102811813354
     },
     {
       "feature": "bill_affects_energy_natural_resources",
-      "meanAbsShap": 0.19771850109100342
-    },
-    {
-      "feature": "chamber_Senate",
-      "meanAbsShap": 0.17130038142204285
-    },
-    {
-      "feature": "bill_affects_transportation",
-      "meanAbsShap": 0.1277747005224228
+      "meanAbsShap": 0.21860137581825256
     },
     {
       "feature": "bill_affects_defense",
-      "meanAbsShap": 0.11913958936929703
+      "meanAbsShap": 0.131638765335083
+    },
+    {
+      "feature": "chamber_Senate",
+      "meanAbsShap": 0.1146157756447792
     },
     {
       "feature": "bill_affects_lawyers__lobbyists",
-      "meanAbsShap": 0.10767819732427597
+      "meanAbsShap": 0.09966159611940384
     },
     {
-      "feature": "party_D",
-      "meanAbsShap": 0.07638321071863174
-    },
-    {
-      "feature": "donor_bill_overlap",
-      "meanAbsShap": 0.07522059977054596
-    },
-    {
-      "feature": "bill_affects_communications_electronics",
-      "meanAbsShap": 0.06634510308504105
-    },
-    {
-      "feature": "bill_affects_agribusiness",
-      "meanAbsShap": 0.05803676322102547
-    },
-    {
-      "feature": "max_donor_sector_in_bill",
-      "meanAbsShap": 0.0543331503868103
+      "feature": "bill_affects_transportation",
+      "meanAbsShap": 0.08904266357421875
     },
     {
       "feature": "bill_affects_other",
-      "meanAbsShap": 0.0536663681268692
+      "meanAbsShap": 0.06892044097185135
     },
     {
-      "feature": "donor_pct_other",
-      "meanAbsShap": 0.036844413727521896
+      "feature": "donor_bill_overlap",
+      "meanAbsShap": 0.06425734609365463
     },
     {
-      "feature": "bill_affects_construction",
-      "meanAbsShap": 0.035477738827466965
+      "feature": "bill_affects_communications_electronics",
+      "meanAbsShap": 0.06399800628423691
     },
     {
-      "feature": "years_in_office",
-      "meanAbsShap": 0.03433536738157272
+      "feature": "bill_affects_agribusiness",
+      "meanAbsShap": 0.0612194687128067
     },
     {
-      "feature": "donor_pct_labor",
-      "meanAbsShap": 0.03321308270096779
-    },
-    {
-      "feature": "bill_affects_labor",
-      "meanAbsShap": 0.03249085694551468
+      "feature": "party_D",
+      "meanAbsShap": 0.05328540503978729
     },
     {
       "feature": "donor_pct_finance_insurance_real_estate",
-      "meanAbsShap": 0.0286500733345747
+      "meanAbsShap": 0.04590030014514923
     },
     {
-      "feature": "donor_pct_agribusiness",
-      "meanAbsShap": 0.027428049594163895
+      "feature": "bill_affects_construction",
+      "meanAbsShap": 0.04387696832418442
+    },
+    {
+      "feature": "max_donor_sector_in_bill",
+      "meanAbsShap": 0.043149352073669434
+    },
+    {
+      "feature": "bill_affects_labor",
+      "meanAbsShap": 0.04036596044898033
     },
     {
       "feature": "donor_pct_communications_electronics",
-      "meanAbsShap": 0.025361603125929832
+      "meanAbsShap": 0.03422988951206207
+    },
+    {
+      "feature": "donor_pct_other",
+      "meanAbsShap": 0.031959857791662216
+    },
+    {
+      "feature": "donor_pct_labor",
+      "meanAbsShap": 0.029257366433739662
+    },
+    {
+      "feature": "donor_pct_agribusiness",
+      "meanAbsShap": 0.028139840811491013
     },
     {
       "feature": "donor_pct_health",
-      "meanAbsShap": 0.02180916629731655
-    },
-    {
-      "feature": "donor_pct_ideology_single-issue",
-      "meanAbsShap": 0.020910754799842834
-    },
-    {
-      "feature": "donor_pct_misc_business",
-      "meanAbsShap": 0.019920382648706436
-    },
-    {
-      "feature": "donor_pct_transportation",
-      "meanAbsShap": 0.019626334309577942
-    },
-    {
-      "feature": "bill_affects_ideology_single-issue",
-      "meanAbsShap": 0.01938723400235176
+      "meanAbsShap": 0.02271442674100399
     },
     {
       "feature": "donor_pct_defense",
-      "meanAbsShap": 0.015481824055314064
+      "meanAbsShap": 0.02207574062049389
     },
     {
-      "feature": "donor_pct_energy_natural_resources",
-      "meanAbsShap": 0.015031450428068638
-    },
-    {
-      "feature": "bill_affects_misc_business",
-      "meanAbsShap": 0.013408823870122433
-    },
-    {
-      "feature": "donor_pct_construction",
-      "meanAbsShap": 0.011390181258320808
+      "feature": "donor_pct_misc_business",
+      "meanAbsShap": 0.0206465981900692
     },
     {
       "feature": "donor_pct_lawyers__lobbyists",
-      "meanAbsShap": 0.011029530316591263
+      "meanAbsShap": 0.020429478958249092
+    },
+    {
+      "feature": "bill_affects_ideology_single-issue",
+      "meanAbsShap": 0.019264647737145424
+    },
+    {
+      "feature": "years_in_office",
+      "meanAbsShap": 0.01866990514099598
+    },
+    {
+      "feature": "donor_pct_energy_natural_resources",
+      "meanAbsShap": 0.0167952012270689
+    },
+    {
+      "feature": "donor_pct_construction",
+      "meanAbsShap": 0.01645621843636036
+    },
+    {
+      "feature": "donor_pct_ideology_single-issue",
+      "meanAbsShap": 0.01631479524075985
     },
     {
       "feature": "bill_affects_health",
-      "meanAbsShap": 0.009675832465291023
+      "meanAbsShap": 0.015286901965737343
+    },
+    {
+      "feature": "donor_pct_transportation",
+      "meanAbsShap": 0.014481511898338795
+    },
+    {
+      "feature": "bill_affects_misc_business",
+      "meanAbsShap": 0.011068139225244522
     }
   ]
 }
