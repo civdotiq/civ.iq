@@ -190,6 +190,34 @@ describe('LobbyingTab', () => {
     expect(screen.getByText('Committee Breakdown')).toBeInTheDocument();
   });
 
+  it('does not crash when chain data is an error-shaped object without chains', () => {
+    // Regression: preload fetcher cached { error: "..." } as data — no chains property
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      {
+        data: { error: 'Influence chain analysis not available for this legislator' },
+        error: undefined,
+        isLoading: false,
+      }
+    );
+    // Should render without throwing
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Lobbying data still renders
+    expect(screen.getByText('$5.0M')).toBeInTheDocument();
+    // No "Follow the Money" section since chains are absent
+    expect(screen.queryByText('Follow the Money')).not.toBeInTheDocument();
+  });
+
+  it('does not crash when chain data has no chains property at all', () => {
+    setupSWR(
+      { data: undefined, error: undefined, isLoading: false },
+      { data: {} as never, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Falls through to empty state
+    expect(screen.getByText(/No lobbying data found/)).toBeInTheDocument();
+  });
+
   it('renders narrative and disclaimer from chain data', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },

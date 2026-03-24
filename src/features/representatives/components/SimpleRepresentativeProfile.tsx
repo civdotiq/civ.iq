@@ -320,16 +320,23 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                       ? 'lobbying'
                       : null;
             if (endpoint) {
-              preload(`/api/representative/${representative.bioguideId}/${endpoint}`, () =>
-                fetch(`/api/representative/${representative.bioguideId}/${endpoint}`).then(res =>
-                  res.json()
-                )
+              const url = `/api/representative/${representative.bioguideId}/${endpoint}`;
+              preload(url, () =>
+                fetch(url).then(res => {
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return res.json();
+                })
               );
             }
             // Also prefetch influence-chain data for lobbying/intelligence tabs
             if ((tabId === 'lobbying' || tabId === 'intelligence') && committeeCodes.length > 0) {
               const chainUrl = `/api/intelligence/representative/${representative.bioguideId}/influence-chain`;
-              preload(chainUrl, () => fetch(chainUrl).then(res => res.json()));
+              preload(chainUrl, () =>
+                fetch(chainUrl).then(res => {
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return res.json();
+                })
+              );
             }
           }
         }, 200);

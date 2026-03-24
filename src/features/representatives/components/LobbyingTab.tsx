@@ -119,8 +119,8 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
 
   const lobbying = lobbyingData?.lobbyingData;
   const hasLobbyingData =
-    lobbying && (lobbying.topCompanies.length > 0 || lobbying.totalRelevantSpending > 0);
-  const hasChains = chainData && chainData.chains.length > 0;
+    lobbying && ((lobbying.topCompanies?.length ?? 0) > 0 || lobbying.totalRelevantSpending > 0);
+  const hasChains = chainData?.chains && chainData.chains.length > 0;
 
   if (!hasLobbyingData && !hasChains) {
     return (
