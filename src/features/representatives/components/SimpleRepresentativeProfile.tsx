@@ -24,6 +24,7 @@ import {
   LobbyingIcon,
 } from '@/components/icons/AicherIcons';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
+import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -530,9 +531,26 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               onTabHover={handleTabHover}
             />
 
-            {/* Tab Content with responsive padding and Suspense boundary */}
+            {/* Tab Content with responsive padding, error boundary, and Suspense */}
             <div className="p-4 sm:p-6">
-              <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab}</Suspense>
+              <ErrorBoundary
+                key={activeTab}
+                fallback={({ error: _error, retry }) => (
+                  <div className="border-2 border-gray-200 p-6 text-center min-h-[200px] flex flex-col items-center justify-center">
+                    <p className="type-sm text-gray-500">
+                      This tab failed to load. Please try again.
+                    </p>
+                    <button
+                      onClick={retry}
+                      className="mt-3 type-xs text-[#3ea2d4] aicher-heading-wide py-2 min-h-[44px] inline-flex items-center aicher-focus"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+              >
+                <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab}</Suspense>
+              </ErrorBoundary>
             </div>
           </div>
 

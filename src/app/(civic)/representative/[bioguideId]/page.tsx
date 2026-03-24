@@ -240,11 +240,11 @@ export default async function RepresentativeProfilePage({
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
 
-        <ChunkLoadErrorBoundary>
-          <ErrorBoundary>
+        <ErrorBoundary>
+          <ChunkLoadErrorBoundary>
             <SimpleRepresentativeProfile representative={representative} />
-          </ErrorBoundary>
-        </ChunkLoadErrorBoundary>
+          </ChunkLoadErrorBoundary>
+        </ErrorBoundary>
 
         {/* Contextual Footer - SEO navigation without redundancy */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
