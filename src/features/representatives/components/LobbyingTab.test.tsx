@@ -40,6 +40,7 @@ const makeLobbyingData = () => ({
         committees: ['Commerce', 'Energy'],
         recentFilings: 3,
       },
+      { name: 'Zero Corp', totalSpending: 0, committees: ['Energy'], recentFilings: 1 },
     ],
     committeeBreakdown: [
       {
@@ -49,6 +50,19 @@ const makeLobbyingData = () => ({
         topIssues: ['Climate', 'Energy'],
       },
     ],
+    summary: {
+      quarterlyTrend: [
+        { quarter: 'Q1', year: 2025, spending: 1_000_000 },
+        { quarter: 'Q2', year: 2025, spending: 1_500_000 },
+        { quarter: 'Q3', year: 2025, spending: 800_000 },
+        { quarter: 'Q4', year: 2025, spending: 1_200_000 },
+      ],
+      industryBreakdown: [
+        { industry: 'Healthcare', spending: 2_000_000, percentage: 40 },
+        { industry: 'Technology', spending: 1_500_000, percentage: 30 },
+        { industry: 'Energy', spending: 1_000_000, percentage: 20 },
+      ],
+    },
   },
 });
 
@@ -97,9 +111,9 @@ describe('LobbyingTab', () => {
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText('$5.0M')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('Total lobbying spending')).toBeInTheDocument();
+    expect(screen.getByText('Organizations lobbying')).toBeInTheDocument();
+    expect(screen.getByText('Committees targeted')).toBeInTheDocument();
   });
 
   it('renders MoneyFlowChain components for chains', () => {
@@ -226,5 +240,79 @@ describe('LobbyingTab', () => {
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText('Multiple lobbying-to-vote connections detected.')).toBeInTheDocument();
     expect(screen.getByTestId('insight-disclaimer')).toBeInTheDocument();
+  });
+
+  it('renders rank numbers in top organizations', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText('#1')).toBeInTheDocument();
+    expect(screen.getByText('#2')).toBeInTheDocument();
+  });
+
+  it('groups $0 spending organizations separately', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText(/filing-only activity/)).toBeInTheDocument();
+    expect(screen.getByText('Zero Corp')).toBeInTheDocument();
+  });
+
+  it('renders issue tags in committee breakdown', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Issues should render as individual tags, not joined text
+    const climateTag = screen.getByText('Climate');
+    expect(climateTag.tagName).toBe('SPAN');
+    expect(climateTag.className).toContain('border-2');
+  });
+
+  it('renders quarterly trend when summary data present', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText('Quarterly Trend')).toBeInTheDocument();
+    expect(screen.getByText('Q1')).toBeInTheDocument();
+    expect(screen.getByText('Q4')).toBeInTheDocument();
+  });
+
+  it('renders industry breakdown when summary data present', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText('Industry Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Healthcare')).toBeInTheDocument();
+    expect(screen.getByText('Technology')).toBeInTheDocument();
+  });
+
+  it('hides spending overview when summary is empty', () => {
+    const data = makeLobbyingData();
+    data.lobbyingData.summary = {
+      quarterlyTrend: [
+        { quarter: 'Q1', year: 2025, spending: 0 },
+        { quarter: 'Q2', year: 2025, spending: 0 },
+        { quarter: 'Q3', year: 2025, spending: 0 },
+        { quarter: 'Q4', year: 2025, spending: 0 },
+      ],
+      industryBreakdown: [],
+    };
+    setupSWR(
+      { data, error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.queryByText('Quarterly Trend')).not.toBeInTheDocument();
+    expect(screen.queryByText('Industry Breakdown')).not.toBeInTheDocument();
   });
 });

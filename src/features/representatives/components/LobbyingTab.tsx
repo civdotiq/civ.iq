@@ -30,12 +30,28 @@ interface CommitteeBreakdownItem {
   topIssues: string[];
 }
 
+interface QuarterlyTrend {
+  quarter: string;
+  year: number;
+  spending: number;
+}
+
+interface IndustryBreakdown {
+  industry: string;
+  spending: number;
+  percentage: number;
+}
+
 interface LobbyingResponse {
   lobbyingData: {
     totalRelevantSpending: number;
     affectedCommittees: number;
     topCompanies: LobbyingCompany[];
     committeeBreakdown: CommitteeBreakdownItem[];
+    summary?: {
+      quarterlyTrend: QuarterlyTrend[];
+      industryBreakdown: IndustryBreakdown[];
+    };
   };
 }
 
@@ -156,6 +172,82 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
         </div>
       )}
 
+      {/* Spending Overview */}
+      {hasLobbyingData &&
+        lobbying.summary &&
+        (() => {
+          const { quarterlyTrend, industryBreakdown } = lobbying.summary;
+          const hasQuarterly = quarterlyTrend.some(q => q.spending > 0);
+          const hasIndustry = industryBreakdown.length > 0;
+
+          if (!hasQuarterly && !hasIndustry) return null;
+
+          const maxQuarterSpending = Math.max(...quarterlyTrend.map(q => q.spending), 1);
+          const maxIndustryPct = Math.max(...industryBreakdown.map(i => i.percentage), 1);
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {hasQuarterly ? (
+                <div className="border-2 border-gray-200 p-3">
+                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Quarterly Trend</h4>
+                  <div className="flex items-end gap-1" style={{ height: 80 }}>
+                    {quarterlyTrend.map(q => (
+                      <div
+                        key={`${q.quarter}-${q.year}`}
+                        className="flex-1 flex flex-col items-center"
+                      >
+                        <div
+                          className="w-full flex items-end justify-center"
+                          style={{ height: 56 }}
+                        >
+                          <div
+                            className="w-full bg-[#3ea2d4]"
+                            style={{
+                              height: `${Math.max((q.spending / maxQuarterSpending) * 100, q.spending > 0 ? 4 : 0)}%`,
+                              minHeight: q.spending > 0 ? 2 : 0,
+                            }}
+                          />
+                        </div>
+                        <span className="type-xs text-gray-400 aicher-heading mt-1">
+                          {q.quarter}
+                        </span>
+                        <span className="type-xs text-gray-500">{formatCompact(q.spending)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="type-xs text-gray-400 mt-2 text-center">
+                    {quarterlyTrend[0]?.year}
+                  </div>
+                </div>
+              ) : (
+                <div />
+              )}
+              {hasIndustry && (
+                <div className="border-2 border-gray-200 p-3">
+                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Industry Breakdown</h4>
+                  <div className="space-y-2">
+                    {industryBreakdown.slice(0, 5).map(ind => (
+                      <div key={ind.industry}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="type-xs text-gray-700">{ind.industry}</span>
+                          <span className="type-xs text-gray-500 aicher-heading-wide">
+                            {formatCompact(ind.spending)} ({ind.percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div
+                          className="h-1 bg-[#3ea2d4]"
+                          style={{ width: `${(ind.percentage / maxIndustryPct) * 100}%` }}
+                          role="presentation"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       {/* Follow the Money section */}
       {hasChains && (
         <div>
@@ -182,61 +274,134 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
       )}
 
       {/* Top Organizations */}
-      {hasLobbyingData && lobbying.topCompanies.length > 0 && (
-        <div>
-          <h3 className="aicher-heading type-lg text-gray-900 mb-4">Top Organizations</h3>
-          <div className="space-y-3">
-            {lobbying.topCompanies.map(company => (
-              <div key={company.name} className="border-2 border-gray-200 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="type-sm font-medium text-gray-900">{company.name}</span>
-                  <span className="type-xs text-gray-500 aicher-heading-wide flex-shrink-0">
-                    {formatCompact(company.totalSpending)}
-                  </span>
+      {hasLobbyingData &&
+        lobbying.topCompanies.length > 0 &&
+        (() => {
+          const withSpending = lobbying.topCompanies.filter(c => c.totalSpending > 0);
+          const zeroSpending = lobbying.topCompanies.filter(c => c.totalSpending === 0);
+          const maxSpending = withSpending[0]?.totalSpending ?? 1;
+
+          return (
+            <div>
+              <h3 className="aicher-heading type-lg text-gray-900 mb-4">Top Organizations</h3>
+              {withSpending.length > 0 && (
+                <div className="space-y-3">
+                  {withSpending.map((company, i) => (
+                    <div key={company.name} className="border-2 border-gray-200 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-baseline gap-2 min-w-0">
+                          <span className="type-xs text-gray-400 aicher-heading flex-shrink-0">
+                            #{i + 1}
+                          </span>
+                          <span className="type-sm font-medium text-gray-900 break-words">
+                            {company.name}
+                          </span>
+                        </div>
+                        <span className="type-sm font-medium text-gray-900 aicher-heading-wide flex-shrink-0">
+                          {formatCompact(company.totalSpending)}
+                        </span>
+                      </div>
+                      <div
+                        className="h-1 bg-[#3ea2d4] mt-2"
+                        style={{ width: `${(company.totalSpending / maxSpending) * 100}%` }}
+                        role="presentation"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {company.committees.map(committee => (
+                          <span
+                            key={committee}
+                            className="border-2 border-gray-300 px-2 py-0.5 type-xs aicher-heading text-gray-600"
+                          >
+                            {committee}
+                          </span>
+                        ))}
+                        <span className="type-xs text-gray-400 self-center ml-1">
+                          {company.recentFilings} filing{company.recentFilings !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-                  <span className="type-xs text-gray-500">
-                    {company.committees.length} committee
-                    {company.committees.length !== 1 ? 's' : ''} lobbied
-                  </span>
-                  <span className="type-xs text-gray-500">
-                    {company.recentFilings} filing{company.recentFilings !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              )}
+              {zeroSpending.length > 0 && (
+                <details className="mt-3 border-2 border-gray-200">
+                  <summary className="p-3 type-xs text-gray-500 aicher-heading-wide cursor-pointer min-h-[44px] flex items-center">
+                    {zeroSpending.length} organization{zeroSpending.length !== 1 ? 's' : ''} with
+                    filing-only activity
+                  </summary>
+                  <div className="px-3 pb-3">
+                    <p className="type-xs text-gray-400 mb-2">
+                      Lobbying registrations without reported income. Spending may be reported on a
+                      different filing or below the reporting threshold.
+                    </p>
+                    <div className="space-y-1">
+                      {zeroSpending.map(company => (
+                        <div
+                          key={company.name}
+                          className="flex items-center justify-between py-1 border-t border-gray-100"
+                        >
+                          <span className="type-xs text-gray-600">{company.name}</span>
+                          <span className="type-xs text-gray-400">
+                            {company.recentFilings} filing{company.recentFilings !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              )}
+            </div>
+          );
+        })()}
 
       {/* Committee Breakdown */}
-      {hasLobbyingData && lobbying.committeeBreakdown.length > 0 && (
-        <div>
-          <h3 className="aicher-heading type-lg text-gray-900 mb-4">Committee Breakdown</h3>
-          <div className="space-y-3">
-            {lobbying.committeeBreakdown.map(cb => (
-              <div key={cb.committee} className="border-2 border-gray-200 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="type-sm font-medium text-gray-900">{cb.committee}</span>
-                  <span className="type-xs text-gray-500 aicher-heading-wide flex-shrink-0">
-                    {formatCompact(cb.totalSpending)}
-                  </span>
-                </div>
-                <div className="mt-2">
-                  <span className="type-xs text-gray-500">
-                    {cb.companyCount} organization{cb.companyCount !== 1 ? 's' : ''}
-                  </span>
-                  {cb.topIssues.length > 0 && (
-                    <span className="type-xs text-gray-400 ml-3">
-                      Issues: {cb.topIssues.join(', ')}
-                    </span>
-                  )}
-                </div>
+      {hasLobbyingData &&
+        lobbying.committeeBreakdown.length > 0 &&
+        (() => {
+          const maxCommitteeSpending = lobbying.committeeBreakdown[0]?.totalSpending ?? 1;
+
+          return (
+            <div>
+              <h3 className="aicher-heading type-lg text-gray-900 mb-4">Committee Breakdown</h3>
+              <div className="space-y-3">
+                {lobbying.committeeBreakdown.map(cb => (
+                  <div key={cb.committee} className="border-2 border-gray-200 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="type-sm font-medium text-gray-900">{cb.committee}</span>
+                        <span className="type-xs text-gray-400 ml-2">
+                          {cb.companyCount} org{cb.companyCount !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <span className="type-sm font-medium text-gray-900 aicher-heading-wide flex-shrink-0">
+                        {formatCompact(cb.totalSpending)}
+                      </span>
+                    </div>
+                    {cb.totalSpending > 0 && (
+                      <div
+                        className="h-1 bg-[#3ea2d4] mt-2"
+                        style={{ width: `${(cb.totalSpending / maxCommitteeSpending) * 100}%` }}
+                        role="presentation"
+                      />
+                    )}
+                    {cb.topIssues.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {cb.topIssues.map(issue => (
+                          <span
+                            key={issue}
+                            className="border-2 border-gray-200 px-2 py-0.5 type-xs aicher-heading text-gray-600"
+                          >
+                            {issue}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          );
+        })()}
 
       {/* Narrative + disclaimer from influence chain insight */}
       {hasChains && (

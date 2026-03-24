@@ -394,7 +394,7 @@ export class SenateLobbyingAPI {
           const filings = relevantFilings.map(filing => ({
             company: filing.client.name,
             amount: filing.income || 0,
-            issues: Array.isArray(filing.specific_issues) ? filing.specific_issues.slice(0, 3) : [], // Top 3 issues
+            issues: Array.isArray(filing.issues) ? filing.issues.map(i => i.description) : [],
             quarter: filing.filingPeriod,
             year: filing.filingYear,
           }));
