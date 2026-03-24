@@ -227,38 +227,27 @@ export async function GET(
           });
         }
 
-        // Industry breakdown (simplified)
-        const industrySpending: Record<string, number> = {};
-        const totalForPercentage = topCompanies.reduce(
-          (sum, company) => sum + company.totalSpending,
-          0
-        );
-
-        topCompanies.forEach(company => {
-          const companyName = company.name.toLowerCase();
-          let industry = 'Other';
-
-          if (companyName.includes('pharma') || companyName.includes('health'))
-            industry = 'Healthcare';
-          else if (companyName.includes('tech') || companyName.includes('software'))
-            industry = 'Technology';
-          else if (companyName.includes('oil') || companyName.includes('energy'))
-            industry = 'Energy';
-          else if (companyName.includes('bank') || companyName.includes('financial'))
-            industry = 'Finance';
-          else if (companyName.includes('defense') || companyName.includes('aerospace'))
-            industry = 'Defense';
-
-          industrySpending[industry] = (industrySpending[industry] || 0) + company.totalSpending;
+        // Industry breakdown — aggregate by LDA issue labels from filings
+        const issueSpending: Record<string, number> = {};
+        committeeLobbyingData.forEach(committeeData => {
+          committeeData.filings.forEach(filing => {
+            const amount = filing.amount;
+            const issues = filing.issues.length > 0 ? filing.issues : ['Other'];
+            const perIssueAmount = amount / issues.length;
+            issues.forEach(issue => {
+              issueSpending[issue] = (issueSpending[issue] || 0) + perIssueAmount;
+            });
+          });
         });
 
-        const industryBreakdown = Object.entries(industrySpending)
+        const industryBreakdown = Object.entries(issueSpending)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
           .map(([industry, spending]) => ({
             industry,
             spending,
-            percentage: totalForPercentage > 0 ? (spending / totalForPercentage) * 100 : 0,
-          }))
-          .sort((a, b) => b.spending - a.spending);
+            percentage: totalRelevantSpending > 0 ? (spending / totalRelevantSpending) * 100 : 0,
+          }));
 
         return {
           totalRelevantSpending,

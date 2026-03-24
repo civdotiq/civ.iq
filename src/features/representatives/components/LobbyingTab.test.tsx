@@ -29,6 +29,13 @@ jest.mock('@/components/intelligence/MoneyFlowChain', () => ({
 }));
 
 const makeLobbyingData = () => ({
+  representative: {
+    name: 'Jane Smith',
+    committees: ['Energy and Commerce'],
+  },
+  metadata: {
+    coveragePeriod: 'Last 2 years (quarterly filings)',
+  },
   lobbyingData: {
     totalRelevantSpending: 5_000_000,
     affectedCommittees: 3,
@@ -259,7 +266,10 @@ describe('LobbyingTab', () => {
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText(/filing-only activity/)).toBeInTheDocument();
-    expect(screen.getByText('Zero Corp')).toBeInTheDocument();
+    // Zero Corp is a link in the collapsible section
+    const zeroCorp = screen.getByText('Zero Corp');
+    expect(zeroCorp.tagName).toBe('A');
+    expect(zeroCorp).toHaveAttribute('href', expect.stringContaining('lda.senate.gov'));
   });
 
   it('renders issue tags in committee breakdown', () => {
@@ -294,6 +304,53 @@ describe('LobbyingTab', () => {
     expect(screen.getByText('Industry Breakdown')).toBeInTheDocument();
     expect(screen.getByText('Healthcare')).toBeInTheDocument();
     expect(screen.getByText('Technology')).toBeInTheDocument();
+  });
+
+  it('renders intro disclaimer with representative name and LDA link', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText(/Jane Smith's committee assignments/)).toBeInTheDocument();
+    expect(screen.getByText(/Filing a disclosure does not mean/)).toBeInTheDocument();
+    const ldaLink = screen.getByText('Search all filings on Senate LDA');
+    expect(ldaLink.tagName).toBe('A');
+    expect(ldaLink).toHaveAttribute('href', 'https://lda.senate.gov/filings/public/filing/search/');
+  });
+
+  it('links organization names to Senate LDA search', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    const acmeLink = screen.getByText('Acme Corp');
+    expect(acmeLink.tagName).toBe('A');
+    expect(acmeLink).toHaveAttribute('href', expect.stringContaining('lda.senate.gov'));
+    expect(acmeLink).toHaveAttribute('href', expect.stringContaining('Acme'));
+  });
+
+  it('hides industry breakdown when only Other category exists', () => {
+    const data = makeLobbyingData();
+    data.lobbyingData.summary = {
+      quarterlyTrend: [
+        { quarter: 'Q1', year: 2025, spending: 1_000_000 },
+        { quarter: 'Q2', year: 2025, spending: 0 },
+        { quarter: 'Q3', year: 2025, spending: 0 },
+        { quarter: 'Q4', year: 2025, spending: 0 },
+      ],
+      industryBreakdown: [{ industry: 'Other', spending: 1_000_000, percentage: 100 }],
+    };
+    setupSWR(
+      { data, error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Quarterly trend should still show since Q1 has spending
+    expect(screen.getByText('Quarterly Trend')).toBeInTheDocument();
+    // Industry breakdown should be hidden since it's just "Other"
+    expect(screen.queryByText('Industry Breakdown')).not.toBeInTheDocument();
   });
 
   it('hides spending overview when summary is empty', () => {

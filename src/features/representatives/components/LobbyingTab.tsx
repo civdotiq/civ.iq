@@ -43,6 +43,10 @@ interface IndustryBreakdown {
 }
 
 interface LobbyingResponse {
+  representative?: {
+    name: string;
+    committees: string[];
+  };
   lobbyingData: {
     totalRelevantSpending: number;
     affectedCommittees: number;
@@ -53,6 +57,9 @@ interface LobbyingResponse {
       industryBreakdown: IndustryBreakdown[];
     };
   };
+  metadata?: {
+    coveragePeriod: string;
+  };
 }
 
 const INITIAL_CHAINS = 3;
@@ -62,6 +69,10 @@ const fetcher = async (url: string) => {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 };
+
+function ldaSearchUrl(registrantName: string): string {
+  return `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(registrantName)}&filing_year=`;
+}
 
 function formatCompact(amount: number): string {
   if (amount >= 1_000_000_000) return `$${(amount / 1_000_000_000).toFixed(1)}B`;
@@ -134,6 +145,8 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
   }
 
   const lobbying = lobbyingData?.lobbyingData;
+  const repName = lobbyingData?.representative?.name;
+  const coveragePeriod = lobbyingData?.metadata?.coveragePeriod;
   const hasLobbyingData =
     lobbying && ((lobbying.topCompanies?.length ?? 0) > 0 || lobbying.totalRelevantSpending > 0);
   const hasChains = chainData?.chains && chainData.chains.length > 0;
@@ -160,6 +173,22 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Intro disclaimer — matches FinanceTab, VotingTab, BillsTab pattern */}
+      <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
+        Shows which organizations filed lobbying disclosures related to
+        {repName ? ` ${repName}'s` : " this representative's"} committee assignments
+        {coveragePeriod ? ` (${coveragePeriod.toLowerCase()})` : ''}. Filing a disclosure does not
+        mean money changed hands or votes were affected.{' '}
+        <a
+          href="https://lda.senate.gov/filings/public/filing/search/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Search all filings on Senate LDA
+        </a>
+      </p>
+
       {/* Summary stats */}
       {hasLobbyingData && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -178,7 +207,9 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
         (() => {
           const { quarterlyTrend, industryBreakdown } = lobbying.summary;
           const hasQuarterly = quarterlyTrend.some(q => q.spending > 0);
-          const hasIndustry = industryBreakdown.length > 0;
+          const hasIndustry =
+            industryBreakdown.length > 1 ||
+            (industryBreakdown.length === 1 && industryBreakdown[0]?.industry !== 'Other');
 
           if (!hasQuarterly && !hasIndustry) return null;
 
@@ -293,9 +324,14 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                           <span className="type-xs text-gray-400 aicher-heading flex-shrink-0">
                             #{i + 1}
                           </span>
-                          <span className="type-sm font-medium text-gray-900 break-words">
+                          <a
+                            href={ldaSearchUrl(company.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="type-sm font-medium text-[#3ea2d4] hover:underline break-words"
+                          >
                             {company.name}
-                          </span>
+                          </a>
                         </div>
                         <span className="type-sm font-medium text-gray-900 aicher-heading-wide flex-shrink-0">
                           {formatCompact(company.totalSpending)}
@@ -315,9 +351,14 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                             {committee}
                           </span>
                         ))}
-                        <span className="type-xs text-gray-400 self-center ml-1">
+                        <a
+                          href={ldaSearchUrl(company.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="type-xs text-[#3ea2d4] hover:underline self-center ml-1"
+                        >
                           {company.recentFilings} filing{company.recentFilings !== 1 ? 's' : ''}
-                        </span>
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -340,10 +381,22 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                           key={company.name}
                           className="flex items-center justify-between py-1 border-t border-gray-100"
                         >
-                          <span className="type-xs text-gray-600">{company.name}</span>
-                          <span className="type-xs text-gray-400">
+                          <a
+                            href={ldaSearchUrl(company.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="type-xs text-[#3ea2d4] hover:underline"
+                          >
+                            {company.name}
+                          </a>
+                          <a
+                            href={ldaSearchUrl(company.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="type-xs text-[#3ea2d4] hover:underline"
+                          >
                             {company.recentFilings} filing{company.recentFilings !== 1 ? 's' : ''}
-                          </span>
+                          </a>
                         </div>
                       ))}
                     </div>
