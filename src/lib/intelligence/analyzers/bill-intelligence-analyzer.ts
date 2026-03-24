@@ -39,7 +39,7 @@ import {
 } from './shared';
 import { classifyBillSectors } from '../embeddings';
 import { confidenceScore } from '../statistics/civic-stats';
-import type { BillIntelligenceInsight } from '../types';
+import type { BillIntelligenceInsight, BillLobbyingSimilarity } from '../types';
 import type { Bill, BillVote } from '@/types/bill';
 
 /** Redis cache TTL: 7 days */
@@ -229,7 +229,8 @@ async function computeAndCache(
     lobbyingOrgs,
     storyContext,
     sponsorCommitteeConnection,
-    sponsorFundingContext
+    sponsorFundingContext,
+    lobbyingSimilarity
   );
 
   const insight: BillIntelligenceInsight = {
@@ -573,7 +574,8 @@ async function generateNarrative(
   lobbyingOrgs: number,
   storyContext: StoryContext,
   sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
-  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext'],
+  lobbyingSimilarity?: BillLobbyingSimilarity | null
 ): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const sectorList = sectors.slice(0, 5).join(', ');
   const sponsorInfo = sponsor
@@ -597,6 +599,15 @@ async function generateNarrative(
     sponsorFundingContext
   );
 
+  const lobbyingLanguageBlock = lobbyingSimilarity?.hasStrongMatches
+    ? `\nLOBBYING LANGUAGE ANALYSIS:\nThis bill's language shows high semantic similarity to lobbying filings:\n${lobbyingSimilarity.matches
+        .slice(0, 3)
+        .map(
+          m => `- ${m.client}: ${(m.similarity * 100).toFixed(0)}% similarity, ${m.period} filing`
+        )
+        .join('\n')}\n`
+    : '';
+
   const prompt =
     `Write a 3-5 sentence narrative about this bill's story: who introduced it, the funding picture, and any notable connections.\n\n` +
     `${PLAIN_LANGUAGE_RULES}\n\n` +
@@ -606,7 +617,8 @@ async function generateNarrative(
     `${sponsorInfo}\n` +
     `${cosponsorInfo}\n` +
     `${lobbyingInfo}\n` +
-    `${storyFacts}\n\n` +
+    `${storyFacts}\n` +
+    `${lobbyingLanguageBlock}\n` +
     `Use "pattern", "correlation", or "association" — never "caused", "influenced", or "resulted in". ` +
     `State facts only. Lead with the most notable finding.`;
 
@@ -620,7 +632,8 @@ async function generateNarrative(
     lobbyingOrgs,
     storyContext,
     sponsorCommitteeConnection,
-    sponsorFundingContext
+    sponsorFundingContext,
+    lobbyingSimilarity
   );
 
   return generateInsightNarrative(
@@ -703,7 +716,8 @@ function buildStatisticalNarrative(
   lobbyingOrgs: number,
   storyContext: StoryContext,
   sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
-  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext']
+  sponsorFundingContext?: BillIntelligenceInsight['sponsorFundingContext'],
+  lobbyingSimilarity?: BillLobbyingSimilarity | null
 ): string {
   const sectorList = sectors.slice(0, 3).join(', ');
   const parts: string[] = [];
@@ -767,6 +781,16 @@ function buildStatisticalNarrative(
   // CBO
   if (storyContext.fiscalImpact) {
     parts.push(`CBO estimates: ${storyContext.fiscalImpact}`);
+  }
+
+  // Lobbying language similarity
+  if (lobbyingSimilarity?.hasStrongMatches) {
+    const topMatch = lobbyingSimilarity.matches[0];
+    if (topMatch) {
+      parts.push(
+        `The bill's language shows ${(topMatch.similarity * 100).toFixed(0)}% semantic similarity to lobbying filings from ${topMatch.client}.`
+      );
+    }
   }
 
   return parts.join(' ');

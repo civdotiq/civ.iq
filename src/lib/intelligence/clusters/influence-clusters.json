@@ -1,0 +1,7077 @@
+{
+  "generatedAt": "2026-03-24T02:15:25.726493",
+  "legislatorCount": 273,
+  "clusterCount": 6,
+  "noisePoints": 137,
+  "crossPartyClusters": 4,
+  "legislators": [
+    {
+      "bioguideId": "A000055",
+      "party": "R",
+      "chamber": "House",
+      "state": "AL",
+      "x": 14.1816,
+      "y": 13.1016,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 2409427.6,
+          "pct": 0.5075081285624647
+        },
+        {
+          "sector": "Other",
+          "amount": 903159,
+          "pct": 0.1902362759870216
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 847977.95,
+          "pct": 0.17861325339957726
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001257",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 13.3392,
+      "y": 17.6292,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2228614.05,
+          "pct": 0.6967870615155983
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 257710,
+          "pct": 0.08057428948865544
+        },
+        {
+          "sector": "Health",
+          "amount": 250000,
+          "pct": 0.07816372035296985
+        }
+      ]
+    },
+    {
+      "bioguideId": "B000490",
+      "party": "D",
+      "chamber": "House",
+      "state": "GA",
+      "x": 11.4848,
+      "y": 13.2091,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1567673.3,
+          "pct": 0.4891795231899055
+        },
+        {
+          "sector": "Transportation",
+          "amount": 609917.5499999999,
+          "pct": 0.19031974091422957
+        },
+        {
+          "sector": "Labor",
+          "amount": 450000,
+          "pct": 0.14041878842706415
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001260",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 15.442,
+      "y": 23.0095,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 39602597.550000004,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "C000059",
+      "party": "R",
+      "chamber": "House",
+      "state": "CA",
+      "x": 10.7947,
+      "y": 14.7742,
+      "clusterId": 2,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 15668920.399999995,
+          "pct": 0.9197212079531442
+        },
+        {
+          "sector": "Construction",
+          "amount": 1175906.7,
+          "pct": 0.06902238973427907
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 162770.8,
+          "pct": 0.00955418452412967
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001072",
+      "party": "D",
+      "chamber": "House",
+      "state": "IN",
+      "x": 10.6826,
+      "y": 12.7803,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1232597.3,
+          "pct": 0.4063981639176922
+        },
+        {
+          "sector": "Labor",
+          "amount": 650000,
+          "pct": 0.21431071327715864
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 525132.1999999998,
+          "pct": 0.17314070207200538
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001051",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 14.8091,
+      "y": 22.4342,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4306562.750000001,
+          "pct": 0.959880200048467
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 55000,
+          "pct": 0.01225882776296843
+        },
+        {
+          "sector": "Construction",
+          "amount": 50000,
+          "pct": 0.011144388875425846
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001066",
+      "party": "D",
+      "chamber": "House",
+      "state": "FL",
+      "x": 11.2289,
+      "y": 12.6226,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1000000,
+          "pct": 0.3891766926204062
+        },
+        {
+          "sector": "Labor",
+          "amount": 500000,
+          "pct": 0.1945883463102031
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 369526.94999999995,
+          "pct": 0.1438112762351062
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001080",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.2354,
+      "y": 13.4294,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1767007.35,
+          "pct": 0.571475792255151
+        },
+        {
+          "sector": "Labor",
+          "amount": 600000,
+          "pct": 0.19404869784672407
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 200000,
+          "pct": 0.06468289928224136
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001067",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 11.4425,
+      "y": 13.7487,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1325000,
+          "pct": 0.5298940211957609
+        },
+        {
+          "sector": "Labor",
+          "amount": 450000,
+          "pct": 0.1799640071985603
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 175000,
+          "pct": 0.06998600279944012
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001061",
+      "party": "D",
+      "chamber": "House",
+      "state": "MO",
+      "x": 14.7417,
+      "y": 19.0978,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1719364.9,
+          "pct": 0.882012854545601
+        },
+        {
+          "sector": "Labor",
+          "amount": 50000,
+          "pct": 0.025649379446608483
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 50000,
+          "pct": 0.025649379446608483
+        }
+      ]
+    },
+    {
+      "bioguideId": "C000537",
+      "party": "D",
+      "chamber": "House",
+      "state": "SC",
+      "x": 12.2129,
+      "y": 13.6778,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1020477.6000000001,
+          "pct": 0.3956142110380067
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 355998.99999999994,
+          "pct": 0.1380121067971696
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 250000,
+          "pct": 0.09691888656791846
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001068",
+      "party": "D",
+      "chamber": "House",
+      "state": "TN",
+      "x": 11.0653,
+      "y": 12.9725,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1522155.1,
+          "pct": 0.5430044510590852
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.22295873916654635
+        },
+        {
+          "sector": "Transportation",
+          "amount": 300000,
+          "pct": 0.10702019479994225
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001053",
+      "party": "R",
+      "chamber": "House",
+      "state": "OK",
+      "x": 9.518,
+      "y": 16.7799,
+      "clusterId": 0,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1932832.4000000004,
+          "pct": 0.472899574970037
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1101000,
+          "pct": 0.26937795126054936
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 389842,
+          "pct": 0.09538132540900551
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001059",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.2367,
+      "y": 16.8267,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1249935,
+          "pct": 0.34474890803723895
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 1153203.75,
+          "pct": 0.3180691264401342
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 550000,
+          "pct": 0.15169740780159083
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001069",
+      "party": "D",
+      "chamber": "House",
+      "state": "CT",
+      "x": 11.4607,
+      "y": 12.5977,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 984092.75,
+          "pct": 0.3039596057224763
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 820484.65,
+          "pct": 0.2534254933951541
+        },
+        {
+          "sector": "Labor",
+          "amount": 400000,
+          "pct": 0.12354916982061959
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001087",
+      "party": "R",
+      "chamber": "House",
+      "state": "AR",
+      "x": 9.962,
+      "y": 16.986,
+      "clusterId": 0,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1706467.0500000003,
+          "pct": 0.5000684328951982
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 776000,
+          "pct": 0.22740146311449363
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 204000,
+          "pct": 0.05978079700432565
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001063",
+      "party": "D",
+      "chamber": "House",
+      "state": "TX",
+      "x": 13.6136,
+      "y": 16.3052,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3935460.249999998,
+          "pct": 0.6930448212576559
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 567646.8000000002,
+          "pct": 0.09996408299219403
+        },
+        {
+          "sector": "Transportation",
+          "amount": 295266.5,
+          "pct": 0.05199720127166162
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000096",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 10.5475,
+      "y": 12.1409,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1189341.4000000001,
+          "pct": 0.4080295765002494
+        },
+        {
+          "sector": "Labor",
+          "amount": 775000,
+          "pct": 0.2658806981642893
+        },
+        {
+          "sector": "Transportation",
+          "amount": 287999.75,
+          "pct": 0.09880461238856875
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000197",
+      "party": "D",
+      "chamber": "House",
+      "state": "CO",
+      "x": 12.0867,
+      "y": 13.9433,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1266512.5,
+          "pct": 0.4656890223013385
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.128692893126178
+        },
+        {
+          "sector": "Health",
+          "amount": 350000,
+          "pct": 0.128692893126178
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000216",
+      "party": "D",
+      "chamber": "House",
+      "state": "CT",
+      "x": 11.8302,
+      "y": 17.5594,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1729966.4500000002,
+          "pct": 0.5778175804207827
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 301000,
+          "pct": 0.10053552871308895
+        },
+        {
+          "sector": "Labor",
+          "amount": 225000,
+          "pct": 0.07515114272573094
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000616",
+      "party": "R",
+      "chamber": "House",
+      "state": "TN",
+      "x": 13.6964,
+      "y": 17.5222,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2002227.45,
+          "pct": 0.7446747531067159
+        },
+        {
+          "sector": "Transportation",
+          "amount": 225000,
+          "pct": 0.08368271019809018
+        },
+        {
+          "sector": "Health",
+          "amount": 197000,
+          "pct": 0.07326886181788339
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000600",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 14.552,
+      "y": 18.7197,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4026990.2999999984,
+          "pct": 0.8298826180038428
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 175491.5,
+          "pct": 0.03616530823464398
+        },
+        {
+          "sector": "Labor",
+          "amount": 175000,
+          "pct": 0.03606401985886893
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000399",
+      "party": "D",
+      "chamber": "House",
+      "state": "TX",
+      "x": 13.8242,
+      "y": 15.5477,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7393971.099999999,
+          "pct": 0.7847748269870682
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1257535.6999999997,
+          "pct": 0.13347122243926024
+        },
+        {
+          "sector": "Health",
+          "amount": 186625,
+          "pct": 0.01980784075372727
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000459",
+      "party": "R",
+      "chamber": "House",
+      "state": "TN",
+      "x": 12.9304,
+      "y": 19.1992,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 3490000,
+          "pct": 0.5232174089693721
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1755267.3500000003,
+          "pct": 0.26314797562049747
+        },
+        {
+          "sector": "Other",
+          "amount": 1100000,
+          "pct": 0.1649109311937849
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000450",
+      "party": "R",
+      "chamber": "House",
+      "state": "NC",
+      "x": 13.0741,
+      "y": 16.2372,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2380942.85,
+          "pct": 0.5187582507500742
+        },
+        {
+          "sector": "Transportation",
+          "amount": 1200000,
+          "pct": 0.26145520498322294
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 254177.10000000003,
+          "pct": 0.055379938152117635
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000559",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.161,
+      "y": 13.5021,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1680750,
+          "pct": 0.5861796673551146
+        },
+        {
+          "sector": "Labor",
+          "amount": 500000,
+          "pct": 0.17438038594529662
+        },
+        {
+          "sector": "Transportation",
+          "amount": 150000,
+          "pct": 0.05231411578358899
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000565",
+      "party": "R",
+      "chamber": "House",
+      "state": "AZ",
+      "x": 15.4723,
+      "y": 23.0029,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 989483.4999999999,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000546",
+      "party": "R",
+      "chamber": "House",
+      "state": "MO",
+      "x": 13.3629,
+      "y": 18.2745,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3731069.3499999996,
+          "pct": 0.6044207069324494
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 1112636.3000000003,
+          "pct": 0.1802433447142185
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 789316.8499999999,
+          "pct": 0.1278666794201223
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000553",
+      "party": "D",
+      "chamber": "House",
+      "state": "TX",
+      "x": 11.0421,
+      "y": 12.0222,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1050000,
+          "pct": 0.293678133464573
+        },
+        {
+          "sector": "Labor",
+          "amount": 1050000,
+          "pct": 0.293678133464573
+        },
+        {
+          "sector": "Other",
+          "amount": 869342.8,
+          "pct": 0.24314949604272912
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000568",
+      "party": "R",
+      "chamber": "House",
+      "state": "VA",
+      "x": 13.4046,
+      "y": 17.2561,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1298092.7,
+          "pct": 0.5413021356513865
+        },
+        {
+          "sector": "Health",
+          "amount": 200000,
+          "pct": 0.08339961169974788
+        },
+        {
+          "sector": "Transportation",
+          "amount": 200000,
+          "pct": 0.08339961169974788
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000558",
+      "party": "R",
+      "chamber": "House",
+      "state": "KY",
+      "x": 15.5883,
+      "y": 22.9797,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 29046845.450000033,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001052",
+      "party": "R",
+      "chamber": "House",
+      "state": "MD",
+      "x": 15.4469,
+      "y": 21.1888,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7492741.449999999,
+          "pct": 0.883604941752086
+        },
+        {
+          "sector": "Health",
+          "amount": 450000,
+          "pct": 0.05306765573613097
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 167000,
+          "pct": 0.019693996684297492
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001047",
+      "party": "D",
+      "chamber": "House",
+      "state": "CT",
+      "x": 8.6779,
+      "y": 16.6767,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 2784002.5,
+          "pct": 0.5182739768214645
+        },
+        {
+          "sector": "Other",
+          "amount": 2006311.5000000002,
+          "pct": 0.373497882939271
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 253000,
+          "pct": 0.047098849995943076
+        }
+      ]
+    },
+    {
+      "bioguideId": "H000874",
+      "party": "D",
+      "chamber": "House",
+      "state": "MD",
+      "x": 15.4337,
+      "y": 21.4674,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 14470511.299999999,
+          "pct": 0.9666010071412858
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 125000,
+          "pct": 0.008349748214678546
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 125000,
+          "pct": 0.008349748214678546
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001058",
+      "party": "R",
+      "chamber": "House",
+      "state": "MI",
+      "x": 11.7189,
+      "y": 18.565,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6777565.399999994,
+          "pct": 0.8816264154812911
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 428500,
+          "pct": 0.05573932477785217
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 177005.3,
+          "pct": 0.02302486792088951
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000288",
+      "party": "D",
+      "chamber": "House",
+      "state": "GA",
+      "x": 10.5452,
+      "y": 12.5725,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1275000,
+          "pct": 0.51
+        },
+        {
+          "sector": "Labor",
+          "amount": 675000,
+          "pct": 0.27
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 200000,
+          "pct": 0.08
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000289",
+      "party": "R",
+      "chamber": "House",
+      "state": "OH",
+      "x": 14.3723,
+      "y": 16.2637,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 10270588.250000002,
+          "pct": 0.9142001329386268
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 811319.2499999999,
+          "pct": 0.07221671711020708
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 92000,
+          "pct": 0.008189055016430403
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000009",
+      "party": "D",
+      "chamber": "House",
+      "state": "OH",
+      "x": 14.0763,
+      "y": 15.8981,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 5874983.7,
+          "pct": 0.8329436375037379
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 653295.1000000002,
+          "pct": 0.09262289475924305
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.035444508446199514
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000375",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 11.0312,
+      "y": 12.6604,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1100000,
+          "pct": 0.4440855874041179
+        },
+        {
+          "sector": "Labor",
+          "amount": 550000,
+          "pct": 0.22204279370205895
+        },
+        {
+          "sector": "Transportation",
+          "amount": 325000,
+          "pct": 0.13120710536939847
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000376",
+      "party": "R",
+      "chamber": "House",
+      "state": "PA",
+      "x": 13.4363,
+      "y": 17.7239,
+      "clusterId": 3,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4268058.800000001,
+          "pct": 0.7674282753937763
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 275000,
+          "pct": 0.049447016927997446
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 219449.59999999998,
+          "pct": 0.03945864758560824
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000560",
+      "party": "D",
+      "chamber": "House",
+      "state": "WA",
+      "x": 11.3885,
+      "y": 12.9268,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1161722.7999999998,
+          "pct": 0.4210348156377024
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.1721508241276737
+        },
+        {
+          "sector": "Transportation",
+          "amount": 400000,
+          "pct": 0.14496911505488314
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000557",
+      "party": "D",
+      "chamber": "House",
+      "state": "CT",
+      "x": 12.7391,
+      "y": 13.9907,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 500000,
+          "pct": 0.4415400918403391
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 175000,
+          "pct": 0.15453903214411868
+        },
+        {
+          "sector": "Health",
+          "amount": 102775,
+          "pct": 0.09075856587778171
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000566",
+      "party": "R",
+      "chamber": "House",
+      "state": "OH",
+      "x": 13.4054,
+      "y": 18.0967,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2322618.65,
+          "pct": 0.6607605373510984
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 397450,
+          "pct": 0.11307033790079747
+        },
+        {
+          "sector": "Transportation",
+          "amount": 175000,
+          "pct": 0.04978565639109211
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000397",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.107,
+      "y": 15.8175,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6121586.799999992,
+          "pct": 0.8171515972924718
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 955745.45,
+          "pct": 0.1275794898591511
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 389040,
+          "pct": 0.051931740543263
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000491",
+      "party": "R",
+      "chamber": "House",
+      "state": "OK",
+      "x": 15.294,
+      "y": 21.5403,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7369222.700000003,
+          "pct": 0.9760271971845281
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 52000,
+          "pct": 0.0068872140685333665
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 29000,
+          "pct": 0.0038409463074513006
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000562",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 12.7135,
+      "y": 13.7465,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2029146,
+          "pct": 0.5276324834303077
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 765206.6500000003,
+          "pct": 0.1989742902072529
+        },
+        {
+          "sector": "Labor",
+          "amount": 600000,
+          "pct": 0.15601612208199145
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001163",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.6354,
+      "y": 19.2841,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 10789015.350000001,
+          "pct": 0.9171201353456242
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 250000,
+          "pct": 0.021251247347275858
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.021251247347275858
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001157",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 13.0218,
+      "y": 19.3101,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 21181871.8,
+          "pct": 0.5385503908368405
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 17350000,
+          "pct": 0.44112481508924917
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 799400,
+          "pct": 0.02032479407391042
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001177",
+      "party": "R",
+      "chamber": "House",
+      "state": "CA",
+      "x": 12.5021,
+      "y": 18.1429,
+      "clusterId": 3,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2948190.1999999997,
+          "pct": 0.7883514522138759
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 176000,
+          "pct": 0.04706272193349064
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 163000,
+          "pct": 0.043586498154312356
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001143",
+      "party": "D",
+      "chamber": "House",
+      "state": "MN",
+      "x": 11.309,
+      "y": 12.8201,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 842250,
+          "pct": 0.42276320742878654
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.17568076295645627
+        },
+        {
+          "sector": "Defense",
+          "amount": 200000,
+          "pct": 0.10038900740368929
+        }
+      ]
+    },
+    {
+      "bioguideId": "M000312",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 10.5695,
+      "y": 12.4067,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1269280,
+          "pct": 0.47856184113291206
+        },
+        {
+          "sector": "Labor",
+          "amount": 675000,
+          "pct": 0.25449801680063944
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 300000,
+          "pct": 0.11311022968917309
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001137",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 14.969,
+      "y": 20.255,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 12980802.6,
+          "pct": 0.9398664809615949
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 425000,
+          "pct": 0.030771845679917958
+        },
+        {
+          "sector": "Transportation",
+          "amount": 127523.65,
+          "pct": 0.009233266066682046
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001160",
+      "party": "D",
+      "chamber": "House",
+      "state": "WI",
+      "x": 12.5861,
+      "y": 13.5474,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1107505,
+          "pct": 0.41674615852086827
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 675000,
+          "pct": 0.253997640644138
+        },
+        {
+          "sector": "Labor",
+          "amount": 575000,
+          "pct": 0.21636836054871017
+        }
+      ]
+    },
+    {
+      "bioguideId": "N000002",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 14.1867,
+      "y": 18.9475,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4381478,
+          "pct": 0.8480614300344356
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 325000,
+          "pct": 0.06290570550877844
+        },
+        {
+          "sector": "Labor",
+          "amount": 175000,
+          "pct": 0.03387230296626532
+        }
+      ]
+    },
+    {
+      "bioguideId": "N000015",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 13.876,
+      "y": 13.6004,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3616791.3499999996,
+          "pct": 0.5533498930712419
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 2513382.95,
+          "pct": 0.3845342603547155
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 156000,
+          "pct": 0.02386717257524788
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000034",
+      "party": "D",
+      "chamber": "House",
+      "state": "NJ",
+      "x": 14.2777,
+      "y": 16.059,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7436579.149999999,
+          "pct": 0.8913248105138412
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 748618.3500000001,
+          "pct": 0.08972702307094177
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 158090,
+          "pct": 0.018948166415217023
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000197",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 15.0113,
+      "y": 22.7343,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 27152511.5,
+          "pct": 0.992833247981339
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 50000,
+          "pct": 0.0018282530659849622
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 37000,
+          "pct": 0.0013529072688288721
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000597",
+      "party": "D",
+      "chamber": "House",
+      "state": "ME",
+      "x": 10.414,
+      "y": 12.0641,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 843754.4000000004,
+          "pct": 0.31800483281908853
+        },
+        {
+          "sector": "Labor",
+          "amount": 725000,
+          "pct": 0.273247172155593
+        },
+        {
+          "sector": "Defense",
+          "amount": 275000,
+          "pct": 0.10364547909350079
+        }
+      ]
+    },
+    {
+      "bioguideId": "Q000023",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 11.7335,
+      "y": 13.4616,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1301253.5999999999,
+          "pct": 0.5100447873939306
+        },
+        {
+          "sector": "Labor",
+          "amount": 375000,
+          "pct": 0.14698656378182084
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 250000,
+          "pct": 0.0979910425212139
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000395",
+      "party": "R",
+      "chamber": "House",
+      "state": "KY",
+      "x": 13.6273,
+      "y": 16.5447,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1754738.2999999998,
+          "pct": 0.7147651671705222
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 197697.45,
+          "pct": 0.0805289603004824
+        },
+        {
+          "sector": "Transportation",
+          "amount": 150000,
+          "pct": 0.061100150988656454
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000575",
+      "party": "R",
+      "chamber": "House",
+      "state": "AL",
+      "x": 13.9236,
+      "y": 13.5171,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2420518.0500000003,
+          "pct": 0.47944480171173504
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1897567.3999999992,
+          "pct": 0.3758612028642596
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 192500,
+          "pct": 0.038129492291746794
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001176",
+      "party": "R",
+      "chamber": "House",
+      "state": "LA",
+      "x": 15.6398,
+      "y": 22.9613,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 231958183.19999978,
+          "pct": 0.9976652789413581
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 542825,
+          "pct": 0.002334721058641846
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001145",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 11.4479,
+      "y": 13.8467,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1363974.3,
+          "pct": 0.6367875702700038
+        },
+        {
+          "sector": "Labor",
+          "amount": 300000,
+          "pct": 0.1400585561480162
+        },
+        {
+          "sector": "Transportation",
+          "amount": 125000,
+          "pct": 0.05835773172834009
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001183",
+      "party": "R",
+      "chamber": "House",
+      "state": "AZ",
+      "x": 10.7652,
+      "y": 14.8242,
+      "clusterId": 2,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11203845.399999997,
+          "pct": 0.9119768943346841
+        },
+        {
+          "sector": "Construction",
+          "amount": 926164.0499999999,
+          "pct": 0.07538842101154246
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 70000,
+          "pct": 0.005697899276923967
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001189",
+      "party": "R",
+      "chamber": "House",
+      "state": "GA",
+      "x": 13.2405,
+      "y": 16.5987,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1848994.65,
+          "pct": 0.6314883976990873
+        },
+        {
+          "sector": "Transportation",
+          "amount": 275000,
+          "pct": 0.09392093663832343
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 225000,
+          "pct": 0.07684440270408281
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001157",
+      "party": "D",
+      "chamber": "House",
+      "state": "GA",
+      "x": 14.3481,
+      "y": 18.8723,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4177770.2499999995,
+          "pct": 0.8226091110800355
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 234000,
+          "pct": 0.04607494440191591
+        },
+        {
+          "sector": "Labor",
+          "amount": 125000,
+          "pct": 0.02461268397538243
+        }
+      ]
+    },
+    {
+      "bioguideId": "S000185",
+      "party": "D",
+      "chamber": "House",
+      "state": "VA",
+      "x": 10.595,
+      "y": 12.0726,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1050000,
+          "pct": 0.42
+        },
+        {
+          "sector": "Labor",
+          "amount": 750000,
+          "pct": 0.3
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 175000,
+          "pct": 0.07
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001185",
+      "party": "D",
+      "chamber": "House",
+      "state": "AL",
+      "x": 12.5562,
+      "y": 14.1397,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 975000,
+          "pct": 0.3577981651376147
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 375000,
+          "pct": 0.13761467889908258
+        },
+        {
+          "sector": "Health",
+          "amount": 350000,
+          "pct": 0.12844036697247707
+        }
+      ]
+    },
+    {
+      "bioguideId": "S000344",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.1431,
+      "y": 15.7769,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 14372446.799999995,
+          "pct": 0.8505352019596284
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1752413.2000000002,
+          "pct": 0.10370461868599293
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 200024.40000000002,
+          "pct": 0.0118370793656967
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001148",
+      "party": "R",
+      "chamber": "House",
+      "state": "ID",
+      "x": 13.6109,
+      "y": 16.9163,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1795363.5999999999,
+          "pct": 0.6599719243412903
+        },
+        {
+          "sector": "Construction",
+          "amount": 200000,
+          "pct": 0.07351958392620753
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 175000,
+          "pct": 0.06432963593543158
+        }
+      ]
+    },
+    {
+      "bioguideId": "S000510",
+      "party": "D",
+      "chamber": "House",
+      "state": "WA",
+      "x": 11.6389,
+      "y": 12.3784,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 810248.6499999999,
+          "pct": 0.30805021038600283
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 553000,
+          "pct": 0.21024628222886838
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 336000,
+          "pct": 0.12774457654412255
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001172",
+      "party": "R",
+      "chamber": "House",
+      "state": "NE",
+      "x": 12.0113,
+      "y": 18.2502,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3284712.0500000003,
+          "pct": 0.7601873191699215
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 213000,
+          "pct": 0.049295005625590006
+        },
+        {
+          "sector": "Transportation",
+          "amount": 209000,
+          "pct": 0.048369277820414606
+        }
+      ]
+    },
+    {
+      "bioguideId": "S000522",
+      "party": "R",
+      "chamber": "House",
+      "state": "NJ",
+      "x": 11.2523,
+      "y": 13.3138,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1621335.8500000003,
+          "pct": 0.6171331606923759
+        },
+        {
+          "sector": "Labor",
+          "amount": 575000,
+          "pct": 0.21886370266722718
+        },
+        {
+          "sector": "Transportation",
+          "amount": 125000,
+          "pct": 0.047579065797223305
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001156",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 10.3687,
+      "y": 16.9103,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1275165.9499999997,
+          "pct": 0.42743158695504424
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 455000,
+          "pct": 0.15251455864591207
+        },
+        {
+          "sector": "Labor",
+          "amount": 325000,
+          "pct": 0.10893897046136576
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000193",
+      "party": "D",
+      "chamber": "House",
+      "state": "MS",
+      "x": 11.7992,
+      "y": 13.4032,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1256200,
+          "pct": 0.47099098403952827
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.13122659163655062
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 251702.35,
+          "pct": 0.09437154713545755
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000460",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.5911,
+      "y": 16.1943,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1902607.8000000003,
+          "pct": 0.6849807233404227
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 300000,
+          "pct": 0.10800660914042651
+        },
+        {
+          "sector": "Labor",
+          "amount": 150000,
+          "pct": 0.054003304570213254
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000467",
+      "party": "R",
+      "chamber": "House",
+      "state": "PA",
+      "x": 13.7874,
+      "y": 21.9134,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1277942.6,
+          "pct": 0.8934332988877653
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 152430.1,
+          "pct": 0.10656670111223458
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000469",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 10.5835,
+      "y": 12.3823,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 925000,
+          "pct": 0.37
+        },
+        {
+          "sector": "Labor",
+          "amount": 650000,
+          "pct": 0.26
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 250000,
+          "pct": 0.1
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000463",
+      "party": "R",
+      "chamber": "House",
+      "state": "OH",
+      "x": 11.7276,
+      "y": 18.5472,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4332188.699999999,
+          "pct": 0.8982932487431752
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 303500,
+          "pct": 0.0629317003189528
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 87000,
+          "pct": 0.01803972958072123
+        }
+      ]
+    },
+    {
+      "bioguideId": "V000081",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 12.1601,
+      "y": 13.5367,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1205000,
+          "pct": 0.4701521654311354
+        },
+        {
+          "sector": "Labor",
+          "amount": 450000,
+          "pct": 0.1755754974639095
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 325000,
+          "pct": 0.12680452594615685
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000798",
+      "party": "R",
+      "chamber": "House",
+      "state": "MI",
+      "x": 10.8599,
+      "y": 17.683,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4352524.75,
+          "pct": 0.6731319469064377
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1441674.8499999999,
+          "pct": 0.22295965085242686
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 151880,
+          "pct": 0.023488730327415087
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000797",
+      "party": "D",
+      "chamber": "House",
+      "state": "FL",
+      "x": 14.8257,
+      "y": 18.0809,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4149749.2999999993,
+          "pct": 0.7823418988984658
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.11782969318448737
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 100516.4,
+          "pct": 0.018950106515214726
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000187",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.4098,
+      "y": 19.9163,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6887068.75,
+          "pct": 0.7361248150387292
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 667500,
+          "pct": 0.07134578321704015
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 632500,
+          "pct": 0.06760480581989198
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000806",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 13.9199,
+      "y": 17.4164,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2185940.3499999996,
+          "pct": 0.7509395889888296
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 175000,
+          "pct": 0.0601180302440756
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 75000,
+          "pct": 0.02576487010460383
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000795",
+      "party": "R",
+      "chamber": "House",
+      "state": "SC",
+      "x": 14.03,
+      "y": 13.3772,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1300000,
+          "pct": 0.34251528550210125
+        },
+        {
+          "sector": "Other",
+          "amount": 1165186.9000000001,
+          "pct": 0.3069956336283141
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 693000,
+          "pct": 0.18258699450227397
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000808",
+      "party": "D",
+      "chamber": "House",
+      "state": "FL",
+      "x": 10.5603,
+      "y": 12.3138,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1629479.4499999997,
+          "pct": 0.5044079292935914
+        },
+        {
+          "sector": "Labor",
+          "amount": 950000,
+          "pct": 0.294073995734596
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 250000,
+          "pct": 0.07738789361436738
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000804",
+      "party": "R",
+      "chamber": "House",
+      "state": "VA",
+      "x": 15.4799,
+      "y": 22.9124,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9787395.149999999,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000809",
+      "party": "R",
+      "chamber": "House",
+      "state": "AR",
+      "x": 13.7418,
+      "y": 13.7278,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1535505.5500000003,
+          "pct": 0.5579027170145616
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 691776.3500000002,
+          "pct": 0.2513464736297543
+        },
+        {
+          "sector": "Transportation",
+          "amount": 200000,
+          "pct": 0.07266697499264155
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000369",
+      "party": "R",
+      "chamber": "House",
+      "state": "NV",
+      "x": 9.4616,
+      "y": 16.8072,
+      "clusterId": 0,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1645655.1000000006,
+          "pct": 0.5130399150457293
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1006000,
+          "pct": 0.31362474101408216
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 152000,
+          "pct": 0.047386640789404064
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001278",
+      "party": "D",
+      "chamber": "House",
+      "state": "OR",
+      "x": 11.685,
+      "y": 12.3525,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1897590,
+          "pct": 0.5059512442110824
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 900949.25,
+          "pct": 0.2402185899001057
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.12664845461889246
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000617",
+      "party": "D",
+      "chamber": "House",
+      "state": "WA",
+      "x": 9.0005,
+      "y": 16.7292,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 15938971.299999999,
+          "pct": 0.5116104904053449
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 14132000,
+          "pct": 0.4536101680795633
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 510533.14999999997,
+          "pct": 0.016387137558851465
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001184",
+      "party": "R",
+      "chamber": "House",
+      "state": "KY",
+      "x": 15.6122,
+      "y": 22.8838,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 55018310,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000454",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 11.1984,
+      "y": 18.13,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 23950662.049999993,
+          "pct": 0.8478189194794168
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 4149075.6000000006,
+          "pct": 0.14687129669680318
+        },
+        {
+          "sector": "Labor",
+          "amount": 100000,
+          "pct": 0.003539855882520028
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000468",
+      "party": "D",
+      "chamber": "House",
+      "state": "NV",
+      "x": 14.6913,
+      "y": 18.1023,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3579656.1999999983,
+          "pct": 0.7902710585408225
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.10486447072958874
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.049672644029805195
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001068",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.1956,
+      "y": 13.4624,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2181411.55,
+          "pct": 0.6682403601960053
+        },
+        {
+          "sector": "Labor",
+          "amount": 700000,
+          "pct": 0.2144337468723881
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 133000,
+          "pct": 0.040742411905753735
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001287",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 12.876,
+      "y": 17.0154,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Health",
+          "amount": 3088815.05,
+          "pct": 0.5040116113344688
+        },
+        {
+          "sector": "Other",
+          "amount": 2370512.5,
+          "pct": 0.38680393790929635
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 191132.55000000002,
+          "pct": 0.03118769591075579
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001193",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.0209,
+      "y": 18.5841,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1664107.3000000003,
+          "pct": 0.6243636539704839
+        },
+        {
+          "sector": "Labor",
+          "amount": 225000,
+          "pct": 0.0844187283736805
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 204603.05000000002,
+          "pct": 0.07676590801056253
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001285",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.5234,
+      "y": 18.4593,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2741793.1500000004,
+          "pct": 0.7292709830708062
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 483261.15,
+          "pct": 0.12853935897404525
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 175000,
+          "pct": 0.04654706429527372
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000599",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.1863,
+      "y": 17.4975,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1627475.35,
+          "pct": 0.5665759150900982
+        },
+        {
+          "sector": "Health",
+          "amount": 302000,
+          "pct": 0.10513580212272318
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.08703294877708873
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000472",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 10.9516,
+      "y": 11.9996,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 968875,
+          "pct": 0.4097529902611267
+        },
+        {
+          "sector": "Labor",
+          "amount": 550000,
+          "pct": 0.23260394234923978
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 420659.29999999993,
+          "pct": 0.17790365739249372
+        }
+      ]
+    },
+    {
+      "bioguideId": "V000130",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 12.9323,
+      "y": 13.9564,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1844606.25,
+          "pct": 0.5967227782912109
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 546621.9,
+          "pct": 0.1768300084870798
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.11322360661085466
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000608",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 12.9776,
+      "y": 19.2717,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 13778000,
+          "pct": 0.5895588212769657
+        },
+        {
+          "sector": "Other",
+          "amount": 8610174.049999999,
+          "pct": 0.3684282235380692
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 372835.50000000006,
+          "pct": 0.01595358237118654
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000462",
+      "party": "D",
+      "chamber": "House",
+      "state": "FL",
+      "x": 12.9714,
+      "y": 18.7274,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1733728.0499999998,
+          "pct": 0.4333131276270214
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 628000,
+          "pct": 0.15695693690239912
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 516818.55000000005,
+          "pct": 0.1291691983158271
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001282",
+      "party": "R",
+      "chamber": "House",
+      "state": "KY",
+      "x": 15.5235,
+      "y": 21.6845,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 22800700.6,
+          "pct": 0.9937961674282126
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 142334.75,
+          "pct": 0.006203832571787411
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000812",
+      "party": "R",
+      "chamber": "House",
+      "state": "MO",
+      "x": 10.9985,
+      "y": 17.9217,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4883584.450000002,
+          "pct": 0.6904263840420347
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1340000,
+          "pct": 0.18944514302733645
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 679703.25,
+          "pct": 0.09609438762119062
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001067",
+      "party": "R",
+      "chamber": "House",
+      "state": "NC",
+      "x": 14.9399,
+      "y": 21.5605,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8902342.099999992,
+          "pct": 0.9490423702137686
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 239000,
+          "pct": 0.0254788148931157
+        },
+        {
+          "sector": "Health",
+          "amount": 105000,
+          "pct": 0.011193621605762127
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001188",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 11.6201,
+      "y": 13.9975,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2697043.7,
+          "pct": 0.644834244719764
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.11356740947204076
+        },
+        {
+          "sector": "Transportation",
+          "amount": 410494.25,
+          "pct": 0.09814477594877531
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000294",
+      "party": "D",
+      "chamber": "House",
+      "state": "NY",
+      "x": 15.353,
+      "y": 22.25,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 35486364.90000001,
+          "pct": 0.9919072967371485
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 101000,
+          "pct": 0.0028231304404597373
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 70000,
+          "pct": 0.0019566250577443722
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001281",
+      "party": "D",
+      "chamber": "House",
+      "state": "OH",
+      "x": 12.8052,
+      "y": 13.7223,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1291574.4499999997,
+          "pct": 0.4384796486810917
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 600000,
+          "pct": 0.2036954116029897
+        },
+        {
+          "sector": "Labor",
+          "amount": 325000,
+          "pct": 0.1103350146182861
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000295",
+      "party": "R",
+      "chamber": "House",
+      "state": "OH",
+      "x": 9.5009,
+      "y": 16.81,
+      "clusterId": 0,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3141246.750000001,
+          "pct": 0.5186950479387419
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1759915.3,
+          "pct": 0.2906041529216465
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 414420.55,
+          "pct": 0.06843075509717589
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000605",
+      "party": "R",
+      "chamber": "House",
+      "state": "PA",
+      "x": 10.8048,
+      "y": 14.8002,
+      "clusterId": 2,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9779519.949999997,
+          "pct": 0.9259799095294051
+        },
+        {
+          "sector": "Construction",
+          "amount": 689785.85,
+          "pct": 0.06531280085763964
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 91960,
+          "pct": 0.008707289612955298
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000814",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 11.4417,
+      "y": 17.6837,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3987705.5499999993,
+          "pct": 0.7371686148435775
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 612000,
+          "pct": 0.11313452977596843
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 412638.50000000006,
+          "pct": 0.07628049455058979
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001091",
+      "party": "D",
+      "chamber": "House",
+      "state": "TX",
+      "x": 10.4778,
+      "y": 12.0055,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 939375,
+          "pct": 0.34607414229795075
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.23025558369790466
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 250000,
+          "pct": 0.09210223347916187
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000816",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 11.4591,
+      "y": 18.5026,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 25567644.55000001,
+          "pct": 0.9032063584393143
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 2740000,
+          "pct": 0.09679364156068575
+        }
+      ]
+    },
+    {
+      "bioguideId": "V000131",
+      "party": "D",
+      "chamber": "House",
+      "state": "TX",
+      "x": 10.8367,
+      "y": 12.7987,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1225000,
+          "pct": 0.49454985870004037
+        },
+        {
+          "sector": "Labor",
+          "amount": 575000,
+          "pct": 0.23213564796124345
+        },
+        {
+          "sector": "Transportation",
+          "amount": 150000,
+          "pct": 0.060557125555106985
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000607",
+      "party": "D",
+      "chamber": "House",
+      "state": "WI",
+      "x": 10.5734,
+      "y": 12.2418,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 935980,
+          "pct": 0.3528758402634923
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.23563259916310464
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 262454.35,
+          "pct": 0.09894848104346106
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000385",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 11.0644,
+      "y": 12.6412,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1134481.0499999998,
+          "pct": 0.44726573060737035
+        },
+        {
+          "sector": "Labor",
+          "amount": 550000,
+          "pct": 0.21683584034660935
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 202000,
+          "pct": 0.07963789045457288
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001195",
+      "party": "R",
+      "chamber": "House",
+      "state": "MO",
+      "x": 11.6916,
+      "y": 18.5181,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9964871.699999994,
+          "pct": 0.8452111549342504
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 864335,
+          "pct": 0.07331209127359821
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 227665,
+          "pct": 0.019310333678265644
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001101",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 14.9879,
+      "y": 20.97,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11136008.900000004,
+          "pct": 0.9646569919051258
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 104000,
+          "pct": 0.009009002063399307
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 78000,
+          "pct": 0.00675675154754948
+        }
+      ]
+    },
+    {
+      "bioguideId": "N000188",
+      "party": "D",
+      "chamber": "House",
+      "state": "NJ",
+      "x": 11.2043,
+      "y": 14.0539,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2164162.7,
+          "pct": 0.49574051410336445
+        },
+        {
+          "sector": "Construction",
+          "amount": 775000,
+          "pct": 0.17752773321068116
+        },
+        {
+          "sector": "Labor",
+          "amount": 675000,
+          "pct": 0.15462092892543197
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000370",
+      "party": "D",
+      "chamber": "House",
+      "state": "NC",
+      "x": 10.6479,
+      "y": 11.9682,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 975000,
+          "pct": 0.39
+        },
+        {
+          "sector": "Labor",
+          "amount": 775000,
+          "pct": 0.31
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.09
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000609",
+      "party": "R",
+      "chamber": "House",
+      "state": "AL",
+      "x": 15.3068,
+      "y": 22.2486,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 23418743.94999998,
+          "pct": 0.9857724610446879
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 136000,
+          "pct": 0.005724690230539784
+        },
+        {
+          "sector": "Construction",
+          "amount": 132000,
+          "pct": 0.0055563169884650845
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001072",
+      "party": "R",
+      "chamber": "House",
+      "state": "AR",
+      "x": 11.8916,
+      "y": 18.5807,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11206769.450000003,
+          "pct": 0.8960753208419634
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 630000,
+          "pct": 0.05037379011401334
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 354734.4,
+          "pct": 0.028363993987016597
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000821",
+      "party": "R",
+      "chamber": "House",
+      "state": "AR",
+      "x": 13.9154,
+      "y": 15.9651,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4803604.550000001,
+          "pct": 0.769355069136344
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 632572.4499999997,
+          "pct": 0.10131408943800259
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 249000,
+          "pct": 0.03988034614859161
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000623",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 10.6681,
+      "y": 12.4239,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1150000,
+          "pct": 0.46
+        },
+        {
+          "sector": "Labor",
+          "amount": 650000,
+          "pct": 0.26
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 175000,
+          "pct": 0.07
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000371",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.6133,
+      "y": 19.1017,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7055121.450000001,
+          "pct": 0.892479687012319
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 239650,
+          "pct": 0.03031595678519499
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 185306.45,
+          "pct": 0.02344144515008511
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000582",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.6472,
+      "y": 18.2374,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4193248.350000001,
+          "pct": 0.8103784351377058
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.06764027041188651
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 230444.44999999995,
+          "pct": 0.04453521403690988
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000474",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.2497,
+      "y": 12.0273,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1488352.0000000002,
+          "pct": 0.4596016739378549
+        },
+        {
+          "sector": "Other",
+          "amount": 875000,
+          "pct": 0.2701991630310726
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.19299940216505185
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001103",
+      "party": "R",
+      "chamber": "House",
+      "state": "GA",
+      "x": 12.893,
+      "y": 17.0245,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Health",
+          "amount": 17130000,
+          "pct": 0.7288217048873021
+        },
+        {
+          "sector": "Other",
+          "amount": 4700893.650000002,
+          "pct": 0.2000066155567364
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 813000,
+          "pct": 0.034590312088346564
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000583",
+      "party": "R",
+      "chamber": "House",
+      "state": "GA",
+      "x": 15.4668,
+      "y": 23.0059,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 23876484.45,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000372",
+      "party": "R",
+      "chamber": "House",
+      "state": "GA",
+      "x": 8.5851,
+      "y": 16.6727,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 9100000,
+          "pct": 0.8093142140824817
+        },
+        {
+          "sector": "Other",
+          "amount": 1338424.3,
+          "pct": 0.1190336055454281
+        },
+        {
+          "sector": "Transportation",
+          "amount": 325000,
+          "pct": 0.028904079074374346
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001295",
+      "party": "R",
+      "chamber": "House",
+      "state": "IL",
+      "x": 12.7342,
+      "y": 18.2013,
+      "clusterId": 3,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3646088.8999999966,
+          "pct": 0.7755098967570725
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 258000,
+          "pct": 0.05487566508960461
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 196000,
+          "pct": 0.041688489757994204
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001196",
+      "party": "D",
+      "chamber": "House",
+      "state": "MA",
+      "x": 15.5354,
+      "y": 23.002,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 244593594.99999902,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001194",
+      "party": "R",
+      "chamber": "House",
+      "state": "MI",
+      "x": 9.2744,
+      "y": 16.7594,
+      "clusterId": 0,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1661482.0500000003,
+          "pct": 0.46365016674214965
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1205000,
+          "pct": 0.33626511398319964
+        },
+        {
+          "sector": "Transportation",
+          "amount": 179000,
+          "pct": 0.04995141527219314
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000624",
+      "party": "D",
+      "chamber": "House",
+      "state": "MI",
+      "x": 11.1521,
+      "y": 13.6036,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2531257.05,
+          "pct": 0.6398110683935464
+        },
+        {
+          "sector": "Labor",
+          "amount": 625000,
+          "pct": 0.15797760158177793
+        },
+        {
+          "sector": "Transportation",
+          "amount": 175000,
+          "pct": 0.044233728442897816
+        }
+      ]
+    },
+    {
+      "bioguideId": "E000294",
+      "party": "R",
+      "chamber": "House",
+      "state": "MN",
+      "x": 10.9397,
+      "y": 14.7285,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 27534165.6,
+          "pct": 0.6764261893900575
+        },
+        {
+          "sector": "Construction",
+          "amount": 12104485.599999994,
+          "pct": 0.29736841086387666
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1066700,
+          "pct": 0.02620539974606582
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000603",
+      "party": "R",
+      "chamber": "House",
+      "state": "NC",
+      "x": 10.8239,
+      "y": 17.3509,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2006780.1,
+          "pct": 0.5534389367512967
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 698585.1,
+          "pct": 0.192658973932569
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 403215.55,
+          "pct": 0.11120061698518402
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000822",
+      "party": "D",
+      "chamber": "House",
+      "state": "NJ",
+      "x": 10.6502,
+      "y": 11.988,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1127000,
+          "pct": 0.44972067039106145
+        },
+        {
+          "sector": "Labor",
+          "amount": 800000,
+          "pct": 0.3192338387869114
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.08978451715881884
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001196",
+      "party": "R",
+      "chamber": "House",
+      "state": "NY",
+      "x": 14.8271,
+      "y": 22.4211,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 55796028.300000034,
+          "pct": 0.9856096680649524
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 814646.4000000001,
+          "pct": 0.014390331935047573
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001296",
+      "party": "D",
+      "chamber": "House",
+      "state": "PA",
+      "x": 14.8382,
+      "y": 18.8998,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8486919.4,
+          "pct": 0.8820401675782069
+        },
+        {
+          "sector": "Labor",
+          "amount": 300000,
+          "pct": 0.031178810331751478
+        },
+        {
+          "sector": "Transportation",
+          "amount": 216000,
+          "pct": 0.022448743438861066
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001291",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 13.5907,
+      "y": 17.6156,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3586673.399999999,
+          "pct": 0.7779366025876936
+        },
+        {
+          "sector": "Health",
+          "amount": 477000,
+          "pct": 0.10345959000179106
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 135000,
+          "pct": 0.029281016038242753
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001292",
+      "party": "D",
+      "chamber": "House",
+      "state": "VA",
+      "x": 11.7989,
+      "y": 13.3559,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Transportation",
+          "amount": 2809908.65,
+          "pct": 0.5629094836363604
+        },
+        {
+          "sector": "Other",
+          "amount": 1153850.65,
+          "pct": 0.23115109937292047
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 400000,
+          "pct": 0.08013206886798409
+        }
+      ]
+    },
+    {
+      "bioguideId": "N000189",
+      "party": "R",
+      "chamber": "House",
+      "state": "WA",
+      "x": 13.368,
+      "y": 18.3186,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1910989.5000000002,
+          "pct": 0.5881060121844787
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 481754.6,
+          "pct": 0.14825972442942706
+        },
+        {
+          "sector": "Transportation",
+          "amount": 150000,
+          "pct": 0.046162421001094876
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000576",
+      "party": "R",
+      "chamber": "House",
+      "state": "WI",
+      "x": 11.3132,
+      "y": 18.2183,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3199100.9000000004,
+          "pct": 0.8046484981642822
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 423000,
+          "pct": 0.10639436684335006
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 158173.5,
+          "pct": 0.0397843247846256
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000388",
+      "party": "R",
+      "chamber": "House",
+      "state": "MS",
+      "x": 13.7923,
+      "y": 13.6834,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1276500,
+          "pct": 0.45888085986184757
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 700000,
+          "pct": 0.2516385443817417
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 230267.8,
+          "pct": 0.08277750572855147
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000585",
+      "party": "R",
+      "chamber": "House",
+      "state": "IL",
+      "x": 14.3078,
+      "y": 16.0646,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11956873.650000004,
+          "pct": 0.909611967887399
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1133153.1000000003,
+          "pct": 0.08620394020879417
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 55000,
+          "pct": 0.004184091903806889
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000626",
+      "party": "R",
+      "chamber": "House",
+      "state": "OH",
+      "x": 11.4854,
+      "y": 17.8622,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4068350.7,
+          "pct": 0.8165524558518131
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 442000,
+          "pct": 0.08871314498194596
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 316000,
+          "pct": 0.06342387740790707
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001108",
+      "party": "R",
+      "chamber": "House",
+      "state": "KY",
+      "x": 11.1693,
+      "y": 17.2957,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2098464.9,
+          "pct": 0.5772205089918486
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 500000,
+          "pct": 0.13753399186992563
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 355000,
+          "pct": 0.0976491342276472
+        }
+      ]
+    },
+    {
+      "bioguideId": "E000296",
+      "party": "D",
+      "chamber": "House",
+      "state": "PA",
+      "x": 10.415,
+      "y": 12.0973,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Labor",
+          "amount": 800000,
+          "pct": 0.32653061224489793
+        },
+        {
+          "sector": "Other",
+          "amount": 550000,
+          "pct": 0.22448979591836735
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 325000,
+          "pct": 0.1326530612244898
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001190",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 8.9444,
+      "y": 16.6966,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2129743.4499999997,
+          "pct": 0.4541279224986177
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1876000,
+          "pct": 0.4000218817939818
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 325000,
+          "pct": 0.06930016608904269
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001302",
+      "party": "R",
+      "chamber": "House",
+      "state": "AZ",
+      "x": 13.0209,
+      "y": 21.5529,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4157364.5999999964,
+          "pct": 0.8251007330467386
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 681250,
+          "pct": 0.13520581629720213
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 50000,
+          "pct": 0.009923362664014834
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000389",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 14.0167,
+      "y": 13.3652,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 2577612.949999999,
+          "pct": 0.3769798270151576
+        },
+        {
+          "sector": "Other",
+          "amount": 2458922.5500000003,
+          "pct": 0.3596211749101706
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1457000,
+          "pct": 0.21308847317867677
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000613",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.3846,
+      "y": 16.4651,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1427123.3999999997,
+          "pct": 0.5647224824874005
+        },
+        {
+          "sector": "Transportation",
+          "amount": 250000,
+          "pct": 0.09892670852559082
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 250000,
+          "pct": 0.09892670852559082
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001112",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.3802,
+      "y": 12.9467,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1283391.85,
+          "pct": 0.4851424374048782
+        },
+        {
+          "sector": "Labor",
+          "amount": 500000,
+          "pct": 0.18900791578381856
+        },
+        {
+          "sector": "Transportation",
+          "amount": 325000,
+          "pct": 0.12285514525948206
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001300",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 11.3412,
+      "y": 13.5663,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1303952.5,
+          "pct": 0.513069616305364
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.18689949806074063
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 225000,
+          "pct": 0.08853134118666661
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001110",
+      "party": "D",
+      "chamber": "House",
+      "state": "CA",
+      "x": 13.2717,
+      "y": 13.7499,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1136336.7999999998,
+          "pct": 0.5583627955208793
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 508750,
+          "pct": 0.24998492719873844
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 390035.9000000001,
+          "pct": 0.1916522772803822
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000628",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 12.86,
+      "y": 16.9453,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Health",
+          "amount": 4485406,
+          "pct": 0.5594824578397964
+        },
+        {
+          "sector": "Other",
+          "amount": 2797804.7500000005,
+          "pct": 0.34898126905030613
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 287000,
+          "pct": 0.035798646856053065
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000609",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 13.6798,
+      "y": 16.8356,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2345494.300000001,
+          "pct": 0.7397882090499265
+        },
+        {
+          "sector": "Transportation",
+          "amount": 225000,
+          "pct": 0.07096685207729278
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 200000,
+          "pct": 0.06308164629092691
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001200",
+      "party": "D",
+      "chamber": "House",
+      "state": "FL",
+      "x": 10.7972,
+      "y": 12.1526,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 855000,
+          "pct": 0.34475806451612906
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.19153225806451613
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 325000,
+          "pct": 0.1310483870967742
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001199",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 12.9725,
+      "y": 21.5195,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 10792000.450000001,
+          "pct": 0.8529404843374759
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1860700,
+          "pct": 0.14705951566252404
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000391",
+      "party": "D",
+      "chamber": "House",
+      "state": "IL",
+      "x": 14.0987,
+      "y": 13.2273,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 7713480.25,
+          "pct": 0.8653236874465274
+        },
+        {
+          "sector": "Other",
+          "amount": 792502.3,
+          "pct": 0.08890552517404243
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.028045825600140982
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001077",
+      "party": "R",
+      "chamber": "House",
+      "state": "LA",
+      "x": 14.9954,
+      "y": 20.7666,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 5123786.35,
+          "pct": 0.9439919001233348
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 100000,
+          "pct": 0.018423717064692497
+        },
+        {
+          "sector": "Defense",
+          "amount": 50000,
+          "pct": 0.009211858532346249
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000299",
+      "party": "R",
+      "chamber": "House",
+      "state": "LA",
+      "x": 12.9337,
+      "y": 16.9977,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 32627473.299999975,
+          "pct": 0.49734986084737026
+        },
+        {
+          "sector": "Health",
+          "amount": 29942215.649999995,
+          "pct": 0.4564177143005879
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 2782970,
+          "pct": 0.04242160370543946
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000606",
+      "party": "D",
+      "chamber": "House",
+      "state": "MD",
+      "x": 13.6948,
+      "y": 13.7987,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 3163373.1000000006,
+          "pct": 0.66629437497664
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1380337.8500000008,
+          "pct": 0.2907375500608352
+        },
+        {
+          "sector": "Transportation",
+          "amount": 50000,
+          "pct": 0.010531390922187456
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001301",
+      "party": "R",
+      "chamber": "House",
+      "state": "MI",
+      "x": 14.7716,
+      "y": 21.5567,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11325420.449999997,
+          "pct": 0.9600851796640095
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 254965.85000000003,
+          "pct": 0.021614114459250558
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 157880,
+          "pct": 0.013383895885768536
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001298",
+      "party": "R",
+      "chamber": "House",
+      "state": "NE",
+      "x": 10.8176,
+      "y": 14.7925,
+      "clusterId": 2,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9047375.2,
+          "pct": 0.8907000655895077
+        },
+        {
+          "sector": "Construction",
+          "amount": 866443.8400000001,
+          "pct": 0.08530005311569537
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 83923.79999999999,
+          "pct": 0.008262168033500005
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000583",
+      "party": "D",
+      "chamber": "House",
+      "state": "NJ",
+      "x": 14.1245,
+      "y": 13.2078,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 12617751.549999995,
+          "pct": 0.7255743207348743
+        },
+        {
+          "sector": "Other",
+          "amount": 4307838.749999997,
+          "pct": 0.24771903000948048
+        },
+        {
+          "sector": "Transportation",
+          "amount": 356429.14999999997,
+          "pct": 0.020496190416854316
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000488",
+      "party": "D",
+      "chamber": "House",
+      "state": "MI",
+      "x": 15.0809,
+      "y": 22.6717,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 109577319.10000005,
+          "pct": 0.9865037720092161
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 866612.8500000001,
+          "pct": 0.007801950735958977
+        },
+        {
+          "sector": "Labor",
+          "amount": 145000,
+          "pct": 0.001305407433912446
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000379",
+      "party": "R",
+      "chamber": "House",
+      "state": "MO",
+      "x": 12.2253,
+      "y": 17.834,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2034851.85,
+          "pct": 0.7321713066648974
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 142250,
+          "pct": 0.05118375982658474
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 125000,
+          "pct": 0.044976941851128945
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000230",
+      "party": "D",
+      "chamber": "House",
+      "state": "NC",
+      "x": 12.5065,
+      "y": 18.1037,
+      "clusterId": 3,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 720851.11,
+          "pct": 0.758304505060298
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 56000,
+          "pct": 0.05890960240510234
+        },
+        {
+          "sector": "Labor",
+          "amount": 45000,
+          "pct": 0.04733807336124295
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000477",
+      "party": "D",
+      "chamber": "House",
+      "state": "NC",
+      "x": 11.8977,
+      "y": 12.6,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 179950,
+          "pct": 0.47707808799297713
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 56600,
+          "pct": 0.15005623662352044
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 35300,
+          "pct": 0.09358631012032283
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001317",
+      "party": "R",
+      "chamber": "House",
+      "state": "OK",
+      "x": 11.076,
+      "y": 17.5859,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1170652,
+          "pct": 0.6329723615427705
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 285600,
+          "pct": 0.15442412130728453
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 92800,
+          "pct": 0.05017702541077033
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001094",
+      "party": "D",
+      "chamber": "House",
+      "state": "OR",
+      "x": 10.932,
+      "y": 13.141,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1629857.2999999998,
+          "pct": 0.5562923832502013
+        },
+        {
+          "sector": "Labor",
+          "amount": 650000,
+          "pct": 0.22185380837489937
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 200000,
+          "pct": 0.0682627102691998
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001226",
+      "party": "D",
+      "chamber": "House",
+      "state": "OR",
+      "x": 14.4345,
+      "y": 18.3027,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2797725,
+          "pct": 0.7523590509179051
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.06722953926117695
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.06050658533505925
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000602",
+      "party": "D",
+      "chamber": "House",
+      "state": "PA",
+      "x": 13.088,
+      "y": 13.9093,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1688653.1500000004,
+          "pct": 0.5528281716900092
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 573418.2999999999,
+          "pct": 0.18772463155183353
+        },
+        {
+          "sector": "Labor",
+          "amount": 275000,
+          "pct": 0.09002899572049623
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000530",
+      "party": "D",
+      "chamber": "House",
+      "state": "PA",
+      "x": 14.8877,
+      "y": 18.1249,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4555829.250000002,
+          "pct": 0.8016461900649247
+        },
+        {
+          "sector": "Labor",
+          "amount": 475000,
+          "pct": 0.08358125807301471
+        },
+        {
+          "sector": "Transportation",
+          "amount": 277263,
+          "pct": 0.0487873481202069
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001223",
+      "party": "D",
+      "chamber": "House",
+      "state": "RI",
+      "x": 11.059,
+      "y": 13.4061,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1929492.9999999998,
+          "pct": 0.6207165337029872
+        },
+        {
+          "sector": "Labor",
+          "amount": 650000,
+          "pct": 0.20910454036730983
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.07238234089637648
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000478",
+      "party": "R",
+      "chamber": "House",
+      "state": "SC",
+      "x": 11.6723,
+      "y": 17.5283,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1428558.1500000004,
+          "pct": 0.6141541001457768
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 232000,
+          "pct": 0.09973955294281872
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 167500,
+          "pct": 0.07201023757725059
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001224",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 13.9676,
+      "y": 17.8183,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1847045.56,
+          "pct": 0.8355231582217096
+        },
+        {
+          "sector": "Health",
+          "amount": 78000,
+          "pct": 0.035283810942537526
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 70000,
+          "pct": 0.031664958538174706
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001327",
+      "party": "R",
+      "chamber": "House",
+      "state": "PA",
+      "x": 11.116,
+      "y": 15.026,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Construction",
+          "amount": 6345745.880000001,
+          "pct": 0.5071450617857688
+        },
+        {
+          "sector": "Other",
+          "amount": 5754513.080000006,
+          "pct": 0.4598943838424896
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 217600,
+          "pct": 0.0173903537159265
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001325",
+      "party": "R",
+      "chamber": "House",
+      "state": "SC",
+      "x": 8.7335,
+      "y": 16.7235,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 1226806.05,
+          "pct": 0.47806786978547605
+        },
+        {
+          "sector": "Other",
+          "amount": 919571.64,
+          "pct": 0.3583432401967178
+        },
+        {
+          "sector": "Health",
+          "amount": 129000,
+          "pct": 0.05026936018315724
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000603",
+      "party": "R",
+      "chamber": "House",
+      "state": "TX",
+      "x": 8.7133,
+      "y": 16.6659,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 2567500,
+          "pct": 0.5531848326694522
+        },
+        {
+          "sector": "Other",
+          "amount": 1861822.4,
+          "pct": 0.4011419329325172
+        },
+        {
+          "sector": "Transportation",
+          "amount": 100000,
+          "pct": 0.021545660473980613
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000403",
+      "party": "R",
+      "chamber": "House",
+      "state": "UT",
+      "x": 8.8083,
+      "y": 16.73,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 1301500,
+          "pct": 0.37100106320381526
+        },
+        {
+          "sector": "Other",
+          "amount": 1229000,
+          "pct": 0.35033446536879675
+        },
+        {
+          "sector": "Health",
+          "amount": 300525.39999999997,
+          "pct": 0.0856667252552838
+        }
+      ]
+    },
+    {
+      "bioguideId": "V000138",
+      "party": "D",
+      "chamber": "House",
+      "state": "VA",
+      "x": 14.7138,
+      "y": 18.3586,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2946495.550000001,
+          "pct": 0.8368538168395039
+        },
+        {
+          "sector": "Labor",
+          "amount": 225000,
+          "pct": 0.06390374789091002
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 114424.70000000001,
+          "pct": 0.03249852080574673
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001230",
+      "party": "D",
+      "chamber": "House",
+      "state": "VA",
+      "x": 14.7542,
+      "y": 18.1774,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2200598.8,
+          "pct": 0.7672674316519361
+        },
+        {
+          "sector": "Labor",
+          "amount": 225000,
+          "pct": 0.07844918034204401
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 122500,
+          "pct": 0.04271122040844618
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001322",
+      "party": "R",
+      "chamber": "House",
+      "state": "WA",
+      "x": 11.6445,
+      "y": 17.5784,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2080916.0999999999,
+          "pct": 0.6821527037283164
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 262919.80000000005,
+          "pct": 0.08618869950292962
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 222677.7,
+          "pct": 0.07299678978648055
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000621",
+      "party": "D",
+      "chamber": "House",
+      "state": "WA",
+      "x": 11.4933,
+      "y": 12.7016,
+      "clusterId": 1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1007500,
+          "pct": 0.5088383838383839
+        },
+        {
+          "sector": "Labor",
+          "amount": 350000,
+          "pct": 0.17676767676767677
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 235000,
+          "pct": 0.11868686868686869
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001235",
+      "party": "R",
+      "chamber": "House",
+      "state": "WV",
+      "x": 14.5834,
+      "y": 18.0026,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2556161.2,
+          "pct": 0.7100129849741172
+        },
+        {
+          "sector": "Labor",
+          "amount": 250000,
+          "pct": 0.06944133501577651
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 241000,
+          "pct": 0.06694144695520855
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000622",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 8.63,
+      "y": 16.7278,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 1126000,
+          "pct": 0.38955294423233056
+        },
+        {
+          "sector": "Other",
+          "amount": 837492.8499999999,
+          "pct": 0.28974050221227843
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 266000,
+          "pct": 0.09202582874404966
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000484",
+      "party": "R",
+      "chamber": "House",
+      "state": "FL",
+      "x": 12.9057,
+      "y": 21.4331,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6543458.149999999,
+          "pct": 0.745848445191264
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1457165,
+          "pct": 0.16609325294410698
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 478550.79999999993,
+          "pct": 0.05454705477485716
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000359",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "SC",
+      "x": 13.6198,
+      "y": 14.3978,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 50029656.29999996,
+          "pct": 0.7729746912542628
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 12515863.749999998,
+          "pct": 0.1933742230792954
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1729000,
+          "pct": 0.02671362028082974
+        }
+      ]
+    },
+    {
+      "bioguideId": "M000355",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "KY",
+      "x": 11.5546,
+      "y": 13.7793,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 0,
+          "pct": 0
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 0,
+          "pct": 0
+        },
+        {
+          "sector": "Other",
+          "amount": 0,
+          "pct": 0
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001176",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "OR",
+      "x": 14.046,
+      "y": 15.6895,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 12322955.299999997,
+          "pct": 0.8529179765297205
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1850040.45,
+          "pct": 0.12804824157011538
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 275000,
+          "pct": 0.019033781900164255
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000122",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "RI",
+      "x": 13.506,
+      "y": 14.2111,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2521438.099999999,
+          "pct": 0.6459805458112391
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 747849.3999999999,
+          "pct": 0.19159548814488359
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 150985,
+          "pct": 0.038681644696853736
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000584",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "ID",
+      "x": 11.1723,
+      "y": 16.9022,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2860174.500000001,
+          "pct": 0.40694530736208434
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 2625000,
+          "pct": 0.37348470585465016
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 607740,
+          "pct": 0.08646917909946861
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001181",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NH",
+      "x": 13.738,
+      "y": 18.8123,
+      "clusterId": 3,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7378341.700000004,
+          "pct": 0.8130499358524164
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 563392.95,
+          "pct": 0.06208259531504259
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 455733.5999999999,
+          "pct": 0.05021916703123014
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000805",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "VA",
+      "x": 13.5873,
+      "y": 18.5982,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 38542987.3,
+          "pct": 0.8399288060131548
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 5811000,
+          "pct": 0.12663331603625969
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1047340.65,
+          "pct": 0.022823648172271834
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000555",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NY",
+      "x": 13.6801,
+      "y": 18.7595,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 36798480.8,
+          "pct": 0.8678660220431008
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 3946262.4499999993,
+          "pct": 0.09306979581666754
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1260839.6,
+          "pct": 0.02973600606051146
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001088",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "DE",
+      "x": 15.5337,
+      "y": 22.3818,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6380330.600000001,
+          "pct": 0.9750146343947229
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 121500,
+          "pct": 0.018567106550710526
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 42000,
+          "pct": 0.006418259054566601
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001230",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "WI",
+      "x": 13.7868,
+      "y": 19.7638,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 27915491.649999972,
+          "pct": 0.8668803880206905
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1200643.4,
+          "pct": 0.03728446661502671
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1035912.7000000001,
+          "pct": 0.03216896247398036
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001267",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "CO",
+      "x": 14.174,
+      "y": 21.5835,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 31010150.249999996,
+          "pct": 0.9436805402868401
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 659003.1,
+          "pct": 0.020054349832074825
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 626228.2000000001,
+          "pct": 0.019056965585610326
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001243",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "TN",
+      "x": 15.4823,
+      "y": 21.7843,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 68032743.1000001,
+          "pct": 0.9908927916228666
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 475657.94999999995,
+          "pct": 0.0069279292948737385
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 149625,
+          "pct": 0.002179279082259601
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001277",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "CT",
+      "x": 13.9377,
+      "y": 19.6051,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 12016566.500000004,
+          "pct": 0.8465647665892815
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 889770,
+          "pct": 0.06268412298705664
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 607688.5,
+          "pct": 0.04281153632041985
+        }
+      ]
+    },
+    {
+      "bioguideId": "C000880",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "ID",
+      "x": 14.8185,
+      "y": 21.9005,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 16364694.900000006,
+          "pct": 0.9817880647994124
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 135000,
+          "pct": 0.008099227609059833
+        },
+        {
+          "sector": "Transportation",
+          "amount": 88754.5,
+          "pct": 0.005324762198728155
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000386",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "IA",
+      "x": 15.1691,
+      "y": 21.4508,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 19251540.349999998,
+          "pct": 0.9644753726753409
+        },
+        {
+          "sector": "Transportation",
+          "amount": 357303.10000000003,
+          "pct": 0.017900387930805478
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 177791,
+          "pct": 0.00890708160832032
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001046",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NM",
+      "x": 14.6164,
+      "y": 19.5409,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 7843747.150000001,
+          "pct": 0.912769511333253
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 222500,
+          "pct": 0.02589211666156892
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 165102.05000000002,
+          "pct": 0.01921277096478286
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001042",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "HI",
+      "x": 12.6644,
+      "y": 18.7937,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2793707.95,
+          "pct": 0.4961453300851064
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 907523.95,
+          "pct": 0.16117066557830054
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 804000,
+          "pct": 0.14278544949139207
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001061",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "ND",
+      "x": 13.2311,
+      "y": 21.3765,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8244976.150000008,
+          "pct": 0.8565874228198346
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 728400,
+          "pct": 0.0756749646609914
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 294000,
+          "pct": 0.030544260859872968
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000293",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "WI",
+      "x": 8.4785,
+      "y": 16.5719,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 61163738.2,
+          "pct": 0.712239412755229
+        },
+        {
+          "sector": "Other",
+          "amount": 20793322.299999997,
+          "pct": 0.2421340503380515
+        },
+        {
+          "sector": "Health",
+          "amount": 3395490.6,
+          "pct": 0.03953980417370729
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000575",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "OK",
+      "x": 11.4144,
+      "y": 17.7798,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 5509973.250000001,
+          "pct": 0.7676748910868152
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 737000,
+          "pct": 0.10268223983319387
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 576009.4500000003,
+          "pct": 0.08025229374638551
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000577",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "UT",
+      "x": 11.9068,
+      "y": 18.8678,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9998691.850000005,
+          "pct": 0.8329680547405922
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 720000,
+          "pct": 0.0599815464273185
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 712000,
+          "pct": 0.05931508480034829
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000570",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NM",
+      "x": 14.5065,
+      "y": 19.5046,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9489972.199999997,
+          "pct": 0.9229243307782161
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 308912.14999999997,
+          "pct": 0.030042505214926758
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 152500,
+          "pct": 0.014831019256692658
+        }
+      ]
+    },
+    {
+      "bioguideId": "M000133",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MA",
+      "x": 14.541,
+      "y": 19.8674,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 17325277.45,
+          "pct": 0.915991004366915
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 494797.5999999999,
+          "pct": 0.02616005151376892
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 454125.54999999993,
+          "pct": 0.024009711812908237
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001153",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "AK",
+      "x": 15.1225,
+      "y": 21.0604,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8486448.079999998,
+          "pct": 0.9738206312242396
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 109351.07999999999,
+          "pct": 0.012548045630728978
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 68880.84,
+          "pct": 0.007904082185589223
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001111",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "WA",
+      "x": 13.6115,
+      "y": 20.2198,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 25050963.250000015,
+          "pct": 0.9226487292431493
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1251170,
+          "pct": 0.04608167754056924
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 553455.05,
+          "pct": 0.020384230078486238
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000603",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "KY",
+      "x": 13.963,
+      "y": 15.6141,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 21781961.80000002,
+          "pct": 0.8552602144956489
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 2805067.299999999,
+          "pct": 0.1101398709033053
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 881198.4999999999,
+          "pct": 0.03459991460104587
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000595",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MI",
+      "x": 13.5862,
+      "y": 19.6983,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 11408709.850000005,
+          "pct": 0.809007956542808
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1302147.15,
+          "pct": 0.09233711951571287
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 700861.7999999999,
+          "pct": 0.049699114105957724
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001150",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "CA",
+      "x": 13.6617,
+      "y": 13.9155,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 25276995.299999997,
+          "pct": 0.7263174349978209
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 9316574.799999997,
+          "pct": 0.26770550183634106
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 99500,
+          "pct": 0.0028590654832413246
+        }
+      ]
+    },
+    {
+      "bioguideId": "S000148",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NY",
+      "x": 15.582,
+      "y": 21.5942,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 17604057.150000002,
+          "pct": 0.9621370802049108
+        },
+        {
+          "sector": "Health",
+          "amount": 557771.3500000001,
+          "pct": 0.030484591906187457
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 135000,
+          "pct": 0.007378327888901619
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000250",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "SD",
+      "x": 15.4038,
+      "y": 21.3286,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 39446537.450000025,
+          "pct": 0.9886362106685337
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 453414.64999999997,
+          "pct": 0.011363789331466383
+        }
+      ]
+    },
+    {
+      "bioguideId": "V000128",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MD",
+      "x": 8.5622,
+      "y": 16.665,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 877318.55,
+          "pct": 0.42727900838884425
+        },
+        {
+          "sector": "Other",
+          "amount": 498500,
+          "pct": 0.24278363392845032
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 201000,
+          "pct": 0.09789269893604516
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000800",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "VT",
+      "x": 13.6795,
+      "y": 18.2226,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2018080.2,
+          "pct": 0.6816125616540586
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 242663.65000000002,
+          "pct": 0.08196036614244762
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 225000,
+          "pct": 0.0759944160654087
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000779",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "OR",
+      "x": 14.9929,
+      "y": 20.3366,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 15787828.200000007,
+          "pct": 0.9638688034151364
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 541816.15,
+          "pct": 0.03307862725358868
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 50000,
+          "pct": 0.0030525693312748866
+        }
+      ]
+    },
+    {
+      "bioguideId": "Y000064",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "IN",
+      "x": 14.8535,
+      "y": 21.8049,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 41710202.10000001,
+          "pct": 0.9834945375089359
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 700000,
+          "pct": 0.016505462491064146
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001194",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "HI",
+      "x": 13.8866,
+      "y": 13.5311,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 1897003.0499999996,
+          "pct": 0.4638657590790266
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1094674.4500000004,
+          "pct": 0.2676758978820125
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 561000,
+          "pct": 0.13717884683597847
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001095",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "AR",
+      "x": 13.2881,
+      "y": 21.5104,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 30582307.54999998,
+          "pct": 0.800050328472464
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 4352048.25,
+          "pct": 0.1138520246141634
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 3291123.85,
+          "pct": 0.08609764691337239
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000817",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MA",
+      "x": 15.5028,
+      "y": 21.2935,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 29413661.49999999,
+          "pct": 0.9742229107919956
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 307175,
+          "pct": 0.010174079232622276
+        },
+        {
+          "sector": "Health",
+          "amount": 240753.6,
+          "pct": 0.007974106623061937
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000383",
+      "party": "I",
+      "chamber": "Senate",
+      "state": "ME",
+      "x": 13.3419,
+      "y": 18.6333,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 2103376.05,
+          "pct": 0.6711807013152359
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 436833.6,
+          "pct": 0.13939223183893304
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 248375,
+          "pct": 0.07925568358980398
+        }
+      ]
+    },
+    {
+      "bioguideId": "D000618",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "MT",
+      "x": 14.1622,
+      "y": 21.0698,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 25057299.499999993,
+          "pct": 0.9139575229448715
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1288963.15,
+          "pct": 0.047014546309797636
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1070000,
+          "pct": 0.039027930745330834
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001096",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "ND",
+      "x": 13.0824,
+      "y": 21.4933,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9521503.349999996,
+          "pct": 0.8569551815747797
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1179350,
+          "pct": 0.10614396238071133
+        },
+        {
+          "sector": "Energy/Natural Resources",
+          "amount": 202000,
+          "pct": 0.01818042175851417
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000463",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "NE",
+      "x": 13.0155,
+      "y": 21.4898,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 12740686.399999995,
+          "pct": 0.8715898851997703
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1653993.75,
+          "pct": 0.1131496512372864
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 150000,
+          "pct": 0.010261494449778278
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001190",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "OK",
+      "x": 10.7884,
+      "y": 14.8151,
+      "clusterId": 2,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 17811392.349999998,
+          "pct": 0.8933773976890925
+        },
+        {
+          "sector": "Construction",
+          "amount": 1395250,
+          "pct": 0.06998244660674754
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 321500,
+          "pct": 0.01612568112099576
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001098",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "TX",
+      "x": 15.0276,
+      "y": 22.7959,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 95980152.45000006,
+          "pct": 0.9899082627850774
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 978481.0499999999,
+          "pct": 0.010091737214922685
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000384",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "VA",
+      "x": 14.5204,
+      "y": 21.5438,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 65043798.449999996,
+          "pct": 0.9588282051432185
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1236900,
+          "pct": 0.018233477060127738
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 964965.9499999998,
+          "pct": 0.01422482376354545
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001288",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NJ",
+      "x": 14.8894,
+      "y": 20.1502,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 70271825.80000001,
+          "pct": 0.9508736652466185
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 3630552.9999999986,
+          "pct": 0.049126334753381413
+        }
+      ]
+    },
+    {
+      "bioguideId": "G000574",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "AZ",
+      "x": 14.1695,
+      "y": 21.361,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 18244366.8,
+          "pct": 0.9273889345093328
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 478500,
+          "pct": 0.024322883333101793
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 427965.3,
+          "pct": 0.021754127612363446
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001198",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "AK",
+      "x": 14.7689,
+      "y": 19.9227,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 16033841.650000004,
+          "pct": 0.9088309711477439
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 975789.1499999996,
+          "pct": 0.05530972677592403
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 296525,
+          "pct": 0.016807644081952417
+        }
+      ]
+    },
+    {
+      "bioguideId": "E000295",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "IA",
+      "x": 13.5074,
+      "y": 21.3123,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 20505130.099999998,
+          "pct": 0.909050324808647
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1233895,
+          "pct": 0.05470204992894757
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 817625,
+          "pct": 0.036247625262405436
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000476",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "NC",
+      "x": 14.9427,
+      "y": 22.3823,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 22365722.84999999,
+          "pct": 0.988803924794707
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 131668.35,
+          "pct": 0.005821147929106312
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 121575.3,
+          "pct": 0.0053749272761865596
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000605",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "SD",
+      "x": 11.4657,
+      "y": 17.6644,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4075163.499999998,
+          "pct": 0.7528978336829872
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 650500,
+          "pct": 0.12018169106853833
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 282474.60000000003,
+          "pct": 0.05218797096373396
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000393",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "LA",
+      "x": 13.9042,
+      "y": 13.5396,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9343119.15,
+          "pct": 0.5772145459027735
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 6165812.050000001,
+          "pct": 0.38092165425960556
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 377631,
+          "pct": 0.02332990756987299
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001076",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NH",
+      "x": 13.5194,
+      "y": 20.1953,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 18091405.949999988,
+          "pct": 0.9289859265230623
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1332953.5999999999,
+          "pct": 0.06844659494848448
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 50000,
+          "pct": 0.002567478528453072
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001113",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NV",
+      "x": 13.5457,
+      "y": 20.224,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 17945741.200000003,
+          "pct": 0.9041979785190226
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1142029.8000000003,
+          "pct": 0.057541286540367796
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 389366.05000000005,
+          "pct": 0.019618247660561198
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001303",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "DE",
+      "x": 14.6368,
+      "y": 18.4761,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 5190003.999999999,
+          "pct": 0.8158063025200936
+        },
+        {
+          "sector": "Labor",
+          "amount": 400000,
+          "pct": 0.06287519643685005
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 300000,
+          "pct": 0.04715639732763754
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001299",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "IN",
+      "x": 14.1937,
+      "y": 15.793,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8364129.550000002,
+          "pct": 0.8415210932260186
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1033231.55,
+          "pct": 0.10395416980498748
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 318000,
+          "pct": 0.03199420884697725
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001198",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "KS",
+      "x": 13.0693,
+      "y": 17.3539,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4644069.08,
+          "pct": 0.5347952661898544
+        },
+        {
+          "sector": "Health",
+          "amount": 2049600,
+          "pct": 0.23602499418090603
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 791400,
+          "pct": 0.09113494359619878
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001305",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "NC",
+      "x": 11.4623,
+      "y": 18.4699,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 16109533.499999981,
+          "pct": 0.904520112216521
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1700500,
+          "pct": 0.095479887783479
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000608",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NV",
+      "x": 14.9052,
+      "y": 20.4819,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 39593407.60000002,
+          "pct": 0.9470259542452372
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1234967.5999999999,
+          "pct": 0.029538916722387638
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 811904.5,
+          "pct": 0.01941976405861318
+        }
+      ]
+    },
+    {
+      "bioguideId": "C001114",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "UT",
+      "x": 13.1765,
+      "y": 21.3286,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 20701788.149999976,
+          "pct": 0.9059650155329054
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1999750,
+          "pct": 0.08751435029113316
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 149000,
+          "pct": 0.006520634175961416
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001203",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MN",
+      "x": 13.3058,
+      "y": 19.6591,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4920923.300000001,
+          "pct": 0.6899337178716389
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 1113510.2,
+          "pct": 0.15611871702491117
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 324056.9,
+          "pct": 0.04543411229737271
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001079",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "MS",
+      "x": 13.5394,
+      "y": 14.0183,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4638400.3,
+          "pct": 0.5979323124526653
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 1790500,
+          "pct": 0.23081186103029905
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1006500,
+          "pct": 0.1297470751896096
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001208",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MI",
+      "x": 15.3982,
+      "y": 22.2505,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 16244435.299999993,
+          "pct": 0.9869676642143824
+        },
+        {
+          "sector": "Transportation",
+          "amount": 106498.34999999999,
+          "pct": 0.006470549809890025
+        },
+        {
+          "sector": "Health",
+          "amount": 58000,
+          "pct": 0.0035239220980758995
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000394",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "NJ",
+      "x": 13.5805,
+      "y": 20.3632,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 10386805.999999998,
+          "pct": 0.9107009158975405
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 533945.4000000001,
+          "pct": 0.04681560094790245
+        },
+        {
+          "sector": "Transportation",
+          "amount": 257536.35000000003,
+          "pct": 0.022580434237619306
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001217",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "FL",
+      "x": 15.4916,
+      "y": 23.0977,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 524425645.64999974,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "H001089",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "MO",
+      "x": 15.3538,
+      "y": 22.7119,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 48635114.65,
+          "pct": 0.9959759675896771
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 196500,
+          "pct": 0.0040240324103229305
+        }
+      ]
+    },
+    {
+      "bioguideId": "K000377",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "AZ",
+      "x": 14.3861,
+      "y": 21.8434,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 32531097.69999997,
+          "pct": 0.9700047166192329
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 513618.99999999994,
+          "pct": 0.015314972065798266
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 492334.35,
+          "pct": 0.014680311314968775
+        }
+      ]
+    },
+    {
+      "bioguideId": "L000571",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "WY",
+      "x": 11.2319,
+      "y": 16.9046,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4369771.150000001,
+          "pct": 0.46720118921225146
+        },
+        {
+          "sector": "Agribusiness",
+          "amount": 4325285.7,
+          "pct": 0.46244495497727495
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 359025.4,
+          "pct": 0.03838578453642915
+        }
+      ]
+    },
+    {
+      "bioguideId": "T000278",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "AL",
+      "x": 11.4956,
+      "y": 18.615,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 8585453.349999998,
+          "pct": 0.8537262976305021
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 789000,
+          "pct": 0.07845713224106754
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 248000,
+          "pct": 0.024660796952832385
+        }
+      ]
+    },
+    {
+      "bioguideId": "H000273",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "CO",
+      "x": 15.0502,
+      "y": 22.7923,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 23319394.299999986,
+          "pct": 0.9957379323990861
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 63814.25,
+          "pct": 0.002724867916170465
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 36000,
+          "pct": 0.0015371996847434036
+        }
+      ]
+    },
+    {
+      "bioguideId": "H000601",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "TN",
+      "x": 14.1576,
+      "y": 13.1648,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 36571203.15,
+          "pct": 0.7339626659122385
+        },
+        {
+          "sector": "Other",
+          "amount": 12848796.200000007,
+          "pct": 0.25786782770134387
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 146062.5,
+          "pct": 0.002931388979741738
+        }
+      ]
+    },
+    {
+      "bioguideId": "P000145",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "CA",
+      "x": 14.443,
+      "y": 18.726,
+      "clusterId": 4,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 4533868.100000001,
+          "pct": 0.8377639691551241
+        },
+        {
+          "sector": "Labor",
+          "amount": 175000,
+          "pct": 0.032336338721928565
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 175000,
+          "pct": 0.032336338721928565
+        }
+      ]
+    },
+    {
+      "bioguideId": "O000174",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "GA",
+      "x": 11.1577,
+      "y": 18.235,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 9379995.700000001,
+          "pct": 0.7964587272032637
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 1500000,
+          "pct": 0.12736552649004898
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 461131.44999999995,
+          "pct": 0.03915483327357979
+        }
+      ]
+    },
+    {
+      "bioguideId": "W000790",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "GA",
+      "x": 14.4081,
+      "y": 19.5781,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 96893903.60000004,
+          "pct": 0.9478743675318156
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 4640902.35,
+          "pct": 0.04540009449865084
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 687500,
+          "pct": 0.006725537969533545
+        }
+      ]
+    },
+    {
+      "bioguideId": "B001319",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "AL",
+      "x": 15.5885,
+      "y": 22.837,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 269666500,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001227",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "MO",
+      "x": 14.9521,
+      "y": 21.3082,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 6949110.2,
+          "pct": 0.9744097062399737
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "amount": 66500,
+          "pct": 0.00932468238379041
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 58000,
+          "pct": 0.008132805688117951
+        }
+      ]
+    },
+    {
+      "bioguideId": "F000479",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "PA",
+      "x": 14.0536,
+      "y": 21.3852,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 38096506.05,
+          "pct": 0.9333379089051395
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 1150000,
+          "pct": 0.028174200380271106
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 686322.5,
+          "pct": 0.01681442403520749
+        }
+      ]
+    },
+    {
+      "bioguideId": "R000618",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "NE",
+      "x": 15.1151,
+      "y": 22.5063,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 20466335.900000002,
+          "pct": 0.9902806536131165
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 200871.75,
+          "pct": 0.00971934638688357
+        }
+      ]
+    },
+    {
+      "bioguideId": "A000382",
+      "party": "D",
+      "chamber": "Senate",
+      "state": "MD",
+      "x": 14.5196,
+      "y": 22.0794,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 32234246.24999999,
+          "pct": 0.9845319841803161
+        },
+        {
+          "sector": "Lawyers & Lobbyists",
+          "amount": 412387.04999999993,
+          "pct": 0.01259555559133843
+        },
+        {
+          "sector": "Communications/Electronics",
+          "amount": 44046.3,
+          "pct": 0.0013453080552426901
+        }
+      ]
+    },
+    {
+      "bioguideId": "S001232",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "MT",
+      "x": 11.1988,
+      "y": 16.8203,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Agribusiness",
+          "amount": 7500000,
+          "pct": 0.6861700312228864
+        },
+        {
+          "sector": "Other",
+          "amount": 3430235.4499999997,
+          "pct": 0.31382996877711355
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001242",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "OH",
+      "x": 8.4942,
+      "y": 16.5835,
+      "clusterId": -1,
+      "topSectors": [
+        {
+          "sector": "Misc Business",
+          "amount": 22226291.35,
+          "pct": 0.9127991704880972
+        },
+        {
+          "sector": "Other",
+          "amount": 1153305,
+          "pct": 0.04736444019122313
+        },
+        {
+          "sector": "Transportation",
+          "amount": 464000,
+          "pct": 0.019055757365768405
+        }
+      ]
+    },
+    {
+      "bioguideId": "M001243",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "PA",
+      "x": 15.5223,
+      "y": 23.0914,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 64527219.84999995,
+          "pct": 1
+        }
+      ]
+    },
+    {
+      "bioguideId": "J000312",
+      "party": "R",
+      "chamber": "Senate",
+      "state": "WV",
+      "x": 11.7352,
+      "y": 18.6746,
+      "clusterId": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "amount": 5124754.899999999,
+          "pct": 0.8467845614587955
+        },
+        {
+          "sector": "Misc Business",
+          "amount": 413000,
+          "pct": 0.06824170730242779
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "amount": 263750,
+          "pct": 0.043580509203426945
+        }
+      ]
+    }
+  ],
+  "clusters": {
+    "0": {
+      "memberCount": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.4937
+        },
+        {
+          "sector": "Misc Business",
+          "meanPct": 0.2875
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "meanPct": 0.0471
+        }
+      ],
+      "partyComposition": {
+        "D": 0,
+        "R": 5,
+        "I": 0
+      },
+      "isCrossParty": false
+    },
+    "1": {
+      "memberCount": 29,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.5153
+        },
+        {
+          "sector": "Labor",
+          "meanPct": 0.2159
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "meanPct": 0.0554
+        }
+      ],
+      "partyComposition": {
+        "D": 28,
+        "R": 1,
+        "I": 0
+      },
+      "isCrossParty": true
+    },
+    "2": {
+      "memberCount": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.9084
+        },
+        {
+          "sector": "Construction",
+          "meanPct": 0.073
+        },
+        {
+          "sector": "Misc Business",
+          "meanPct": 0.0049
+        }
+      ],
+      "partyComposition": {
+        "D": 0,
+        "R": 5,
+        "I": 0
+      },
+      "isCrossParty": false
+    },
+    "3": {
+      "memberCount": 5,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.7805
+        },
+        {
+          "sector": "Communications/Electronics",
+          "meanPct": 0.0461
+        },
+        {
+          "sector": "Misc Business",
+          "meanPct": 0.0373
+        }
+      ],
+      "partyComposition": {
+        "D": 2,
+        "R": 3,
+        "I": 0
+      },
+      "isCrossParty": true
+    },
+    "4": {
+      "memberCount": 6,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.8255
+        },
+        {
+          "sector": "Labor",
+          "meanPct": 0.0479
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "meanPct": 0.0319
+        }
+      ],
+      "partyComposition": {
+        "D": 5,
+        "R": 1,
+        "I": 0
+      },
+      "isCrossParty": true
+    },
+    "5": {
+      "memberCount": 86,
+      "topSectors": [
+        {
+          "sector": "Other",
+          "meanPct": 0.9401
+        },
+        {
+          "sector": "Finance/Insurance/Real Estate",
+          "meanPct": 0.0165
+        },
+        {
+          "sector": "Ideology/Single-Issue",
+          "meanPct": 0.0123
+        }
+      ],
+      "partyComposition": {
+        "D": 37,
+        "R": 49,
+        "I": 0
+      },
+      "isCrossParty": true
+    }
+  }
+}

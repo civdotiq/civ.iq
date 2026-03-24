@@ -38,13 +38,14 @@ jest.mock('@/lib/intelligence/embeddings/embedding-classifier', () => {
   };
 });
 
-// Mock Redis cache
+// Mock Redis cache — singleton so tests can inspect calls
+const mockRedisInstance = {
+  get: jest.fn(async () => null),
+  set: jest.fn(async () => {}),
+  keys: jest.fn(async () => []),
+};
 jest.mock('@/lib/cache/redis-client', () => ({
-  getRedisCache: () => ({
-    get: jest.fn(async () => null),
-    set: jest.fn(async () => {}),
-    keys: jest.fn(async () => []),
-  }),
+  getRedisCache: () => mockRedisInstance,
 }));
 
 describe('Bill-Lobbying Similarity', () => {
@@ -149,5 +150,66 @@ describe('Bill-Lobbying Similarity', () => {
       expect(typeof result!.averageSimilarity).toBe('number');
       expect(Number.isFinite(result!.averageSimilarity)).toBe(true);
     }
+  });
+
+  it('sets hasStrongMatches based on 0.55 threshold', async () => {
+    // With our mock embeddings, similarity values are deterministic
+    // and based on sin() functions. We need to verify the flag logic.
+    const result = await computeBillLobbyingSimilarity(
+      'hr-500',
+      'An act about pharmaceutical pricing reform',
+      sampleFilings
+    );
+
+    expect(result).not.toBeNull();
+    // hasStrongMatches should be true if ANY match >= 0.55, false otherwise
+    if (result!.matches.some(m => m.similarity >= 0.55)) {
+      expect(result!.hasStrongMatches).toBe(true);
+    } else {
+      expect(result!.hasStrongMatches).toBe(false);
+    }
+  });
+
+  it('caps matches at 10 even with more filings', async () => {
+    // Create 15 filings with non-empty specificIssues
+    const manyFilings = Array.from({ length: 15 }, (_, i) => ({
+      id: `filing-cap-${i}`,
+      client: `Client ${i}`,
+      registrant: `Registrant ${i}`,
+      specificIssues: [`Issue about topic ${i} and regulatory policy`],
+      income: 100000 + i * 10000,
+      period: `Q${(i % 4) + 1} 2025`,
+    }));
+
+    const result = await computeBillLobbyingSimilarity(
+      'hr-600',
+      'An act about comprehensive regulatory reform and oversight',
+      manyFilings
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.matches.length).toBeLessThanOrEqual(10);
+  });
+
+  it('caches lobbying embeddings in Redis', async () => {
+    // Clear previous calls so we only see this test's interactions
+    mockRedisInstance.set.mockClear();
+
+    const result = await computeBillLobbyingSimilarity(
+      'hr-700',
+      'An act about defense spending',
+      sampleFilings
+    );
+
+    expect(result).not.toBeNull();
+    // Redis set should have been called for each filing with non-empty specificIssues
+    // filing-1 and filing-2 have issues, filing-3 has empty issues
+    const setCalls = mockRedisInstance.set.mock.calls.filter(
+      (call: unknown[]) =>
+        typeof call[0] === 'string' && (call[0] as string).startsWith('lobbying-embedding:')
+    );
+    expect(setCalls.length).toBe(2); // filing-1 and filing-2
+    // Verify the cache key format
+    expect(setCalls[0][0]).toContain('lobbying-embedding:filing-1');
   });
 });
