@@ -148,6 +148,7 @@ const httpClient = HttpClient.getInstance();
 class ConcurrencyLimiter {
   private running = 0;
   private queue: Array<() => void> = [];
+  public delayMs = 0; // Per-request delay for batch/throttled mode
 
   constructor(private limit: number) {}
 
@@ -157,6 +158,9 @@ class ConcurrencyLimiter {
         this.running++;
 
         try {
+          if (this.delayMs > 0) {
+            await new Promise(r => setTimeout(r, this.delayMs));
+          }
           const result = await task();
           resolve(result);
         } catch (error) {
@@ -352,8 +356,12 @@ export class BatchVotingService {
   private cache = new InMemoryCache();
   private circuitBreaker = new CircuitBreaker();
   private limiter = new ConcurrencyLimiter(5); // Max 5 concurrent requests
-  private apiKey = process.env.CONGRESS_API_KEY;
   private lisToGuideMappingPromise: Promise<Map<string, string>> | null = null;
+
+  // Read API key lazily so dotenv has time to load in scripts
+  private get apiKey(): string | undefined {
+    return process.env.CONGRESS_API_KEY;
+  }
 
   private constructor() {
     // Cleanup expired cache entries every hour
@@ -370,6 +378,15 @@ export class BatchVotingService {
       BatchVotingService.instance = new BatchVotingService();
     }
     return BatchVotingService.instance;
+  }
+
+  /**
+   * Configure for batch data collection (slower, avoids rate limits).
+   * Call before any vote fetching in scripts — NOT needed for web serving.
+   */
+  configureBatchMode(options: { concurrency?: number; delayMs?: number }): void {
+    this.limiter = new ConcurrencyLimiter(options.concurrency ?? 2);
+    this.limiter.delayMs = options.delayMs ?? 300;
   }
 
   /**

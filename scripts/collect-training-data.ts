@@ -160,6 +160,11 @@ async function collectTrainingData() {
   const startTime = Date.now();
   log('Starting training data collection');
 
+  // Throttle vote fetching: concurrency=2, 500ms between requests
+  // Avoids IP bans from Senate.gov and Congress.gov rate limits
+  batchVotingService.configureBatchMode({ concurrency: 2, delayMs: 500 });
+  log('Batch mode configured', { concurrency: 2, delayMs: 500 });
+
   // Load existing data for incremental mode
   let existingBioguideIds = new Set<string>();
   if (isIncremental) {
