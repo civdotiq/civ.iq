@@ -48,6 +48,9 @@ export const ANALYZER_NAMES = [
   'sector-leaderboard',
   'civic-brief',
   'federal-register',
+  'regulation',
+  'enforcement',
+  'influence-graph',
 ] as const;
 
 export type AnalyzerName = (typeof ANALYZER_NAMES)[number];

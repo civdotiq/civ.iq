@@ -20,6 +20,10 @@ import logger from '@/lib/logging/simple-logger';
 import type {
   EpaFacility,
   EpaViolation,
+  EpaEnforcementCase,
+  EpaEnforcementCaseDetail,
+  EpaComplianceTimeline,
+  EpaComplianceQuarter,
   SuperfundSite,
   ToxicRelease,
   EchoSearchResponse,
@@ -295,6 +299,188 @@ export class EpaEchoService {
     } catch (error) {
       logger.error('EpaEchoService.getToxicReleases failed', error as Error);
       return [];
+    }
+  }
+  /**
+   * Search EPA enforcement cases by state, SIC code, or facility name.
+   * Uses the ECHO case_rest_services API.
+   */
+  async searchEnforcementCases(params: {
+    state?: string;
+    sicCode?: string;
+    facilityName?: string;
+    penaltyMin?: number;
+    dateFrom?: string;
+  }): Promise<EpaEnforcementCase[]> {
+    const { state, sicCode, facilityName, penaltyMin, dateFrom } = params;
+    const cacheKey = `epa-enforcement:${state ?? ''}:${sicCode ?? ''}:${facilityName?.slice(0, 20) ?? ''}:${penaltyMin ?? ''}:${dateFrom ?? ''}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const qp = new URLSearchParams({
+            output: 'JSON',
+            responseset: '100',
+          });
+
+          if (state) qp.set('p_st', state.toUpperCase());
+          if (sicCode) qp.set('p_sic', sicCode);
+          if (facilityName) qp.set('p_name', facilityName);
+          if (penaltyMin) qp.set('p_penalty', String(penaltyMin));
+          if (dateFrom) qp.set('p_cs_date_from', dateFrom);
+
+          const searchUrl = `${ECHO_BASE}/case_rest_services.get_cases?${qp.toString()}`;
+          logger.info('EPA enforcement case search', { state, sicCode });
+
+          const searchResponse = await rateLimitedFetch(searchUrl);
+          if (!searchResponse.ok) {
+            throw new Error(`ECHO case API returned ${searchResponse.status}`);
+          }
+
+          const data = await searchResponse.json();
+          const cases = data.Results?.Cases ?? [];
+
+          return cases.map((c: Record<string, string | null>) => ({
+            caseNumber: c['CaseNumber'] ?? '',
+            caseName: c['CaseName'] ?? '',
+            activityTypeDesc: c['ActivityTypeDesc'] ?? '',
+            enforcementOutcome: c['EnforcementOutcome'] ?? '',
+            totalPenalties: parseFloat(c['TotalPenalties'] ?? '0') || 0,
+            federalPenalty: parseFloat(c['FederalPenalty'] ?? '0') || 0,
+            stateLocalPenalty: parseFloat(c['StateLocalPenalty'] ?? '0') || 0,
+            complianceActionCost: parseFloat(c['ComplianceActionCost'] ?? '0') || 0,
+            settlementDate: c['SettlementDate'] ?? null,
+            leadAgency: c['LeadAgency'] ?? '',
+            defendants: (c['Defendants'] ?? '').split(';').filter(Boolean),
+            facilityState: c['FacilityState'] ?? '',
+            facilitySICCode: c['FacilitySICCode'] ?? null,
+          })) as EpaEnforcementCase[];
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.searchEnforcementCases failed', error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * Get detailed enforcement case information including penalty breakdown.
+   */
+  async getEnforcementCaseDetail(caseNumber: string): Promise<EpaEnforcementCaseDetail | null> {
+    const cacheKey = `epa-case-detail:${caseNumber}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const qp = new URLSearchParams({
+            p_case_number: caseNumber,
+            output: 'JSON',
+          });
+
+          const url = `${ECHO_BASE}/case_rest_services.get_case_detail?${qp.toString()}`;
+          logger.info('EPA enforcement case detail', { caseNumber });
+
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error(`ECHO case detail API returned ${response.status}`);
+          }
+
+          const data = await response.json();
+          const c = data.Results?.Cases?.[0] as Record<string, string | null> | undefined;
+          if (!c) return null;
+
+          return {
+            caseNumber: c['CaseNumber'] ?? '',
+            caseName: c['CaseName'] ?? '',
+            activityTypeDesc: c['ActivityTypeDesc'] ?? '',
+            enforcementOutcome: c['EnforcementOutcome'] ?? '',
+            totalPenalties: parseFloat(c['TotalPenalties'] ?? '0') || 0,
+            federalPenalty: parseFloat(c['FederalPenalty'] ?? '0') || 0,
+            stateLocalPenalty: parseFloat(c['StateLocalPenalty'] ?? '0') || 0,
+            complianceActionCost: parseFloat(c['ComplianceActionCost'] ?? '0') || 0,
+            settlementDate: c['SettlementDate'] ?? null,
+            leadAgency: c['LeadAgency'] ?? '',
+            defendants: (c['Defendants'] ?? '').split(';').filter(Boolean),
+            facilityState: c['FacilityState'] ?? '',
+            facilitySICCode: c['FacilitySICCode'] ?? null,
+            penaltyAssessed: parseFloat(c['PenaltyAssessed'] ?? '0') || 0,
+            penaltyPaid: parseFloat(c['PenaltyPaid'] ?? '0') || 0,
+            enforcementType: c['EnforcementType'] ?? '',
+            relatedFacilities: (c['RelatedFacilities'] ?? '').split(';').filter(Boolean),
+          } as EpaEnforcementCaseDetail;
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.getEnforcementCaseDetail failed', error as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Get quarterly compliance history for a facility.
+   * Uses the DFR API compliance_summary.
+   */
+  async getComplianceHistory(registryId: string): Promise<EpaComplianceTimeline | null> {
+    const cacheKey = `epa-compliance:${registryId}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const url = `${ECHO_BASE}/dfr_rest_services.get_dfr?p_id=${encodeURIComponent(registryId)}&output=JSON`;
+          logger.info('EPA compliance history fetch', { registryId });
+
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error(`DFR compliance API returned ${response.status}`);
+          }
+
+          const data = await response.json();
+          const dfr = data.Results;
+          if (!dfr) return null;
+
+          const facilityName = dfr.Facility?.FacName ?? '';
+
+          // Extract compliance quarters from DFR data
+          const quarters: EpaComplianceQuarter[] = [];
+          const complianceSources = dfr.ComplianceSummary?.Sources ?? [];
+
+          for (const source of complianceSources) {
+            for (const quarter of source.Quarters ?? []) {
+              quarters.push({
+                quarter: quarter.YearQuarter ?? '',
+                status: quarter.Status === 'V'
+                  ? 'in_violation'
+                  : quarter.Status === 'C'
+                    ? 'in_compliance'
+                    : 'unknown',
+                programArea: source.ProgramArea ?? '',
+              });
+            }
+          }
+
+          const violationQuarters = quarters.filter(q => q.status === 'in_violation').length;
+
+          return {
+            registryId,
+            facilityName,
+            quarters,
+            currentStatus: dfr.Facility?.FacComplianceStatus ?? 'Unknown',
+            totalQuarters: quarters.length,
+            violationQuarters,
+          } as EpaComplianceTimeline;
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('EpaEchoService.getComplianceHistory failed', error as Error);
+      return null;
     }
   }
 }

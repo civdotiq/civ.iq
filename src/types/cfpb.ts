@@ -56,6 +56,33 @@ export interface CfpbSearchParams {
 
 // ── Raw API response types ──────────────────────────────────────
 
+// ── Company Trends (Phase 3) ────────────────────────────────────
+
+/** Monthly complaint count for a company */
+export interface CfpbMonthlyCount {
+  month: string; // YYYY-MM
+  count: number;
+}
+
+/** Company complaint trend over time */
+export interface CfpbCompanyTrend {
+  company: string;
+  totalComplaints: number;
+  monthlyCounts: CfpbMonthlyCount[];
+  trend: 'increasing' | 'decreasing' | 'stable';
+  periodMonths: number;
+}
+
+/** Company complaint breakdown by product, issue, and state */
+export interface CfpbCompanyBreakdown {
+  company: string;
+  totalComplaints: number;
+  byProduct: Array<{ product: string; count: number }>;
+  byIssue: Array<{ issue: string; count: number }>;
+  byState: Array<{ state: string; count: number }>;
+  timelyResponseRate: number;
+}
+
 /** Raw complaint from CFPB API _source field */
 export interface CfpbRawComplaint {
   complaint_id: string;

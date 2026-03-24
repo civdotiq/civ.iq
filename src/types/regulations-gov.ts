@@ -124,6 +124,21 @@ export interface RegAPISingleResponse<T> {
   };
 }
 
+/** Rule lifecycle tracking for a docket */
+export interface RuleLifecycle {
+  docketId: string;
+  agencyId: string;
+  title: string;
+  status: 'proposed' | 'comment_period' | 'comment_closed' | 'final' | 'effective' | 'withdrawn';
+  proposedDate: string | null;
+  commentOpenDate: string | null;
+  commentCloseDate: string | null;
+  finalRuleDate: string | null;
+  effectiveDate: string | null;
+  totalComments: number;
+  rin: string | null;
+}
+
 /** API response for comments endpoint */
 export interface RegCommentsResponse {
   success: boolean;

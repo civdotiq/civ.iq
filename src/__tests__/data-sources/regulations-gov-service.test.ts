@@ -286,4 +286,268 @@ describe('RegulationsGovService', () => {
       expect(docket).toBeNull();
     });
   });
+
+  describe('searchByRIN', () => {
+    it('delegates to searchDocuments with RIN as searchTerm', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'doc-1',
+              type: 'documents',
+              attributes: {
+                documentId: 'EPA-HQ-2025-0001',
+                documentType: 'Rule',
+                title: 'Final Rule for RIN',
+                agencyId: 'EPA',
+                docketId: 'EPA-HQ-2025',
+                commentStartDate: null,
+                commentEndDate: null,
+                postedDate: '2025-03-01',
+                lastModifiedDate: '2025-03-01',
+                objectId: 'obj-rin',
+                withdrawn: false,
+              },
+            },
+          ],
+          meta: { totalElements: 1, totalPages: 1 },
+        }),
+      });
+
+      const docs = await service.searchByRIN('2060-A001');
+
+      expect(docs).toHaveLength(1);
+      expect(docs[0]?.title).toBe('Final Rule for RIN');
+      const calledUrl = mockFetch.mock.calls[0]?.[0] as string;
+      expect(calledUrl).toContain('2060-A001');
+    });
+  });
+
+  describe('getDocketDocuments', () => {
+    it('fetches documents filtered by docketId', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'doc-1',
+              type: 'documents',
+              attributes: {
+                documentId: 'EPA-HQ-2025-0001',
+                documentType: 'Proposed Rule',
+                title: 'Proposed Rule in Docket',
+                agencyId: 'EPA',
+                docketId: 'EPA-HQ-2025',
+                commentStartDate: '2025-01-01',
+                commentEndDate: '2025-03-01',
+                postedDate: '2025-01-01',
+                lastModifiedDate: '2025-01-01',
+                objectId: 'obj-dk',
+                withdrawn: false,
+              },
+            },
+          ],
+          meta: { totalElements: 1 },
+        }),
+      });
+
+      const docs = await service.getDocketDocuments('EPA-HQ-2025');
+      expect(docs).toHaveLength(1);
+      expect(docs[0]?.docketId).toBe('EPA-HQ-2025');
+    });
+  });
+
+  describe('getRuleLifecycle', () => {
+    it('constructs lifecycle from docket and its documents', async () => {
+      // getDocket call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'EPA-HQ-2025',
+            type: 'dockets',
+            attributes: {
+              docketId: 'EPA-HQ-2025',
+              agencyId: 'EPA',
+              title: 'Clean Water Rulemaking',
+              docketType: 'Rulemaking',
+              lastModifiedDate: '2025-03-01',
+              objectId: 'obj-1',
+            },
+          },
+        }),
+      });
+
+      // getDocketDocuments call — searchDocuments
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'doc-pr',
+              type: 'documents',
+              attributes: {
+                documentId: 'EPA-HQ-2025-PR',
+                documentType: 'Proposed Rule',
+                title: 'Proposed Clean Water Rule',
+                agencyId: 'EPA',
+                docketId: 'EPA-HQ-2025',
+                commentStartDate: '2025-01-01',
+                commentEndDate: '2025-02-01',
+                postedDate: '2025-01-01',
+                lastModifiedDate: '2025-01-01',
+                objectId: 'obj-pr',
+                withdrawn: false,
+              },
+            },
+            {
+              id: 'doc-fr',
+              type: 'documents',
+              attributes: {
+                documentId: 'EPA-HQ-2025-FR',
+                documentType: 'Rule',
+                title: 'Final Clean Water Rule',
+                agencyId: 'EPA',
+                docketId: 'EPA-HQ-2025',
+                commentStartDate: null,
+                commentEndDate: null,
+                postedDate: '2025-03-01',
+                lastModifiedDate: '2025-03-01',
+                objectId: 'obj-fr',
+                withdrawn: false,
+              },
+            },
+          ],
+          meta: { totalElements: 2 },
+        }),
+      });
+
+      // getDocument detail call (for RIN)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'doc-pr',
+            type: 'documents',
+            attributes: {
+              documentId: 'EPA-HQ-2025-PR',
+              documentType: 'Proposed Rule',
+              title: 'Proposed Clean Water Rule',
+              agencyId: 'EPA',
+              docketId: 'EPA-HQ-2025',
+              rin: '2040-AF00',
+              commentCount: 500,
+              postedDate: '2025-01-01',
+              lastModifiedDate: '2025-01-01',
+              objectId: 'obj-pr',
+              withdrawn: false,
+            },
+          },
+        }),
+      });
+
+      // getCommentStats call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'c1',
+              type: 'comments',
+              attributes: {
+                commentId: 'c1',
+                documentId: 'd1',
+                docketId: 'EPA-HQ-2025',
+                agencyId: 'EPA',
+                title: 'Comment',
+                postedDate: '2025-01-15',
+                submitterType: 'Individual',
+                organization: null,
+                category: null,
+                withdrawn: false,
+              },
+            },
+          ],
+          meta: { totalElements: 300 },
+        }),
+      });
+
+      const lifecycle = await service.getRuleLifecycle('EPA-HQ-2025');
+
+      expect(lifecycle).not.toBeNull();
+      expect(lifecycle?.docketId).toBe('EPA-HQ-2025');
+      expect(lifecycle?.status).toBe('final');
+      expect(lifecycle?.rin).toBe('2040-AF00');
+      expect(lifecycle?.totalComments).toBe(300);
+      expect(lifecycle?.proposedDate).toBe('2025-01-01');
+      expect(lifecycle?.finalRuleDate).toBe('2025-03-01');
+    });
+
+    it('returns null when docket not found', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+
+      const lifecycle = await service.getRuleLifecycle('NONEXISTENT');
+      expect(lifecycle).toBeNull();
+    });
+  });
+
+  describe('getOrganizationComments', () => {
+    it('fetches and filters comments by organization', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'c1',
+              type: 'comments',
+              attributes: {
+                commentId: 'c1',
+                documentId: 'd1',
+                docketId: 'EPA-HQ-2025',
+                agencyId: 'EPA',
+                title: 'Comment from Green Corp',
+                postedDate: '2025-02-01',
+                submitterType: 'Organization',
+                organization: 'Green Corp International',
+                category: null,
+                withdrawn: false,
+              },
+            },
+            {
+              id: 'c2',
+              type: 'comments',
+              attributes: {
+                commentId: 'c2',
+                documentId: 'd1',
+                docketId: 'EPA-HQ-2025',
+                agencyId: 'EPA',
+                title: 'Comment from other org',
+                postedDate: '2025-02-02',
+                submitterType: 'Organization',
+                organization: 'Other Industries',
+                category: null,
+                withdrawn: false,
+              },
+            },
+          ],
+          meta: { totalElements: 2 },
+        }),
+      });
+
+      const result = await service.getOrganizationComments('EPA-HQ-2025', 'Green Corp');
+
+      expect(result.comments).toHaveLength(1);
+      expect(result.comments[0]?.organization).toContain('Green Corp');
+    });
+
+    it('returns empty when no API key', async () => {
+      process.env = { ...originalEnv };
+      delete process.env.DATA_GOV_API_KEY;
+
+      const result = await service.getOrganizationComments('test', 'org');
+      expect(result.comments).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
 });

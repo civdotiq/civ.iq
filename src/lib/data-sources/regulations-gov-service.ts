@@ -15,6 +15,7 @@ import type {
   RegDocFilters,
   RegAPIResponse,
   RegAPISingleResponse,
+  RuleLifecycle,
 } from '@/types/regulations-gov';
 
 const BASE_URL = 'https://api.regulations.gov/v4';
@@ -283,6 +284,174 @@ export class RegulationsGovService {
     } catch (error) {
       logger.error('Failed to fetch docket', error as Error, { docketId });
       return null;
+    }
+  }
+  /**
+   * Search documents by Regulation Identifier Number (RIN).
+   * RINs link Federal Register rules to Regulations.gov dockets.
+   */
+  async searchByRIN(rin: string): Promise<RegDocument[]> {
+    return this.searchDocuments({ searchTerm: rin, pageSize: 25 });
+  }
+
+  /**
+   * Get all documents in a docket.
+   */
+  async getDocketDocuments(
+    docketId: string,
+    opts?: { pageSize?: number }
+  ): Promise<RegDocument[]> {
+    return this.searchDocuments({ docketId, pageSize: opts?.pageSize ?? 25 });
+  }
+
+  /**
+   * Reconstruct the rule lifecycle for a docket by examining its documents.
+   * Determines status from document types and dates.
+   */
+  async getRuleLifecycle(docketId: string): Promise<RuleLifecycle | null> {
+    const apiKey = getDataGovApiKey();
+    if (!apiKey) {
+      logger.warn('DATA_GOV_API_KEY not configured');
+      return null;
+    }
+
+    const cacheKey = `regs-lifecycle:${docketId}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const docket = await this.getDocket(docketId);
+          if (!docket) return null;
+
+          const docs = await this.getDocketDocuments(docketId, { pageSize: 50 });
+
+          let proposedDate: string | null = null;
+          let commentOpenDate: string | null = null;
+          let commentCloseDate: string | null = null;
+          let finalRuleDate: string | null = null;
+          const effectiveDate: string | null = null;
+          let rin: string | null = null;
+          let isWithdrawn = false;
+
+          for (const doc of docs) {
+            if (doc.withdrawn) {
+              isWithdrawn = true;
+            }
+            if (doc.documentType === 'Proposed Rule') {
+              proposedDate = proposedDate ?? doc.postedDate;
+              commentOpenDate = commentOpenDate ?? doc.commentStartDate;
+              commentCloseDate = commentCloseDate ?? doc.commentEndDate;
+            }
+            if (doc.documentType === 'Rule') {
+              finalRuleDate = finalRuleDate ?? doc.postedDate;
+            }
+          }
+
+          // Get RIN from first detailed document if available
+          if (docs.length > 0) {
+            const detail = await this.getDocument(docs[0]!.documentId);
+            if (detail?.rin) {
+              rin = detail.rin;
+            }
+            if (detail && !effectiveDate) {
+              // effectiveDate not on the list doc type, but present on detail
+              // We check via the Federal Register link instead
+            }
+          }
+
+          // Get total comments
+          const commentStats = await this.getCommentStats(docketId);
+          const totalComments = commentStats?.total ?? 0;
+
+          // Determine status
+          let status: RuleLifecycle['status'];
+          if (isWithdrawn) {
+            status = 'withdrawn';
+          } else if (finalRuleDate) {
+            status = 'final';
+          } else if (commentCloseDate && new Date(commentCloseDate) < new Date()) {
+            status = 'comment_closed';
+          } else if (commentOpenDate) {
+            status = 'comment_period';
+          } else {
+            status = 'proposed';
+          }
+
+          return {
+            docketId,
+            agencyId: docket.agencyId,
+            title: docket.title,
+            status,
+            proposedDate,
+            commentOpenDate,
+            commentCloseDate,
+            finalRuleDate,
+            effectiveDate,
+            totalComments,
+            rin,
+          };
+        },
+        1800 // 30 minutes
+      );
+    } catch (error) {
+      logger.error('Failed to get rule lifecycle', error as Error, { docketId });
+      return null;
+    }
+  }
+
+  /**
+   * Search comments on a docket filtered by organization name.
+   */
+  async getOrganizationComments(
+    docketId: string,
+    orgName: string
+  ): Promise<{ comments: RegComment[]; total: number }> {
+    const apiKey = getDataGovApiKey();
+    if (!apiKey) {
+      logger.warn('DATA_GOV_API_KEY not configured');
+      return { comments: [], total: 0 };
+    }
+
+    const cacheKey = `regs-org-comments:${docketId}:${orgName.toLowerCase().slice(0, 30)}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const params = new URLSearchParams({
+            'filter[docketId]': docketId,
+            'filter[searchTerm]': orgName,
+            'page[size]': '25',
+            'page[number]': '1',
+            sort: '-postedDate',
+          });
+
+          const url = `${BASE_URL}/comments?${params.toString()}`;
+          logger.info('Fetching org comments on docket', { docketId, orgName });
+
+          const response = await rateLimitedFetch(url, apiKey);
+          if (!response.ok) {
+            throw new Error(`Regulations.gov API returned ${response.status}`);
+          }
+
+          const data = await response.json();
+          const comments = extractComments(data);
+          const total = data.meta?.totalElements ?? comments.length;
+
+          // Filter to comments where organization matches
+          const orgLower = orgName.toLowerCase();
+          const matched = comments.filter(
+            c => c.organization?.toLowerCase().includes(orgLower)
+          );
+
+          return { comments: matched, total };
+        },
+        1800 // 30 minutes
+      );
+    } catch (error) {
+      logger.error('Failed to fetch org comments', error as Error, { docketId, orgName });
+      return { comments: [], total: 0 };
     }
   }
 }

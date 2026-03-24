@@ -468,10 +468,90 @@ export interface BillLobbyingSimilarity {
   hasStrongMatches: boolean;
 }
 
+// ── Regulation Node ──────────────────────────────────────────────────
+
+export interface RegulationNode {
+  docketId: string;
+  agency: string;
+  agencySlug: string;
+  title: string;
+  type: 'proposed_rule' | 'final_rule';
+  status: 'proposed' | 'comment_period' | 'comment_closed' | 'final' | 'effective' | 'withdrawn';
+  publicationDate: string;
+  rin: string | null;
+  commentCount: number;
+  linkMethod: 'committee_agency' | 'rin' | 'text_similarity';
+  linkConfidence: number;
+}
+
+export interface RegulationInsight extends InsightBase {
+  agencySlug: string;
+  agencyName: string;
+  regulationBillLinks: Array<{
+    regulation: RegulationNode;
+    billId: string;
+    billTitle: string;
+    confidence: number;
+  }>;
+  lobbyingCommentOverlap: Array<{
+    organization: string;
+    lobbyingSpending: number;
+    commentCount: number;
+    isOverlap: boolean;
+  }>;
+  activeRulemakings: number;
+  finalizedRules: number;
+  withdrawnRules: number;
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
+// ── Enforcement Node ─────────────────────────────────────────────────
+
+export interface EnforcementAction {
+  agency: 'EPA' | 'OSHA' | 'SEC' | 'CFPB';
+  actionType: string;
+  organization: string;
+  resolvedCompany: import('@civiq/entity-resolution').ResolvedCompany | null;
+  sector: IndustrySector | null;
+  penaltyAmount: number;
+  date: string;
+  state: string;
+  district: string | null;
+}
+
+export interface EnforcementInsight extends InsightBase {
+  scope:
+    | { type: 'sector'; sector: IndustrySector }
+    | { type: 'state'; state: string }
+    | { type: 'organization'; name: string };
+  actions: EnforcementAction[];
+  stats: {
+    totalActions: number;
+    totalPenalties: number;
+    byAgency: Array<{ agency: string; count: number; penalties: number }>;
+    trend: 'increasing' | 'decreasing' | 'stable';
+    periodMonths: number;
+  };
+  linkedRegulations: Array<{ docketId: string; title: string; agency: string }>;
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
 // ── Influence Chain ──────────────────────────────────────────────────
 
 export interface InfluenceChainLink {
-  type: 'lobbying' | 'contribution' | 'committee' | 'bill_match' | 'vote' | 'text_similarity';
+  type:
+    | 'lobbying'
+    | 'contribution'
+    | 'committee'
+    | 'bill_match'
+    | 'vote'
+    | 'text_similarity'
+    | 'regulation'
+    | 'enforcement'
+    | 'court_case'
+    | 'outcome';
   label: string;
   confidence: number;
   data: Record<string, unknown>;
@@ -496,6 +576,43 @@ export interface InfluenceChainInsight extends InsightBase {
   chains: InfluenceChain[];
   totalChainsDetected: number;
   chainsDropped: number;
+  peerComparison: PeerComparison;
+  narrative: string;
+}
+
+// ── Influence Graph (Full 6-Node Chain) ──────────────────────────────
+
+export interface OutcomeSignal {
+  type: 'stock_price' | 'economic_indicator' | 'enforcement_trend' | 'complaint_trend';
+  metric: string;
+  value: number;
+  change: number;
+  periodStart: string;
+  periodEnd: string;
+  direction: 'positive' | 'negative' | 'neutral';
+  baseline: { value: number; label: string };
+}
+
+export interface InfluenceGraphChain extends InfluenceChain {
+  regulationNode: RegulationNode | null;
+  enforcementActions: EnforcementAction[];
+  courtCases: Array<{ caseName: string; court: string; dateFiled: string; status: string }>;
+  outcomeSignals: OutcomeSignal[];
+}
+
+export interface InfluenceGraphInsight extends InsightBase {
+  bioguideId: string;
+  chains: InfluenceGraphChain[];
+  totalChainsDetected: number;
+  chainsDropped: number;
+  graphStats: {
+    nodesCount: number;
+    edgesCount: number;
+    avgChainLength: number;
+    maxChainLength: number;
+    regulationLinks: number;
+    enforcementLinks: number;
+  };
   peerComparison: PeerComparison;
   narrative: string;
 }

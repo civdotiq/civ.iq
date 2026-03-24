@@ -146,6 +146,62 @@ export interface GisFeatureResponse {
   }>;
 }
 
+// ── Enforcement Types (Phase 3) ──────────────────────────────────
+
+/** EPA enforcement case from ECHO case_rest_services */
+export interface EpaEnforcementCase {
+  caseNumber: string;
+  caseName: string;
+  activityTypeDesc: string;
+  enforcementOutcome: string;
+  totalPenalties: number;
+  federalPenalty: number;
+  stateLocalPenalty: number;
+  complianceActionCost: number;
+  settlementDate: string | null;
+  leadAgency: string;
+  defendants: string[];
+  facilityState: string;
+  facilitySICCode: string | null;
+}
+
+/** EPA enforcement case detail with penalty breakdown */
+export interface EpaEnforcementCaseDetail extends EpaEnforcementCase {
+  penaltyAssessed: number;
+  penaltyPaid: number;
+  enforcementType: string;
+  relatedFacilities: string[];
+}
+
+/** Quarterly EPA compliance status timeline entry */
+export interface EpaComplianceQuarter {
+  quarter: string;
+  status: 'in_compliance' | 'in_violation' | 'unknown';
+  programArea: string;
+}
+
+/** EPA compliance history for a facility */
+export interface EpaComplianceTimeline {
+  registryId: string;
+  facilityName: string;
+  quarters: EpaComplianceQuarter[];
+  currentStatus: string;
+  totalQuarters: number;
+  violationQuarters: number;
+}
+
+/** Raw ECHO enforcement case from API */
+export interface EchoCaseResponse {
+  Results: {
+    CaseNumber: string;
+    CaseName: string;
+    Message?: string;
+    QueryRows?: string;
+    QueryID?: string;
+    Cases?: Array<Record<string, string | null>>;
+  };
+}
+
 /** Envirofacts TRI facility response */
 export interface TriFacilityResponse {
   tri_facility_id: string;
