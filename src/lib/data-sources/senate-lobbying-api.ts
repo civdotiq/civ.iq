@@ -370,7 +370,13 @@ export class SenateLobbyingAPI {
       const committeeData: CommitteeLobbyingData[] = [];
 
       for (const committee of committees) {
-        const keywords = committeeKeywords[committee] || [committee.toLowerCase()];
+        // Match full committee names (e.g. "House Committee on Energy and Commerce")
+        // against the short keyword map keys (e.g. "Energy", "Commerce") via substring
+        const committeeLower = committee.toLowerCase();
+        const matchedKeywords = Object.entries(committeeKeywords)
+          .filter(([key]) => committeeLower.includes(key.toLowerCase()))
+          .flatMap(([, kws]) => kws);
+        const keywords = matchedKeywords.length > 0 ? matchedKeywords : [committeeLower];
         const relevantFilings = allFilings.filter(filing => {
           // Check if any specific issues or general issues match committee keywords
           // Handle null/undefined specific_issues and issues arrays
