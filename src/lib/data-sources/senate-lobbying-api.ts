@@ -57,6 +57,51 @@ export interface RawLDAFiling {
   }>;
 }
 
+/**
+ * Transform a raw Senate LDA API filing into the normalized LobbyingFiling shape.
+ *
+ * The raw API nests issue codes and descriptions inside `lobbying_activities[]`,
+ * but the rest of the codebase expects flat `issues[]` and `specific_issues[]`.
+ */
+function transformRawFiling(raw: RawLDAFiling): LobbyingFiling {
+  const issues: LobbyingFiling['issues'] = [];
+  const specificIssues: string[] = [];
+  const lobbyists: LobbyingFiling['lobbyists'] = [];
+  const govEntities: string[] = [];
+
+  for (const activity of raw.lobbying_activities ?? []) {
+    if (activity.general_issue_code) {
+      issues.push({
+        code: activity.general_issue_code,
+        description: activity.general_issue_code_display ?? activity.general_issue_code,
+      });
+    }
+    if (activity.description) {
+      specificIssues.push(activity.description);
+    }
+    for (const lob of activity.lobbyists ?? []) {
+      lobbyists.push(lob);
+    }
+    for (const ge of activity.government_entities ?? []) {
+      govEntities.push(ge.name);
+    }
+  }
+
+  return {
+    id: raw.filing_uuid,
+    registrant: { name: raw.registrant.name, id: String(raw.registrant.id) },
+    client: { name: raw.client.name, id: String(raw.client.id) },
+    income: parseFloat(raw.income ?? '0') || 0,
+    expenses: parseFloat(raw.expenses ?? '0') || 0,
+    filingPeriod: raw.filing_period,
+    filingYear: raw.filing_year,
+    issues,
+    lobbyists,
+    government_entities: Array.from(new Set(govEntities)),
+    specific_issues: specificIssues,
+  };
+}
+
 export interface CommitteeLobbyingData {
   committee: string;
   totalSpending: number;
@@ -133,7 +178,7 @@ export class SenateLobbyingAPI {
             filingCount: data.results.length,
           });
 
-          return data.results as LobbyingFiling[];
+          return (data.results as RawLDAFiling[]).map(transformRawFiling);
         },
         7 * 24 * 60 * 60 // 7 days cache (seconds) - lobbying data is quarterly
       );

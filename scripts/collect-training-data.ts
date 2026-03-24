@@ -425,10 +425,19 @@ async function processLegislator(
   if (!fecId) return null;
 
   // Fetch votes and contributions in parallel
-  const [rawVotes, contributions] = await Promise.all([
+  const [rawVotes, primaryContributions] = await Promise.all([
     fetchLegislatorVotes(bioguideId, rep.chamber),
     fecApiService.getSampleContributions(fecId, cycle, MAX_CONTRIBUTIONS).catch(() => []),
   ]);
+
+  // Cycle fallback: many 119th Congress members have data under 2022 cycle
+  // (Senators not up in 2024, House members with delayed filings)
+  let contributions = primaryContributions;
+  if (!contributions.length && cycle >= 2022) {
+    contributions = await fecApiService
+      .getSampleContributions(fecId, cycle - 2, MAX_CONTRIBUTIONS)
+      .catch(() => []);
+  }
 
   if (!contributions.length) return null;
 
