@@ -75,84 +75,99 @@ export default function QuickStartPaths() {
         <p className="text-xs text-gray-600 mt-1">Alternative ways to explore the platform</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-grid-2 sm:gap-grid-3">
-        {/* Browse by State */}
-        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
-            BROWSE BY STATE
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-3 sm:gap-grid-4">
+        {/* Federal */}
+        <div className="border-l-4 border-l-black pl-grid-2 sm:pl-grid-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-grid-2">
+            Federal
           </h3>
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
-            View state legislature and federal representatives
-          </p>
-          <div className="flex-grow">
-            <select
-              value={selectedState}
-              onChange={e => setSelectedState(e.target.value)}
-              className="w-full border-2 border-black px-3 py-2.5 min-h-[44px] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
-              aria-label="Select a state"
-            >
-              <option value="">Select a state...</option>
-              {US_STATES.map(state => (
-                <option key={state.code} value={state.code}>
-                  {state.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          {selectedState && (
-            <Link
-              href={`/state-legislature/${selectedState}`}
-              className="mt-grid-1 bg-civiq-blue text-white px-3 py-2.5 min-h-[44px] text-center text-xs font-bold aicher-border aicher-hover flex items-center justify-center gap-1"
-            >
-              VIEW {selectedState}
-              <ArrowRightIcon className="h-3 w-3" />
-            </Link>
-          )}
-        </div>
-
-        {/* Example Profile */}
-        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
-            EXAMPLE PROFILE
-          </h3>
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
-            See what representative profiles look like
-          </p>
-          <div className="flex-grow space-y-1">
-            {EXAMPLE_REPS.map(rep => (
+          <div className="space-y-grid-2">
+            {/* Example Profiles */}
+            <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
+              <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
+                EXAMPLE PROFILES
+              </h4>
+              <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
+                See what congressional member profiles look like
+              </p>
+              <div className="space-y-1">
+                {EXAMPLE_REPS.map(rep => (
+                  <Link
+                    key={rep.id}
+                    href={`/representative/${rep.id}`}
+                    className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover text-[10px] sm:text-xs"
+                  >
+                    <div className="font-semibold text-gray-900">{rep.name}</div>
+                    <div className="text-gray-600">{rep.title}</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {/* Federal data links */}
+            <div className="flex flex-col gap-1">
               <Link
-                key={rep.id}
-                href={`/representative/${rep.id}`}
-                className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover text-[10px] sm:text-xs"
+                href="/representatives"
+                className="block aicher-card px-3 py-2.5 min-h-[44px] aicher-hover"
               >
-                <div className="font-semibold text-gray-900">{rep.name}</div>
-                <div className="text-gray-600">{rep.title}</div>
+                <div className="text-xs font-semibold text-gray-900">All Representatives</div>
+                <div className="text-[10px] text-gray-600">535 members of Congress</div>
               </Link>
-            ))}
+              <Link
+                href="/districts"
+                className="block aicher-card px-3 py-2.5 min-h-[44px] aicher-hover"
+              >
+                <div className="text-xs font-semibold text-gray-900">All Districts</div>
+                <div className="text-[10px] text-gray-600">435 congressional districts</div>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Explore Data */}
-        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
-            EXPLORE DATA
+        {/* State */}
+        <div className="border-l-4 border-l-gray-300 pl-grid-2 sm:pl-grid-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-grid-2">
+            State
           </h3>
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
-            Browse comprehensive datasets
-          </p>
-          <div className="flex-grow space-y-1">
-            <Link
-              href="/districts"
-              className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover"
-            >
-              <div className="text-xs font-semibold text-gray-900">All Districts</div>
-              <div className="text-[10px] text-gray-600">435 congressional districts</div>
-            </Link>
+          <div className="space-y-grid-2">
+            {/* Browse by State */}
+            <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
+              <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
+                BROWSE BY STATE
+              </h4>
+              <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
+                View state legislators and bills
+              </p>
+              <div>
+                <select
+                  value={selectedState}
+                  onChange={e => setSelectedState(e.target.value)}
+                  className="w-full border-2 border-black px-3 py-2.5 min-h-[44px] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
+                  aria-label="Select a state"
+                >
+                  <option value="">Select a state...</option>
+                  {US_STATES.map(state => (
+                    <option key={state.code} value={state.code}>
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedState && (
+                <Link
+                  href={`/state-legislature/${selectedState}`}
+                  className="mt-grid-1 bg-civiq-blue text-white px-3 py-2.5 min-h-[44px] text-center text-xs font-bold aicher-border aicher-hover flex items-center justify-center gap-1"
+                >
+                  VIEW {selectedState}
+                  <ArrowRightIcon className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+            {/* State data link */}
             <Link
               href="/states"
-              className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover"
+              className="block aicher-card px-3 py-2.5 min-h-[44px] aicher-hover"
             >
-              <div className="text-xs font-semibold text-gray-900">All States</div>
+              <div className="text-xs font-semibold text-gray-900">All State Legislatures</div>
               <div className="text-[10px] text-gray-600">50 states + territories</div>
             </Link>
           </div>

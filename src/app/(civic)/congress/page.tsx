@@ -153,7 +153,7 @@ export default function CongressHubPage() {
         description="All 50 state delegations in the 119th United States Congress"
         items={STATES.map(s => ({
           name: `${s.name} Congressional Delegation`,
-          url: `https://civdotiq.org/state-legislature/${s.code.toLowerCase()}`,
+          url: `https://civdotiq.org/delegation/${s.code.toLowerCase()}`,
         }))}
       />
 

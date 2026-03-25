@@ -194,7 +194,7 @@ export default async function StateDelegationPage({ params }: PageProps) {
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
-          { name: 'States', url: 'https://civdotiq.org/states' },
+          { name: 'Representatives', url: 'https://civdotiq.org/representatives' },
           {
             name: `${stateName} Delegation`,
             url: `https://civdotiq.org/delegation/${normalizedCode.toLowerCase()}`,
@@ -211,8 +211,8 @@ export default async function StateDelegationPage({ params }: PageProps) {
               Home
             </Link>
             <span className="mx-2">›</span>
-            <Link href="/states" className="hover:text-civiq-blue">
-              States
+            <Link href="/representatives" className="hover:text-civiq-blue">
+              Representatives
             </Link>
             <span className="mx-2">›</span>
             <span className="font-medium text-gray-900">{stateName} Delegation</span>
