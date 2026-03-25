@@ -164,29 +164,29 @@ export const StateExecutivesTab: React.FC<StateExecutivesTabProps> = ({ state })
             Total Officials
           </div>
         </div>
-        <div className="bg-blue-50 border-2 border-blue-300 p-4 text-center">
-          <div className="text-3xl font-bold text-blue-600">{data.partyBreakdown.Democratic}</div>
-          <div className="text-sm text-blue-700 mt-1">Democrats</div>
+        <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
+          <div className="text-3xl font-bold text-civiq-blue">{data.partyBreakdown.Democratic}</div>
+          <div className="text-sm text-civiq-blue mt-1">Democrats</div>
         </div>
-        <div className="bg-red-50 border-2 border-red-300 p-4 text-center">
-          <div className="text-3xl font-bold text-red-600">{data.partyBreakdown.Republican}</div>
-          <div className="text-sm text-red-700 mt-1">Republicans</div>
+        <div className="bg-civiq-red/10 border-2 border-civiq-red p-4 text-center">
+          <div className="text-3xl font-bold text-civiq-red">{data.partyBreakdown.Republican}</div>
+          <div className="text-sm text-civiq-red mt-1">Republicans</div>
         </div>
         {data.partyBreakdown.Independent > 0 && (
-          <div className="bg-purple-50 border-2 border-purple-300 p-4 text-center">
-            <div className="text-3xl font-bold text-purple-600">
+          <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
+            <div className="text-3xl font-bold text-civiq-blue">
               {data.partyBreakdown.Independent}
             </div>
-            <div className="text-sm text-purple-700 mt-1">Independents</div>
+            <div className="text-sm text-civiq-blue mt-1">Independents</div>
           </div>
         )}
       </div>
 
       {/* Next Election Info */}
       {data.nextElection && (
-        <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-6">
+        <div className="bg-gray-100 border-2 border-gray-400 p-4 mb-6">
           <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" />
+            <Calendar className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Next Election</h3>
               <p className="text-sm text-gray-700">
@@ -207,12 +207,12 @@ export const StateExecutivesTab: React.FC<StateExecutivesTabProps> = ({ state })
       )}
 
       {/* Data Source Notice */}
-      <div className="bg-blue-50 border-2 border-blue-300 p-4 mb-6">
+      <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 mb-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-civiq-blue flex-shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="text-blue-900 font-medium mb-1">Data Source</p>
-            <p className="text-blue-800">
+            <p className="text-civiq-blue font-medium mb-1">Data Source</p>
+            <p className="text-civiq-blue">
               Executive information is sourced from Wikidata and may not be complete for all states.
               Last updated: {new Date(data.lastUpdated).toLocaleDateString()}.
             </p>

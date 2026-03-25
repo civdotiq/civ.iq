@@ -109,7 +109,7 @@ function ProfileContent({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-            <User className="h-5 w-5 text-blue-500" />
+            <User className="h-5 w-5 text-civiq-blue" />
             Basic Information
           </h4>
           <dl className="space-y-2">
@@ -141,7 +141,7 @@ function ProfileContent({
         {data.contact && (
           <div className="space-y-4">
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Phone className="h-5 w-5 text-blue-500" />
+              <Phone className="h-5 w-5 text-civiq-blue" />
               Contact Information
             </h4>
             <dl className="space-y-2">
@@ -159,7 +159,7 @@ function ProfileContent({
                       href={data.contact.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-1"
+                      className="text-civiq-blue hover:underline flex items-center gap-1"
                     >
                       <Globe className="h-4 w-4" />
                       Visit
@@ -200,7 +200,7 @@ function BillsContent({ data }: { data: TabResponseData }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-          <FileText className="h-5 w-5 text-blue-500" />
+          <FileText className="h-5 w-5 text-civiq-blue" />
           Sponsored Legislation ({bills.length})
         </h4>
       </div>
@@ -211,7 +211,7 @@ function BillsContent({ data }: { data: TabResponseData }) {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold text-blue-600">
+                  <span className="font-semibold text-civiq-blue">
                     {bill.type}
                     {bill.number || ` ${bill.congress}-${index + 1}`}
                   </span>
@@ -235,7 +235,7 @@ function BillsContent({ data }: { data: TabResponseData }) {
                   href={bill.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-4 text-blue-600 hover:text-blue-800"
+                  className="ml-4 text-civiq-blue hover:text-civiq-blue"
                 >
                   <Globe className="h-5 w-5" />
                 </a>
@@ -268,18 +268,18 @@ function VotesContent({ data }: { data: TabResponseData }) {
       {/* Voting Summary */}
       {votingPattern && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-green-50 p-3 text-center">
-            <div className="text-2xl font-bold text-green-600">
+          <div className="bg-civiq-green/10 p-3 text-center">
+            <div className="text-2xl font-bold text-civiq-green">
               {Number(votingPattern.yes || 0)}
             </div>
             <div className="text-sm text-gray-600">Yes Votes</div>
           </div>
-          <div className="bg-red-50 p-3 text-center">
-            <div className="text-2xl font-bold text-red-600">{Number(votingPattern.no || 0)}</div>
+          <div className="bg-civiq-red/10 p-3 text-center">
+            <div className="text-2xl font-bold text-civiq-red">{Number(votingPattern.no || 0)}</div>
             <div className="text-sm text-gray-600">No Votes</div>
           </div>
-          <div className="bg-yellow-50 p-3 text-center">
-            <div className="text-2xl font-bold text-yellow-600">
+          <div className="bg-gray-100 p-3 text-center">
+            <div className="text-2xl font-bold text-gray-600">
               {Number(votingPattern.present || 0)}
             </div>
             <div className="text-sm text-gray-600">Present</div>
@@ -296,7 +296,7 @@ function VotesContent({ data }: { data: TabResponseData }) {
       {/* Recent Votes */}
       <div>
         <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
-          <Vote className="h-5 w-5 text-blue-500" />
+          <Vote className="h-5 w-5 text-civiq-blue" />
           Recent Votes
         </h4>
 
@@ -312,11 +312,11 @@ function VotesContent({ data }: { data: TabResponseData }) {
                     <span
                       className={`px-2 py-1 text-sm font-bold uppercase tracking-aicher border-2 ${
                         vote.position === 'Yea'
-                          ? 'bg-green-100 text-green-700 border-civiq-green'
+                          ? 'bg-civiq-green/10 text-civiq-green border-civiq-green'
                           : vote.position === 'Nay'
-                            ? 'bg-red-100 text-red-700 border-civiq-red'
+                            ? 'bg-civiq-red/10 text-civiq-red border-civiq-red'
                             : vote.position === 'Present'
-                              ? 'bg-yellow-100 text-yellow-700 border-yellow-600'
+                              ? 'bg-gray-100 text-gray-600 border-gray-400'
                               : 'bg-white border-gray-300 text-gray-700'
                       }`}
                     >
@@ -358,24 +358,24 @@ function FinanceContent({ data, bioguideId }: { data: TabResponseData; bioguideI
   return (
     <div className="space-y-6">
       <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-        <DollarSign className="h-5 w-5 text-green-500" />
+        <DollarSign className="h-5 w-5 text-civiq-green" />
         Campaign Finance Summary
       </h4>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {summary?.total_receipts !== undefined && summary?.total_receipts !== null && (
-          <div className="bg-blue-50 p-4">
+          <div className="bg-civiq-blue/10 p-4">
             <div className="text-sm text-gray-600 mb-1">Total Receipts</div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-civiq-blue">
               ${Number(summary.total_receipts || 0).toLocaleString()}
             </div>
           </div>
         )}
 
         {summary?.total_disbursements !== undefined && summary?.total_disbursements !== null && (
-          <div className="bg-orange-50 p-4">
+          <div className="bg-civiq-red/10 p-4">
             <div className="text-sm text-gray-600 mb-1">Total Disbursements</div>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-civiq-red">
               ${Number(summary.total_disbursements || 0).toLocaleString()}
             </div>
           </div>
@@ -383,9 +383,9 @@ function FinanceContent({ data, bioguideId }: { data: TabResponseData; bioguideI
 
         {summary?.cash_on_hand_end_period !== undefined &&
           summary?.cash_on_hand_end_period !== null && (
-            <div className="bg-green-50 p-4">
+            <div className="bg-civiq-green/10 p-4">
               <div className="text-sm text-gray-600 mb-1">Cash on Hand</div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-civiq-green">
                 ${Number(summary.cash_on_hand_end_period || 0).toLocaleString()}
               </div>
             </div>
@@ -584,13 +584,13 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         {error && (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-3" />
-              <p className="text-red-500">
+              <AlertCircle className="h-8 w-8 text-civiq-red mx-auto mb-3" />
+              <p className="text-civiq-red">
                 Error loading {activeTab}: {error}
               </p>
               <button
                 onClick={() => setActiveTab(activeTab)}
-                className="mt-3 text-sm text-blue-600 hover:underline"
+                className="mt-3 text-sm text-civiq-blue hover:underline"
               >
                 Try again
               </button>

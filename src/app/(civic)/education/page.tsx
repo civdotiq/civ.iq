@@ -62,11 +62,11 @@ const GRADE_BAND_COLORS: Record<GradeLevel, { bg: string; text: string; border: 
 
 const TOPIC_COLORS: Record<string, string> = {
   'government-structure': 'bg-gray-200 text-gray-800',
-  'legislative-process': 'bg-blue-100 text-blue-800',
-  representatives: 'bg-green-100 text-green-800',
-  'campaign-finance': 'bg-yellow-100 text-yellow-800',
-  elections: 'bg-purple-100 text-purple-800',
-  'civic-participation': 'bg-orange-100 text-orange-800',
+  'legislative-process': 'bg-civiq-blue/10 text-civiq-blue',
+  representatives: 'bg-civiq-green/10 text-civiq-green',
+  'campaign-finance': 'bg-gray-100 text-gray-600',
+  elections: 'bg-civiq-blue/10 text-civiq-blue',
+  'civic-participation': 'bg-civiq-red/10 text-civiq-red',
   'state-government': 'bg-teal-100 text-teal-800',
   'data-literacy': 'bg-indigo-100 text-indigo-800',
   demographics: 'bg-pink-100 text-pink-800',

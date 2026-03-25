@@ -110,7 +110,7 @@ function CommitteeCard({ committee }: { committee: Committee }) {
         className="block p-6 hover:bg-gray-50 transition-colors group"
       >
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-civiq-blue transition-colors">
             {committee.name}
           </h3>
           <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 uppercase tracking-wide">
@@ -131,7 +131,7 @@ function CommitteeCard({ committee }: { committee: Committee }) {
               <li key={sub.code} className="text-sm pl-4 border-l-2 border-gray-200">
                 <Link
                   href={`/committee/${sub.code}`}
-                  className="text-gray-600 hover:text-blue-600 hover:underline transition-colors"
+                  className="text-gray-600 hover:text-civiq-blue hover:underline transition-colors"
                 >
                   {sub.name}
                 </Link>
@@ -214,7 +214,7 @@ export default function CommitteesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -235,20 +235,22 @@ export default function CommitteesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Link
             href="#house"
-            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-blue-600 transition-colors group"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-civiq-blue transition-colors group"
           >
-            <Building2 className="w-12 h-12 text-blue-600 mb-4" />
+            <Building2 className="w-12 h-12 text-civiq-blue mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{houseCommittees.length}</div>
-            <div className="text-sm text-gray-600 group-hover:text-blue-600">House Committees</div>
+            <div className="text-sm text-gray-600 group-hover:text-civiq-blue">
+              House Committees
+            </div>
           </Link>
 
           <Link
             href="#senate"
-            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-green-600 transition-colors group"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-civiq-green transition-colors group"
           >
-            <Scale className="w-12 h-12 text-green-600 mb-4" />
+            <Scale className="w-12 h-12 text-civiq-green mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{senateCommittees.length}</div>
-            <div className="text-sm text-gray-600 group-hover:text-green-600">
+            <div className="text-sm text-gray-600 group-hover:text-civiq-green">
               Senate Committees
             </div>
           </Link>
@@ -270,7 +272,7 @@ export default function CommitteesPage() {
             title="House Committees"
             committees={houseCommittees}
             icon={Building2}
-            color="bg-blue-600"
+            color="bg-civiq-blue"
           />
         )}
 
@@ -281,7 +283,7 @@ export default function CommitteesPage() {
             title="Senate Committees"
             committees={senateCommittees}
             icon={Scale}
-            color="bg-green-600"
+            color="bg-civiq-green"
           />
         )}
 

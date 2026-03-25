@@ -47,7 +47,7 @@ export const JusticeCard: React.FC<JusticeCardProps> = ({ justice, isChief = fal
 
           {/* Chief Justice Badge */}
           {isChief && (
-            <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-50 text-blue-800 border-2 border-blue-600">
+            <span className="inline-block px-3 py-1 text-xs font-bold bg-civiq-blue/10 text-civiq-blue border-2 border-civiq-blue">
               CHIEF JUSTICE
             </span>
           )}

@@ -77,7 +77,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
       <div className="container mx-auto px-4 py-8 overflow-hidden">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -94,13 +94,13 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
 
         {/* Compare bar */}
         {compareIds.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
+          <div className="bg-civiq-blue/10 border border-civiq-blue p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-900">
+                <p className="text-sm font-medium text-civiq-blue">
                   Comparing {compareIds.length} representative{compareIds.length > 1 ? 's' : ''}
                 </p>
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="text-xs text-civiq-blue mt-1">
                   {compareIds.length === 2
                     ? 'Click"View Comparison" to see detailed analysis'
                     : 'Select one more representative to compare'}

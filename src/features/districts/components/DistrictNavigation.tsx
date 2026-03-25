@@ -29,7 +29,7 @@ export default function DistrictNavigation({
           <h4 className="text-sm font-medium text-gray-700 mb-2">Representative</h4>
           <Link
             href={`/representative/${bioguideId}`}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-civiq-blue hover:text-civiq-blue font-medium"
           >
             {representativeName}
           </Link>
@@ -60,16 +60,16 @@ export default function DistrictNavigation({
           <div className="space-y-2">
             <Link
               href="/representatives"
-              className="block text-sm text-blue-600 hover:text-blue-800"
+              className="block text-sm text-civiq-blue hover:text-civiq-blue"
             >
               All Representatives
             </Link>
-            <Link href="/districts" className="block text-sm text-blue-600 hover:text-blue-800">
+            <Link href="/districts" className="block text-sm text-civiq-blue hover:text-civiq-blue">
               All Districts
             </Link>
             <Link
               href={`/districts/${state}-Senate`}
-              className="block text-sm text-blue-600 hover:text-blue-800"
+              className="block text-sm text-civiq-blue hover:text-civiq-blue"
             >
               {state} Senate Seats
             </Link>

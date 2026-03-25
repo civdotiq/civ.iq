@@ -87,19 +87,19 @@ function BillCard({ bill }: { bill: StateBill }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'signed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-civiq-green/10 text-civiq-green border-civiq-green';
       case 'passed_both':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
       case 'vetoed':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
       case 'dead':
         return 'bg-white border-2 border-gray-300 text-gray-800 border-gray-200';
       case 'floor':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-gray-100 text-gray-600 border-gray-300';
       case 'committee':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
       default:
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
   };
 
@@ -123,9 +123,9 @@ function BillCard({ bill }: { bill: StateBill }) {
   const getPartyColor = (party: string) => {
     switch (party) {
       case 'Democratic':
-        return 'text-blue-600';
+        return 'text-civiq-blue';
       case 'Republican':
-        return 'text-red-600';
+        return 'text-civiq-red';
       default:
         return 'text-gray-600';
     }
@@ -145,7 +145,7 @@ function BillCard({ bill }: { bill: StateBill }) {
       <div className="mb-4">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
+            <h3 className="text-lg font-semibold text-gray-900 hover:text-civiq-blue">
               {bill.billNumber}
             </h3>
             <span
@@ -224,7 +224,7 @@ function BillCard({ bill }: { bill: StateBill }) {
               href={bill.fullTextUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+              className="flex items-center gap-1 text-sm text-civiq-blue hover:text-civiq-blue"
             >
               <ExternalLink className="w-4 h-4" />
               Full Text
@@ -242,7 +242,7 @@ function BillCard({ bill }: { bill: StateBill }) {
                 {getChamberLabel(vote.chamber)} - {new Date(vote.date).toLocaleDateString()}
               </span>
               <span
-                className={`font-medium ${vote.result === 'pass' ? 'text-green-600' : 'text-red-600'}`}
+                className={`font-medium ${vote.result === 'pass' ? 'text-civiq-green' : 'text-civiq-red'}`}
               >
                 {vote.yesVotes} Yes, {vote.noVotes} No ({vote.result.toUpperCase()})
               </span>
@@ -270,14 +270,14 @@ function StatusSummary({ summary }: { summary: StateBillsData['summary'] }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'signed':
-        return 'text-green-600';
+        return 'text-civiq-green';
       case 'passed_both':
-        return 'text-blue-600';
+        return 'text-civiq-blue';
       case 'vetoed':
       case 'dead':
-        return 'text-red-600';
+        return 'text-civiq-red';
       default:
-        return 'text-yellow-600';
+        return 'text-gray-600';
     }
   };
 
@@ -300,11 +300,11 @@ function StatusSummary({ summary }: { summary: StateBillsData['summary'] }) {
         <h4 className="text-sm font-medium text-gray-700 mb-3">By Chamber</h4>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
-            <p className="text-xl font-bold text-blue-600">{summary.byChamber.upper || 0}</p>
+            <p className="text-xl font-bold text-civiq-blue">{summary.byChamber.upper || 0}</p>
             <p className="text-sm text-gray-600">Senate Bills</p>
           </div>
           <div>
-            <p className="text-xl font-bold text-green-600">{summary.byChamber.lower || 0}</p>
+            <p className="text-xl font-bold text-civiq-green">{summary.byChamber.lower || 0}</p>
             <p className="text-sm text-gray-600">House Bills</p>
           </div>
         </div>
@@ -367,7 +367,7 @@ export default function StateBillsPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
           <p className="mt-4 text-gray-600">Loading state bills...</p>
         </div>
       </div>
@@ -380,7 +380,7 @@ export default function StateBillsPage() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-xl text-gray-600">State bills data not available</p>
-          <Link href="/states" className="mt-4 text-blue-600 hover:text-blue-700">
+          <Link href="/states" className="mt-4 text-civiq-blue hover:text-civiq-blue">
             ← Back to States
           </Link>
         </div>
@@ -394,15 +394,15 @@ export default function StateBillsPage() {
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/states" className="hover:text-blue-600">
+          <Link href="/states" className="hover:text-civiq-blue">
             States
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href={`/state-bills/${state.toUpperCase()}`} className="hover:text-blue-600">
+          <Link href={`/state-bills/${state.toUpperCase()}`} className="hover:text-civiq-blue">
             State Bills
           </Link>
           <span className="mx-2">&rsaquo;</span>
@@ -410,14 +410,14 @@ export default function StateBillsPage() {
         </nav>
 
         {/* Page header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8 mb-8">
+        <div className="bg-gradient-to-r from-civiq-green to-civiq-green text-white p-8 mb-8">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <FileText className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-3xl font-bold mb-2">{billsData.stateName} State Bills</h1>
-              <p className="text-green-100">
+              <p className="text-civiq-green">
                 {billsData.session} • {billsData.totalCount} Total Bills
               </p>
             </div>
@@ -442,7 +442,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.status}
                     onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                   >
                     <option value="all">All Statuses</option>
                     <option value="introduced">Introduced</option>
@@ -460,7 +460,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.chamber}
                     onChange={e => setFilters(prev => ({ ...prev, chamber: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                   >
                     <option value="all">Both Chambers</option>
                     <option value="upper">Senate</option>
@@ -473,7 +473,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.subject}
                     onChange={e => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                   >
                     <option value="all">All Subjects</option>
                     {availableSubjects.map(subject => (
@@ -503,7 +503,7 @@ export default function StateBillsPage() {
                       fetchBills();
                     }
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                 />
               </div>
               {filters.search && filters.search.trim().length > 0 && (
@@ -514,7 +514,7 @@ export default function StateBillsPage() {
                       setFilters(prev => ({ ...prev, search: '' }));
                       fetchBills();
                     }}
-                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                    className="ml-2 text-civiq-blue hover:text-civiq-blue underline"
                   >
                     Clear search
                   </button>

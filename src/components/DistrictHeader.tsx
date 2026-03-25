@@ -137,12 +137,12 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
     if (!isMultiDistrict || !multiDistrictInfo) return null;
 
     return (
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-200">
+      <div className="mb-4 p-4 bg-civiq-blue/10 border border-civiq-blue">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-4 h-4 text-blue-600" />
-          <h4 className="font-medium text-blue-900">Multiple Districts Found</h4>
+          <AlertCircle className="w-4 h-4 text-civiq-blue" />
+          <h4 className="font-medium text-civiq-blue">Multiple Districts Found</h4>
         </div>
-        <p className="text-sm text-blue-700 mb-3">
+        <p className="text-sm text-civiq-blue mb-3">
           ZIP code {zipCode} spans multiple congressional districts. Select the one that best
           represents your area:
         </p>
@@ -153,7 +153,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
               onClick={() => setSelectedDistrict(option.value)}
               className={`w-full p-3 text-left border transition-colors min-h-[44px] ${
                 selectedDistrict === option.value || (selectedDistrict === null && option.isPrimary)
-                  ? 'bg-blue-100 border-blue-300'
+                  ? 'bg-civiq-blue/10 border-civiq-blue'
                   : 'bg-white border-gray-200 hover:bg-gray-50'
               }`}
             >
@@ -161,7 +161,9 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
                 <span className="font-medium">{option.label}</span>
                 <div className="flex items-center gap-2">
                   {option.isPrimary && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs">Primary</span>
+                    <span className="px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs">
+                      Primary
+                    </span>
                   )}
                   <span className="text-sm text-gray-600">{option.percentage}%</span>
                 </div>
@@ -177,21 +179,21 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
   if (loading && !districtData) {
     return (
       <div
-        className={`bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-6 mb-6 transition-all duration-300 ${className}`}
+        className={`bg-gradient-to-r from-civiq-green/10 to-emerald-50 border border-civiq-green p-6 mb-6 transition-all duration-300 ${className}`}
       >
         <div className="animate-pulse">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 bg-green-200"></div>
-            <div className="w-80 h-6 bg-green-200"></div>
+            <div className="w-5 h-5 bg-civiq-green/10"></div>
+            <div className="w-80 h-6 bg-civiq-green/10"></div>
           </div>
-          <div className="w-full h-4 bg-green-200 mb-4"></div>
+          <div className="w-full h-4 bg-civiq-green/10 mb-4"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-full h-16 bg-green-200"></div>
+              <div key={i} className="w-full h-16 bg-civiq-green/10"></div>
             ))}
           </div>
           {cacheStatus.hasData && (
-            <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
+            <div className="mt-2 text-xs text-civiq-green flex items-center gap-1">
               <CheckCircle className="w-3 h-3" />
               Using cached data while loading fresh information...
             </div>
@@ -205,12 +207,12 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
   if (error && !districtData) {
     return (
       <div
-        className={`bg-red-50 border border-red-200 p-6 mb-6 transition-all duration-300 ${className}`}
+        className={`bg-civiq-red/10 border border-civiq-red p-6 mb-6 transition-all duration-300 ${className}`}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <h3 className="text-lg font-semibold text-red-900">
+            <AlertCircle className="w-5 h-5 text-civiq-red" />
+            <h3 className="text-lg font-semibold text-civiq-red">
               {error.includes('404') ? 'District Not Found' : 'Unable to Load District Information'}
             </h3>
           </div>
@@ -218,14 +220,14 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <button
               onClick={handleRetry}
               disabled={isRetrying}
-              className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors min-h-[44px]"
+              className="flex items-center gap-2 px-4 py-2 bg-civiq-red/10 text-civiq-red hover:bg-civiq-red/10 disabled:opacity-50 transition-colors min-h-[44px]"
             >
               <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Retrying...' : 'Retry'}
             </button>
           )}
         </div>
-        <p className="text-sm text-red-700 mb-2">
+        <p className="text-sm text-civiq-red mb-2">
           {error.includes('404')
             ? 'This ZIP code may not be mapped to a congressional district yet.'
             : error.includes('timeout')
@@ -233,7 +235,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
               : error || 'Could not determine district information for this ZIP code.'}
         </p>
         {error.includes('404') && (
-          <p className="text-xs text-red-600">
+          <p className="text-xs text-civiq-red">
             Try a different ZIP code or contact support if you believe this is an error.
           </p>
         )}
@@ -259,23 +261,23 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
   // Main component render with enhanced data
   return (
     <div
-      className={`bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-6 mb-6 transition-all duration-300 ${className}`}
+      className={`bg-gradient-to-r from-civiq-green/10 to-emerald-50 border border-civiq-green p-6 mb-6 transition-all duration-300 ${className}`}
     >
       {/* Multi-district selector */}
       <MultiDistrictSelector />
 
       {/* Stale data indicator */}
       {error && districtData && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200">
+        <div className="mb-4 p-3 bg-gray-100 border border-gray-300">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm text-yellow-800">Using cached data (connection issues)</span>
+              <AlertCircle className="w-4 h-4 text-gray-600" />
+              <span className="text-sm text-gray-600">Using cached data (connection issues)</span>
             </div>
             <button
               onClick={handleRetry}
               disabled={isRetrying}
-              className="text-xs text-yellow-700 hover:text-yellow-900 underline"
+              className="text-xs text-gray-600 hover:text-gray-600 underline"
             >
               {isRetrying ? 'Retrying...' : 'Try to refresh'}
             </button>
@@ -286,15 +288,15 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-5 h-5 text-green-600" />
-            <h3 className="text-xl font-semibold text-green-900">
+            <MapPin className="w-5 h-5 text-civiq-green" />
+            <h3 className="text-xl font-semibold text-civiq-green">
               {formatDistrictName(districtData.state, districtData.number)}
             </h3>
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium">
+            <span className="px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium">
               119th Congress
             </span>
           </div>
-          <p className="text-sm text-green-700 mb-4">
+          <p className="text-sm text-civiq-green mb-4">
             Congressional district serving ZIP code {zipCode} • Represented by{' '}
             {districtData.representative.name} ({districtData.representative.party})
           </p>
@@ -302,53 +304,55 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
           {/* Statistics Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Population */}
-            <div className="bg-white p-4 border border-green-100">
+            <div className="bg-white p-4 border border-civiq-green">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Population</span>
+                <Users className="w-4 h-4 text-civiq-green" />
+                <span className="text-sm font-medium text-civiq-green">Population</span>
               </div>
-              <p className="text-2xl font-bold text-green-800">
+              <p className="text-2xl font-bold text-civiq-green">
                 {districtData.demographics?.population
                   ? formatPopulation(districtData.demographics.population)
                   : 'N/A'}
               </p>
-              <p className="text-xs text-green-600">District residents</p>
+              <p className="text-xs text-civiq-green">District residents</p>
             </div>
 
             {/* Median Income */}
-            <div className="bg-white p-4 border border-green-100">
+            <div className="bg-white p-4 border border-civiq-green">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Median Income</span>
+                <DollarSign className="w-4 h-4 text-civiq-green" />
+                <span className="text-sm font-medium text-civiq-green">Median Income</span>
               </div>
-              <p className="text-2xl font-bold text-green-800">
+              <p className="text-2xl font-bold text-civiq-green">
                 {districtData.demographics?.medianIncome
                   ? formatCurrency(districtData.demographics.medianIncome)
                   : 'N/A'}
               </p>
-              <p className="text-xs text-green-600">Household income</p>
+              <p className="text-xs text-civiq-green">Household income</p>
             </div>
 
             {/* Political Lean - Plain language instead of Cook PVI jargon */}
-            <div className="bg-white p-4 border border-green-100">
+            <div className="bg-white p-4 border border-civiq-green">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Political Lean</span>
+                <BarChart3 className="w-4 h-4 text-civiq-green" />
+                <span className="text-sm font-medium text-civiq-green">Political Lean</span>
               </div>
-              <p className="text-2xl font-bold text-green-800">
+              <p className="text-2xl font-bold text-civiq-green">
                 {getDistrictLean(districtData.political.cookPVI)}
               </p>
-              <p className="text-xs text-green-600">Based on recent elections</p>
+              <p className="text-xs text-civiq-green">Based on recent elections</p>
             </div>
 
             {/* Representative */}
-            <div className="bg-white p-4 border border-green-100">
+            <div className="bg-white p-4 border border-civiq-green">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Representative</span>
+                <Calendar className="w-4 h-4 text-civiq-green" />
+                <span className="text-sm font-medium text-civiq-green">Representative</span>
               </div>
-              <p className="text-lg font-bold text-green-800">{districtData.representative.name}</p>
-              <p className="text-xs text-green-600">
+              <p className="text-lg font-bold text-civiq-green">
+                {districtData.representative.name}
+              </p>
+              <p className="text-xs text-civiq-green">
                 {districtData.representative.party === 'D'
                   ? 'Democrat'
                   : districtData.representative.party === 'R'
@@ -361,12 +365,12 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
           {/* Enhanced Geographic Information */}
           <div className="mt-4 flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-green-600" />
-              <span className="text-green-900">Showing representatives for ZIP {zipCode}</span>
+              <MapPin className="w-4 h-4 text-civiq-green" />
+              <span className="text-civiq-green">Showing representatives for ZIP {zipCode}</span>
             </div>
             {districtData.geography.majorCities.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-green-900">
+                <span className="text-civiq-green">
                   Major cities: {districtData.geography.majorCities.slice(0, 2).join(', ')}
                   {districtData.geography.majorCities.length > 2 &&
                     ` and ${districtData.geography.majorCities.length - 2} more`}
@@ -376,7 +380,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             {districtData.geography.realCounties &&
               districtData.geography.realCounties.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-green-900">
+                  <span className="text-civiq-green">
                     Counties: {districtData.geography.realCounties.slice(0, 2).join(', ')}
                     {districtData.geography.realCounties.length > 2 &&
                       ` and ${districtData.geography.realCounties.length - 2} more`}
@@ -387,7 +391,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
 
           {/* Learn More Link */}
           <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-green-600">
+            <div className="flex items-center gap-4 text-xs text-civiq-green">
               {cacheStatus.hasData && (
                 <span className="flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
@@ -398,7 +402,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
 
             <a
               href={`/districts/${districtData.id}`}
-              className="flex items-center gap-1 text-sm text-green-700 hover:text-green-900 font-medium transition-colors"
+              className="flex items-center gap-1 text-sm text-civiq-green hover:text-civiq-green font-medium transition-colors"
             >
               Learn more about this district
               <ExternalLink className="w-4 h-4" />

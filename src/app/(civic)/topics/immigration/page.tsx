@@ -151,11 +151,11 @@ export default function ImmigrationTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -182,11 +182,11 @@ export default function ImmigrationTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Immigration policy</strong> is among the most debated areas of federal
             legislation. Congress sets the rules for{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               legal immigration
             </Link>
             , including visa categories and annual limits, while also addressing{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               border security
             </Link>{' '}
             and enforcement. The Immigration and Nationality Act provides the statutory foundation,
@@ -194,11 +194,11 @@ export default function ImmigrationTopicPage() {
           </p>
           <p className="text-gray-700 mb-4">
             Immigration jurisdiction is shared between the{' '}
-            <Link href="/committee/HSJU" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSJU" className="text-civiq-blue hover:underline">
               Judiciary Committees
             </Link>{' '}
             (which handle immigration law) and the{' '}
-            <Link href="/committee/HSHM" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSHM" className="text-civiq-blue hover:underline">
               Homeland Security Committees
             </Link>{' '}
             (which oversee border operations and enforcement agencies). This split jurisdiction
@@ -220,11 +220,11 @@ export default function ImmigrationTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.join(', ')}
                 </p>
               </Link>
@@ -247,7 +247,7 @@ export default function ImmigrationTopicPage() {
                   {area.keywords.map(keyword => (
                     <span
                       key={keyword}
-                      className="px-2 py-1 text-xs bg-orange-50 text-orange-700 border border-orange-200"
+                      className="px-2 py-1 text-xs bg-civiq-red/10 text-civiq-red border border-civiq-red"
                     >
                       {keyword}
                     </span>
@@ -286,7 +286,7 @@ export default function ImmigrationTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

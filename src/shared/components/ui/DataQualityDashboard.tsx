@@ -39,28 +39,28 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-yellow-600';
-    if (score >= 50) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 90) return 'text-civiq-green';
+    if (score >= 75) return 'text-gray-600';
+    if (score >= 50) return 'text-civiq-red';
+    return 'text-civiq-red';
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent':
-        return 'bg-green-100 text-green-800';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'good':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'fair':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-600';
       case 'poor':
-        return 'bg-red-100 text-red-800';
+        return 'bg-civiq-red/10 text-civiq-red';
       case 'healthy':
-        return 'bg-green-100 text-green-800';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'degraded':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-600';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-civiq-red/10 text-civiq-red';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-800';
     }
@@ -69,11 +69,11 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return { icon: '', color: 'text-green-600' };
+        return { icon: '', color: 'text-civiq-green' };
       case 'stable':
-        return { icon: '', color: 'text-blue-600' };
+        return { icon: '', color: 'text-civiq-blue' };
       case 'declining':
-        return { icon: '', color: 'text-red-600' };
+        return { icon: '', color: 'text-civiq-red' };
       default:
         return { icon: '', color: 'text-gray-600' };
     }
@@ -117,12 +117,12 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
           <div
             className={`h-3 transition-all duration-500 ${
               metrics.overall.score >= 90
-                ? 'bg-green-500'
+                ? 'bg-civiq-green'
                 : metrics.overall.score >= 75
-                  ? 'bg-yellow-500'
+                  ? 'bg-gray-500'
                   : metrics.overall.score >= 50
-                    ? 'bg-orange-500'
-                    : 'bg-red-500'
+                    ? 'bg-civiq-red'
+                    : 'bg-civiq-red'
             }`}
             style={{ width: `${metrics.overall.score}%` }}
           />
@@ -178,7 +178,9 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                       <div className="text-xs text-gray-600">Reliability</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-blue-600">{source.latency}ms</div>
+                      <div className="text-lg font-semibold text-civiq-blue">
+                        {source.latency}ms
+                      </div>
                       <div className="text-xs text-gray-600">Avg Latency</div>
                     </div>
                     <div className="text-center">
@@ -199,7 +201,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                       <ul className="text-sm text-gray-600 space-y-1">
                         {source.issues.map((issue, index) => (
                           <li key={index} className="flex items-start gap-2">
-                            <span className="text-yellow-500 mt-0.5"></span>
+                            <span className="text-gray-600 mt-0.5"></span>
                             {issue}
                           </li>
                         ))}
@@ -219,9 +221,9 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
           <h4 className="text-md font-semibold text-gray-900 mb-3">Recommendations</h4>
           <div className="space-y-2">
             {metrics.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start gap-2 p-3 bg-blue-50">
-                <span className="text-blue-500 mt-0.5"></span>
-                <span className="text-sm text-blue-800">{recommendation}</span>
+              <div key={index} className="flex items-start gap-2 p-3 bg-civiq-blue/10">
+                <span className="text-civiq-blue mt-0.5"></span>
+                <span className="text-sm text-civiq-blue">{recommendation}</span>
               </div>
             ))}
           </div>
@@ -246,10 +248,10 @@ export function InlineQualityScore({
   trend = 'stable',
 }: InlineQualityScoreProps) {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-yellow-600';
-    if (score >= 50) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 90) return 'text-civiq-green';
+    if (score >= 75) return 'text-gray-600';
+    if (score >= 50) return 'text-civiq-red';
+    return 'text-civiq-red';
   };
 
   const getTrendIcon = (trend: string) => {
@@ -312,10 +314,10 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
 
   const trustScore = calculateTrustScore(safeSources);
   const getColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 75) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 90) return 'text-civiq-green bg-civiq-green/10 border-civiq-green';
+    if (score >= 75) return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
+    if (score >= 50) return 'text-gray-600 bg-gray-100 border-gray-300';
+    return 'text-civiq-red bg-civiq-red/10 border-civiq-red';
   };
 
   return (

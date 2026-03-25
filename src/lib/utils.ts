@@ -57,11 +57,11 @@ export function getPartyColor(party: string): string {
   switch (party.toLowerCase()) {
     case 'republican':
     case 'r':
-      return 'text-red-600';
+      return 'text-civiq-red';
     case 'democrat':
     case 'democratic':
     case 'd':
-      return 'text-blue-600';
+      return 'text-civiq-blue';
     case 'independent':
     case 'i':
       return 'text-gray-600';
@@ -77,11 +77,11 @@ export function getPartyBgColor(party: string): string {
   switch (party.toLowerCase()) {
     case 'republican':
     case 'r':
-      return 'bg-red-100';
+      return 'bg-civiq-red/10';
     case 'democrat':
     case 'democratic':
     case 'd':
-      return 'bg-blue-100';
+      return 'bg-civiq-blue/10';
     case 'independent':
     case 'i':
       return 'bg-gray-100';

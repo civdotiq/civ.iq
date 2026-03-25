@@ -30,12 +30,12 @@ export const Button: FC<ButtonProps> = memo(
 
     const variants = {
       primary:
-        'bg-civiq-green text-white hover:bg-green-700 hover:border-2 border-black focus-visible:ring-civiq-green',
+        'bg-civiq-green text-white hover:bg-civiq-green hover:border-2 border-black focus-visible:ring-civiq-green',
       secondary:
         'border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-white focus-visible:ring-gray-400',
       ghost: 'text-gray-700 hover:bg-white border-2 border-gray-300 focus-visible:ring-gray-400',
       danger:
-        'bg-civiq-red text-white hover:bg-red-700 hover:border-2 border-black focus-visible:ring-civiq-red',
+        'bg-civiq-red text-white hover:bg-civiq-red hover:border-2 border-black focus-visible:ring-civiq-red',
     };
 
     const sizes = {

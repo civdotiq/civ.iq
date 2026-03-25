@@ -58,7 +58,7 @@ export function FinanceJurisdictionSection({ bioguideId }: FinanceJurisdictionSe
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading finance jurisdiction data"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -120,13 +120,13 @@ export function FinanceJurisdictionSection({ bioguideId }: FinanceJurisdictionSe
                 key={sector}
                 role="listitem"
                 className={`flex items-center justify-between p-3 border ${
-                  overlaps ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 bg-white'
+                  overlaps ? 'border-gray-300 bg-gray-100' : 'border-gray-200 bg-white'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-900">{sector}</span>
                   {overlaps && (
-                    <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-200 text-yellow-900">
+                    <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">
                       overlaps jurisdiction
                     </span>
                   )}

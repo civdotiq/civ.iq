@@ -113,15 +113,15 @@ export default async function StateLegislatorProfilePage({
       <div>
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">&rsaquo;</span>
-            <Link href="/states" className="hover:text-blue-600">
+            <Link href="/states" className="hover:text-civiq-blue">
               States
             </Link>
             <span className="mx-2">&rsaquo;</span>
-            <Link href={`/state-legislature/${state}`} className="hover:text-blue-600">
+            <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
               {state.toUpperCase()} Legislature
             </Link>
             <span className="mx-2">&rsaquo;</span>

@@ -23,8 +23,8 @@ export function Spinner({ size = 'md', className = '', color = 'blue' }: Spinner
   };
 
   const colors = {
-    blue: 'text-blue-600',
-    green: 'text-green-600',
+    blue: 'text-civiq-blue',
+    green: 'text-civiq-green',
     gray: 'text-gray-600',
   };
 
@@ -160,7 +160,7 @@ export function LoadingStateWrapper({
     return (
       <ComponentErrorBoundary componentName="LoadingStateWrapper">
         <div className="flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-red-500 mb-4">
+          <div className="text-civiq-red mb-4">
             <svg
               className="w-12 h-12 mx-auto"
               fill="none"
@@ -180,7 +180,7 @@ export function LoadingStateWrapper({
           {retry && (
             <button
               onClick={retry}
-              className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
             >
               Try Again
             </button>

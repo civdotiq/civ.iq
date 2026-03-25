@@ -269,7 +269,7 @@ export function ExtendedTabNavigation({
         aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap relative aicher-focus min-h-[44px]
         ${
           activeTab === tab.id
-            ? 'aicher-border-blue text-blue-600'
+            ? 'aicher-border-blue text-civiq-blue'
             : 'border-transparent text-gray-500 aicher-hover'
         }
        `}

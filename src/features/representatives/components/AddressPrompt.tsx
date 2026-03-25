@@ -190,7 +190,7 @@ export function AddressPrompt({
             <button
               onClick={handleUseLocation}
               disabled={isGettingLocation}
-              className="w-full px-4 py-3 bg-civiq-blue text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              className="w-full px-4 py-3 bg-civiq-blue text-white hover:bg-civiq-blue disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               {isGettingLocation ? (
                 <>
@@ -225,7 +225,7 @@ export function AddressPrompt({
                 </>
               )}
             </button>
-            {locationError && <p className="mt-2 text-sm text-red-600">{locationError}</p>}
+            {locationError && <p className="mt-2 text-sm text-civiq-red">{locationError}</p>}
           </div>
 
           {/* Divider */}
@@ -255,7 +255,7 @@ export function AddressPrompt({
             <button
               type="submit"
               disabled={!address.trim() || isSubmitting}
-              className="w-full mt-3 px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full mt-3 px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
@@ -285,7 +285,7 @@ export function AddressPrompt({
           <div className="space-y-3">
             <button
               onClick={() => setShowDistrictOptions(!showDistrictOptions)}
-              className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-300 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+              className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-300 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
             >
               <span className="text-sm font-medium text-gray-700">
                 {showDistrictOptions ? 'Hide' : 'Select from'} {districts.length} available
@@ -314,7 +314,7 @@ export function AddressPrompt({
                   <button
                     key={`${district.state}-${district.district}`}
                     onClick={() => handleDistrictSelect(district)}
-                    className="w-full text-left px-4 py-3 border border-gray-200 hover:bg-blue-50 hover:border-civiq-blue transition-colors group"
+                    className="w-full text-left px-4 py-3 border border-gray-200 hover:bg-civiq-blue/10 hover:border-civiq-blue transition-colors group"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -322,7 +322,7 @@ export function AddressPrompt({
                           {formatDistrictName(district)}
                         </div>
                         {district.primary && (
-                          <div className="text-xs text-blue-600 mt-1 flex items-center">
+                          <div className="text-xs text-civiq-blue mt-1 flex items-center">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>

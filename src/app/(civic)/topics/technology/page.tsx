@@ -155,11 +155,11 @@ export default function TechnologyTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -186,11 +186,11 @@ export default function TechnologyTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Technology policy</strong> has become one of the fastest-evolving areas of
             congressional activity. From{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               data privacy
             </Link>{' '}
             affecting every internet user to{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               artificial intelligence
             </Link>{' '}
             reshaping entire industries, Congress faces growing pressure to establish regulatory
@@ -199,11 +199,11 @@ export default function TechnologyTopicPage() {
           <p className="text-gray-700 mb-4">
             Technology legislation is spread across multiple committees, reflecting its
             cross-cutting nature. The{' '}
-            <Link href="/committee/HSIF" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSIF" className="text-civiq-blue hover:underline">
               House Energy and Commerce Committee
             </Link>{' '}
             handles telecommunications and consumer protection, while the{' '}
-            <Link href="/committee/HSJU" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSJU" className="text-civiq-blue hover:underline">
               Judiciary Committee
             </Link>{' '}
             addresses antitrust concerns. Understanding this divided jurisdiction helps you follow
@@ -225,11 +225,11 @@ export default function TechnologyTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.slice(0, 2).join(', ')}
                   {committee.subcommittees.length > 2 && '...'}
                 </p>
@@ -253,7 +253,7 @@ export default function TechnologyTopicPage() {
                   {area.keywords.map(keyword => (
                     <span
                       key={keyword}
-                      className="px-2 py-1 text-xs bg-purple-50 text-purple-700 border border-purple-200"
+                      className="px-2 py-1 text-xs bg-civiq-blue/10 text-civiq-blue border border-civiq-blue"
                     >
                       {keyword}
                     </span>
@@ -296,7 +296,7 @@ export default function TechnologyTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

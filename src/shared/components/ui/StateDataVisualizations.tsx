@@ -646,10 +646,10 @@ export default function StateDataVisualizations({
     setError(err instanceof Error ? err.message : 'Visualization error');
     return (
       <div
-        className={`flex items-center justify-center bg-red-100 ${className}`}
+        className={`flex items-center justify-center bg-civiq-red/10 ${className}`}
         style={{ width, height }}
       >
-        <p className="text-red-600">Error: {error}</p>
+        <p className="text-civiq-red">Error: {error}</p>
       </div>
     );
   }

@@ -84,7 +84,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-white px-4">
           <Card className="max-w-md w-full p-6 text-center">
-            <div className="text-red-500 mb-4">
+            <div className="text-civiq-red mb-4">
               <svg
                 className="w-16 h-16 mx-auto mb-4"
                 fill="none"
@@ -124,15 +124,17 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                     Error Details (Development Only)
                   </summary>
-                  <div className="mt-2 p-3 bg-red-50 border border-red-200 text-xs">
-                    <p className="font-medium text-red-800">Error:</p>
-                    <p className="text-red-700 mb-2">{this.state.error.message}</p>
-                    <p className="font-medium text-red-800">Stack:</p>
-                    <pre className="text-red-700 whitespace-pre-wrap">{this.state.error.stack}</pre>
+                  <div className="mt-2 p-3 bg-civiq-red/10 border border-civiq-red text-xs">
+                    <p className="font-medium text-civiq-red">Error:</p>
+                    <p className="text-civiq-red mb-2">{this.state.error.message}</p>
+                    <p className="font-medium text-civiq-red">Stack:</p>
+                    <pre className="text-civiq-red whitespace-pre-wrap">
+                      {this.state.error.stack}
+                    </pre>
                     {this.state.errorInfo && (
                       <>
-                        <p className="font-medium text-red-800 mt-2">Component Stack:</p>
-                        <pre className="text-red-700 whitespace-pre-wrap">
+                        <p className="font-medium text-civiq-red mt-2">Component Stack:</p>
+                        <pre className="text-civiq-red whitespace-pre-wrap">
                           {this.state.errorInfo.componentStack}
                         </pre>
                       </>

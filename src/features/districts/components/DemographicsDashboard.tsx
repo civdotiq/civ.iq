@@ -137,19 +137,19 @@ export function DemographicsDashboard({
         </div>
 
         {/* Democratic seats */}
-        <div className="bg-blue-50 p-4 sm:p-5">
-          <div className="text-2xl sm:text-3xl font-bold text-blue-700">
+        <div className="bg-civiq-blue/10 p-4 sm:p-5">
+          <div className="text-2xl sm:text-3xl font-bold text-civiq-blue">
             {stats.democraticDistricts}
           </div>
-          <div className="text-sm text-blue-600 mt-1">Democratic</div>
+          <div className="text-sm text-civiq-blue mt-1">Democratic</div>
         </div>
 
         {/* Republican seats */}
-        <div className="bg-red-50 p-4 sm:p-5">
-          <div className="text-2xl sm:text-3xl font-bold text-red-700">
+        <div className="bg-civiq-red/10 p-4 sm:p-5">
+          <div className="text-2xl sm:text-3xl font-bold text-civiq-red">
             {stats.republicanDistricts}
           </div>
-          <div className="text-sm text-red-600 mt-1">Republican</div>
+          <div className="text-sm text-civiq-red mt-1">Republican</div>
         </div>
       </div>
 
@@ -162,11 +162,11 @@ export function DemographicsDashboard({
         </div>
         <div className="w-full h-3 bg-gray-200 flex overflow-hidden">
           <div
-            className="bg-blue-600 h-full transition-all duration-500"
+            className="bg-civiq-blue h-full transition-all duration-500"
             style={{ width: `${demPercent}%` }}
           />
           <div
-            className="bg-red-600 h-full transition-all duration-500"
+            className="bg-civiq-red h-full transition-all duration-500"
             style={{ width: `${repPercent}%` }}
           />
         </div>

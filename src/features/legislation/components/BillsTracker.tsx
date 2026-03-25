@@ -107,7 +107,7 @@ const BillsList = ({
                   {/* Committee and Topic Tags */}
                   <div className="flex flex-wrap gap-2 mb-3">
                     {bill.policyArea && (
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium">
+                      <span className="px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium">
                         {bill.policyArea}
                       </span>
                     )}
@@ -221,9 +221,9 @@ const BillsList = ({
                         ].map((step, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
                             <div
-                              className={`w-3 h-3 ${step.done ? 'bg-green-500' : 'bg-gray-300'}`}
+                              className={`w-3 h-3 ${step.done ? 'bg-civiq-green' : 'bg-gray-300'}`}
                             />
-                            <span className={step.done ? 'text-green-700' : 'text-gray-600'}>
+                            <span className={step.done ? 'text-civiq-green' : 'text-gray-600'}>
                               {step.label}
                             </span>
                           </div>
@@ -431,17 +431,17 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
   const getStatusColor = (stage: string) => {
     switch (stage) {
       case 'introduced':
-        return 'bg-blue-500';
+        return 'bg-civiq-blue';
       case 'committee':
-        return 'bg-yellow-500';
+        return 'bg-gray-500';
       case 'house-passed':
-        return 'bg-green-400';
+        return 'bg-civiq-green';
       case 'senate-passed':
-        return 'bg-green-600';
+        return 'bg-civiq-green';
       case 'enacted':
-        return 'bg-green-700';
+        return 'bg-civiq-green';
       case 'failed':
-        return 'bg-red-500';
+        return 'bg-civiq-red';
       default:
         return 'bg-gray-400';
     }
@@ -611,11 +611,11 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
             <div className="text-sm text-gray-600">Bills Sponsored</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.byStage.enacted || 0}</div>
+            <div className="text-2xl font-bold text-civiq-green">{stats.byStage.enacted || 0}</div>
             <div className="text-sm text-gray-600">Enacted</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.avgCosponsors}</div>
+            <div className="text-2xl font-bold text-gray-600">{stats.avgCosponsors}</div>
             <div className="text-sm text-gray-600">Avg Cosponsors</div>
           </div>
           <div className="text-center">
@@ -656,8 +656,8 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                                 <span
                                   className={`px-2 py-1 text-xs${
                                     bill.sponsorshipType === 'sponsored'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-blue-100 text-blue-800'
+                                      ? 'bg-civiq-green/10 text-civiq-green'
+                                      : 'bg-civiq-blue/10 text-civiq-blue'
                                   }`}
                                 >
                                   {bill.sponsorshipType === 'sponsored'

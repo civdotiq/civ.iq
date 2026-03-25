@@ -149,7 +149,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                 <dd className="text-sm">
                   <Link
                     href={`/representatives?chamber=${representative.chamber}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-civiq-blue hover:text-civiq-blue hover:underline"
                   >
                     {representative.chamber}
                   </Link>
@@ -162,7 +162,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                 <dd className="text-sm">
                   <Link
                     href={`/representatives?state=${representative.state}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-civiq-blue hover:text-civiq-blue hover:underline"
                   >
                     {representative.state}
                   </Link>
@@ -176,7 +176,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   <dd className="text-sm">
                     <Link
                       href={`/districts/${representative.state}-${representative.district}`}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-civiq-blue hover:text-civiq-blue hover:underline"
                     >
                       {representative.district}
                     </Link>
@@ -190,7 +190,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                 <dd className="text-sm">
                   <Link
                     href={`/representatives?party=${encodeURIComponent(representative.party || 'Unknown')}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-civiq-blue hover:text-civiq-blue hover:underline"
                   >
                     {representative.party || 'Unknown'}
                   </Link>
@@ -262,7 +262,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   <dd className="text-sm">
                     <a
                       href={`tel:${representative.currentTerm.phone}`}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-civiq-blue hover:text-civiq-blue"
                     >
                       {representative.currentTerm.phone}
                     </a>
@@ -285,7 +285,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   href={representative.currentTerm.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  className="flex items-center text-sm text-civiq-blue hover:text-civiq-blue"
                 >
                   <svg
                     className="w-4 h-4 mr-2"
@@ -308,7 +308,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   href={representative.currentTerm.contactForm}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  className="flex items-center text-sm text-civiq-blue hover:text-civiq-blue"
                 >
                   <svg
                     className="w-4 h-4 mr-2"
@@ -331,7 +331,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   href={representative.currentTerm.rssUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  className="flex items-center text-sm text-civiq-blue hover:text-civiq-blue"
                 >
                   <svg
                     className="w-4 h-4 mr-2"
@@ -378,7 +378,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                   <div className="flex items-center justify-between">
                     <Link
                       href={`/committee/${routingId}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-sm font-medium text-civiq-blue hover:text-civiq-blue hover:underline"
                     >
                       {committee.name}
                     </Link>
@@ -386,9 +386,9 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                       <span
                         className={`text-xs px-2 py-1 ${
                           committee.role === 'Chair'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-civiq-green/10 text-civiq-green'
                             : committee.role === 'Ranking Member'
-                              ? 'bg-orange-100 text-orange-800'
+                              ? 'bg-civiq-red/10 text-civiq-red'
                               : 'bg-gray-200 text-gray-700'
                         }`}
                       >

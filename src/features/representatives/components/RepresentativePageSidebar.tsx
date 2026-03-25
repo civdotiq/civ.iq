@@ -59,7 +59,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-100 border-2 border-black flex items-center justify-center">
+            <div className="w-8 h-8 bg-civiq-blue/10 border-2 border-black flex items-center justify-center">
               <svg
                 className="w-5 h-5 text-civiq-blue"
                 fill="none"
@@ -94,7 +94,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-green-100 border-2 border-black flex items-center justify-center">
+            <div className="w-8 h-8 bg-civiq-green/10 border-2 border-black flex items-center justify-center">
               <svg
                 className="w-5 h-5 text-civiq-green"
                 fill="none"
@@ -136,7 +136,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
           <div className="mt-4 pt-4 border-t border-gray-100">
             <Link
               href={`/districts/${representative.state}-${representative.district}`}
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="inline-flex items-center text-sm text-civiq-blue hover:text-civiq-blue font-medium"
             >
               View district details
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,9 +220,9 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-orange-100 flex items-center justify-center">
+            <div className="w-8 h-8 bg-civiq-red/10 flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-orange-600"
+                className="w-5 h-5 text-civiq-red"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

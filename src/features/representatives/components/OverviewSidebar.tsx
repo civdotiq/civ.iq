@@ -60,7 +60,7 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="block hover:bg-blue-50 transition-colors"
+        className="block hover:bg-civiq-blue/10 transition-colors"
       >
         {content}
       </a>

@@ -22,7 +22,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
     <div className="border border-gray-200 overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 text-left hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+        className="w-full p-4 text-left hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-inset"
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -35,7 +35,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                   <span className="font-medium text-gray-700 mr-2">Chair:</span>
                   <Link
                     href={`/representative/${subcommittee.chair.bioguideId}`}
-                    className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                    className="text-civiq-blue hover:text-civiq-blue inline-flex items-center"
                     onClick={e => e.stopPropagation()}
                   >
                     <RepresentativePhoto
@@ -53,7 +53,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                   <span className="font-medium text-gray-700 mr-2">Ranking:</span>
                   <Link
                     href={`/representative/${subcommittee.rankingMember.bioguideId}`}
-                    className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                    className="text-civiq-blue hover:text-civiq-blue inline-flex items-center"
                     onClick={e => e.stopPropagation()}
                   >
                     <RepresentativePhoto
@@ -104,7 +104,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                       <td className="py-3 pr-4">
                         <Link
                           href={`/representative/${member.representative.bioguideId}`}
-                          className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                          className="flex items-center text-sm text-civiq-blue hover:text-civiq-blue"
                         >
                           <RepresentativePhoto
                             bioguideId={member.representative.bioguideId}
@@ -120,10 +120,10 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                             member.representative.party === 'Democrat' ||
                             member.representative.party === 'D'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-civiq-blue/10 text-civiq-blue'
                               : member.representative.party === 'Independent'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-civiq-blue/10 text-civiq-blue'
+                                : 'bg-civiq-red/10 text-civiq-red'
                           }`}
                         >
                           {member.representative.party}

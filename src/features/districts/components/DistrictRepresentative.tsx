@@ -40,9 +40,9 @@ export default function DistrictRepresentative({
             <span
               className={`px-3 py-1 text-sm font-medium ${
                 representative.party === 'Democrat'
-                  ? 'bg-blue-100 text-blue-800'
+                  ? 'bg-civiq-blue/10 text-civiq-blue'
                   : representative.party === 'Republican'
-                    ? 'bg-red-100 text-red-800'
+                    ? 'bg-civiq-red/10 text-civiq-red'
                     : 'bg-white border-2 border-gray-300 text-gray-800'
               }`}
             >
@@ -57,7 +57,7 @@ export default function DistrictRepresentative({
           <div className="mt-4">
             <Link
               href={`/representative/${representative.bioguideId}`}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-civiq-blue transition-colors"
             >
               View Full Profile
             </Link>

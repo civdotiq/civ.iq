@@ -43,9 +43,9 @@ const TYPE_OPTIONS = [
 ];
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  executive_order: 'bg-yellow-50 text-yellow-800 border-yellow-500',
-  proposed_rule: 'bg-blue-50 text-blue-800 border-[#3ea2d4]',
-  final_rule: 'bg-green-50 text-green-800 border-[#0a9338]',
+  executive_order: 'bg-gray-100 text-gray-600 border-gray-400',
+  proposed_rule: 'bg-civiq-blue/10 text-civiq-blue border-[#3ea2d4]',
+  final_rule: 'bg-civiq-green/10 text-civiq-green border-[#0a9338]',
   notice: 'bg-gray-50 text-gray-800 border-gray-400',
 };
 
@@ -197,7 +197,7 @@ export default function RegulationsPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <div className="text-red-600 mb-2">Failed to load regulations</div>
+              <div className="text-civiq-red mb-2">Failed to load regulations</div>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-[#3592c0]"

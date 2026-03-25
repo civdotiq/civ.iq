@@ -179,7 +179,7 @@ export default function TopicsHubPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -201,7 +201,7 @@ export default function TopicsHubPage() {
           </h2>
           <p className="text-gray-700 mb-4">
             Congress addresses a wide range of policy issues. Each topic area has dedicated{' '}
-            <Link href="/committees" className="text-blue-600 hover:underline">
+            <Link href="/committees" className="text-civiq-blue hover:underline">
               committees
             </Link>{' '}
             that hold hearings, draft legislation, and provide oversight. Understanding which
@@ -228,7 +228,7 @@ export default function TopicsHubPage() {
                   <div>
                     <h3 className="font-bold text-gray-900">{topic.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">{topic.description}</p>
-                    <p className="text-xs text-blue-600">
+                    <p className="text-xs text-civiq-blue">
                       Committees: {topic.committees.slice(0, 2).join(', ')}
                       {topic.committees.length > 2 && '...'}
                     </p>

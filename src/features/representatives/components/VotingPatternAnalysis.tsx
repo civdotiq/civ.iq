@@ -186,11 +186,11 @@ export function VotingPatternAnalysis({
                   <div
                     className={`w-3 h-3 ${
                       item.label === 'Yea'
-                        ? 'bg-green-500'
+                        ? 'bg-civiq-green'
                         : item.label === 'Nay'
-                          ? 'bg-red-500'
+                          ? 'bg-civiq-red'
                           : item.label === 'Present'
-                            ? 'bg-blue-500'
+                            ? 'bg-civiq-blue'
                             : 'bg-gray-400'
                     }`}
                   />
@@ -211,7 +211,7 @@ export function VotingPatternAnalysis({
             <div className="text-2xl font-bold text-gray-900">{attendance.toFixed(1)}%</div>
             <div className="mt-2 bg-gray-200 h-2 overflow-hidden">
               <div
-                className="bg-blue-500 h-full transition-all duration-500"
+                className="bg-civiq-blue h-full transition-all duration-500"
                 style={{ width: `${attendance}%` }}
               />
             </div>

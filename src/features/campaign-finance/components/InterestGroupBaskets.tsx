@@ -92,17 +92,17 @@ export function InterestGroupBaskets({
               </div>
             </div>
 
-            <div className="p-4 bg-green-50">
+            <div className="p-4 bg-civiq-green/10">
               <div className="text-sm text-gray-600 mb-1">Grassroots Funding</div>
-              <div className="text-xl font-bold text-green-700">
+              <div className="text-xl font-bold text-civiq-green">
                 {metrics.grassrootsPercentage.toFixed(1)}%
               </div>
               <div className="text-xs text-gray-500">Small donors ≤ $200</div>
             </div>
 
-            <div className="p-4 bg-blue-50">
+            <div className="p-4 bg-civiq-blue/10">
               <div className="text-sm text-gray-600 mb-1">Funding Diversity</div>
-              <div className="text-xl font-bold text-blue-700">{metrics.diversityScore}/100</div>
+              <div className="text-xl font-bold text-civiq-blue">{metrics.diversityScore}/100</div>
               <div className="text-xs text-gray-500">
                 {metrics.diversityScore >= 70
                   ? 'Very diverse'
@@ -114,8 +114,8 @@ export function InterestGroupBaskets({
           </div>
 
           {metrics.corporatePercentage > 0 && (
-            <div className="mt-4 p-3 bg-orange-50 border border-orange-200">
-              <div className="text-sm text-orange-800">
+            <div className="mt-4 p-3 bg-civiq-red/10 border border-civiq-red">
+              <div className="text-sm text-civiq-red">
                 <strong>{metrics.corporatePercentage.toFixed(1)}%</strong> from corporate interests
                 (Big Tech, Wall Street, Healthcare, Energy, Defense, etc.)
               </div>

@@ -314,7 +314,7 @@ export default function OpenDataPage() {
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-blue-600">
+          <a href="/" className="hover:text-civiq-blue">
             Home
           </a>
           <span className="mx-2">›</span>

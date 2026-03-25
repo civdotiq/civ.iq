@@ -76,11 +76,11 @@ export default function APIHealthPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'operational':
-        return 'text-green-600 bg-green-50';
+        return 'text-civiq-green bg-civiq-green/10';
       case 'degraded':
-        return 'text-yellow-600 bg-yellow-50';
+        return 'text-gray-600 bg-gray-100';
       case 'error':
-        return 'text-red-600 bg-red-50';
+        return 'text-civiq-red bg-civiq-red/10';
       default:
         return 'text-gray-600 bg-white';
     }
@@ -119,11 +119,11 @@ export default function APIHealthPage() {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 p-4 mb-4">
-            <p className="text-red-800">Error: {error}</p>
+          <div className="bg-civiq-red/10 border border-civiq-red p-4 mb-4">
+            <p className="text-civiq-red">Error: {error}</p>
             <button
               onClick={fetchHealth}
-              className="mt-2 text-red-600 underline hover:text-red-800"
+              className="mt-2 text-civiq-red underline hover:text-civiq-red"
             >
               Try Again
             </button>
@@ -161,7 +161,7 @@ export default function APIHealthPage() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {Object.entries(health.environment.apiKeysConfigured).map(([key, configured]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <span className={configured ? 'text-green-600' : 'text-red-600'}>
+                    <span className={configured ? 'text-civiq-green' : 'text-civiq-red'}>
                       {configured ? 'Yes' : 'No'}
                     </span>
                     <span className="text-sm capitalize">{key}</span>
@@ -189,7 +189,7 @@ export default function APIHealthPage() {
                         </div>
 
                         {api.error && (
-                          <p className="mt-1 text-sm text-red-600">Error: {api.error}</p>
+                          <p className="mt-1 text-sm text-civiq-red">Error: {api.error}</p>
                         )}
 
                         {api.details && (
@@ -215,23 +215,23 @@ export default function APIHealthPage() {
 
             {/* Summary Stats */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-green-50 p-4 text-center">
-                <p className="text-3xl font-bold text-green-600">
+              <div className="bg-civiq-green/10 p-4 text-center">
+                <p className="text-3xl font-bold text-civiq-green">
                   {health.apis.filter(a => a.status === 'operational').length}
                 </p>
-                <p className="text-sm text-green-800">Operational</p>
+                <p className="text-sm text-civiq-green">Operational</p>
               </div>
-              <div className="bg-yellow-50 p-4 text-center">
-                <p className="text-3xl font-bold text-yellow-600">
+              <div className="bg-gray-100 p-4 text-center">
+                <p className="text-3xl font-bold text-gray-600">
                   {health.apis.filter(a => a.status === 'degraded').length}
                 </p>
-                <p className="text-sm text-yellow-800">Degraded</p>
+                <p className="text-sm text-gray-600">Degraded</p>
               </div>
-              <div className="bg-red-50 p-4 text-center">
-                <p className="text-3xl font-bold text-red-600">
+              <div className="bg-civiq-red/10 p-4 text-center">
+                <p className="text-3xl font-bold text-civiq-red">
                   {health.apis.filter(a => a.status === 'error').length}
                 </p>
-                <p className="text-sm text-red-800">Error</p>
+                <p className="text-sm text-civiq-red">Error</p>
               </div>
             </div>
           </>

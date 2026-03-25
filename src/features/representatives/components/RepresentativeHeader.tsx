@@ -47,11 +47,11 @@ export function RepresentativeHeader({ representative, metrics }: Representative
     switch (party?.toLowerCase()) {
       case 'republican':
       case 'r':
-        return 'bg-red-600';
+        return 'bg-civiq-red';
       case 'democrat':
       case 'democratic':
       case 'd':
-        return 'bg-blue-600';
+        return 'bg-civiq-blue';
       default:
         return 'bg-gray-600';
     }
@@ -62,11 +62,11 @@ export function RepresentativeHeader({ representative, metrics }: Representative
     switch (party?.toLowerCase()) {
       case 'republican':
       case 'r':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
       case 'democrat':
       case 'democratic':
       case 'd':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-800 border-gray-200';
     }

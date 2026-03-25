@@ -85,7 +85,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load bills</div>
+        <div className="text-civiq-red mb-2">Failed to load bills</div>
         <div className="text-sm text-gray-500">Please try refreshing the page</div>
       </div>
     );
@@ -202,7 +202,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setSelectedSession('all');
                 setCurrentPage(1);
               }}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-civiq-blue hover:text-civiq-blue"
             >
               Clear all filters
             </button>
@@ -220,7 +220,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
               setCurrentPage(1);
             }}
             placeholder="Search by title, bill number, or subject..."
-            className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
           />
         </div>
 
@@ -235,7 +235,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setSelectedSession(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             >
               <option value="all">All Sessions</option>
               {uniqueSessions.map(session => (
@@ -255,7 +255,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setSelectedSubject(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             >
               <option value="all">All Subjects</option>
               {uniqueSubjects.map(subject => (
@@ -275,7 +275,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setSelectedClassification(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             >
               <option value="all">All Types</option>
               {uniqueClassifications.map(classification => (
@@ -300,7 +300,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -313,18 +313,18 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
       {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-50 border-2 border-gray-300 p-4 text-center">
-          <div className="text-3xl font-bold text-blue-600">{bills.length}</div>
+          <div className="text-3xl font-bold text-civiq-blue">{bills.length}</div>
           <div className="text-sm text-gray-600">Total Bills</div>
           <div className="text-xs text-gray-400">{filteredBills.length} shown</div>
         </div>
         <div className="bg-gray-50 border-2 border-gray-300 p-4 text-center">
-          <div className="text-3xl font-bold text-green-600">
+          <div className="text-3xl font-bold text-civiq-green">
             {bills.filter(b => getSponsorshipRole(b) === 'primary').length}
           </div>
           <div className="text-sm text-gray-600">Primary Sponsor</div>
         </div>
         <div className="bg-gray-50 border-2 border-gray-300 p-4 text-center">
-          <div className="text-3xl font-bold text-yellow-600">
+          <div className="text-3xl font-bold text-gray-600">
             {bills.filter(b => getSponsorshipRole(b) === 'cosponsor').length}
           </div>
           <div className="text-sm text-gray-600">Co-Sponsor</div>
@@ -372,7 +372,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
               setSelectedSession('all');
               setCurrentPage(1);
             }}
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-civiq-blue hover:text-civiq-blue text-sm"
           >
             Clear filters
           </button>
@@ -392,18 +392,18 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">
                       {sponsorshipRole === 'primary' && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 mr-2">
+                        <span className="text-xs bg-civiq-blue/10 text-civiq-blue px-2 py-1 mr-2">
                           Primary Sponsor
                         </span>
                       )}
                       {sponsorshipRole === 'cosponsor' && (
-                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 mr-2">
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 mr-2">
                           Co-Sponsor
                         </span>
                       )}
                       <Link
                         href={`/state-bills/${state}/${base64BillId}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-civiq-blue hover:text-civiq-blue hover:underline"
                       >
                         {bill.identifier}
                       </Link>
@@ -423,7 +423,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                     </span>
                   )}
                   {bill.subject && bill.subject.length > 0 && (
-                    <span className="text-xs bg-green-100 px-2 py-1">{bill.subject[0]}</span>
+                    <span className="text-xs bg-civiq-green/10 px-2 py-1">{bill.subject[0]}</span>
                   )}
                   {bill.first_action_date && (
                     <span className="text-xs bg-white border-2 border-gray-300 px-2 py-1 flex items-center gap-1">

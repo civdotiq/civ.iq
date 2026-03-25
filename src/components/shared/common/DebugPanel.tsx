@@ -60,7 +60,7 @@ export function DebugPanel() {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsVisible(true)}
-          className="bg-purple-600 text-white px-3 py-1 text-sm hover:bg-purple-700 border-2 border-black"
+          className="bg-civiq-blue text-white px-3 py-1 text-sm hover:bg-civiq-blue border-2 border-black"
           title="Show Debug Panel (Ctrl+Shift+D)"
         >
           Debug
@@ -70,12 +70,12 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-black text-green-400 p-4 border-2 border-black-xl max-w-md max-h-96 overflow-y-auto font-mono text-xs">
+    <div className="fixed bottom-4 right-4 z-50 bg-black text-civiq-green p-4 border-2 border-black-xl max-w-md max-h-96 overflow-y-auto font-mono text-xs">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-white font-bold">Phase 2 Debug Panel</h3>
         <button
           onClick={() => setIsVisible(false)}
-          className="text-red-400 hover:text-red-300"
+          className="text-civiq-red hover:text-civiq-red"
           title="Hide Debug Panel (Ctrl+Shift+D)"
         >
           ✕
@@ -85,7 +85,7 @@ export function DebugPanel() {
       <div className="space-y-3">
         {/* Page Data */}
         <div>
-          <h4 className="text-yellow-400 font-semibold">Page Data</h4>
+          <h4 className="text-gray-600 font-semibold">Page Data</h4>
           {pageData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(pageData, null, 2)}</pre>
           ) : (
@@ -95,7 +95,7 @@ export function DebugPanel() {
 
         {/* Client Data */}
         <div>
-          <h4 className="text-blue-400 font-semibold">Client Data</h4>
+          <h4 className="text-civiq-blue font-semibold">Client Data</h4>
           {clientData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(clientData, null, 2)}</pre>
           ) : (
@@ -105,7 +105,7 @@ export function DebugPanel() {
 
         {/* Bills Component Data */}
         <div>
-          <h4 className="text-orange-400 font-semibold">Bills Component</h4>
+          <h4 className="text-civiq-red font-semibold">Bills Component</h4>
           {billsData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(billsData, null, 2)}</pre>
           ) : (

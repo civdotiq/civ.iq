@@ -59,8 +59,10 @@ interface DelegationMember {
 
 function getPartyColor(party: string): string {
   const p = party.toLowerCase();
-  if (p.includes('democrat') || p === 'd') return 'bg-blue-100 text-blue-800 border-blue-200';
-  if (p.includes('republican') || p === 'r') return 'bg-red-100 text-red-800 border-red-200';
+  if (p.includes('democrat') || p === 'd')
+    return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
+  if (p.includes('republican') || p === 'r')
+    return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
   return 'bg-gray-100 text-gray-800 border-gray-200';
 }
 
@@ -96,7 +98,7 @@ function DelegationCard({ member }: { member: DelegationMember }) {
               {member.party}
             </span>
             {member.chamber === 'Senate' && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="px-2 py-0.5 text-xs font-medium bg-civiq-blue/10 text-civiq-blue border border-civiq-blue">
                 Senator
               </span>
             )}
@@ -205,11 +207,11 @@ export default async function StateDelegationPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">›</span>
-            <Link href="/states" className="hover:text-blue-600">
+            <Link href="/states" className="hover:text-civiq-blue">
               States
             </Link>
             <span className="mx-2">›</span>
@@ -254,13 +256,15 @@ export default async function StateDelegationPage({ params }: PageProps) {
             <div className="bg-gray-50 border-2 border-black p-4 text-center">
               <div className="flex items-center justify-center gap-2">
                 {partyCount.democrat > 0 && (
-                  <span className="text-2xl font-bold text-blue-600">{partyCount.democrat}D</span>
+                  <span className="text-2xl font-bold text-civiq-blue">{partyCount.democrat}D</span>
                 )}
                 {partyCount.democrat > 0 && partyCount.republican > 0 && (
                   <span className="text-gray-400">-</span>
                 )}
                 {partyCount.republican > 0 && (
-                  <span className="text-2xl font-bold text-red-600">{partyCount.republican}R</span>
+                  <span className="text-2xl font-bold text-civiq-red">
+                    {partyCount.republican}R
+                  </span>
                 )}
                 {partyCount.other > 0 && (
                   <span className="text-2xl font-bold text-gray-600">+{partyCount.other}</span>

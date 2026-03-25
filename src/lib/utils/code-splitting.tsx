@@ -24,7 +24,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => (
   <div className={`flex items-center justify-center ${className}`}>
     <div className="text-center">
-      <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+      <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
       <p className="text-sm text-gray-600">{message}</p>
     </div>
   </div>
@@ -40,7 +40,7 @@ export const CardLoadingSpinner: React.FC<CardLoadingSpinnerProps> = ({
 }) => (
   <div className={`flex items-center justify-center ${height} bg-white`}>
     <div className="text-center">
-      <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+      <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
       <p className="text-sm text-gray-600">{message}</p>
     </div>
   </div>
@@ -120,7 +120,7 @@ export function createLazyPage<T extends React.ComponentType<Record<string, unkn
 export const TabLoadingSpinner = () => (
   <div className="flex items-center justify-center py-8">
     <div className="text-center">
-      <div className="animate-spin h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+      <div className="animate-spin h-6 w-6 border-b-2 border-civiq-blue mx-auto mb-2"></div>
       <p className="text-sm text-gray-600">Loading...</p>
     </div>
   </div>
@@ -129,7 +129,7 @@ export const TabLoadingSpinner = () => (
 export const ChartLoadingSpinner = () => (
   <div className="flex items-center justify-center h-64 bg-white">
     <div className="text-center">
-      <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+      <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
       <p className="text-sm text-gray-600">Loading chart...</p>
     </div>
   </div>
@@ -138,7 +138,7 @@ export const ChartLoadingSpinner = () => (
 export const MapLoadingSpinner = () => (
   <div className="flex items-center justify-center h-96 bg-gray-100">
     <div className="text-center">
-      <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+      <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
       <p className="text-sm text-gray-600">Loading map...</p>
     </div>
   </div>

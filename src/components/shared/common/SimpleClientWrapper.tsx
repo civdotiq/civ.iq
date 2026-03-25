@@ -54,12 +54,12 @@ export function SimpleClientWrapper({
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Success indicator */}
-      <div className="bg-green-500 text-white p-4 mb-4">
+      <div className="bg-civiq-green text-white p-4 mb-4">
         SIMPLE CLIENT COMPONENT MOUNTED SUCCESSFULLY
       </div>
 
       {/* Basic representative info */}
-      <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
+      <div className="bg-civiq-blue/10 border border-civiq-blue p-4 mb-6">
         <h1 className="text-2xl font-bold">{representative?.name || 'Unknown'}</h1>
         <p className="text-gray-600">
           {representative?.party} • {representative?.state} • {representative?.chamber}
@@ -82,7 +82,7 @@ export function SimpleClientWrapper({
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-civiq-blue text-civiq-blue'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >

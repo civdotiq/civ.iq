@@ -118,9 +118,9 @@ function LegislatorCard({
   const getPartyColor = (party: string) => {
     switch (party) {
       case 'Democratic':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'Republican':
-        return 'bg-red-100 text-red-800';
+        return 'bg-civiq-red/10 text-civiq-red';
       case 'Independent':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -207,7 +207,7 @@ function LegislatorCard({
                     className="inline-flex items-center px-2 py-1 bg-white border-2 border-gray-300 text-xs"
                   >
                     {committee.name}
-                    {committee.role === 'chair' && <span className="ml-1 text-blue-600">•</span>}
+                    {committee.role === 'chair' && <span className="ml-1 text-civiq-blue">•</span>}
                   </span>
                 ))}
                 {legislator.committees.length > 3 && (
@@ -223,7 +223,7 @@ function LegislatorCard({
             {legislator.email && (
               <a
                 href={`mailto:${legislator.email}`}
-                className="flex items-center gap-1 hover:text-blue-600"
+                className="flex items-center gap-1 hover:text-civiq-blue"
               >
                 <Mail className="w-4 h-4" />
                 Email
@@ -232,7 +232,7 @@ function LegislatorCard({
             {legislator.phone && (
               <a
                 href={`tel:${legislator.phone}`}
-                className="flex items-center gap-1 hover:text-blue-600"
+                className="flex items-center gap-1 hover:text-civiq-blue"
               >
                 <Phone className="w-4 h-4" />
                 Call
@@ -276,14 +276,14 @@ function ChamberOverview({
         <div className="flex justify-between text-sm mb-2">
           <span>Chamber Control</span>
           <span
-            className={`font-medium ${majority === 'Democratic' ? 'text-blue-600' : 'text-red-600'}`}
+            className={`font-medium ${majority === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'}`}
           >
             {majority} (+{majoritySeats - minoritySeats})
           </span>
         </div>
         <div className="relative h-8 bg-gray-200 overflow-hidden">
           <div
-            className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
+            className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
             style={{ width: `${demPercentage}%` }}
           />
           <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
@@ -295,11 +295,11 @@ function ChamberOverview({
 
       <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
         <div>
-          <p className="text-2xl font-bold text-blue-600">{chamberData.democraticSeats}</p>
+          <p className="text-2xl font-bold text-civiq-blue">{chamberData.democraticSeats}</p>
           <p className="text-xs text-gray-600">Democrats</p>
         </div>
         <div>
-          <p className="text-2xl font-bold text-red-600">{chamberData.republicanSeats}</p>
+          <p className="text-2xl font-bold text-civiq-red">{chamberData.republicanSeats}</p>
           <p className="text-xs text-gray-600">Republicans</p>
         </div>
         <div>
@@ -315,15 +315,15 @@ function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'signed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'passed_both':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'vetoed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-civiq-red/10 text-civiq-red';
       case 'dead':
         return 'bg-white border-2 border-gray-300 text-gray-800';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
@@ -337,7 +337,7 @@ function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
         <h3 className="text-lg font-semibold text-gray-900">Recent Bills</h3>
         <Link
           href={`/state-bills/${state.toUpperCase()}`}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="text-sm text-civiq-blue hover:text-civiq-blue font-medium"
         >
           View All Bills →
         </Link>
@@ -427,7 +427,7 @@ export default function StateLegislaturePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
           <p className="mt-4 text-gray-600">Loading state legislature data...</p>
         </div>
       </div>
@@ -439,7 +439,7 @@ export default function StateLegislaturePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-xl text-gray-600">State legislature data not available</p>
-          <Link href="/states" className="mt-4 text-blue-600 hover:text-blue-700">
+          <Link href="/states" className="mt-4 text-civiq-blue hover:text-civiq-blue">
             ← Back to States
           </Link>
         </div>
@@ -467,11 +467,11 @@ export default function StateLegislaturePage() {
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/states" className="hover:text-blue-600">
+          <Link href="/states" className="hover:text-civiq-blue">
             States
           </Link>
           <span className="mx-2">&rsaquo;</span>
@@ -479,7 +479,7 @@ export default function StateLegislaturePage() {
         </nav>
 
         {/* Page header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-8 mb-8">
+        <div className="bg-gradient-to-r from-civiq-blue to-civiq-blue text-white p-4 sm:p-8 mb-8">
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <span className="text-2xl font-bold">{legislatureData.state}</span>
@@ -488,7 +488,7 @@ export default function StateLegislaturePage() {
               <h1 className="text-2xl sm:text-3xl font-bold mb-2">
                 {legislatureData.stateName} State Legislature
               </h1>
-              <p className="text-blue-100">
+              <p className="text-civiq-blue">
                 {legislatureData.session.name} • {legislatureData.legislators.length} Total
                 Legislators
               </p>
@@ -499,12 +499,12 @@ export default function StateLegislaturePage() {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white border border-gray-200 p-6 text-center">
-            <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <Users className="w-8 h-8 text-civiq-blue mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{legislatureData.totalCount}</p>
             <p className="text-sm text-gray-600">Total Legislators</p>
           </div>
           <div className="bg-white border border-gray-200 p-6 text-center">
-            <FileText className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <FileText className="w-8 h-8 text-civiq-green mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{recentBills.length}</p>
             <p className="text-sm text-gray-600">Active Bills</p>
           </div>
@@ -514,7 +514,7 @@ export default function StateLegislaturePage() {
             <p className="text-sm text-gray-600">Current Session</p>
           </div>
           <div className="bg-white border border-gray-200 p-6 text-center">
-            <ExternalLink className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+            <ExternalLink className="w-8 h-8 text-civiq-red mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
               {Math.round(
                 (new Date().getTime() - new Date(legislatureData.session.startDate).getTime()) /
@@ -535,7 +535,7 @@ export default function StateLegislaturePage() {
                   onClick={() => setActiveTab(tab)}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === tab
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-civiq-blue text-white'
                       : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                   }`}
                 >
@@ -581,14 +581,14 @@ export default function StateLegislaturePage() {
                         placeholder="Search legislators..."
                         value={filters.search}
                         onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                       />
                     </div>
                   </div>
                   <select
                     value={filters.party}
                     onChange={e => setFilters(prev => ({ ...prev, party: e.target.value }))}
-                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                   >
                     <option value="all">All Parties</option>
                     <option value="d">Democrats</option>

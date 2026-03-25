@@ -40,12 +40,12 @@ export const DataProvenance: FC<DataProvenanceProps> = ({
     <div className={`pt-3 border-t border-gray-200 ${className}`}>
       {/* Quality warning */}
       {quality === 'partial' && (
-        <p className="text-xs text-yellow-800 mb-2">
+        <p className="text-xs text-gray-600 mb-2">
           Some data sources were unavailable. Results based on partial data.
         </p>
       )}
       {quality === 'degraded' && (
-        <p className="text-xs text-yellow-800 mb-2">
+        <p className="text-xs text-gray-600 mb-2">
           Most data sources were unavailable. Results may be incomplete.
         </p>
       )}

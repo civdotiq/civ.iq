@@ -162,11 +162,11 @@ export default function StateBillsSearchPage() {
         <main className="container mx-auto px-4 py-8">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">›</span>
-            <Link href="/states" className="hover:text-blue-600">
+            <Link href="/states" className="hover:text-civiq-blue">
               States
             </Link>
             <span className="mx-2">›</span>
@@ -184,12 +184,12 @@ export default function StateBillsSearchPage() {
             </div>
           </div>
           {/* Instructions */}
-          <div className="bg-blue-50 border-2 border-blue-300 p-6 mb-6">
+          <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-6 mb-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-civiq-blue flex-shrink-0 mt-0.5" />
               <div>
-                <h2 className="font-semibold text-blue-900 mb-1">How to Search</h2>
-                <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                <h2 className="font-semibold text-civiq-blue mb-1">How to Search</h2>
+                <ol className="text-sm text-civiq-blue space-y-1 list-decimal list-inside">
                   <li>Select one or more states to search</li>
                   <li>Optionally apply filters (chamber, type, status, subject)</li>
                   <li>Click &quot;Search Bills&quot; to see results</li>
@@ -221,7 +221,7 @@ export default function StateBillsSearchPage() {
                 type="button"
                 onClick={handleSearch}
                 disabled={selectedStates.length === 0 || isLoading}
-                className="w-full bg-civiq-blue text-white py-4 font-bold border-2 border-black hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-civiq-blue text-white py-4 font-bold border-2 border-black hover:bg-civiq-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Searching...' : 'Search Bills'}
               </button>

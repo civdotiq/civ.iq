@@ -80,7 +80,7 @@ export function VotePatternSection({ bioguideId }: VotePatternSectionProps) {
         className="w-full p-4 flex items-center justify-between text-left"
       >
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-blue-600" />
+          <Brain className="w-5 h-5 text-civiq-blue" />
           <h3 className="font-semibold text-gray-900">Voting Pattern Analysis</h3>
           <span className="text-xs text-gray-500">AI-generated</span>
         </div>
@@ -99,7 +99,7 @@ export function VotePatternSection({ bioguideId }: VotePatternSectionProps) {
             {analysis.topIssueAreas.map(area => (
               <span
                 key={area}
-                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200"
+                className="px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium border border-civiq-blue"
               >
                 {area}
               </span>

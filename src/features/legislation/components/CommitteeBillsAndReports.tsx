@@ -97,15 +97,15 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'passed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'in committee':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'introduced':
         return 'bg-white border-2 border-gray-300 text-gray-800';
       case 'reported':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'amended':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-600';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-800';
     }
@@ -114,15 +114,15 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
   const getCommitteeStatusColor = (status: CommitteeBill['committeeStatus']) => {
     switch (status) {
       case 'reported':
-        return 'bg-green-100 text-green-800';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'markup_completed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'markup_scheduled':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-600';
       case 'referred':
         return 'bg-white border-2 border-gray-300 text-gray-800';
       case 'stalled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-civiq-red/10 text-civiq-red';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-800';
     }
@@ -153,7 +153,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
           onClick={() => setActiveTab('bills')}
           className={`px-4 py-2 font-medium transition-colors ${
             activeTab === 'bills'
-              ? 'bg-blue-100 text-blue-700'
+              ? 'bg-civiq-blue/10 text-civiq-blue'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -163,7 +163,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
           onClick={() => setActiveTab('reports')}
           className={`px-4 py-2 font-medium transition-colors ${
             activeTab === 'reports'
-              ? 'bg-blue-100 text-blue-700'
+              ? 'bg-civiq-blue/10 text-civiq-blue'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -231,7 +231,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                   </div>
 
                   {bill.nextCommitteeAction && (
-                    <div className="text-sm text-blue-600 mt-2">
+                    <div className="text-sm text-civiq-blue mt-2">
                       <strong>Next Action:</strong> {bill.nextCommitteeAction.description}
                       {bill.nextCommitteeAction.date !== 'TBD' && (
                         <span className="ml-2">
@@ -294,7 +294,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                         href={report.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-civiq-blue hover:text-civiq-blue text-sm font-medium"
                       >
                         View Full Report →
                       </Link>

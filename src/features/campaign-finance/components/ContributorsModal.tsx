@@ -140,7 +140,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 transition-colors border-2 border-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 transition-colors border-2 border-black focus:outline-none focus:ring-2 focus:ring-civiq-blue"
             aria-label="Close modal"
             title="Close (or press Escape)"
           >
@@ -177,7 +177,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
                             href={contributor.fecTransparencyLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="text-xs text-civiq-blue hover:text-civiq-blue font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                             aria-label={`View ${contributor.name} on FEC.gov (opens in new tab)`}
                           >
                             View on FEC.gov →
@@ -194,7 +194,10 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
                         {contributor.contributionCount !== 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div className="text-lg font-semibold text-green-600" aria-label="Total amount">
+                    <div
+                      className="text-lg font-semibold text-civiq-green"
+                      aria-label="Total amount"
+                    >
                       {formatCurrency(contributor.totalAmount)}
                     </div>
                   </div>
@@ -213,7 +216,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
               href={metadata.fecReceiptsLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center text-civiq-blue hover:text-civiq-blue font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue"
               aria-label="View all contributions on FEC.gov (opens in new tab)"
             >
               View all contributions on FEC.gov →

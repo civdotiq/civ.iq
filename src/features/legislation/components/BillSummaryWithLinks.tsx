@@ -27,15 +27,15 @@ export function BillSummaryWithLinks({
   const [activeTab, setActiveTab] = useState<'summary' | 'keypoints' | 'impact'>('summary');
 
   const getReadingLevelColor = (level: number) => {
-    if (level <= 8) return 'text-green-600 bg-green-50';
-    if (level <= 10) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (level <= 8) return 'text-civiq-green bg-civiq-green/10';
+    if (level <= 10) return 'text-gray-600 bg-gray-100';
+    return 'text-civiq-red bg-civiq-red/10';
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    if (confidence >= 0.8) return 'text-civiq-green';
+    if (confidence >= 0.6) return 'text-gray-600';
+    return 'text-civiq-red';
   };
 
   const formatDate = (dateString: string) => {
@@ -55,8 +55,8 @@ export function BillSummaryWithLinks({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Brain className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-600">AI-Generated Summary</span>
+              <Brain className="h-5 w-5 text-civiq-blue" />
+              <span className="text-sm font-medium text-civiq-blue">AI-Generated Summary</span>
               <div
                 className={`px-2 py-1 text-xs font-medium ${getReadingLevelColor(summary.readingLevel)}`}
               >
@@ -117,7 +117,7 @@ export function BillSummaryWithLinks({
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                   activeTab === tab
-                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    ? 'text-civiq-blue border-b-2 border-civiq-blue'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -154,7 +154,7 @@ export function BillSummaryWithLinks({
               <div className="space-y-2">
                 {summary.keyPoints.map((point, index) => (
                   <div key={index} className="flex items-start">
-                    <span className="text-blue-600 mr-2">•</span>
+                    <span className="text-civiq-blue mr-2">•</span>
                     {/* UPDATED: Link entities in key points */}
                     <span className="text-gray-700">
                       <EntityLinkWrapper text={point} />
@@ -172,7 +172,10 @@ export function BillSummaryWithLinks({
                       <h4 className="font-medium text-gray-900 mb-2">Who This Affects</h4>
                       <div className="flex flex-wrap gap-2">
                         {summary.whoItAffects.map((group: string, index: number) => (
-                          <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm">
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-sm"
+                          >
                             <Users className="h-3 w-3 inline mr-1" />
                             {/* UPDATED: Link entities in affected groups */}
                             <EntityLinkWrapper text={group} />

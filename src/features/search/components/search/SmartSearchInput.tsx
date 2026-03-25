@@ -162,8 +162,8 @@ export function SmartSearchInput({
             className={`
               w-full px-4 py-3 pr-24 text-lg border
               transition-all duration-200
-              ${isValid === true ? 'border-green-500 bg-green-50' : ''}
-              ${isValid === false ? 'border-orange-500 bg-orange-50' : ''}
+              ${isValid === true ? 'border-civiq-green bg-civiq-green/10' : ''}
+              ${isValid === false ? 'border-civiq-red bg-civiq-red/10' : ''}
               ${isValid === null ? 'border-gray-300' : ''}
               focus:outline-none focus:ring-2 focus:ring-civiq-blue/50
             `}

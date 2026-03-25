@@ -105,7 +105,7 @@ export const BillSearchFilters: React.FC<BillSearchFiltersProps> = ({
           <button
             type="button"
             onClick={onClear}
-            className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
+            className="text-sm text-civiq-red hover:text-civiq-red font-medium flex items-center gap-1"
           >
             <X className="w-4 h-4" />
             Clear Filters
@@ -154,7 +154,7 @@ export const BillSearchFilters: React.FC<BillSearchFiltersProps> = ({
       <button
         type="button"
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="w-full mb-4 text-sm font-medium text-civiq-blue hover:text-blue-700 flex items-center justify-center gap-2 py-2 border-2 border-gray-300 hover:border-civiq-blue transition-colors"
+        className="w-full mb-4 text-sm font-medium text-civiq-blue hover:text-civiq-blue flex items-center justify-center gap-2 py-2 border-2 border-gray-300 hover:border-civiq-blue transition-colors"
       >
         {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
         <svg
@@ -242,22 +242,22 @@ export const BillSearchFilters: React.FC<BillSearchFiltersProps> = ({
           <h4 className="text-sm font-semibold text-gray-700 mb-2">Active Filters:</h4>
           <div className="flex flex-wrap gap-2">
             {filters.searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-800 border border-blue-600 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-civiq-blue/10 text-civiq-blue border border-civiq-blue text-xs">
                 Keywords: {filters.searchQuery}
               </span>
             )}
             {filters.chamber !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-800 border border-green-600 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-civiq-green/10 text-civiq-green border border-civiq-green text-xs">
                 {CHAMBER_OPTIONS.find(o => o.value === filters.chamber)?.label}
               </span>
             )}
             {filters.classification !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-800 border border-purple-600 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-civiq-blue/10 text-civiq-blue border border-civiq-blue text-xs">
                 {CLASSIFICATION_OPTIONS.find(o => o.value === filters.classification)?.label}
               </span>
             )}
             {filters.status !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-800 border border-yellow-600 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 border border-gray-400 text-xs">
                 {STATUS_OPTIONS.find(o => o.value === filters.status)?.label}
               </span>
             )}

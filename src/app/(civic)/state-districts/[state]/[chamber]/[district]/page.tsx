@@ -148,7 +148,7 @@ export default async function StateDistrictPage({
               <Link href="/representatives" className="text-gray-600 font-medium">
                 Representatives
               </Link>
-              <Link href="/state-legislature" className="text-blue-600 font-medium">
+              <Link href="/state-legislature" className="text-civiq-blue font-medium">
                 State Legislatures
               </Link>
             </nav>
@@ -166,7 +166,7 @@ export default async function StateDistrictPage({
                 ? `/representatives?address=${encodeURIComponent(fromAddress)}`
                 : `/state-legislature/${stateCode}`
             }
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
           >
             <Home className="w-4 h-4" />
             <span>
@@ -215,7 +215,7 @@ export default async function StateDistrictPage({
                         href={wikipediaBio.wikipediaPageUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline text-sm"
+                        className="text-civiq-blue hover:text-civiq-blue underline text-sm"
                       >
                         Read more on Wikipedia →
                       </a>

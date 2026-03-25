@@ -22,7 +22,7 @@ export default function LocalPage() {
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">›</span>

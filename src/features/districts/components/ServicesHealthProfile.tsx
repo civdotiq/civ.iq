@@ -134,16 +134,16 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
       {/* Education Metrics */}
       <div className="mb-8">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <StatisticsIcon className="w-5 h-5 mr-2 text-blue-600" />
+          <StatisticsIcon className="w-5 h-5 mr-2 text-civiq-blue" />
           Education Performance
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-blue-50 border-aicher border-blue-600 p-grid-3">
-            <div className="text-2xl font-bold text-blue-900">
+          <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatPercentage(services.education.graduationRate)}
             </div>
-            <p className="text-sm text-blue-700 mt-1">Graduation Rate</p>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-sm text-civiq-blue mt-1">Graduation Rate</p>
+            <p className="text-xs text-civiq-blue mt-1">
               {services.education.graduationRate >= 85
                 ? 'Excellent'
                 : services.education.graduationRate >= 75
@@ -152,12 +152,12 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             </p>
           </div>
 
-          <div className="bg-purple-50 border-aicher border-purple-600 p-grid-3">
-            <div className="text-2xl font-bold text-purple-900">
+          <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
+            <div className="text-2xl font-bold text-civiq-blue">
               {services.education.schoolDistrictPerformance}/100
             </div>
-            <p className="text-sm text-purple-700 mt-1">District Performance</p>
-            <p className="text-xs text-purple-600 mt-1">Overall school quality</p>
+            <p className="text-sm text-civiq-blue mt-1">District Performance</p>
+            <p className="text-xs text-civiq-blue mt-1">Overall school quality</p>
           </div>
 
           <div className="bg-indigo-50 border-aicher border-indigo-600 p-grid-3">
@@ -202,17 +202,17 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         services.healthcare.healthcareCostIndex > 0) && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <CheckIcon className="w-5 h-5 mr-2 text-red-600" />
+            <CheckIcon className="w-5 h-5 mr-2 text-civiq-red" />
             Healthcare Access
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.healthcare.hospitalQualityRating > 0 && (
-              <div className="bg-red-50 border-aicher border-red-600 p-grid-3">
-                <div className="text-2xl font-bold text-red-900">
+              <div className="bg-civiq-red/10 border-aicher border-civiq-red p-grid-3">
+                <div className="text-2xl font-bold text-civiq-red">
                   {getStarRating(services.healthcare.hospitalQualityRating)}
                 </div>
-                <p className="text-sm text-red-700 mt-1">Hospital Quality Rating</p>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-sm text-civiq-red mt-1">Hospital Quality Rating</p>
+                <p className="text-xs text-civiq-red mt-1">
                   {services.healthcare.hospitalQualityRating.toFixed(1)} out of 5 stars
                 </p>
               </div>
@@ -249,12 +249,12 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             services.healthcare.healthcareCostIndex > 0) && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               {services.healthcare.medicareProviderCount > 0 && (
-                <div className="bg-orange-50 border-aicher border-orange-600 p-grid-3">
-                  <div className="text-2xl font-bold text-orange-900">
+                <div className="bg-civiq-red/10 border-aicher border-civiq-red p-grid-3">
+                  <div className="text-2xl font-bold text-civiq-red">
                     {services.healthcare.medicareProviderCount}
                   </div>
-                  <p className="text-sm text-orange-700 mt-1">Medicare Providers</p>
-                  <p className="text-xs text-orange-600 mt-1">Active provider count</p>
+                  <p className="text-sm text-civiq-red mt-1">Medicare Providers</p>
+                  <p className="text-xs text-civiq-red mt-1">Active provider count</p>
                 </div>
               )}
 
@@ -281,16 +281,16 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
       {/* Public Health */}
       <div className="mb-6">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <CheckIcon className="w-5 h-5 mr-2 text-green-600" />
+          <CheckIcon className="w-5 h-5 mr-2 text-civiq-green" />
           Public Health & Prevention
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-green-50 border-aicher border-green-600 p-grid-3">
-            <div className="text-2xl font-bold text-green-900">
+          <div className="bg-civiq-green/10 border-aicher border-civiq-green p-grid-3">
+            <div className="text-2xl font-bold text-civiq-green">
               {services.publicHealth.preventableDiseaseRate.toFixed(0)}
             </div>
-            <p className="text-sm text-green-700 mt-1">Preventable Disease Rate</p>
-            <p className="text-xs text-green-600 mt-1">Per 100,000 population</p>
+            <p className="text-sm text-civiq-green mt-1">Preventable Disease Rate</p>
+            <p className="text-xs text-civiq-green mt-1">Per 100,000 population</p>
           </div>
 
           <div className="bg-teal-50 border-aicher border-teal-600 p-grid-3">
@@ -332,7 +332,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
               href={data.metadata.dataSources.education}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-civiq-blue hover:text-civiq-blue"
             >
               Department of Education
             </a>
@@ -343,14 +343,14 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
               href={data.metadata.dataSources.cdc}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-civiq-blue hover:text-civiq-blue"
             >
               Centers for Disease Control
             </a>
           </div>
           <div>
             <strong>Healthcare:</strong>{' '}
-            <span className="text-red-600">{data.metadata.dataSources.healthcare}</span>
+            <span className="text-civiq-red">{data.metadata.dataSources.healthcare}</span>
           </div>
         </div>
 

@@ -223,13 +223,13 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load voting records</div>
+        <div className="text-civiq-red mb-2">Failed to load voting records</div>
         <div className="text-sm text-gray-500 mb-4">
           Voting data may not be available for all state legislators.
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
         >
           Retry Loading
         </button>
@@ -315,12 +315,12 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
         <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
         >
           <Filter className="h-4 w-4" />
           Filters
           {(positionFilter !== 'all' || dateFilter.start || dateFilter.end) && (
-            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 ">
+            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-civiq-blue ">
               {
                 [positionFilter !== 'all', dateFilter.start || dateFilter.end].filter(Boolean)
                   .length
@@ -343,7 +343,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
               <select
                 value={positionFilter}
                 onChange={e => handlePositionFilterChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
               >
                 <option value="all">All Positions</option>
                 <option value="yes">Yes</option>
@@ -363,14 +363,14 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                   type="date"
                   value={dateFilter.start}
                   onChange={e => handleDateFilterChange('start', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent text-sm"
                   placeholder="Start date"
                 />
                 <input
                   type="date"
                   value={dateFilter.end}
                   onChange={e => handleDateFilterChange('end', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent text-sm"
                   placeholder="End date"
                 />
               </div>
@@ -382,7 +382,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
             <div className="mt-4 pt-4 border-t border-gray-200">
               <button
                 onClick={handleClearFilters}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
               >
                 <X className="h-4 w-4" />
                 Clear All Filters
@@ -399,11 +399,11 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
           <div className="text-sm text-gray-500">Total Votes</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-green-600">{yesVotes}</div>
+          <div className="text-3xl font-bold text-civiq-green">{yesVotes}</div>
           <div className="text-sm text-gray-500">Yes</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-red-600">{noVotes}</div>
+          <div className="text-3xl font-bold text-civiq-red">{noVotes}</div>
           <div className="text-sm text-gray-500">No</div>
         </div>
         <div className="text-center">
@@ -422,14 +422,14 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
         <div className="flex items-center gap-3">
           <span className="w-20 text-sm">Yes</span>
           <div className="flex-1 bg-gray-200 h-6">
-            <div className="bg-green-500 h-6" style={{ width: `${yesPercent}%` }}></div>
+            <div className="bg-civiq-green h-6" style={{ width: `${yesPercent}%` }}></div>
           </div>
           <span className="text-sm w-12 text-right">{yesPercent}%</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="w-20 text-sm">No</span>
           <div className="flex-1 bg-gray-200 h-6">
-            <div className="bg-red-500 h-6" style={{ width: `${noPercent}%` }}></div>
+            <div className="bg-civiq-red h-6" style={{ width: `${noPercent}%` }}></div>
           </div>
           <span className="text-sm w-12 text-right">{noPercent}%</span>
         </div>
@@ -437,7 +437,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
           <div className="flex items-center gap-3">
             <span className="w-20 text-sm">Abstain</span>
             <div className="flex-1 bg-gray-200 h-6">
-              <div className="bg-yellow-500 h-6" style={{ width: `${abstainPercent}%` }}></div>
+              <div className="bg-gray-500 h-6" style={{ width: `${abstainPercent}%` }}></div>
             </div>
             <span className="text-sm w-12 text-right">{abstainPercent}%</span>
           </div>
@@ -451,8 +451,8 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
       ) : (
         <div className="relative">
           {filteredVotes.length !== (data?.votes?.length || 0) && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className="mb-4 p-3 bg-civiq-blue/10 border border-civiq-blue">
+              <p className="text-sm text-civiq-blue">
                 Showing {filteredVotes.length} of {data?.votes?.length || 0} votes
                 {filteredVotes.length === 0 && ' (try adjusting filters)'}
               </p>
@@ -483,7 +483,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                 {paginationData.paginatedVotes.map((vote, index) => (
                   <tr
                     key={`${vote.vote_id}-${index}`}
-                    className={`border-b border-gray-200 hover:bg-blue-50 transition-colors ${
+                    className={`border-b border-gray-200 hover:bg-civiq-blue/10 transition-colors ${
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                     }`}
                   >
@@ -504,7 +504,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                         vote.bill_id ? (
                           <Link
                             href={`/state-bills/${state}/${encodeBase64Url(vote.bill_id)}`}
-                            className="text-blue-600 hover:underline font-medium text-sm"
+                            className="text-civiq-blue hover:underline font-medium text-sm"
                           >
                             {vote.bill_identifier}
                           </Link>
@@ -528,8 +528,8 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                       <span
                         className={`text-sm font-medium whitespace-nowrap ${
                           vote.result === 'pass' || vote.result === 'passed'
-                            ? 'text-green-700'
-                            : 'text-red-700'
+                            ? 'text-civiq-green'
+                            : 'text-civiq-red'
                         }`}
                       >
                         {vote.result === 'pass' || vote.result === 'passed' ? 'Passed' : 'Failed'}
@@ -541,9 +541,9 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                       <span
                         className={`inline-block px-3 py-1  text-xs font-semibold ${
                           vote.option === 'yes'
-                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            ? 'bg-civiq-green/10 text-civiq-green border border-civiq-green'
                             : vote.option === 'no'
-                              ? 'bg-red-100 text-red-800 border border-red-200'
+                              ? 'bg-civiq-red/10 text-civiq-red border border-civiq-red'
                               : 'bg-gray-100 text-gray-700 border border-gray-200'
                         }`}
                       >
@@ -567,7 +567,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
               <select
                 value={votesPerPage}
                 onChange={e => handleVotesPerPageChange(Number(e.target.value))}
-                className="px-2 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -586,7 +586,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -598,9 +598,9 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                   <button
                     key={page}
                     onClick={() => handlePageClick(page)}
-                    className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 ${
                       page === currentPage
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-civiq-blue text-white'
                         : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
                     }`}
                   >
@@ -613,7 +613,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                     <>
                       <button
                         onClick={() => handlePageClick(1)}
-                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                       >
                         1
                       </button>
@@ -627,9 +627,9 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                       <button
                         key={page}
                         onClick={() => handlePageClick(page)}
-                        className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 ${
                           page === currentPage
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-civiq-blue text-white'
                             : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -642,7 +642,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                       <span className="px-2 text-gray-500">...</span>
                       <button
                         onClick={() => handlePageClick(paginationData.totalPages)}
-                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                       >
                         {paginationData.totalPages}
                       </button>
@@ -655,7 +655,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
             <button
               onClick={handleNextPage}
               disabled={currentPage === paginationData.totalPages}
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
               <ChevronRight className="h-4 w-4" />

@@ -49,7 +49,7 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
 
       {/* Full-width Need Help Section */}
       <div
-        className="bg-blue-50 aicher-border border-civiq-blue"
+        className="bg-civiq-blue/10 aicher-border border-civiq-blue"
         style={{ padding: 'calc(var(--grid) * 3)', marginTop: 'calc(var(--grid) * 2)' }}
       >
         <div className="flex items-start gap-3">

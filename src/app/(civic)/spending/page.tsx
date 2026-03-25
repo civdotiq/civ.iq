@@ -69,7 +69,7 @@ function SpendingPageContent() {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -107,8 +107,8 @@ function SpendingPageContent() {
 
         {/* Error */}
         {error && !loading && (
-          <div className="border-l-4 border-[#e11d07] bg-red-50 dark:bg-red-900/20 p-4 mb-8">
-            <p className="text-[#e11d07] dark:text-red-400 font-semibold">Error</p>
+          <div className="border-l-4 border-[#e11d07] bg-civiq-red/10 dark:bg-civiq-red/20 p-4 mb-8">
+            <p className="text-[#e11d07] dark:text-civiq-red font-semibold">Error</p>
             <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{error}</p>
           </div>
         )}

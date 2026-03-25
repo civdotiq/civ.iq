@@ -100,7 +100,7 @@ export function HeroSummary({
     }
     if (status === 'high' || status === 'low') {
       return (
-        <span className="bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+        <span className="bg-civiq-blue/10 px-2 py-1 text-xs font-medium text-civiq-blue">
           {totalRaisedComparison.percentDifference > 0 ? 'Above' : 'Below'} Average
         </span>
       );

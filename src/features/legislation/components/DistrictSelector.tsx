@@ -85,7 +85,9 @@ export function DistrictSelector({
 
   if (currentDistrict && !isEditing) {
     return (
-      <div className={`flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 ${className}`}>
+      <div
+        className={`flex items-center gap-3 p-3 bg-civiq-blue/10 border border-civiq-blue ${className}`}
+      >
         <MapPin className="h-4 w-4 text-civiq-blue flex-shrink-0" />
         <span className="text-sm text-gray-700">
           Showing impact for{' '}
@@ -93,7 +95,7 @@ export function DistrictSelector({
         </span>
         <button
           onClick={() => setIsEditing(true)}
-          className="text-sm text-civiq-blue hover:text-blue-800 font-medium"
+          className="text-sm text-civiq-blue hover:text-civiq-blue font-medium"
         >
           Change
         </button>
@@ -137,7 +139,7 @@ export function DistrictSelector({
           />
           <button
             type="submit"
-            className="px-3 py-1 bg-civiq-blue text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="px-3 py-1 bg-civiq-blue text-white text-sm font-medium hover:bg-civiq-blue transition-colors"
           >
             Go
           </button>
@@ -151,7 +153,7 @@ export function DistrictSelector({
             </button>
           )}
         </form>
-        {inputError && <p className="text-xs text-red-600 mt-1">{inputError}</p>}
+        {inputError && <p className="text-xs text-civiq-red mt-1">{inputError}</p>}
       </div>
     );
   }

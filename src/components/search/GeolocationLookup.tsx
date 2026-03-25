@@ -101,11 +101,11 @@ export function GeolocationLookup({
   };
 
   return (
-    <div className="bg-white border-2 border-blue-200 p-4 sm:p-6 mx-auto max-w-md animate-fade-in-up">
+    <div className="bg-white border-2 border-civiq-blue p-4 sm:p-6 mx-auto max-w-md animate-fade-in-up">
       {/* Header */}
       <div className="text-center mb-4 sm:mb-6">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-          <Navigation className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-civiq-blue/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <Navigation className="w-6 h-6 sm:w-8 sm:h-8 text-civiq-blue" />
         </div>
         <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
           Find Your Exact Location
@@ -118,14 +118,14 @@ export function GeolocationLookup({
 
       {/* Status Display */}
       {isLocating && (
-        <div className="bg-blue-50 border border-blue-200 p-3 sm:p-4 mb-3 sm:mb-4">
+        <div className="bg-civiq-blue/10 border border-civiq-blue p-3 sm:p-4 mb-3 sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 animate-spin flex-shrink-0" />
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-civiq-blue animate-spin flex-shrink-0" />
             <div>
-              <div className="font-medium text-blue-900 text-sm sm:text-base">
+              <div className="font-medium text-civiq-blue text-sm sm:text-base">
                 Getting your location...
               </div>
-              <div className="text-xs sm:text-sm text-blue-700">
+              <div className="text-xs sm:text-sm text-civiq-blue">
                 This may take a few seconds. Please allow location access when prompted.
               </div>
             </div>
@@ -134,12 +134,12 @@ export function GeolocationLookup({
       )}
 
       {locationError && (
-        <div className="bg-red-50 border border-red-200 p-3 sm:p-4 mb-3 sm:mb-4">
+        <div className="bg-civiq-red/10 border border-civiq-red p-3 sm:p-4 mb-3 sm:mb-4">
           <div className="flex items-start gap-2 sm:gap-3">
-            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-civiq-red flex-shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-red-900 text-sm sm:text-base">Location Error</div>
-              <div className="text-xs sm:text-sm text-red-700 mt-1">{locationError}</div>
+              <div className="font-medium text-civiq-red text-sm sm:text-base">Location Error</div>
+              <div className="text-xs sm:text-sm text-civiq-red mt-1">{locationError}</div>
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function GeolocationLookup({
           <button
             onClick={handleLocationRequest}
             disabled={isLocating}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm sm:text-base"
+            className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-civiq-blue text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-civiq-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm sm:text-base"
           >
             {isLocating ? (
               <>
@@ -172,7 +172,7 @@ export function GeolocationLookup({
         {hasRequested && !isLocating && locationError && (
           <button
             onClick={handleLocationRequest}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-blue-700 transition-all duration-200 font-medium text-sm sm:text-base"
+            className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-civiq-blue text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-civiq-blue transition-all duration-200 font-medium text-sm sm:text-base"
           >
             <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
             Try Again
@@ -190,7 +190,7 @@ export function GeolocationLookup({
       {/* Privacy Note */}
       <div className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-gray-500 bg-gray-50 p-2.5 sm:p-3">
         <div className="flex items-start gap-1.5 sm:gap-2">
-          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 flex-shrink-0 mt-0.5" />
+          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-civiq-green flex-shrink-0 mt-0.5" />
           <div>
             <strong>Privacy:</strong> Your location is only used to find your representatives and is
             not stored or shared. Location data stays on your device.

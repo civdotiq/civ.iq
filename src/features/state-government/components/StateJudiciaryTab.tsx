@@ -115,17 +115,17 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
           </div>
 
           {/* Term Length */}
-          <div className="bg-blue-50 border-2 border-blue-300 p-4 text-center">
-            <div className="text-3xl font-bold text-blue-600">
+          <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
+            <div className="text-3xl font-bold text-civiq-blue">
               {courtSystem.supremeCourt.termLength}
             </div>
-            <div className="text-sm text-blue-700 mt-1">Years per Term</div>
+            <div className="text-sm text-civiq-blue mt-1">Years per Term</div>
           </div>
 
           {/* Selection Method */}
-          <div className="bg-green-50 border-2 border-green-300 p-4">
+          <div className="bg-civiq-green/10 border-2 border-civiq-green p-4">
             <div className="text-sm text-gray-700 font-medium mb-1">Selection Method</div>
-            <div className="text-sm text-green-800 font-semibold">
+            <div className="text-sm text-civiq-green font-semibold">
               {formatSelectionMethod(courtSystem.supremeCourt.selectionMethod)}
             </div>
           </div>
@@ -133,12 +133,12 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
       </div>
 
       {/* Data Source Notice */}
-      <div className="bg-blue-50 border-2 border-blue-300 p-4 mb-6">
+      <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 mb-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-civiq-blue flex-shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="text-blue-900 font-medium mb-1">Data Source</p>
-            <p className="text-blue-800">
+            <p className="text-civiq-blue font-medium mb-1">Data Source</p>
+            <p className="text-civiq-blue">
               Judiciary information is sourced from Wikidata and may not be complete for all states.
               Last updated: {new Date(courtSystem.lastUpdated).toLocaleDateString()}.
             </p>

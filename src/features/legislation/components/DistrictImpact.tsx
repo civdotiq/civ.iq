@@ -34,9 +34,9 @@ interface DistrictImpactProps {
 }
 
 const IMPACT_COLORS: Record<string, string> = {
-  High: 'text-red-700 bg-red-50 border-red-200',
-  Medium: 'text-yellow-700 bg-yellow-50 border-yellow-200',
-  Low: 'text-green-700 bg-green-50 border-green-200',
+  High: 'text-civiq-red bg-civiq-red/10 border-civiq-red',
+  Medium: 'text-gray-600 bg-gray-100 border-gray-300',
+  Low: 'text-civiq-green bg-civiq-green/10 border-civiq-green',
   Uncertain: 'text-gray-700 bg-gray-50 border-gray-200',
 };
 
@@ -44,9 +44,9 @@ export function DistrictImpactDisplay({ impact, className = '' }: DistrictImpact
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    if (confidence >= 0.8) return 'text-civiq-green';
+    if (confidence >= 0.6) return 'text-gray-600';
+    return 'text-civiq-red';
   };
 
   const formatDistrictLabel = (districtId: string) => {
@@ -212,8 +212,8 @@ export function DistrictImpactError({ error, onRetry, className = '' }: District
     <div className={`bg-white border-2 border-black ${className}`}>
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <span className="text-sm font-medium text-red-600">District Impact Unavailable</span>
+          <AlertCircle className="h-5 w-5 text-civiq-red" />
+          <span className="text-sm font-medium text-civiq-red">District Impact Unavailable</span>
         </div>
         <p className="text-gray-700 mb-4">
           {error || 'Unable to generate district impact analysis at this time.'}
@@ -221,7 +221,7 @@ export function DistrictImpactError({ error, onRetry, className = '' }: District
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-3 py-2 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            className="px-3 py-2 bg-civiq-red text-white text-sm font-medium hover:bg-civiq-red transition-colors"
           >
             Try Again
           </button>

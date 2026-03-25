@@ -38,10 +38,10 @@ const fetcher = async (url: string) => {
 
 const statusStyles: Record<string, string> = {
   introduced: 'bg-gray-100 text-gray-700',
-  committee: 'bg-yellow-100 text-yellow-800',
-  floor: 'bg-blue-100 text-blue-800',
-  passed: 'bg-green-100 text-green-800',
-  enacted: 'bg-green-200 text-green-900',
+  committee: 'bg-gray-100 text-gray-600',
+  floor: 'bg-civiq-blue/10 text-civiq-blue',
+  passed: 'bg-civiq-green/10 text-civiq-green',
+  enacted: 'bg-civiq-green/10 text-civiq-green',
 };
 
 function RelevanceIndicator({ score }: { score: number }) {
@@ -93,7 +93,7 @@ export function DistrictRelevantBills({ districtId }: DistrictRelevantBillsProps
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading relevant legislation"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -131,7 +131,7 @@ export function DistrictRelevantBills({ districtId }: DistrictRelevantBillsProps
             href={`/bill/${bill.id}`}
             role="listitem"
             aria-label={`${bill.type.toUpperCase()}. ${bill.number}: ${bill.title}`}
-            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">

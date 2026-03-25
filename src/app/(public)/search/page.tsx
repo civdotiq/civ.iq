@@ -27,8 +27,8 @@ export default function SearchPage() {
 
         {/* Search Tips */}
         <div className="aicher-card aicher-status-info mt-12 p-6">
-          <h3 className="aicher-heading text-lg text-blue-900 mb-4">Search Tips</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+          <h3 className="aicher-heading text-lg text-civiq-blue mb-4">Search Tips</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-civiq-blue">
             <div>
               <h4 className="font-medium mb-2">Quick Searches:</h4>
               <ul className="space-y-1">

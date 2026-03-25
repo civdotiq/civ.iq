@@ -166,7 +166,7 @@ export default function StatesHubPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -233,11 +233,11 @@ export default function StatesHubPage() {
               <Link
                 key={state.code}
                 href={`/state-legislature/${state.code.toLowerCase()}`}
-                className="block p-3 bg-white border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 text-center transition-colors"
+                className="block p-3 bg-white border-2 border-gray-200 hover:border-civiq-green hover:bg-civiq-green/10 text-center transition-colors"
               >
                 <span className="text-lg font-bold text-gray-800">{state.code}</span>
                 <span className="block text-xs text-gray-500 truncate">{state.name}</span>
-                <span className="block text-xs text-green-600">Legislature →</span>
+                <span className="block text-xs text-civiq-green">Legislature →</span>
               </Link>
             ))}
           </div>
@@ -260,7 +260,7 @@ export default function StatesHubPage() {
                     <Link
                       key={state.code}
                       href={`/state-legislature/${state.code.toLowerCase()}`}
-                      className="text-blue-600 hover:underline text-sm"
+                      className="text-civiq-blue hover:underline text-sm"
                     >
                       {state.name}
                     </Link>

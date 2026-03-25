@@ -84,12 +84,10 @@ export default function CommitteeBiographicalInfo({
 
   if (error) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 p-4 ${className}`}>
+      <div className={`bg-gray-100 border border-gray-300 p-4 ${className}`}>
         <div className="flex items-center">
-          <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
-          <p className="text-sm text-yellow-700">
-            Unable to load biographical information: {error}
-          </p>
+          <AlertCircle className="w-4 h-4 text-gray-600 mr-2" />
+          <p className="text-sm text-gray-600">Unable to load biographical information: {error}</p>
         </div>
       </div>
     );
@@ -105,31 +103,31 @@ export default function CommitteeBiographicalInfo({
   }
 
   return (
-    <div className={`bg-blue-50 border border-blue-200 overflow-hidden ${className}`}>
+    <div className={`bg-civiq-blue/10 border border-civiq-blue overflow-hidden ${className}`}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 text-left hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+        className="w-full p-4 text-left hover:bg-civiq-blue/10 transition-colors focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-inset"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Globe className="w-5 h-5 text-blue-600 mr-3" />
+            <Globe className="w-5 h-5 text-civiq-blue mr-3" />
             <div>
-              <h3 className="text-lg font-medium text-blue-900">Committee Background</h3>
-              <p className="text-sm text-blue-700">
+              <h3 className="text-lg font-medium text-civiq-blue">Committee Background</h3>
+              <p className="text-sm text-civiq-blue">
                 Historical context and jurisdictional information
               </p>
             </div>
           </div>
           {expanded ? (
-            <ChevronUp className="w-5 h-5 text-blue-600" />
+            <ChevronUp className="w-5 h-5 text-civiq-blue" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-blue-600" />
+            <ChevronDown className="w-5 h-5 text-civiq-blue" />
           )}
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-blue-200 bg-white">
+        <div className="border-t border-civiq-blue bg-white">
           <div className="p-6 space-y-6">
             {/* Wikipedia Extract */}
             {data.wikipedia?.extract && (
@@ -144,7 +142,7 @@ export default function CommitteeBiographicalInfo({
                       href={data.wikipedia.pageurl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      className="inline-flex items-center text-sm text-civiq-blue hover:text-civiq-blue"
                     >
                       View on Wikipedia
                       <ExternalLink className="w-3 h-3 ml-1" />
@@ -249,7 +247,7 @@ export default function CommitteeBiographicalInfo({
                             href={agency.wikipediaUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-civiq-blue hover:text-civiq-blue"
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
@@ -275,7 +273,7 @@ export default function CommitteeBiographicalInfo({
                           href={entity.wikipediaUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-xs hover:bg-blue-200"
+                          className="inline-flex items-center px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-xs hover:bg-civiq-blue/10"
                         >
                           {entity.name}
                           <ExternalLink className="w-3 h-3 ml-1" />

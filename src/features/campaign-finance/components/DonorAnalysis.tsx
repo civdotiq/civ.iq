@@ -40,15 +40,15 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 70) return 'text-green-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 70) return 'text-civiq-green';
+    if (score >= 40) return 'text-gray-600';
+    return 'text-civiq-red';
   };
 
   const getScoreBackground = (score: number): string => {
-    if (score >= 70) return 'bg-green-100';
-    if (score >= 40) return 'bg-yellow-100';
-    return 'bg-red-100';
+    if (score >= 70) return 'bg-civiq-green/10';
+    if (score >= 40) return 'bg-gray-100';
+    return 'bg-civiq-red/10';
   };
 
   const renderSizeView = () => {
@@ -72,9 +72,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
         {/* Small vs Large Donors */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 p-4 border border-green-200">
+          <div className="bg-civiq-green/10 p-4 border border-civiq-green">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg"></span>
+              <span className="text-civiq-green text-lg"></span>
               <h4 className="font-semibold text-gray-900">Small Donors</h4>
             </div>
             <div className="space-y-2">
@@ -105,9 +105,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-red-50 p-4 border border-red-200">
+          <div className="bg-civiq-red/10 p-4 border border-civiq-red">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-red-600 text-lg"></span>
+              <span className="text-civiq-red text-lg"></span>
               <h4 className="font-semibold text-gray-900">Large Donors</h4>
             </div>
             <div className="space-y-2">
@@ -161,7 +161,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
                   <div
-                    className="bg-green-500 h-2"
+                    className="bg-civiq-green h-2"
                     style={{ width: `${data.breakdown.smallDonors.percent}%` }}
                   />
                 </div>
@@ -175,7 +175,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
                   <div
-                    className="bg-red-500 h-2"
+                    className="bg-civiq-red h-2"
                     style={{ width: `${data.breakdown.largeDonors.percent}%` }}
                   />
                 </div>
@@ -210,9 +210,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
         {/* In-State vs Out-of-State */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-50 p-4 border border-blue-200">
+          <div className="bg-civiq-blue/10 p-4 border border-civiq-blue">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg"></span>
+              <span className="text-civiq-blue text-lg"></span>
               <h4 className="font-semibold text-gray-900">In-State</h4>
             </div>
             <div className="space-y-2">
@@ -231,9 +231,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 border border-purple-200">
+          <div className="bg-civiq-blue/10 p-4 border border-civiq-blue">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-purple-600 text-lg"></span>
+              <span className="text-civiq-blue text-lg"></span>
               <h4 className="font-semibold text-gray-900">Out-of-State</h4>
             </div>
             <div className="space-y-2">
@@ -265,7 +265,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-24 bg-gray-200 h-2">
-                    <div className="bg-blue-500 h-2" style={{ width: `${state.percent}%` }} />
+                    <div className="bg-civiq-blue h-2" style={{ width: `${state.percent}%` }} />
                   </div>
                   <span className="text-sm font-medium w-16 text-right">
                     {formatCurrency(state.amount)}
@@ -289,9 +289,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
       <div className="space-y-6">
         {/* Contribution Type Breakdown */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 p-4 border border-green-200">
+          <div className="bg-civiq-green/10 p-4 border border-civiq-green">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg"></span>
+              <span className="text-civiq-green text-lg"></span>
               <h4 className="font-semibold text-gray-900">Individual</h4>
             </div>
             <div className="space-y-2">
@@ -306,9 +306,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-orange-50 p-4 border border-orange-200">
+          <div className="bg-civiq-red/10 p-4 border border-civiq-red">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-orange-600 text-lg"></span>
+              <span className="text-civiq-red text-lg"></span>
               <h4 className="font-semibold text-gray-900">PACs</h4>
             </div>
             <div className="space-y-2">
@@ -323,9 +323,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 border border-blue-200">
+          <div className="bg-civiq-blue/10 p-4 border border-civiq-blue">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg"></span>
+              <span className="text-civiq-blue text-lg"></span>
               <h4 className="font-semibold text-gray-900">Party</h4>
             </div>
             <div className="space-y-2">
@@ -340,9 +340,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 border border-purple-200">
+          <div className="bg-civiq-blue/10 p-4 border border-civiq-blue">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-purple-600 text-lg"></span>
+              <span className="text-civiq-blue text-lg"></span>
               <h4 className="font-semibold text-gray-900">Self-Funded</h4>
             </div>
             <div className="space-y-2">
@@ -366,7 +366,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <span className="text-sm text-gray-600">Individual Contributions</span>
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
-                  <div className="bg-green-500 h-2" style={{ width: `${individual.percent}%` }} />
+                  <div className="bg-civiq-green h-2" style={{ width: `${individual.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(individual.percent)}
@@ -377,7 +377,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <span className="text-sm text-gray-600">PAC Contributions</span>
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
-                  <div className="bg-orange-500 h-2" style={{ width: `${pac.percent}%` }} />
+                  <div className="bg-civiq-red h-2" style={{ width: `${pac.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(pac.percent)}
@@ -388,7 +388,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <span className="text-sm text-gray-600">Party Contributions</span>
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
-                  <div className="bg-blue-500 h-2" style={{ width: `${party.percent}%` }} />
+                  <div className="bg-civiq-blue h-2" style={{ width: `${party.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(party.percent)}
@@ -399,7 +399,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
               <span className="text-sm text-gray-600">Self-Funded</span>
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 h-2">
-                  <div className="bg-purple-500 h-2" style={{ width: `${candidate.percent}%` }} />
+                  <div className="bg-civiq-blue h-2" style={{ width: `${candidate.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(candidate.percent)}

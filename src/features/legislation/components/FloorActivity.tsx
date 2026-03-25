@@ -96,7 +96,7 @@ export function FloorActivity() {
   if (error || !data) {
     return (
       <div className="border-2 border-black p-6">
-        <div className="flex items-center gap-2 text-red-600">
+        <div className="flex items-center gap-2 text-civiq-red">
           <AlertCircle className="w-5 h-5" />
           <span>Unable to load floor schedule</span>
         </div>
@@ -121,7 +121,7 @@ export function FloorActivity() {
               href={data.liveStreams.house}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-red text-white text-xs font-bold hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-red text-white text-xs font-bold hover:bg-civiq-red transition-colors"
             >
               <Play className="w-3 h-3" />
               HOUSE LIVE
@@ -130,7 +130,7 @@ export function FloorActivity() {
               href={data.liveStreams.senate}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-blue text-white text-xs font-bold hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-blue text-white text-xs font-bold hover:bg-civiq-blue transition-colors"
             >
               <Play className="w-3 h-3" />
               SENATE LIVE
@@ -155,7 +155,7 @@ export function FloorActivity() {
             activeTab === 'senate' ? 'bg-gray-100 border-b-4 border-civiq-blue' : 'hover:bg-gray-50'
           }`}
         >
-          SENATE {senateIsLive && <span className="ml-1 text-green-600">● LIVE</span>}
+          SENATE {senateIsLive && <span className="ml-1 text-civiq-green">● LIVE</span>}
         </button>
       </div>
 
@@ -186,9 +186,9 @@ export function FloorActivity() {
                           <span
                             className={`text-xs px-2 py-0.5 ${
                               item.category === 'suspension'
-                                ? 'bg-yellow-100 text-yellow-800'
+                                ? 'bg-gray-100 text-gray-600'
                                 : item.category === 'rule'
-                                  ? 'bg-purple-100 text-purple-800'
+                                  ? 'bg-civiq-blue/10 text-civiq-blue'
                                   : 'bg-gray-100 text-gray-800'
                             }`}
                           >
@@ -236,8 +236,8 @@ export function FloorActivity() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   {data.senate.session.isLive && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-bold">
-                      <span className="w-2 h-2 bg-green-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-civiq-green/10 text-civiq-green text-xs font-bold">
+                      <span className="w-2 h-2 bg-civiq-green animate-pulse" />
                       IN SESSION
                     </span>
                   )}
@@ -255,7 +255,7 @@ export function FloorActivity() {
                     href={data.senate.session.streamUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-civiq-blue text-white font-bold hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-civiq-blue text-white font-bold hover:bg-civiq-blue transition-colors"
                   >
                     <Play className="w-4 h-4" />
                     Watch Live Stream

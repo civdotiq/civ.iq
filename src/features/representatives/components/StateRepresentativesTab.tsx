@@ -185,9 +185,9 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 p-6 text-center">
-        <p className="text-red-800 font-medium">Error</p>
-        <p className="text-red-600 mt-1">{error}</p>
+      <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
+        <p className="text-civiq-red font-medium">Error</p>
+        <p className="text-civiq-red mt-1">{error}</p>
       </div>
     );
   }
@@ -196,21 +196,21 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
     // Check if this is due to a service error (e.g., rate limiting)
     if (stateData?.error || stateData?.errorCode === 'OPENSTATES_UNAVAILABLE') {
       return (
-        <div className="bg-yellow-50 border border-yellow-200 p-6 text-center">
-          <p className="text-yellow-800 font-medium">
+        <div className="bg-gray-100 border border-gray-300 p-6 text-center">
+          <p className="text-gray-600 font-medium">
             State Legislature Data Temporarily Unavailable
           </p>
-          <p className="text-yellow-700 mt-2">
+          <p className="text-gray-600 mt-2">
             {stateData.error ||
               'We are currently unable to load state legislator information. This is usually temporary.'}
           </p>
-          <p className="text-yellow-600 mt-4 text-sm">
+          <p className="text-gray-600 mt-4 text-sm">
             Please try again in a few minutes, or visit{' '}
             <a
               href="https://openstates.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
+              className="text-civiq-blue hover:underline"
             >
               OpenStates.org
             </a>{' '}

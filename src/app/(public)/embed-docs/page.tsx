@@ -134,11 +134,11 @@ export default function EmbedDocsPage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/developers" className="hover:text-blue-600">
+          <Link href="/developers" className="hover:text-civiq-blue">
             Developers
           </Link>
           <span className="mx-2">&rsaquo;</span>

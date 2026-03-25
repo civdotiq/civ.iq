@@ -59,11 +59,11 @@ export default function MultiDistrictIndicator({
   const getConfidenceColor = (confidence: 'high' | 'medium' | 'low' = 'high'): string => {
     switch (confidence) {
       case 'high':
-        return 'text-green-600 bg-green-50';
+        return 'text-civiq-green bg-civiq-green/10';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-50';
+        return 'text-gray-600 bg-gray-100';
       case 'low':
-        return 'text-red-600 bg-red-50';
+        return 'text-civiq-red bg-civiq-red/10';
       default:
         return 'text-gray-600 bg-white';
     }
@@ -94,12 +94,12 @@ export default function MultiDistrictIndicator({
 
   if (districts.length === 0) {
     return (
-      <div className="bg-red-50 border border-red-200 p-4 mb-4">
-        <div className="flex items-center gap-2 text-red-700">
+      <div className="bg-civiq-red/10 border border-civiq-red p-4 mb-4">
+        <div className="flex items-center gap-2 text-civiq-red">
           <AlertTriangle className="w-5 h-5" />
           <span className="font-semibold">ZIP Code Not Found</span>
         </div>
-        <p className="text-red-600 mt-2">
+        <p className="text-civiq-red mt-2">
           ZIP code {zipCode} could not be mapped to a congressional district.
         </p>
       </div>
@@ -111,10 +111,10 @@ export default function MultiDistrictIndicator({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-blue-600" />
+          <MapPin className="w-5 h-5 text-civiq-blue" />
           <span className="font-semibold text-gray-900">ZIP Code {zipCode}</span>
           {isMultiDistrict && (
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium">
+            <span className="px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium">
               Multi-District
             </span>
           )}
@@ -123,7 +123,7 @@ export default function MultiDistrictIndicator({
         {isMultiDistrict && (
           <button
             onClick={() => setShowExplanation(!showExplanation)}
-            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+            className="flex items-center gap-1 text-civiq-blue hover:text-civiq-blue text-sm"
           >
             <Info className="w-4 h-4" />
             <span>Why multiple districts?</span>
@@ -134,19 +134,19 @@ export default function MultiDistrictIndicator({
       {/* Primary District */}
       <div className="mb-3">
         <div className="flex items-center gap-2 mb-2">
-          <Users className="w-4 h-4 text-green-600" />
+          <Users className="w-4 h-4 text-civiq-green" />
           <span className="font-medium text-gray-900">
             {isMultiDistrict ? 'Primary District' : 'Congressional District'}
           </span>
         </div>
 
-        <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200">
+        <div className="flex items-center gap-3 p-3 bg-civiq-green/10 border border-civiq-green">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-green-800">
+              <span className="font-semibold text-civiq-green">
                 {getDistrictDisplay(primaryDistrict || districts[0]!)}
               </span>
-              {primaryDistrict?.primary && <CheckCircle className="w-4 h-4 text-green-600" />}
+              {primaryDistrict?.primary && <CheckCircle className="w-4 h-4 text-civiq-green" />}
               <span
                 className={`px-2 py-1 text-xs font-medium ${getConfidenceColor(primaryDistrict?.confidence)}`}
               >
@@ -154,14 +154,14 @@ export default function MultiDistrictIndicator({
               </span>
             </div>
 
-            <div className="text-sm text-green-700 mt-1">
+            <div className="text-sm text-civiq-green mt-1">
               {getDistrictType(primaryDistrict || districts[0]!)}
               {(() => {
                 const state = primaryDistrict?.state || (districts[0] && districts[0].state);
                 return (
                   state &&
                   isSpecialTerritory(state) && (
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1">
+                    <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1">
                       {getTerritoryName(state)}
                     </span>
                   )
@@ -175,8 +175,8 @@ export default function MultiDistrictIndicator({
               onClick={() => onDistrictSelect((primaryDistrict || districts[0])!)}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 selectedDistrict?.district === (primaryDistrict || districts[0])?.district
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-green-700 hover:bg-green-100'
+                  ? 'bg-civiq-green text-white'
+                  : 'bg-white text-civiq-green hover:bg-civiq-green/10'
               }`}
             >
               {selectedDistrict?.district === (primaryDistrict || districts[0])?.district
@@ -189,11 +189,11 @@ export default function MultiDistrictIndicator({
 
       {/* Multi-District Explanation */}
       {showExplanation && isMultiDistrict && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200">
-          <h4 className="font-medium text-blue-900 mb-2">
+        <div className="mb-4 p-3 bg-civiq-blue/10 border border-civiq-blue">
+          <h4 className="font-medium text-civiq-blue mb-2">
             Why does this ZIP code span multiple districts?
           </h4>
-          <p className="text-blue-800 text-sm leading-relaxed">
+          <p className="text-civiq-blue text-sm leading-relaxed">
             Some ZIP codes cross congressional district boundaries due to how postal routes are
             designed versus how political districts are drawn. This is common in urban areas and
             large ZIP codes. We show the primary district based on population distribution, but you
@@ -225,7 +225,9 @@ export default function MultiDistrictIndicator({
                 <div
                   key={`${district.state}-${district.district}`}
                   className={`p-3 border ${
-                    district.primary ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
+                    district.primary
+                      ? 'border-civiq-green bg-civiq-green/10'
+                      : 'border-gray-200 bg-white'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -234,7 +236,7 @@ export default function MultiDistrictIndicator({
                         {getDistrictDisplay(district)}
                       </span>
                       {district.primary && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium">
+                        <span className="px-2 py-1 bg-civiq-green/10 text-civiq-green text-xs font-medium">
                           Primary
                         </span>
                       )}
@@ -250,8 +252,8 @@ export default function MultiDistrictIndicator({
                         onClick={() => onDistrictSelect(district)}
                         className={`px-3 py-1 text-sm font-medium transition-colors ${
                           selectedDistrict?.district === district.district
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white text-blue-700 hover:bg-blue-100'
+                            ? 'bg-civiq-blue text-white'
+                            : 'bg-white text-civiq-blue hover:bg-civiq-blue/10'
                         }`}
                       >
                         {selectedDistrict?.district === district.district ? 'Selected' : 'Select'}
@@ -262,7 +264,7 @@ export default function MultiDistrictIndicator({
                   <div className="text-sm text-gray-600 mt-1">
                     {getDistrictType(district)}
                     {isSpecialTerritory(district.state) && (
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1">
+                      <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1">
                         {getTerritoryName(district.state)}
                       </span>
                     )}
@@ -280,10 +282,10 @@ export default function MultiDistrictIndicator({
           {warnings.map((warning, index) => (
             <div
               key={index}
-              className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 mb-2"
+              className="flex items-start gap-2 p-3 bg-gray-100 border border-gray-300 mb-2"
             >
-              <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <p className="text-yellow-800 text-sm">{warning}</p>
+              <AlertTriangle className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+              <p className="text-gray-600 text-sm">{warning}</p>
             </div>
           ))}
         </div>

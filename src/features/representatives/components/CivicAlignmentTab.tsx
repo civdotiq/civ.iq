@@ -57,9 +57,9 @@ function DistrictNeedsSection({ needs }: { needs: CivicAlignmentReport['district
   if (needs.length === 0) return null;
 
   const severityStyles = {
-    high: 'bg-red-100 text-red-800',
-    moderate: 'bg-yellow-100 text-yellow-800',
-    low: 'bg-green-100 text-green-800',
+    high: 'bg-civiq-red/10 text-civiq-red',
+    moderate: 'bg-gray-100 text-gray-600',
+    low: 'bg-civiq-green/10 text-civiq-green',
   };
 
   return (
@@ -103,8 +103,8 @@ function VotingActivitySection({ activity }: { activity: CivicAlignmentReport['v
           >
             <span className="text-sm font-medium text-gray-900 flex-1">{item.category}</span>
             <div className="flex items-center gap-3 text-sm">
-              <span className="text-green-700">{item.yeaVotes} Yea</span>
-              <span className="text-red-700">{item.nayVotes} Nay</span>
+              <span className="text-civiq-green">{item.yeaVotes} Yea</span>
+              <span className="text-civiq-red">{item.nayVotes} Nay</span>
               <span className="text-gray-500">{item.totalVotes} total</span>
             </div>
           </div>
@@ -207,7 +207,7 @@ export function CivicAlignmentTab({ bioguideId }: CivicAlignmentTabProps) {
         </div>
         <button
           onClick={() => mutate()}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
           aria-label="Retry loading civic alignment analysis"
         >
           <RefreshCw className="w-4 h-4" aria-hidden="true" />

@@ -157,11 +157,11 @@ export default function EconomyTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -187,11 +187,11 @@ export default function EconomyTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Economic policy</strong> encompasses some of the most impactful legislation
             Congress considers. From{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               tax policy
             </Link>{' '}
             affecting every American to{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               trade agreements
             </Link>{' '}
             shaping global commerce, economic legislation has far-reaching consequences.
@@ -199,7 +199,7 @@ export default function EconomyTopicPage() {
           <p className="text-gray-700 mb-4">
             The Constitution requires that tax and revenue bills originate in the House of
             Representatives, giving the{' '}
-            <Link href="/committee/HSWM" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSWM" className="text-civiq-blue hover:underline">
               Ways and Means Committee
             </Link>{' '}
             particular importance in economic policy. Understanding committee jurisdiction helps you
@@ -221,11 +221,11 @@ export default function EconomyTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.slice(0, 2).join(', ')}
                   {committee.subcommittees.length > 2 && '...'}
                 </p>
@@ -249,7 +249,7 @@ export default function EconomyTopicPage() {
                   {area.keywords.map(keyword => (
                     <span
                       key={keyword}
-                      className="px-2 py-1 text-xs bg-green-50 text-green-700 border border-green-200"
+                      className="px-2 py-1 text-xs bg-civiq-green/10 text-civiq-green border border-civiq-green"
                     >
                       {keyword}
                     </span>
@@ -291,7 +291,7 @@ export default function EconomyTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

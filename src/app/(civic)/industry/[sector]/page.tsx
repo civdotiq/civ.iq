@@ -48,7 +48,7 @@ const fetcher = async (url: string) => {
 };
 
 const chamberStyles: Record<string, string> = {
-  House: 'bg-blue-100 text-blue-800',
+  House: 'bg-civiq-blue/10 text-civiq-blue',
   Senate: 'bg-gray-200 text-gray-900',
   Joint: 'bg-gray-100 text-gray-700',
 };
@@ -90,7 +90,7 @@ export default function IndustrySectorPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -135,7 +135,7 @@ export default function IndustrySectorPage() {
               </p>
               <button
                 onClick={() => mutate()}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                 aria-label="Retry loading industry connections"
               >
                 <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -183,7 +183,7 @@ export default function IndustrySectorPage() {
                       key={committee.code}
                       href={`/committee/${committee.code}`}
                       role="listitem"
-                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 hover:border-civiq-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 hover:border-civiq-blue hover:bg-civiq-blue/10 dark:hover:bg-civiq-blue/20 transition-all"
                     >
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {committee.name}
@@ -220,7 +220,7 @@ export default function IndustrySectorPage() {
                       href={`/bill/${bill.id}`}
                       role="listitem"
                       aria-label={`${bill.type.toUpperCase()}. ${bill.number}: ${bill.title}`}
-                      className="block p-4 border border-gray-200 dark:border-gray-700 hover:border-civiq-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      className="block p-4 border border-gray-200 dark:border-gray-700 hover:border-civiq-blue hover:bg-civiq-blue/10 dark:hover:bg-civiq-blue/20 transition-all"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">

@@ -122,7 +122,7 @@ function FinanceDetailCard({
         </div>
       )}
 
-      {error && <div className="text-red-600 text-sm">Failed to load data</div>}
+      {error && <div className="text-civiq-red text-sm">Failed to load data</div>}
 
       {data && !isLoading && !error && renderContent(data)}
     </div>
@@ -167,7 +167,7 @@ export function FinanceTab({
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load financial data</div>
+        <div className="text-civiq-red mb-2">Failed to load financial data</div>
         <div className="text-sm text-gray-500">Please try refreshing the page</div>
       </div>
     );
@@ -253,12 +253,12 @@ export function FinanceTab({
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200 hover:border-2 border-black transition-all duration-200">
-          <h3 className="text-lg font-semibold text-green-700 mb-2">Total Raised</h3>
-          <div className="text-3xl font-bold text-green-900 mb-2">
+        <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6 border border-civiq-green hover:border-2 border-black transition-all duration-200">
+          <h3 className="text-lg font-semibold text-civiq-green mb-2">Total Raised</h3>
+          <div className="text-3xl font-bold text-civiq-green mb-2">
             {formatCurrency(data.totalRaised)}
           </div>
-          <div className="text-sm text-green-600 mb-2">Total receipts reported to FEC</div>
+          <div className="text-sm text-civiq-green mb-2">Total receipts reported to FEC</div>
           <a
             href={
               data.fecTransparencyLinks?.contributions ||
@@ -268,18 +268,18 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-3 py-2 min-h-[36px] hover:bg-green-300 transition-colors"
+            className="inline-flex items-center text-xs bg-civiq-green/10 text-civiq-green px-3 py-2 min-h-[36px] hover:bg-civiq-green transition-colors"
           >
             View on FEC.gov →
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200 hover:border-2 border-black transition-all duration-200">
-          <h3 className="text-lg font-semibold text-red-700 mb-2">Total Spent</h3>
-          <div className="text-3xl font-bold text-red-900 mb-2">
+        <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6 border border-civiq-red hover:border-2 border-black transition-all duration-200">
+          <h3 className="text-lg font-semibold text-civiq-red mb-2">Total Spent</h3>
+          <div className="text-3xl font-bold text-civiq-red mb-2">
             {formatCurrency(data.totalSpent)}
           </div>
-          <div className="text-sm text-red-600 mb-2">Total disbursements reported to FEC</div>
+          <div className="text-sm text-civiq-red mb-2">Total disbursements reported to FEC</div>
           <a
             href={
               data.fecTransparencyLinks?.disbursements ||
@@ -289,18 +289,18 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-3 py-2 min-h-[36px] hover:bg-red-300 transition-colors"
+            className="inline-flex items-center text-xs bg-civiq-red/10 text-civiq-red px-3 py-2 min-h-[36px] hover:bg-civiq-red transition-colors"
           >
             View on FEC.gov →
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200 hover:border-2 border-black transition-all duration-200">
-          <h3 className="text-lg font-semibold text-blue-700 mb-2">Cash on Hand</h3>
-          <div className="text-3xl font-bold text-blue-900 mb-2">
+        <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6 border border-civiq-blue hover:border-2 border-black transition-all duration-200">
+          <h3 className="text-lg font-semibold text-civiq-blue mb-2">Cash on Hand</h3>
+          <div className="text-3xl font-bold text-civiq-blue mb-2">
             {formatCurrency(data.cashOnHand)}
           </div>
-          <div className="text-sm text-blue-600 mb-2">
+          <div className="text-sm text-civiq-blue mb-2">
             Available cash at end of reporting period
           </div>
           <a
@@ -312,7 +312,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-3 py-2 min-h-[36px] hover:bg-blue-300 transition-colors"
+            className="inline-flex items-center text-xs bg-civiq-blue/10 text-civiq-blue px-3 py-2 min-h-[36px] hover:bg-civiq-blue transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -330,7 +330,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-800 underline"
+            className="text-xs text-civiq-blue hover:text-civiq-blue underline"
           >
             View on FEC.gov →
           </a>
@@ -429,7 +429,7 @@ export function FinanceTab({
                           href={contributor.fecTransparencyLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs text-civiq-blue hover:text-civiq-blue"
                           title="View on FEC.gov"
                         >
                           FEC↗
@@ -458,7 +458,7 @@ export function FinanceTab({
                     href={contributorData?.metadata?.fecCandidateLink || 'https://www.fec.gov'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm text-civiq-blue hover:text-civiq-blue underline"
                   >
                     View all {contributorData.topContributors.length} contributors on FEC.gov →
                   </a>
@@ -471,14 +471,14 @@ export function FinanceTab({
 
       {/* FEC Transparency Links */}
       {data.fecTransparencyLinks && (
-        <div className="bg-blue-50 p-6 border border-blue-200 mt-8">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">FEC Transparency Links</h3>
+        <div className="bg-civiq-blue/10 p-6 border border-civiq-blue mt-8">
+          <h3 className="text-lg font-semibold text-civiq-blue mb-4">FEC Transparency Links</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
               href={data.fecTransparencyLinks.candidatePage}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline text-sm"
+              className="text-civiq-blue hover:text-civiq-blue underline text-sm"
             >
               View Full FEC Candidate Profile →
             </a>
@@ -486,7 +486,7 @@ export function FinanceTab({
               href={data.fecTransparencyLinks.contributions}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline text-sm"
+              className="text-civiq-blue hover:text-civiq-blue underline text-sm"
             >
               Browse All Individual Contributions →
             </a>
@@ -494,7 +494,7 @@ export function FinanceTab({
               href={data.fecTransparencyLinks.disbursements}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline text-sm"
+              className="text-civiq-blue hover:text-civiq-blue underline text-sm"
             >
               View Campaign Expenditures →
             </a>
@@ -502,7 +502,7 @@ export function FinanceTab({
               href={data.fecTransparencyLinks.financialSummary}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline text-sm"
+              className="text-civiq-blue hover:text-civiq-blue underline text-sm"
             >
               See Financial Summary →
             </a>

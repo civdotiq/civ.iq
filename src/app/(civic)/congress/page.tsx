@@ -160,7 +160,7 @@ export default function CongressHubPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
@@ -184,11 +184,11 @@ export default function CongressHubPage() {
           <p className="text-gray-700 mb-4">
             The <strong>United States Congress</strong> is the bicameral legislature of the federal
             government, consisting of the{' '}
-            <Link href="#senate" className="text-blue-600 hover:underline">
+            <Link href="#senate" className="text-civiq-blue hover:underline">
               Senate
             </Link>{' '}
             and the{' '}
-            <Link href="#house" className="text-blue-600 hover:underline">
+            <Link href="#house" className="text-civiq-blue hover:underline">
               House of Representatives
             </Link>
             . Congress meets in the United States Capitol in Washington, D.C.
@@ -233,15 +233,15 @@ export default function CongressHubPage() {
             state. Senators serve six-year terms. The Senate has exclusive powers including
             confirming presidential appointments and ratifying treaties.
           </p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
-            <p className="text-sm text-blue-800">
+          <div className="bg-civiq-blue/10 border-l-4 border-civiq-blue p-4 mb-4">
+            <p className="text-sm text-civiq-blue">
               <strong>Find your Senators:</strong> Select your state below to view your two U.S.
               Senators and their voting records, committee assignments, and sponsored legislation.
             </p>
           </div>
           <Link
             href="/committees"
-            className="inline-block bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+            className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
           >
             View Senate Committees →
           </Link>
@@ -260,7 +260,7 @@ export default function CongressHubPage() {
           </p>
           <Link
             href="/committees"
-            className="inline-block bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+            className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
           >
             View House Committees →
           </Link>
@@ -302,7 +302,7 @@ export default function CongressHubPage() {
               <Link
                 key={state.code}
                 href={`/delegation/${state.code}`}
-                className="block p-3 bg-white border border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-center transition-colors"
+                className="block p-3 bg-white border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 text-center transition-colors"
               >
                 <span className="font-medium text-gray-800">{state.code}</span>
                 <span className="block text-xs text-gray-500">{state.name}</span>

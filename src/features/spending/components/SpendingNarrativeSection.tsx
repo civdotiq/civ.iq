@@ -69,7 +69,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
       return (
         <div className="bg-white border-2 border-black p-4 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
-            <Brain className="h-5 w-5 text-blue-600" />
+            <Brain className="h-5 w-5 text-civiq-blue" />
             <h2 className="text-xl font-bold text-gray-900">Spending in Your Community</h2>
           </div>
           <div className="text-center py-4">
@@ -77,7 +77,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
             <p className="text-sm text-gray-500 mb-3">Unable to load spending narrative</p>
             <button
               onClick={() => mutate()}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 border border-blue-200 hover:bg-blue-50"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-civiq-blue border border-civiq-blue hover:bg-civiq-blue/10"
             >
               <RefreshCw className="w-3 h-3" />
               Retry
@@ -94,7 +94,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
   return (
     <div className="bg-white border-2 border-black p-4 sm:p-8">
       <div className="flex items-center gap-2 mb-4">
-        <Brain className="h-5 w-5 text-blue-600" />
+        <Brain className="h-5 w-5 text-civiq-blue" />
         <h2 className="text-xl font-bold text-gray-900">Spending in Your Community</h2>
         <span className="text-xs text-gray-500">AI-generated</span>
       </div>
@@ -102,19 +102,19 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
       <p className="text-gray-700 leading-relaxed mb-4">{narrative.summary}</p>
 
       {narrative.topCategories && (
-        <div className="bg-blue-50 p-4 mb-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-1">
+        <div className="bg-civiq-blue/10 p-4 mb-4">
+          <h3 className="text-sm font-medium text-civiq-blue mb-2 flex items-center gap-1">
             <DollarSign className="h-4 w-4" />
             Top Spending Categories
           </h3>
-          <p className="text-blue-800 text-sm leading-relaxed">{narrative.topCategories}</p>
+          <p className="text-civiq-blue text-sm leading-relaxed">{narrative.topCategories}</p>
         </div>
       )}
 
       {narrative.localImpact && (
-        <div className="bg-green-50 p-4 mb-4">
-          <h3 className="text-sm font-medium text-green-900 mb-2">Local Impact</h3>
-          <p className="text-green-800 text-sm leading-relaxed">{narrative.localImpact}</p>
+        <div className="bg-civiq-green/10 p-4 mb-4">
+          <h3 className="text-sm font-medium text-civiq-green mb-2">Local Impact</h3>
+          <p className="text-civiq-green text-sm leading-relaxed">{narrative.localImpact}</p>
         </div>
       )}
 
@@ -124,7 +124,7 @@ export function SpendingNarrativeSection({ districtId }: SpendingNarrativeSectio
           <ul className="space-y-1">
             {narrative.notableContracts.map((contract, index) => (
               <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="text-blue-600 mt-0.5">{'>'}</span>
+                <span className="text-civiq-blue mt-0.5">{'>'}</span>
                 {contract}
               </li>
             ))}

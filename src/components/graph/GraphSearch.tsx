@@ -259,7 +259,7 @@ export function GraphSearch({ onSelect }: GraphSearchProps) {
                       key={rep.bioguideId}
                       onClick={() => selectResult({ type: 'rep', item: rep })}
                       className={`w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 ${
-                        selectedIndex === index ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                        selectedIndex === index ? 'bg-civiq-blue/10 dark:bg-civiq-blue/30' : ''
                       }`}
                       role="option"
                       aria-selected={selectedIndex === index}
@@ -290,7 +290,9 @@ export function GraphSearch({ onSelect }: GraphSearchProps) {
                         key={committee.id}
                         onClick={() => selectResult({ type: 'committee', item: committee })}
                         className={`w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 ${
-                          selectedIndex === resultIndex ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                          selectedIndex === resultIndex
+                            ? 'bg-civiq-blue/10 dark:bg-civiq-blue/30'
+                            : ''
                         }`}
                         role="option"
                         aria-selected={selectedIndex === resultIndex}
@@ -319,7 +321,9 @@ export function GraphSearch({ onSelect }: GraphSearchProps) {
                         key={fec.committee_id}
                         onClick={() => selectResult({ type: 'fec-committee', item: fec })}
                         className={`w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 ${
-                          selectedIndex === resultIndex ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                          selectedIndex === resultIndex
+                            ? 'bg-civiq-blue/10 dark:bg-civiq-blue/30'
+                            : ''
                         }`}
                         role="option"
                         aria-selected={selectedIndex === resultIndex}

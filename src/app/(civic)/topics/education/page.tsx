@@ -148,11 +148,11 @@ export default function EducationTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -178,11 +178,11 @@ export default function EducationTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Education policy</strong> in Congress spans the full range of American learning,
             from{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               early childhood programs
             </Link>{' '}
             to{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               higher education
             </Link>{' '}
             and workforce training. While most K-12 education funding comes from state and local
@@ -192,11 +192,11 @@ export default function EducationTopicPage() {
           <p className="text-gray-700 mb-4">
             Federal student loan programs, Pell Grants, and research funding are among the largest
             areas of federal education spending. The{' '}
-            <Link href="/committee/HSED" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSED" className="text-civiq-blue hover:underline">
               House Education and Workforce Committee
             </Link>{' '}
             and the{' '}
-            <Link href="/committee/SSHR" className="text-blue-600 hover:underline">
+            <Link href="/committee/SSHR" className="text-civiq-blue hover:underline">
               Senate HELP Committee
             </Link>{' '}
             share primary jurisdiction over education legislation.
@@ -217,11 +217,11 @@ export default function EducationTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.join(', ')}
                 </p>
               </Link>
@@ -283,7 +283,7 @@ export default function EducationTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

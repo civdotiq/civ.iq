@@ -71,11 +71,11 @@ export const extractVoteId = (vote: Vote): string | null => {
 const getPositionStyles = (position: Vote['position']): string => {
   switch (position) {
     case 'Yea':
-      return 'bg-green-100 text-green-800 border border-green-200';
+      return 'bg-civiq-green/10 text-civiq-green border border-civiq-green';
     case 'Nay':
-      return 'bg-red-100 text-red-800 border border-red-200';
+      return 'bg-civiq-red/10 text-civiq-red border border-civiq-red';
     case 'Present':
-      return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+      return 'bg-gray-100 text-gray-600 border border-gray-300';
     default:
       return 'bg-white border-2 border-gray-300 text-gray-700';
   }
@@ -87,10 +87,10 @@ const getPositionStyles = (position: Vote['position']): string => {
 const getResultStyles = (result: string): string => {
   const lowerResult = result?.toLowerCase() || '';
   if (lowerResult.includes('passed') || lowerResult.includes('agreed')) {
-    return 'text-green-700';
+    return 'text-civiq-green';
   }
   if (lowerResult.includes('failed') || lowerResult.includes('rejected')) {
-    return 'text-red-700';
+    return 'text-civiq-red';
   }
   return 'text-gray-700';
 };
@@ -134,16 +134,16 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
       }
       className={`border-b border-gray-200 ${
         isClickable
-          ? 'cursor-pointer hover:bg-blue-50 transition-colors focus:bg-blue-100 focus:outline-none'
+          ? 'cursor-pointer hover:bg-civiq-blue/10 transition-colors focus:bg-civiq-blue/10 focus:outline-none'
           : ''
-      } ${vote.isKeyVote ? 'bg-yellow-50' : ''} ${index % 2 === 0 ? 'bg-white' : 'bg-white/50'}`}
+      } ${vote.isKeyVote ? 'bg-gray-100' : ''} ${index % 2 === 0 ? 'bg-white' : 'bg-white/50'}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
       {/* Roll Number */}
       <td className="py-3 px-3 align-top" style={{ width: '80px', minWidth: '80px' }}>
         <div className="flex items-center gap-1">
-          <span className="font-medium text-blue-600 text-sm">{vote.rollNumber || 'N/A'}</span>
+          <span className="font-medium text-civiq-blue text-sm">{vote.rollNumber || 'N/A'}</span>
           {isClickable && <span className="text-xs text-gray-400" aria-hidden="true"></span>}
         </div>
       </td>
@@ -182,7 +182,7 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
       <td className="py-3 px-3 align-top" style={{ width: '35%', minWidth: '250px' }}>
         <div className="overflow-hidden">
           {vote.bill?.number && (
-            <div className="text-xs text-blue-600 font-medium mb-1">
+            <div className="text-xs text-civiq-blue font-medium mb-1">
               {vote.bill.url ? (
                 <a
                   href={vote.bill.url}

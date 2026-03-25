@@ -179,11 +179,11 @@ export default async function LessonPage({ params }: PageProps) {
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/education" className="hover:text-blue-600">
+          <Link href="/education" className="hover:text-civiq-blue">
             Education
           </Link>
           <span className="mx-2">&rsaquo;</span>

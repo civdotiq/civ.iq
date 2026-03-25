@@ -59,7 +59,7 @@ export function FormattedMessageDisplay({
         {/* Copy to Clipboard Button */}
         <button
           onClick={handleCopy}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-civiq-blue hover:bg-civiq-blue text-white font-medium transition-colors"
           aria-label={copied ? 'Message copied' : 'Copy message to clipboard'}
         >
           {copied ? (
@@ -81,7 +81,7 @@ export function FormattedMessageDisplay({
             href={contactFormUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-civiq-green hover:bg-civiq-green text-white font-medium transition-colors"
           >
             <ExternalLink className="w-5 h-5" />
             Open Official Contact Form
@@ -101,8 +101,8 @@ export function FormattedMessageDisplay({
       </div>
 
       {/* Instructions */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
-        <p className="text-sm text-blue-900 dark:text-blue-100">
+      <div className="bg-civiq-blue/10 dark:bg-civiq-blue/20 border border-civiq-blue dark:border-civiq-blue p-4">
+        <p className="text-sm text-civiq-blue dark:text-civiq-blue">
           <strong>Next steps:</strong> Copy your message and paste it into{' '}
           {contactFormUrl ? (
             <>
@@ -124,8 +124,8 @@ export function FormattedMessageDisplay({
 
       {/* No Contact Method Warning */}
       {!contactFormUrl && !email && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4">
-          <p className="text-sm text-yellow-900 dark:text-yellow-100">
+        <div className="bg-gray-100 dark:bg-gray-800/20 border border-gray-300 dark:border-gray-400 p-4">
+          <p className="text-sm text-gray-600 dark:text-gray-600">
             <strong>Contact information limited:</strong> We don&apos;t have a direct contact form
             or email for this representative. You can copy the message and send it through other
             channels, or contact their office directly.

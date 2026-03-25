@@ -145,9 +145,9 @@ export const StateLegislatorActivityFeed: React.FC<StateLegislatorActivityFeedPr
   const getVoteOptionStyle = (option: string) => {
     switch (option.toLowerCase()) {
       case 'yes':
-        return 'bg-green-100 text-green-700';
+        return 'bg-civiq-green/10 text-civiq-green';
       case 'no':
-        return 'bg-red-100 text-red-700';
+        return 'bg-civiq-red/10 text-civiq-red';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -187,7 +187,7 @@ export const StateLegislatorActivityFeed: React.FC<StateLegislatorActivityFeedPr
                   {activity.link ? (
                     <Link
                       href={activity.link}
-                      className="font-semibold text-sm text-blue-600 hover:underline truncate"
+                      className="font-semibold text-sm text-civiq-blue hover:underline truncate"
                     >
                       {activity.title}
                     </Link>

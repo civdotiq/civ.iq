@@ -140,7 +140,7 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading stock trade data"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -396,9 +396,9 @@ function TradeRow({ trade }: { trade: StockTrade }) {
         <span
           className={`inline-block px-2 py-0.5 text-xs font-medium ${
             isPurchase
-              ? 'bg-green-100 text-green-800'
+              ? 'bg-civiq-green/10 text-civiq-green'
               : isSale
-                ? 'bg-red-100 text-red-800'
+                ? 'bg-civiq-red/10 text-civiq-red'
                 : 'bg-gray-100 text-gray-800'
           }`}
         >

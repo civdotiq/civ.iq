@@ -30,7 +30,7 @@ export default function GlobalError({
       <body>
         <div className="min-h-screen flex items-center justify-center bg-white">
           <div className="text-center p-8 bg-white border-2 border-black max-w-md">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Application Error</h2>
+            <h2 className="text-2xl font-bold text-civiq-red mb-4">Application Error</h2>
             <p className="text-gray-600 mb-4">
               Something went wrong with the application. Please try refreshing the page.
             </p>
@@ -45,7 +45,7 @@ export default function GlobalError({
             )}
             <button
               onClick={reset}
-              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 mr-2"
+              className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue mr-2"
             >
               Try again
             </button>

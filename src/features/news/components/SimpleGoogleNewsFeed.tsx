@@ -252,11 +252,11 @@ export function SimpleGoogleNewsFeed({
     if (error) {
       return (
         <div className="text-center py-12">
-          <div className="text-red-600 mb-4">Failed to load news</div>
+          <div className="text-civiq-red mb-4">Failed to load news</div>
           <div className="text-gray-600 mb-4">{error}</div>
           <button
             onClick={fetchNews}
-            className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+            className="bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
           >
             Try Again
           </button>
@@ -286,7 +286,7 @@ export function SimpleGoogleNewsFeed({
           return (
             <div
               key={cluster.id}
-              className="bg-white border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:border-blue-300"
+              className="bg-white border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:border-civiq-blue"
             >
               {/* Featured Article with Image */}
               {featuredArticle && (
@@ -312,10 +312,10 @@ export function SimpleGoogleNewsFeed({
                         <span
                           className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold backdrop-blur-sm ${
                             cluster.topicType === 'breaking'
-                              ? 'bg-red-500/90 text-white'
+                              ? 'bg-civiq-red/90 text-white'
                               : cluster.topicType === 'developing'
-                                ? 'bg-orange-500/90 text-white'
-                                : 'bg-blue-500/90 text-white'
+                                ? 'bg-civiq-red/90 text-white'
+                                : 'bg-civiq-blue/90 text-white'
                           }`}
                         >
                           {cluster.topicType === 'breaking'
@@ -336,10 +336,10 @@ export function SimpleGoogleNewsFeed({
                         <span
                           className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold ${
                             cluster.topicType === 'breaking'
-                              ? 'bg-red-100 text-red-800'
+                              ? 'bg-civiq-red/10 text-civiq-red'
                               : cluster.topicType === 'developing'
-                                ? 'bg-orange-100 text-orange-800'
-                                : 'bg-blue-100 text-blue-800'
+                                ? 'bg-civiq-red/10 text-civiq-red'
+                                : 'bg-civiq-blue/10 text-civiq-blue'
                           }`}
                         >
                           {cluster.topicType === 'breaking'
@@ -352,7 +352,7 @@ export function SimpleGoogleNewsFeed({
                     )}
 
                     {/* Title */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-civiq-blue transition-colors line-clamp-2">
                       {featuredArticle.title}
                     </h3>
 
@@ -405,7 +405,7 @@ export function SimpleGoogleNewsFeed({
                         rel="noopener noreferrer"
                         className="block group"
                       >
-                        <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-1.5">
+                        <h4 className="text-sm font-medium text-gray-900 group-hover:text-civiq-blue transition-colors line-clamp-2 mb-1.5">
                           {article.title}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -451,7 +451,7 @@ export function SimpleGoogleNewsFeed({
                         </svg>
                         {cluster.timeSpan}h span
                       </span>
-                      <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                      <span className="inline-flex items-center gap-1 text-civiq-green font-medium">
                         <svg
                           className="w-3.5 h-3.5"
                           fill="currentColor"
@@ -510,7 +510,7 @@ export function SimpleGoogleNewsFeed({
                   onClick={() => setActiveViewMode(mode)}
                   className={`px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     activeViewMode === mode
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-civiq-blue text-white'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >

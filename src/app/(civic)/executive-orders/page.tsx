@@ -85,7 +85,7 @@ export default function ExecutiveOrdersPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <div className="text-red-600 mb-2">Failed to load executive orders</div>
+              <div className="text-civiq-red mb-2">Failed to load executive orders</div>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-[#3592c0]"
@@ -104,7 +104,7 @@ export default function ExecutiveOrdersPage() {
                 <div key={order.id} className="bg-white border-2 border-black p-4 sm:p-6">
                   <div className="flex items-start gap-3 mb-2">
                     {order.executiveOrderNumber && (
-                      <span className="flex-shrink-0 text-xs font-bold border-2 border-yellow-500 bg-yellow-50 text-yellow-800 px-2 py-1">
+                      <span className="flex-shrink-0 text-xs font-bold border-2 border-gray-400 bg-gray-100 text-gray-600 px-2 py-1">
                         EO {order.executiveOrderNumber}
                       </span>
                     )}

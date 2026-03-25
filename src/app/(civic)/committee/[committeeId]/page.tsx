@@ -236,7 +236,7 @@ async function CommitteeContent({
                   href={committee.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Congress.gov
@@ -290,7 +290,7 @@ async function CommitteeContent({
                 <div>
                   <Link
                     href={`/representative/${committee.leadership.chair.representative.bioguideId}`}
-                    className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
                   >
                     {committee.leadership.chair.representative.name}
                   </Link>
@@ -324,7 +324,7 @@ async function CommitteeContent({
                 <div>
                   <Link
                     href={`/representative/${committee.leadership.rankingMember.representative.bioguideId}`}
-                    className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
                   >
                     {committee.leadership.rankingMember.representative.name}
                   </Link>

@@ -73,11 +73,11 @@ export function AddressRefinementInput({
   ];
 
   return (
-    <div className="bg-white border-2 border-blue-200 p-4 sm:p-6 mx-auto max-w-lg animate-fade-in-up">
+    <div className="bg-white border-2 border-civiq-blue p-4 sm:p-6 mx-auto max-w-lg animate-fade-in-up">
       {/* Header */}
       <div className="text-center mb-4 sm:mb-6">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-          <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-civiq-blue/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-civiq-blue" />
         </div>
         <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
           Enter Your Full Address
@@ -104,7 +104,7 @@ export function AddressRefinementInput({
               value={address}
               onChange={e => setAddress(e.target.value)}
               placeholder={`e.g., 123 Main Street`}
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 border border-gray-300 focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue transition-colors text-sm sm:text-base"
               disabled={isValidating}
               autoComplete="street-address"
             />
@@ -119,10 +119,10 @@ export function AddressRefinementInput({
 
         {/* Validation Error */}
         {validationError && (
-          <div className="bg-red-50 border border-red-200 p-3">
+          <div className="bg-civiq-red/10 border border-civiq-red p-3">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{validationError}</p>
+              <AlertCircle className="w-4 h-4 text-civiq-red flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-civiq-red">{validationError}</p>
             </div>
           </div>
         )}
@@ -132,7 +132,7 @@ export function AddressRefinementInput({
           <button
             type="submit"
             disabled={!address.trim() || isValidating}
-            className="flex-1 bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
+            className="flex-1 bg-civiq-blue text-white px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-civiq-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
           >
             {isValidating ? (
               <>

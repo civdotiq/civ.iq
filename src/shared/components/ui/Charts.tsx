@@ -363,7 +363,7 @@ export function VoteHistoryChart({ votes }: VoteHistoryProps) {
                     Result: <span className="font-medium">{vote.result}</span>
                   </span>
                   {vote.isKeyVote && (
-                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs font-medium">
+                    <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs font-medium">
                       Key Vote
                     </span>
                   )}

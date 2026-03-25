@@ -140,7 +140,7 @@ export function TopicNavigation({
                 flex items-center space-x-2 whitespace-nowrap
                 ${
                   isActive
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-civiq-blue text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }
               `}
@@ -150,7 +150,7 @@ export function TopicNavigation({
                 <span
                   className={`
                     px-2 py-0.5 text-xs font-semibold
-                    ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}
+                    ${isActive ? 'bg-civiq-blue text-white' : 'bg-gray-200 text-gray-600'}
                   `}
                 >
                   {tab.count}

@@ -169,13 +169,13 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
               return (
                 <span
                   key={stateCode}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-800 border-2 border-blue-600 text-sm font-medium"
+                  className="inline-flex items-center gap-2 px-3 py-1 bg-civiq-blue/10 text-civiq-blue border-2 border-civiq-blue text-sm font-medium"
                 >
                   {state?.name}
                   <button
                     type="button"
                     onClick={() => handleRemoveState(stateCode)}
-                    className="hover:bg-blue-100 p-0.5"
+                    className="hover:bg-civiq-blue/10 p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -186,7 +186,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
               <button
                 type="button"
                 onClick={handleClearAll}
-                className="text-sm text-red-600 hover:text-red-800 font-medium underline"
+                className="text-sm text-civiq-red hover:text-civiq-red font-medium underline"
               >
                 Clear All
               </button>
@@ -222,7 +222,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
                     type="button"
                     onClick={() => handleToggleState(state.code)}
                     className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-200 flex items-center justify-between ${
-                      isSelected ? 'bg-blue-50' : ''
+                      isSelected ? 'bg-civiq-blue/10' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">

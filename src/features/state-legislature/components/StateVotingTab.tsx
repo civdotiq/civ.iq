@@ -78,11 +78,11 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
   const getVoteColor = (option: string) => {
     switch (option.toLowerCase()) {
       case 'yes':
-        return 'bg-green-500 text-white';
+        return 'bg-civiq-green text-white';
       case 'no':
-        return 'bg-red-500 text-white';
+        return 'bg-civiq-red text-white';
       case 'abstain':
-        return 'bg-yellow-500 text-white';
+        return 'bg-gray-500 text-white';
       case 'not voting':
         return 'bg-gray-400 text-white';
       case 'absent':
@@ -120,9 +120,9 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
   if (error) {
     return (
       <div className="p-grid-3">
-        <div className="bg-red-50 border-2 border-red-300 p-grid-3">
-          <h3 className="text-xl font-bold text-red-700 mb-grid-2">Error Loading Votes</h3>
-          <p className="text-red-600">{error}</p>
+        <div className="bg-civiq-red/10 border-2 border-civiq-red p-grid-3">
+          <h3 className="text-xl font-bold text-civiq-red mb-grid-2">Error Loading Votes</h3>
+          <p className="text-civiq-red">{error}</p>
         </div>
       </div>
     );
@@ -146,17 +146,17 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
       <div className="bg-gray-50 border-2 border-gray-300 p-grid-3 mb-grid-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-grid-3">
           <div>
-            <p className="text-3xl font-bold text-blue-600">{votes.length}</p>
+            <p className="text-3xl font-bold text-civiq-blue">{votes.length}</p>
             <p className="text-sm text-gray-600">Total Votes</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-green-600">
+            <p className="text-3xl font-bold text-civiq-green">
               {votes.filter(v => v.option === 'yes').length}
             </p>
             <p className="text-sm text-gray-600">Yes Votes</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-red-600">
+            <p className="text-3xl font-bold text-civiq-red">
               {votes.filter(v => v.option === 'no').length}
             </p>
             <p className="text-sm text-gray-600">No Votes</p>
@@ -193,14 +193,14 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
                   <span
                     className={`px-grid-2 py-grid-1 text-sm ${
                       vote.result === 'passed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-civiq-green/10 text-civiq-green'
+                        : 'bg-civiq-red/10 text-civiq-red'
                     }`}
                   >
                     {vote.result === 'passed' ? 'PASSED' : 'FAILED'}
                   </span>
                 </div>
-                <h3 className="font-bold text-lg hover:text-blue-600">{vote.motion_text}</h3>
+                <h3 className="font-bold text-lg hover:text-civiq-blue">{vote.motion_text}</h3>
               </div>
               <div className="text-right text-sm text-gray-600">
                 <p>{formatDate(vote.start_date)}</p>
@@ -232,8 +232,8 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
 
       {/* Load More Notice */}
       {votes.length >= limit && (
-        <div className="mt-grid-3 p-grid-3 bg-blue-50 border-2 border-blue-300 text-center">
-          <p className="text-blue-700">
+        <div className="mt-grid-3 p-grid-3 bg-civiq-blue/10 border-2 border-civiq-blue text-center">
+          <p className="text-civiq-blue">
             Showing {votes.length} most recent votes. More voting history may be available.
           </p>
         </div>

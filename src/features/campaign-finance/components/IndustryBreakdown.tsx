@@ -92,7 +92,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
       <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.industry}</p>
         <p className="text-xs text-gray-600 mb-2">{description}</p>
-        <p className="text-lg font-bold text-blue-600">${data.amount.toLocaleString()}</p>
+        <p className="text-lg font-bold text-civiq-blue">${data.amount.toLocaleString()}</p>
         <p className="text-sm text-gray-500">{data.percentage.toFixed(1)}% of total</p>
         {data.count && <p className="text-xs text-gray-400 mt-1">{data.count} contributions</p>}
       </div>
@@ -312,24 +312,28 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4">
-          <h4 className="font-medium text-blue-900 mb-1">Top Industry</h4>
-          <p className="text-sm text-blue-700 mb-2">{topIndustry ? topIndustry.industry : 'N/A'}</p>
-          <p className="text-lg font-bold text-blue-800">
+        <div className="bg-civiq-blue/10 p-4">
+          <h4 className="font-medium text-civiq-blue mb-1">Top Industry</h4>
+          <p className="text-sm text-civiq-blue mb-2">
+            {topIndustry ? topIndustry.industry : 'N/A'}
+          </p>
+          <p className="text-lg font-bold text-civiq-blue">
             {topIndustry ? `${topIndustry.percentage.toFixed(1)}%` : '0%'}
           </p>
         </div>
 
-        <div className="bg-green-50 p-4">
-          <h4 className="font-medium text-green-900 mb-1">Top 3 Concentration</h4>
-          <p className="text-sm text-green-700 mb-2">Combined share of funding</p>
-          <p className="text-lg font-bold text-green-800">{industrialConcentration.toFixed(1)}%</p>
+        <div className="bg-civiq-green/10 p-4">
+          <h4 className="font-medium text-civiq-green mb-1">Top 3 Concentration</h4>
+          <p className="text-sm text-civiq-green mb-2">Combined share of funding</p>
+          <p className="text-lg font-bold text-civiq-green">
+            {industrialConcentration.toFixed(1)}%
+          </p>
         </div>
 
-        <div className="bg-purple-50 p-4">
-          <h4 className="font-medium text-purple-900 mb-1">Diversification</h4>
-          <p className="text-sm text-purple-700 mb-2">Number of funding sectors</p>
-          <p className="text-lg font-bold text-purple-800">{diversificationScore} sectors</p>
+        <div className="bg-civiq-blue/10 p-4">
+          <h4 className="font-medium text-civiq-blue mb-1">Diversification</h4>
+          <p className="text-sm text-civiq-blue mb-2">Number of funding sectors</p>
+          <p className="text-lg font-bold text-civiq-blue">{diversificationScore} sectors</p>
         </div>
       </div>
 
@@ -368,35 +372,35 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
         <h4 className="font-medium text-gray-800 mb-3">Key Insights</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {industrialConcentration > 60 && (
-            <div className="flex items-start gap-2 p-2 bg-yellow-50">
-              <span className="text-yellow-500 text-xs mt-1"></span>
-              <span className="text-sm text-yellow-800">
+            <div className="flex items-start gap-2 p-2 bg-gray-100">
+              <span className="text-gray-600 text-xs mt-1"></span>
+              <span className="text-sm text-gray-600">
                 High concentration: Top 3 industries provide {industrialConcentration.toFixed(0)}%
                 of funding
               </span>
             </div>
           )}
           {diversificationScore > 8 && (
-            <div className="flex items-start gap-2 p-2 bg-green-50">
-              <span className="text-green-500 text-xs mt-1"></span>
-              <span className="text-sm text-green-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-green/10">
+              <span className="text-civiq-green text-xs mt-1"></span>
+              <span className="text-sm text-civiq-green">
                 Well-diversified funding across {diversificationScore} different sectors
               </span>
             </div>
           )}
           {topIndustry && topIndustry.percentage > 30 && (
-            <div className="flex items-start gap-2 p-2 bg-blue-50">
-              <span className="text-blue-500 text-xs mt-1"></span>
-              <span className="text-sm text-blue-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-blue/10">
+              <span className="text-civiq-blue text-xs mt-1"></span>
+              <span className="text-sm text-civiq-blue">
                 {topIndustry.industry} is the dominant funding source at{' '}
                 {topIndustry.percentage.toFixed(0)}%
               </span>
             </div>
           )}
           {industrialConcentration < 40 && diversificationScore > 6 && (
-            <div className="flex items-start gap-2 p-2 bg-purple-50">
-              <span className="text-purple-500 text-xs mt-1"></span>
-              <span className="text-sm text-purple-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-blue/10">
+              <span className="text-civiq-blue text-xs mt-1"></span>
+              <span className="text-sm text-civiq-blue">
                 Balanced funding distribution across multiple industries
               </span>
             </div>

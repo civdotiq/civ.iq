@@ -186,7 +186,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
             <h4 className="font-medium text-gray-700">{upperHouse.name}</h4>
             <span
               className={`text-sm font-medium ${
-                upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                upperControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
               }`}
             >
               {upperControl.control} Control (+{upperControl.margin})
@@ -194,7 +194,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
           </div>
           <div className="relative h-8 bg-gray-200 overflow-hidden">
             <div
-              className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
+              className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
               style={{ width: `${upperControl.demPercent}%` }}
             />
             <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
@@ -210,7 +210,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
             <h4 className="font-medium text-gray-700">{lowerHouse.name}</h4>
             <span
               className={`text-sm font-medium ${
-                lowerControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                lowerControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
               }`}
             >
               {lowerControl.control} Control (+{lowerControl.margin})
@@ -218,7 +218,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
           </div>
           <div className="relative h-8 bg-gray-200 overflow-hidden">
             <div
-              className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
+              className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
               style={{ width: `${lowerControl.demPercent}%` }}
             />
             <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
@@ -235,7 +235,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
             {upperControl.control === lowerControl.control ? (
               <span
                 className={`font-medium ${
-                  upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                  upperControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
                 }`}
               >
                 {upperControl.control} Trifecta
@@ -485,7 +485,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
               <div className="flex-1 relative h-6 bg-gray-200 overflow-hidden">
                 <div
                   className={`absolute h-full transition-all duration-500 ${
-                    pviValue < 0 ? 'bg-blue-600 right-1/2' : 'bg-red-600 left-1/2'
+                    pviValue < 0 ? 'bg-civiq-blue right-1/2' : 'bg-civiq-red left-1/2'
                   }`}
                   style={{
                     width: `${Math.abs(pviValue) * 2}%`,
@@ -494,7 +494,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
                 />
                 {isCompetitive && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-700 bg-yellow-100 px-2 py-0.5">
+                    <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5">
                       Competitive
                     </span>
                   </div>
@@ -502,7 +502,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
               </div>
               <span
                 className={`text-sm font-medium w-20 text-right ${
-                  district.party === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                  district.party === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
                 }`}
               >
                 {district.cookPVI}
@@ -513,7 +513,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
       </div>
       <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-600">
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-blue-600"></div>
+          <div className="w-3 h-3 bg-civiq-blue"></div>
           Democratic Lean
         </span>
         <span className="flex items-center gap-1">
@@ -521,7 +521,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
           Even
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-red-600"></div>
+          <div className="w-3 h-3 bg-civiq-red"></div>
           Republican Lean
         </span>
       </div>
@@ -549,7 +549,7 @@ function StatCard({
       {trend && (
         <div
           className={`flex items-center gap-1 mt-2 text-sm ${
-            trend.positive ? 'text-green-600' : 'text-red-600'
+            trend.positive ? 'text-civiq-green' : 'text-civiq-red'
           }`}
         >
           <span>{trend.positive ? '↑' : '↓'}</span>
@@ -599,7 +599,7 @@ export default function StateOverviewPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
           <p className="mt-4 text-gray-600">Loading state data...</p>
         </div>
       </div>
@@ -620,11 +620,11 @@ export default function StateOverviewPage() {
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/states" className="hover:text-blue-600">
+          <Link href="/states" className="hover:text-civiq-blue">
             States
           </Link>
           <span className="mx-2">&rsaquo;</span>
@@ -632,14 +632,14 @@ export default function StateOverviewPage() {
         </nav>
 
         {/* State header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
+        <div className="bg-gradient-to-r from-civiq-blue to-civiq-blue text-white p-8 mb-8">
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-white/20 flex items-center justify-center">
               <span className="text-4xl font-bold">{stateData.abbreviation}</span>
             </div>
             <div>
               <h1 className="text-4xl font-bold mb-2">{stateData.name}</h1>
-              <p className="text-xl text-blue-100">
+              <p className="text-xl text-civiq-blue">
                 Capital: {stateData.capital} • Largest City: {stateData.largestCity}
               </p>
             </div>
@@ -681,7 +681,7 @@ export default function StateOverviewPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-civiq-blue text-white'
                     : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                 }`}
               >
@@ -809,14 +809,14 @@ export default function StateOverviewPage() {
                 </h3>
                 <div className="flex items-center justify-center gap-8">
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-blue-600">
+                    <p className="text-3xl font-bold text-civiq-blue">
                       {stateData.districts.filter(d => d.party === 'Democratic').length}
                     </p>
                     <p className="text-sm text-gray-600">Democrats</p>
                   </div>
                   <div className="text-gray-400">vs</div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-red-600">
+                    <p className="text-3xl font-bold text-civiq-red">
                       {stateData.districts.filter(d => d.party === 'Republican').length}
                     </p>
                     <p className="text-sm text-gray-600">Republicans</p>

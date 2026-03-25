@@ -44,11 +44,11 @@ export default function StateDistrictsPage() {
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">›</span>
-            <Link href="/states" className="hover:text-blue-600">
+            <Link href="/states" className="hover:text-civiq-blue">
               States
             </Link>
             <span className="mx-2">›</span>
@@ -129,7 +129,7 @@ export default function StateDistrictsPage() {
                     {legislature.unicameral ? (
                       <Link
                         href={`/state-districts/${lowerCode}/lower/1`}
-                        className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-green-700 transition-colors font-medium"
+                        className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-civiq-green transition-colors font-medium"
                       >
                         View Districts
                       </Link>
@@ -137,7 +137,7 @@ export default function StateDistrictsPage() {
                       <>
                         <Link
                           href={`/state-districts/${lowerCode}/upper/1`}
-                          className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-green-700 transition-colors font-medium"
+                          className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-civiq-green transition-colors font-medium"
                         >
                           View {legislature.chambers.upper.name} Districts
                         </Link>

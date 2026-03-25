@@ -68,7 +68,7 @@ export function BillSpendingSection({ billId }: BillSpendingSectionProps) {
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading spending data"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -140,7 +140,7 @@ export function BillSpendingSection({ billId }: BillSpendingSectionProps) {
             rel="noopener noreferrer"
             role="listitem"
             aria-label={`${award.recipientName} — $${award.amount.toLocaleString()} ${award.type} from ${award.agency}. Opens USASpending.gov`}
-            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
@@ -156,7 +156,7 @@ export function BillSpendingSection({ billId }: BillSpendingSectionProps) {
                 <span
                   className={`px-2 py-1 text-xs font-medium ${
                     award.type === 'grant'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-civiq-green/10 text-civiq-green'
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >

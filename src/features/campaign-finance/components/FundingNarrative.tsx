@@ -22,17 +22,17 @@ const profileIcons = {
 };
 
 const profileColors = {
-  grassroots: 'bg-green-50 border-green-200 text-green-800',
-  traditional: 'bg-blue-50 border-blue-200 text-blue-800',
-  'self-funded': 'bg-purple-50 border-purple-200 text-purple-800',
+  grassroots: 'bg-civiq-green/10 border-civiq-green text-civiq-green',
+  traditional: 'bg-civiq-blue/10 border-civiq-blue text-civiq-blue',
+  'self-funded': 'bg-civiq-blue/10 border-civiq-blue text-civiq-blue',
   mixed: 'bg-white border-gray-200 text-gray-800',
-  'pac-heavy': 'bg-orange-50 border-orange-200 text-orange-800',
+  'pac-heavy': 'bg-civiq-red/10 border-civiq-red text-civiq-red',
 };
 
 const trustLevelColors = {
-  high: 'text-green-600',
-  medium: 'text-yellow-600',
-  low: 'text-red-600',
+  high: 'text-civiq-green',
+  medium: 'text-gray-600',
+  low: 'text-civiq-red',
 };
 
 export const FundingNarrative: React.FC<FundingNarrativeProps> = ({
@@ -86,7 +86,7 @@ export const FundingNarrative: React.FC<FundingNarrativeProps> = ({
 
       {/* Trust Level Disclaimer */}
       {narrative.trustLevel === 'low' && (
-        <div className="mt-4 bg-yellow-100 px-3 py-2 text-xs text-yellow-800">
+        <div className="mt-4 bg-gray-100 px-3 py-2 text-xs text-gray-600">
           <strong>Note:</strong> Analysis based on limited data. Narrative may not fully represent
           funding activity.
         </div>

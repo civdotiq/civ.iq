@@ -16,7 +16,7 @@ import { BillLifecycleChart } from '@/features/legislation/components/BillLifecy
 function BreadcrumbNav() {
   return (
     <nav className="text-sm text-gray-500 mb-6">
-      <Link href="/" className="hover:text-blue-600">
+      <Link href="/" className="hover:text-civiq-blue">
         Home
       </Link>
       <span className="mx-2">›</span>
@@ -250,11 +250,11 @@ export default function LegislationPage() {
               <div className="mt-4 text-sm text-gray-600">
                 Showing {filteredBills.length} of {bills.length} bills
                 {policyAreaFilter && (
-                  <span className="ml-2 inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium">
+                  <span className="ml-2 inline-flex items-center px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium">
                     Topic: {policyAreaFilter}
                     <button
                       onClick={() => setPolicyAreaFilter('')}
-                      className="ml-1 hover:text-blue-600"
+                      className="ml-1 hover:text-civiq-blue"
                       aria-label="Clear topic filter"
                     >
                       ×
@@ -275,12 +275,12 @@ export default function LegislationPage() {
               <p className="text-gray-600">Fetching the latest legislation data</p>
             </div>
           ) : error ? (
-            <div className="bg-white border-2 border-red-300 p-12 text-center">
-              <h3 className="text-lg font-medium text-red-900 mb-2">Unable to Load Bills</h3>
-              <p className="text-red-700 mb-4">{error}</p>
+            <div className="bg-white border-2 border-civiq-red p-12 text-center">
+              <h3 className="text-lg font-medium text-civiq-red mb-2">Unable to Load Bills</h3>
+              <p className="text-civiq-red mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-civiq-red text-white hover:bg-civiq-red transition-colors"
               >
                 Try Again
               </button>
@@ -301,7 +301,7 @@ export default function LegislationPage() {
                 <Link
                   key={`${bill.type}-${bill.number}`}
                   href={`/bill/${formatBillId(bill)}`}
-                  className="block bg-white border-2 border-black p-4 sm:p-6 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+                  className="block bg-white border-2 border-black p-4 sm:p-6 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -309,14 +309,14 @@ export default function LegislationPage() {
                         <h3 className="text-xl font-semibold">
                           {bill.type}. {bill.number}
                         </h3>
-                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="px-2 py-1 text-xs font-medium bg-civiq-blue/10 text-civiq-blue">
                           {bill.originChamber}
                         </span>
                         <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800">
                           {getBillTypeDisplay(bill.type)}
                         </span>
                         {bill.policyArea?.name && (
-                          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800">
+                          <span className="px-2 py-1 text-xs font-medium bg-civiq-green/10 text-civiq-green">
                             {bill.policyArea.name}
                           </span>
                         )}
@@ -385,7 +385,7 @@ export default function LegislationPage() {
               </div>
               <div className="hidden md:block text-gray-400">→</div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-yellow-200 flex items-center justify-center mx-auto mb-2">
+                <div className="w-16 h-16 bg-gray-100 flex items-center justify-center mx-auto mb-2">
                   <span className="text-2xl font-bold">2</span>
                 </div>
                 <p className="font-medium">Committee</p>
@@ -393,7 +393,7 @@ export default function LegislationPage() {
               </div>
               <div className="hidden md:block text-gray-400">→</div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-200 flex items-center justify-center mx-auto mb-2">
+                <div className="w-16 h-16 bg-civiq-blue/10 flex items-center justify-center mx-auto mb-2">
                   <span className="text-2xl font-bold">3</span>
                 </div>
                 <p className="font-medium">Floor Vote</p>
@@ -401,7 +401,7 @@ export default function LegislationPage() {
               </div>
               <div className="hidden md:block text-gray-400">→</div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-200 flex items-center justify-center mx-auto mb-2">
+                <div className="w-16 h-16 bg-civiq-blue/10 flex items-center justify-center mx-auto mb-2">
                   <span className="text-2xl font-bold">4</span>
                 </div>
                 <p className="font-medium">Other Chamber</p>
@@ -409,7 +409,7 @@ export default function LegislationPage() {
               </div>
               <div className="hidden md:block text-gray-400">→</div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-green-200 flex items-center justify-center mx-auto mb-2">
+                <div className="w-16 h-16 bg-civiq-green/10 flex items-center justify-center mx-auto mb-2">
                   <span className="text-2xl font-bold">5</span>
                 </div>
                 <p className="font-medium">President</p>

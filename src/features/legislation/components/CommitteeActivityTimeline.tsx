@@ -84,9 +84,9 @@ export default function CommitteeActivityTimeline({
   const getImportanceColor = (importance: TimelineItem['importance']) => {
     switch (importance) {
       case 'high':
-        return 'border-red-500 bg-red-50';
+        return 'border-civiq-red bg-civiq-red/10';
       case 'medium':
-        return 'border-yellow-500 bg-yellow-50';
+        return 'border-gray-400 bg-gray-100';
       case 'low':
         return 'border-gray-400 bg-white';
       default:
@@ -137,7 +137,7 @@ export default function CommitteeActivityTimeline({
               onClick={() => setFilter('all')}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'all'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-civiq-blue text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -147,7 +147,7 @@ export default function CommitteeActivityTimeline({
               onClick={() => setFilter('bills')}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'bills'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-civiq-blue text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -157,7 +157,7 @@ export default function CommitteeActivityTimeline({
               onClick={() => setFilter('reports')}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'reports'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-civiq-blue text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -170,30 +170,30 @@ export default function CommitteeActivityTimeline({
       {/* Activity Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-white">
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.billsCount}</div>
+          <div className="text-2xl font-bold text-civiq-blue">{stats.billsCount}</div>
           <div className="text-xs text-gray-600">Bills</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">{stats.reportsCount}</div>
+          <div className="text-2xl font-bold text-civiq-green">{stats.reportsCount}</div>
           <div className="text-xs text-gray-600">Reports</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600">{stats.hearingsCount}</div>
+          <div className="text-2xl font-bold text-civiq-blue">{stats.hearingsCount}</div>
           <div className="text-xs text-gray-600">Hearings</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">{stats.markupsCount}</div>
+          <div className="text-2xl font-bold text-civiq-red">{stats.markupsCount}</div>
           <div className="text-xs text-gray-600">Markups</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-red-600">{stats.votesCount}</div>
+          <div className="text-2xl font-bold text-civiq-red">{stats.votesCount}</div>
           <div className="text-xs text-gray-600">Votes</div>
         </div>
       </div>
 
       {/* Most Active Month */}
       {stats.mostActiveMonth && (
-        <div className="mb-4 p-3 bg-blue-50 text-sm">
+        <div className="mb-4 p-3 bg-civiq-blue/10 text-sm">
           <span className="font-semibold">Most Active Month:</span>{' '}
           {formatMonthYear(stats.mostActiveMonth)}({stats.activityByMonth[stats.mostActiveMonth]}{' '}
           activities)
@@ -227,7 +227,7 @@ export default function CommitteeActivityTimeline({
                       href={item.metadata.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                      className="text-xs text-civiq-blue hover:underline mt-1 inline-block"
                     >
                       View Details →
                     </a>
@@ -242,7 +242,7 @@ export default function CommitteeActivityTimeline({
             <div className="text-center pt-4">
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-civiq-blue hover:text-civiq-blue font-medium"
               >
                 {expanded ? 'Show Less' : `Show All ${timeline.length} Activities`}
               </button>

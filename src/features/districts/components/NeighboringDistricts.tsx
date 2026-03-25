@@ -66,7 +66,7 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
               <div className="text-sm text-gray-600">{neighbor.name}</div>
             </div>
             <ExternalLink
-              className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors"
+              className="w-4 h-4 text-gray-400 group-hover:text-civiq-blue transition-colors"
               aria-hidden="true"
             />
           </Link>

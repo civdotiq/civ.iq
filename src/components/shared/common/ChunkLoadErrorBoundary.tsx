@@ -144,7 +144,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
             <div className="text-center p-8 max-w-md">
               <div className="mb-4">
                 <svg
-                  className="w-16 h-16 text-blue-500 mx-auto animate-pulse"
+                  className="w-16 h-16 text-civiq-blue mx-auto animate-pulse"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -169,7 +169,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
                   </div>
                   <button
                     onClick={this.retry}
-                    className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
+                    className="bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue transition-colors"
                   >
                     Retry Loading
                   </button>
@@ -181,7 +181,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
                   </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
+                    className="bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue transition-colors"
                   >
                     Refresh Page
                   </button>
@@ -198,7 +198,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
           <div className="text-center p-8">
             <div className="mb-4">
               <svg
-                className="w-16 h-16 text-red-500 mx-auto"
+                className="w-16 h-16 text-civiq-red mx-auto"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -217,7 +217,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
             </p>
             <button
               onClick={this.retry}
-              className="bg-red-600 text-white px-4 py-2 hover:bg-red-700 transition-colors"
+              className="bg-civiq-red text-white px-4 py-2 hover:bg-civiq-red transition-colors"
             >
               Try Again
             </button>

@@ -154,13 +154,13 @@ export function AddressRefinement({
 
             {/* Error Display */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200">
+              <div className="p-3 bg-civiq-red/10 border border-civiq-red">
                 <div className="flex items-start">
-                  <div className="text-red-600 mr-2"></div>
+                  <div className="text-civiq-red mr-2"></div>
                   <div>
-                    <p className="text-sm font-medium text-red-800">Address Not Found</p>
-                    <p className="text-sm text-red-700 mt-1">{error}</p>
-                    <p className="text-xs text-red-600 mt-2">
+                    <p className="text-sm font-medium text-civiq-red">Address Not Found</p>
+                    <p className="text-sm text-civiq-red mt-1">{error}</p>
+                    <p className="text-xs text-civiq-red mt-2">
                       Try including more details like your full street address, city, and state.
                     </p>
                   </div>
@@ -192,9 +192,9 @@ export function AddressRefinement({
           </div>
 
           {/* Help Section */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
-            <h4 className="text-sm font-semibold text-blue-900 mb-2">Tips for Better Results</h4>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="mt-6 p-4 bg-civiq-blue/10 border border-civiq-blue">
+            <h4 className="text-sm font-semibold text-civiq-blue mb-2">Tips for Better Results</h4>
+            <ul className="text-xs text-civiq-blue space-y-1">
               <li>• Include your full street address (number, street name, type)</li>
               <li>• Add your city and state for best accuracy</li>
               <li>
@@ -296,7 +296,7 @@ export function InlineAddressRefinement({
           className="w-full"
         />
 
-        {error && <div className="text-xs text-red-600 text-center">{error}</div>}
+        {error && <div className="text-xs text-civiq-red text-center">{error}</div>}
 
         {isLoading && (
           <div className="flex items-center justify-center text-sm text-civiq-blue">

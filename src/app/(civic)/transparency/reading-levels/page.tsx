@@ -49,7 +49,7 @@ export default function ReadingLevelDashboard() {
     return (
       <div className="max-w-4xl mx-auto p-8">
         <nav className="text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-blue-600">
+          <a href="/" className="hover:text-civiq-blue">
             Home
           </a>
           <span className="mx-2">&rsaquo;</span>
@@ -68,14 +68,14 @@ export default function ReadingLevelDashboard() {
     return (
       <div className="max-w-4xl mx-auto p-8">
         <nav className="text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-blue-600">
+          <a href="/" className="hover:text-civiq-blue">
             Home
           </a>
           <span className="mx-2">&rsaquo;</span>
           <span className="font-medium text-gray-900">Reading Level Compliance</span>
         </nav>
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
-        <p className="text-red-700">Failed to load data: {error}</p>
+        <p className="text-civiq-red">Failed to load data: {error}</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function ReadingLevelDashboard() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <nav className="text-sm text-gray-500 mb-6">
-        <a href="/" className="hover:text-blue-600">
+        <a href="/" className="hover:text-civiq-blue">
           Home
         </a>
         <span className="mx-2">&rsaquo;</span>
@@ -144,7 +144,7 @@ export default function ReadingLevelDashboard() {
           <p className="text-xs text-gray-500 uppercase tracking-wide">Pass Rate</p>
           <p
             className={`text-3xl font-bold mt-1 ${
-              aggregate.passRate >= 80 ? 'text-green-700' : 'text-red-700'
+              aggregate.passRate >= 80 ? 'text-civiq-green' : 'text-civiq-red'
             }`}
           >
             {aggregate.passRate}%
@@ -156,8 +156,8 @@ export default function ReadingLevelDashboard() {
           <p
             className={`text-3xl font-bold mt-1 ${
               aggregate.avgFleschEase >= aggregate.fleschEaseTarget
-                ? 'text-green-700'
-                : 'text-red-700'
+                ? 'text-civiq-green'
+                : 'text-civiq-red'
             }`}
           >
             {aggregate.avgFleschEase}
@@ -179,7 +179,7 @@ export default function ReadingLevelDashboard() {
               <div key={grade} className="flex-1 flex flex-col items-center">
                 <span className="text-xs text-gray-500 mb-1">{count || ''}</span>
                 <div
-                  className={`w-full ${isPass ? 'bg-green-600' : 'bg-red-600'}`}
+                  className={`w-full ${isPass ? 'bg-civiq-green' : 'bg-civiq-red'}`}
                   style={{ height: `${Math.max(heightPct, count > 0 ? 2 : 0)}%` }}
                 />
                 <span className="text-xs mt-1">{grade}</span>
@@ -190,9 +190,9 @@ export default function ReadingLevelDashboard() {
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <span>Grade Level</span>
           <span>
-            <span className="inline-block w-3 h-2 bg-green-600 mr-1" />
+            <span className="inline-block w-3 h-2 bg-civiq-green mr-1" />
             Pass (&le;8)
-            <span className="inline-block w-3 h-2 bg-red-600 ml-3 mr-1" />
+            <span className="inline-block w-3 h-2 bg-civiq-red ml-3 mr-1" />
             Fail (&gt;8)
           </span>
         </div>
@@ -208,7 +208,7 @@ export default function ReadingLevelDashboard() {
                 <span className="text-xs text-gray-500 w-20 shrink-0">{day.date}</span>
                 <div className="flex-1 bg-gray-100 h-4">
                   <div
-                    className={`h-full ${day.passRate >= 80 ? 'bg-green-600' : 'bg-red-600'}`}
+                    className={`h-full ${day.passRate >= 80 ? 'bg-civiq-green' : 'bg-civiq-red'}`}
                     style={{ width: `${day.passRate}%` }}
                   />
                 </div>

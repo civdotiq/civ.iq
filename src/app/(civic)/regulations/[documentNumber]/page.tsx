@@ -78,14 +78,14 @@ const FR_FIELDS = [
   .join('&');
 
 const chamberStyles: Record<string, string> = {
-  House: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  Senate: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  House: 'bg-civiq-blue/10 text-civiq-blue dark:bg-civiq-blue/30 dark:text-civiq-blue',
+  Senate: 'bg-civiq-blue/10 text-civiq-blue dark:bg-civiq-blue/30 dark:text-civiq-blue',
   Joint: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 };
 
 const relevanceStyles: Record<string, string> = {
-  direct: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  topical: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+  direct: 'bg-civiq-green/10 text-civiq-green dark:bg-civiq-green/30 dark:text-civiq-green',
+  topical: 'bg-gray-100 text-gray-600 dark:bg-gray-800/30 dark:text-gray-600',
 };
 
 const typeLabels: Record<string, string> = {
@@ -164,7 +164,7 @@ export default function RegulationDetailPage() {
               </p>
               <Link
                 href="/regulations"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-blue-700"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-civiq-blue"
               >
                 Browse Regulations
               </Link>
@@ -287,7 +287,7 @@ export default function RegulationDetailPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       role="listitem"
-                      className="block p-4 border border-gray-200 dark:border-gray-700 hover:border-[#3ea2d4] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      className="block p-4 border border-gray-200 dark:border-gray-700 hover:border-[#3ea2d4] hover:bg-civiq-blue/10 dark:hover:bg-civiq-blue/20 transition-all"
                     >
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span
@@ -345,7 +345,7 @@ export default function RegulationDetailPage() {
                       key={committee.code}
                       href={`/committee/${committee.code}`}
                       role="listitem"
-                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 hover:border-[#3ea2d4] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 hover:border-[#3ea2d4] hover:bg-civiq-blue/10 dark:hover:bg-civiq-blue/20 transition-all"
                     >
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {committee.name}

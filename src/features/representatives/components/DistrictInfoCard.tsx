@@ -42,7 +42,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-red-50">
+            <div className="p-2 bg-civiq-red/10">
               <MapPin className="w-5 h-5" style={{ color: '#e21f0a' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
@@ -62,7 +62,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                 representative.district && (
                   <Link
                     href={`/districts/${representative.state}-${representative.district}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-xs font-semibold text-civiq-red bg-civiq-red/10 hover:bg-civiq-red/10 transition-colors"
                   >
                     <Map className="w-3 h-3" />
                     View District
@@ -89,7 +89,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-50">
+            <div className="p-2 bg-civiq-blue/10">
               <Phone className="w-5 h-5" style={{ color: '#3aa3d5' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#3aa3d5' }}>
@@ -117,7 +117,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               <div className="mt-1">
                 <a
                   href={`tel:${representative.currentTerm.phone}`}
-                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue font-medium transition-colors"
                 >
                   <Phone className="w-4 h-4" />
                   {representative.currentTerm.phone}
@@ -136,7 +136,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                   href={representative.currentTerm.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-civiq-blue bg-civiq-blue/10 hover:bg-civiq-blue/10 transition-colors"
                 >
                   <Globe className="w-4 h-4" />
                   Official Website
@@ -161,7 +161,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all border-2 border-black hover:border-2 border-black transform hover:-translate-y-0.5"
+              className="block w-full bg-gradient-to-r from-civiq-blue to-civiq-blue text-white text-center py-3 px-4 text-sm font-bold hover:from-civiq-blue hover:to-civiq-blue transition-all border-2 border-black hover:border-2 border-black transform hover:-translate-y-0.5"
             >
               Visit Website
             </a>
@@ -185,9 +185,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={`https://www.congress.gov/member/${representative.bioguideId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-blue-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
+              className="flex items-center gap-3 group hover:bg-civiq-blue/10 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-blue-600 ring-4 ring-blue-100 group-hover:ring-blue-200"></div>
+              <div className="w-2.5 h-2.5 bg-civiq-blue ring-4 ring-civiq-blue group-hover:ring-civiq-blue"></div>
               <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-blue group-hover:underline">
                 Congress.gov
               </span>
@@ -197,9 +197,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={`https://github.com/unitedstates/congress-legislators/search?q=${encodeURIComponent(representative.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-green-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
+              className="flex items-center gap-3 group hover:bg-civiq-green/10 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-green-600 ring-4 ring-green-100 group-hover:ring-green-200"></div>
+              <div className="w-2.5 h-2.5 bg-civiq-green ring-4 ring-civiq-green group-hover:ring-civiq-green"></div>
               <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-green group-hover:underline">
                 Congress Legislators
               </span>
@@ -210,17 +210,17 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                 href={`https://www.fec.gov/data/candidate/${representative.ids.fec[0]}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
+                className="flex items-center gap-3 group hover:bg-civiq-blue/10 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
               >
-                <div className="w-2.5 h-2.5 bg-purple-600 ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 group-hover:underline">
+                <div className="w-2.5 h-2.5 bg-civiq-blue ring-4 ring-civiq-blue group-hover:ring-civiq-blue"></div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-blue group-hover:underline">
                   FEC Campaign Finance
                 </span>
-                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 ml-auto" />
+                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-blue ml-auto" />
               </a>
             ) : (
               <div className="flex items-center gap-3 -mx-2 px-3 py-2 min-h-[44px] opacity-50">
-                <div className="w-2.5 h-2.5 bg-purple-600 ring-4 ring-purple-100"></div>
+                <div className="w-2.5 h-2.5 bg-civiq-blue ring-4 ring-civiq-blue"></div>
                 <span className="text-sm font-medium text-gray-700">FEC Campaign Finance</span>
                 <span className="text-xs text-gray-500 ml-auto">(N/A)</span>
               </div>
@@ -233,13 +233,13 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-orange-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
+              className="flex items-center gap-3 group hover:bg-civiq-red/10 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-orange-600 ring-4 ring-orange-100 group-hover:ring-orange-200"></div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600 group-hover:underline">
+              <div className="w-2.5 h-2.5 bg-civiq-red ring-4 ring-civiq-red group-hover:ring-civiq-red"></div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-red group-hover:underline">
                 U.S. Census Bureau
               </span>
-              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-orange-600 ml-auto" />
+              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-red ml-auto" />
             </a>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-500 italic">

@@ -94,7 +94,7 @@ export default function Error({
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center p-8 bg-white border-2 border-black max-w-md">
           <div className="mb-4">
-            <div className="w-16 h-16 mx-auto mb-4 text-orange-500">
+            <div className="w-16 h-16 mx-auto mb-4 text-civiq-red">
               <svg
                 className="w-full h-full animate-spin"
                 fill="none"
@@ -110,7 +110,7 @@ export default function Error({
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-orange-600 mb-4">Updating Application</h2>
+          <h2 className="text-2xl font-bold text-civiq-red mb-4">Updating Application</h2>
           <p className="text-gray-600 mb-4">
             The app is being updated with the latest version. This will only take a moment.
           </p>
@@ -136,7 +136,7 @@ export default function Error({
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center p-8 bg-white border-2 border-black max-w-md">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong!</h2>
+        <h2 className="text-2xl font-bold text-civiq-red mb-4">Something went wrong!</h2>
         <p className="text-gray-600 mb-4">{error.message || 'An unexpected error occurred'}</p>
         <details className="text-left mb-4">
           <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>

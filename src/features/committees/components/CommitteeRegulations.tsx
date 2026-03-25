@@ -40,7 +40,7 @@ function DaysUntilCloseBadge({ days }: { days: number | undefined }) {
   return (
     <span
       className={`px-2 py-0.5 text-xs font-medium ${
-        urgent ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+        urgent ? 'bg-civiq-red/10 text-civiq-red' : 'bg-gray-100 text-gray-600'
       }`}
     >
       {days <= 0 ? 'Closing today' : `${days}d left`}
@@ -54,7 +54,7 @@ function RegulationItem({ item }: { item: FederalRegisterItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+      className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -124,7 +124,7 @@ export function CommitteeRegulations({ committeeId }: CommitteeRegulationsProps)
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading regulations"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -167,10 +167,10 @@ export function CommitteeRegulations({ committeeId }: CommitteeRegulationsProps)
       {data.openCommentPeriods.length > 0 && (
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-yellow-600" aria-hidden="true" />
+            <Clock className="w-4 h-4 text-gray-600" aria-hidden="true" />
             Open Comment Periods ({data.openCommentPeriods.length})
             {data.summary.urgentComments > 0 && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800">
+              <span className="px-2 py-0.5 text-xs font-medium bg-civiq-red/10 text-civiq-red">
                 {data.summary.urgentComments} closing soon
               </span>
             )}

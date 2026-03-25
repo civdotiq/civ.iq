@@ -192,16 +192,16 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
             </div>
 
             {/* Key Numbers */}
-            <div className="bg-blue-50 p-3 sm:p-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Key Numbers</h4>
+            <div className="bg-civiq-blue/10 p-3 sm:p-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-civiq-blue mb-2">Key Numbers</h4>
               <div className="space-y-1 text-xs sm:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Majority Needed:</span>
-                  <span className="font-medium text-blue-900">{majorityThreshold}</span>
+                  <span className="text-civiq-blue">Majority Needed:</span>
+                  <span className="font-medium text-civiq-blue">{majorityThreshold}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Total Seats:</span>
-                  <span className="font-medium text-blue-900">{data.totalSeats}</span>
+                  <span className="text-civiq-blue">Total Seats:</span>
+                  <span className="font-medium text-civiq-blue">{data.totalSeats}</span>
                 </div>
               </div>
             </div>

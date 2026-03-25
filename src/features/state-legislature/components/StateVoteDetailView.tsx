@@ -43,11 +43,11 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
   const getVoteColor = (option: string) => {
     switch (option.toLowerCase()) {
       case 'yes':
-        return 'bg-green-500 text-white';
+        return 'bg-civiq-green text-white';
       case 'no':
-        return 'bg-red-500 text-white';
+        return 'bg-civiq-red text-white';
       case 'abstain':
-        return 'bg-yellow-500 text-white';
+        return 'bg-gray-500 text-white';
       case 'not voting':
       case 'absent':
       case 'excused':
@@ -72,7 +72,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
           <h1 className="text-3xl font-bold text-gray-900">{vote.motion_text}</h1>
           <span
             className={`px-4 py-2 font-semibold text-lg ${
-              vote.result === 'passed' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              vote.result === 'passed' ? 'bg-civiq-green text-white' : 'bg-civiq-red text-white'
             }`}
           >
             {vote.result.toUpperCase()}
@@ -93,13 +93,13 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
 
         {/* Bill Link */}
         {vote.bill && (
-          <div className="mt-4 p-4 bg-blue-50">
+          <div className="mt-4 p-4 bg-civiq-blue/10">
             <div className="flex items-start space-x-2">
-              <span className="font-semibold text-blue-900">Related Bill:</span>
+              <span className="font-semibold text-civiq-blue">Related Bill:</span>
               <div>
                 <Link
                   href={`/state-legislature/${state}/bill/${encodeBase64Url(vote.bill.id)}`}
-                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  className="text-civiq-blue hover:text-civiq-blue hover:underline font-medium"
                 >
                   {vote.bill.identifier}
                 </Link>
@@ -148,7 +148,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
                     {voter.voter_id ? (
                       <Link
                         href={`/state-legislature/${state}/legislator/${encodeBase64Url(voter.voter_id)}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-civiq-blue hover:text-civiq-blue hover:underline"
                       >
                         {voter.voter_name}
                       </Link>

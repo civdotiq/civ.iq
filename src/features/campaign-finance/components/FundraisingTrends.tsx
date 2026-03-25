@@ -50,22 +50,22 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   };
 
   const getEfficiencyColor = (efficiency: number): string => {
-    if (efficiency >= 80) return 'text-green-600';
-    if (efficiency >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (efficiency >= 80) return 'text-civiq-green';
+    if (efficiency >= 60) return 'text-gray-600';
+    return 'text-civiq-red';
   };
 
   const getEfficiencyBackground = (efficiency: number): string => {
-    if (efficiency >= 80) return 'bg-green-100';
-    if (efficiency >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
+    if (efficiency >= 80) return 'bg-civiq-green/10';
+    if (efficiency >= 60) return 'bg-gray-100';
+    return 'bg-civiq-red/10';
   };
 
   const getTrendIndicator = (current: number, previous: number) => {
     if (previous === 0) return { icon: '→', color: 'text-gray-400' };
     const change = ((current - previous) / previous) * 100;
-    if (change > 5) return { icon: '↗', color: 'text-green-500' };
-    if (change < -5) return { icon: '↘', color: 'text-red-500' };
+    if (change > 5) return { icon: '↗', color: 'text-civiq-green' };
+    if (change < -5) return { icon: '↘', color: 'text-civiq-red' };
     return { icon: '→', color: 'text-gray-400' };
   };
 
@@ -118,32 +118,32 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-blue-50 p-4 border border-blue-200">
+          <div className="bg-civiq-blue/10 p-4 border border-civiq-blue">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg"></span>
+              <span className="text-civiq-blue text-lg"></span>
               <h4 className="font-semibold text-gray-900">Total Raised</h4>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatCurrency(data.summary.totalRaised)}
             </div>
           </div>
 
-          <div className="bg-red-50 p-4 border border-red-200">
+          <div className="bg-civiq-red/10 p-4 border border-civiq-red">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-red-600 text-lg"></span>
+              <span className="text-civiq-red text-lg"></span>
               <h4 className="font-semibold text-gray-900">Total Spent</h4>
             </div>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-civiq-red">
               {formatCurrency(data.summary.totalSpent)}
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 border border-green-200">
+          <div className="bg-civiq-green/10 p-4 border border-civiq-green">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg"></span>
+              <span className="text-civiq-green text-lg"></span>
               <h4 className="font-semibold text-gray-900">Cash on Hand</h4>
             </div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-civiq-green">
               {formatCurrency(data.summary.cashOnHand)}
             </div>
           </div>
@@ -193,23 +193,23 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-green-600 text-sm">Raised:</span>
+                        <span className="text-civiq-green text-sm">Raised:</span>
                         {raisedTrend && (
                           <span className={`text-sm ${raisedTrend.color}`}>{raisedTrend.icon}</span>
                         )}
                       </div>
-                      <span className="font-medium text-green-600">
+                      <span className="font-medium text-civiq-green">
                         {formatCurrency(period.raised)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-red-600 text-sm">Spent:</span>
+                        <span className="text-civiq-red text-sm">Spent:</span>
                         {spentTrend && (
                           <span className={`text-sm ${spentTrend.color}`}>{spentTrend.icon}</span>
                         )}
                       </div>
-                      <span className="font-medium text-red-600">
+                      <span className="font-medium text-civiq-red">
                         {formatCurrency(period.spent)}
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                       <div className="flex items-center gap-2 flex-1 ml-4">
                         <div className="w-full bg-gray-200 h-2">
                           <div
-                            className="bg-green-500 h-2 transition-all duration-500"
+                            className="bg-civiq-green h-2 transition-all duration-500"
                             style={{ width: `${(period.raised / maxAmount) * 100}%` }}
                           />
                         </div>
@@ -236,7 +236,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                       <div className="flex items-center gap-2 flex-1 ml-4">
                         <div className="w-full bg-gray-200 h-2">
                           <div
-                            className="bg-red-500 h-2 transition-all duration-500"
+                            className="bg-civiq-red h-2 transition-all duration-500"
                             style={{ width: `${(period.spent / maxAmount) * 100}%` }}
                           />
                         </div>
@@ -282,19 +282,19 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
           <h4 className="font-semibold text-gray-900 mb-4">Quarterly Performance Summary</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-civiq-blue">
                 {formatCurrency(data.summary.quarterlyAverage)}
               </div>
               <div className="text-sm text-gray-500">Quarterly Average</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-civiq-red">
                 {formatCurrency(data.summary.burnRate)}
               </div>
               <div className="text-sm text-gray-500">Average Burn Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-civiq-blue">
                 {formatRunway(
                   calculateRunwayMonths(data.summary.cashOnHand, data.summary.burnRate)
                 )}
@@ -350,8 +350,8 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${
                             quarter.raisedGrowth >= 0
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-civiq-green/10 text-civiq-green'
+                              : 'bg-civiq-red/10 text-civiq-red'
                           }`}
                         >
                           {quarter.raisedGrowth >= 0 ? '+' : ''}
@@ -367,8 +367,8 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${
                             quarter.spentGrowth >= 0
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-green-100 text-green-800'
+                              ? 'bg-civiq-red/10 text-civiq-red'
+                              : 'bg-civiq-green/10 text-civiq-green'
                           }`}
                         >
                           {quarter.spentGrowth >= 0 ? '+' : ''}
@@ -379,7 +379,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
                         className={`font-medium ${
-                          quarter.netChange >= 0 ? 'text-green-600' : 'text-red-600'
+                          quarter.netChange >= 0 ? 'text-civiq-green' : 'text-civiq-red'
                         }`}
                       >
                         {quarter.netChange >= 0 ? '+' : ''}
@@ -414,25 +414,25 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return (
       <div className="space-y-6">
         {/* Cash Flow Projections */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border">
+        <div className="bg-gradient-to-r from-civiq-blue/10 to-civiq-blue/10 p-6 border">
           <h4 className="font-semibold text-gray-900 mb-4">Cash Flow Projections</h4>
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-green-600 text-lg"></span>
+                  <span className="text-civiq-green text-lg"></span>
                   <h5 className="font-medium text-gray-900">Next Quarter Projection</h5>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Expected Raised:</span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-civiq-green">
                       {formatCurrency(projectedNextQuarter)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Expected Spent:</span>
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-civiq-red">
                       {formatCurrency(projectedSpending)}
                     </span>
                   </div>
@@ -441,8 +441,8 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <span
                       className={`font-medium ${
                         projectedNextQuarter - projectedSpending >= 0
-                          ? 'text-green-600'
-                          : 'text-red-600'
+                          ? 'text-civiq-green'
+                          : 'text-civiq-red'
                       }`}
                     >
                       {projectedNextQuarter - projectedSpending >= 0 ? '+' : ''}
@@ -454,19 +454,19 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
               <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-orange-600 text-lg"></span>
+                  <span className="text-civiq-red text-lg"></span>
                   <h5 className="font-medium text-gray-900">Runway Analysis</h5>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Current Runway:</span>
-                    <span className="font-medium text-orange-600">
+                    <span className="font-medium text-civiq-red">
                       {formatRunway(runwayMonths)} months
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Monthly Burn:</span>
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-civiq-red">
                       {formatCurrency(currentBurnRate)}
                     </span>
                   </div>
@@ -475,10 +475,10 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <span
                       className={`font-medium ${
                         runwayMonths === RUNWAY_UNLIMITED || runwayMonths > 6
-                          ? 'text-green-600'
+                          ? 'text-civiq-green'
                           : runwayMonths > 3
-                            ? 'text-yellow-600'
-                            : 'text-red-600'
+                            ? 'text-gray-600'
+                            : 'text-civiq-red'
                       }`}
                     >
                       {runwayMonths === RUNWAY_UNLIMITED || runwayMonths > 6
@@ -494,7 +494,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
             <div className="bg-white p-4 border-2 border-black">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-purple-600 text-lg"></span>
+                <span className="text-civiq-blue text-lg"></span>
                 <h5 className="font-medium text-gray-900">Performance Targets</h5>
               </div>
               <div className="space-y-4">
@@ -507,7 +507,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   </div>
                   <div className="w-full bg-gray-200 h-2">
                     <div
-                      className="bg-purple-500 h-2"
+                      className="bg-civiq-blue h-2"
                       style={{
                         width: `${Math.min(((latestPeriod?.raised || 0) / (avgQuarterlyRaised * 1.2)) * 100, 100)}%`,
                       }}
@@ -525,7 +525,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   </div>
                   <div className="w-full bg-gray-200 h-2">
                     <div
-                      className="bg-green-500 h-2"
+                      className="bg-civiq-green h-2"
                       style={{ width: `${Math.min(data.summary.efficiency, 100)}%` }}
                     />
                   </div>
@@ -542,15 +542,15 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Scenario Analysis</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-green-50 p-4 border border-green-200">
-              <h5 className="font-medium text-green-900 mb-2">Best Case</h5>
+            <div className="bg-civiq-green/10 p-4 border border-civiq-green">
+              <h5 className="font-medium text-civiq-green mb-2">Best Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-green-700">Raised:</span>
+                  <span className="text-civiq-green">Raised:</span>
                   <span className="font-medium">{formatCurrency(projectedNextQuarter * 1.3)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-green-700">Runway:</span>
+                  <span className="text-civiq-green">Runway:</span>
                   <span className="font-medium">
                     {formatScenarioRunway(runwayMonths, 1.4)} months
                   </span>
@@ -558,29 +558,29 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-4 border border-yellow-200">
-              <h5 className="font-medium text-yellow-900 mb-2">Likely Case</h5>
+            <div className="bg-gray-100 p-4 border border-gray-300">
+              <h5 className="font-medium text-gray-600 mb-2">Likely Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-yellow-700">Raised:</span>
+                  <span className="text-gray-600">Raised:</span>
                   <span className="font-medium">{formatCurrency(projectedNextQuarter)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-yellow-700">Runway:</span>
+                  <span className="text-gray-600">Runway:</span>
                   <span className="font-medium">{formatRunway(runwayMonths)} months</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-red-50 p-4 border border-red-200">
-              <h5 className="font-medium text-red-900 mb-2">Worst Case</h5>
+            <div className="bg-civiq-red/10 p-4 border border-civiq-red">
+              <h5 className="font-medium text-civiq-red mb-2">Worst Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-red-700">Raised:</span>
+                  <span className="text-civiq-red">Raised:</span>
                   <span className="font-medium">{formatCurrency(projectedNextQuarter * 0.7)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-red-700">Runway:</span>
+                  <span className="text-civiq-red">Runway:</span>
                   <span className="font-medium">
                     {formatScenarioRunway(runwayMonths, 0.6)} months
                   </span>

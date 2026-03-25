@@ -146,7 +146,7 @@ export const ArticleCard = memo(function ArticleCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <h4 className={`${getTitleClasses()} group-hover:text-blue-600 transition-colors`}>
+          <h4 className={`${getTitleClasses()} group-hover:text-civiq-blue transition-colors`}>
             {article.title}
           </h4>
 

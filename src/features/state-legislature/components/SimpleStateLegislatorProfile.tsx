@@ -137,10 +137,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
   // Get party badge color
   const getPartyBadgeClass = () => {
     if (legislator.party === 'Republican') {
-      return 'bg-red-50 text-red-800 border-civiq-red';
+      return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
     if (legislator.party === 'Democratic') {
-      return 'bg-blue-50 text-blue-800 border-civiq-blue';
+      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
     }
     return 'bg-gray-50 text-gray-800 border-black';
   };
@@ -466,11 +466,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                             className={`px-2 py-1 text-xs font-bold border-2 ${
                               committee.role.toLowerCase().includes('chair') &&
                               !committee.role.toLowerCase().includes('vice')
-                                ? 'bg-yellow-50 text-yellow-800 border-yellow-500'
+                                ? 'bg-gray-100 text-gray-600 border-gray-400'
                                 : committee.role.toLowerCase().includes('vice')
-                                  ? 'bg-blue-50 text-blue-800 border-blue-500'
+                                  ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
                                   : committee.role.toLowerCase().includes('ranking')
-                                    ? 'bg-green-50 text-green-800 border-civiq-green'
+                                    ? 'bg-civiq-green/10 text-civiq-green border-civiq-green'
                                     : 'bg-white text-gray-800 border-black'
                             }`}
                           >
@@ -588,7 +588,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
             {/* Need Help Section */}
             <div
-              className="bg-red-50 aicher-border border-civiq-red"
+              className="bg-civiq-red/10 aicher-border border-civiq-red"
               style={{ padding: 'calc(var(--grid) * 3)' }}
             >
               <div className="flex items-start gap-3">
@@ -740,7 +740,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                           <span className="text-sm text-gray-900">{collab.legislatorName}</span>
                           <span className="text-xs text-gray-500">({collab.party})</span>
                           {collab.bipartisan && (
-                            <span className="text-xs font-bold border-2 border-yellow-500 bg-yellow-50 text-yellow-800 px-1">
+                            <span className="text-xs font-bold border-2 border-gray-400 bg-gray-100 text-gray-600 px-1">
                               Bipartisan
                             </span>
                           )}
@@ -864,7 +864,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                     legislator.leadershipRoles.map((role, index) => (
                       <span
                         key={index}
-                        className="aicher-heading text-xs sm:text-sm font-bold bg-yellow-50 text-yellow-800 border-2 border-yellow-500 px-3 py-2 flex items-center gap-1"
+                        className="aicher-heading text-xs sm:text-sm font-bold bg-gray-100 text-gray-600 border-2 border-gray-400 px-3 py-2 flex items-center gap-1"
                       >
                         <Crown className="w-3 h-3" />
                         {role.title}

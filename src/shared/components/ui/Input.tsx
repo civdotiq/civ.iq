@@ -40,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             'w-full px-4 py-3 border transition-all duration-200',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             error
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+              ? 'border-civiq-red focus:border-civiq-red focus:ring-civiq-red/20'
               : 'border-gray-300 focus:border-civiq-blue focus:ring-civiq-blue/20',
             className
           )}
@@ -49,7 +49,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p id={errorId} className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">
+          <p id={errorId} className="mt-1 text-sm text-civiq-red" role="alert" aria-live="polite">
             {error}
           </p>
         )}

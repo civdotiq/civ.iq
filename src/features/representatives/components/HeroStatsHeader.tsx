@@ -230,9 +230,9 @@ export function HeroStatsHeader({
                 <span
                   className={`aicher-heading text-xs sm:text-sm font-bold border-2 px-3 py-2 ${
                     representative.party === 'Republican'
-                      ? 'bg-red-50 text-red-800 border-civiq-red'
+                      ? 'bg-civiq-red/10 text-civiq-red border-civiq-red'
                       : representative.party === 'Democrat'
-                        ? 'bg-blue-50 text-blue-800 border-civiq-blue'
+                        ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
                 >
@@ -257,7 +257,7 @@ export function HeroStatsHeader({
               {currentLeadershipRoles?.map((role, index) => (
                 <span
                   key={index}
-                  className="aicher-heading text-xs sm:text-sm font-bold bg-yellow-50 text-yellow-800 border-2 border-yellow-500 px-3 py-2 flex items-center gap-1"
+                  className="aicher-heading text-xs sm:text-sm font-bold bg-gray-100 text-gray-600 border-2 border-gray-400 px-3 py-2 flex items-center gap-1"
                 >
                   <Crown className="w-3 h-3" />
                   {role.title}

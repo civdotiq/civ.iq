@@ -86,11 +86,11 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
   const getPositionColor = (position: string) => {
     switch (position) {
       case 'Yea':
-        return 'bg-green-500';
+        return 'bg-civiq-green';
       case 'Nay':
-        return 'bg-red-500';
+        return 'bg-civiq-red';
       case 'Present':
-        return 'bg-blue-500';
+        return 'bg-civiq-blue';
       case 'Not Voting':
         return 'bg-gray-400';
       default:
@@ -101,11 +101,11 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
   const getPositionTextColor = (position: string) => {
     switch (position) {
       case 'Yea':
-        return 'text-green-700 bg-green-50';
+        return 'text-civiq-green bg-civiq-green/10';
       case 'Nay':
-        return 'text-red-700 bg-red-50';
+        return 'text-civiq-red bg-civiq-red/10';
       case 'Present':
-        return 'text-blue-700 bg-blue-50';
+        return 'text-civiq-blue bg-civiq-blue/10';
       case 'Not Voting':
         return 'text-gray-700 bg-white';
       default:
@@ -230,29 +230,29 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             {filteredVotes.length !== votes.length && `${votes.length} total`}
           </div>
         </div>
-        <div className="text-center p-4 bg-green-50">
-          <div className="text-2xl font-bold text-green-600">{stats.yea}</div>
+        <div className="text-center p-4 bg-civiq-green/10">
+          <div className="text-2xl font-bold text-civiq-green">{stats.yea}</div>
           <div className="text-sm text-gray-600">Yea</div>
           <div className="text-xs text-gray-500 mt-1">
             {stats.total > 0 ? Math.round((stats.yea / stats.total) * 100) : 0}%
           </div>
         </div>
-        <div className="text-center p-4 bg-red-50">
-          <div className="text-2xl font-bold text-red-600">{stats.nay}</div>
+        <div className="text-center p-4 bg-civiq-red/10">
+          <div className="text-2xl font-bold text-civiq-red">{stats.nay}</div>
           <div className="text-sm text-gray-600">Nay</div>
           <div className="text-xs text-gray-500 mt-1">
             {stats.total > 0 ? Math.round((stats.nay / stats.total) * 100) : 0}%
           </div>
         </div>
-        <div className="text-center p-4 bg-blue-50">
-          <div className="text-2xl font-bold text-blue-600">{stats.present}</div>
+        <div className="text-center p-4 bg-civiq-blue/10">
+          <div className="text-2xl font-bold text-civiq-blue">{stats.present}</div>
           <div className="text-sm text-gray-600">Present</div>
           <div className="text-xs text-gray-500 mt-1">
             {stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0}%
           </div>
         </div>
-        <div className="text-center p-4 bg-orange-50">
-          <div className="text-2xl font-bold text-orange-600">{stats.keyVotes}</div>
+        <div className="text-center p-4 bg-civiq-red/10">
+          <div className="text-2xl font-bold text-civiq-red">{stats.keyVotes}</div>
           <div className="text-sm text-gray-600">Key Votes</div>
           <div className="text-xs text-gray-500 mt-1">
             {stats.total > 0 ? Math.round((stats.keyVotes / stats.total) * 100) : 0}%
@@ -269,7 +269,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
               key={index}
               className={`w-4 h-4 cursor-pointer transition-all duration-200 ${getPositionColor(vote.position)} ${
                 hoveredVote === index ? 'scale-125 ring-2 ring-gray-400' : ''
-              } ${vote.isKeyVote ? 'ring-2 ring-yellow-400' : ''}`}
+              } ${vote.isKeyVote ? 'ring-2 ring-gray-400' : ''}`}
               onMouseEnter={() => setHoveredVote(index)}
               onMouseLeave={() => setHoveredVote(null)}
               title={`${vote.bill}: ${vote.position} - ${new Date(vote.date).toLocaleDateString()}`}
@@ -281,15 +281,15 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
         </div>
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-500"></div>
+            <div className="w-3 h-3 bg-civiq-green"></div>
             Yea
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-500"></div>
+            <div className="w-3 h-3 bg-civiq-red"></div>
             Nay
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500"></div>
+            <div className="w-3 h-3 bg-civiq-blue"></div>
             Present
           </span>
           <span className="flex items-center gap-1">
@@ -297,7 +297,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             Not Voting
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-300 ring-2 ring-yellow-400"></div>
+            <div className="w-3 h-3 bg-gray-300 ring-2 ring-gray-400"></div>
             Key Vote
           </span>
         </div>
@@ -318,7 +318,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
                 {filteredVotes[hoveredVote].position}
               </span>
               {filteredVotes[hoveredVote].isKeyVote && (
-                <div className="text-xs text-yellow-600 mt-1">⭐ Key Vote</div>
+                <div className="text-xs text-gray-600 mt-1">⭐ Key Vote</div>
               )}
             </div>
           </div>
@@ -335,9 +335,9 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
           <h4 className="text-md font-medium text-gray-900 mb-3">Position Distribution</h4>
           <div className="space-y-2">
             {[
-              { label: 'Yea', count: stats.yea, color: 'bg-green-500' },
-              { label: 'Nay', count: stats.nay, color: 'bg-red-500' },
-              { label: 'Present', count: stats.present, color: 'bg-blue-500' },
+              { label: 'Yea', count: stats.yea, color: 'bg-civiq-green' },
+              { label: 'Nay', count: stats.nay, color: 'bg-civiq-red' },
+              { label: 'Present', count: stats.present, color: 'bg-civiq-blue' },
               { label: 'Not Voting', count: stats.notVoting, color: 'bg-gray-400' },
             ]
               .filter(item => item.count > 0)
@@ -392,7 +392,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
                     <div className="flex items-center gap-2 mb-2">
                       <h5 className="font-medium text-gray-900">{vote.bill}</h5>
                       {vote.isKeyVote && (
-                        <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs">
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs">
                           ⭐ Key Vote
                         </span>
                       )}

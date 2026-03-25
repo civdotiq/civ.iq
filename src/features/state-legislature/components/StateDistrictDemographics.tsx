@@ -95,7 +95,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
             <span className="text-gray-600">White</span>
             <div className="flex items-center gap-2">
               <div className="w-24 h-2 bg-gray-200 overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: `${white_percent}%` }} />
+                <div className="h-full bg-civiq-blue" style={{ width: `${white_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
                 {formatPercent(white_percent)}
@@ -119,7 +119,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
             <span className="text-gray-600">Hispanic</span>
             <div className="flex items-center gap-2">
               <div className="w-24 h-2 bg-gray-200 overflow-hidden">
-                <div className="h-full bg-orange-500" style={{ width: `${hispanic_percent}%` }} />
+                <div className="h-full bg-civiq-red" style={{ width: `${hispanic_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
                 {formatPercent(hispanic_percent)}
@@ -131,7 +131,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
             <span className="text-gray-600">Asian</span>
             <div className="flex items-center gap-2">
               <div className="w-24 h-2 bg-gray-200 overflow-hidden">
-                <div className="h-full bg-yellow-500" style={{ width: `${asian_percent}%` }} />
+                <div className="h-full bg-gray-500" style={{ width: `${asian_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
                 {formatPercent(asian_percent)}

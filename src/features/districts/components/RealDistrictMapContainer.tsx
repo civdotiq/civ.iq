@@ -256,11 +256,11 @@ export function RealDistrictMapContainer({
         style={{ height }}
       >
         <div className="text-center p-6">
-          <div className="text-red-600 text-lg font-medium mb-2">Map Loading Error</div>
+          <div className="text-civiq-red text-lg font-medium mb-2">Map Loading Error</div>
           <div className="text-gray-600 text-sm">{mapState.error}</div>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue"
           >
             Reload Page
           </button>
@@ -294,7 +294,7 @@ export function RealDistrictMapContainer({
               <span>District Boundary</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500"></div>
+              <div className="w-3 h-3 bg-civiq-blue"></div>
               <span>Selected District</span>
             </div>
           </div>

@@ -63,7 +63,7 @@ export function Breadcrumb({
           )}
           <Link
             href={item.href}
-            className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+            className="inline-flex items-center gap-1.5 text-civiq-blue hover:text-civiq-blue hover:underline transition-colors"
           >
             {index === 0 && <Home className="w-4 h-4" aria-hidden="true" />}
             <span>{item.label}</span>
@@ -92,7 +92,7 @@ export function SimpleBreadcrumb({ className = '' }: { className?: string }) {
     <nav className={`mb-6 ${className}`}>
       <Link
         href="/representatives"
-        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+        className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
       >
         <Home className="w-4 h-4" />
         <span>Back to Representatives</span>

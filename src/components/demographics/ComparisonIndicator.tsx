@@ -57,7 +57,9 @@ export function ComparisonIndicator({
   }
 
   return (
-    <div className={`text-xs mt-1 ${isBetter ? 'text-green-600' : 'text-orange-600'} ${className}`}>
+    <div
+      className={`text-xs mt-1 ${isBetter ? 'text-civiq-green' : 'text-civiq-red'} ${className}`}
+    >
       {isAbove ? '↑' : '↓'} {Math.abs(parseFloat(percentDiff))}% {isAbove ? 'above' : 'below'} U.S.
       avg ({average.toLocaleString()}
       {suffix})

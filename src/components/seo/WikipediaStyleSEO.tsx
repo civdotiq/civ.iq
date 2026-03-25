@@ -33,7 +33,10 @@ export function TableOfContents({ items, title = 'Contents' }: TableOfContentsPr
       <ol className="space-y-1 text-sm">
         {items.map((item, index) => (
           <li key={item.id} className={item.level === 2 ? 'ml-4' : item.level === 3 ? 'ml-8' : ''}>
-            <a href={`#${item.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+            <a
+              href={`#${item.id}`}
+              className="text-civiq-blue hover:text-civiq-blue hover:underline"
+            >
               {item.level === 1 && `${index + 1}. `}
               {item.title}
             </a>
@@ -85,7 +88,7 @@ export function FAQSection({ faqs, title = 'Frequently Asked Questions' }: FAQSe
       <h2 className="text-lg font-bold text-gray-800 mb-4">{title}</h2>
       <dl className="space-y-4">
         {faqs.map((faq, index) => (
-          <div key={index} className="border-l-4 border-blue-500 pl-4">
+          <div key={index} className="border-l-4 border-civiq-blue pl-4">
             <dt className="font-semibold text-gray-800">{faq.question}</dt>
             <dd className="mt-1 text-gray-600">{faq.answer}</dd>
           </div>

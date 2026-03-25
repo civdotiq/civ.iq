@@ -58,7 +58,7 @@ export function RepresentativeSidebar({
       {/* Federal Level Section */}
       <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-blue-500" />
+          <CheckCircle className="h-5 w-5 text-civiq-blue" />
           Federal Level
         </h3>
 
@@ -81,7 +81,7 @@ export function RepresentativeSidebar({
       {/* District Information */}
       <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-green-500" />
+          <MapPin className="h-5 w-5 text-civiq-green" />
           District Information
         </h3>
 
@@ -103,7 +103,7 @@ export function RepresentativeSidebar({
                 representative.state,
                 representative.district
               )}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+              className="text-civiq-blue hover:text-civiq-blue text-sm font-medium flex items-center gap-1"
             >
               View District Details
               <ExternalLink className="h-3 w-3" />
@@ -124,7 +124,7 @@ export function RepresentativeSidebar({
 
           <div className="w-full bg-gray-200 h-3">
             <div
-              className="bg-green-600 h-3 transition-all duration-300"
+              className="bg-civiq-green h-3 transition-all duration-300"
               style={{ width: `${dataCompleteness}%` }}
             />
           </div>
@@ -147,7 +147,7 @@ export function RepresentativeSidebar({
       {newsArticles.length > 0 && (
         <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Newspaper className="h-5 w-5 text-orange-500" />
+            <Newspaper className="h-5 w-5 text-civiq-red" />
             Recent News
           </h3>
 
@@ -175,7 +175,7 @@ export function RepresentativeSidebar({
               <div className="pt-3 border-t border-gray-100">
                 <Link
                   href={`/representative/${representative.bioguideId}/news`}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-civiq-blue hover:text-civiq-blue text-sm font-medium"
                 >
                   View all news ({newsArticles.length})
                 </Link>

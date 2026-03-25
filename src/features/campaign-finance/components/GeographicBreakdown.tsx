@@ -74,8 +74,8 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     return (
       <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
-        {data.isHomeState && <p className="text-xs text-blue-600 font-medium mb-2">Home State</p>}
-        <p className="text-lg font-bold text-blue-600">${data.amount.toLocaleString()}</p>
+        {data.isHomeState && <p className="text-xs text-civiq-blue font-medium mb-2">Home State</p>}
+        <p className="text-lg font-bold text-civiq-blue">${data.amount.toLocaleString()}</p>
         <p className="text-sm text-gray-500">{data.percentage.toFixed(1)}% of total</p>
         {data.count && <p className="text-xs text-gray-400 mt-1">{data.count} contributions</p>}
       </div>
@@ -91,7 +91,7 @@ const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
     return (
       <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
-        {data.isHomeState && <p className="text-xs text-blue-600 font-medium mb-2">Home State</p>}
+        {data.isHomeState && <p className="text-xs text-civiq-blue font-medium mb-2">Home State</p>}
         <p className="text-lg font-bold" style={{ color: data.color }}>
           ${data.amount.toLocaleString()}
         </p>
@@ -296,24 +296,24 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4">
-          <h4 className="font-medium text-blue-900 mb-1">Home State</h4>
-          <p className="text-sm text-blue-700 mb-2">{representativeState || 'N/A'}</p>
-          <p className="text-lg font-bold text-blue-800">
+        <div className="bg-civiq-blue/10 p-4">
+          <h4 className="font-medium text-civiq-blue mb-1">Home State</h4>
+          <p className="text-sm text-civiq-blue mb-2">{representativeState || 'N/A'}</p>
+          <p className="text-lg font-bold text-civiq-blue">
             {homeStateData ? `${homeStateData.percentage.toFixed(1)}%` : '0%'}
           </p>
         </div>
 
-        <div className="bg-green-50 p-4">
-          <h4 className="font-medium text-green-900 mb-1">Out-of-State</h4>
-          <p className="text-sm text-green-700 mb-2">Non-home state funding</p>
-          <p className="text-lg font-bold text-green-800">{outOfStatePercentage.toFixed(1)}%</p>
+        <div className="bg-civiq-green/10 p-4">
+          <h4 className="font-medium text-civiq-green mb-1">Out-of-State</h4>
+          <p className="text-sm text-civiq-green mb-2">Non-home state funding</p>
+          <p className="text-lg font-bold text-civiq-green">{outOfStatePercentage.toFixed(1)}%</p>
         </div>
 
-        <div className="bg-purple-50 p-4">
-          <h4 className="font-medium text-purple-900 mb-1">Geographic Reach</h4>
-          <p className="text-sm text-purple-700 mb-2">States contributing</p>
-          <p className="text-lg font-bold text-purple-800">{stateCount} states</p>
+        <div className="bg-civiq-blue/10 p-4">
+          <h4 className="font-medium text-civiq-blue mb-1">Geographic Reach</h4>
+          <p className="text-sm text-civiq-blue mb-2">States contributing</p>
+          <p className="text-lg font-bold text-civiq-blue">{stateCount} states</p>
         </div>
       </div>
 
@@ -331,7 +331,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-gray-900 truncate flex items-center gap-2">
                     {state.stateName}
-                    {state.isHomeState && <span className="text-blue-600 text-sm"></span>}
+                    {state.isHomeState && <span className="text-civiq-blue text-sm"></span>}
                   </p>
                   <p className="text-xs text-gray-500">{state.state}</p>
                 </div>
@@ -350,34 +350,34 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
         <h4 className="font-medium text-gray-800 mb-3">Key Insights</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {homeStateData && homeStateData.percentage > 60 && (
-            <div className="flex items-start gap-2 p-2 bg-blue-50">
-              <span className="text-blue-500 text-xs mt-1"></span>
-              <span className="text-sm text-blue-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-blue/10">
+              <span className="text-civiq-blue text-xs mt-1"></span>
+              <span className="text-sm text-civiq-blue">
                 Strong home state support: {homeStateData.percentage.toFixed(0)}% of funding from{' '}
                 {representativeState}
               </span>
             </div>
           )}
           {outOfStatePercentage > 50 && (
-            <div className="flex items-start gap-2 p-2 bg-green-50">
-              <span className="text-green-500 text-xs mt-1"></span>
-              <span className="text-sm text-green-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-green/10">
+              <span className="text-civiq-green text-xs mt-1"></span>
+              <span className="text-sm text-civiq-green">
                 National appeal: {outOfStatePercentage.toFixed(0)}% of funding from out-of-state
               </span>
             </div>
           )}
           {stateCount > 15 && (
-            <div className="flex items-start gap-2 p-2 bg-purple-50">
-              <span className="text-purple-500 text-xs mt-1"></span>
-              <span className="text-sm text-purple-800">
+            <div className="flex items-start gap-2 p-2 bg-civiq-blue/10">
+              <span className="text-civiq-blue text-xs mt-1"></span>
+              <span className="text-sm text-civiq-blue">
                 Broad geographic base: Contributions from {stateCount} states
               </span>
             </div>
           )}
           {homeStateData && homeStateData.percentage < 30 && outOfStatePercentage > 70 && (
-            <div className="flex items-start gap-2 p-2 bg-yellow-50">
-              <span className="text-yellow-500 text-xs mt-1"></span>
-              <span className="text-sm text-yellow-800">
+            <div className="flex items-start gap-2 p-2 bg-gray-100">
+              <span className="text-gray-600 text-xs mt-1"></span>
+              <span className="text-sm text-gray-600">
                 Limited home state support: Only {homeStateData.percentage.toFixed(0)}% from{' '}
                 {representativeState}
               </span>

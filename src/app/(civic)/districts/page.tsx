@@ -139,7 +139,7 @@ export default function DistrictsPage() {
         <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-4 sm:mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">›</span>
@@ -188,8 +188,8 @@ export default function DistrictsPage() {
 
           {/* Districts data - loads progressively */}
           {error ? (
-            <div className="bg-red-50 border-2 border-red-200 p-8 mb-8 text-center">
-              <div className="text-red-600 text-lg font-medium mb-2">
+            <div className="bg-civiq-red/10 border-2 border-civiq-red p-8 mb-8 text-center">
+              <div className="text-civiq-red text-lg font-medium mb-2">
                 {errorType === 'rate-limit'
                   ? 'Too Many Requests'
                   : errorType === 'timeout'
@@ -207,21 +207,21 @@ export default function DistrictsPage() {
                 </div>
               )}
               {circuitState === 'open' && (
-                <div className="text-sm text-orange-600 mb-4">
+                <div className="text-sm text-civiq-red mb-4">
                   Service temporarily unavailable. Will retry automatically in 30 seconds.
                 </div>
               )}
               <button
                 onClick={retry}
                 disabled={circuitState === 'open' && errorType === 'server'}
-                className="px-6 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-civiq-blue text-white font-medium hover:bg-civiq-blue transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {circuitState === 'open' ? 'Service Unavailable' : 'Retry'}
               </button>
             </div>
           ) : apiLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue"></div>
               <p className="mt-4 text-gray-600">Loading representative data...</p>
               {retryCount > 0 && (
                 <p className="mt-2 text-sm text-gray-500">Retry attempt {retryCount} of 3...</p>
@@ -242,9 +242,9 @@ export default function DistrictsPage() {
                       <span
                         className={
                           cacheStatus === 'hit'
-                            ? 'text-green-600'
+                            ? 'text-civiq-green'
                             : cacheStatus === 'stale'
-                              ? 'text-orange-600'
+                              ? 'text-civiq-red'
                               : 'text-gray-600'
                         }
                       >
@@ -254,10 +254,10 @@ export default function DistrictsPage() {
                       <span
                         className={
                           circuitState === 'open'
-                            ? 'text-red-600'
+                            ? 'text-civiq-red'
                             : circuitState === 'half-open'
-                              ? 'text-orange-600'
-                              : 'text-green-600'
+                              ? 'text-civiq-red'
+                              : 'text-civiq-green'
                         }
                       >
                         {circuitState}

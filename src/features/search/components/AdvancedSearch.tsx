@@ -247,7 +247,7 @@ export function AdvancedSearch() {
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center justify-center gap-2 px-4 py-3 border transition-colors min-h-[44px] ${
             showFilters
-              ? 'bg-blue-600 text-white border-blue-600'
+              ? 'bg-civiq-blue text-white border-civiq-blue'
               : 'aicher-button text-gray-700 aicher-hover'
           }`}
         >
@@ -463,7 +463,7 @@ export function AdvancedSearch() {
         </h3>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Sort by:</span>
-          <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue">
             <option>Relevance</option>
             <option>Name (A-Z)</option>
             <option>Years in Office</option>
@@ -521,9 +521,9 @@ export function AdvancedSearch() {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-medium ${
                             rep.party === 'D'
-                              ? 'bg-blue-100 text-blue-700'
+                              ? 'bg-civiq-blue/10 text-civiq-blue'
                               : rep.party === 'R'
-                                ? 'bg-red-100 text-red-700'
+                                ? 'bg-civiq-red/10 text-civiq-red'
                                 : 'bg-gray-100 text-gray-700'
                           }`}
                         >
@@ -544,7 +544,7 @@ export function AdvancedSearch() {
                         </span>
                       </div>
                     </div>
-                    <button className="min-h-[44px] px-4 py-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium">
+                    <button className="min-h-[44px] px-4 py-3 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors font-medium">
                       View Profile
                     </button>
                   </div>
@@ -559,7 +559,7 @@ export function AdvancedSearch() {
                       <span>{formatCurrency(rep.fundraisingTotal)} raised</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-4 h-4 bg-blue-600"></div>
+                      <div className="w-4 h-4 bg-civiq-blue"></div>
                       <span>{rep.votingScore}% voting score</span>
                     </div>
                   </div>
@@ -591,7 +591,7 @@ export function AdvancedSearch() {
             >
               Previous
             </button>
-            <span className="min-h-[44px] min-w-[44px] px-4 py-3 bg-blue-600 text-white text-sm font-medium flex items-center justify-center">
+            <span className="min-h-[44px] min-w-[44px] px-4 py-3 bg-civiq-blue text-white text-sm font-medium flex items-center justify-center">
               1
             </span>
             <button className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 text-sm hover:bg-gray-50 font-medium">

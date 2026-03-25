@@ -35,9 +35,9 @@ export default function EdgeCaseTooltip({
     territory: {
       icon: MapPin,
       title: 'U.S. Territory',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      color: 'text-civiq-blue',
+      bgColor: 'bg-civiq-blue/10',
+      borderColor: 'border-civiq-blue',
       description:
         'This ZIP code is located in a U.S. territory with non-voting representation in Congress.',
       details: [
@@ -50,9 +50,9 @@ export default function EdgeCaseTooltip({
     dc: {
       icon: MapPin,
       title: 'District of Columbia',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
+      color: 'text-civiq-blue',
+      bgColor: 'bg-civiq-blue/10',
+      borderColor: 'border-civiq-blue',
       description: 'Washington D.C. has non-voting representation in the House of Representatives.',
       details: [
         'D.C. has one non-voting delegate in the House',
@@ -64,9 +64,9 @@ export default function EdgeCaseTooltip({
     'at-large': {
       icon: Info,
       title: 'At-Large District',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
+      color: 'text-civiq-green',
+      bgColor: 'bg-civiq-green/10',
+      borderColor: 'border-civiq-green',
       description: 'This state has only one House representative serving the entire state.',
       details: [
         'States with populations too small for multiple districts',
@@ -78,9 +78,9 @@ export default function EdgeCaseTooltip({
     'multi-district': {
       icon: AlertTriangle,
       title: 'Multi-District ZIP Code',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100',
+      borderColor: 'border-gray-300',
       description: 'This ZIP code spans multiple congressional districts.',
       details: [
         'ZIP codes are designed for mail delivery, not political boundaries',
@@ -93,9 +93,9 @@ export default function EdgeCaseTooltip({
     'low-confidence': {
       icon: AlertTriangle,
       title: 'Low Confidence Mapping',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
+      color: 'text-civiq-red',
+      bgColor: 'bg-civiq-red/10',
+      borderColor: 'border-civiq-red',
       description: 'The district mapping for this ZIP code has lower confidence.',
       details: [
         'Data source may be incomplete or outdated',
@@ -108,9 +108,9 @@ export default function EdgeCaseTooltip({
     unmapped: {
       icon: AlertTriangle,
       title: 'Unmapped ZIP Code',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
+      color: 'text-civiq-red',
+      bgColor: 'bg-civiq-red/10',
+      borderColor: 'border-civiq-red',
       description: 'This ZIP code could not be mapped to a congressional district.',
       details: [
         'ZIP code may be invalid or no longer in use',

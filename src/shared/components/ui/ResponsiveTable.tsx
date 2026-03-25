@@ -282,9 +282,9 @@ export function VoteCard({
               })}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-blue-600">{vote.bill.number}</span>
+              <span className="text-lg font-semibold text-civiq-blue">{vote.bill.number}</span>
               {vote.isKeyVote && (
-                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600">
                   Key Vote
                 </span>
               )}

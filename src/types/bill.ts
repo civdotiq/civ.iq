@@ -229,16 +229,16 @@ export function getBillDisplayStatus(status: BillStatus): string {
 
 export function getBillStatusColor(status: BillStatus): string {
   const colorMap: Record<BillStatus, string> = {
-    introduced: 'bg-blue-100 text-blue-800',
-    referred: 'bg-yellow-100 text-yellow-800',
-    reported: 'bg-purple-100 text-purple-800',
-    passed_house: 'bg-green-100 text-green-800',
-    passed_senate: 'bg-green-100 text-green-800',
-    passed_both: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
+    introduced: 'bg-civiq-blue/10 text-civiq-blue',
+    referred: 'bg-gray-100 text-gray-600',
+    reported: 'bg-civiq-blue/10 text-civiq-blue',
+    passed_house: 'bg-civiq-green/10 text-civiq-green',
+    passed_senate: 'bg-civiq-green/10 text-civiq-green',
+    passed_both: 'bg-civiq-green/10 text-civiq-green',
+    failed: 'bg-civiq-red/10 text-civiq-red',
     enacted: 'bg-emerald-100 text-emerald-800',
-    vetoed: 'bg-red-100 text-red-800',
-    pocket_vetoed: 'bg-red-100 text-red-800',
+    vetoed: 'bg-civiq-red/10 text-civiq-red',
+    pocket_vetoed: 'bg-civiq-red/10 text-civiq-red',
   };
   return colorMap[status] || 'bg-gray-100 text-gray-800';
 }

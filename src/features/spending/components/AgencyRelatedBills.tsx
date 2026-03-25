@@ -88,7 +88,7 @@ export function AgencyRelatedBills({ agencySlug }: AgencyRelatedBillsProps) {
           </p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading related bills"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -121,7 +121,7 @@ export function AgencyRelatedBills({ agencySlug }: AgencyRelatedBillsProps) {
             key={bill.id}
             href={`/bill/${bill.id}`}
             role="listitem"
-            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+            className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
@@ -132,7 +132,7 @@ export function AgencyRelatedBills({ agencySlug }: AgencyRelatedBillsProps) {
                   <span
                     className={`px-2 py-0.5 text-xs font-medium ${
                       bill.connectionStrength === 'direct'
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-civiq-green/10 text-civiq-green'
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >

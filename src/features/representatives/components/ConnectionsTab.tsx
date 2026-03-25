@@ -109,7 +109,7 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load connections data</div>
+        <div className="text-civiq-red mb-2">Failed to load connections data</div>
         <div className="text-sm text-gray-500">Please try refreshing the page</div>
       </div>
     );
@@ -153,16 +153,16 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
     <div className="space-y-6">
       {/* Civic Action Summary */}
       {civicActions.canComment > 0 && (
-        <div className="bg-yellow-50 border-2 border-yellow-500 p-4">
-          <div className="font-semibold text-yellow-800 mb-1">
+        <div className="bg-gray-100 border-2 border-gray-400 p-4">
+          <div className="font-semibold text-gray-600 mb-1">
             {civicActions.canComment} Open Comment Period
             {civicActions.canComment !== 1 ? 's' : ''}
           </div>
-          <div className="text-sm text-yellow-700">
+          <div className="text-sm text-gray-600">
             You can influence policy — these regulations are open for public comment
           </div>
           {civicActions.upcomingDeadlines.length > 0 && (
-            <div className="mt-2 text-sm text-yellow-800">
+            <div className="mt-2 text-sm text-gray-600">
               Closing soon:{' '}
               {civicActions.upcomingDeadlines.map(d => `${d.title} (${d.daysLeft}d)`).join(', ')}
             </div>
@@ -296,7 +296,7 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
                   <span
                     className={`flex-shrink-0 text-xs font-bold px-2 py-1 border-2 ${
                       period.daysUntilClose <= 7
-                        ? 'border-red-500 bg-red-50 text-red-800'
+                        ? 'border-civiq-red bg-civiq-red/10 text-civiq-red'
                         : 'border-gray-300 bg-gray-50 text-gray-700'
                     }`}
                   >

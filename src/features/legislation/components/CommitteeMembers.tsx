@@ -222,9 +222,9 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
       return <ChevronUpIcon className="w-4 h-4 text-gray-400" />;
     }
     return sortBy.direction === 'asc' ? (
-      <ChevronUpIcon className="w-4 h-4 text-blue-600" />
+      <ChevronUpIcon className="w-4 h-4 text-civiq-blue" />
     ) : (
-      <ChevronDownIcon className="w-4 h-4 text-blue-600" />
+      <ChevronDownIcon className="w-4 h-4 text-civiq-blue" />
     );
   };
 
@@ -249,14 +249,14 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
             onClick={() => setShowFilters(!showFilters)}
             className={`inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium ${
               hasActiveFilters
-                ? 'bg-blue-50 text-blue-700 border-blue-300'
+                ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
                 : 'text-gray-700 bg-white'
-            } hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            } hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue`}
           >
             <FunnelIcon className="w-4 h-4 mr-2" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5">
+              <span className="ml-2 bg-civiq-blue text-white text-xs px-2 py-0.5">
                 {Object.values(filters).reduce((sum, arr) => sum + arr.length, 0)}
               </span>
             )}
@@ -288,7 +288,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       type="checkbox"
                       checked={filters.party.includes(party)}
                       onChange={() => handleFilterChange('party', party)}
-                      className="border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                      className="border-gray-300 text-civiq-blue focus:ring-civiq-blue mr-2"
                     />
                     <span className="text-sm text-gray-600">{party}</span>
                   </label>
@@ -306,7 +306,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       type="checkbox"
                       checked={filters.state.includes(state)}
                       onChange={() => handleFilterChange('state', state)}
-                      className="border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                      className="border-gray-300 text-civiq-blue focus:ring-civiq-blue mr-2"
                     />
                     <span className="text-sm text-gray-600">{state}</span>
                   </label>
@@ -324,7 +324,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       type="checkbox"
                       checked={filters.role.includes(role)}
                       onChange={() => handleFilterChange('role', role)}
-                      className="border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                      className="border-gray-300 text-civiq-blue focus:ring-civiq-blue mr-2"
                     />
                     <span className="text-sm text-gray-600">{role}</span>
                   </label>
@@ -342,7 +342,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       type="checkbox"
                       checked={filters.chamber.includes(chamber)}
                       onChange={() => handleFilterChange('chamber', chamber)}
-                      className="border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                      className="border-gray-300 text-civiq-blue focus:ring-civiq-blue mr-2"
                     />
                     <span className="text-sm text-gray-600">{chamber}</span>
                   </label>
@@ -436,7 +436,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       <div>
                         <Link
                           href={`/representative/${member.representative.bioguideId}`}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                          className="text-sm font-medium text-civiq-blue hover:text-civiq-blue"
                         >
                           {member.representative.name}
                         </Link>
@@ -451,10 +451,10 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                         member.representative.party === 'Democrat' ||
                         member.representative.party === 'D'
-                          ? 'bg-blue-100 text-blue-800'
+                          ? 'bg-civiq-blue/10 text-civiq-blue'
                           : member.representative.party === 'Independent'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-civiq-blue/10 text-civiq-blue'
+                            : 'bg-civiq-red/10 text-civiq-red'
                       }`}
                     >
                       {member.representative.party}
@@ -468,7 +468,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                         member.representative.state,
                         member.representative.district
                       )}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-civiq-blue hover:text-civiq-blue hover:underline"
                     >
                       {member.representative.state}
                       {member.representative.district && `-${member.representative.district}`}
@@ -480,9 +480,9 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                     <span
                       className={`px-2 py-1 inline-flex text-xs leading-5 font-medium ${
                         member.role === 'Chair'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-civiq-green/10 text-civiq-green'
                           : member.role === 'Ranking Member'
-                            ? 'bg-orange-100 text-orange-800'
+                            ? 'bg-civiq-red/10 text-civiq-red'
                             : 'bg-white border-2 border-gray-300 text-gray-800'
                       }`}
                     >
@@ -502,7 +502,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => toggleMemberExpanded(member.representative.bioguideId)}
-                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300"
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-civiq-blue hover:text-civiq-blue border border-civiq-blue hover:border-civiq-blue"
                     >
                       {expandedMembers.has(member.representative.bioguideId) ? (
                         <>
@@ -525,7 +525,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                       <div className="space-y-3">
                         {memberBills[member.representative.bioguideId]?.loading && (
                           <div className="flex items-center justify-center py-4">
-                            <div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div>
+                            <div className="animate-spin h-6 w-6 border-b-2 border-civiq-blue"></div>
                             <span className="ml-2 text-sm text-gray-600">
                               Loading 119th Congress bills...
                             </span>
@@ -533,7 +533,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                         )}
 
                         {memberBills[member.representative.bioguideId]?.error && (
-                          <div className="text-sm text-red-600 text-center py-4">
+                          <div className="text-sm text-civiq-red text-center py-4">
                             {memberBills[member.representative.bioguideId]?.error}
                           </div>
                         )}
@@ -578,7 +578,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                                         <div className="flex-1">
                                           <Link
                                             href={`/bill/${bill.billId}`}
-                                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                                            className="text-sm font-medium text-civiq-blue hover:text-civiq-blue"
                                           >
                                             {bill.type} {bill.number}
                                           </Link>
@@ -618,7 +618,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                             <div className="mt-3 text-center">
                               <Link
                                 href={`/representative/${member.representative.bioguideId}/bills`}
-                                className="text-xs text-blue-600 hover:text-blue-800"
+                                className="text-xs text-civiq-blue hover:text-civiq-blue"
                               >
                                 View all bills →
                               </Link>

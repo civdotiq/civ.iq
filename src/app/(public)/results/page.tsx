@@ -62,7 +62,7 @@ const DistrictMap = dynamic(() => import('@/features/districts/components/Distri
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-white border border-gray-200">
       <div className="text-center">
-        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue mb-2"></div>
         <p className="text-sm text-gray-600">Loading congressional district map...</p>
       </div>
     </div>
@@ -77,7 +77,7 @@ const StateDistrictBoundaryMap = dynamic(
     loading: () => (
       <div className="flex items-center justify-center h-96 bg-white border border-gray-200">
         <div className="text-center">
-          <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+          <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue mb-2"></div>
           <p className="text-sm text-gray-600">Loading state district map...</p>
         </div>
       </div>
@@ -614,7 +614,7 @@ function ResultsContent() {
               </span>
             )}
             {multiDistrictData && !selectedDistrict && (
-              <span className="ml-2 text-orange-600">
+              <span className="ml-2 text-civiq-red">
                 • Multiple districts found - please select
               </span>
             )}
@@ -732,8 +732,8 @@ function ResultsContent() {
                     )}
 
                   {loading.error && (
-                    <div className="bg-red-50 border border-red-200 p-6 text-center">
-                      <div className="text-red-500 mb-4">
+                    <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
+                      <div className="text-civiq-red mb-4">
                         <svg
                           className="w-12 h-12 mx-auto"
                           fill="none"
@@ -748,12 +748,12 @@ function ResultsContent() {
                           />
                         </svg>
                       </div>
-                      <p className="text-red-800 font-medium">Unable to find representatives</p>
-                      <p className="text-red-600 mt-1">{loading.error.message}</p>
+                      <p className="text-civiq-red font-medium">Unable to find representatives</p>
+                      <p className="text-civiq-red mt-1">{loading.error.message}</p>
                       <div className="flex gap-4 justify-center mt-4">
                         <button
                           onClick={() => loading.retry()}
-                          className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
+                          className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
                         >
                           Try Again
                         </button>
@@ -821,7 +821,7 @@ function ResultsContent() {
                   <Suspense
                     fallback={
                       <div className="text-center py-8">
-                        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue"></div>
                         <p className="mt-4 text-gray-600">Loading state representatives...</p>
                       </div>
                     }
@@ -846,9 +846,11 @@ function ResultsContent() {
                 (zipCode || query) &&
                 (districtInfo || selectedDistrict) && (
                   <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 p-4 mb-4">
-                      <h3 className="font-medium text-blue-900 mb-2">Congressional District Map</h3>
-                      <p className="text-sm text-blue-800">
+                    <div className="bg-civiq-blue/10 border border-civiq-blue p-4 mb-4">
+                      <h3 className="font-medium text-civiq-blue mb-2">
+                        Congressional District Map
+                      </h3>
+                      <p className="text-sm text-civiq-blue">
                         Interactive map showing your Congressional district boundaries. Zoom and pan
                         to explore your district in detail.
                       </p>
@@ -865,8 +867,8 @@ function ResultsContent() {
                         currentDistrict.startsWith('S')
                       ) {
                         return (
-                          <div className="bg-yellow-50 border border-yellow-200 p-6 text-center">
-                            <p className="text-yellow-800">
+                          <div className="bg-gray-100 border border-gray-300 p-6 text-center">
+                            <p className="text-gray-600">
                               Congressional district map is only available for numbered House
                               districts. Your location is in an at-large or statewide district.
                             </p>
@@ -883,11 +885,11 @@ function ResultsContent() {
                 (zipCode || query) &&
                 unifiedGeocodeResult?.districts && (
                   <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 p-4 mb-4">
-                      <h3 className="font-medium text-green-900 mb-2">
+                    <div className="bg-civiq-green/10 border border-civiq-green p-4 mb-4">
+                      <h3 className="font-medium text-civiq-green mb-2">
                         State Legislative District Maps
                       </h3>
-                      <p className="text-sm text-green-800 mb-2">
+                      <p className="text-sm text-civiq-green mb-2">
                         Interactive map showing your state legislative district boundaries.
                       </p>
                     </div>
@@ -921,9 +923,9 @@ function ResultsContent() {
 
         {/* Show error state if no search query */}
         {!zipCode && !address && !query && (
-          <div className="bg-red-50 border border-red-200 p-6 text-center">
-            <p className="text-red-800 font-medium">Error</p>
-            <p className="text-red-600 mt-1">No search query provided</p>
+          <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
+            <p className="text-civiq-red font-medium">Error</p>
+            <p className="text-civiq-red mt-1">No search query provided</p>
             <Link href="/" className="inline-block mt-4 text-civiq-blue hover:underline">
               ← Go to search page
             </Link>

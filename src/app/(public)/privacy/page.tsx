@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       <div className="min-h-screen aicher-background">
         <div className="max-w-4xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
           <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-civiq-blue">
               Home
             </Link>
             <span className="mx-2">&rsaquo;</span>

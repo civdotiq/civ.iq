@@ -150,11 +150,11 @@ export default function AgricultureTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -181,27 +181,27 @@ export default function AgricultureTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Agriculture policy</strong> encompasses a wide range of legislation affecting
             farmers, consumers, and rural communities. The centerpiece is the{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               Farm Bill
             </Link>
             , a massive omnibus law reauthorized approximately every five years that covers
             everything from{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               crop insurance
             </Link>{' '}
             to{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               nutrition assistance
             </Link>
             .
           </p>
           <p className="text-gray-700 mb-4">
             The{' '}
-            <Link href="/committee/HSAG" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSAG" className="text-civiq-blue hover:underline">
               House Agriculture Committee
             </Link>{' '}
             and{' '}
-            <Link href="/committee/SSAF" className="text-blue-600 hover:underline">
+            <Link href="/committee/SSAF" className="text-civiq-blue hover:underline">
               Senate Agriculture Committee
             </Link>{' '}
             have jurisdiction over agricultural policy, including nutrition programs that account
@@ -224,11 +224,11 @@ export default function AgricultureTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.slice(0, 2).join(', ')}
                   {committee.subcommittees.length > 2 && '...'}
                 </p>
@@ -293,7 +293,7 @@ export default function AgricultureTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

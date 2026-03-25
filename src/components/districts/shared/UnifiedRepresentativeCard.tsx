@@ -76,9 +76,9 @@ export default function UnifiedRepresentativeCard({
   const displayParty = party === 'Democratic' ? 'Democrat' : party;
   const partyColorClass =
     party === 'Democrat' || party === 'Democratic'
-      ? 'bg-blue-100 text-blue-800'
+      ? 'bg-civiq-blue/10 text-civiq-blue'
       : party === 'Republican'
-        ? 'bg-red-100 text-red-800'
+        ? 'bg-civiq-red/10 text-civiq-red'
         : 'bg-gray-100 text-gray-800';
 
   return (
@@ -145,7 +145,7 @@ export default function UnifiedRepresentativeCard({
           {/* View Full Profile Link */}
           <Link
             href={profileLink}
-            className="inline-block mt-4 px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-blue-700 transition-colors"
+            className="inline-block mt-4 px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-civiq-blue transition-colors"
           >
             View Full Profile
           </Link>

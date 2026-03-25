@@ -129,32 +129,32 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
       {/* Federal Investment */}
       <div className="mb-8">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+          <DollarSign className="w-5 h-5 mr-2 text-civiq-green" />
           Federal Investment
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6">
-            <div className="text-2xl font-bold text-green-900">
+          <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6">
+            <div className="text-2xl font-bold text-civiq-green">
               {formatLargeNumber(government.federalInvestment.totalAnnualSpending)}
             </div>
-            <p className="text-sm text-green-700 mt-1">Total Annual Spending</p>
-            <p className="text-xs text-green-600 mt-1">Federal dollars to district</p>
+            <p className="text-sm text-civiq-green mt-1">Total Annual Spending</p>
+            <p className="text-xs text-civiq-green mt-1">Federal dollars to district</p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-            <div className="text-2xl font-bold text-blue-900">
+          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatNumber(government.federalInvestment.contractsAndGrants)}
             </div>
-            <p className="text-sm text-blue-700 mt-1">Contracts & Grants</p>
-            <p className="text-xs text-blue-600 mt-1">Active federal awards</p>
+            <p className="text-sm text-civiq-blue mt-1">Contracts & Grants</p>
+            <p className="text-xs text-civiq-blue mt-1">Active federal awards</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6">
-            <div className="text-2xl font-bold text-purple-900">
+          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatLargeNumber(government.federalInvestment.infrastructureInvestment)}
             </div>
-            <p className="text-sm text-purple-700 mt-1">Infrastructure Investment</p>
-            <p className="text-xs text-purple-600 mt-1">Roads, bridges, utilities</p>
+            <p className="text-sm text-civiq-blue mt-1">Infrastructure Investment</p>
+            <p className="text-xs text-civiq-blue mt-1">Roads, bridges, utilities</p>
           </div>
         </div>
 
@@ -190,31 +190,31 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
         government.socialServices.veteransServices > 0) && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <Users className="w-5 h-5 mr-2 text-blue-600" />
+            <Users className="w-5 h-5 mr-2 text-civiq-blue" />
             Social Services
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {government.socialServices.snapBeneficiaries > 0 && (
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6">
-                <div className="text-2xl font-bold text-orange-900">
+              <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6">
+                <div className="text-2xl font-bold text-civiq-red">
                   {new Intl.NumberFormat('en-US').format(
                     government.socialServices.snapBeneficiaries
                   )}
                 </div>
-                <p className="text-sm text-orange-700 mt-1">SNAP Beneficiaries</p>
-                <p className="text-xs text-orange-600 mt-1">Households receiving aid</p>
+                <p className="text-sm text-civiq-red mt-1">SNAP Beneficiaries</p>
+                <p className="text-xs text-civiq-red mt-1">Households receiving aid</p>
               </div>
             )}
 
             {government.socialServices.medicaidEnrollment > 0 && (
-              <div className="bg-gradient-to-br from-red-50 to-red-100 p-6">
-                <div className="text-2xl font-bold text-red-900">
+              <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6">
+                <div className="text-2xl font-bold text-civiq-red">
                   {new Intl.NumberFormat('en-US').format(
                     government.socialServices.medicaidEnrollment
                   )}
                 </div>
-                <p className="text-sm text-red-700 mt-1">Medicaid Enrollment</p>
-                <p className="text-xs text-red-600 mt-1">Healthcare coverage</p>
+                <p className="text-sm text-civiq-red mt-1">Medicaid Enrollment</p>
+                <p className="text-xs text-civiq-red mt-1">Healthcare coverage</p>
               </div>
             )}
 
@@ -248,7 +248,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
       {/* Congressional Representation */}
       <div className="mb-8">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <FileText className="w-5 h-5 mr-2 text-purple-600" />
+          <FileText className="w-5 h-5 mr-2 text-civiq-blue" />
           Congressional Activity
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -287,10 +287,10 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                     <span
                       className={`px-2 py-1 text-xs ${
                         bill.impactLevel === 'High'
-                          ? 'bg-red-100 text-red-800'
+                          ? 'bg-civiq-red/10 text-civiq-red'
                           : bill.impactLevel === 'Medium'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
+                            ? 'bg-gray-100 text-gray-600'
+                            : 'bg-civiq-green/10 text-civiq-green'
                       }`}
                     >
                       {bill.impactLevel}
@@ -352,7 +352,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
               href={data.metadata.dataSources.usaspending}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-civiq-blue hover:text-civiq-blue"
             >
               USASpending.gov
             </a>
@@ -363,11 +363,11 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
           </div>
           <div>
             <strong>Social Services:</strong>{' '}
-            <span className="text-red-600">{data.metadata.dataSources.socialServices}</span>
+            <span className="text-civiq-red">{data.metadata.dataSources.socialServices}</span>
           </div>
           <div>
             <strong>Federal Facilities:</strong>{' '}
-            <span className="text-red-600">{data.metadata.dataSources.federalFacilities}</span>
+            <span className="text-civiq-red">{data.metadata.dataSources.federalFacilities}</span>
           </div>
         </div>
 

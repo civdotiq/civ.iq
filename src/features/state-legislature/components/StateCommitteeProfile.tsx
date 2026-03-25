@@ -36,13 +36,13 @@ export const StateCommitteeProfile: React.FC<StateCommitteeProfileProps> = ({
   // Get party badge styling
   const getPartyBadgeClass = (party?: string) => {
     if (party === 'Democratic') {
-      return 'bg-blue-50 text-blue-800 border-blue-300';
+      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
     }
     if (party === 'Republican') {
-      return 'bg-red-50 text-red-800 border-red-300';
+      return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
     if (party === 'Independent') {
-      return 'bg-purple-50 text-purple-800 border-purple-300';
+      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
     }
     return 'bg-gray-50 text-gray-800 border-gray-300';
   };

@@ -38,8 +38,8 @@ export default function StateInfoPanel({ state, onClose }: StateInfoPanelProps) 
 
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50">
-            <Users className="h-5 w-5 text-blue-600" />
+          <div className="p-2 bg-civiq-blue/10">
+            <Users className="h-5 w-5 text-civiq-blue" />
           </div>
           <div>
             <p className="text-sm text-gray-600">Population</p>
@@ -48,8 +48,8 @@ export default function StateInfoPanel({ state, onClose }: StateInfoPanelProps) 
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-green-50">
-            <MapPin className="h-5 w-5 text-green-600" />
+          <div className="p-2 bg-civiq-green/10">
+            <MapPin className="h-5 w-5 text-civiq-green" />
           </div>
           <div>
             <p className="text-sm text-gray-600">House Districts</p>
@@ -58,8 +58,8 @@ export default function StateInfoPanel({ state, onClose }: StateInfoPanelProps) 
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-purple-50">
-            <Vote className="h-5 w-5 text-purple-600" />
+          <div className="p-2 bg-civiq-blue/10">
+            <Vote className="h-5 w-5 text-civiq-blue" />
           </div>
           <div className="flex-1">
             <p className="text-sm text-gray-600">US Senators</p>
@@ -74,7 +74,7 @@ export default function StateInfoPanel({ state, onClose }: StateInfoPanelProps) 
         </div>
 
         <div className="pt-4 border-t border-gray-200">
-          <button className="w-full bg-blue-600 text-white py-2 px-4 hover:bg-blue-700 transition-colors text-sm font-medium">
+          <button className="w-full bg-civiq-blue text-white py-2 px-4 hover:bg-civiq-blue transition-colors text-sm font-medium">
             View All {state.name} Districts
           </button>
         </div>

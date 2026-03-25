@@ -71,7 +71,7 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="block hover:bg-blue-50 transition-colors"
+        className="block hover:bg-civiq-blue/10 transition-colors"
       >
         {content}
       </a>
@@ -155,26 +155,26 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             {representative.chamber === 'Senate' ? (
               <Link
                 href={`/districts/${representative.state}-STATE`}
-                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
+                className="block hover:bg-civiq-blue/10 -m-3 p-3 transition-colors group"
               >
-                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
+                <div className="text-lg font-bold text-gray-900 group-hover:text-civiq-blue">
                   {getDistrictDisplay()}
                 </div>
                 <div className="text-sm text-gray-600">U.S. Senate</div>
-                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                <div className="text-xs text-civiq-blue opacity-0 group-hover:opacity-100 transition-opacity mt-1">
                   View state overview →
                 </div>
               </Link>
             ) : (
               <Link
                 href={`/districts/${representative.state}-${representative.district || 'AL'}`}
-                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
+                className="block hover:bg-civiq-blue/10 -m-3 p-3 transition-colors group"
               >
-                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
+                <div className="text-lg font-bold text-gray-900 group-hover:text-civiq-blue">
                   {getDistrictDisplay()}
                 </div>
                 <div className="text-sm text-gray-600">Congressional District</div>
-                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                <div className="text-xs text-civiq-blue opacity-0 group-hover:opacity-100 transition-opacity mt-1">
                   View district profile →
                 </div>
               </Link>

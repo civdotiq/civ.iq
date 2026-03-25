@@ -29,25 +29,25 @@ export function MultiDistrictNotification({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-blue-50 border-2 border-blue-200 p-4 sm:p-6 mx-auto max-w-2xl animate-fade-in-up">
+    <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 sm:p-6 mx-auto max-w-2xl animate-fade-in-up">
       {/* Header */}
       <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-civiq-blue/10 flex items-center justify-center flex-shrink-0">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-civiq-blue" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-blue-900">
+            <h3 className="text-base sm:text-lg font-semibold text-civiq-blue">
               Multiple Representatives Found
             </h3>
-            <p className="text-sm sm:text-base text-blue-700">
+            <p className="text-sm sm:text-base text-civiq-blue">
               ZIP code {zipCode} spans {districts.length} congressional districts
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+          className="text-civiq-blue hover:text-civiq-blue transition-colors p-1"
           aria-label="Close notification"
         >
           <svg
@@ -67,7 +67,7 @@ export function MultiDistrictNotification({
       </div>
 
       {/* Main Message */}
-      <p className="text-sm sm:text-base text-blue-800 mb-4 sm:mb-6">
+      <p className="text-sm sm:text-base text-civiq-blue mb-4 sm:mb-6">
         To find your exact representative, please choose one of these options:
       </p>
 
@@ -76,10 +76,10 @@ export function MultiDistrictNotification({
         {/* Use Current Location */}
         <button
           onClick={onUseLocation}
-          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border-2 border-civiq-blue hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all duration-200 text-left group"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors flex-shrink-0">
-            <Navigation className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-civiq-green/10 flex items-center justify-center group-hover:bg-civiq-green/10 transition-colors flex-shrink-0">
+            <Navigation className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-civiq-green" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-medium text-gray-900 text-sm sm:text-base">
@@ -89,7 +89,7 @@ export function MultiDistrictNotification({
               Share your location to find your exact district automatically
             </div>
           </div>
-          <div className="text-blue-600 group-hover:text-blue-700 flex-shrink-0">
+          <div className="text-civiq-blue group-hover:text-civiq-blue flex-shrink-0">
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"
@@ -104,10 +104,10 @@ export function MultiDistrictNotification({
         {/* Enter Full Address */}
         <button
           onClick={onRefineAddress}
-          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border-2 border-civiq-blue hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all duration-200 text-left group"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">
-            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-civiq-blue/10 flex items-center justify-center group-hover:bg-civiq-blue/10 transition-colors flex-shrink-0">
+            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-civiq-blue" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-medium text-gray-900 text-sm sm:text-base">
@@ -117,7 +117,7 @@ export function MultiDistrictNotification({
               Provide your street address for precise district matching
             </div>
           </div>
-          <div className="text-blue-600 group-hover:text-blue-700 flex-shrink-0">
+          <div className="text-civiq-blue group-hover:text-civiq-blue flex-shrink-0">
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"
@@ -131,16 +131,16 @@ export function MultiDistrictNotification({
       </div>
 
       {/* District Selection */}
-      <div className="border-t border-blue-200 pt-4">
+      <div className="border-t border-civiq-blue pt-4">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center justify-between w-full text-left mb-3"
         >
-          <span className="text-sm font-medium text-blue-800">
+          <span className="text-sm font-medium text-civiq-blue">
             Or choose from available districts:
           </span>
           <svg
-            className={`w-4 h-4 text-blue-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-civiq-blue transition-transform ${isExpanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -155,14 +155,14 @@ export function MultiDistrictNotification({
               <button
                 key={`${district.state}-${district.district}`}
                 onClick={() => onSelectDistrict(district)}
-                className="w-full p-3 bg-white border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                className="w-full p-3 bg-white border border-civiq-blue hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all duration-200 text-left group"
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium text-gray-900">
                       {district.state}-{district.district}
                       {district.primary && (
-                        <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800">
+                        <span className="ml-2 px-2 py-1 text-xs bg-civiq-green/10 text-civiq-green">
                           Most likely
                         </span>
                       )}
@@ -171,7 +171,7 @@ export function MultiDistrictNotification({
                       <div className="text-xs text-gray-600">Confidence: {district.confidence}</div>
                     )}
                   </div>
-                  <div className="text-blue-600 group-hover:text-blue-700">
+                  <div className="text-civiq-blue group-hover:text-civiq-blue">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -189,7 +189,7 @@ export function MultiDistrictNotification({
       </div>
 
       {/* Footer Note */}
-      <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-blue-600 bg-blue-100 p-2.5 sm:p-3">
+      <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-civiq-blue bg-civiq-blue/10 p-2.5 sm:p-3">
         <strong>Why does this happen?</strong> Some ZIP codes cross congressional district
         boundaries. For the most accurate results, we need to know your specific location within the
         ZIP code.

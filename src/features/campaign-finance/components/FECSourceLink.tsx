@@ -28,7 +28,7 @@ export const FECSourceLink: React.FC<FECSourceLinkProps> = ({
       href={fecUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors ${className}`}
+      className={`inline-flex items-center gap-1 text-civiq-blue hover:text-civiq-blue transition-colors ${className}`}
       title={linkText}
     >
       <svg

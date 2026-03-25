@@ -63,7 +63,7 @@ export function SecFilingsSection({ bioguideId }: SecFilingsSectionProps) {
           <p className="text-sm text-gray-500 mb-3">Unable to load SEC filing data</p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-civiq-blue border border-blue-200 hover:bg-blue-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-civiq-blue border border-civiq-blue hover:bg-civiq-blue/10"
           >
             <RefreshCw className="w-3 h-3" aria-hidden="true" />
             Retry
@@ -152,7 +152,7 @@ function FilingRow({ filing, cik }: { filing: SecFiling; cik?: string }) {
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">{formattedDate}</td>
       <td className="px-3 py-2 text-sm whitespace-nowrap">
-        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-civiq-blue/10 text-civiq-blue">
           {filing.form}
         </span>
       </td>

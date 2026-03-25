@@ -301,7 +301,7 @@ export function BillJourneyTimeline({
                           : isCurrent
                             ? 'bg-white border-civiq-blue text-civiq-blue ring-4 ring-civiq-blue/20'
                             : isFailed
-                              ? 'bg-red-500 border-red-500 text-white'
+                              ? 'bg-civiq-red border-civiq-red text-white'
                               : 'bg-white border-gray-300 text-gray-400'
                       }
                     `}
@@ -317,7 +317,7 @@ export function BillJourneyTimeline({
                         isCompleted || isCurrent
                           ? 'text-gray-900'
                           : isFailed
-                            ? 'text-red-600'
+                            ? 'text-civiq-red'
                             : 'text-gray-400'
                       }`}
                     >
@@ -365,7 +365,7 @@ export function BillJourneyTimeline({
                           : isCurrent
                             ? 'bg-white border-civiq-blue text-civiq-blue ring-4 ring-civiq-blue/20'
                             : isFailed
-                              ? 'bg-red-500 border-red-500 text-white'
+                              ? 'bg-civiq-red border-civiq-red text-white'
                               : 'bg-white border-gray-300 text-gray-400'
                       }
                     `}
@@ -380,7 +380,7 @@ export function BillJourneyTimeline({
                         isCompleted || isCurrent
                           ? 'text-gray-900'
                           : isFailed
-                            ? 'text-red-600'
+                            ? 'text-civiq-red'
                             : 'text-gray-400'
                       }`}
                     >

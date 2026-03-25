@@ -127,9 +127,9 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
                 <span
                   className={`aicher-heading text-xs sm:text-sm font-bold border-2 px-3 py-2 ${
                     representative.party === 'Republican'
-                      ? 'bg-red-50 text-red-800 border-civiq-red'
+                      ? 'bg-civiq-red/10 text-civiq-red border-civiq-red'
                       : representative.party === 'Democrat'
-                        ? 'bg-blue-50 text-blue-800 border-civiq-blue'
+                        ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
                 >

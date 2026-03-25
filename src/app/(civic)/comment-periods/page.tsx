@@ -81,7 +81,7 @@ export default function CommentPeriodsPage() {
           <span
             className={`flex-shrink-0 text-xs font-bold border-2 px-2 py-1 ${
               item.daysUntilClose <= 7
-                ? 'border-[#e11d07] bg-red-50 text-red-800'
+                ? 'border-[#e11d07] bg-civiq-red/10 text-civiq-red'
                 : 'border-gray-300 bg-gray-50 text-gray-700'
             }`}
           >
@@ -146,7 +146,7 @@ export default function CommentPeriodsPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <div className="text-red-600 mb-2">Failed to load comment periods</div>
+              <div className="text-civiq-red mb-2">Failed to load comment periods</div>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-[#3592c0]"

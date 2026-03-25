@@ -112,15 +112,15 @@ export default async function StateVotePage({ params }: PageProps) {
       />
 
       <nav className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-blue-600">
+        <Link href="/" className="hover:text-civiq-blue">
           Home
         </Link>
         <span className="mx-2">›</span>
-        <Link href="/states" className="hover:text-blue-600">
+        <Link href="/states" className="hover:text-civiq-blue">
           States
         </Link>
         <span className="mx-2">›</span>
-        <Link href={`/state-legislature/${state}`} className="hover:text-blue-600">
+        <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
           {state.toUpperCase()}
         </Link>
         <span className="mx-2">›</span>

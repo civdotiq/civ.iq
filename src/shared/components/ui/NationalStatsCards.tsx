@@ -62,10 +62,10 @@ export default function NationalStatsCards({ districts = [] }: NationalStatsCard
 
   const getColorClasses = (color: string) => {
     const colors = {
-      blue: 'bg-blue-50 text-blue-600 border-blue-200',
-      green: 'bg-green-50 text-green-600 border-green-200',
-      purple: 'bg-purple-50 text-purple-600 border-purple-200',
-      orange: 'bg-orange-50 text-orange-600 border-orange-200',
+      blue: 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue',
+      green: 'bg-civiq-green/10 text-civiq-green border-civiq-green',
+      purple: 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue',
+      orange: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };

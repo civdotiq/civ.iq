@@ -45,21 +45,21 @@ export const DataQualityIndicator: React.FC<DataQualityIndicatorProps> = ({
   const qualityStyles = {
     high: {
       icon: '',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-800',
-      borderColor: 'border-green-200',
+      bgColor: 'bg-civiq-green/10',
+      textColor: 'text-civiq-green',
+      borderColor: 'border-civiq-green',
     },
     medium: {
       icon: '',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-800',
-      borderColor: 'border-yellow-200',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-600',
+      borderColor: 'border-gray-300',
     },
     low: {
       icon: '',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-800',
-      borderColor: 'border-red-200',
+      bgColor: 'bg-civiq-red/10',
+      textColor: 'text-civiq-red',
+      borderColor: 'border-civiq-red',
     },
   };
 

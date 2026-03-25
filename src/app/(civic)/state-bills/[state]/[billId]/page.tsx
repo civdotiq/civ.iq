@@ -128,7 +128,7 @@ export default function StateBillDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-800"
+            className="mb-6 flex items-center gap-2 text-civiq-blue hover:text-civiq-blue"
           >
             <ChevronLeft className="w-4 h-4" />
             Back
@@ -141,7 +141,7 @@ export default function StateBillDetailPage() {
             </p>
             <Link
               href={`/state-legislature/${state}`}
-              className="inline-block px-6 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              className="inline-block px-6 py-3 bg-civiq-blue text-white font-medium hover:bg-civiq-blue transition-colors"
             >
               View All Legislators
             </Link>
@@ -161,7 +161,7 @@ export default function StateBillDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+          className="mb-6 flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
@@ -182,7 +182,7 @@ export default function StateBillDetailPage() {
           {/* Metadata Badges */}
           <div className="flex flex-wrap gap-2 mb-6">
             {bill.classification && bill.classification.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-sm font-medium">
                 <Building2 className="w-4 h-4" />
                 {bill.classification[0]}
               </span>
@@ -193,7 +193,7 @@ export default function StateBillDetailPage() {
               </span>
             )}
             {bill.session && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-civiq-green/10 text-civiq-green text-sm font-medium">
                 <Calendar className="w-4 h-4" />
                 {bill.session}
               </span>
@@ -236,7 +236,9 @@ export default function StateBillDetailPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-shrink-0 flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-r-2 last:border-r-0 border-black ${
-                  activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  activeTab === tab.id
+                    ? 'bg-civiq-blue text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {tab.label}
@@ -269,8 +271,8 @@ export default function StateBillDetailPage() {
                   <div className="bg-white border-2 border-black">
                     <div className="p-4 border-b border-gray-100">
                       <div className="flex items-center gap-2 mb-1">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-600">
+                        <Brain className="h-5 w-5 text-civiq-blue" />
+                        <span className="text-sm font-medium text-civiq-blue">
                           AI-Generated Summary
                         </span>
                         {aiSummary.confidence !== undefined && (
@@ -284,23 +286,25 @@ export default function StateBillDetailPage() {
 
                     <div className="p-4 space-y-4">
                       {aiSummary.whatItDoes && (
-                        <div className="bg-blue-50 p-4">
-                          <h4 className="text-sm font-medium text-blue-900 mb-2">
+                        <div className="bg-civiq-blue/10 p-4">
+                          <h4 className="text-sm font-medium text-civiq-blue mb-2">
                             What This Bill Does
                           </h4>
-                          <p className="text-blue-800 leading-relaxed">{aiSummary.whatItDoes}</p>
+                          <p className="text-civiq-blue leading-relaxed">{aiSummary.whatItDoes}</p>
                         </div>
                       )}
 
                       <p className="text-gray-700 leading-relaxed">{aiSummary.summary}</p>
 
                       {aiSummary.whoItAffects && (
-                        <div className="bg-green-50 p-4">
-                          <h4 className="text-sm font-medium text-green-900 mb-2 flex items-center gap-1">
+                        <div className="bg-civiq-green/10 p-4">
+                          <h4 className="text-sm font-medium text-civiq-green mb-2 flex items-center gap-1">
                             <Users className="h-4 w-4" />
                             Who It Affects
                           </h4>
-                          <p className="text-green-800 leading-relaxed">{aiSummary.whoItAffects}</p>
+                          <p className="text-civiq-green leading-relaxed">
+                            {aiSummary.whoItAffects}
+                          </p>
                         </div>
                       )}
 
@@ -310,7 +314,7 @@ export default function StateBillDetailPage() {
                           <ul className="space-y-2">
                             {aiSummary.keyPoints.map((point, index) => (
                               <li key={index} className="flex items-start gap-2">
-                                <div className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium mt-0.5">
+                                <div className="flex-shrink-0 w-5 h-5 bg-civiq-blue/10 text-civiq-blue flex items-center justify-center text-xs font-medium mt-0.5">
                                   {index + 1}
                                 </div>
                                 <span className="text-gray-700 text-sm">{point}</span>
@@ -346,7 +350,7 @@ export default function StateBillDetailPage() {
                 <div className="bg-white border-2 border-black p-6 space-y-6">
                   <div>
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                      <FileText className="w-5 h-5 text-civiq-blue" />
                       Bill Details
                     </h2>
                     <div className="space-y-3 text-sm">
@@ -378,7 +382,7 @@ export default function StateBillDetailPage() {
                         {bill.subject.map((subject, index) => (
                           <span
                             key={index}
-                            className="px-3 py-1 bg-green-100 text-green-800 text-sm"
+                            className="px-3 py-1 bg-civiq-green/10 text-civiq-green text-sm"
                           >
                             {subject}
                           </span>
@@ -393,14 +397,14 @@ export default function StateBillDetailPage() {
             {activeTab === 'sponsors' && (
               <div className="bg-white border-2 border-black p-6">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-600" />
+                  <Users className="w-5 h-5 text-civiq-blue" />
                   Sponsors & Co-Sponsors
                 </h2>
 
                 {primarySponsor && (
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-3">Primary Sponsor</h3>
-                    <div className="bg-blue-50 border-2 border-blue-200 p-4">
+                    <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4">
                       <div className="font-medium text-gray-900">{primarySponsor.name}</div>
                       {primarySponsor.entity_type && (
                         <div className="text-sm text-gray-600 mt-1">
@@ -440,13 +444,16 @@ export default function StateBillDetailPage() {
             {activeTab === 'actions' && (
               <div className="bg-white border-2 border-black p-6">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
+                  <Clock className="w-5 h-5 text-civiq-blue" />
                   Legislative Actions
                 </h2>
                 {bill.actions.length > 0 ? (
                   <div className="space-y-4">
                     {bill.actions.map((action, index) => (
-                      <div key={index} className="border-l-4 border-blue-600 pl-4 py-2 bg-gray-50">
+                      <div
+                        key={index}
+                        className="border-l-4 border-civiq-blue pl-4 py-2 bg-gray-50"
+                      >
                         <div className="text-sm text-gray-600 mb-1">{formatDate(action.date)}</div>
                         <div className="text-gray-900 mb-1">{action.description}</div>
                         {action.organization && (
@@ -478,7 +485,7 @@ export default function StateBillDetailPage() {
             {activeTab === 'votes' && (
               <div className="bg-white border-2 border-black p-6">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                  <CheckCircle className="w-5 h-5 text-civiq-blue" />
                   Votes
                 </h2>
                 {bill.votes.length > 0 ? (
@@ -496,8 +503,8 @@ export default function StateBillDetailPage() {
                           <span
                             className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium ${
                               vote.result === 'passed'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-civiq-green/10 text-civiq-green'
+                                : 'bg-civiq-red/10 text-civiq-red'
                             }`}
                           >
                             {vote.result === 'passed' ? (
@@ -533,7 +540,7 @@ export default function StateBillDetailPage() {
             {bill.sources && bill.sources.length > 0 && (
               <div className="bg-white border-2 border-black p-4">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <ExternalLink className="w-4 h-4 text-blue-600" />
+                  <ExternalLink className="w-4 h-4 text-civiq-blue" />
                   External Sources
                 </h3>
                 <div className="space-y-2">
@@ -543,7 +550,7 @@ export default function StateBillDetailPage() {
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-blue-600 hover:text-blue-800 text-sm hover:underline flex items-center gap-2"
+                      className="block text-civiq-blue hover:text-civiq-blue text-sm hover:underline flex items-center gap-2"
                     >
                       <ExternalLink className="w-3 h-3" />
                       {source.note || 'View Source'}
@@ -557,7 +564,7 @@ export default function StateBillDetailPage() {
             {bill.versions && bill.versions.length > 0 && (
               <div className="bg-white border-2 border-black p-4">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-600" />
+                  <FileText className="w-4 h-4 text-civiq-blue" />
                   Bill Versions
                 </h3>
                 <div className="space-y-2">
@@ -567,7 +574,7 @@ export default function StateBillDetailPage() {
                       href={version.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-blue-600 hover:text-blue-800 text-sm hover:underline"
+                      className="block text-civiq-blue hover:text-civiq-blue text-sm hover:underline"
                     >
                       {version.note || `Version ${index + 1}`}
                       {version.date && ` (${formatDate(version.date)})`}

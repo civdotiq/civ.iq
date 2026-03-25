@@ -27,31 +27,31 @@ const DATA_SOURCES = {
     displayName: 'Congress.gov',
     url: 'https://www.congress.gov',
     description: 'Official U.S. Congress legislative data',
-    color: 'bg-blue-600',
+    color: 'bg-civiq-blue',
   },
   'congress-legislators': {
     displayName: 'Congress Legislators',
     url: 'https://github.com/unitedstates/congress-legislators',
     description: 'Open source congressional biographical data',
-    color: 'bg-green-600',
+    color: 'bg-civiq-green',
   },
   'fec.gov': {
     displayName: 'FEC.gov',
     url: 'https://www.fec.gov',
     description: 'Federal Election Commission campaign finance data',
-    color: 'bg-purple-600',
+    color: 'bg-civiq-blue',
   },
   census: {
     displayName: 'U.S. Census',
     url: 'https://www.census.gov',
     description: 'Congressional district mapping data',
-    color: 'bg-orange-600',
+    color: 'bg-civiq-red',
   },
   'house-senate-clerk-xml': {
     displayName: 'House/Senate Clerk',
     url: 'https://clerk.house.gov',
     description: 'Official voting records from House/Senate Clerk',
-    color: 'bg-red-600',
+    color: 'bg-civiq-red',
   },
 } as const;
 
@@ -131,15 +131,15 @@ export function CacheStatusIndicator({
     <div
       className={`inline-flex items-center gap-1 px-2 py-1 text-xs ${
         cached
-          ? 'bg-green-100 text-green-800 border border-green-200'
-          : 'bg-blue-100 text-blue-800 border border-blue-200'
+          ? 'bg-civiq-green/10 text-civiq-green border border-civiq-green'
+          : 'bg-civiq-blue/10 text-civiq-blue border border-civiq-blue'
       } ${className}`}
       title={cached ? 'Data served from cache for faster loading' : 'Fresh data from source'}
     >
       {cached ? (
         <Database className="w-3 h-3" />
       ) : (
-        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent animate-spin" />
+        <div className="w-3 h-3 border-2 border-civiq-blue border-t-transparent animate-spin" />
       )}
       {showLabel && <span>{cached ? 'Cached' : 'Fresh'}</span>}
     </div>
@@ -162,25 +162,25 @@ export function DataQualityIndicator({
   const qualityConfig = {
     high: {
       icon: CheckCircle,
-      color: 'text-green-600 bg-green-50 border-green-200',
+      color: 'text-civiq-green bg-civiq-green/10 border-civiq-green',
       label: 'High Quality',
       description: 'Complete and validated data',
     },
     medium: {
       icon: Info,
-      color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+      color: 'text-gray-600 bg-gray-100 border-gray-300',
       label: 'Medium Quality',
       description: 'Most data available with minor gaps',
     },
     low: {
       icon: AlertCircle,
-      color: 'text-orange-600 bg-orange-50 border-orange-200',
+      color: 'text-civiq-red bg-civiq-red/10 border-civiq-red',
       label: 'Low Quality',
       description: 'Limited data availability',
     },
     unavailable: {
       icon: AlertCircle,
-      color: 'text-red-600 bg-red-50 border-red-200',
+      color: 'text-civiq-red bg-civiq-red/10 border-civiq-red',
       label: 'Unavailable',
       description: 'Data currently unavailable',
     },
@@ -244,8 +244,8 @@ export function DataFreshnessIndicator({
   const freshness = ageMinutes < 5 ? 'fresh' : ageMinutes < 30 ? 'recent' : 'older';
 
   const freshnessColors = {
-    fresh: 'text-green-600 bg-green-50 border-green-200',
-    recent: 'text-blue-600 bg-blue-50 border-blue-200',
+    fresh: 'text-civiq-green bg-civiq-green/10 border-civiq-green',
+    recent: 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue',
     older: 'text-gray-600 bg-white border-gray-200',
   };
 

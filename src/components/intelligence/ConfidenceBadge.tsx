@@ -24,7 +24,7 @@ export function ConfidenceBadge({ confidence, className = '' }: ConfidenceBadgeP
   const isHigh = confidence >= 0.8;
   const label = isHigh ? 'High confidence' : 'Moderate confidence';
   const colorClasses = isHigh
-    ? 'border-[#0a9338] bg-green-50 text-[#0a9338]'
+    ? 'border-[#0a9338] bg-civiq-green/10 text-[#0a9338]'
     : 'border-amber-500 bg-amber-50 text-amber-700';
 
   return (

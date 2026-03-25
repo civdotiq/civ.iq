@@ -12,7 +12,7 @@ import type { SponsoredBill } from '@/features/legislation/components/BillsTrack
 const SimpleLoader = ({ height = '400px' }: { height?: string }) => (
   <div className="animate-pulse bg-gray-100" style={{ height }}>
     <div className="flex items-center justify-center h-full">
-      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-civiq-blue border-t-transparent animate-spin"></div>
     </div>
   </div>
 );

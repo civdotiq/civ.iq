@@ -27,7 +27,7 @@ function formatCompact(amount: number): string {
 
 function ConfidenceDot({ confidence }: { confidence: number }) {
   const color =
-    confidence >= 0.8 ? 'bg-green-500' : confidence >= 0.6 ? 'bg-amber-500' : 'bg-red-500';
+    confidence >= 0.8 ? 'bg-civiq-green' : confidence >= 0.6 ? 'bg-amber-500' : 'bg-civiq-red';
 
   return (
     <span

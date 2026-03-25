@@ -41,7 +41,7 @@ const StateDistrictBoundaryMap = dynamic(
         style={{ height: 500 }}
       >
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-civiq-blue" />
           <p className="text-sm text-gray-600">Loading district map...</p>
         </div>
       </div>

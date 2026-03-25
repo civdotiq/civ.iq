@@ -121,7 +121,7 @@ export const BillsTab = React.memo(
     if (error) {
       return (
         <div className="text-center py-8">
-          <div className="text-red-600 mb-2">Failed to load sponsored bills</div>
+          <div className="text-civiq-red mb-2">Failed to load sponsored bills</div>
           <div className="text-sm text-gray-500">Please try refreshing the page</div>
         </div>
       );
@@ -233,7 +233,7 @@ export const BillsTab = React.memo(
                   setSearchTerm('');
                   setCurrentPage(1);
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-civiq-blue hover:text-civiq-blue"
               >
                 Clear all filters
               </button>
@@ -251,7 +251,7 @@ export const BillsTab = React.memo(
                 setCurrentPage(1);
               }}
               placeholder="Search by title, bill number, or policy area..."
-              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             />
           </div>
 
@@ -266,7 +266,7 @@ export const BillsTab = React.memo(
                   setSelectedCongress(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
                 <option value={119}>Current (119th)</option>
                 <option value={0}>All Congresses</option>
@@ -287,7 +287,7 @@ export const BillsTab = React.memo(
                   setSelectedType(e.target.value as 'all' | 'sponsored' | 'cosponsored');
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
                 <option value="all">All Bills</option>
                 <option value="sponsored">Sponsored Only</option>
@@ -304,7 +304,7 @@ export const BillsTab = React.memo(
                   setSelectedStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
                 <option value="all">All Statuses</option>
                 {uniqueStatuses.map(status => (
@@ -324,7 +324,7 @@ export const BillsTab = React.memo(
                   setSelectedPolicyArea(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
                 <option value="all">All Policy Areas</option>
                 {uniquePolicyAreas.map(area => (
@@ -349,7 +349,7 @@ export const BillsTab = React.memo(
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -364,25 +364,25 @@ export const BillsTab = React.memo(
         {/* Statistics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{data.totalSponsored}</div>
+            <div className="text-3xl font-bold text-civiq-blue">{data.totalSponsored}</div>
             <div className="text-sm text-gray-500">Sponsored</div>
             <div className="text-xs text-gray-400">
               {filteredBills.filter(b => b.relationship === 'sponsored').length} shown
             </div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">{enactedBills}</div>
+            <div className="text-3xl font-bold text-civiq-green">{enactedBills}</div>
             <div className="text-sm text-gray-500">Enacted</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600">{data.totalCosponsored}</div>
+            <div className="text-3xl font-bold text-gray-600">{data.totalCosponsored}</div>
             <div className="text-sm text-gray-500">Cosponsored</div>
             <div className="text-xs text-gray-400">
               {filteredBills.filter(b => b.relationship === 'cosponsored').length} shown
             </div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">{data.totalBills}</div>
+            <div className="text-3xl font-bold text-civiq-blue">{data.totalBills}</div>
             <div className="text-sm text-gray-500">Total Bills</div>
           </div>
         </div>
@@ -440,7 +440,7 @@ export const BillsTab = React.memo(
               </p>
               <button
                 onClick={() => setSelectedCongress(0)}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="text-civiq-blue hover:text-civiq-blue text-sm"
               >
                 View all congresses
               </button>
@@ -457,12 +457,12 @@ export const BillsTab = React.memo(
               >
                 <h3 className="font-medium">
                   {bill.relationship === 'cosponsored' && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 mr-2">
+                    <span className="text-xs bg-civiq-blue/10 text-civiq-blue px-3 py-1.5 mr-2">
                       Cosponsored
                     </span>
                   )}
                   {bill.relationship === 'sponsored' && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 mr-2">
+                    <span className="text-xs bg-civiq-blue/10 text-civiq-blue px-3 py-1.5 mr-2">
                       Sponsored
                     </span>
                   )}
@@ -473,7 +473,7 @@ export const BillsTab = React.memo(
                           ? `/bill/${getBillId(bill)}?from=${bioguideId}&name=${encodeURIComponent(representativeName)}`
                           : `/bill/${getBillId(bill)}`
                       }
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-civiq-blue hover:text-civiq-blue hover:underline"
                     >
                       {bill.number}: {bill.title}
                     </Link>
@@ -504,13 +504,13 @@ export const BillsTab = React.memo(
                 </p>
                 <p className="text-sm text-gray-600 mt-1">{bill.lastAction}</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-xs bg-blue-100 px-3 py-1.5">
+                  <span className="text-xs bg-civiq-blue/10 px-3 py-1.5">
                     {bill.type || 'Type: Unknown'}
                   </span>
                   {bill.policyArea && (
-                    <span className="text-xs bg-green-100 px-3 py-1.5">{bill.policyArea}</span>
+                    <span className="text-xs bg-civiq-green/10 px-3 py-1.5">{bill.policyArea}</span>
                   )}
-                  <span className="text-xs bg-yellow-100 px-3 py-1.5">
+                  <span className="text-xs bg-gray-100 px-3 py-1.5">
                     {bill.status || 'Status: Unknown'}
                   </span>
                 </div>

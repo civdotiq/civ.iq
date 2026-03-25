@@ -135,11 +135,11 @@ export default async function GlossaryTermPage({ params }: PageProps) {
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/glossary" className="hover:text-blue-600">
+          <Link href="/glossary" className="hover:text-civiq-blue">
             Glossary
           </Link>
           <span className="mx-2">›</span>
@@ -150,7 +150,7 @@ export default async function GlossaryTermPage({ params }: PageProps) {
         <article>
           <header className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+              <span className="px-3 py-1 text-sm font-medium bg-civiq-blue/10 text-civiq-blue border border-civiq-blue">
                 {GLOSSARY_CATEGORIES[glossaryTerm.category]}
               </span>
             </div>
@@ -171,7 +171,7 @@ export default async function GlossaryTermPage({ params }: PageProps) {
               <h2 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-gray-200 pb-2">
                 Example
               </h2>
-              <blockquote className="bg-blue-50 border-l-4 border-blue-500 p-4 text-gray-700 italic">
+              <blockquote className="bg-civiq-blue/10 border-l-4 border-civiq-blue p-4 text-gray-700 italic">
                 {glossaryTerm.example}
               </blockquote>
             </section>
@@ -188,9 +188,9 @@ export default async function GlossaryTermPage({ params }: PageProps) {
                   <Link
                     key={related.term}
                     href={`/glossary/${termToSlug(related.term)}`}
-                    className="block p-3 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                    className="block p-3 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
                   >
-                    <span className="font-medium text-blue-600">{related.term}</span>
+                    <span className="font-medium text-civiq-blue">{related.term}</span>
                     <p className="text-sm text-gray-600 line-clamp-2">{related.definition}</p>
                   </Link>
                 ))}
@@ -209,7 +209,7 @@ export default async function GlossaryTermPage({ params }: PageProps) {
                   <Link
                     key={term.term}
                     href={`/glossary/${termToSlug(term.term)}`}
-                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700 border border-gray-200 transition-colors"
+                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 hover:bg-civiq-blue/10 hover:text-civiq-blue border border-gray-200 transition-colors"
                   >
                     {term.term}
                   </Link>

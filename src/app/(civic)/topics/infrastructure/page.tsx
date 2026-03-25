@@ -160,11 +160,11 @@ export default function InfrastructureTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -190,11 +190,11 @@ export default function InfrastructureTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Infrastructure policy</strong> addresses the physical systems that underpin the
             American economy. From{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               transportation networks
             </Link>{' '}
             to{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               broadband connectivity
             </Link>
             , Congress authorizes and funds the construction, maintenance, and modernization of
@@ -203,19 +203,19 @@ export default function InfrastructureTopicPage() {
           </p>
           <p className="text-gray-700 mb-4">
             Infrastructure jurisdiction is spread across several{' '}
-            <Link href="#committees" className="text-blue-600 hover:underline">
+            <Link href="#committees" className="text-civiq-blue hover:underline">
               committees
             </Link>
             . The{' '}
-            <Link href="/committee/HSPW" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSPW" className="text-civiq-blue hover:underline">
               House Transportation and Infrastructure Committee
             </Link>{' '}
             is the primary venue in the House, while Senate jurisdiction is shared among the{' '}
-            <Link href="/committee/SSEV" className="text-blue-600 hover:underline">
+            <Link href="/committee/SSEV" className="text-civiq-blue hover:underline">
               Environment and Public Works
             </Link>{' '}
             and{' '}
-            <Link href="/committee/SSCM" className="text-blue-600 hover:underline">
+            <Link href="/committee/SSCM" className="text-civiq-blue hover:underline">
               Commerce
             </Link>{' '}
             committees.
@@ -236,11 +236,11 @@ export default function InfrastructureTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.slice(0, 2).join(', ')}
                   {committee.subcommittees.length > 2 && '...'}
                 </p>
@@ -303,7 +303,7 @@ export default function InfrastructureTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

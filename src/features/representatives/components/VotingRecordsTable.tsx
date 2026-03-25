@@ -98,7 +98,7 @@ const VotesList = memo(
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <Link
                         href={`/bill/${vote.bill.number.replace(/\s+/g, '')}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-sm font-medium text-civiq-blue hover:text-civiq-blue hover:underline"
                         onClick={e => e.stopPropagation()}
                       >
                         {vote.bill.number}
@@ -108,7 +108,7 @@ const VotesList = memo(
                           href={vote.congressUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-900 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-civiq-green hover:text-civiq-green hover:underline"
                           onClick={e => e.stopPropagation()}
                         >
                           <span>View on Congress.gov</span>
@@ -128,14 +128,14 @@ const VotesList = memo(
                         </a>
                       )}
                       {vote.isKeyVote && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">
                           Key Vote
                         </span>
                       )}
                     </div>
                     <Link
                       href={`/bill/${vote.bill.number.replace(/\s+/g, '')}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
-                      className="block text-gray-900 font-medium mb-3 line-clamp-2 hover:text-blue-600 transition-colors leading-relaxed"
+                      className="block text-gray-900 font-medium mb-3 line-clamp-2 hover:text-civiq-blue transition-colors leading-relaxed"
                       onClick={e => e.stopPropagation()}
                     >
                       {vote.bill.title}
@@ -210,7 +210,7 @@ const VotesList = memo(
                               href={vote.congressUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-civiq-blue hover:bg-civiq-blue transition-colors"
                               onClick={e => e.stopPropagation()}
                             >
                               <span>Official Vote Record</span>
@@ -232,17 +232,17 @@ const VotesList = memo(
                         </div>
 
                         {vote.total && (
-                          <div className="bg-blue-50 p-3">
+                          <div className="bg-civiq-blue/10 p-3">
                             <h4 className="font-medium text-gray-900 mb-2">Final Tally</h4>
                             <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div className="text-green-700">
+                              <div className="text-civiq-green">
                                 <span className="font-medium">{vote.total.yes}</span> Yea
                               </div>
-                              <div className="text-red-700">
+                              <div className="text-civiq-red">
                                 <span className="font-medium">{vote.total.no}</span> Nay
                               </div>
                               {vote.total.present > 0 && (
-                                <div className="text-blue-700">
+                                <div className="text-civiq-blue">
                                   <span className="font-medium">{vote.total.present}</span> Present
                                 </div>
                               )}
@@ -261,14 +261,14 @@ const VotesList = memo(
                             <h4 className="font-medium text-gray-900 mb-2">Party Breakdown</h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-blue-700 font-medium">Democratic:</span>
+                                <span className="text-civiq-blue font-medium">Democratic:</span>
                                 <span>
                                   {vote.party_breakdown.democratic.yes} Yea,{' '}
                                   {vote.party_breakdown.democratic.no} Nay
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-red-700 font-medium">Republican:</span>
+                                <span className="text-civiq-red font-medium">Republican:</span>
                                 <span>
                                   {vote.party_breakdown.republican.yes} Yea,{' '}
                                   {vote.party_breakdown.republican.no} Nay
@@ -276,7 +276,7 @@ const VotesList = memo(
                               </div>
                               {vote.party_breakdown.independent && (
                                 <div className="flex justify-between">
-                                  <span className="text-green-700 font-medium">Independent:</span>
+                                  <span className="text-civiq-green font-medium">Independent:</span>
                                   <span>
                                     {vote.party_breakdown.independent.yes} Yea,{' '}
                                     {vote.party_breakdown.independent.no} Nay
@@ -483,13 +483,13 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
   const getPositionColor = useCallback((position: string) => {
     switch (position) {
       case 'Yea':
-        return 'text-green-700 bg-green-100 border-green-300';
+        return 'text-civiq-green bg-civiq-green/10 border-civiq-green';
       case 'Nay':
-        return 'text-red-700 bg-red-100 border-red-300';
+        return 'text-civiq-red bg-civiq-red/10 border-civiq-red';
       case 'Not Voting':
         return 'text-gray-700 bg-white border-2 border-gray-300 border-gray-300';
       case 'Present':
-        return 'text-blue-700 bg-blue-100 border-blue-300';
+        return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
       default:
         return 'text-gray-700 bg-white border-2 border-gray-300 border-gray-300';
     }
@@ -498,9 +498,9 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
   const getResultColor = useCallback((result: string) => {
     const lowerResult = result.toLowerCase();
     if (lowerResult.includes('passed') || lowerResult.includes('agreed')) {
-      return 'text-green-700';
+      return 'text-civiq-green';
     } else if (lowerResult.includes('failed') || lowerResult.includes('rejected')) {
-      return 'text-red-700';
+      return 'text-civiq-red';
     }
     return 'text-gray-700';
   }, []);
@@ -540,7 +540,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                     onClick={() => handleFilterChange('all')}
                     className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'all'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-civiq-blue text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -550,7 +550,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                     onClick={() => handleFilterChange('key')}
                     className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'key'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-civiq-blue text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -560,7 +560,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                     onClick={() => handleFilterChange('passed')}
                     className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'passed'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-civiq-blue text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -570,7 +570,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                     onClick={() => handleFilterChange('failed')}
                     className={`px-3 py-1 text-sm transition-colors ${
                       filterCategory === 'failed'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-civiq-blue text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -629,10 +629,10 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
 
             {/* Show pending indicator during transitions */}
             {isPending && (
-              <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
-                <div className="flex items-center gap-2 text-sm text-blue-700">
+              <div className="absolute top-0 left-0 right-0 bg-civiq-blue/10 border-b border-civiq-blue py-2 px-4 z-10">
+                <div className="flex items-center gap-2 text-sm text-civiq-blue">
                   <div
-                    className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent"
+                    className="animate-spin w-4 h-4 border-2 border-civiq-blue border-t-transparent"
                     style={{ borderRadius: '50%' }}
                   ></div>
                   Updating results...

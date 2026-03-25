@@ -78,7 +78,7 @@ export function ClusterControls({
   const getFilterButtonClasses = (isActive: boolean): string => {
     const baseClasses = 'px-3 py-1.5 text-xs font-medium transition-all duration-200 border-2';
     return isActive
-      ? `${baseClasses} bg-blue-100 text-blue-800 border-[#3ea2d4]`
+      ? `${baseClasses} bg-civiq-blue/10 text-civiq-blue border-[#3ea2d4]`
       : `${baseClasses} bg-white text-gray-600 border-gray-300 hover:bg-gray-50`;
   };
 
@@ -113,7 +113,7 @@ export function ClusterControls({
             className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium transition-colors ${
               isLoading
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#3ea2d4] text-white hover:bg-blue-700'
+                : 'bg-[#3ea2d4] text-white hover:bg-civiq-blue'
             }`}
           >
             <svg

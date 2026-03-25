@@ -157,11 +157,11 @@ export default function DefenseTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -188,23 +188,23 @@ export default function DefenseTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Defense policy</strong> is one of the most significant areas of federal
             legislation. The annual{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               National Defense Authorization Act
             </Link>{' '}
             sets policy for the Department of Defense, while separate appropriations bills fund
             military operations. Congress also oversees{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               veterans benefits
             </Link>{' '}
             through the VA system, serving millions of former service members.
           </p>
           <p className="text-gray-700 mb-4">
             The{' '}
-            <Link href="/committee/HSAS" className="text-blue-600 hover:underline">
+            <Link href="/committee/HSAS" className="text-civiq-blue hover:underline">
               House Armed Services Committee
             </Link>{' '}
             and{' '}
-            <Link href="/committee/SSAS" className="text-blue-600 hover:underline">
+            <Link href="/committee/SSAS" className="text-civiq-blue hover:underline">
               Senate Armed Services Committee
             </Link>{' '}
             have primary jurisdiction over defense authorization. Defense spending represents
@@ -227,11 +227,11 @@ export default function DefenseTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.slice(0, 2).join(', ')}
                   {committee.subcommittees.length > 2 && '...'}
                 </p>
@@ -294,7 +294,7 @@ export default function DefenseTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

@@ -607,15 +607,15 @@ function LessonCard({
 
           {/* Teacher Notes */}
           {lesson.teacherNotes && lesson.teacherNotes.length > 0 && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200">
-              <h4 className="flex items-center gap-2 font-semibold text-yellow-800 mb-2">
+            <div className="p-4 bg-gray-100 border border-gray-300">
+              <h4 className="flex items-center gap-2 font-semibold text-gray-600 mb-2">
                 <Lightbulb className="w-5 h-5" />
                 Teacher Notes
               </h4>
               <ul className="space-y-1">
                 {lesson.teacherNotes.map((note, index) => (
-                  <li key={index} className="text-yellow-900 text-sm flex items-start gap-2">
-                    <span className="text-yellow-600">•</span>
+                  <li key={index} className="text-gray-600 text-sm flex items-start gap-2">
+                    <span className="text-gray-600">•</span>
                     {note}
                   </li>
                 ))}

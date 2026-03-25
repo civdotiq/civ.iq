@@ -34,8 +34,8 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
 
   // Get party badge color for chair
   const getPartyColor = (party?: string) => {
-    if (party === 'Democratic') return 'text-blue-700 bg-blue-50 border-blue-200';
-    if (party === 'Republican') return 'text-red-700 bg-red-50 border-red-200';
+    if (party === 'Democratic') return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
+    if (party === 'Republican') return 'text-civiq-red bg-civiq-red/10 border-civiq-red';
     return 'text-gray-700 bg-gray-50 border-gray-200';
   };
 

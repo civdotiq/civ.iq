@@ -124,16 +124,16 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
       {/* Employment Metrics */}
       <div className="mb-8">
         <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+          <TrendingUp className="w-5 h-5 mr-2 text-civiq-green" />
           Employment & Economy
         </h4>
         <div className="aicher-grid aicher-grid-3 gap-6">
           <div className="aicher-card aicher-status-success p-6">
-            <div className="text-2xl font-bold text-green-900">
+            <div className="text-2xl font-bold text-civiq-green">
               {formatPercentage(economic.employment.unemploymentRate)}
             </div>
-            <p className="text-sm text-green-700 mt-1">Unemployment Rate</p>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-sm text-civiq-green mt-1">Unemployment Rate</p>
+            <p className="text-xs text-civiq-green mt-1">
               {economic.employment.unemploymentRate <= 4
                 ? 'Low'
                 : economic.employment.unemploymentRate <= 6
@@ -143,19 +143,19 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
           </div>
 
           <div className="aicher-card aicher-status-info p-6">
-            <div className="text-2xl font-bold text-blue-900">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatPercentage(economic.employment.laborForceParticipation)}
             </div>
-            <p className="text-sm text-blue-700 mt-1">Labor Force Participation</p>
-            <p className="text-xs text-blue-600 mt-1">Working age population</p>
+            <p className="text-sm text-civiq-blue mt-1">Labor Force Participation</p>
+            <p className="text-xs text-civiq-blue mt-1">Working age population</p>
           </div>
 
-          <div className="aicher-card aicher-border bg-purple-100 p-6">
-            <div className="text-2xl font-bold text-purple-900">
+          <div className="aicher-card aicher-border bg-civiq-blue/10 p-6">
+            <div className="text-2xl font-bold text-civiq-blue">
               {formatCurrency(economic.employment.averageWage)}
             </div>
-            <p className="text-sm text-purple-700 mt-1">Average Wage</p>
-            <p className="text-xs text-purple-600 mt-1">Annual median income</p>
+            <p className="text-sm text-civiq-blue mt-1">Average Wage</p>
+            <p className="text-xs text-civiq-blue mt-1">Annual median income</p>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             <p className="text-sm font-medium text-gray-700 mb-2">Major Industries:</p>
             <div className="flex flex-wrap gap-2">
               {economic.employment.majorIndustries.map((industry, index) => (
-                <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm">
+                <span key={index} className="px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-sm">
                   {industry}
                 </span>
               ))}
@@ -179,17 +179,17 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
         economic.infrastructure.publicTransitAccessibility > 0) && (
         <div className="mb-8">
           <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-            <Building className="w-5 h-5 mr-2 text-orange-600" />
+            <Building className="w-5 h-5 mr-2 text-civiq-red" />
             Infrastructure
           </h4>
           <div className="aicher-grid aicher-grid-3 gap-6">
             {economic.infrastructure.bridgeConditionRating > 0 && (
               <div className="aicher-card aicher-status-error p-6">
-                <div className="text-2xl font-bold text-orange-900">
+                <div className="text-2xl font-bold text-civiq-red">
                   {economic.infrastructure.bridgeConditionRating}/100
                 </div>
-                <p className="text-sm text-orange-700 mt-1">Bridge Condition Rating</p>
-                <p className="text-xs text-orange-600 mt-1">
+                <p className="text-sm text-civiq-red mt-1">Bridge Condition Rating</p>
+                <p className="text-xs text-civiq-red mt-1">
                   {economic.infrastructure.bridgeConditionRating >= 80
                     ? 'Excellent'
                     : economic.infrastructure.bridgeConditionRating >= 60
@@ -225,7 +225,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
       {/* Connectivity Metrics - Only show verifiable FCC data */}
       <div className="mb-6">
         <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-          <Wifi className="w-5 h-5 mr-2 text-blue-600" />
+          <Wifi className="w-5 h-5 mr-2 text-civiq-blue" />
           Digital Connectivity
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -265,7 +265,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
               href={data.metadata.dataSources.bls}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-civiq-blue hover:text-civiq-blue"
             >
               Bureau of Labor Statistics
             </a>
@@ -276,14 +276,14 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
               href={data.metadata.dataSources.fcc}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-civiq-blue hover:text-civiq-blue"
             >
               Federal Communications Commission
             </a>
           </div>
           <div>
             <strong>Infrastructure:</strong>{' '}
-            <span className="text-red-600">{data.metadata.dataSources.infrastructure}</span>
+            <span className="text-civiq-red">{data.metadata.dataSources.infrastructure}</span>
           </div>
         </div>
 

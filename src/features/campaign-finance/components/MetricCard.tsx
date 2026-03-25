@@ -36,9 +36,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   'data-testid': dataTestId,
 }) => {
   const colorClasses = {
-    green: 'text-green-600',
-    red: 'text-red-600',
-    blue: 'text-blue-600',
+    green: 'text-civiq-green',
+    red: 'text-civiq-red',
+    blue: 'text-civiq-blue',
   };
 
   return (

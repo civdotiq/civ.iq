@@ -290,7 +290,7 @@ const VotingTabComponent = React.memo(
 
       return (
         <div className="text-center py-8">
-          <div className="text-red-600 mb-2">
+          <div className="text-civiq-red mb-2">
             {isParsingError
               ? 'Voting data processing issue'
               : isApiError
@@ -307,7 +307,7 @@ const VotingTabComponent = React.memo(
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             >
               Retry Loading
             </button>
@@ -318,7 +318,7 @@ const VotingTabComponent = React.memo(
                 url.searchParams.set('refresh', Date.now().toString());
                 window.location.href = url.toString();
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             >
               Force Refresh
             </button>
@@ -367,7 +367,7 @@ const VotingTabComponent = React.memo(
             />
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -376,7 +376,7 @@ const VotingTabComponent = React.memo(
                 categoryFilter !== 'all' ||
                 dateFilter.start ||
                 dateFilter.end) && (
-                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500">
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-civiq-blue">
                   {
                     [
                       positionFilter !== 'all',
@@ -404,7 +404,7 @@ const VotingTabComponent = React.memo(
                 <select
                   value={positionFilter}
                   onChange={e => handlePositionFilterChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
                 >
                   <option value="all">All Positions</option>
                   <option value="Yea">Yea</option>
@@ -423,7 +423,7 @@ const VotingTabComponent = React.memo(
                 <select
                   value={chamberFilter}
                   onChange={e => handleChamberFilterChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
                 >
                   <option value="all">All Chambers</option>
                   <option value="House">House</option>
@@ -440,7 +440,7 @@ const VotingTabComponent = React.memo(
                 <select
                   value={categoryFilter}
                   onChange={e => handleCategoryFilterChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
                   <option value="key">Key Votes</option>
@@ -459,14 +459,14 @@ const VotingTabComponent = React.memo(
                     type="date"
                     value={dateFilter.start}
                     onChange={e => handleDateFilterChange('start', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent text-sm"
                     placeholder="Start date"
                   />
                   <input
                     type="date"
                     value={dateFilter.end}
                     onChange={e => handleDateFilterChange('end', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent text-sm"
                     placeholder="End date"
                   />
                 </div>
@@ -482,7 +482,7 @@ const VotingTabComponent = React.memo(
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <button
                   onClick={handleClearFilters}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                 >
                   <X className="h-4 w-4" />
                   Clear All Filters
@@ -494,12 +494,12 @@ const VotingTabComponent = React.memo(
 
         {/* Phase 4 Defensive UI: Data Quality Indicator */}
         {data?.success === false || data?.error ? (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200">
-            <div className="flex items-center gap-2 text-sm text-yellow-800">
-              <span className="text-lg font-bold text-yellow-800">!</span>
+          <div className="mb-4 p-3 bg-gray-100 border border-gray-300">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-lg font-bold text-gray-600">!</span>
               <div>
                 <div className="font-medium">Partial data available</div>
-                <div className="text-xs text-yellow-700 mt-1">
+                <div className="text-xs text-gray-600 mt-1">
                   Some voting records may not display due to recent XML parsing improvements.
                   {data?.error && ` Error: ${data.error}`}
                 </div>
@@ -523,10 +523,10 @@ const VotingTabComponent = React.memo(
                   <div
                     className={`text-2xl font-bold ${
                       ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 95
-                        ? 'text-green-600'
+                        ? 'text-civiq-green'
                         : ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 80
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
+                          ? 'text-gray-600'
+                          : 'text-civiq-red'
                     }`}
                   >
                     {totalVotes > 0
@@ -547,10 +547,10 @@ const VotingTabComponent = React.memo(
               <div
                 className={`h-full transition-all duration-500 ${
                   ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 95
-                    ? 'bg-green-500'
+                    ? 'bg-civiq-green'
                     : ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 80
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
+                      ? 'bg-gray-500'
+                      : 'bg-civiq-red'
                 }`}
                 style={{
                   width:
@@ -570,15 +570,15 @@ const VotingTabComponent = React.memo(
             <div className="text-sm text-gray-500">Total Votes</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">{yesVotes}</div>
+            <div className="text-3xl font-bold text-civiq-green">{yesVotes}</div>
             <div className="text-sm text-gray-500">Yea</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-red-600">{nayVotes}</div>
+            <div className="text-3xl font-bold text-civiq-red">{nayVotes}</div>
             <div className="text-sm text-gray-500">Nay</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600">{presentVotes}</div>
+            <div className="text-3xl font-bold text-gray-600">{presentVotes}</div>
             <div className="text-sm text-gray-500">Present</div>
           </div>
           <div className="text-center">
@@ -594,7 +594,7 @@ const VotingTabComponent = React.memo(
             <span className="w-20 text-sm">Yes</span>
             <div className="flex-1 bg-gray-200 h-6">
               <div
-                className="bg-green-500 h-6"
+                className="bg-civiq-green h-6"
                 style={{
                   width: totalVotes > 0 ? `${(yesVotes / totalVotes) * 100}%` : '0%',
                 }}
@@ -608,7 +608,7 @@ const VotingTabComponent = React.memo(
             <span className="w-20 text-sm">Nay</span>
             <div className="flex-1 bg-gray-200 h-6">
               <div
-                className="bg-red-500 h-6"
+                className="bg-civiq-red h-6"
                 style={{
                   width: totalVotes > 0 ? `${(nayVotes / totalVotes) * 100}%` : '0%',
                 }}
@@ -623,7 +623,7 @@ const VotingTabComponent = React.memo(
               <span className="w-20 text-sm">Present</span>
               <div className="flex-1 bg-gray-200 h-6">
                 <div
-                  className="bg-yellow-500 h-6"
+                  className="bg-gray-500 h-6"
                   style={{
                     width: totalVotes > 0 ? `${(presentVotes / totalVotes) * 100}%` : '0%',
                   }}
@@ -654,7 +654,7 @@ const VotingTabComponent = React.memo(
 
         {/* Phase 4 Debug: Cache Status Indicator (dev only) */}
         {process.env.NODE_ENV === 'development' && data && (
-          <div className="mb-4 p-2 bg-blue-50 border border-blue-200 text-xs text-blue-700">
+          <div className="mb-4 p-2 bg-civiq-blue/10 border border-civiq-blue text-xs text-civiq-blue">
             <div className="font-mono">
               Cache: {data.dataSource || 'unknown'} | Success: {data.success ? '✓' : '✗'} | Votes:{' '}
               {data.votes?.length || 0} | Total: {data.totalResults || 'unknown'}
@@ -669,8 +669,8 @@ const VotingTabComponent = React.memo(
         ) : (
           <div className="relative">
             {filteredVotes.length !== (data?.votes?.length || 0) && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200">
-                <p className="text-sm text-blue-800">
+              <div className="mb-4 p-3 bg-civiq-blue/10 border border-civiq-blue">
+                <p className="text-sm text-civiq-blue">
                   Showing {filteredVotes.length} of {data?.votes?.length || 0} votes
                   {filteredVotes.length === 0 && ' (try adjusting filters)'}
                 </p>
@@ -743,7 +743,7 @@ const VotingTabComponent = React.memo(
                 <select
                   value={votesPerPage}
                   onChange={e => handleVotesPerPageChange(Number(e.target.value))}
-                  className="px-3 py-2 min-h-[44px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 min-h-[44px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>
@@ -762,7 +762,7 @@ const VotingTabComponent = React.memo(
               <button
                 onClick={handlePreviousPage}
                 disabled={currentPage === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -775,9 +775,9 @@ const VotingTabComponent = React.memo(
                     <button
                       key={page}
                       onClick={() => handlePageClick(page)}
-                      className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 ${
                         page === currentPage
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-civiq-blue text-white'
                           : 'text-gray-600 bg-white border border-gray-300 hover:bg-white'
                       }`}
                     >
@@ -791,7 +791,7 @@ const VotingTabComponent = React.memo(
                       <>
                         <button
                           onClick={() => handlePageClick(1)}
-                          className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                         >
                           1
                         </button>
@@ -806,9 +806,9 @@ const VotingTabComponent = React.memo(
                         <button
                           key={page}
                           onClick={() => handlePageClick(page)}
-                          className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 ${
                             page === currentPage
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-civiq-blue text-white'
                               : 'text-gray-600 bg-white border border-gray-300 hover:bg-white'
                           }`}
                         >
@@ -822,7 +822,7 @@ const VotingTabComponent = React.memo(
                         <span className="px-2 text-gray-500">...</span>
                         <button
                           onClick={() => handlePageClick(paginationData.totalPages)}
-                          className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
                         >
                           {paginationData.totalPages}
                         </button>
@@ -835,7 +835,7 @@ const VotingTabComponent = React.memo(
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === paginationData.totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

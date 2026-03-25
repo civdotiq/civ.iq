@@ -115,13 +115,13 @@ function getEntityLinkClassName(type: EntityMatch['type']): string {
 
   switch (type) {
     case 'representative':
-      return `${baseClasses} text-blue-700 hover:text-blue-900 decoration-blue-400`;
+      return `${baseClasses} text-civiq-blue hover:text-civiq-blue decoration-civiq-blue`;
     case 'bill':
-      return `${baseClasses} text-purple-700 hover:text-purple-900 decoration-purple-400`;
+      return `${baseClasses} text-civiq-blue hover:text-civiq-blue decoration-civiq-blue`;
     case 'committee':
-      return `${baseClasses} text-green-700 hover:text-green-900 decoration-green-400`;
+      return `${baseClasses} text-civiq-green hover:text-civiq-green decoration-civiq-green`;
     case 'donor':
-      return `${baseClasses} text-orange-700 hover:text-orange-900 decoration-orange-400`;
+      return `${baseClasses} text-civiq-red hover:text-civiq-red decoration-civiq-red`;
     default:
       return baseClasses;
   }

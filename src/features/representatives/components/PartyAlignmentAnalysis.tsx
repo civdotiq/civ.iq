@@ -61,9 +61,9 @@ function AlignmentMeter({
   comparison?: number;
 }) {
   const getColor = (val: number) => {
-    if (val >= 80) return 'bg-green-500';
-    if (val >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (val >= 80) return 'bg-civiq-green';
+    if (val >= 60) return 'bg-gray-500';
+    return 'bg-civiq-red';
   };
 
   return (
@@ -92,9 +92,9 @@ function TrendIndicator({ trend }: { trend: 'increasing' | 'decreasing' | 'stabl
   const getTrendIcon = () => {
     switch (trend) {
       case 'increasing':
-        return <span className="text-green-500">↗ Increasing</span>;
+        return <span className="text-civiq-green">↗ Increasing</span>;
       case 'decreasing':
-        return <span className="text-red-500">↘ Decreasing</span>;
+        return <span className="text-civiq-red">↘ Decreasing</span>;
       case 'stable':
         return <span className="text-gray-500">→ Stable</span>;
     }
@@ -224,23 +224,23 @@ export function PartyAlignmentAnalysis({
       <div className="mb-6">
         <h4 className="text-lg font-semibold text-gray-900 mb-3">Voting Patterns</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="text-center p-3 bg-green-50">
-            <div className="text-2xl font-bold text-green-600">
+          <div className="text-center p-3 bg-civiq-green/10">
+            <div className="text-2xl font-bold text-civiq-green">
               {alignmentData.voting_patterns.with_party}
             </div>
-            <div className="text-xs text-green-700">With Party</div>
+            <div className="text-xs text-civiq-green">With Party</div>
           </div>
-          <div className="text-center p-3 bg-red-50">
-            <div className="text-2xl font-bold text-red-600">
+          <div className="text-center p-3 bg-civiq-red/10">
+            <div className="text-2xl font-bold text-civiq-red">
               {alignmentData.voting_patterns.against_party}
             </div>
-            <div className="text-xs text-red-700">Against Party</div>
+            <div className="text-xs text-civiq-red">Against Party</div>
           </div>
-          <div className="text-center p-3 bg-blue-50">
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="text-center p-3 bg-civiq-blue/10">
+            <div className="text-2xl font-bold text-civiq-blue">
               {alignmentData.voting_patterns.bipartisan}
             </div>
-            <div className="text-xs text-blue-700">Bipartisan</div>
+            <div className="text-xs text-civiq-blue">Bipartisan</div>
           </div>
           <div className="text-center p-3 bg-white">
             <div className="text-2xl font-bold text-gray-600">
@@ -294,9 +294,9 @@ export function PartyAlignmentAnalysis({
                   <div
                     className={`px-2 py-1 text-xs font-medium ${
                       departure.significance === 'high'
-                        ? 'bg-red-100 text-red-800'
+                        ? 'bg-civiq-red/10 text-civiq-red'
                         : departure.significance === 'medium'
-                          ? 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-gray-100 text-gray-600'
                           : 'bg-white border-2 border-gray-300 text-gray-800'
                     }`}
                   >

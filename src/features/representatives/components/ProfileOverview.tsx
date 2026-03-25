@@ -54,9 +54,9 @@ interface TimelineItemProps {
 
 function TimelineItem({ date, title, description, type = 'other' }: TimelineItemProps) {
   const typeColors = {
-    term: 'bg-blue-100 text-blue-800',
-    leadership: 'bg-blue-100 text-blue-800',
-    committee: 'bg-green-100 text-green-800',
+    term: 'bg-civiq-blue/10 text-civiq-blue',
+    leadership: 'bg-civiq-blue/10 text-civiq-blue',
+    committee: 'bg-civiq-green/10 text-civiq-green',
     other: 'bg-white border-2 border-gray-300 text-gray-800',
   };
 
@@ -285,7 +285,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                     href={representative.currentTerm.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center gap-1 text-civiq-blue hover:text-civiq-blue"
                   >
                     Visit Website
                     <ExternalLink className="w-3 h-3" />
@@ -305,7 +305,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{committee.name}</div>
                     {committee.role && (
-                      <div className="text-sm text-blue-600 font-medium">{committee.role}</div>
+                      <div className="text-sm text-civiq-blue font-medium">{committee.role}</div>
                     )}
                   </div>
                 </div>
@@ -340,7 +340,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://twitter.com/${representative.socialMedia.twitter}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
               >
                 <span>Twitter</span>
                 <ExternalLink className="w-3 h-3" />
@@ -352,7 +352,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://facebook.com/${representative.socialMedia.facebook}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
               >
                 <span>Facebook</span>
                 <ExternalLink className="w-3 h-3" />
@@ -364,7 +364,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://youtube.com/${representative.socialMedia.youtube}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-civiq-red text-white hover:bg-civiq-red transition-colors"
               >
                 <span>YouTube</span>
                 <ExternalLink className="w-3 h-3" />

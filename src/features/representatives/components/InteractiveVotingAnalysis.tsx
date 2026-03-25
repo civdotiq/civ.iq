@@ -62,16 +62,16 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
   // Memoized color calculation functions - must be before early returns
   const getPartyColor = useCallback((party: string) => {
     const normalizedParty = party.toLowerCase();
-    if (normalizedParty.includes('democrat')) return 'bg-blue-500';
-    if (normalizedParty.includes('republican')) return 'bg-red-500';
+    if (normalizedParty.includes('democrat')) return 'bg-civiq-blue';
+    if (normalizedParty.includes('republican')) return 'bg-civiq-red';
     return 'bg-white0';
   }, []);
 
   const getAlignmentColor = useCallback((score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-blue-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 90) return 'text-civiq-green';
+    if (score >= 75) return 'text-civiq-blue';
+    if (score >= 60) return 'text-gray-600';
+    return 'text-civiq-red';
   }, []);
 
   // Memoized calculations
@@ -106,9 +106,9 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="text-center">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-civiq-red/10">
             <svg
-              className="w-6 h-6 text-red-600"
+              className="w-6 h-6 text-civiq-red"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -129,7 +129,7 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue"
           >
             Try Again
           </button>
@@ -245,10 +245,10 @@ export const InteractiveVotingAnalysis = memo(function InteractiveVotingAnalysis
             <div
               className={`w-3 h-3 mr-3 ${
                 data.dataSource === 'congress.gov'
-                  ? 'bg-green-500'
+                  ? 'bg-civiq-green'
                   : data.dataSource === 'unavailable'
-                    ? 'bg-red-500'
-                    : 'bg-yellow-500'
+                    ? 'bg-civiq-red'
+                    : 'bg-gray-500'
               }`}
             />
             <span className="text-xs text-gray-600 capitalize font-medium">

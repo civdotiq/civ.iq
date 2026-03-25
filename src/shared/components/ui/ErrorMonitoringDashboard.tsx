@@ -125,13 +125,13 @@ export function ErrorMonitoringDashboard() {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'low':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-gray-600 bg-gray-100';
       case 'medium':
-        return 'text-orange-600 bg-orange-100';
+        return 'text-civiq-red bg-civiq-red/10';
       case 'high':
-        return 'text-red-600 bg-red-100';
+        return 'text-civiq-red bg-civiq-red/10';
       case 'critical':
-        return 'text-red-800 bg-red-200';
+        return 'text-civiq-red bg-civiq-red/10';
       default:
         return 'text-gray-600 bg-white border-2 border-gray-300';
     }
@@ -139,11 +139,11 @@ export function ErrorMonitoringDashboard() {
 
   const getTrendIcon = (count: number) => {
     if (count > 10) {
-      return <span className="text-red-500"></span>;
+      return <span className="text-civiq-red"></span>;
     } else if (count > 5) {
-      return <span className="text-yellow-500"></span>;
+      return <span className="text-gray-600"></span>;
     } else {
-      return <span className="text-green-500"></span>;
+      return <span className="text-civiq-green"></span>;
     }
   };
 
@@ -190,13 +190,13 @@ export function ErrorMonitoringDashboard() {
           </select>
           <button
             onClick={exportErrorData}
-            className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
           >
             Export Data
           </button>
           <button
             onClick={clearErrorData}
-            className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-civiq-red text-white hover:bg-civiq-red transition-colors"
           >
             Clear Data
           </button>
@@ -272,10 +272,10 @@ export function ErrorMonitoringDashboard() {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-medium ${
                             error.helpfulRate > 70
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-civiq-green/10 text-civiq-green'
                               : error.helpfulRate > 40
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-gray-100 text-gray-600'
+                                : 'bg-civiq-red/10 text-civiq-red'
                           }`}
                         >
                           {error.helpfulRate}% helpful
@@ -353,7 +353,9 @@ export function ErrorMonitoringDashboard() {
                   </code>
                   <span
                     className={`ml-2 inline-flex px-2 py-1 text-xs font-medium ${
-                      feedback.helpful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      feedback.helpful
+                        ? 'bg-civiq-green/10 text-civiq-green'
+                        : 'bg-civiq-red/10 text-civiq-red'
                     }`}
                   >
                     {feedback.helpful ? 'Helpful' : 'Not Helpful'}

@@ -120,13 +120,13 @@ export function DataSourceAttribution({
   const variantClasses = {
     default: 'border-gray-300 bg-white p-3',
     compact: 'border-gray-200 py-1',
-    prominent: 'border-civiq-blue bg-blue-50 p-4 border-2 border-black',
+    prominent: 'border-civiq-blue bg-civiq-blue/10 p-4 border-2 border-black',
   };
 
   const reliabilityColors = {
-    high: 'text-green-700 border-green-300',
-    medium: 'text-yellow-700 border-yellow-300',
-    low: 'text-red-700 border-red-300',
+    high: 'text-civiq-green border-civiq-green',
+    medium: 'text-gray-600 border-gray-300',
+    low: 'text-civiq-red border-civiq-red',
   };
 
   const reliabilityLabels = {
@@ -170,10 +170,10 @@ export function DataSourceAttribution({
                 <div
                   className={`w-2 h-2 ${
                     reliability === 'high'
-                      ? 'bg-green-500'
+                      ? 'bg-civiq-green'
                       : reliability === 'medium'
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
+                        ? 'bg-gray-500'
+                        : 'bg-civiq-red'
                   }`}
                 />
                 {reliabilityLabels[reliability]}
@@ -188,7 +188,7 @@ export function DataSourceAttribution({
           )}
 
           {disclaimer && variant !== 'compact' && (
-            <div className="mt-2 text-xs text-gray-600 bg-yellow-50 border border-yellow-200 px-2 py-1">
+            <div className="mt-2 text-xs text-gray-600 bg-gray-100 border border-gray-300 px-2 py-1">
               <strong>Note:</strong> {disclaimer}
             </div>
           )}

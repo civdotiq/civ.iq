@@ -322,7 +322,7 @@ function ContributionTrendsChart({
               <div key={index} className="flex-1 flex flex-col items-center justify-end">
                 <div className="text-xs text-gray-600 mb-1">{formatCurrency(trend.amount)}</div>
                 <div
-                  className="w-full bg-gradient-to-t from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 transition-colors cursor-pointer"
+                  className="w-full bg-gradient-to-t from-civiq-blue to-civiq-blue hover:from-civiq-blue hover:to-civiq-blue transition-colors cursor-pointer"
                   style={{ height: `${height}%`, minHeight: '4px' }}
                   title={`${trend.count} contributions totaling ${formatCurrency(trend.amount)}`}
                 />
@@ -440,7 +440,7 @@ export const FinanceTabEnhanced = React.memo(
     }
 
     if (error) {
-      return <div className="text-center py-8 text-red-600">Failed to load financial data</div>;
+      return <div className="text-center py-8 text-civiq-red">Failed to load financial data</div>;
     }
 
     if (!data) {
@@ -455,12 +455,12 @@ export const FinanceTabEnhanced = React.memo(
 
         {/* Financial Overview with Enhanced FEC Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200">
+          <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6 border border-civiq-green">
             <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-green-700">Total Raised</h3>
+              <h3 className="text-lg font-semibold text-civiq-green">Total Raised</h3>
               <InfoTooltip text="Total contributions received during the current election cycle as reported to the FEC" />
             </div>
-            <div className="text-3xl font-bold text-green-900 mb-2">
+            <div className="text-3xl font-bold text-civiq-green mb-2">
               {formatCurrency(data.totalRaised)}
             </div>
             <a
@@ -471,18 +471,18 @@ export const FinanceTabEnhanced = React.memo(
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 hover:bg-green-300 transition-colors"
+              className="inline-flex items-center text-xs bg-civiq-green/10 text-civiq-green px-2 py-1 hover:bg-civiq-green transition-colors"
             >
               View Receipts on FEC.gov →
             </a>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200">
+          <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6 border border-civiq-red">
             <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-red-700">Total Spent</h3>
+              <h3 className="text-lg font-semibold text-civiq-red">Total Spent</h3>
               <InfoTooltip text="Total disbursements made by the campaign as reported to the FEC" />
             </div>
-            <div className="text-3xl font-bold text-red-900 mb-2">
+            <div className="text-3xl font-bold text-civiq-red mb-2">
               {formatCurrency(data.totalSpent)}
             </div>
             <a
@@ -494,18 +494,18 @@ export const FinanceTabEnhanced = React.memo(
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 hover:bg-red-300 transition-colors"
+              className="inline-flex items-center text-xs bg-civiq-red/10 text-civiq-red px-2 py-1 hover:bg-civiq-red transition-colors"
             >
               View Spending on FEC.gov →
             </a>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200">
+          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6 border border-civiq-blue">
             <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-blue-700">Cash on Hand</h3>
+              <h3 className="text-lg font-semibold text-civiq-blue">Cash on Hand</h3>
               <InfoTooltip text="Available campaign funds at the end of the last reporting period" />
             </div>
-            <div className="text-3xl font-bold text-blue-900 mb-2">
+            <div className="text-3xl font-bold text-civiq-blue mb-2">
               {formatCurrency(data.cashOnHand)}
             </div>
             <a
@@ -517,7 +517,7 @@ export const FinanceTabEnhanced = React.memo(
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 hover:bg-blue-300 transition-colors"
+              className="inline-flex items-center text-xs bg-civiq-blue/10 text-civiq-blue px-2 py-1 hover:bg-civiq-blue transition-colors"
             >
               View Committee Page →
             </a>
@@ -533,11 +533,11 @@ export const FinanceTabEnhanced = React.memo(
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {/* Business */}
-              <div className="text-center p-4 bg-blue-50 border-2 border-blue-200">
-                <div className="text-2xl font-bold text-blue-700">
+              <div className="text-center p-4 bg-civiq-blue/10 border-2 border-civiq-blue">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {sectorSummaryData.business.percentage.toFixed(0)}%
                 </div>
-                <div className="text-xs font-semibold text-blue-600 uppercase mt-1">Business</div>
+                <div className="text-xs font-semibold text-civiq-blue uppercase mt-1">Business</div>
                 <div className="text-lg font-semibold text-gray-900 mt-2">
                   {formatCurrency(sectorSummaryData.business.amount)}
                 </div>
@@ -546,11 +546,11 @@ export const FinanceTabEnhanced = React.memo(
                 </div>
               </div>
               {/* Labor */}
-              <div className="text-center p-4 bg-red-50 border-2 border-red-200">
-                <div className="text-2xl font-bold text-red-700">
+              <div className="text-center p-4 bg-civiq-red/10 border-2 border-civiq-red">
+                <div className="text-2xl font-bold text-civiq-red">
                   {sectorSummaryData.labor.percentage.toFixed(0)}%
                 </div>
-                <div className="text-xs font-semibold text-red-600 uppercase mt-1">Labor</div>
+                <div className="text-xs font-semibold text-civiq-red uppercase mt-1">Labor</div>
                 <div className="text-lg font-semibold text-gray-900 mt-2">
                   {formatCurrency(sectorSummaryData.labor.amount)}
                 </div>
@@ -559,11 +559,11 @@ export const FinanceTabEnhanced = React.memo(
                 </div>
               </div>
               {/* Ideological */}
-              <div className="text-center p-4 bg-purple-50 border-2 border-purple-200">
-                <div className="text-2xl font-bold text-purple-700">
+              <div className="text-center p-4 bg-civiq-blue/10 border-2 border-civiq-blue">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {sectorSummaryData.ideological.percentage.toFixed(0)}%
                 </div>
-                <div className="text-xs font-semibold text-purple-600 uppercase mt-1">
+                <div className="text-xs font-semibold text-civiq-blue uppercase mt-1">
                   Ideological
                 </div>
                 <div className="text-lg font-semibold text-gray-900 mt-2">
@@ -591,7 +591,7 @@ export const FinanceTabEnhanced = React.memo(
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               {sectorSummaryData.business.topIndustries.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-blue-700 mb-2">Top Business Industries</h4>
+                  <h4 className="font-semibold text-civiq-blue mb-2">Top Business Industries</h4>
                   <ul className="space-y-1">
                     {sectorSummaryData.business.topIndustries.slice(0, 3).map((item, i) => (
                       <li key={i} className="flex justify-between text-xs">
@@ -604,7 +604,7 @@ export const FinanceTabEnhanced = React.memo(
               )}
               {sectorSummaryData.labor.topUnions.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-red-700 mb-2">Top Labor Sources</h4>
+                  <h4 className="font-semibold text-civiq-red mb-2">Top Labor Sources</h4>
                   <ul className="space-y-1">
                     {sectorSummaryData.labor.topUnions.slice(0, 3).map((item, i) => (
                       <li key={i} className="flex justify-between text-xs">
@@ -617,7 +617,7 @@ export const FinanceTabEnhanced = React.memo(
               )}
               {sectorSummaryData.ideological.topCauses.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-purple-700 mb-2">Top Ideological Causes</h4>
+                  <h4 className="font-semibold text-civiq-blue mb-2">Top Ideological Causes</h4>
                   <ul className="space-y-1">
                     {sectorSummaryData.ideological.topCauses.slice(0, 3).map((item, i) => (
                       <li key={i} className="flex justify-between text-xs">
@@ -652,7 +652,7 @@ export const FinanceTabEnhanced = React.memo(
                 <div
                   className={`text-4xl font-bold ${
                     districtAnalysisData.inDistrict.percentage >= 50
-                      ? 'text-green-600'
+                      ? 'text-civiq-green'
                       : 'text-amber-600'
                   }`}
                 >
@@ -673,7 +673,7 @@ export const FinanceTabEnhanced = React.memo(
                 <div
                   className={`text-4xl font-bold ${
                     districtAnalysisData.outOfDistrict.percentage > 50
-                      ? 'text-red-600'
+                      ? 'text-civiq-red'
                       : 'text-gray-600'
                   }`}
                 >
@@ -695,12 +695,12 @@ export const FinanceTabEnhanced = React.memo(
             <div className="mt-4">
               <div className="flex h-4 overflow-hidden bg-gray-200">
                 <div
-                  className="bg-green-500 transition-all"
+                  className="bg-civiq-green transition-all"
                   style={{ width: `${districtAnalysisData.inDistrict.percentage}%` }}
                   title={`In-District: ${districtAnalysisData.inDistrict.percentage.toFixed(1)}%`}
                 />
                 <div
-                  className="bg-red-400 transition-all"
+                  className="bg-civiq-red transition-all"
                   style={{ width: `${districtAnalysisData.outOfDistrict.percentage}%` }}
                   title={`Out-of-District: ${districtAnalysisData.outOfDistrict.percentage.toFixed(1)}%`}
                 />
@@ -722,7 +722,7 @@ export const FinanceTabEnhanced = React.memo(
 
         {/* Conduit Aggregates (ActBlue/WinRed) */}
         {contributorData?.conduitAggregates && (
-          <div className="bg-yellow-50 p-6 border border-yellow-200 mb-8">
+          <div className="bg-gray-100 p-6 border border-gray-300 mb-8">
             <div className="flex items-center mb-4">
               <h3 className="text-lg font-semibold">Online Fundraising Platforms</h3>
               <InfoTooltip text="ActBlue (Democrats) and WinRed (Republicans) are conduit organizations that process small-dollar online donations" />
@@ -730,7 +730,7 @@ export const FinanceTabEnhanced = React.memo(
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contributorData.conduitAggregates.actblue && (
                 <div>
-                  <h4 className="font-medium text-blue-700 mb-2">ActBlue</h4>
+                  <h4 className="font-medium text-civiq-blue mb-2">ActBlue</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Total Raised:</span>
@@ -755,7 +755,7 @@ export const FinanceTabEnhanced = React.memo(
               )}
               {contributorData.conduitAggregates.winred && (
                 <div>
-                  <h4 className="font-medium text-red-700 mb-2">WinRed</h4>
+                  <h4 className="font-medium text-civiq-red mb-2">WinRed</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Total Raised:</span>
@@ -804,7 +804,7 @@ export const FinanceTabEnhanced = React.memo(
               )}
             </div>
             {comprehensiveData?.metadata?.sampleSize && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-sm text-gray-700">
+              <div className="mb-4 p-3 bg-civiq-blue/10 border border-civiq-blue text-sm text-gray-700">
                 <strong>Representative sample:</strong> Industry breakdown based on{' '}
                 {comprehensiveData.metadata.sampleSize.toLocaleString()} recent contributions.
                 Percentages reflect contribution patterns within this sample.{' '}
@@ -828,7 +828,7 @@ export const FinanceTabEnhanced = React.memo(
                             href={industry.fecVerifyLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-civiq-blue hover:text-civiq-blue underline"
                             title="Verify on FEC.gov"
                           >
                             FEC↗
@@ -842,7 +842,7 @@ export const FinanceTabEnhanced = React.memo(
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-gray-200 h-2">
                         <div
-                          className="bg-blue-600 h-2 transition-all"
+                          className="bg-civiq-blue h-2 transition-all"
                           style={{ width: `${Math.min(industry.percentage, 100)}%` }}
                         />
                       </div>
@@ -893,7 +893,7 @@ export const FinanceTabEnhanced = React.memo(
                             href={org.fecVerifyLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-civiq-blue hover:text-civiq-blue underline"
                             title="Verify on FEC.gov"
                           >
                             FEC
@@ -971,14 +971,14 @@ export const FinanceTabEnhanced = React.memo(
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-700 mb-3">Funding Breakdown</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-green-50">
-                    <div className="text-2xl font-bold text-green-700">
+                  <div className="text-center p-4 bg-civiq-green/10">
+                    <div className="text-2xl font-bold text-civiq-green">
                       {interestGroupData.metrics.grassrootsPercentage.toFixed(1)}%
                     </div>
                     <div className="text-xs text-gray-600 mt-1">Grassroots (≤$200)</div>
                   </div>
-                  <div className="text-center p-4 bg-blue-50">
-                    <div className="text-2xl font-bold text-blue-700">
+                  <div className="text-center p-4 bg-civiq-blue/10">
+                    <div className="text-2xl font-bold text-civiq-blue">
                       {interestGroupData.metrics.corporatePercentage.toFixed(1)}%
                     </div>
                     <div className="text-xs text-gray-600 mt-1">Corporate/PAC</div>
@@ -1000,7 +1000,7 @@ export const FinanceTabEnhanced = React.memo(
               {contributorData?.topContributors && contributorData.topContributors.length > 10 && (
                 <button
                   onClick={() => setShowAllContributors(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-sm text-civiq-blue hover:text-civiq-blue font-medium"
                 >
                   View All {contributorData.topContributors.length} →
                 </button>
@@ -1008,7 +1008,7 @@ export const FinanceTabEnhanced = React.memo(
             </div>
           </div>
           {comprehensiveData?.metadata?.sampleSize && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-sm text-gray-700">
+            <div className="mb-4 p-3 bg-civiq-blue/10 border border-civiq-blue text-sm text-gray-700">
               <strong>Sample-based analysis:</strong> Top contributors shown are based on analysis
               of {comprehensiveData.metadata.sampleSize.toLocaleString()} recent contributions (not
               exhaustive). This represents the largest donors in our sample.{' '}
@@ -1017,7 +1017,7 @@ export const FinanceTabEnhanced = React.memo(
                   href={contributorData.metadata.fecReceiptsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-civiq-blue hover:text-civiq-blue underline"
                 >
                   View all contributions on FEC.gov↗
                 </a>
@@ -1035,7 +1035,7 @@ export const FinanceTabEnhanced = React.memo(
                         href={contributor.fecTransparencyLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-civiq-blue hover:text-civiq-blue"
                         title="View on FEC.gov"
                       >
                         FEC↗
@@ -1077,20 +1077,20 @@ export const FinanceTabEnhanced = React.memo(
             </div>
             {/* PAC Type Summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-              <div className="text-center p-3 bg-purple-50 border border-purple-200">
-                <div className="text-lg font-bold text-purple-700">
+              <div className="text-center p-3 bg-civiq-blue/10 border border-civiq-blue">
+                <div className="text-lg font-bold text-civiq-blue">
                   {formatCurrency(pacDirectData.byType.traditional)}
                 </div>
                 <div className="text-xs text-gray-600">Traditional PAC</div>
               </div>
-              <div className="text-center p-3 bg-blue-50 border border-blue-200">
-                <div className="text-lg font-bold text-blue-700">
+              <div className="text-center p-3 bg-civiq-blue/10 border border-civiq-blue">
+                <div className="text-lg font-bold text-civiq-blue">
                   {formatCurrency(pacDirectData.byType.leadership)}
                 </div>
                 <div className="text-xs text-gray-600">Leadership PAC</div>
               </div>
-              <div className="text-center p-3 bg-orange-50 border border-orange-200">
-                <div className="text-lg font-bold text-orange-700">
+              <div className="text-center p-3 bg-civiq-red/10 border border-civiq-red">
+                <div className="text-lg font-bold text-civiq-red">
                   {formatCurrency(pacDirectData.byType.superPac)}
                 </div>
                 <div className="text-xs text-gray-600">Super PAC</div>
@@ -1116,7 +1116,7 @@ export const FinanceTabEnhanced = React.memo(
                         href={pac.fecLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-civiq-blue hover:text-civiq-blue"
                         title="View PAC on FEC.gov"
                       >
                         FEC
@@ -1136,7 +1136,7 @@ export const FinanceTabEnhanced = React.memo(
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-green-600 ml-4">
+                  <span className="text-sm font-semibold text-civiq-green ml-4">
                     {formatCurrency(pac.amount)}
                   </span>
                 </div>
@@ -1189,7 +1189,7 @@ export const FinanceTabEnhanced = React.memo(
                         href={sponsor.fecLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-civiq-blue hover:text-civiq-blue"
                       >
                         FEC
                       </a>
@@ -1225,9 +1225,9 @@ export const FinanceTabEnhanced = React.memo(
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Supporting PACs */}
               {interestGroupData.pacContributions.supportingExpenditures.length > 0 && (
-                <div className="bg-green-50 p-6 border border-green-200">
+                <div className="bg-civiq-green/10 p-6 border border-civiq-green">
                   <div className="flex items-center mb-4">
-                    <h3 className="text-lg font-semibold text-green-800">
+                    <h3 className="text-lg font-semibold text-civiq-green">
                       PACs Supporting (
                       {interestGroupData.pacContributions.supportingExpenditures.length})
                     </h3>
@@ -1237,10 +1237,10 @@ export const FinanceTabEnhanced = React.memo(
                     {interestGroupData.pacContributions.supportingExpenditures
                       .slice(0, 5)
                       .map((expenditure, index) => (
-                        <div key={index} className="bg-white p-3 border border-green-100">
+                        <div key={index} className="bg-white p-3 border border-civiq-green">
                           <div className="flex justify-between items-start mb-1">
                             <span className="font-medium text-sm">{expenditure.pacName}</span>
-                            <span className="text-green-700 font-semibold">
+                            <span className="text-civiq-green font-semibold">
                               {formatCurrency(expenditure.amount)}
                             </span>
                           </div>
@@ -1261,9 +1261,9 @@ export const FinanceTabEnhanced = React.memo(
 
               {/* Opposing PACs */}
               {interestGroupData.pacContributions.opposingExpenditures.length > 0 && (
-                <div className="bg-red-50 p-6 border border-red-200">
+                <div className="bg-civiq-red/10 p-6 border border-civiq-red">
                   <div className="flex items-center mb-4">
-                    <h3 className="text-lg font-semibold text-red-800">
+                    <h3 className="text-lg font-semibold text-civiq-red">
                       PACs Opposing (
                       {interestGroupData.pacContributions.opposingExpenditures.length})
                     </h3>
@@ -1273,10 +1273,10 @@ export const FinanceTabEnhanced = React.memo(
                     {interestGroupData.pacContributions.opposingExpenditures
                       .slice(0, 5)
                       .map((expenditure, index) => (
-                        <div key={index} className="bg-white p-3 border border-red-100">
+                        <div key={index} className="bg-white p-3 border border-civiq-red">
                           <div className="flex justify-between items-start mb-1">
                             <span className="font-medium text-sm">{expenditure.pacName}</span>
-                            <span className="text-red-700 font-semibold">
+                            <span className="text-civiq-red font-semibold">
                               {formatCurrency(expenditure.amount)}
                             </span>
                           </div>
@@ -1310,21 +1310,21 @@ export const FinanceTabEnhanced = React.memo(
                   href={`https://www.fec.gov/data/receipts/?committee_id=${contributorData.metadata.fecCommitteeId}&two_year_transaction_period=2024&is_individual=false`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-xs text-civiq-blue hover:text-civiq-blue font-medium"
                 >
                   Verify PACs on FEC.gov →
                 </a>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-purple-50 border border-purple-200">
-                <div className="text-2xl font-bold text-purple-700">
+              <div className="text-center p-4 bg-civiq-blue/10 border border-civiq-blue">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {formatCurrency(interestGroupData.pacContributions.byType.superPac)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Super PAC</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 border border-blue-200">
-                <div className="text-2xl font-bold text-blue-700">
+              <div className="text-center p-4 bg-civiq-blue/10 border border-civiq-blue">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {formatCurrency(interestGroupData.pacContributions.byType.traditional)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Traditional PAC</div>
@@ -1358,7 +1358,7 @@ export const FinanceTabEnhanced = React.memo(
                   href={`https://www.fec.gov/data/receipts/?committee_id=${contributorData.metadata.fecCommitteeId}&two_year_transaction_period=2024`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-xs text-civiq-blue hover:text-civiq-blue font-medium"
                 >
                   View by State on FEC.gov →
                 </a>
@@ -1408,7 +1408,7 @@ export const FinanceTabEnhanced = React.memo(
                   href={contributorData.metadata.fecReceiptsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-xs text-civiq-blue hover:text-civiq-blue font-medium"
                 >
                   View All Receipts on FEC.gov →
                 </a>
@@ -1430,7 +1430,7 @@ export const FinanceTabEnhanced = React.memo(
                       {new Date(contribution.date).toLocaleDateString()}
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-green-600 ml-4">
+                  <span className="text-sm font-semibold text-civiq-green ml-4">
                     {formatCurrency(contribution.amount)}
                   </span>
                 </div>
@@ -1452,33 +1452,33 @@ export const FinanceTabEnhanced = React.memo(
                   href={contributorData.metadata.fecReceiptsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-xs text-civiq-blue hover:text-civiq-blue font-medium"
                 >
                   Verify Data on FEC.gov →
                 </a>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50">
-                <div className="text-2xl font-bold text-blue-700">
+              <div className="text-center p-4 bg-civiq-blue/10">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {donorMetrics.totalDonors.toLocaleString()}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Total Donors</div>
               </div>
-              <div className="text-center p-4 bg-green-50">
-                <div className="text-2xl font-bold text-green-700">
+              <div className="text-center p-4 bg-civiq-green/10">
+                <div className="text-2xl font-bold text-civiq-green">
                   {donorMetrics.smallDonorPercentage.toFixed(1)}%
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Small Donors (≤$200)</div>
               </div>
-              <div className="text-center p-4 bg-purple-50">
-                <div className="text-2xl font-bold text-purple-700">
+              <div className="text-center p-4 bg-civiq-blue/10">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {formatCurrency(donorMetrics.medianDonation)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Median Donation</div>
               </div>
-              <div className="text-center p-4 bg-orange-50">
-                <div className="text-2xl font-bold text-orange-700">
+              <div className="text-center p-4 bg-civiq-red/10">
+                <div className="text-2xl font-bold text-civiq-red">
                   {formatCurrency(donorMetrics.averageDonation)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Average Donation</div>
@@ -1491,8 +1491,8 @@ export const FinanceTabEnhanced = React.memo(
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Avg Small Donation</div>
               </div>
-              <div className="text-center p-4 bg-red-50">
-                <div className="text-xl font-bold text-red-700">
+              <div className="text-center p-4 bg-civiq-red/10">
+                <div className="text-xl font-bold text-civiq-red">
                   {formatCurrency(donorMetrics.largestDonation)}
                 </div>
                 <div className="text-xs text-gray-600 mt-1">Largest Single Donation</div>

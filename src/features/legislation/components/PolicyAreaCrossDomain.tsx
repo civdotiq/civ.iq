@@ -65,7 +65,7 @@ export function PolicyAreaCrossDomain({ policyArea }: PolicyAreaCrossDomainProps
           <p className="text-gray-600 font-medium">Failed to load cross-domain data</p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-4 py-2 mt-4 text-sm font-medium text-white bg-civiq-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-4 py-2 mt-4 text-sm font-medium text-white bg-civiq-blue hover:bg-civiq-blue focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2"
             aria-label="Retry loading cross-domain data"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />

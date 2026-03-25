@@ -21,10 +21,10 @@ export const Badge: FC<BadgeProps> = ({
 }) => {
   const variants = {
     default: 'bg-white border-2 border-gray-300 text-gray-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    danger: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800',
+    success: 'bg-civiq-green/10 text-civiq-green',
+    warning: 'bg-gray-100 text-gray-600',
+    danger: 'bg-civiq-red/10 text-civiq-red',
+    info: 'bg-civiq-blue/10 text-civiq-blue',
   };
 
   const sizes = {

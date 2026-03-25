@@ -20,18 +20,18 @@ function getFreshnessInfo(freshness?: string) {
     const timeMatch = freshness.match(/Retrieved in (\d+)ms/);
     if (timeMatch && timeMatch[1]) {
       const ms = parseInt(timeMatch[1]);
-      if (ms < 100) return { status: 'real-time', color: 'text-green-600', icon: '' };
-      if (ms < 1000) return { status: 'fast', color: 'text-blue-600', icon: '' };
-      return { status: 'live', color: 'text-orange-600', icon: '' };
+      if (ms < 100) return { status: 'real-time', color: 'text-civiq-green', icon: '' };
+      if (ms < 1000) return { status: 'fast', color: 'text-civiq-blue', icon: '' };
+      return { status: 'live', color: 'text-civiq-red', icon: '' };
     }
   }
 
   if (freshness.includes('Failed after')) {
-    return { status: 'failed', color: 'text-red-600', icon: '' };
+    return { status: 'failed', color: 'text-civiq-red', icon: '' };
   }
 
   if (freshness.includes('cached')) {
-    return { status: 'cached', color: 'text-purple-600', icon: '' };
+    return { status: 'cached', color: 'text-civiq-blue', icon: '' };
   }
 
   return { status: 'unknown', color: 'text-gray-600', icon: '' };
@@ -59,28 +59,28 @@ export function DataQualityIndicator({
     switch (quality) {
       case 'high':
         return {
-          color: 'bg-green-100 text-green-800 border-green-200',
+          color: 'bg-civiq-green/10 text-civiq-green border-civiq-green',
           icon: '✓',
           label: 'High Quality',
           description: 'Complete and current data',
         };
       case 'medium':
         return {
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          color: 'bg-gray-100 text-gray-600 border-gray-300',
           icon: '⚠',
           label: 'Medium Quality',
           description: 'Some data may be missing',
         };
       case 'low':
         return {
-          color: 'bg-orange-100 text-orange-800 border-orange-200',
+          color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
           icon: '!',
           label: 'Low Quality',
           description: 'Limited data available',
         };
       case 'unavailable':
         return {
-          color: 'bg-red-100 text-red-800 border-red-200',
+          color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
           icon: '✗',
           label: 'Unavailable',
           description: 'Data could not be retrieved',
@@ -145,7 +145,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   // Defensive programming: handle missing props gracefully
   if (!error && !metadata) {
     return (
-      <div className="p-6 border bg-red-50 border-red-200 text-red-800">
+      <div className="p-6 border bg-civiq-red/10 border-civiq-red text-civiq-red">
         <div className="flex items-start gap-4">
           <span className="text-2xl"></span>
           <div className="flex-1">
@@ -156,7 +156,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors text-sm font-medium"
               >
                 Try Again
               </button>
@@ -218,8 +218,8 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
 
   const severity = getErrorSeverity();
   const severityStyles = {
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
+    warning: 'bg-gray-100 border-gray-300 text-gray-600',
+    error: 'bg-civiq-red/10 border-civiq-red text-civiq-red',
   };
 
   return (
@@ -261,7 +261,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors text-sm font-medium"
               >
                 Try Again
               </button>
@@ -305,7 +305,7 @@ export function DataSourceBadge({
   const getSourceConfig = () => {
     if (source.includes('congress-legislators')) {
       return {
-        color: 'bg-blue-100 text-blue-800',
+        color: 'bg-civiq-blue/10 text-civiq-blue',
         icon: '',
         label: 'Congress Data',
         trustLevel: 'official',
@@ -313,7 +313,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('census')) {
       return {
-        color: 'bg-green-100 text-green-800',
+        color: 'bg-civiq-green/10 text-civiq-green',
         icon: '',
         label: 'Census Data',
         trustLevel: 'official',
@@ -321,7 +321,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('congress.gov')) {
       return {
-        color: 'bg-blue-100 text-blue-800',
+        color: 'bg-civiq-blue/10 text-civiq-blue',
         icon: '',
         label: 'Congress.gov',
         trustLevel: 'official',
@@ -329,7 +329,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('fec')) {
       return {
-        color: 'bg-purple-100 text-purple-800',
+        color: 'bg-civiq-blue/10 text-civiq-blue',
         icon: '',
         label: 'FEC Data',
         trustLevel: 'official',
@@ -345,7 +345,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('error') || source.includes('failed')) {
       return {
-        color: 'bg-red-100 text-red-800',
+        color: 'bg-civiq-red/10 text-civiq-red',
         icon: '',
         label: 'Error',
         trustLevel: 'error',

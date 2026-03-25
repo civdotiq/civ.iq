@@ -47,8 +47,8 @@ export const RepresentativeCard = memo(function RepresentativeCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
+    if (party.toLowerCase().includes('democrat')) return 'text-civiq-blue bg-civiq-blue/10';
+    if (party.toLowerCase().includes('republican')) return 'text-civiq-red bg-civiq-red/10';
     return 'text-gray-600 bg-white';
   };
 

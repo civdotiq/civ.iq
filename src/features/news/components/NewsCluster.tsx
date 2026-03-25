@@ -65,12 +65,12 @@ export function NewsClusterComponent({
    */
   const getStoryTypeBadge = () => {
     const badges: Record<string, { classes: string; label: string }> = {
-      breaking: { classes: 'bg-red-100 text-red-800 border-[#e11d07]', label: 'Breaking' },
+      breaking: { classes: 'bg-civiq-red/10 text-civiq-red border-[#e11d07]', label: 'Breaking' },
       developing: {
-        classes: 'bg-orange-100 text-orange-800 border-orange-500',
+        classes: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
         label: 'Developing',
       },
-      ongoing: { classes: 'bg-blue-100 text-blue-800 border-[#3ea2d4]', label: 'Ongoing' },
+      ongoing: { classes: 'bg-civiq-blue/10 text-civiq-blue border-[#3ea2d4]', label: 'Ongoing' },
       background: { classes: 'bg-gray-100 text-gray-800 border-gray-400', label: 'Background' },
     };
 
@@ -162,7 +162,7 @@ export function NewsClusterComponent({
 
             {cluster.relatedArticles.length > 3 && (
               <div className="text-center pt-2">
-                <button className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                <button className="text-sm text-civiq-blue hover:text-civiq-blue hover:underline">
                   Show {cluster.relatedArticles.length - 3} more articles
                 </button>
               </div>

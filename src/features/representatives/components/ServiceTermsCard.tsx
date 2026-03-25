@@ -105,7 +105,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
       <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-green-50">
+            <div className="p-2 bg-civiq-green/10">
               <Calendar className="w-5 h-5" style={{ color: '#0e8d37' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#0e8d37' }}>
@@ -146,7 +146,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                     <div
                       className={`flex items-start gap-3 p-3 transition-all cursor-pointer border-2 ${
                         selectedChamber === (group.chamber === 'Senate' ? 'Senate' : 'House')
-                          ? 'bg-green-50 border-green-300 border-2 border-black'
+                          ? 'bg-civiq-green/10 border-civiq-green border-2 border-black'
                           : 'bg-white border-transparent hover:bg-white border-2 border-gray-300'
                       }`}
                       onClick={() =>
@@ -197,7 +197,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                   {selectedChamber !== 'all' && (
                     <button
                       onClick={() => setSelectedChamber('all')}
-                      className="text-xs text-green-600 hover:text-green-700 hover:underline"
+                      className="text-xs text-civiq-green hover:text-civiq-green hover:underline"
                     >
                       Show all
                     </button>
@@ -220,7 +220,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                         href={getCongressWikipediaUrl(term.congress) || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-gray-900 hover:text-green-600 inline-flex items-center gap-1.5 transition-colors"
+                        className="font-medium text-gray-900 hover:text-civiq-green inline-flex items-center gap-1.5 transition-colors"
                         onClick={e => e.stopPropagation()}
                       >
                         {term.congress}th Congress
@@ -234,8 +234,8 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                       <span
                         className={`px-2 py-0.5 border-2 border-black text-xs font-medium ${
                           term.chamber === 'Senate'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-civiq-blue/10 text-civiq-blue'
+                            : 'bg-civiq-red/10 text-civiq-red'
                         }`}
                       >
                         {term.chamber}
@@ -254,7 +254,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
               {filteredTerms.length > 5 && (
                 <button
                   onClick={() => setShowAllTerms(!showAllTerms)}
-                  className="mt-3 w-full py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors flex items-center justify-center gap-1"
+                  className="mt-3 w-full py-2 text-sm text-civiq-green hover:text-civiq-green hover:bg-civiq-green/10 transition-colors flex items-center justify-center gap-1"
                 >
                   {showAllTerms ? (
                     <>

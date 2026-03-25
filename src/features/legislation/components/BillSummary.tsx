@@ -42,15 +42,15 @@ export function BillSummary({
   const [activeTab, setActiveTab] = useState<'summary' | 'keypoints' | 'impact'>('summary');
 
   const getReadingLevelColor = (level: number) => {
-    if (level <= 8) return 'text-green-600 bg-green-50';
-    if (level <= 10) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (level <= 8) return 'text-civiq-green bg-civiq-green/10';
+    if (level <= 10) return 'text-gray-600 bg-gray-100';
+    return 'text-civiq-red bg-civiq-red/10';
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    if (confidence >= 0.8) return 'text-civiq-green';
+    if (confidence >= 0.6) return 'text-gray-600';
+    return 'text-civiq-red';
   };
 
   const formatDate = (dateString: string) => {
@@ -70,8 +70,8 @@ export function BillSummary({
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Brain className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-blue-600">AI-Generated Summary</span>
+              <Brain className="h-5 w-5 text-civiq-blue flex-shrink-0" />
+              <span className="text-sm font-medium text-civiq-blue">AI-Generated Summary</span>
               <div
                 className={`px-2 py-1 text-xs font-medium ${getReadingLevelColor(summary.readingLevel)}`}
               >
@@ -112,15 +112,15 @@ export function BillSummary({
 
       {/* Quick Summary - Always Visible */}
       <div className="p-4">
-        <div className="bg-blue-50 p-4 mb-4">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">What This Bill Does</h4>
-          <p className="text-blue-800 leading-relaxed">{summary.whatItDoes || summary.summary}</p>
+        <div className="bg-civiq-blue/10 p-4 mb-4">
+          <h4 className="text-sm font-medium text-civiq-blue mb-2">What This Bill Does</h4>
+          <p className="text-civiq-blue leading-relaxed">{summary.whatItDoes || summary.summary}</p>
         </div>
 
         {summary.whyItMatters && (
-          <div className="bg-green-50 p-4">
-            <h4 className="text-sm font-medium text-green-900 mb-2">Why It Matters</h4>
-            <p className="text-green-800 leading-relaxed">{summary.whyItMatters}</p>
+          <div className="bg-civiq-green/10 p-4">
+            <h4 className="text-sm font-medium text-civiq-green mb-2">Why It Matters</h4>
+            <p className="text-civiq-green leading-relaxed">{summary.whyItMatters}</p>
           </div>
         )}
       </div>
@@ -140,7 +140,7 @@ export function BillSummary({
                 onClick={() => setActiveTab(tab.id as 'summary' | 'keypoints' | 'impact')}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    ? 'text-civiq-blue border-b-2 border-civiq-blue bg-civiq-blue/10'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                 }`}
               >
@@ -170,7 +170,7 @@ export function BillSummary({
                   <ul className="space-y-3">
                     {summary.keyPoints.map((point, index) => (
                       <li key={index} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600  flex items-center justify-center text-xs font-medium mt-0.5">
+                        <div className="flex-shrink-0 w-6 h-6 bg-civiq-blue/10 text-civiq-blue  flex items-center justify-center text-xs font-medium mt-0.5">
                           {index + 1}
                         </div>
                         <p className="text-gray-700 leading-relaxed">{point}</p>
@@ -243,9 +243,9 @@ export function BillSummaryStreaming({ streamingText, className = '' }: BillSumm
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <Brain className="h-5 w-5 text-blue-600" />
-          <span className="text-sm font-medium text-blue-600">AI-Generated Summary</span>
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium">
+          <Brain className="h-5 w-5 text-civiq-blue" />
+          <span className="text-sm font-medium text-civiq-blue">AI-Generated Summary</span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-civiq-blue/10 text-civiq-blue text-xs font-medium">
             Generating...
           </span>
         </div>
@@ -253,11 +253,11 @@ export function BillSummaryStreaming({ streamingText, className = '' }: BillSumm
 
       {/* Streaming text */}
       <div className="p-4">
-        <div className="bg-blue-50 p-4">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">What This Bill Does</h4>
-          <p className="text-blue-800 leading-relaxed whitespace-pre-wrap">
+        <div className="bg-civiq-blue/10 p-4">
+          <h4 className="text-sm font-medium text-civiq-blue mb-2">What This Bill Does</h4>
+          <p className="text-civiq-blue leading-relaxed whitespace-pre-wrap">
             {streamingText}
-            <span className="inline-block w-1.5 h-4 bg-blue-600 ml-0.5 animate-pulse align-text-bottom" />
+            <span className="inline-block w-1.5 h-4 bg-civiq-blue ml-0.5 animate-pulse align-text-bottom" />
           </p>
         </div>
       </div>
@@ -281,11 +281,11 @@ interface BillSummaryErrorProps {
 
 export function BillSummaryError({ error, onRetry, className = '' }: BillSummaryErrorProps) {
   return (
-    <div className={`bg-white border border-red-200 border-2 border-black ${className}`}>
+    <div className={`bg-white border border-civiq-red border-2 border-black ${className}`}>
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <span className="text-sm font-medium text-red-600">Summary Unavailable</span>
+          <AlertCircle className="h-5 w-5 text-civiq-red" />
+          <span className="text-sm font-medium text-civiq-red">Summary Unavailable</span>
         </div>
         <p className="text-gray-700 mb-4">
           {error ||
@@ -294,7 +294,7 @@ export function BillSummaryError({ error, onRetry, className = '' }: BillSummary
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-3 py-2 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+            className="px-3 py-2 bg-civiq-red text-white text-sm font-medium hover:bg-civiq-red transition-colors"
           >
             Try Again
           </button>

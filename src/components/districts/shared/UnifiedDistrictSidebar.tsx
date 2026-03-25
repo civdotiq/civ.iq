@@ -60,8 +60,8 @@ export default function UnifiedDistrictSidebar({
     <div className="space-y-6">
       {/* District Info Card (State Pages) */}
       {districtInfo && (
-        <div className="bg-blue-50 border-2 border-blue-200 p-6">
-          <h3 className="text-sm font-bold text-blue-900 mb-3 uppercase tracking-wide">
+        <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-6">
+          <h3 className="text-sm font-bold text-civiq-blue mb-3 uppercase tracking-wide">
             District Info
           </h3>
           <div className="space-y-2 text-sm">
@@ -92,7 +92,7 @@ export default function UnifiedDistrictSidebar({
               <h4 className="text-sm font-medium text-gray-700 mb-2">Representative</h4>
               <Link
                 href={representativeLink}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-civiq-blue hover:text-civiq-blue font-medium"
               >
                 {representativeName}
               </Link>
@@ -130,7 +130,7 @@ export default function UnifiedDistrictSidebar({
                   <Link
                     key={index}
                     href={link.href}
-                    className="block text-sm text-blue-600 hover:text-blue-800"
+                    className="block text-sm text-civiq-blue hover:text-civiq-blue"
                   >
                     {link.label}
                   </Link>

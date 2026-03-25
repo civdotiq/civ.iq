@@ -509,7 +509,7 @@ export default function StateDistrictBoundaryMap({
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-[999]">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-civiq-blue" />
             <p className="text-sm text-gray-600">Loading district boundaries...</p>
           </div>
         </div>
@@ -541,7 +541,7 @@ export default function StateDistrictBoundaryMap({
             </div>
             <div className="flex items-center space-x-3">
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 border border-blue-800 mr-1"></div>
+                <div className="w-3 h-3 bg-civiq-blue border border-civiq-blue mr-1"></div>
                 <span>Current District</span>
               </div>
               <div className="flex items-center">

@@ -64,7 +64,7 @@ export function EconomicIndicatorsSection({ districtId }: EconomicIndicatorsSect
           <p className="text-sm text-gray-500 mb-3">Unable to load economic data</p>
           <button
             onClick={() => mutate()}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-civiq-blue border border-blue-200 hover:bg-blue-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-civiq-blue border border-civiq-blue hover:bg-civiq-blue/10"
           >
             <RefreshCw className="w-3 h-3" />
             Retry

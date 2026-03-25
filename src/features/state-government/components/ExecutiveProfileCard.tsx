@@ -65,13 +65,13 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
   // Get party color classes
   const getPartyBadgeClass = () => {
     if (official.party === 'Republican') {
-      return 'bg-red-50 text-red-800 border-civiq-red';
+      return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
     if (official.party === 'Democratic') {
-      return 'bg-blue-50 text-blue-800 border-civiq-blue';
+      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
     }
     if (official.party === 'Independent') {
-      return 'bg-purple-50 text-purple-800 border-purple-600';
+      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
     }
     return 'bg-gray-50 text-gray-800 border-gray-400';
   };
@@ -143,7 +143,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
 
             {/* Incumbent Badge */}
             {official.isIncumbent && (
-              <span className="ml-2 inline-block px-3 py-1 text-xs font-bold bg-green-50 text-green-800 border-2 border-green-600">
+              <span className="ml-2 inline-block px-3 py-1 text-xs font-bold bg-civiq-green/10 text-civiq-green border-2 border-civiq-green">
                 INCUMBENT
               </span>
             )}
@@ -169,7 +169,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
                 <Mail className="w-4 h-4 text-civiq-blue flex-shrink-0" />
                 <a
                   href={`mailto:${official.email}`}
-                  className="text-blue-600 hover:underline break-all"
+                  className="text-civiq-blue hover:underline break-all"
                 >
                   {official.email}
                 </a>
@@ -178,7 +178,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
             {official.phone && (
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-civiq-green flex-shrink-0" />
-                <a href={`tel:${official.phone}`} className="text-blue-600 hover:underline">
+                <a href={`tel:${official.phone}`} className="text-civiq-blue hover:underline">
                   {official.phone}
                 </a>
               </div>

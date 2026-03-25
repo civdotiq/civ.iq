@@ -171,7 +171,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue transition-colors"
             >
               Return Home
             </Link>
@@ -266,7 +266,9 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               {/* Show bill title prominently if available */}
               {voteDetail.bill?.title &&
                 voteDetail.bill.title !== `${voteDetail.bill.type} ${voteDetail.bill.number}` && (
-                  <p className="text-lg text-blue-700 font-medium mb-2">{voteDetail.bill.title}</p>
+                  <p className="text-lg text-civiq-blue font-medium mb-2">
+                    {voteDetail.bill.title}
+                  </p>
                 )}
               <p className="text-gray-600">
                 {voteDetail.chamber} Roll Call #{voteDetail.rollNumber} • {voteDetail.congress}th
@@ -278,8 +280,8 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 className={`text-2xl font-bold ${
                   voteDetail.result.toLowerCase().includes('passed') ||
                   voteDetail.result.toLowerCase().includes('agreed')
-                    ? 'text-green-600'
-                    : 'text-red-600'
+                    ? 'text-civiq-green'
+                    : 'text-civiq-red'
                 }`}
               >
                 {voteDetail.result}
@@ -289,9 +291,9 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
           </div>
 
           {/* What This Vote Means */}
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-            <h3 className="font-semibold text-blue-900 mb-2">What This Vote Means</h3>
-            <p className="text-sm text-blue-800">
+          <div className="bg-civiq-blue/10 border-l-4 border-civiq-blue p-4 mb-4">
+            <h3 className="font-semibold text-civiq-blue mb-2">What This Vote Means</h3>
+            <p className="text-sm text-civiq-blue">
               {(() => {
                 const q = voteDetail.question.toLowerCase();
                 const r = voteDetail.result.toLowerCase();
@@ -335,7 +337,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               })()}
             </p>
             {voteDetail.requiredMajority && (
-              <p className="text-xs text-blue-700 mt-2">
+              <p className="text-xs text-civiq-blue mt-2">
                 <strong>Required to pass:</strong> {voteDetail.requiredMajority} majority
                 {voteDetail.requiredMajority === '3/5' && ' (60 votes)'}
                 {voteDetail.requiredMajority === '2/3' && ' (67 votes)'}
@@ -343,12 +345,12 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               </p>
             )}
             {voteDetail.metadata?.xmlUrl && (
-              <div className="mt-3 pt-3 border-t border-blue-200">
+              <div className="mt-3 pt-3 border-t border-civiq-blue">
                 <a
                   href={voteDetail.metadata.xmlUrl.replace('.xml', '.htm')}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 hover:underline transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-civiq-blue hover:text-civiq-blue hover:underline transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                   View official vote record on{' '}
@@ -376,7 +378,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               )}
               <Link
                 href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase().replace(/\./g, '') || (voteDetail.chamber === 'House' ? 'hr' : 's')}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue transition-colors text-sm font-medium"
               >
                 <FileText className="h-4 w-4" />
                 View Full Bill Details →
@@ -420,21 +422,21 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
         {/* Vote Results Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="aicher-card p-4 sm:p-6 text-center">
-            <div className="text-3xl font-bold text-green-600">{voteDetail.yeas}</div>
+            <div className="text-3xl font-bold text-civiq-green">{voteDetail.yeas}</div>
             <div className="text-sm text-gray-500">Yea</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.yeas / voteDetail.totalVotes) * 100).toFixed(1)}%
             </div>
           </div>
           <div className="aicher-card p-4 sm:p-6 text-center">
-            <div className="text-3xl font-bold text-red-600">{voteDetail.nays}</div>
+            <div className="text-3xl font-bold text-civiq-red">{voteDetail.nays}</div>
             <div className="text-sm text-gray-500">Nay</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.nays / voteDetail.totalVotes) * 100).toFixed(1)}%
             </div>
           </div>
           <div className="aicher-card p-4 sm:p-6 text-center">
-            <div className="text-3xl font-bold text-yellow-600">{voteDetail.present}</div>
+            <div className="text-3xl font-bold text-gray-600">{voteDetail.present}</div>
             <div className="text-sm text-gray-500">Present</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.present / voteDetail.totalVotes) * 100).toFixed(1)}%
@@ -454,7 +456,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
           <h2 className="aicher-heading text-xl text-gray-900 mb-4">Vote by Party</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <h3 className="font-semibold text-blue-600 mb-2">
+              <h3 className="font-semibold text-civiq-blue mb-2">
                 Democrats ({votesByParty.D.length})
               </h3>
               <div className="space-y-1 text-sm">
@@ -465,7 +467,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               </div>
             </div>
             <div className="text-center">
-              <h3 className="font-semibold text-red-600 mb-2">
+              <h3 className="font-semibold text-civiq-red mb-2">
                 Republicans ({votesByParty.R.length})
               </h3>
               <div className="space-y-1 text-sm">
@@ -476,7 +478,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               </div>
             </div>
             <div className="text-center">
-              <h3 className="font-semibold text-green-600 mb-2">
+              <h3 className="font-semibold text-civiq-green mb-2">
                 Independents ({votesByParty.I.length})
               </h3>
               <div className="space-y-1 text-sm">
@@ -547,16 +549,16 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             if (senators.length === 0) return null;
 
             const positionColors = {
-              Yea: 'bg-green-50 border-green-200',
-              Nay: 'bg-red-50 border-red-200',
-              Present: 'bg-yellow-50 border-yellow-200',
+              Yea: 'bg-civiq-green/10 border-civiq-green',
+              Nay: 'bg-civiq-red/10 border-civiq-red',
+              Present: 'bg-gray-100 border-gray-300',
               'Not Voting': 'bg-white border-gray-200',
             };
 
             const iconColors = {
-              Yea: 'text-green-600',
-              Nay: 'text-red-600',
-              Present: 'text-yellow-600',
+              Yea: 'text-civiq-green',
+              Nay: 'text-civiq-red',
+              Present: 'text-gray-600',
               'Not Voting': 'text-gray-600',
             };
 
@@ -610,7 +612,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                             return bioguideId ? (
                               <Link
                                 href={`/representative/${bioguideId}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                className="text-civiq-blue hover:text-civiq-blue hover:underline transition-colors"
                                 title={`View ${senator.firstName} ${senator.lastName}'s profile`}
                               >
                                 {senator.firstName} {senator.lastName}
@@ -627,10 +629,10 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                       <div
                         className={`text-sm font-medium ${
                           senator.party === 'D'
-                            ? 'text-blue-600'
+                            ? 'text-civiq-blue'
                             : senator.party === 'R'
-                              ? 'text-red-600'
-                              : 'text-green-600'
+                              ? 'text-civiq-red'
+                              : 'text-civiq-green'
                         }`}
                       >
                         {senator.party === 'D'

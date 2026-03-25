@@ -308,7 +308,7 @@ export function GlobalSearch() {
                         role="option"
                         aria-selected={selectedIndex === resultIndex}
                       >
-                        <Building2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <Building2 className="w-4 h-4 text-civiq-green flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">{leg.name}</div>
                           <div className="text-xs text-gray-500">

@@ -235,7 +235,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 href={bill.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Congress.gov
@@ -401,7 +401,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.cboCostEstimates && bill.cboCostEstimates.length > 0 && (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
+                <DollarSign className="w-5 h-5 text-civiq-green" />
                 CBO Cost Estimates ({bill.cboCostEstimates.length})
               </h3>
               <div className="space-y-3">
@@ -411,7 +411,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={estimate.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block p-4 border border-gray-200 hover:border-green-400 hover:bg-green-50 transition-all"
+                    className="block p-4 border border-gray-200 hover:border-civiq-green hover:bg-civiq-green/10 transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -426,7 +426,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           })}
                         </p>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0 ml-2" />
+                      <ExternalLink className="w-4 h-4 text-civiq-green flex-shrink-0 ml-2" />
                     </div>
                   </a>
                 ))}
@@ -438,10 +438,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.amendments && bill.amendments.count > 0 && (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <ScrollText className="w-5 h-5 text-orange-600" />
+                <ScrollText className="w-5 h-5 text-civiq-red" />
                 Amendments ({bill.amendments.count})
               </h3>
-              <div className="p-4 bg-orange-50 border border-orange-200">
+              <div className="p-4 bg-civiq-red/10 border border-civiq-red">
                 <p className="text-gray-700">
                   This bill has <span className="font-bold">{bill.amendments.count}</span> amendment
                   {bill.amendments.count === 1 ? '' : 's'} proposed or adopted.
@@ -451,7 +451,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={`${bill.url}/amendments`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-sm text-orange-700 hover:text-orange-900 font-medium"
+                    className="inline-flex items-center gap-1 mt-2 text-sm text-civiq-red hover:text-civiq-red font-medium"
                   >
                     View all amendments on Congress.gov
                     <ExternalLink className="w-3 h-3" />
@@ -464,7 +464,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {/* Congressional Votes - The Critical Link */}
           <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Vote className="w-5 h-5 text-blue-600" />
+              <Vote className="w-5 h-5 text-civiq-blue" />
               Congressional Votes ({bill.votes?.length || 0})
             </h3>
 
@@ -477,18 +477,18 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     <Link
                       key={`${vote.voteId || 'vote'}-${index}`}
                       href={`/vote/${vote.rollNumber || vote.voteId}`}
-                      className="block p-4 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                      className="block p-4 border-2 border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             {isPassed ? (
-                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <CheckCircle className="w-5 h-5 text-civiq-green" />
                             ) : (
-                              <XCircle className="w-5 h-5 text-red-600" />
+                              <XCircle className="w-5 h-5 text-civiq-red" />
                             )}
                             <span
-                              className={`font-semibold ${isPassed ? 'text-green-700' : 'text-red-700'}`}
+                              className={`font-semibold ${isPassed ? 'text-civiq-green' : 'text-civiq-red'}`}
                             >
                               {vote.result}
                             </span>
@@ -510,19 +510,21 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       {/* Vote Breakdown */}
                       {vote.votes ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
-                          <div className="text-center p-2 bg-green-50">
-                            <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
-                            <div className="text-xs text-green-600">Yea</div>
+                          <div className="text-center p-2 bg-civiq-green/10">
+                            <div className="text-lg font-bold text-civiq-green">
+                              {vote.votes.yea}
+                            </div>
+                            <div className="text-xs text-civiq-green">Yea</div>
                           </div>
-                          <div className="text-center p-2 bg-red-50">
-                            <div className="text-lg font-bold text-red-700">{vote.votes.nay}</div>
-                            <div className="text-xs text-red-600">Nay</div>
+                          <div className="text-center p-2 bg-civiq-red/10">
+                            <div className="text-lg font-bold text-civiq-red">{vote.votes.nay}</div>
+                            <div className="text-xs text-civiq-red">Nay</div>
                           </div>
-                          <div className="text-center p-2 bg-yellow-50">
-                            <div className="text-lg font-bold text-yellow-700">
+                          <div className="text-center p-2 bg-gray-100">
+                            <div className="text-lg font-bold text-gray-600">
                               {vote.votes.present}
                             </div>
-                            <div className="text-xs text-yellow-600">Present</div>
+                            <div className="text-xs text-gray-600">Present</div>
                           </div>
                           <div className="text-center p-2 bg-gray-50">
                             <div className="text-lg font-bold text-gray-700">
@@ -546,16 +548,16 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           <VoteBar vote={vote} />
                           {/* Party text breakdown */}
                           <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="bg-blue-50 p-2">
-                              <div className="font-medium text-blue-800 mb-1">Democrats</div>
-                              <div className="text-blue-700">
+                            <div className="bg-civiq-blue/10 p-2">
+                              <div className="font-medium text-civiq-blue mb-1">Democrats</div>
+                              <div className="text-civiq-blue">
                                 {vote.breakdown.democratic.yea} Yea /{' '}
                                 {vote.breakdown.democratic.nay} Nay
                               </div>
                             </div>
-                            <div className="bg-red-50 p-2">
-                              <div className="font-medium text-red-800 mb-1">Republicans</div>
-                              <div className="text-red-700">
+                            <div className="bg-civiq-red/10 p-2">
+                              <div className="font-medium text-civiq-red mb-1">Republicans</div>
+                              <div className="text-civiq-red">
                                 {vote.breakdown.republican.yea} Yea /{' '}
                                 {vote.breakdown.republican.nay} Nay
                               </div>
@@ -571,7 +573,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         </div>
                       ) : null}
 
-                      <div className="mt-3 text-sm text-blue-600 font-medium flex items-center gap-1">
+                      <div className="mt-3 text-sm text-civiq-blue font-medium flex items-center gap-1">
                         View all {vote.chamber === 'Senate' ? '100' : '435'} member votes →
                       </div>
                     </Link>
@@ -606,8 +608,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               <div className="mb-6 p-4 bg-white">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Party Breakdown</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-blue-100 p-3">
-                    <div className="text-lg font-bold text-blue-800">
+                  <div className="bg-civiq-blue/10 p-3">
+                    <div className="text-lg font-bold text-civiq-blue">
                       {
                         [
                           bill.sponsor.representative,
@@ -615,10 +617,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         ].filter(rep => rep.party === 'D').length
                       }
                     </div>
-                    <div className="text-xs text-blue-600">Democrats</div>
+                    <div className="text-xs text-civiq-blue">Democrats</div>
                   </div>
-                  <div className="bg-red-100 p-3">
-                    <div className="text-lg font-bold text-red-800">
+                  <div className="bg-civiq-red/10 p-3">
+                    <div className="text-lg font-bold text-civiq-red">
                       {
                         [
                           bill.sponsor.representative,
@@ -626,7 +628,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         ].filter(rep => rep.party === 'R').length
                       }
                     </div>
-                    <div className="text-xs text-red-600">Republicans</div>
+                    <div className="text-xs text-civiq-red">Republicans</div>
                   </div>
                   <div className="bg-gray-100 p-3">
                     <div className="text-lg font-bold text-gray-800">
@@ -646,7 +648,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
             {/* Sponsor */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-700 mb-3">Sponsor</h4>
-              <div className="flex items-center space-x-4 p-4 bg-blue-50">
+              <div className="flex items-center space-x-4 p-4 bg-civiq-blue/10">
                 <RepresentativePhoto
                   bioguideId={bill.sponsor.representative.bioguideId}
                   name={bill.sponsor.representative.name}
@@ -655,7 +657,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 <div>
                   <Link
                     href={`/representative/${bill.sponsor.representative.bioguideId}`}
-                    className="text-lg font-medium text-blue-600 hover:text-blue-800"
+                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
                   >
                     {bill.sponsor.representative.name}
                   </Link>
@@ -700,7 +702,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/representative/${cosponsor.representative.bioguideId}`}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800 truncate block"
+                          className="text-sm font-medium text-civiq-blue hover:text-civiq-blue truncate block"
                         >
                           {cosponsor.representative.name}
                         </Link>
@@ -798,7 +800,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           href={format.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 hover:border-civiq-blue hover:bg-blue-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-colors"
                         >
                           {format.type}
                           <ExternalLink className="w-3 h-3" />
@@ -824,10 +826,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={report.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-colors"
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-civiq-blue/10 border border-gray-200 hover:border-civiq-blue transition-colors"
                   >
                     <span className="text-sm font-medium text-gray-900">{report.citation}</span>
-                    <ExternalLink className="w-4 h-4 text-blue-600" />
+                    <ExternalLink className="w-4 h-4 text-civiq-blue" />
                   </a>
                 ))}
               </div>
@@ -858,11 +860,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     <Link
                       key={index}
                       href={billRoute || '#'}
-                      className={`block p-3 border border-gray-200 transition-colors ${billRoute ? 'hover:bg-blue-50 hover:border-blue-300' : ''}`}
+                      className={`block p-3 border border-gray-200 transition-colors ${billRoute ? 'hover:bg-civiq-blue/10 hover:border-civiq-blue' : ''}`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                          <p className="text-sm font-medium text-civiq-blue hover:text-civiq-blue">
                             {relatedBill.number}
                           </p>
                           <p className="text-xs text-gray-700 mt-1 line-clamp-2">
@@ -872,12 +874,12 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                             <span
                               className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
                                 relatedBill.relationship === 'identical'
-                                  ? 'bg-green-100 text-green-800'
+                                  ? 'bg-civiq-green/10 text-civiq-green'
                                   : relatedBill.relationship === 'supersedes'
-                                    ? 'bg-orange-100 text-orange-800'
+                                    ? 'bg-civiq-red/10 text-civiq-red'
                                     : relatedBill.relationship === 'superseded'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-blue-100 text-blue-800'
+                                      ? 'bg-civiq-red/10 text-civiq-red'
+                                      : 'bg-civiq-blue/10 text-civiq-blue'
                               }`}
                             >
                               {relatedBill.relationship === 'identical'
@@ -889,7 +891,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                                     : 'Related'}
                             </span>
                             {billRoute && (
-                              <span className="text-xs text-blue-600">View bill →</span>
+                              <span className="text-xs text-civiq-blue">View bill →</span>
                             )}
                           </div>
                         </div>
@@ -912,17 +914,17 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   <Link
                     key={index}
                     href={`/committee/${committee.committeeId}`}
-                    className="flex items-center justify-between p-3 bg-white hover:bg-blue-50 border border-transparent hover:border-blue-300 transition-colors group"
+                    className="flex items-center justify-between p-3 bg-white hover:bg-civiq-blue/10 border border-transparent hover:border-civiq-blue transition-colors group"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-civiq-blue">
                         {committee.name}
                       </p>
                       {committee.chamber && (
                         <p className="text-xs text-gray-500">{committee.chamber}</p>
                       )}
                     </div>
-                    <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-civiq-blue opacity-0 group-hover:opacity-100 transition-opacity">
                       View committee →
                     </span>
                   </Link>
@@ -955,7 +957,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={bill.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="inline-flex items-center text-civiq-blue hover:text-civiq-blue text-sm font-medium"
                   >
                     <ExternalLink className="w-4 h-4 mr-1" />
                     View on Congress.gov
@@ -993,7 +995,7 @@ function LegislativeProcessSection({ explanation }: LegislativeProcessSectionPro
         className="w-full p-6 flex items-center justify-between text-left"
       >
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-blue-600" />
+          <Brain className="w-5 h-5 text-civiq-blue" />
           <h3 className="text-lg font-semibold text-gray-900">Where This Bill Stands</h3>
           <span className="text-xs text-gray-500 ml-2">AI-generated</span>
         </div>
@@ -1024,13 +1026,13 @@ function LegislativeProcessSection({ explanation }: LegislativeProcessSectionPro
           {explanation.nextSteps && explanation.nextSteps.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-1">
-                <ArrowRight className="w-4 h-4 text-blue-600" />
+                <ArrowRight className="w-4 h-4 text-civiq-blue" />
                 Next Steps
               </h4>
               <ul className="space-y-1">
                 {explanation.nextSteps.map((step, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-blue-600 mt-0.5">{'>'}</span>
+                    <span className="text-civiq-blue mt-0.5">{'>'}</span>
                     {step}
                   </li>
                 ))}
@@ -1118,7 +1120,7 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
             <div className="mt-4 text-center">
               <button
                 onClick={() => setShowFullText(true)}
-                className="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors font-medium text-sm"
+                className="px-4 py-2 bg-civiq-blue/10 text-civiq-blue hover:bg-civiq-blue/10 transition-colors font-medium text-sm"
               >
                 Show Full Text ({Math.round(fullText.content.length / 1000)}KB)
               </button>

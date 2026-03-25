@@ -167,10 +167,10 @@ interface CampaignFinanceVisualizerProps {
 // PAC Type Badge Component
 const PACTypeBadge: React.FC<{ type: string }> = ({ type }) => {
   const config = {
-    superPac: { label: 'Super PAC', color: 'bg-purple-100 text-purple-800' },
-    traditional: { label: 'PAC', color: 'bg-blue-100 text-blue-800' },
-    leadership: { label: 'Leadership PAC', color: 'bg-green-100 text-green-800' },
-    hybrid: { label: 'Hybrid PAC', color: 'bg-orange-100 text-orange-800' },
+    superPac: { label: 'Super PAC', color: 'bg-civiq-blue/10 text-civiq-blue' },
+    traditional: { label: 'PAC', color: 'bg-civiq-blue/10 text-civiq-blue' },
+    leadership: { label: 'Leadership PAC', color: 'bg-civiq-green/10 text-civiq-green' },
+    hybrid: { label: 'Hybrid PAC', color: 'bg-civiq-red/10 text-civiq-red' },
     unknown: { label: 'Unknown', color: 'bg-gray-100 text-gray-800' },
   };
 
@@ -515,9 +515,9 @@ export function CampaignFinanceVisualizer({
                 }
                 className={`${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-civiq-blue text-civiq-blue'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } flex-shrink-0 whitespace-nowrap py-4 px-4 sm:px-6 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                } flex-shrink-0 whitespace-nowrap py-4 px-4 sm:px-6 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:ring-offset-2`}
               >
                 {tab.name}
               </button>
@@ -635,7 +635,7 @@ export function CampaignFinanceVisualizer({
                       financeData.supportingExpenditures.length > 0 && (
                         <div className="flex justify-between">
                           <span>Supporting:</span>
-                          <span className="text-green-600">
+                          <span className="text-civiq-green">
                             {financeData.supportingExpenditures.length} expenditure
                             {financeData.supportingExpenditures.length !== 1 ? 's' : ''} (
                             {formatCurrency(
@@ -652,7 +652,7 @@ export function CampaignFinanceVisualizer({
                       financeData.opposingExpenditures.length > 0 && (
                         <div className="flex justify-between">
                           <span>Opposing:</span>
-                          <span className="text-red-600">
+                          <span className="text-civiq-red">
                             {financeData.opposingExpenditures.length} expenditure
                             {financeData.opposingExpenditures.length !== 1 ? 's' : ''} (
                             {formatCurrency(
@@ -702,7 +702,7 @@ export function CampaignFinanceVisualizer({
                     )}
                     {fundingSourcesData.candidateContributions.percentage > 0 && (
                       <div
-                        className="h-full bg-yellow-500"
+                        className="h-full bg-gray-500"
                         style={{
                           width: `${fundingSourcesData.candidateContributions.percentage}%`,
                         }}
@@ -739,7 +739,7 @@ export function CampaignFinanceVisualizer({
                       {
                         label: 'Self-Funded',
                         data: fundingSourcesData.candidateContributions,
-                        color: 'bg-yellow-500',
+                        color: 'bg-gray-500',
                       },
                       {
                         label: 'Other',
@@ -834,7 +834,7 @@ export function CampaignFinanceVisualizer({
                       href={financeData.fecTransparencyLinks.candidatePage}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline block"
+                      className="text-civiq-blue hover:underline block"
                     >
                       View Complete FEC Profile →
                     </a>
@@ -842,7 +842,7 @@ export function CampaignFinanceVisualizer({
                       href={financeData.fecTransparencyLinks.contributions}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline block"
+                      className="text-civiq-blue hover:underline block"
                     >
                       View All Contributions →
                     </a>
@@ -850,7 +850,7 @@ export function CampaignFinanceVisualizer({
                       href={financeData.fecTransparencyLinks.financialSummary}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline block"
+                      className="text-civiq-blue hover:underline block"
                     >
                       View Financial Summary →
                     </a>
@@ -1250,17 +1250,17 @@ export function CampaignFinanceVisualizer({
                           </div>
                         </div>
 
-                        <div className="p-4 bg-green-50">
+                        <div className="p-4 bg-civiq-green/10">
                           <div className="text-sm text-gray-600 mb-1">Grassroots Funding</div>
-                          <div className="text-xl font-bold text-green-700">
+                          <div className="text-xl font-bold text-civiq-green">
                             {financeData.interestGroupMetrics.grassrootsPercentage.toFixed(1)}%
                           </div>
                           <div className="text-xs text-gray-500">Small donors ≤ $200</div>
                         </div>
 
-                        <div className="p-4 bg-blue-50">
+                        <div className="p-4 bg-civiq-blue/10">
                           <div className="text-sm text-gray-600 mb-1">Funding Diversity</div>
-                          <div className="text-xl font-bold text-blue-700">
+                          <div className="text-xl font-bold text-civiq-blue">
                             {financeData.interestGroupMetrics.diversityScore}/100
                           </div>
                           <div className="text-xs text-gray-500">
@@ -1274,8 +1274,8 @@ export function CampaignFinanceVisualizer({
                       </div>
 
                       {financeData.interestGroupMetrics.corporatePercentage > 0 && (
-                        <div className="mt-4 p-3 bg-orange-50 border border-orange-200">
-                          <div className="text-sm text-orange-800">
+                        <div className="mt-4 p-3 bg-civiq-red/10 border border-civiq-red">
+                          <div className="text-sm text-civiq-red">
                             <strong>
                               {financeData.interestGroupMetrics.corporatePercentage.toFixed(1)}%
                             </strong>{' '}
@@ -1500,7 +1500,7 @@ export function CampaignFinanceVisualizer({
             <div className="space-y-6">
               {/* Supporting Expenditures */}
               <div className="bg-white p-4 sm:p-6">
-                <h3 className="text-lg font-semibold mb-4 text-green-700">
+                <h3 className="text-lg font-semibold mb-4 text-civiq-green">
                   Independent Expenditures Supporting Representative
                 </h3>
                 {financeData.supportingExpenditures &&
@@ -1537,7 +1537,7 @@ export function CampaignFinanceVisualizer({
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />
                               </td>
-                              <td className="text-right py-2 font-semibold text-green-600">
+                              <td className="text-right py-2 font-semibold text-civiq-green">
                                 ${exp.amount.toLocaleString()}
                               </td>
                             </tr>
@@ -1553,7 +1553,7 @@ export function CampaignFinanceVisualizer({
 
               {/* Opposing Expenditures */}
               <div className="bg-white p-4 sm:p-6">
-                <h3 className="text-lg font-semibold mb-4 text-red-700">
+                <h3 className="text-lg font-semibold mb-4 text-civiq-red">
                   Independent Expenditures Opposing Representative
                 </h3>
                 {financeData.opposingExpenditures && financeData.opposingExpenditures.length > 0 ? (
@@ -1589,7 +1589,7 @@ export function CampaignFinanceVisualizer({
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />
                               </td>
-                              <td className="text-right py-2 font-semibold text-red-600">
+                              <td className="text-right py-2 font-semibold text-civiq-red">
                                 ${exp.amount.toLocaleString()}
                               </td>
                             </tr>

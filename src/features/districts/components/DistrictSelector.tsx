@@ -66,8 +66,10 @@ export function DistrictSelector({
   };
 
   const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50 border-red-200';
+    if (party.toLowerCase().includes('democrat'))
+      return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
+    if (party.toLowerCase().includes('republican'))
+      return 'text-civiq-red bg-civiq-red/10 border-civiq-red';
     return 'text-gray-600 bg-white border-gray-200';
   };
 
@@ -128,7 +130,7 @@ export function DistrictSelector({
                             </span>
                           )}
                           {district.confidence && district.confidence !== 'high' && (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600">
                               {district.confidence} confidence
                             </span>
                           )}

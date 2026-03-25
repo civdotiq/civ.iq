@@ -121,10 +121,10 @@ const RepresentativeCard = memo(function RepresentativeCard({
       case 'D':
       case 'Democratic':
       case 'Democrat':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'R':
       case 'Republican':
-        return 'bg-red-100 text-red-700';
+        return 'bg-civiq-red/10 text-civiq-red';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-700';
     }

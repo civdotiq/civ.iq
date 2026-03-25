@@ -151,11 +151,11 @@ export default function HealthcareTopicPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/topics" className="hover:text-blue-600">
+          <Link href="/topics" className="hover:text-civiq-blue">
             Topics
           </Link>
           <span className="mx-2">›</span>
@@ -181,11 +181,11 @@ export default function HealthcareTopicPage() {
           <p className="text-gray-700 mb-4">
             <strong>Healthcare policy</strong> is one of the most actively legislated areas in
             Congress. Key programs like{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               Medicare
             </Link>{' '}
             and{' '}
-            <Link href="#policy-areas" className="text-blue-600 hover:underline">
+            <Link href="#policy-areas" className="text-civiq-blue hover:underline">
               Medicaid
             </Link>{' '}
             provide health coverage to over 150 million Americans. Congress debates issues ranging
@@ -193,7 +193,7 @@ export default function HealthcareTopicPage() {
           </p>
           <p className="text-gray-700 mb-4">
             Healthcare legislation typically moves through specialized{' '}
-            <Link href="#committees" className="text-blue-600 hover:underline">
+            <Link href="#committees" className="text-civiq-blue hover:underline">
               committees
             </Link>{' '}
             with jurisdiction over health policy. Understanding which committees handle which
@@ -216,11 +216,11 @@ export default function HealthcareTopicPage() {
               <Link
                 key={committee.id}
                 href={`/committee/${committee.id}`}
-                className="block p-4 bg-white border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                className="block p-4 bg-white border-2 border-gray-200 hover:border-civiq-blue transition-colors"
               >
                 <h3 className="font-bold text-gray-900 mb-1">{committee.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{committee.jurisdiction}</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-civiq-blue">
                   Key subcommittees: {committee.subcommittees.join(', ')}
                 </p>
               </Link>
@@ -243,7 +243,7 @@ export default function HealthcareTopicPage() {
                   {area.keywords.map(keyword => (
                     <span
                       key={keyword}
-                      className="px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200"
+                      className="px-2 py-1 text-xs bg-civiq-blue/10 text-civiq-blue border border-civiq-blue"
                     >
                       {keyword}
                     </span>
@@ -282,7 +282,7 @@ export default function HealthcareTopicPage() {
           </ul>
           <Link
             href="/legislation"
-            className="inline-block mt-4 text-blue-600 hover:underline font-medium"
+            className="inline-block mt-4 text-civiq-blue hover:underline font-medium"
           >
             Browse all current legislation →
           </Link>

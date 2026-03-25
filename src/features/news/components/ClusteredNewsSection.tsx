@@ -311,7 +311,7 @@ export function ClusteredNewsSection({
           <div className="text-sm text-gray-600 mb-4">{error}</div>
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 text-sm font-medium bg-[#3ea2d4] text-white border-2 border-[#3ea2d4] hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-[#3ea2d4] text-white border-2 border-[#3ea2d4] hover:bg-civiq-blue transition-colors"
           >
             Try Again
           </button>

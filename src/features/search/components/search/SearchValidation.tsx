@@ -125,7 +125,7 @@ export function SearchValidation({
           onChange={handleInputChange}
           placeholder={placeholder}
           className={`w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent ${
-            error ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            error ? 'border-civiq-red bg-civiq-red/10' : 'border-gray-300'
           }`}
           disabled={isValidating}
         />
@@ -133,7 +133,7 @@ export function SearchValidation({
         <button
           type="submit"
           disabled={!query.trim() || isValidating}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-civiq-blue text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-civiq-blue text-white hover:bg-civiq-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isValidating ? (
             <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">

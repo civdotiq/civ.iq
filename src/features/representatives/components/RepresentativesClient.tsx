@@ -304,7 +304,7 @@ export function RepresentativesClient({
   if (searchState.isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
         <p className="mt-4 text-gray-600">Loading representatives...</p>
       </div>
     );
@@ -391,7 +391,7 @@ export function RepresentativesClient({
               onClick={() => setViewMode('grid')}
               className={`px-4 py-2 transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-civiq-blue text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -401,7 +401,7 @@ export function RepresentativesClient({
               onClick={() => setViewMode('list')}
               className={`px-4 py-2 transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-civiq-blue text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -478,8 +478,8 @@ export function RepresentativesClient({
                           <span
                             className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                               rep.party === 'D'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-civiq-blue/10 text-civiq-blue'
+                                : 'bg-civiq-red/10 text-civiq-red'
                             }`}
                           >
                             {rep.party}
@@ -491,7 +491,7 @@ export function RepresentativesClient({
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-                            className="text-blue-600 hover:text-blue-900 mr-4"
+                            className="text-civiq-blue hover:text-civiq-blue mr-4"
                           >
                             View
                           </button>

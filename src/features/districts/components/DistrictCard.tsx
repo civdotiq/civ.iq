@@ -52,19 +52,19 @@ interface District {
  */
 function getDistrictLean(pvi: string): { text: string; color: string; bgColor: string } {
   if (!pvi || pvi === 'EVEN') {
-    return { text: 'Competitive', color: 'text-purple-700', bgColor: 'bg-purple-100' };
+    return { text: 'Competitive', color: 'text-civiq-blue', bgColor: 'bg-civiq-blue/10' };
   }
 
   const match = pvi.match(/^([DR])\+(\d+)/);
   if (!match || !match[1] || !match[2]) {
-    return { text: 'Competitive', color: 'text-purple-700', bgColor: 'bg-purple-100' };
+    return { text: 'Competitive', color: 'text-civiq-blue', bgColor: 'bg-civiq-blue/10' };
   }
 
   const party = match[1];
   const margin = parseInt(match[2], 10);
   const partyName = party === 'D' ? 'Democratic' : 'Republican';
-  const color = party === 'D' ? 'text-blue-700' : 'text-red-700';
-  const bgColor = party === 'D' ? 'bg-blue-100' : 'bg-red-100';
+  const color = party === 'D' ? 'text-civiq-blue' : 'text-civiq-red';
+  const bgColor = party === 'D' ? 'bg-civiq-blue/10' : 'bg-civiq-red/10';
 
   if (margin >= 15) {
     return { text: `Strongly ${partyName}`, color, bgColor };

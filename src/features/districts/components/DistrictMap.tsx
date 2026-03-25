@@ -604,12 +604,12 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       {coordinateCount > 0 && (
         <div className="mt-2 text-xs text-center">
           {isLiveCensusTiger ? (
-            <span className="text-green-600 font-medium">
+            <span className="text-civiq-green font-medium">
               Live from Census TIGER API • 119th Congress ({coordinateCount.toLocaleString()}{' '}
               coordinate points)
             </span>
           ) : isStateBoundary ? (
-            <span className="text-blue-600 font-medium">
+            <span className="text-civiq-blue font-medium">
               State boundaries ({coordinateCount.toLocaleString()} coordinate points)
             </span>
           ) : (

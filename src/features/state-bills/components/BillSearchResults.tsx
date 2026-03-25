@@ -47,7 +47,7 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
     return (
       <div className="bg-white border-2 border-black p-8">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-6 h-6 text-civiq-red flex-shrink-0 mt-0.5" />
           <div>
             <h3 className="font-bold text-gray-900 mb-1">Search Error</h3>
             <p className="text-gray-600">{error}</p>
@@ -92,18 +92,18 @@ export const BillSearchResults: React.FC<BillSearchResultsProps> = ({
 
     switch (status) {
       case 'signed':
-        return 'bg-green-50 text-green-800 border-green-600';
+        return 'bg-civiq-green/10 text-civiq-green border-civiq-green';
       case 'passed_legislature':
       case 'passed_upper':
       case 'passed_lower':
-        return 'bg-blue-50 text-blue-800 border-blue-600';
+        return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
       case 'vetoed':
       case 'failed':
-        return 'bg-red-50 text-red-800 border-red-600';
+        return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
       case 'in_committee':
-        return 'bg-yellow-50 text-yellow-800 border-yellow-600';
+        return 'bg-gray-100 text-gray-600 border-gray-400';
       case 'introduced':
-        return 'bg-purple-50 text-purple-800 border-purple-600';
+        return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
       default:
         return 'bg-gray-50 text-gray-800 border-gray-400';
     }

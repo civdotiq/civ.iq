@@ -416,7 +416,7 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
           <h3 className="aicher-heading type-lg text-gray-900">
             Biography
             {hasErrors && (
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 border-2 border-yellow-300 px-2 py-1">
+              <span className="ml-2 text-xs bg-gray-100 text-gray-600 border-2 border-gray-300 px-2 py-1">
                 Partial
               </span>
             )}
@@ -451,7 +451,7 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
                     href={biographyData.wikipediaPageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors hover:underline"
+                    className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue text-sm font-medium transition-colors hover:underline"
                   >
                     Read full biography
                     <ExternalLink className="w-3 h-3" />
@@ -488,7 +488,7 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
                     href={biographyData.wikipediaPageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors hover:underline"
+                    className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue text-sm font-medium transition-colors hover:underline"
                   >
                     Read full biography
                     <ExternalLink className="w-3 h-3" />
@@ -558,8 +558,8 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
 
         {/* Error reporting for partial failures (dev/debug info) */}
         {hasErrors && process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-yellow-50 border-2 border-yellow-300">
-            <div className="text-xs text-yellow-800">
+          <div className="mt-4 p-3 bg-gray-100 border-2 border-gray-300">
+            <div className="text-xs text-gray-600">
               <strong>Debug Info (dev only):</strong>
               {biographyData?.wikipediaError && (
                 <div>Wikipedia: {biographyData.wikipediaError}</div>

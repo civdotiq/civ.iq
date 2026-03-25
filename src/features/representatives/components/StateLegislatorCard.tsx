@@ -48,14 +48,15 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
+    if (party.toLowerCase().includes('democrat')) return 'text-civiq-blue bg-civiq-blue/10';
+    if (party.toLowerCase().includes('republican')) return 'text-civiq-red bg-civiq-red/10';
     return 'text-gray-600 bg-white';
   };
 
   const getChamberInfo = (chamber: string) => {
     if (chamber === 'upper') return { name: 'State Senate', color: 'bg-gray-100 text-gray-800' };
-    if (chamber === 'lower') return { name: 'State House', color: 'bg-green-100 text-green-800' };
+    if (chamber === 'lower')
+      return { name: 'State House', color: 'bg-civiq-green/10 text-civiq-green' };
     return { name: 'Legislature', color: 'bg-white border-2 border-gray-300 text-gray-800' };
   };
 

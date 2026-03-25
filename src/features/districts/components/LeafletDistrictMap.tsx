@@ -331,7 +331,7 @@ export default function LeafletDistrictMap({
         style={{ height }}
       >
         <div className="text-center p-6">
-          <div className="text-red-600 text-lg font-medium mb-2">Map Loading Error</div>
+          <div className="text-civiq-red text-lg font-medium mb-2">Map Loading Error</div>
           <div className="text-gray-600 text-sm">{mapState.error}</div>
         </div>
       </div>
@@ -343,7 +343,7 @@ export default function LeafletDistrictMap({
       {mapState.loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
-            <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
+            <Loader2 className="animate-spin h-8 w-8 text-civiq-blue mx-auto mb-2" />
             <div className="text-sm text-gray-600">Loading map...</div>
           </div>
         </div>

@@ -55,7 +55,7 @@ const DistrictMap = dynamic(() => import('@/features/districts/components/Distri
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
       <div className="text-center">
-        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-blue-600 mb-2" />
+        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue mb-2" />
         <p className="text-sm text-gray-600">Loading district map...</p>
       </div>
     </div>
@@ -168,7 +168,7 @@ export default function DistrictPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
           <p className="mt-4 text-gray-600">Loading district details...</p>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function DistrictPage() {
           </p>
           <Link
             href="/districts"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-civiq-blue"
           >
             Browse All Districts
           </Link>
@@ -200,11 +200,11 @@ export default function DistrictPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-civiq-blue">
             Home
           </Link>
           <span className="mx-2">›</span>
-          <Link href="/districts" className="hover:text-blue-600">
+          <Link href="/districts" className="hover:text-civiq-blue">
             Districts
           </Link>
           <span className="mx-2">›</span>
@@ -334,7 +334,7 @@ export default function DistrictPage() {
                         href={district.wikidata.wikipediaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-civiq-blue hover:text-civiq-blue"
                       >
                         View on Wikipedia →
                       </a>

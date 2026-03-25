@@ -29,19 +29,19 @@ export function DataQualityBadge({
 }: DataQualityBadgeProps) {
   const config = {
     high: {
-      color: 'bg-green-100 text-green-800 border-green-300',
+      color: 'bg-civiq-green/10 text-civiq-green border-civiq-green',
       icon: '✓',
       text: 'High Quality',
       description: 'Complete FEC data with detailed contribution information',
     },
     medium: {
-      color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      color: 'bg-gray-100 text-gray-600 border-gray-300',
       icon: '!',
       text: 'Moderate Quality',
       description: 'Partial FEC data available, some details may be limited',
     },
     low: {
-      color: 'bg-red-100 text-red-800 border-red-300',
+      color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
       icon: '?',
       text: 'Limited Data',
       description: 'Minimal FEC data available, may be incomplete or outdated',
@@ -75,7 +75,7 @@ export function DataQualityBadge({
         <div className="group relative inline-block">
           <button
             type="button"
-            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
             aria-label="More information about data quality"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -109,9 +109,9 @@ export function DataQualityBadge({
  */
 export function DataQualityIndicator({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const colors = {
-    high: 'bg-green-500',
-    medium: 'bg-yellow-500',
-    low: 'bg-red-500',
+    high: 'bg-civiq-green',
+    medium: 'bg-gray-500',
+    low: 'bg-civiq-red',
   };
 
   const labels = {

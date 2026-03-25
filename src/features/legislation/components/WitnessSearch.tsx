@@ -143,7 +143,7 @@ export function WitnessSearch() {
             <span>Loading witnesses...</span>
           </div>
         ) : error ? (
-          <div className="flex items-center gap-2 py-8 text-red-600 justify-center">
+          <div className="flex items-center gap-2 py-8 text-civiq-red justify-center">
             <AlertCircle className="w-5 h-5" />
             <span>Unable to load witnesses</span>
           </div>
@@ -167,8 +167,8 @@ export function WitnessSearch() {
                       <span
                         className={`text-xs px-2 py-0.5 font-bold ${
                           witness.chamber === 'House'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-civiq-red/10 text-civiq-red'
+                            : 'bg-civiq-blue/10 text-civiq-blue'
                         }`}
                       >
                         {witness.chamber}

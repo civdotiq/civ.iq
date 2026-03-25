@@ -25,7 +25,7 @@ export default function Error({
         <p className="text-gray-600 mb-6">We encountered an error while loading this page.</p>
         <button
           onClick={reset}
-          className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors"
         >
           Try again
         </button>
