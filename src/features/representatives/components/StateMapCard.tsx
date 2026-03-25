@@ -7,7 +7,55 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 import useSWR from 'swr';
+
+const SVG_SANITIZE_CONFIG = {
+  ALLOWED_TAGS: [
+    'svg',
+    'path',
+    'g',
+    'circle',
+    'rect',
+    'line',
+    'polyline',
+    'polygon',
+    'ellipse',
+    'text',
+    'tspan',
+    'defs',
+    'clipPath',
+    'use',
+  ],
+  ALLOWED_ATTR: [
+    'viewBox',
+    'xmlns',
+    'd',
+    'fill',
+    'stroke',
+    'stroke-width',
+    'stroke-linecap',
+    'stroke-linejoin',
+    'cx',
+    'cy',
+    'r',
+    'x',
+    'y',
+    'width',
+    'height',
+    'points',
+    'transform',
+    'class',
+    'style',
+    'opacity',
+    'fill-opacity',
+    'stroke-opacity',
+    'id',
+    'clip-path',
+  ],
+  FORBID_TAGS: ['script', 'foreignObject', 'animate', 'set'],
+  ALLOW_DATA_ATTR: false,
+};
 
 interface StateDemographics {
   state_code: string;
@@ -91,7 +139,9 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
           ) : svgContent ? (
             <div
               className="w-full aicher-border bg-gray-50"
-              dangerouslySetInnerHTML={{ __html: svgContent }}
+              dangerouslySetInnerHTML={{
+                __html: String(DOMPurify.sanitize(svgContent, SVG_SANITIZE_CONFIG)),
+              }}
             />
           ) : (
             <div className="w-full h-48 bg-gray-100 aicher-border flex items-center justify-center">

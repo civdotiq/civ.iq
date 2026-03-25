@@ -7,18 +7,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
+import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * Verify admin access using timing-safe comparison
- * Prevents timing attacks that could leak token information
  */
 function verifyAdminAccess(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
   const adminKey = process.env.ADMIN_API_KEY;
 
   if (!adminKey) {
@@ -26,24 +24,7 @@ function verifyAdminAccess(request: NextRequest): boolean {
     return false;
   }
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false;
-  }
-
-  const token = authHeader.substring(7);
-
-  // Use timing-safe comparison to prevent timing attacks
-  // Both strings must be the same length for timingSafeEqual
-  if (token.length !== adminKey.length) {
-    return false;
-  }
-
-  try {
-    return timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(adminKey, 'utf8'));
-  } catch {
-    // If comparison fails for any reason, deny access
-    return false;
-  }
+  return verifyBearerToken(request.headers.get('authorization'), adminKey);
 }
 
 interface CacheInvalidationRequest {

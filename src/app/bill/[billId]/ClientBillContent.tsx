@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { sanitizeBillHtml } from '@/utils/sanitize';
 import Link from 'next/link';
 import {
   ExternalLink,
@@ -1069,8 +1070,9 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
   // Truncate content for preview
   const previewLength = 2000;
   const isLongContent = fullText.content.length > previewLength;
-  const displayContent =
+  const rawContent =
     showFullText || !isLongContent ? fullText.content : fullText.content.slice(0, previewLength);
+  const displayContent = useMemo(() => sanitizeBillHtml(rawContent), [rawContent]);
 
   return (
     <div className="bg-white border-2 border-black p-6">

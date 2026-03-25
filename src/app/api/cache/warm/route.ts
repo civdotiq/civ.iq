@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Cache warming can take time
@@ -28,8 +29,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If secret is configured, always require it
-    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+    // If secret is configured, always require it (timing-safe comparison)
+    if (expectedToken && !verifyBearerToken(authHeader, expectedToken)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

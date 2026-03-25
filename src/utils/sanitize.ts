@@ -139,6 +139,84 @@ export function sanitizeAndValidateWikipediaHtml(htmlContent: string): string {
 }
 
 /**
+ * Sanitization configuration for legislative bill text from Congress.gov
+ *
+ * Allows a broader set of tags than Wikipedia content to preserve
+ * the formatting of bills, resolutions, and amendments.
+ */
+const BILL_SANITIZE_CONFIG = {
+  ALLOWED_TAGS: [
+    'p',
+    'b',
+    'strong',
+    'i',
+    'em',
+    'br',
+    'a',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'ul',
+    'ol',
+    'li',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'div',
+    'span',
+    'pre',
+    'code',
+    'blockquote',
+    'dl',
+    'dt',
+    'dd',
+    'hr',
+    'sup',
+    'sub',
+  ],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'colspan', 'rowspan'],
+  FORBID_ATTR: ['onclick', 'onload', 'onmouseover', 'onerror', 'onfocus'],
+  FORBID_TAGS: ['script', 'object', 'embed', 'iframe', 'form', 'input', 'svg', 'math'],
+  ALLOW_DATA_ATTR: false,
+  WHOLE_DOCUMENT: false,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  SANITIZE_DOM: true,
+  KEEP_CONTENT: true,
+  ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
+};
+
+/**
+ * Sanitize HTML content from Congress.gov bill text
+ *
+ * Allows richer formatting than Wikipedia content (tables, lists, headings)
+ * while stripping all scripts, event handlers, and dangerous elements.
+ *
+ * @param htmlContent - Raw HTML from Congress.gov API
+ * @returns Sanitized HTML safe for use with dangerouslySetInnerHTML
+ */
+export function sanitizeBillHtml(htmlContent: string): string {
+  if (!htmlContent || typeof htmlContent !== 'string') {
+    return '';
+  }
+
+  try {
+    const sanitized = DOMPurify.sanitize(htmlContent, BILL_SANITIZE_CONFIG);
+    return String(sanitized);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error sanitizing bill HTML content:', error);
+    return '';
+  }
+}
+
+/**
  * Check if DOMPurify is available and working properly
  *
  * This function can be used for debugging to ensure the sanitization

@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRequestCounts } from '@/lib/analytics/request-counter';
 import { addVersionHeaders } from '@/lib/api/v1-versioning';
+import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (authHeader !== `Bearer ${expectedToken}`) {
+  if (!verifyBearerToken(authHeader, expectedToken)) {
     return NextResponse.json({ error: { code: 401, message: 'Unauthorized' } }, { status: 401 });
   }
 
@@ -43,6 +44,14 @@ export async function GET(request: NextRequest) {
   if (!datePattern.test(startDate) || !datePattern.test(endDate)) {
     return NextResponse.json(
       { error: { code: 400, message: 'Invalid date format. Use YYYY-MM-DD.' } },
+      { status: 400 }
+    );
+  }
+
+  // Validate dates are semantically valid (regex alone accepts "2025-13-45")
+  if (isNaN(new Date(startDate).getTime()) || isNaN(new Date(endDate).getTime())) {
+    return NextResponse.json(
+      { error: { code: 400, message: 'Invalid date values.' } },
       { status: 400 }
     );
   }

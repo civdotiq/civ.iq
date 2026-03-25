@@ -73,7 +73,7 @@ interface StateLegislatureData {
 }
 
 // Helper function to get state abbreviation mapping
-function getStateAbbreviation(state: string): string {
+function getStateAbbreviation(state: string): string | null {
   const stateMap: { [key: string]: string } = {
     AL: 'al',
     AK: 'ak',
@@ -127,7 +127,7 @@ function getStateAbbreviation(state: string): string {
     WY: 'wy',
   };
 
-  return stateMap[state.toUpperCase()] || state.toLowerCase();
+  return stateMap[state.toUpperCase()] || null;
 }
 
 // Helper: Sleep for rate limiting
@@ -413,6 +413,9 @@ export async function GET(
         );
 
         const stateAbbrev = getStateAbbreviation(state);
+        if (!stateAbbrev) {
+          throw new Error('Invalid state abbreviation');
+        }
 
         // Fetch jurisdiction info and legislators from OpenStates API
         const [jurisdiction, legislators] = await Promise.all([

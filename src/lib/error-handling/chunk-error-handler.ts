@@ -245,17 +245,28 @@ class ChunkErrorHandler {
       max-width: 400px;
     `;
 
-    content.innerHTML = `
-      <div style="margin-bottom: 1rem;">
-        <svg style="width: 48px; height: 48px; animation: spin 1s linear infinite; color: #3ea2d4;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-      </div>
-      <h3 style="margin: 0 0 0.5rem 0; color: #3ea2d4;">Updating Application</h3>
-      <p style="margin: 0; color: #666; font-size: 14px;">
-        Loading the latest version. This will only take a moment.
-      </p>
-    `;
+    // Build DOM elements safely (no innerHTML with dynamic content)
+    const iconWrapper = document.createElement('div');
+    iconWrapper.style.marginBottom = '1rem';
+    // SVG is hardcoded, no user input — safe to use innerHTML on isolated element
+    const svgContainer = document.createElement('div');
+    svgContainer.innerHTML =
+      '<svg style="width: 48px; height: 48px; animation: spin 1s linear infinite; color: #3ea2d4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+    if (svgContainer.firstChild) {
+      iconWrapper.appendChild(svgContainer.firstChild);
+    }
+
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'margin: 0 0 0.5rem 0; color: #3ea2d4;';
+    heading.textContent = 'Updating Application';
+
+    const paragraph = document.createElement('p');
+    paragraph.style.cssText = 'margin: 0; color: #666; font-size: 14px;';
+    paragraph.textContent = 'Loading the latest version. This will only take a moment.';
+
+    content.appendChild(iconWrapper);
+    content.appendChild(heading);
+    content.appendChild(paragraph);
 
     // Add spinner animation
     const style = document.createElement('style');
@@ -297,16 +308,28 @@ class ChunkErrorHandler {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       `;
 
-      overlay.innerHTML = `
-        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; text-align: center;">
-          <h3 style="color: #e11d07; margin: 0 0 1rem 0;">Connection Issue</h3>
-          <p style="margin: 0 0 1.5rem 0; color: #666;">${message}</p>
-          <button onclick="window.location.reload()" 
-                  style="background: #3ea2d4; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-            Refresh Page
-          </button>
-        </div>
-      `;
+      const container = document.createElement('div');
+      container.style.cssText =
+        'background: white; padding: 2rem; max-width: 400px; text-align: center;';
+
+      const heading = document.createElement('h3');
+      heading.style.cssText = 'color: #e11d07; margin: 0 0 1rem 0;';
+      heading.textContent = 'Connection Issue';
+
+      const paragraph = document.createElement('p');
+      paragraph.style.cssText = 'margin: 0 0 1.5rem 0; color: #666;';
+      paragraph.textContent = message.trim();
+
+      const button = document.createElement('button');
+      button.style.cssText =
+        'background: #3ea2d4; color: white; border: none; padding: 0.75rem 1.5rem; cursor: pointer;';
+      button.textContent = 'Refresh Page';
+      button.addEventListener('click', () => window.location.reload());
+
+      container.appendChild(heading);
+      container.appendChild(paragraph);
+      container.appendChild(button);
+      overlay.appendChild(container);
 
       document.body.appendChild(overlay);
     } catch {
