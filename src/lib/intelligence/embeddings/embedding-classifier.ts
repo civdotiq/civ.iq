@@ -50,8 +50,11 @@ let sectorEmbeddingsCache: SectorEmbeddingEntry[] | null = null;
  * Defined here to avoid importing the full library at module level
  * (it should only be loaded lazily at runtime).
  */
+/** Pooling strategies supported by the HuggingFace feature-extraction pipeline. */
+type PoolingStrategy = 'none' | 'mean' | 'cls' | 'first_token' | 'eos' | 'last_token';
+
 interface FeatureExtractionPipeline {
-  (text: string, options?: { pooling?: string; normalize?: boolean }): Promise<Tensor>;
+  (text: string, options?: { pooling?: PoolingStrategy; normalize?: boolean }): Promise<Tensor>;
 }
 
 /** Minimal Tensor interface — only the fields we use. */
@@ -140,7 +143,12 @@ async function loadPipeline(): Promise<FeatureExtractionPipeline | null> {
       dtype: 'q8',
     });
 
-    pipelineInstance = extractor as unknown as FeatureExtractionPipeline;
+    // The HuggingFace pipeline() returns a callable class instance whose
+    // TypeScript signature is (...args: any[]) => any. We wrap it in a
+    // typed function to enforce our FeatureExtractionPipeline contract.
+    const typedExtractor: FeatureExtractionPipeline = (text, options) =>
+      extractor(text, options) as Promise<Tensor>;
+    pipelineInstance = typedExtractor;
     logger.info('[EmbeddingClassifier] Pipeline loaded', { model: MODEL_ID });
     return pipelineInstance;
   } catch (error) {

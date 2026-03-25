@@ -14,7 +14,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, KeyboardEvent } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 export interface Contributor {
   name: string;
@@ -66,7 +66,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
 }) => {
   // Handle escape key to close modal
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
@@ -116,7 +116,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
       aria-describedby="contributors-modal-description"
       className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-12"
       onClick={handleBackdropClick}
-      onKeyDown={handleKeyDown as unknown as React.KeyboardEventHandler<HTMLDivElement>}
+      onKeyDown={handleKeyDown}
     >
       <div
         id="contributors-modal"

@@ -297,9 +297,14 @@ export const commonValidationRules = {
   },
 };
 
-// Extended request type with validated data
-interface ValidatedRequest extends NextRequest {
-  validatedData: Record<string, string | number>;
+/** Side-channel storage for attaching validated data to requests without unsafe casts. */
+const validatedRequestData = new WeakMap<NextRequest, Record<string, string | number>>();
+
+/** Retrieve validated data previously attached by the withValidation decorator. */
+export function getValidatedData(
+  request: NextRequest
+): Record<string, string | number> | undefined {
+  return validatedRequestData.get(request);
 }
 
 // Helper function to apply validation to API routes
@@ -332,8 +337,8 @@ export function withValidation(
         );
       }
 
-      // Add validated data to request
-      (request as unknown as ValidatedRequest).validatedData = validationResult.sanitizedData;
+      // Add validated data to request via side-channel
+      validatedRequestData.set(request, validationResult.sanitizedData);
 
       return originalMethod.call(this, request, ...args);
     };

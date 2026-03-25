@@ -176,7 +176,12 @@ async function loadPipeline(): Promise<ZeroShotPipeline | null> {
       dtype: 'q8',
     });
 
-    pipelineInstance = classifier as unknown as ZeroShotPipeline;
+    // The HuggingFace pipeline() returns a callable class instance whose
+    // TypeScript signature is (...args: any[]) => any. We wrap it in a
+    // typed function to enforce our ZeroShotPipeline contract.
+    const typedClassifier: ZeroShotPipeline = (text, labels, options) =>
+      classifier(text, labels, options) as Promise<{ labels: string[]; scores: number[] }>;
+    pipelineInstance = typedClassifier;
     logger.info('[ZeroShotClassifier] Pipeline loaded', { model: MODEL_ID });
     return pipelineInstance;
   } catch (error) {

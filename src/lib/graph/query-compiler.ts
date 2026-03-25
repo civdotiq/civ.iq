@@ -25,6 +25,7 @@ const FilterSchema = z.object({
 });
 
 const TraversalSchema = z.object({
+  // z.enum requires a mutable tuple [string, ...string[]], but our const arrays are readonly — cast is the standard zod workaround
   edge: z.enum(GRAPH_EDGE_TYPES as unknown as [string, ...string[]]),
   direction: z.enum(['incoming', 'outgoing']),
   nodeFilter: FilterSchema.optional(),
@@ -32,6 +33,7 @@ const TraversalSchema = z.object({
 });
 
 const StructuredQuerySchema = z.object({
+  // z.enum requires a mutable tuple [string, ...string[]], but our const arrays are readonly — cast is the standard zod workaround
   find: z.enum(GRAPH_NODE_TYPES as unknown as [string, ...string[]]),
   filters: z.array(FilterSchema),
   traversals: z.array(TraversalSchema),

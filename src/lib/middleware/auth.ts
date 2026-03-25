@@ -103,6 +103,13 @@ class ApiKeyManager {
 
 const apiKeyManager = new ApiKeyManager();
 
+/** Side-channel storage for attaching ApiKey data to requests without unsafe casts. */
+const requestApiKeys = new WeakMap<NextRequest, ApiKey>();
+
+export function getRequestApiKey(request: NextRequest): ApiKey | undefined {
+  return requestApiKeys.get(request);
+}
+
 // Default configuration
 const defaultConfig: ApiKeyConfig = {
   requiredForRoutes: ['/api/admin', '/api/internal'],
@@ -176,7 +183,7 @@ export function requireAuth(permissions: string[] = ['read']) {
       }
 
       // Add API key info to request for logging
-      (request as unknown as { apiKey: ApiKey }).apiKey = keyData;
+      requestApiKeys.set(request, keyData);
 
       return originalMethod.call(this, request, ...args);
     };

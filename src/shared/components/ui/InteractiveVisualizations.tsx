@@ -200,6 +200,9 @@ export function RepresentativeNetwork({
         g.attr('transform', event.transform);
       });
 
+    // d3-zoom's ZoomBehavior type is not directly assignable to Selection.call()
+    // due to a generic variance mismatch in d3's type definitions. This cast is
+    // the standard workaround recommended by d3-typescript community.
     svg.call(
       zoomBehavior as unknown as (
         selection: Selection<SVGSVGElement, unknown, null, undefined>
@@ -745,6 +748,9 @@ export function InteractiveDistrictMap({
         g.attr('transform', event.transform);
       });
 
+    // d3-zoom's ZoomBehavior type is not directly assignable to Selection.call()
+    // due to a generic variance mismatch in d3's type definitions. This cast is
+    // the standard workaround recommended by d3-typescript community.
     svg.call(
       zoomBehavior as unknown as (
         selection: Selection<SVGSVGElement, unknown, null, undefined>

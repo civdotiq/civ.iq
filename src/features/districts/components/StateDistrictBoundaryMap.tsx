@@ -59,6 +59,14 @@ type MapRef = Record<string, unknown> & {
   ) => Array<{ properties?: { id?: string } }>;
 };
 
+/**
+ * Assert that a dynamically-created MapLibre Map instance conforms to MapRef.
+ * MapLibre GL is loaded via dynamic import so its class type is unavailable at compile time.
+ */
+function asMapRef(instance: object): MapRef {
+  return instance as MapRef;
+}
+
 interface StateDistrictBoundaryMapProps {
   stateCode: string; // e.g., "CA"
   chamber: 'upper' | 'lower';
@@ -157,39 +165,41 @@ export default function StateDistrictBoundaryMap({
 
         // Initialize map with only OSM base tiles (PMTiles added after map loads)
         logger.info('[StateDistrictBoundaryMap] Creating MapLibre map instance...');
-        map.current = new maplibregl.default.Map({
-          container: mapContainer,
-          style: {
-            version: 8,
-            sources: {
-              osm: {
-                type: 'raster',
-                tiles: [
-                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                ],
-                tileSize: 256,
-                attribution:
-                  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxzoom: 19,
+        map.current = asMapRef(
+          new maplibregl.default.Map({
+            container: mapContainer,
+            style: {
+              version: 8,
+              sources: {
+                osm: {
+                  type: 'raster',
+                  tiles: [
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  ],
+                  tileSize: 256,
+                  attribution:
+                    '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                  maxzoom: 19,
+                },
               },
+              layers: [
+                // Base map (OpenStreetMap)
+                {
+                  id: 'osm-background',
+                  type: 'raster',
+                  source: 'osm',
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
             },
-            layers: [
-              // Base map (OpenStreetMap)
-              {
-                id: 'osm-background',
-                type: 'raster',
-                source: 'osm',
-                minzoom: 0,
-                maxzoom: 22,
-              },
-            ],
-          },
-          center: [-98.5795, 39.8283], // US center default
-          zoom: 4,
-        }) as unknown as MapRef;
+            center: [-98.5795, 39.8283], // US center default
+            zoom: 4,
+          })
+        );
         logger.info('[StateDistrictBoundaryMap] Map instance created, waiting for load event...');
 
         map.current.on('load', () => {

@@ -9,6 +9,11 @@ import { useState, useMemo, useCallback, CSSProperties } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import Link from 'next/link';
 
+/** Development-only window extension for BillsTracker debug data */
+interface BillsDebugWindow extends Window {
+  BILLS_COMPONENT_DATA?: unknown;
+}
+
 export interface SponsoredBill {
   billId: string;
   number: string;
@@ -280,7 +285,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
   // PHASE 2 DEBUG: Development-only debug info (removed from production builds)
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-    (window as unknown as { BILLS_COMPONENT_DATA: unknown }).BILLS_COMPONENT_DATA = {
+    (window as BillsDebugWindow).BILLS_COMPONENT_DATA = {
       billsData: {
         isArray: Array.isArray(bills),
         length: Array.isArray(bills) ? bills.length : 'not array',

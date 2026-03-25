@@ -265,8 +265,8 @@ async function fetchAdditionalData(
   return additionalData;
 }
 
-// Field selection helper
-function selectFields<T extends Record<string, unknown>>(data: T, fields?: string[]): Partial<T> {
+// Field selection helper — accepts any object, returns partial with only requested fields
+function selectFields<T extends object>(data: T, fields?: string[]): Partial<T> {
   if (!fields || fields.length === 0) {
     return data;
   }
@@ -274,7 +274,8 @@ function selectFields<T extends Record<string, unknown>>(data: T, fields?: strin
   const selected: Partial<T> = {};
   for (const field of fields) {
     if (field in data) {
-      (selected as Record<string, unknown>)[field] = data[field];
+      const key = field as keyof T;
+      selected[key] = data[key];
     }
   }
   return selected;
@@ -389,22 +390,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     let formattedRep: unknown;
     switch (query.format) {
       case 'simple':
-        formattedRep = selectFields(
-          toSimpleFormat(representative) as unknown as Record<string, unknown>,
-          query.fields
-        );
+        formattedRep = selectFields(toSimpleFormat(representative), query.fields);
         break;
       case 'detailed':
-        formattedRep = selectFields(
-          toDetailedFormat(representative) as unknown as Record<string, unknown>,
-          query.fields
-        );
+        formattedRep = selectFields(toDetailedFormat(representative), query.fields);
         break;
       case 'full':
-        formattedRep = selectFields(
-          representative as unknown as Record<string, unknown>,
-          query.fields
-        );
+        formattedRep = selectFields(representative, query.fields);
         break;
       default:
         formattedRep = representative;

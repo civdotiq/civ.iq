@@ -147,14 +147,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 // Clean up old cache entries periodically
-interface GlobalWithCleanupInterval {
-  _photoCleanupInterval?: NodeJS.Timeout;
+declare global {
+  var _photoCleanupInterval: NodeJS.Timeout | undefined;
 }
 
-const globalWithInterval = global as unknown as GlobalWithCleanupInterval;
-
-if (typeof global !== 'undefined' && !globalWithInterval._photoCleanupInterval) {
-  globalWithInterval._photoCleanupInterval = setInterval(
+if (typeof global !== 'undefined' && !globalThis._photoCleanupInterval) {
+  globalThis._photoCleanupInterval = setInterval(
     () => {
       const now = Date.now();
       for (const [key, value] of photoCache.entries()) {

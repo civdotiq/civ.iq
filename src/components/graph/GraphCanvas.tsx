@@ -356,6 +356,9 @@ export function GraphCanvas({
       .force(
         'link',
         d3
+          // d3's forceLink expects source/target as string | number | SimNode,
+          // but after simulation initialization d3 mutates them to resolved SimNode objects.
+          // SimLink declares them as SimNode directly, so this cast bridges the type gap.
           .forceLink<SimNode, d3.SimulationLinkDatum<SimNode>>(
             simLinks as unknown as d3.SimulationLinkDatum<SimNode>[]
           )

@@ -12,6 +12,16 @@ interface DebugInfo {
   [key: string]: unknown;
 }
 
+/** Augment Window with optional debug properties set at runtime */
+interface WindowWithDebug extends Window {
+  CLIENT_DEBUG_INFO?: DebugInfo;
+  BILLS_COMPONENT_DATA?: DebugInfo;
+}
+
+function getDebugWindow(): WindowWithDebug | undefined {
+  return typeof window !== 'undefined' ? (window as WindowWithDebug) : undefined;
+}
+
 export function DebugPanel() {
   const [isVisible, setIsVisible] = useState(false);
   const [pageData, _setPageData] = useState<DebugInfo | null>(null);
@@ -20,17 +30,13 @@ export function DebugPanel() {
 
   useEffect(() => {
     const checkDebugData = () => {
-      if (typeof window !== 'undefined') {
-        const windowWithDebug = window as unknown as {
-          CLIENT_DEBUG_INFO?: DebugInfo;
-          BILLS_COMPONENT_DATA?: DebugInfo;
-        };
-
-        if (windowWithDebug.CLIENT_DEBUG_INFO) {
-          setClientData(windowWithDebug.CLIENT_DEBUG_INFO);
+      const win = getDebugWindow();
+      if (win) {
+        if (win.CLIENT_DEBUG_INFO) {
+          setClientData(win.CLIENT_DEBUG_INFO);
         }
-        if (windowWithDebug.BILLS_COMPONENT_DATA) {
-          setBillsData(windowWithDebug.BILLS_COMPONENT_DATA);
+        if (win.BILLS_COMPONENT_DATA) {
+          setBillsData(win.BILLS_COMPONENT_DATA);
         }
       }
     };

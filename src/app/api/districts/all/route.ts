@@ -592,11 +592,11 @@ function filterDistrictFields(district: District, fields?: string): Partial<Dist
   const requestedFields = fields.split(',').map(f => f.trim());
   const filtered: Partial<District> = {};
 
-  for (const field of requestedFields) {
-    if (field in district) {
-      (filtered as unknown as Record<string, unknown>)[field] = (
-        district as unknown as Record<string, unknown>
-      )[field];
+  // Dynamic field selection: use Object.entries for type-safe key iteration
+  const districtEntries = Object.entries(district);
+  for (const [key, value] of districtEntries) {
+    if (requestedFields.includes(key)) {
+      (filtered as Record<string, unknown>)[key] = value;
     }
   }
 

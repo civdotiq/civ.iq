@@ -9,6 +9,21 @@
 import { ExportButton } from '@/shared/components/ui/ExportButton';
 import { ExportColumn } from '@/lib/utils/data-export';
 
+/**
+ * Bridge for ExportButton which requires Record<string, unknown>.
+ * Structured types like DelegationMember are Record<string, unknown> at runtime
+ * but TypeScript doesn't infer the index signature. A single narrowing cast
+ * (not double "as unknown as") bridges this safely.
+ */
+function widenToRecord<T extends object>(data: T[]): (T & Record<string, unknown>)[] {
+  return data as (T & Record<string, unknown>)[];
+}
+function widenColumns<T extends object>(
+  cols: ExportColumn<T>[]
+): ExportColumn<T & Record<string, unknown>>[] {
+  return cols as ExportColumn<T & Record<string, unknown>>[];
+}
+
 // Representative type for export
 interface DelegationMember {
   bioguideId: string;
@@ -50,8 +65,8 @@ export function DelegationExportButton({
 }: DelegationExportButtonProps) {
   return (
     <ExportButton
-      data={data as unknown as Record<string, unknown>[]}
-      columns={delegationExportColumns as unknown as ExportColumn<Record<string, unknown>>[]}
+      data={widenToRecord(data)}
+      columns={widenColumns(delegationExportColumns)}
       filename={`${stateCode.toLowerCase()}-delegation`}
       description={`Federal congressional delegation for ${stateName}`}
       size="md"

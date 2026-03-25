@@ -49,14 +49,21 @@ export async function GET(
       logger.warn('Bill data unavailable from Congress.gov', { billId });
       return NextResponse.json(
         {
-          bill: null,
+          bill: {} as Bill,
           metadata: {
             dataSource: 'unavailable',
             lastUpdated: new Date().toISOString(),
-            cacheInfo: 'Bill data unavailable from Congress.gov',
-            error: 'Bill not found - data unavailable from Congress.gov API',
+            votesCount: 0,
+            cosponsorsCount: 0,
+            committeesCount: 0,
           },
-        } as unknown as BillAPIResponse,
+          errors: [
+            {
+              code: 'BILL_NOT_FOUND',
+              message: 'Bill not found - data unavailable from Congress.gov API',
+            },
+          ],
+        },
         { status: 404 }
       );
     }

@@ -7,6 +7,11 @@
 import React, { Component, ReactNode } from 'react';
 import logger from '@/lib/logging/simple-logger';
 
+/** Google Analytics gtag function attached to window by the GA script */
+interface WindowWithGtag extends Window {
+  gtag?: (...args: unknown[]) => void;
+}
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -49,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Report to monitoring service if available
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
+      const gtag = (window as WindowWithGtag).gtag;
       if (typeof gtag === 'function') {
         gtag('event', 'exception', {
           description: error.toString(),

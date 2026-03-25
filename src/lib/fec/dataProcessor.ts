@@ -227,7 +227,8 @@ function isFECContribution(obj: unknown): obj is {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof (obj as unknown as { sub_id?: unknown }).sub_id === 'string'
+    'sub_id' in obj &&
+    typeof (obj as Record<string, unknown>).sub_id === 'string'
   );
 }
 
@@ -280,7 +281,8 @@ function isFECExpenditure(obj: unknown): obj is {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof (obj as unknown as { sub_id?: unknown }).sub_id === 'string'
+    'sub_id' in obj &&
+    typeof (obj as Record<string, unknown>).sub_id === 'string'
   );
 }
 

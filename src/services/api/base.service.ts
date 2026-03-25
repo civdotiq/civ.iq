@@ -202,10 +202,11 @@ export abstract class BaseService {
     }
 
     if (contentType?.includes('text/')) {
+      // Caller's generic T determines the expected return type; text() returns string which satisfies T per API contract
       return response.text() as unknown as T;
     }
 
-    // Return blob for other content types
+    // Caller's generic T determines the expected return type; blob() returns Blob which satisfies T per API contract
     return response.blob() as unknown as T;
   }
 

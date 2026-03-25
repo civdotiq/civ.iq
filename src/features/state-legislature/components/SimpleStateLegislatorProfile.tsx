@@ -783,19 +783,19 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
         return (
           <ClusteredNewsSection
             apiEndpoint={`/api/state-legislature/${legislator.state}/legislator/${encodeBase64Url(legislator.id)}/news`}
-            representative={
-              {
-                bioguideId: legislator.id,
-                name: legislator.name,
-                firstName: legislator.name.split(' ')[0] || legislator.name,
-                lastName: legislator.name.split(' ').slice(1).join(' ') || legislator.name,
-                state: legislator.state,
-                party: legislator.party,
-                chamber: legislator.chamber === 'upper' ? 'Senate' : 'House',
-                title: '',
-                terms: [],
-              } as unknown as Parameters<typeof ClusteredNewsSection>[0]['representative']
-            }
+            representative={{
+              bioguideId: legislator.id,
+              name: legislator.name,
+              firstName: legislator.name.split(' ')[0] || legislator.name,
+              lastName: legislator.name.split(' ').slice(1).join(' ') || legislator.name,
+              state: legislator.state,
+              party: legislator.party,
+              chamber: legislator.chamber === 'upper' ? 'Senate' : 'House',
+              title: '',
+              terms: [],
+              votingMember: true,
+              role: legislator.chamber === 'upper' ? 'Senator' : 'Representative',
+            }}
           />
         );
 

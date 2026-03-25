@@ -23,6 +23,21 @@ import { ExportColumn } from '@/lib/utils/data-export';
 import { VoteRow, extractVoteId, type Vote } from './VoteRow';
 import { VotePatternSection } from './VotePatternSection';
 
+/**
+ * Bridge for ExportButton which requires Record<string, unknown>.
+ * Structured types like Vote are Record<string, unknown> at runtime but
+ * TypeScript doesn't infer the index signature. A single narrowing cast
+ * (not double "as unknown as") bridges this safely.
+ */
+function widenToRecord<T extends object>(data: T[]): (T & Record<string, unknown>)[] {
+  return data as (T & Record<string, unknown>)[];
+}
+function widenColumns<T extends object>(
+  cols: ExportColumn<T>[]
+): ExportColumn<T & Record<string, unknown>>[] {
+  return cols as ExportColumn<T & Record<string, unknown>>[];
+}
+
 interface VoteResponse {
   votes: Vote[];
   totalResults: number;
@@ -359,8 +374,8 @@ const VotingTabComponent = React.memo(
           <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
           <div className="flex items-center gap-2">
             <ExportButton
-              data={filteredVotes as unknown as Record<string, unknown>[]}
-              columns={voteExportColumns as unknown as ExportColumn<Record<string, unknown>>[]}
+              data={widenToRecord(filteredVotes)}
+              columns={widenColumns(voteExportColumns)}
               filename={`voting-record-${bioguideId}`}
               description={`Voting record for ${data?.member?.name ?? bioguideId}`}
               ariaLabel="Export voting records"

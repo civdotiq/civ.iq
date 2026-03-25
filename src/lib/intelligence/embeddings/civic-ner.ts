@@ -317,7 +317,11 @@ async function loadPipeline(): Promise<NERPipeline | null> {
       dtype: 'q8',
     });
 
-    pipelineInstance = ner as unknown as NERPipeline;
+    // The HuggingFace pipeline() returns a callable class instance whose
+    // TypeScript signature is (...args: any[]) => any. We wrap it in a
+    // typed function to enforce our NERPipeline contract at the call boundary.
+    const typedNer: NERPipeline = (text: string) => ner(text) as Promise<NERToken[]>;
+    pipelineInstance = typedNer;
     logger.info('[CivicNER] Pipeline loaded', { model: MODEL_ID });
     return pipelineInstance;
   } catch (error) {

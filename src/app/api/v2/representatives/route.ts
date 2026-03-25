@@ -118,8 +118,8 @@ function validateAndParseQuery(searchParams: URLSearchParams): {
   };
 }
 
-// Field selection helper
-function selectFields<T extends Record<string, unknown>>(data: T, fields?: string[]): Partial<T> {
+// Field selection helper — accepts any object, returns partial with only requested fields
+function selectFields<T extends object>(data: T, fields?: string[]): Partial<T> {
   if (!fields || fields.length === 0) {
     return data;
   }
@@ -127,7 +127,8 @@ function selectFields<T extends Record<string, unknown>>(data: T, fields?: strin
   const selected: Partial<T> = {};
   for (const field of fields) {
     if (field in data) {
-      (selected as Record<string, unknown>)[field] = data[field];
+      const key = field as keyof T;
+      selected[key] = data[key];
     }
   }
   return selected;
@@ -313,19 +314,17 @@ export async function GET(request: NextRequest) {
       case 'simple':
         formattedData = paginatedReps.map(rep => {
           const simple = toSimpleFormat(rep);
-          return selectFields(simple as unknown as Record<string, unknown>, query.fields);
+          return selectFields(simple, query.fields);
         });
         break;
       case 'detailed':
         formattedData = paginatedReps.map(rep => {
           const detailed = toDetailedFormat(rep);
-          return selectFields(detailed as unknown as Record<string, unknown>, query.fields);
+          return selectFields(detailed, query.fields);
         });
         break;
       case 'full':
-        formattedData = paginatedReps.map(rep =>
-          selectFields(rep as unknown as Record<string, unknown>, query.fields)
-        );
+        formattedData = paginatedReps.map(rep => selectFields(rep, query.fields));
         break;
       default:
         formattedData = paginatedReps.map(rep => toSimpleFormat(rep));

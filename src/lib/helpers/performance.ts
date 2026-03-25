@@ -262,6 +262,10 @@ class PerformanceMonitor {
     this.activeTimers.clear();
   }
 
+  pruneOlderThan(cutoffTime: number): void {
+    this.metrics = this.metrics.filter(m => m.startTime > cutoffTime);
+  }
+
   exportMetrics(): string {
     return JSON.stringify(this.metrics, null, 2);
   }
@@ -348,13 +352,14 @@ export function estimateMemoryUsage(): {
   percentage: number;
 } | null {
   if ('memory' in performance) {
-    const memory = (
-      performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number } }
-    ).memory;
+    const perfWithMemory = performance as Performance & {
+      memory: { usedJSHeapSize: number; totalJSHeapSize: number };
+    };
     return {
-      used: memory.usedJSHeapSize,
-      total: memory.totalJSHeapSize,
-      percentage: (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100,
+      used: perfWithMemory.memory.usedJSHeapSize,
+      total: perfWithMemory.memory.totalJSHeapSize,
+      percentage:
+        (perfWithMemory.memory.usedJSHeapSize / perfWithMemory.memory.totalJSHeapSize) * 100,
     };
   }
   return null;
@@ -366,12 +371,11 @@ export function cleanupResources(): void {
 
   // Clear performance metrics older than 5 minutes
   const fiveMinutesAgo = performance.now() - 5 * 60 * 1000;
-  const monitor = performanceMonitor as unknown as { metrics: PerformanceMetrics[] };
-  monitor.metrics = monitor.metrics.filter((m: PerformanceMetrics) => m.startTime > fiveMinutesAgo);
+  performanceMonitor.pruneOlderThan(fiveMinutesAgo);
 
-  // Suggest garbage collection if available
-  if ('gc' in window && typeof (window as unknown as { gc?: () => void }).gc === 'function') {
-    (window as unknown as { gc: () => void }).gc();
+  // Suggest garbage collection if available (V8 --expose-gc flag)
+  if ('gc' in window && typeof (window as Window & { gc?: () => void }).gc === 'function') {
+    (window as Window & { gc: () => void }).gc();
   }
 }
 

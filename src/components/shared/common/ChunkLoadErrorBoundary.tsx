@@ -8,6 +8,11 @@
 import React from 'react';
 import { logger } from '@/lib/logging/logger-client';
 
+/** Webpack runtime internals attached to window at build time */
+interface WindowWithWebpack extends Window {
+  __webpack_require__?: { cache?: Record<string, unknown> };
+}
+
 interface ChunkLoadErrorBoundaryState {
   hasError: boolean;
   error?: Error;
@@ -83,12 +88,11 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
     try {
       // Clear module cache if available
       if (typeof window !== 'undefined' && 'webpackChunkName' in window) {
-        // Clear webpack cache
-        const windowWithWebpack = window as unknown as {
-          __webpack_require__?: { cache?: Record<string, unknown> };
-        };
-        if (windowWithWebpack.__webpack_require__?.cache) {
-          delete windowWithWebpack.__webpack_require__.cache;
+        // Clear webpack cache — __webpack_require__ is a webpack runtime internal
+        // not present in Window type definitions
+        const win = window as WindowWithWebpack;
+        if (win.__webpack_require__?.cache) {
+          delete win.__webpack_require__.cache;
         }
       }
 

@@ -112,7 +112,7 @@ export function scheduleIdleCallback(callback: () => void): void {
 
   if ('requestIdleCallback' in window) {
     (
-      window as unknown as {
+      window as Window & {
         requestIdleCallback: (cb: () => void, options: { timeout: number }) => void;
       }
     ).requestIdleCallback(callback, { timeout: 5000 });
@@ -142,7 +142,7 @@ export function getConnectionQuality(): 'slow' | 'fast' | 'unknown' {
     return 'unknown';
   }
 
-  const connection = (navigator as unknown as { connection?: { effectiveType?: string } })
+  const connection = (navigator as Navigator & { connection?: { effectiveType?: string } })
     .connection;
   if (!connection) return 'unknown';
 

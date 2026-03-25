@@ -455,7 +455,8 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         switch (activeTab) {
           case 'profile':
             // Just show the representative data we already have
-            setData(representative as unknown as TabResponseData);
+            // Spread EnhancedRepresentative into TabResponseData (index-signature type)
+            setData(Object.assign({} as TabResponseData, representative));
             setLoading(false);
             return;
 
