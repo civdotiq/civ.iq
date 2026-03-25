@@ -175,7 +175,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
     );
   };
 
-  // Enhanced loading skeleton with timeout failsafe
+  // Enhanced loading state with timeout failsafe
   if (loading && !districtData) {
     return (
       <div

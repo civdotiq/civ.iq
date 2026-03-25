@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { EnhancedRepresentative } from '@/types/representative';
-import { LoadingSkeleton } from './LoadingSkeleton';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { TopicNavigation } from './TopicNavigation';
 import logger from '@/lib/logging/simple-logger';
 
@@ -246,7 +246,7 @@ export function SimpleGoogleNewsFeed({
   // Render clusters
   const renderClusters = () => {
     if (loading) {
-      return <LoadingSkeleton count={3} viewMode={activeViewMode} />;
+      return <LoadingState message="Loading news..." />;
     }
 
     if (error) {

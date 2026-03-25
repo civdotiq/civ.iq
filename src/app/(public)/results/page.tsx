@@ -50,7 +50,7 @@ const StateRepresentativesTab = dynamic(
   }
 );
 import { SearchHistory } from '@/lib/searchHistory';
-import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
@@ -722,7 +722,7 @@ function ResultsContent() {
                               submessage={`Step ${loading.currentStageIndex + 1} of 5`}
                               className="mb-8"
                             />
-                            <SearchResultsSkeleton count={3} />
+                            <LoadingState message="Searching..." />
                           </>
                         }
                         loadingMessage={loading.currentStage}

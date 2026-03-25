@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Search, Filter, MapPin, Users, Calendar, DollarSign, FileText, X } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 interface SearchFilters {
   query: string;
@@ -475,19 +476,7 @@ export function AdvancedSearch() {
       {/* Results */}
       <div className="space-y-4">
         {loading ? (
-          // Loading skeleton
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="border border-gray-200 p-6 animate-pulse">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-200 w-1/3"></div>
-                  <div className="h-4 bg-gray-200 w-1/2"></div>
-                  <div className="h-4 bg-gray-200 w-1/4"></div>
-                </div>
-              </div>
-            </div>
-          ))
+          <LoadingState message="Searching representatives..." />
         ) : results.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />

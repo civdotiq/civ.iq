@@ -3,35 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { AdaptiveGridSkeleton } from '@/shared/components/ui';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 export default function Loading() {
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Header skeleton */}
-      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="h-8 bg-gray-200 rounded w-32 animate-pulse" />
-            <nav className="flex items-center gap-6">
-              <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
-              <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
-              <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        {/* Page header skeleton */}
-        <div className="mb-8">
-          <div className="h-10 bg-gray-200 rounded w-64 mb-3 animate-pulse" />
-          <div className="h-6 bg-gray-200 rounded w-96 animate-pulse" />
-        </div>
-
-        {/* Enhanced grid skeleton */}
-        <AdaptiveGridSkeleton type="representatives" count={9} />
-      </main>
-    </div>
-  );
+  return <LoadingState fullPage message="Loading representatives..." />;
 }

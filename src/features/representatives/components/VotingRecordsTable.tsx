@@ -10,7 +10,7 @@ import { VariableSizeList as List } from 'react-window';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { TouchPagination } from '@/shared/components/ui/ResponsiveTable';
-import { VotingRecordsSkeleton } from '@/shared/components/ui/SkeletonComponents';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
 import logger from '@/lib/logging/simple-logger';
@@ -519,7 +519,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
       loading={isLoading}
       error={error}
       retry={() => window.location.reload()}
-      loadingComponent={<VotingRecordsSkeleton rows={votesPerPage} />}
+      loadingComponent={<LoadingState message="Loading voting records..." />}
       loadingMessage="Loading voting records..."
       timeoutMessage="Voting records are taking longer than usual to load"
     >

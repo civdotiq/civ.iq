@@ -80,11 +80,6 @@
     @apply badge bg-green-100 text-green-800;
   }
 
-  /* Loading skeleton */
-  .skeleton {
-    @apply animate-pulse bg-gray-200;
-  }
-
   /* Aicher map container - geometric */
   .district-map-container {
     height: 400px;
@@ -165,7 +160,7 @@
     left: -100%;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #3ea2d4, transparent);
+    background: #3ea2d4;
     transition: left 0.5s;
   }
 
@@ -260,15 +255,6 @@
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
 @keyframes pulse-soft {
   0%,
   100% {
@@ -320,13 +306,6 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
-}
-
-/* Loading shimmer effect */
-.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
 }
 
 /* Animation delays */
@@ -651,12 +630,6 @@ select:disabled {
   color: #888888;
 }
 
-/* Dark mode shimmer */
-.dark .shimmer {
-  background: linear-gradient(90deg, #2a2a2e 25%, #333336 50%, #2a2a2e 75%);
-  background-size: 200% 100%;
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .card {
@@ -685,11 +658,6 @@ select:disabled {
   .animate-bounce {
     animation: none !important;
   }
-
-  /* Disable shimmer effects */
-  .animate-\[shimmer_2s_infinite\] {
-    animation: none !important;
-  }
 }
 
 /* Horizontal scroll indicators for mobile */
@@ -704,7 +672,7 @@ select:disabled {
   top: 0;
   bottom: 0;
   width: 40px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9));
+  background: rgba(255, 255, 255, 0.9);
   pointer-events: none;
   opacity: 1;
   transition: opacity 0.3s ease;

@@ -52,12 +52,6 @@
   --color-border-medium: #dadce0;
   --color-border-dark: #5f6368;
 
-  /* Shadows - Aicher: borders replace shadows */
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
-  --shadow-xl: none;
-
   /* Typography Scale */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -113,7 +107,6 @@
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
 }
 
 .feedTitle {
@@ -179,19 +172,16 @@
 }
 
 .newsCluster:hover {
-  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
 /* Visual Priority Variants */
 .newsCluster.hero {
-  box-shadow: var(--shadow-lg);
   border: 2px solid var(--color-primary);
   grid-column: span 12;
 }
 
 .newsCluster.featured {
-  box-shadow: var(--shadow-md);
   grid-column: span 8;
 }
 
@@ -201,7 +191,6 @@
 
 .newsCluster.compact {
   grid-column: span 4;
-  box-shadow: var(--shadow-sm);
 }
 
 /* Coverage View Layout Adjustments */
@@ -454,8 +443,7 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   margin-bottom: var(--space-6);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
+  border: 2px solid var(--color-border-light);
 }
 
 .controlsRow {
@@ -494,7 +482,6 @@
 .viewModeButton.active {
   background-color: var(--color-primary);
   color: var(--color-text-inverse);
-  box-shadow: var(--shadow-sm);
 }
 
 .viewModeButton:hover:not(.active) {
@@ -595,66 +582,6 @@
    Loading States
 ======================================== */
 
-.loadingSkeleton {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.skeletonCard {
-  background-color: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  border: 1px solid var(--color-border-light);
-}
-
-.skeletonHeader {
-  height: 20px;
-  background: linear-gradient(
-    90deg,
-    var(--color-bg-tertiary) 25%,
-    var(--color-bg-secondary) 50%,
-    var(--color-bg-tertiary) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-4);
-}
-
-.skeletonTitle {
-  height: 24px;
-  background: linear-gradient(
-    90deg,
-    var(--color-bg-tertiary) 25%,
-    var(--color-bg-secondary) 50%,
-    var(--color-bg-tertiary) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-3);
-  width: 80%;
-}
-
-.skeletonText {
-  height: 16px;
-  background: linear-gradient(
-    90deg,
-    var(--color-bg-tertiary) 25%,
-    var(--color-bg-secondary) 50%,
-    var(--color-bg-tertiary) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-}
-
-.skeletonText:last-child {
-  width: 60%;
-}
-
 /* ========================================
    Error States
 ======================================== */
@@ -720,15 +647,6 @@
   }
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
   }
 }
 

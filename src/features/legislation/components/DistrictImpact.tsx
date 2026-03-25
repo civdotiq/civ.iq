@@ -5,6 +5,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { LoadingState } from '@/components/shared/ui/LoadingState';
+
 /**
  * District Impact Component
  *
@@ -187,30 +189,14 @@ export function DistrictImpactDisplay({ impact, className = '' }: DistrictImpact
   );
 }
 
-interface DistrictImpactSkeletonProps {
+interface DistrictImpactLoadingProps {
   className?: string;
 }
 
-export function DistrictImpactSkeleton({ className = '' }: DistrictImpactSkeletonProps) {
+export function DistrictImpactLoading({ className = '' }: DistrictImpactLoadingProps) {
   return (
-    <div className={`bg-white border-2 border-black animate-pulse ${className}`}>
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="h-5 w-5 bg-gray-300"></div>
-          <div className="h-4 w-32 bg-gray-300"></div>
-          <div className="h-6 w-24 bg-gray-300"></div>
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="space-y-2">
-          <div className="h-4 w-full bg-gray-300"></div>
-          <div className="h-4 w-4/5 bg-gray-300"></div>
-          <div className="h-4 w-3/5 bg-gray-300"></div>
-        </div>
-      </div>
-      <div className="px-4 py-3 bg-white border-t border-gray-100">
-        <div className="h-3 w-1/2 bg-gray-300"></div>
-      </div>
+    <div className={className}>
+      <LoadingState message="Loading district impact analysis..." />
     </div>
   );
 }

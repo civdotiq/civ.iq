@@ -9,6 +9,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { MoneyFlowChain } from '@/components/intelligence/MoneyFlowChain';
 import { InsightDisclaimer } from '@/components/intelligence/InsightDisclaimer';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import type { InfluenceChainInsight } from '@/lib/intelligence/types';
 
 interface LobbyingTabProps {
@@ -90,23 +91,8 @@ function StatBox({ value, label }: { value: string; label: string }) {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="animate-pulse space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="border-2 border-gray-200 p-3">
-            <div className="h-8 bg-gray-200 w-16 mb-2" />
-            <div className="h-3 bg-gray-100 w-24" />
-          </div>
-        ))}
-      </div>
-      <div className="h-4 bg-gray-200 w-48" />
-      {[1, 2, 3].map(i => (
-        <div key={i} className="border-2 border-gray-200 p-12" />
-      ))}
-    </div>
-  );
+function LobbyingLoadingState() {
+  return <LoadingState message="Loading lobbying data..." />;
 }
 
 export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
@@ -133,7 +119,7 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
 
   const isLoading = lobbyingLoading || chainLoading;
 
-  if (isLoading) return <LoadingSkeleton />;
+  if (isLoading) return <LobbyingLoadingState />;
 
   if (lobbyingError && chainError) {
     return (

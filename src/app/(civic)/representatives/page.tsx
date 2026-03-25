@@ -11,7 +11,7 @@ import {
   getAllRepresentativesService,
   getRepresentativesByZipService,
 } from '@/lib/services/representatives.service';
-import { AdaptiveGridSkeleton } from '@/shared/components/ui/LoadingStates';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 // Dynamic imports for better code splitting
 const RepresentativesClient = dynamic(
@@ -20,7 +20,7 @@ const RepresentativesClient = dynamic(
       default: mod.RepresentativesClient,
     })),
   {
-    loading: () => <AdaptiveGridSkeleton type="representatives" count={6} />,
+    loading: () => <LoadingState message="Loading representatives..." />,
   }
 );
 
@@ -110,7 +110,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
           </div>
         )}
 
-        <Suspense fallback={<AdaptiveGridSkeleton type="representatives" count={6} />}>
+        <Suspense fallback={<LoadingState message="Loading representatives..." />}>
           <RepresentativesClient
             initialRepresentatives={initialRepresentatives}
             compareIds={compareIds}

@@ -136,7 +136,6 @@
   padding: var(--space-6);
   transition:
     border-color var(--transition-normal),
-    box-shadow var(--transition-normal),
     transform var(--transition-fast);
 }
 

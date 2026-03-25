@@ -3,18 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
-import { LoadingMessage } from '@/shared/components/ui/LoadingStates';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 export default function Loading() {
-  return (
-    <div className="max-w-6xl mx-auto p-6">
-      <LoadingMessage
-        message="Finding Your Representatives"
-        submessage="Looking up your district and gathering representative information..."
-        className="mb-8"
-      />
-      <SearchResultsSkeleton count={6} />
-    </div>
-  );
+  return <LoadingState fullPage message="Finding your representatives..." />;
 }

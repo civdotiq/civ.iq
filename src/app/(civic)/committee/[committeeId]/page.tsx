@@ -12,6 +12,7 @@ import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -151,58 +152,7 @@ function CommitteeLoading() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button skeleton */}
-        <div className="mb-6">
-          <div className="h-10 w-32 bg-gray-200 animate-pulse"></div>
-        </div>
-
-        {/* Header skeleton */}
-        <div className="bg-white border-2 border-black p-4 sm:p-8 mb-8">
-          <div className="h-8 w-2/3 bg-gray-200 animate-pulse mb-4"></div>
-          <div className="h-6 w-1/3 bg-gray-200 animate-pulse mb-2"></div>
-          <div className="h-4 w-full bg-gray-200 animate-pulse"></div>
-        </div>
-
-        {/* Leadership skeleton */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white border-2 border-black p-6">
-            <div className="h-6 w-24 bg-gray-200 animate-pulse mb-4"></div>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
-              <div>
-                <div className="h-5 w-32 bg-gray-200 animate-pulse mb-2"></div>
-                <div className="h-4 w-24 bg-gray-200 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white border-2 border-black p-6">
-            <div className="h-6 w-32 bg-gray-200 animate-pulse mb-4"></div>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
-              <div>
-                <div className="h-5 w-32 bg-gray-200 animate-pulse mb-2"></div>
-                <div className="h-4 w-24 bg-gray-200 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Members table skeleton */}
-        <div className="bg-white border-2 border-black p-6">
-          <div className="h-6 w-32 bg-gray-200 animate-pulse mb-4"></div>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-4 p-4 border">
-                <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="flex-1">
-                  <div className="h-4 w-1/3 bg-gray-200 animate-pulse mb-2"></div>
-                  <div className="h-3 w-1/4 bg-gray-200 animate-pulse"></div>
-                </div>
-                <div className="h-4 w-20 bg-gray-200 animate-pulse"></div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <LoadingState fullPage message="Loading committee details..." />
       </div>
     </div>
   );

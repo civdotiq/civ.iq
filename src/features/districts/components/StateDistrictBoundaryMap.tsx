@@ -485,7 +485,7 @@ export default function StateDistrictBoundaryMap({
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
         <button
           onClick={toggleFullscreen}
-          className="bg-white hover:bg-gray-100 border-2 border-black rounded p-2 transition-colors shadow-lg"
+          className="bg-white hover:bg-gray-100 border-2 border-black rounded p-2 transition-colors"
           title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
         >
           {isFullscreen ? (
@@ -588,7 +588,7 @@ export default function StateDistrictBoundaryMap({
         {mapComponent}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-4 left-4 z-[1001] bg-white hover:bg-gray-100 border-2 border-black rounded px-4 py-2 transition-colors shadow-lg"
+          className="absolute top-4 left-4 z-[1001] bg-white hover:bg-gray-100 border-2 border-black rounded px-4 py-2 transition-colors"
         >
           Exit Fullscreen
         </button>

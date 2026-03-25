@@ -8,8 +8,7 @@
 
 import { useState, useEffect, memo } from 'react';
 import { StateLegislatorCard } from '@/features/representatives/components/StateLegislatorCard';
-import { RepresentativeSkeleton } from '@/shared/components/ui/SkeletonComponents';
-import { Spinner } from '@/shared/components/ui/LoadingStates';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import type { StateLegislatorSummary } from '@/types/state-legislature';
 
 // API response type for state legislators by ZIP
@@ -179,16 +178,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
   if (loading) {
     return (
       <>
-        <div className="text-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Finding your state representatives...</p>
-        </div>
-
-        <div className="space-y-6">
-          <RepresentativeSkeleton />
-          <RepresentativeSkeleton />
-          <RepresentativeSkeleton />
-        </div>
+        <LoadingState message="Finding your state representatives..." />
       </>
     );
   }

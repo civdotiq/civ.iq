@@ -19,7 +19,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { EnhancedRepresentative } from '@/types/representative';
 import logger from '@/lib/logging/simple-logger';
 import { FallbackImage } from '@/components/FallbackImage';
-import { ArticleSkeleton } from './ArticleSkeleton';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import styles from './SimpleNewsSection.module.css';
 
 /**
@@ -369,7 +369,7 @@ export function SimpleNewsSection({
           <h2 className={styles.sectionTitle}>Recent News Coverage</h2>
         </div>
         <div className={styles.articlesGrid}>
-          <ArticleSkeleton count={initialLimit} />
+          <LoadingState message="Loading articles..." />
         </div>
       </div>
     );
@@ -491,10 +491,10 @@ export function SimpleNewsSection({
             );
           })}
 
-          {/* Loading skeleton for next page */}
+          {/* Loading indicator for next page */}
           {isLoadingMore && (
             <div className={styles.articlesGrid}>
-              <ArticleSkeleton count={3} />
+              <LoadingState message="Loading more articles..." />
             </div>
           )}
         </div>

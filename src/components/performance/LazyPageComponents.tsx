@@ -8,7 +8,7 @@
 import { lazy, Suspense, ComponentType } from 'react';
 import type { SponsoredBill } from '@/features/legislation/components/BillsTracker';
 
-// Lightweight loading skeletons
+// Lightweight loading placeholders
 const SimpleLoader = ({ height = '400px' }: { height?: string }) => (
   <div className="animate-pulse bg-gray-100 rounded-lg" style={{ height }}>
     <div className="flex items-center justify-center h-full">

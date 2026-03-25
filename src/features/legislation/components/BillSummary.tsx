@@ -5,6 +5,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { LoadingState } from '@/components/shared/ui/LoadingState';
+
 /**
  * Bill Summary Component
  *
@@ -218,54 +220,14 @@ export function BillSummary({
   );
 }
 
-interface BillSummarySkeletonProps {
+interface BillSummaryLoadingProps {
   className?: string;
 }
 
-export function BillSummarySkeleton({ className = '' }: BillSummarySkeletonProps) {
+export function BillSummaryLoading({ className = '' }: BillSummaryLoadingProps) {
   return (
-    <div className={`bg-white border-2 border-black overflow-hidden animate-pulse ${className}`}>
-      {/* Header */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-4 w-4 bg-gray-300"></div>
-              <div className="h-4 w-24 bg-gray-300"></div>
-              <div className="h-6 w-32 bg-gray-300 "></div>
-            </div>
-            <div className="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
-            <div className="flex items-center gap-4">
-              <div className="h-4 w-20 bg-gray-300"></div>
-              <div className="h-4 w-24 bg-gray-300"></div>
-            </div>
-          </div>
-          <div className="h-8 w-8 bg-gray-300"></div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className="bg-white border-2 border-gray-300 p-4 mb-4">
-          <div className="h-4 w-24 bg-gray-300 rounded mb-2"></div>
-          <div className="space-y-2">
-            <div className="h-4 w-full bg-gray-300"></div>
-            <div className="h-4 w-4/5 bg-gray-300"></div>
-          </div>
-        </div>
-        <div className="bg-white border-2 border-gray-300 p-4">
-          <div className="h-4 w-20 bg-gray-300 rounded mb-2"></div>
-          <div className="space-y-2">
-            <div className="h-4 w-full bg-gray-300"></div>
-            <div className="h-4 w-3/4 bg-gray-300"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="px-4 py-3 bg-white border-t border-gray-100 ">
-        <div className="h-3 w-1/2 bg-gray-300"></div>
-      </div>
+    <div className={className}>
+      <LoadingState message="Loading bill summary..." />
     </div>
   );
 }

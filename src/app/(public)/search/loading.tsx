@@ -3,25 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { Skeleton } from '@/shared/components/ui';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 export default function Loading() {
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="space-y-6">
-        <div className="text-center space-y-4">
-          <Skeleton className="h-10 w-64 mx-auto" />
-          <Skeleton className="h-6 w-96 mx-auto" />
-        </div>
-
-        <div className="bg-white border-2 border-black p-6">
-          <Skeleton className="h-12 w-full" />
-          <div className="mt-4 flex gap-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <LoadingState fullPage message="Searching..." />;
 }

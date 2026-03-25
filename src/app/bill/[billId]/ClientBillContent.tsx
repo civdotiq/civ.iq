@@ -33,7 +33,6 @@ import {
 import { useBillSummaryStream } from '@/features/legislation/hooks/useBillSummaryStream';
 import {
   DistrictImpactDisplay,
-  DistrictImpactSkeleton,
   DistrictImpactError,
 } from '@/features/legislation/components/DistrictImpact';
 import { DistrictSelector } from '@/features/legislation/components/DistrictSelector';
@@ -43,6 +42,7 @@ import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
 import { BillIntelligenceSection } from '@/components/intelligence/BillIntelligenceSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 interface ClientBillContentProps {
   billId: string;
@@ -342,7 +342,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               setDistrictImpactError(null);
             }}
           />
-          {district && districtImpactLoading && <DistrictImpactSkeleton />}
+          {district && districtImpactLoading && (
+            <LoadingState message="Loading district impact..." />
+          )}
           {district && districtImpactError && !districtImpactLoading && (
             <DistrictImpactError
               error={districtImpactError}

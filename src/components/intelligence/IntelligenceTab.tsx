@@ -23,6 +23,7 @@ import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
 import { TemporalProximityCard } from './TemporalProximityCard';
 import { AnomalyFlagsDisplay } from './AnomalyFlagsDisplay';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { CounterfactualSection } from '@/components/mesh/CounterfactualSection';
 import type { TemporalProximityInsight } from '@/lib/intelligence/analyzers/temporal-proximity-analyzer';
 import type {
@@ -214,7 +215,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
 
       {/* Tier 1: Civic Brief — always visible */}
       {civicBrief && <CivicBriefCard insight={civicBrief} />}
-      {civicBriefLoading && !civicBrief && <InsightSkeleton tall />}
+      {civicBriefLoading && !civicBrief && <InsightPlaceholder tall />}
 
       {/* Tier 2: Detailed analysis — collapsed by default */}
       {hasDetailedInsights && (
@@ -246,7 +247,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
                 keyStats={financeJurisdictionKeyStats(financeJurisdiction)}
               />
             )}
-            {fjLoading && !financeJurisdiction && <InsightSkeleton />}
+            {fjLoading && !financeJurisdiction && <InsightPlaceholder />}
 
             {/* Anomaly Flags — plain-language funding outliers */}
             {financeJurisdiction?.peerComparison?.anomalies && (
@@ -261,7 +262,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
                 keyStats={voteFinanceKeyStats(voteFinance)}
               />
             )}
-            {vfLoading && !voteFinance && <InsightSkeleton />}
+            {vfLoading && !voteFinance && <InsightPlaceholder />}
 
             {/* Temporal */}
             {temporal && (
@@ -274,7 +275,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
                 />
               </>
             )}
-            {temporalLoading && !temporal && <InsightSkeleton tall />}
+            {temporalLoading && !temporal && <InsightPlaceholder tall />}
 
             {/* Lobbying Pipeline */}
             {lobbying && (
@@ -287,15 +288,15 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
                 />
               </>
             )}
-            {lobbyingLoading && !lobbying && primaryCommittee && <InsightSkeleton />}
+            {lobbyingLoading && !lobbying && primaryCommittee && <InsightPlaceholder />}
 
             {/* Influence Chain */}
             {influenceChain && <InfluenceChainCard insight={influenceChain} />}
-            {influenceChainLoading && !influenceChain && <InsightSkeleton />}
+            {influenceChainLoading && !influenceChain && <InsightPlaceholder />}
 
             {/* Vote Prediction */}
             {votePrediction && <VotePredictionCard insight={votePrediction} />}
-            {votePredictionLoading && !votePrediction && <InsightSkeleton />}
+            {votePredictionLoading && !votePrediction && <InsightPlaceholder />}
 
             {/* Stock Trades */}
             {stock && (
@@ -308,11 +309,11 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
                 />
               </>
             )}
-            {stockLoading && !stock && <InsightSkeleton />}
+            {stockLoading && !stock && <InsightPlaceholder />}
 
             {/* Timing Patterns */}
             {temporalProximity && <TemporalProximityCard insight={temporalProximity} />}
-            {temporalProximityLoading && !temporalProximity && <InsightSkeleton />}
+            {temporalProximityLoading && !temporalProximity && <InsightPlaceholder />}
 
             {/* What-If Analysis */}
             <CounterfactualSection bioguideId={bioguideId} />
@@ -333,11 +334,12 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   );
 }
 
-function InsightSkeleton({ tall = false }: { tall?: boolean }) {
+function InsightPlaceholder({ tall = false }: { tall?: boolean }) {
   return (
-    <div className="border-2 border-gray-200 p-6 animate-pulse">
-      <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-      <div className={`${tall ? 'h-48' : 'h-32'} bg-gray-200 border-2 border-gray-300`} />
+    <div
+      className={`border-2 border-gray-200 p-6 flex items-center justify-center ${tall ? 'h-60' : 'h-44'}`}
+    >
+      <LoadingState message="Loading insight..." />
     </div>
   );
 }
