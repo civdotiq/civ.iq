@@ -377,34 +377,31 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             break;
           }
 
-          // Call FEC API with the mapped ID
+          // Call FEC API with the mapped ID — try multiple cycles
           const candidateId = fecMapping.fecId;
-          const cycle = 2024;
+          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
 
-          logger.info(`Calling FEC API:`, {
-            candidateId,
-            cycle,
-            method: 'getCandidateFinancials',
-          });
+          let summaryData = null;
+          for (const cycle of FALLBACK_CYCLES) {
+            logger.info(`Calling FEC API:`, {
+              candidateId,
+              cycle,
+              method: 'getCandidateFinancials',
+            });
 
-          // Get financial summary (FIX: Correct method name)
-          const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
+            const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
 
-          logger.info(`FEC API response:`, {
-            candidateId,
-            responseType: Array.isArray(summaryDataArray) ? 'array' : typeof summaryDataArray,
-            length: Array.isArray(summaryDataArray) ? summaryDataArray.length : 'N/A',
-            firstItemKeys:
-              Array.isArray(summaryDataArray) && summaryDataArray[0]
-                ? Object.keys(summaryDataArray[0])
-                : 'none',
-          });
+            const candidate =
+              Array.isArray(summaryDataArray) && summaryDataArray.length > 0
+                ? summaryDataArray[0]
+                : null;
 
-          // Handle array response - take the most recent cycle's data
-          const summaryData =
-            Array.isArray(summaryDataArray) && summaryDataArray.length > 0
-              ? summaryDataArray[0]
-              : null;
+            if (candidate) {
+              logger.info(`FEC API found data in cycle`, { candidateId, cycle });
+              summaryData = candidate;
+              break;
+            }
+          }
 
           if (!summaryData) {
             logger.warn(`No financial data returned from FEC for ${candidateId} (${bioguideId})`);
@@ -445,7 +442,6 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
             metadata: {
               candidateId,
-              cycle,
               lastUpdated: new Date().toISOString(),
               bioguideId,
             },
