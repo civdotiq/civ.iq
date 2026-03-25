@@ -133,7 +133,7 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
   }, [bioguideId, name]);
 
   const combinedClasses = useMemo(() => {
-    const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
+    const baseClasses = `${sizeClasses[size]} flex items-center justify-center overflow-hidden flex-shrink-0`;
     return `${baseClasses} ${className}`;
   }, [size, className]);
 
@@ -141,7 +141,7 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
   if (photoState.isLoading) {
     return (
       <div ref={imgRef} className={`${combinedClasses} bg-gray-200 animate-pulse`}>
-        <div className="w-full h-full bg-gray-300 rounded-full"></div>
+        <div className="w-full h-full bg-gray-300"></div>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
           width={sizeDimensions[size]}
           height={sizeDimensions[size]}
           sizes={responsiveSizes[size]}
-          className="w-full h-full object-cover rounded-full"
+          className="w-full h-full object-cover"
           style={{ aspectRatio: '1/1' }}
           priority={size === 'xl'} // Prioritize larger images
           placeholder="blur"

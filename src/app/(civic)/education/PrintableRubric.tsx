@@ -179,7 +179,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
           {/* Footer */}
           <footer className="mt-8 pt-4 border-t border-[#e0e0e0] flex justify-between text-[8pt] text-[#888]">
             <div className="flex items-center gap-1">
-              <span className="w-[10px] h-[10px] border border-[#888] rounded-full flex items-center justify-center text-[6pt] font-semibold">
+              <span className="w-[10px] h-[10px] border border-[#888] flex items-center justify-center text-[6pt] font-semibold">
                 i
               </span>
               <span>Based on NCSS C3 Framework standards</span>

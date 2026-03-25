@@ -119,7 +119,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
         <h3 className="text-lg font-semibold text-gray-900">Interactive Voting Analysis</h3>
         <button
           onClick={() => setShowDetailedView(!showDetailedView)}
-          className="px-4 py-2 min-h-[44px] text-sm bg-civiq-blue text-white rounded hover:bg-civiq-blue/90 transition-colors"
+          className="px-4 py-2 min-h-[44px] text-sm bg-civiq-blue text-white hover:bg-civiq-blue/90 transition-colors"
         >
           {showDetailedView ? 'Summary View' : 'Detailed View'}
         </button>
@@ -133,7 +133,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             <select
               value={selectedTimeframe}
               onChange={e => setSelectedTimeframe(e.target.value as TimeframeFilter)}
-              className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              className="w-full text-sm border border-gray-300 px-3 py-2"
             >
               <option value="all">All Time</option>
               <option value="1year">Past Year</option>
@@ -145,7 +145,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             <select
               value={selectedFilter}
               onChange={e => setSelectedFilter(e.target.value as VoteTypeFilter)}
-              className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              className="w-full text-sm border border-gray-300 px-3 py-2"
             >
               <option value="all">All Votes</option>
               <option value="key">Key Votes</option>
@@ -158,7 +158,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             <select
               value={selectedPosition}
               onChange={e => setSelectedPosition(e.target.value as PositionFilter)}
-              className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              className="w-full text-sm border border-gray-300 px-3 py-2"
             >
               <option value="all">All Positions</option>
               <option value="Yea">Yea</option>
@@ -174,7 +174,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
               placeholder="Search bills..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              className="w-full text-sm border border-gray-300 px-3 py-2"
             />
           </div>
         </div>
@@ -187,22 +187,22 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
           <div className="flex flex-wrap gap-2">
             <span className="text-sm text-gray-600">Active filters:</span>
             {selectedTimeframe !== 'all' && (
-              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs rounded">
+              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs">
                 Time: {selectedTimeframe}
               </span>
             )}
             {selectedFilter !== 'all' && (
-              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs rounded">
+              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs">
                 Type: {selectedFilter}
               </span>
             )}
             {selectedPosition !== 'all' && (
-              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs rounded">
+              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs">
                 Position: {selectedPosition}
               </span>
             )}
             {searchQuery && (
-              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs rounded">
+              <span className="px-3 py-1.5 bg-civiq-blue text-white text-xs">
                 Search: &quot;{searchQuery}&quot;
               </span>
             )}
@@ -213,7 +213,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
                 setSelectedPosition('all');
                 setSearchQuery('');
               }}
-              className="px-3 py-2 min-h-[44px] bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-2 min-h-[44px] bg-gray-200 text-gray-700 text-xs hover:bg-gray-300 transition-colors"
             >
               Clear all
             </button>
@@ -267,7 +267,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
           {filteredVotes.slice(0, 50).map((vote, index) => (
             <div
               key={index}
-              className={`w-4 h-4 rounded cursor-pointer transition-all duration-200 ${getPositionColor(vote.position)} ${
+              className={`w-4 h-4 cursor-pointer transition-all duration-200 ${getPositionColor(vote.position)} ${
                 hoveredVote === index ? 'scale-125 ring-2 ring-gray-400' : ''
               } ${vote.isKeyVote ? 'ring-2 ring-yellow-400' : ''}`}
               onMouseEnter={() => setHoveredVote(index)}
@@ -281,23 +281,23 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
         </div>
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-500 rounded"></div>
+            <div className="w-3 h-3 bg-green-500"></div>
             Yea
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-500 rounded"></div>
+            <div className="w-3 h-3 bg-red-500"></div>
             Nay
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+            <div className="w-3 h-3 bg-blue-500"></div>
             Present
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-400 rounded"></div>
+            <div className="w-3 h-3 bg-gray-400"></div>
             Not Voting
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-300 rounded ring-2 ring-yellow-400"></div>
+            <div className="w-3 h-3 bg-gray-300 ring-2 ring-yellow-400"></div>
             Key Vote
           </span>
         </div>
@@ -313,7 +313,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
             </div>
             <div className="text-right">
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getPositionTextColor(filteredVotes[hoveredVote].position)}`}
+                className={`px-2 py-1 text-xs font-medium ${getPositionTextColor(filteredVotes[hoveredVote].position)}`}
               >
                 {filteredVotes[hoveredVote].position}
               </span>
@@ -344,9 +344,9 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
               .map(item => (
                 <div key={item.label} className="flex items-center">
                   <div className="w-20 text-sm text-gray-700">{item.label}</div>
-                  <div className="flex-1 bg-white border-2 border-gray-300 rounded-full h-4 mx-3">
+                  <div className="flex-1 bg-white border-2 border-gray-300 h-4 mx-3">
                     <div
-                      className={`h-4 rounded-full ${item.color} transition-all duration-500`}
+                      className={`h-4 ${item.color} transition-all duration-500`}
                       style={{ width: `${(item.count / stats.total) * 100}%` }}
                     />
                   </div>
@@ -392,7 +392,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
                     <div className="flex items-center gap-2 mb-2">
                       <h5 className="font-medium text-gray-900">{vote.bill}</h5>
                       {vote.isKeyVote && (
-                        <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs rounded">
+                        <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs">
                           ⭐ Key Vote
                         </span>
                       )}
@@ -405,7 +405,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
                   </div>
                   <div className="text-right">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getPositionTextColor(vote.position)}`}
+                      className={`px-3 py-1 text-sm font-medium ${getPositionTextColor(vote.position)}`}
                     >
                       {vote.position}
                     </span>

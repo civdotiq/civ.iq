@@ -88,7 +88,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
     return (
       <div className="aicher-card p-8">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-6 bg-gray-200 w-48 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="aicher-card p-6 h-24"></div>
@@ -116,7 +116,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
   const { economic } = data;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black border border-gray-100 p-8">
       <h3 className="aicher-heading text-lg text-gray-900 mb-6">
         Economic & Infrastructure Health
       </h3>
@@ -164,10 +164,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             <p className="text-sm font-medium text-gray-700 mb-2">Major Industries:</p>
             <div className="flex flex-wrap gap-2">
               {economic.employment.majorIndustries.map((industry, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                >
+                <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm">
                   {industry}
                 </span>
               ))}

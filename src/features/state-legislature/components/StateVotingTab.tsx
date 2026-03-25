@@ -111,7 +111,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
   if (loading) {
     return (
       <div className="p-grid-4 text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
+        <div className="inline-block animate-spin h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
         <p className="mt-grid-2 text-gray-600">Loading voting records...</p>
       </div>
     );

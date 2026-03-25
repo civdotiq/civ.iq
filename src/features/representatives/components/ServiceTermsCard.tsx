@@ -100,7 +100,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
 
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
+      className={`bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
     >
       <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center justify-between">

@@ -96,14 +96,14 @@ export function DistrictCard({ district }: { district: District }) {
           <p className="text-xs sm:text-sm text-gray-600 truncate">{district.name}</p>
         </div>
         <span
-          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 ${lean.bgColor} ${lean.color}`}
+          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium flex-shrink-0 ${lean.bgColor} ${lean.color}`}
         >
           {lean.text}
         </span>
       </div>
 
       <Link href={repHref} className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 group">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0">
           {district.representative.imageUrl ? (
             <Image
               src={district.representative.imageUrl}

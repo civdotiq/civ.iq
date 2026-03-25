@@ -37,7 +37,7 @@ export default function GlobalError({
             {process.env?.NODE_ENV === 'development' && (
               <details className="text-left mb-4">
                 <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
-                <pre className="mt-2 text-xs bg-white border-2 border-gray-300 p-2 rounded overflow-auto">
+                <pre className="mt-2 text-xs bg-white border-2 border-gray-300 p-2 overflow-auto">
                   {error.message}
                   {error.stack}
                 </pre>
@@ -45,13 +45,13 @@ export default function GlobalError({
             )}
             <button
               onClick={reset}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
+              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 mr-2"
             >
               Try again
             </button>
             <button
               onClick={() => (window.location.href = '/')}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700"
             >
               Go to Home
             </button>

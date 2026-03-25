@@ -159,9 +159,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Small Donors (&lt;$200)</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-gray-200 h-2">
                   <div
-                    className="bg-green-500 h-2 rounded-full"
+                    className="bg-green-500 h-2"
                     style={{ width: `${data.breakdown.smallDonors.percent}%` }}
                   />
                 </div>
@@ -173,9 +173,9 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Large Donors (&gt;$2,800)</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="w-32 bg-gray-200 h-2">
                   <div
-                    className="bg-red-500 h-2 rounded-full"
+                    className="bg-red-500 h-2"
                     style={{ width: `${data.breakdown.largeDonors.percent}%` }}
                   />
                 </div>
@@ -264,11 +264,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
                   <span className="text-sm font-medium text-gray-900">{state.state}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full"
-                      style={{ width: `${state.percent}%` }}
-                    />
+                  <div className="w-24 bg-gray-200 h-2">
+                    <div className="bg-blue-500 h-2" style={{ width: `${state.percent}%` }} />
                   </div>
                   <span className="text-sm font-medium w-16 text-right">
                     {formatCurrency(state.amount)}
@@ -368,11 +365,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Individual Contributions</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${individual.percent}%` }}
-                  />
+                <div className="w-32 bg-gray-200 h-2">
+                  <div className="bg-green-500 h-2" style={{ width: `${individual.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(individual.percent)}
@@ -382,11 +376,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">PAC Contributions</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: `${pac.percent}%` }}
-                  />
+                <div className="w-32 bg-gray-200 h-2">
+                  <div className="bg-orange-500 h-2" style={{ width: `${pac.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(pac.percent)}
@@ -396,11 +387,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Party Contributions</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${party.percent}%` }}
-                  />
+                <div className="w-32 bg-gray-200 h-2">
+                  <div className="bg-blue-500 h-2" style={{ width: `${party.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(party.percent)}
@@ -410,11 +398,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Self-Funded</span>
               <div className="flex items-center gap-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-purple-500 h-2 rounded-full"
-                    style={{ width: `${candidate.percent}%` }}
-                  />
+                <div className="w-32 bg-gray-200 h-2">
+                  <div className="bg-purple-500 h-2" style={{ width: `${candidate.percent}%` }} />
                 </div>
                 <span className="text-sm font-medium w-12 text-right">
                   {formatPercent(candidate.percent)}

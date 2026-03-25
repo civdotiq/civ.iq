@@ -114,7 +114,7 @@ export default function MultiDistrictIndicator({
           <MapPin className="w-5 h-5 text-blue-600" />
           <span className="font-semibold text-gray-900">ZIP Code {zipCode}</span>
           {isMultiDistrict && (
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium">
               Multi-District
             </span>
           )}
@@ -148,7 +148,7 @@ export default function MultiDistrictIndicator({
               </span>
               {primaryDistrict?.primary && <CheckCircle className="w-4 h-4 text-green-600" />}
               <span
-                className={`px-2 py-1 text-xs rounded-full font-medium ${getConfidenceColor(primaryDistrict?.confidence)}`}
+                className={`px-2 py-1 text-xs font-medium ${getConfidenceColor(primaryDistrict?.confidence)}`}
               >
                 {primaryDistrict?.confidence || 'high'} confidence
               </span>
@@ -161,7 +161,7 @@ export default function MultiDistrictIndicator({
                 return (
                   state &&
                   isSpecialTerritory(state) && (
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1">
                       {getTerritoryName(state)}
                     </span>
                   )
@@ -234,12 +234,12 @@ export default function MultiDistrictIndicator({
                         {getDistrictDisplay(district)}
                       </span>
                       {district.primary && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium">
                           Primary
                         </span>
                       )}
                       <span
-                        className={`px-2 py-1 text-xs rounded-full font-medium ${getConfidenceColor(district.confidence)}`}
+                        className={`px-2 py-1 text-xs font-medium ${getConfidenceColor(district.confidence)}`}
                       >
                         {district.confidence || 'high'}
                       </span>
@@ -262,7 +262,7 @@ export default function MultiDistrictIndicator({
                   <div className="text-sm text-gray-600 mt-1">
                     {getDistrictType(district)}
                     {isSpecialTerritory(district.state) && (
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1">
                         {getTerritoryName(district.state)}
                       </span>
                     )}

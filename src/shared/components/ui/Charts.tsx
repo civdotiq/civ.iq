@@ -25,11 +25,9 @@ export function BarChart({ data, title, formatValue = v => v.toString() }: BarCh
             <div className="w-24 text-sm text-gray-700 truncate" title={item.label}>
               {item.label}
             </div>
-            <div className="flex-1 bg-white border-2 border-gray-300 rounded-full h-6 relative">
+            <div className="flex-1 bg-white border-2 border-gray-300 h-6 relative">
               <div
-                className={`h-6 rounded-full transition-all duration-500 ${
-                  item.color || 'bg-civiq-green'
-                }`}
+                className={`h-6 transition-all duration-500 ${item.color || 'bg-civiq-green'}`}
                 style={{ width: `${(item.value / maxValue) * 100}%` }}
               />
             </div>
@@ -125,7 +123,7 @@ export function PieChart({
         <div className="flex-1 space-y-2">
           {segments.map((segment, index) => (
             <div key={index} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
+              <div className="w-3 h-3" style={{ backgroundColor: segment.color }} />
               <span className="text-sm text-gray-700 flex-1">{segment.label}</span>
               <span className="text-sm font-medium text-gray-900">
                 {formatValue(segment.value)} ({segment.percentage.toFixed(1)}%)
@@ -213,7 +211,7 @@ export function DonutChart({
         <div className="flex-1 space-y-2">
           {data.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+              <div className="w-3 h-3" style={{ backgroundColor: item.color }} />
               <span className="text-sm text-gray-700 flex-1">{item.label}</span>
               <span className="text-sm font-medium text-gray-900">
                 {formatValue(item.value)} ({((item.value / total) * 100).toFixed(1)}%)
@@ -254,9 +252,9 @@ export function PartyAlignmentChart({
           <span className="text-sm font-medium text-gray-700">Votes with {party} Party</span>
           <span className="text-sm font-bold text-gray-900">{partyAlignment.toFixed(1)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-4">
+        <div className="w-full bg-gray-200 h-4">
           <div
-            className="h-4 rounded-full transition-all duration-700 flex items-center justify-end pr-2"
+            className="h-4 transition-all duration-700 flex items-center justify-end pr-2"
             style={{
               width: `${partyAlignment}%`,
               backgroundColor: partyColor,
@@ -342,7 +340,7 @@ export function VoteHistoryChart({ votes }: VoteHistoryProps) {
             <div className="flex items-start gap-4">
               {/* Vote position indicator */}
               <div
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-white text-sm font-bold"
                 style={{ backgroundColor: getPositionColor(vote.position) }}
               >
                 {getPositionIcon(vote.position)}
@@ -365,7 +363,7 @@ export function VoteHistoryChart({ votes }: VoteHistoryProps) {
                     Result: <span className="font-medium">{vote.result}</span>
                   </span>
                   {vote.isKeyVote && (
-                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs font-medium">
                       Key Vote
                     </span>
                   )}
@@ -415,9 +413,9 @@ export function DemographicStats({ title, stats }: DemographicStatsProps) {
                       <span>Percentage</span>
                       <span>{stat.percentage.toFixed(1)}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 h-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-500 ${stat.color?.includes('green') ? 'bg-civiq-green' : stat.color?.includes('red') ? 'bg-civiq-red' : 'bg-civiq-blue'}`}
+                        className={`h-2 transition-all duration-500 ${stat.color?.includes('green') ? 'bg-civiq-green' : stat.color?.includes('red') ? 'bg-civiq-red' : 'bg-civiq-blue'}`}
                         style={{ width: `${stat.percentage}%` }}
                       />
                     </div>
@@ -492,9 +490,9 @@ export function ElectionResults({ title, elections }: ElectionResultsProps) {
                         {result.percentage.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-200 h-3">
                       <div
-                        className="h-3 rounded-full transition-all duration-500"
+                        className="h-3 transition-all duration-500"
                         style={{
                           width: `${result.percentage}%`,
                           backgroundColor: getPartyColor(result.party),
@@ -553,9 +551,9 @@ export function PopulationPyramid({ title, ageGroups, totalPopulation }: Populat
                     {percentage.toFixed(1)}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="w-full bg-gray-200 h-4">
                   <div
-                    className="h-4 rounded-full transition-all duration-700"
+                    className="h-4 transition-all duration-700"
                     style={{
                       width: `${barWidth}%`,
                       backgroundColor: group.color,

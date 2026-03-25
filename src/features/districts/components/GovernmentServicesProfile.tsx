@@ -93,9 +93,9 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+      <div className="bg-white border-2 border-black border border-gray-100 p-8">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-6 bg-gray-200 w-48 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white border-2 border-gray-300 p-6 h-24"></div>
@@ -108,7 +108,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
 
   if (error || !data) {
     return (
-      <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+      <div className="bg-white border-2 border-black border border-gray-100 p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Federal Investment & Services</h3>
         <div className="bg-white p-6 text-center">
           <p className="text-gray-600">Government spending data not available for this district</p>
@@ -123,7 +123,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
   const { government } = data;
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black border border-gray-100 p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Federal Investment & Services</h3>
 
       {/* Federal Investment */}
@@ -285,7 +285,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                       </div>
                     </div>
                     <span
-                      className={`px-2 py-1 text-xs rounded-full ${
+                      className={`px-2 py-1 text-xs ${
                         bill.impactLevel === 'High'
                           ? 'bg-red-100 text-red-800'
                           : bill.impactLevel === 'Medium'

@@ -135,7 +135,7 @@ export default function CommitteeActivityTimeline({
           <div className="flex space-x-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'all'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
@@ -145,7 +145,7 @@ export default function CommitteeActivityTimeline({
             </button>
             <button
               onClick={() => setFilter('bills')}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'bills'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
@@ -155,7 +155,7 @@ export default function CommitteeActivityTimeline({
             </button>
             <button
               onClick={() => setFilter('reports')}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
                 filter === 'reports'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
@@ -193,7 +193,7 @@ export default function CommitteeActivityTimeline({
 
       {/* Most Active Month */}
       {stats.mostActiveMonth && (
-        <div className="mb-4 p-3 bg-blue-50 rounded text-sm">
+        <div className="mb-4 p-3 bg-blue-50 text-sm">
           <span className="font-semibold">Most Active Month:</span>{' '}
           {formatMonthYear(stats.mostActiveMonth)}({stats.activityByMonth[stats.mostActiveMonth]}{' '}
           activities)
@@ -206,10 +206,7 @@ export default function CommitteeActivityTimeline({
       ) : (
         <div className="space-y-3">
           {displayedItems.map(item => (
-            <div
-              key={item.id}
-              className={`border-l-4 p-3 rounded ${getImportanceColor(item.importance)}`}
-            >
+            <div key={item.id} className={`border-l-4 p-3 ${getImportanceColor(item.importance)}`}>
               <div className="flex items-start space-x-2">
                 <span className="text-lg flex-shrink-0">{getTimelineIcon(item.type)}</span>
                 <div className="flex-1">

@@ -284,7 +284,7 @@ export function VoteCard({
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold text-blue-600">{vote.bill.number}</span>
               {vote.isKeyVote && (
-                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
                   Key Vote
                 </span>
               )}
@@ -292,7 +292,7 @@ export function VoteCard({
           </div>
           <div className="flex flex-col items-end gap-2">
             <span
-              className={`inline-flex px-3 py-1.5 text-sm font-medium rounded-full border ${getPositionColor(vote.position)}`}
+              className={`inline-flex px-3 py-1.5 text-sm font-medium border ${getPositionColor(vote.position)}`}
             >
               {vote.position}
             </span>

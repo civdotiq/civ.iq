@@ -72,9 +72,9 @@ function AlignmentMeter({
         <span className="text-sm font-medium text-gray-700">{label}</span>
         <span className="text-lg font-bold text-gray-900">{value.toFixed(1)}%</span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-gray-200 h-2">
         <div
-          className={`h-2 rounded-full transition-all duration-300 ${getColor(value)}`}
+          className={`h-2 transition-all duration-300 ${getColor(value)}`}
           style={{ width: `${Math.min(100, value)}%` }}
         />
       </div>
@@ -144,11 +144,11 @@ export function PartyAlignmentAnalysis({
     return (
       <div className="bg-white border-2 border-black p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mb-4"></div>
           <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200"></div>
+            <div className="h-4 bg-gray-200 w-3/4"></div>
+            <div className="h-4 bg-gray-200 w-1/2"></div>
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@ export function PartyAlignmentAnalysis({
           Analysis of {representative.name}&apos;s voting patterns and party loyalty
         </p>
         {alignmentData.metadata && (
-          <div className="mt-2 text-xs text-gray-500 bg-white p-2 rounded">
+          <div className="mt-2 text-xs text-gray-500 bg-white p-2">
             {alignmentData.metadata.note}
           </div>
         )}
@@ -292,7 +292,7 @@ export function PartyAlignmentAnalysis({
                     <div className="text-xs text-gray-500">{departure.vote_date}</div>
                   </div>
                   <div
-                    className={`px-2 py-1 rounded text-xs font-medium ${
+                    className={`px-2 py-1 text-xs font-medium ${
                       departure.significance === 'high'
                         ? 'bg-red-100 text-red-800'
                         : departure.significance === 'medium'

@@ -33,7 +33,7 @@ export default function CongressSessionInfo() {
             <h3 className="text-lg font-semibold text-blue-900">
               {congressInfo.session} ({congressInfo.period})
             </h3>
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium">
               Current
             </span>
           </div>

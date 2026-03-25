@@ -113,7 +113,7 @@ export default function APIHealthPage() {
 
         {loading && !health && (
           <div className="bg-white border-2 border-black p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue mx-auto"></div>
+            <div className="animate-spin h-12 w-12 border-b-2 border-civiq-blue mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading health status...</p>
           </div>
         )}
@@ -183,9 +183,7 @@ export default function APIHealthPage() {
                         <div className="flex items-center gap-2">
                           <span>{getStatusIcon(api.status)}</span>
                           <h4 className="font-medium">{api.name}</h4>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(api.status)}`}
-                          >
+                          <span className={`text-xs px-2 py-1 ${getStatusColor(api.status)}`}>
                             {api.status}
                           </span>
                         </div>

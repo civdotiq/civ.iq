@@ -101,18 +101,18 @@ export const BillsTab = React.memo(
     if (isLoading) {
       return (
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
+          <div className="h-8 bg-gray-200 w-1/3"></div>
+          <div className="h-6 bg-white border-2 border-gray-300 w-1/2"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
+            <div className="h-16 bg-white border-2 border-gray-300"></div>
           </div>
           <div className="space-y-4">
-            <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-            <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+            <div className="h-24 bg-white border-2 border-gray-300"></div>
+            <div className="h-24 bg-white border-2 border-gray-300"></div>
+            <div className="h-24 bg-white border-2 border-gray-300"></div>
           </div>
         </div>
       );
@@ -349,7 +349,7 @@ export const BillsTab = React.memo(
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -457,12 +457,12 @@ export const BillsTab = React.memo(
               >
                 <h3 className="font-medium">
                   {bill.relationship === 'cosponsored' && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded mr-2">
+                    <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 mr-2">
                       Cosponsored
                     </span>
                   )}
                   {bill.relationship === 'sponsored' && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded mr-2">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 mr-2">
                       Sponsored
                     </span>
                   )}
@@ -504,15 +504,13 @@ export const BillsTab = React.memo(
                 </p>
                 <p className="text-sm text-gray-600 mt-1">{bill.lastAction}</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-xs bg-blue-100 px-3 py-1.5 rounded">
+                  <span className="text-xs bg-blue-100 px-3 py-1.5">
                     {bill.type || 'Type: Unknown'}
                   </span>
                   {bill.policyArea && (
-                    <span className="text-xs bg-green-100 px-3 py-1.5 rounded">
-                      {bill.policyArea}
-                    </span>
+                    <span className="text-xs bg-green-100 px-3 py-1.5">{bill.policyArea}</span>
                   )}
-                  <span className="text-xs bg-yellow-100 px-3 py-1.5 rounded">
+                  <span className="text-xs bg-yellow-100 px-3 py-1.5">
                     {bill.status || 'Status: Unknown'}
                   </span>
                 </div>

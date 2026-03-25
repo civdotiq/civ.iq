@@ -48,12 +48,12 @@ export function ComparisonBarChart({
       <div className="relative mb-2 h-8">
         {/* Actual amount bar */}
         <div
-          className="absolute left-0 top-0 h-full rounded bg-civiq-blue"
+          className="absolute left-0 top-0 h-full bg-civiq-blue"
           style={{ width: `${actualWidth}%` }}
         />
         {/* Benchmark reference (dashed border) */}
         <div
-          className="absolute left-0 top-0 h-full rounded border-2 border-dashed border-neutral-400"
+          className="absolute left-0 top-0 h-full border-2 border-dashed border-neutral-400"
           style={{ width: `${benchmarkWidth}%` }}
         />
       </div>

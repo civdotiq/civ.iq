@@ -241,7 +241,7 @@ export default function CongressHubPage() {
           </div>
           <Link
             href="/committees"
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="inline-block bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
           >
             View Senate Committees →
           </Link>
@@ -260,7 +260,7 @@ export default function CongressHubPage() {
           </p>
           <Link
             href="/committees"
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="inline-block bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
           >
             View House Committees →
           </Link>
@@ -279,7 +279,7 @@ export default function CongressHubPage() {
           </p>
           <Link
             href="/committees"
-            className="inline-block bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900"
+            className="inline-block bg-gray-800 text-white px-4 py-2 hover:bg-gray-900"
           >
             Browse All Committees →
           </Link>

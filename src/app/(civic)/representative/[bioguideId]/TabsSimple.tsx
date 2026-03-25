@@ -116,7 +116,7 @@ export function TabsSimple({ bioguideId, representative }: TabsSimpleProps) {
         {data !== null && !loading && !error && (
           <div>
             <p className="text-sm text-gray-600 mb-2">Raw data from API:</p>
-            <pre className="bg-white border-2 border-gray-300 p-4 rounded overflow-auto max-h-96 text-xs">
+            <pre className="bg-white border-2 border-gray-300 p-4 overflow-auto max-h-96 text-xs">
               {JSON.stringify(data, null, 2)}
             </pre>
           </div>

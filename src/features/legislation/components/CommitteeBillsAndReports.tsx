@@ -180,8 +180,8 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
             <div className="animate-pulse space-y-4">
               {[1, 2, 3].map(i => (
                 <div key={i} className="border p-4">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 w-1/2"></div>
                 </div>
               ))}
             </div>
@@ -201,12 +201,12 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                     </div>
                     <div className="flex space-x-2">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.status)}`}
+                        className={`px-2 py-1 text-xs font-medium ${getStatusColor(bill.status)}`}
                       >
                         {bill.status}
                       </span>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getCommitteeStatusColor(bill.committeeStatus)}`}
+                        className={`px-2 py-1 text-xs font-medium ${getCommitteeStatusColor(bill.committeeStatus)}`}
                       >
                         {formatCommitteeStatus(bill.committeeStatus)}
                       </span>
@@ -258,8 +258,8 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
             <div className="animate-pulse space-y-4">
               {[1, 2, 3].map(i => (
                 <div key={i} className="border p-4">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 w-1/2"></div>
                 </div>
               ))}
             </div>
@@ -272,7 +272,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                       <h3 className="font-medium text-gray-900">{report.reportNumber}</h3>
                       <p className="text-sm text-gray-600 mt-1">{report.title}</p>
                     </div>
-                    <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-800 rounded-full text-xs font-medium">
+                    <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-800 text-xs font-medium">
                       {report.reportType.toUpperCase()}
                     </span>
                   </div>

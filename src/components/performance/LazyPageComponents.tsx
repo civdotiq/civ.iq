@@ -10,22 +10,22 @@ import type { SponsoredBill } from '@/features/legislation/components/BillsTrack
 
 // Lightweight loading placeholders
 const SimpleLoader = ({ height = '400px' }: { height?: string }) => (
-  <div className="animate-pulse bg-gray-100 rounded-lg" style={{ height }}>
+  <div className="animate-pulse bg-gray-100" style={{ height }}>
     <div className="flex items-center justify-center h-full">
-      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent animate-spin"></div>
     </div>
   </div>
 );
 
 const ChartLoader = () => (
-  <div className="bg-white border border-gray-200 p-6 rounded-lg">
-    <div className="h-4 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+  <div className="bg-white border border-gray-200 p-6">
+    <div className="h-4 bg-gray-200 w-1/3 mb-4 animate-pulse"></div>
     <div className="space-y-2">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="flex items-center gap-3">
-          <div className="w-16 h-3 bg-gray-200 rounded animate-pulse"></div>
-          <div className="flex-1 h-4 bg-gray-100 rounded animate-pulse"></div>
-          <div className="w-12 h-3 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-16 h-3 bg-gray-200 animate-pulse"></div>
+          <div className="flex-1 h-4 bg-gray-100 animate-pulse"></div>
+          <div className="w-12 h-3 bg-gray-200 animate-pulse"></div>
         </div>
       ))}
     </div>

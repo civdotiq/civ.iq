@@ -172,7 +172,7 @@ export function AddressRefinement({
             {isLoading && (
               <div className="flex items-center justify-center py-4">
                 <div className="flex items-center space-x-3 text-civiq-blue">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-civiq-blue"></div>
+                  <div className="animate-spin h-5 w-5 border-b-2 border-civiq-blue"></div>
                   <span className="text-sm">Finding your exact district...</span>
                 </div>
               </div>
@@ -300,7 +300,7 @@ export function InlineAddressRefinement({
 
         {isLoading && (
           <div className="flex items-center justify-center text-sm text-civiq-blue">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue mr-2"></div>
+            <div className="animate-spin h-4 w-4 border-b-2 border-civiq-blue mr-2"></div>
             Geocoding...
           </div>
         )}

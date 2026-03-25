@@ -384,7 +384,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
                     </Link>
                     {committee.role && (
                       <span
-                        className={`text-xs px-2 py-1 rounded ${
+                        className={`text-xs px-2 py-1 ${
                           committee.role === 'Chair'
                             ? 'bg-green-100 text-green-800'
                             : committee.role === 'Ranking Member'

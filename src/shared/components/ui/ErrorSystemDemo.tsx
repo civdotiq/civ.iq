@@ -43,9 +43,7 @@ export function ErrorSystemDemo() {
     if (selectedError) {
       throw sampleErrors[selectedError as keyof typeof sampleErrors];
     }
-    return (
-      <div className="p-4 bg-green-50 text-green-800 rounded">Component working correctly!</div>
-    );
+    return <div className="p-4 bg-green-50 text-green-800">Component working correctly!</div>;
   };
 
   const demos = {
@@ -95,7 +93,7 @@ export function ErrorSystemDemo() {
             <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-red-300 rounded bg-red-50"
+              className="w-full px-3 py-2 border border-red-300 bg-red-50"
               value="1234"
               readOnly
             />
@@ -106,7 +104,7 @@ export function ErrorSystemDemo() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-red-300 rounded bg-red-50"
+              className="w-full px-3 py-2 border border-red-300 bg-red-50"
               value="main street"
               readOnly
             />

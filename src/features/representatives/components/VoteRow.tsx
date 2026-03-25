@@ -208,7 +208,7 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
       {/* Vote Position */}
       <td className="text-center py-3 px-3 align-top" style={{ width: '100px', minWidth: '100px' }}>
         <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getPositionStyles(vote.position)}`}
+          className={`inline-block px-3 py-1 text-xs font-semibold ${getPositionStyles(vote.position)}`}
         >
           {vote.position}
         </span>

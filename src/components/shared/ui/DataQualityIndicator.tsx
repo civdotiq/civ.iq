@@ -241,7 +241,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
               return (
                 <div className="text-sm mb-4 opacity-90">
                   <p className="font-medium mb-2">Additional Details:</p>
-                  <pre className="bg-black/10 p-2 rounded text-xs overflow-x-auto">
+                  <pre className="bg-black/10 p-2 text-xs overflow-x-auto">
                     {JSON.stringify(errorData.details, null, 2)}
                   </pre>
                 </div>
@@ -293,7 +293,7 @@ export function DataSourceBadge({
   if (!source) {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white border-2 border-gray-300 text-gray-800 ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-white border-2 border-gray-300 text-gray-800 ${className}`}
       >
         <span className="text-xs">?</span>
         Unknown Source
@@ -366,7 +366,7 @@ export function DataSourceBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.color} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium ${config.color} ${className}`}
     >
       <span className="text-xs">{config.icon}</span>
       {config.label}

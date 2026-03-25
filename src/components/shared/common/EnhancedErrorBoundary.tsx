@@ -193,13 +193,13 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                 <div className="space-y-2 text-xs font-mono">
                   <div>
                     <strong>Component Stack:</strong>
-                    <pre className="mt-1 p-2 bg-white rounded overflow-auto">
+                    <pre className="mt-1 p-2 bg-white overflow-auto">
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </div>
                   <div>
                     <strong>Error Details:</strong>
-                    <pre className="mt-1 p-2 bg-white rounded overflow-auto">
+                    <pre className="mt-1 p-2 bg-white overflow-auto">
                       {JSON.stringify(this.state.error.toJSON(), null, 2)}
                     </pre>
                   </div>

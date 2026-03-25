@@ -150,7 +150,7 @@ export function VotingPatternHeatmap({
       <svg ref={svgRef} width={width} height={height} />
       {tooltip.visible && (
         <div
-          className="absolute bg-gray-900 text-white px-2 py-1 rounded text-sm pointer-events-none"
+          className="absolute bg-gray-900 text-white px-2 py-1 text-sm pointer-events-none"
           style={{ left: tooltip.x, top: tooltip.y }}
         >
           {tooltip.content}

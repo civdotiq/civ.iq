@@ -26,7 +26,7 @@ interface TopIndustriesProps {
 export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
   if (!industries || industries.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <div className="border border-neutral-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-semibold">Top Industries</h3>
         <p className="text-neutral-600">No industry data available for this cycle.</p>
       </div>
@@ -60,7 +60,7 @@ export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
   ];
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <div className="border border-neutral-200 bg-white p-6">
       <div className="mb-6">
         <h3 className="mb-2 text-lg font-semibold">Top Industries</h3>
         <p className="text-sm text-neutral-600">
@@ -75,7 +75,7 @@ export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
         showInitially={5}
       />
 
-      <div className="mt-4 rounded-lg bg-neutral-50 p-4">
+      <div className="mt-4 bg-neutral-50 p-4">
         <div className="text-sm text-neutral-700">
           <strong>Total Analyzed:</strong> ${(totalRaised / 1000000).toFixed(2)}M from{' '}
           {industries.length} industries

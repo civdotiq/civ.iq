@@ -24,13 +24,13 @@ export default function DistrictRepresentative({
   districtName,
 }: DistrictRepresentativeProps) {
   return (
-    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black border border-gray-100 p-8">
       <div className="flex items-center space-x-6">
         <div className="flex-shrink-0">
           <RepresentativePhoto
             bioguideId={representative.bioguideId}
             name={representative.name}
-            className="w-24 h-24 rounded-full"
+            className="w-24 h-24"
           />
         </div>
         <div className="flex-1">
@@ -38,7 +38,7 @@ export default function DistrictRepresentative({
           <p className="text-lg text-gray-600 mb-1">Representative for {districtName}</p>
           <div className="flex items-center space-x-4">
             <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
+              className={`px-3 py-1 text-sm font-medium ${
                 representative.party === 'Democrat'
                   ? 'bg-blue-100 text-blue-800'
                   : representative.party === 'Republican'

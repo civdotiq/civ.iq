@@ -184,7 +184,7 @@ export function FloorActivity() {
                             {item.legisNum}
                           </span>
                           <span
-                            className={`text-xs px-2 py-0.5 rounded ${
+                            className={`text-xs px-2 py-0.5 ${
                               item.category === 'suspension'
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : item.category === 'rule'
@@ -202,7 +202,7 @@ export function FloorActivity() {
                           href={item.documents[0].url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-shrink-0 p-2 hover:bg-gray-100 rounded"
+                          className="flex-shrink-0 p-2 hover:bg-gray-100"
                           title="View document"
                         >
                           <FileText className="w-4 h-4 text-gray-600" />
@@ -236,8 +236,8 @@ export function FloorActivity() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   {data.senate.session.isLive && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-bold">
+                      <span className="w-2 h-2 bg-green-500 animate-pulse" />
                       IN SESSION
                     </span>
                   )}

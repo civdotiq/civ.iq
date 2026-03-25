@@ -153,8 +153,8 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
         {/* Demographics - Only population and income (reliable Census data) */}
         {isDemographicsLoading ? (
           <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 w-3/4 animate-pulse"></div>
           </div>
         ) : demographics ? (
           <div className="space-y-4">

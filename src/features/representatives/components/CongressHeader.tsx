@@ -159,13 +159,13 @@ export default function CongressHeader({
       >
         <div className="animate-pulse">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 bg-blue-200 rounded"></div>
-            <div className="w-64 h-6 bg-blue-200 rounded"></div>
+            <div className="w-5 h-5 bg-blue-200"></div>
+            <div className="w-64 h-6 bg-blue-200"></div>
           </div>
-          <div className="w-full h-4 bg-blue-200 rounded mb-4"></div>
+          <div className="w-full h-4 bg-blue-200 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-full h-16 bg-blue-200 rounded"></div>
+              <div key={i} className="w-full h-16 bg-blue-200"></div>
             ))}
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function CongressHeader({
         <div className="flex items-center gap-2 flex-wrap">
           <Users className="w-5 h-5 text-blue-600 flex-shrink-0" />
           <h3 className="text-base md:text-xl font-semibold text-blue-900">{getChamberTitle()}</h3>
-          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium">
             {statistics.session.period}
           </span>
           {/* Compact stats shown on mobile when collapsed */}

@@ -58,7 +58,7 @@ export function BillSummaryWithLinks({
               <Brain className="h-5 w-5 text-blue-600" />
               <span className="text-sm font-medium text-blue-600">AI-Generated Summary</span>
               <div
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getReadingLevelColor(summary.readingLevel)}`}
+                className={`px-2 py-1 text-xs font-medium ${getReadingLevelColor(summary.readingLevel)}`}
               >
                 <BookOpen className="h-3 w-3 inline mr-1" />
                 Grade {summary.readingLevel} Reading Level
@@ -172,10 +172,7 @@ export function BillSummaryWithLinks({
                       <h4 className="font-medium text-gray-900 mb-2">Who This Affects</h4>
                       <div className="flex flex-wrap gap-2">
                         {summary.whoItAffects.map((group: string, index: number) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
-                          >
+                          <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm">
                             <Users className="h-3 w-3 inline mr-1" />
                             {/* UPDATED: Link entities in affected groups */}
                             <EntityLinkWrapper text={group} />

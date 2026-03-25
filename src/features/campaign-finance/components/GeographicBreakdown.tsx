@@ -136,8 +136,8 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mb-4"></div>
+          <div className="h-64 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -327,10 +327,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
               className="flex items-center justify-between p-3 bg-white hover:bg-white border-2 border-gray-300 transition-colors"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div
-                  className="w-4 h-4 rounded flex-shrink-0"
-                  style={{ backgroundColor: state.color }}
-                />
+                <div className="w-4 h-4 flex-shrink-0" style={{ backgroundColor: state.color }} />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-gray-900 truncate flex items-center gap-2">
                     {state.stateName}
@@ -353,7 +350,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
         <h4 className="font-medium text-gray-800 mb-3">Key Insights</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {homeStateData && homeStateData.percentage > 60 && (
-            <div className="flex items-start gap-2 p-2 bg-blue-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-blue-50">
               <span className="text-blue-500 text-xs mt-1"></span>
               <span className="text-sm text-blue-800">
                 Strong home state support: {homeStateData.percentage.toFixed(0)}% of funding from{' '}
@@ -362,7 +359,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
             </div>
           )}
           {outOfStatePercentage > 50 && (
-            <div className="flex items-start gap-2 p-2 bg-green-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-green-50">
               <span className="text-green-500 text-xs mt-1"></span>
               <span className="text-sm text-green-800">
                 National appeal: {outOfStatePercentage.toFixed(0)}% of funding from out-of-state
@@ -370,7 +367,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
             </div>
           )}
           {stateCount > 15 && (
-            <div className="flex items-start gap-2 p-2 bg-purple-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-purple-50">
               <span className="text-purple-500 text-xs mt-1"></span>
               <span className="text-sm text-purple-800">
                 Broad geographic base: Contributions from {stateCount} states
@@ -378,7 +375,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
             </div>
           )}
           {homeStateData && homeStateData.percentage < 30 && outOfStatePercentage > 70 && (
-            <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-yellow-50">
               <span className="text-yellow-500 text-xs mt-1"></span>
               <span className="text-sm text-yellow-800">
                 Limited home state support: Only {homeStateData.percentage.toFixed(0)}% from{' '}

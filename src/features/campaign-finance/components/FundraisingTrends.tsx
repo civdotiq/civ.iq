@@ -220,9 +220,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">Raised</span>
                       <div className="flex items-center gap-2 flex-1 ml-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 h-2">
                           <div
-                            className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-green-500 h-2 transition-all duration-500"
                             style={{ width: `${(period.raised / maxAmount) * 100}%` }}
                           />
                         </div>
@@ -234,9 +234,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">Spent</span>
                       <div className="flex items-center gap-2 flex-1 ml-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 h-2">
                           <div
-                            className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-red-500 h-2 transition-all duration-500"
                             style={{ width: `${(period.spent / maxAmount) * 100}%` }}
                           />
                         </div>
@@ -348,7 +348,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {index > 0 && (
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${
                             quarter.raisedGrowth >= 0
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
@@ -365,7 +365,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {index > 0 && (
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${
                             quarter.spentGrowth >= 0
                               ? 'bg-red-100 text-red-800'
                               : 'bg-green-100 text-green-800'
@@ -505,9 +505,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                       {formatCurrency(avgQuarterlyRaised * 1.2)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 h-2">
                     <div
-                      className="bg-purple-500 h-2 rounded-full"
+                      className="bg-purple-500 h-2"
                       style={{
                         width: `${Math.min(((latestPeriod?.raised || 0) / (avgQuarterlyRaised * 1.2)) * 100, 100)}%`,
                       }}
@@ -523,9 +523,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <span className="text-sm text-gray-600">Efficiency Target</span>
                     <span className="text-sm font-medium">75%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full"
+                      className="bg-green-500 h-2"
                       style={{ width: `${Math.min(data.summary.efficiency, 100)}%` }}
                     />
                   </div>

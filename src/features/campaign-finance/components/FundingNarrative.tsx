@@ -75,10 +75,7 @@ export const FundingNarrative: React.FC<FundingNarrativeProps> = ({
           <h4 className="mb-2 text-sm font-medium text-gray-700">Key Insights:</h4>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {narrative.keyInsights.map((insight, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-2 rounded bg-white/50 px-3 py-2 text-sm"
-              >
+              <div key={index} className="flex items-start gap-2 bg-white/50 px-3 py-2 text-sm">
                 <span className="text-xs opacity-70">•</span>
                 <span>{insight}</span>
               </div>
@@ -89,7 +86,7 @@ export const FundingNarrative: React.FC<FundingNarrativeProps> = ({
 
       {/* Trust Level Disclaimer */}
       {narrative.trustLevel === 'low' && (
-        <div className="mt-4 rounded bg-yellow-100 px-3 py-2 text-xs text-yellow-800">
+        <div className="mt-4 bg-yellow-100 px-3 py-2 text-xs text-yellow-800">
           <strong>Note:</strong> Analysis based on limited data. Narrative may not fully represent
           funding activity.
         </div>

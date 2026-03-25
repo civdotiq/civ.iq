@@ -362,7 +362,7 @@ export function RealDistrictBoundaryMap({
       {mapState.loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <div className="text-sm text-gray-600">Loading district boundary...</div>
             {mapState.district && (
               <div className="text-xs text-gray-500 mt-1">{mapState.district.full_name}</div>
@@ -408,11 +408,11 @@ export function RealDistrictBoundaryMap({
           <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 bg-opacity-30 border-2 border-blue-700 rounded"></div>
+              <div className="w-3 h-3 bg-blue-500 bg-opacity-30 border-2 border-blue-700"></div>
               <span>District Boundary</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-red-600"></div>
               <span>District Center</span>
             </div>
           </div>

@@ -105,7 +105,7 @@ export class ComponentErrorBoundary extends Component<Props, State> {
               <summary className="cursor-pointer text-sm font-medium text-red-700 hover:text-red-900">
                 Error Details (Development Only)
               </summary>
-              <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-xs">
+              <div className="mt-2 p-2 bg-red-100 border border-red-300 text-xs">
                 <p className="font-medium text-red-800">Component:</p>
                 <p className="text-red-700 mb-2">{this.props.componentName || 'Unknown'}</p>
                 <p className="font-medium text-red-800">Error:</p>

@@ -90,7 +90,7 @@ export default function UnifiedRepresentativeCard({
             <RepresentativePhoto
               bioguideId={representative.bioguideId}
               name={name}
-              className="w-[100px] h-[100px] rounded-full border-2 border-gray-300"
+              className="w-[100px] h-[100px] border-2 border-gray-300"
             />
           ) : (
             representative.photo_url && (
@@ -99,7 +99,7 @@ export default function UnifiedRepresentativeCard({
                 alt={name}
                 width={100}
                 height={100}
-                className="rounded-full border-2 border-gray-300"
+                className="border-2 border-gray-300"
               />
             )
           )}

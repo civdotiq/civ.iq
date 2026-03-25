@@ -112,7 +112,7 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
           {/* Footer */}
           <footer className="mt-10 pt-4 border-t border-[#e0e0e0] flex justify-between text-[8pt] text-[#888]">
             <div className="flex items-center gap-1">
-              <span className="w-[10px] h-[10px] border border-[#888] rounded-full flex items-center justify-center text-[6pt] font-semibold">
+              <span className="w-[10px] h-[10px] border border-[#888] flex items-center justify-center text-[6pt] font-semibold">
                 i
               </span>
               <span>Data source: Congress.gov API via CIV.IQ</span>
@@ -274,12 +274,8 @@ function CheckboxField({ field }: { field: WorksheetField }) {
           <label key={i} className="flex items-center gap-2 text-[10pt]">
             <span className="w-4 h-4 border-2 border-black flex-shrink-0" />
             <span>{option}</span>
-            {option === 'Democratic' && (
-              <span className="w-[10px] h-[10px] rounded-full bg-[#1976d2]" />
-            )}
-            {option === 'Republican' && (
-              <span className="w-[10px] h-[10px] rounded-full bg-[#d32f2f]" />
-            )}
+            {option === 'Democratic' && <span className="w-[10px] h-[10px] bg-[#1976d2]" />}
+            {option === 'Republican' && <span className="w-[10px] h-[10px] bg-[#d32f2f]" />}
           </label>
         ))}
       </div>

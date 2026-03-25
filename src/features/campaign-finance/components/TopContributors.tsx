@@ -44,10 +44,10 @@ interface TopContributorsProps {
 export function TopContributors({ contributors, loading = false, cycle }: TopContributorsProps) {
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <div className="border border-neutral-200 bg-white p-6">
         <div className="mb-6">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 w-2/3 animate-pulse"></div>
         </div>
         <SortableDataTable
           data={[]}
@@ -65,7 +65,7 @@ export function TopContributors({ contributors, loading = false, cycle }: TopCon
 
   if (!contributors || contributors.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <div className="border border-neutral-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-semibold">Top Contributors</h3>
         <p className="text-neutral-600">No contributor data available for this cycle.</p>
       </div>
@@ -139,7 +139,7 @@ export function TopContributors({ contributors, loading = false, cycle }: TopCon
   ];
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <div className="border border-neutral-200 bg-white p-6">
       <div className="mb-6">
         <h3 className="mb-2 text-lg font-semibold">Top Contributors</h3>
         <p className="text-sm text-neutral-600">
@@ -154,7 +154,7 @@ export function TopContributors({ contributors, loading = false, cycle }: TopCon
         showInitially={5}
       />
 
-      <div className="mt-4 rounded-lg bg-neutral-50 p-4">
+      <div className="mt-4 bg-neutral-50 p-4">
         <div className="text-sm text-neutral-700">
           <strong>Total Contributors:</strong> {contributors.length} unique donors
         </div>

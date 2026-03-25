@@ -199,7 +199,7 @@ export function WitnessSearch() {
                     href={witness.congressGovUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-shrink-0 p-2 hover:bg-gray-100 rounded"
+                    className="flex-shrink-0 p-2 hover:bg-gray-100"
                     title="View on Congress.gov"
                   >
                     <ExternalLink className="w-4 h-4 text-gray-600" />

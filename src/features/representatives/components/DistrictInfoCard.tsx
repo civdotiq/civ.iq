@@ -39,7 +39,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
   return (
     <div className={`space-y-4 ${className}`}>
       {/* District Information */}
-      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-red-50">
@@ -62,7 +62,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                 representative.district && (
                   <Link
                     href={`/districts/${representative.state}-${representative.district}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-xs font-semibold text-red-700 bg-red-100 rounded-full hover:bg-red-200 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 transition-colors"
                   >
                     <Map className="w-3 h-3" />
                     View District
@@ -86,7 +86,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Office Contact */}
-      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-blue-50">
@@ -149,7 +149,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#0e8d37' }}>
             Quick Actions
@@ -173,7 +173,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Data Sources */}
-      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
             Data Sources
@@ -185,9 +185,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={`https://www.congress.gov/member/${representative.bioguideId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-blue-50 -mx-2 px-3 py-2 min-h-[44px] rounded transition-colors"
+              className="flex items-center gap-3 group hover:bg-blue-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-blue-600 rounded-full ring-4 ring-blue-100 group-hover:ring-blue-200"></div>
+              <div className="w-2.5 h-2.5 bg-blue-600 ring-4 ring-blue-100 group-hover:ring-blue-200"></div>
               <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-blue group-hover:underline">
                 Congress.gov
               </span>
@@ -197,9 +197,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={`https://github.com/unitedstates/congress-legislators/search?q=${encodeURIComponent(representative.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-green-50 -mx-2 px-3 py-2 min-h-[44px] rounded transition-colors"
+              className="flex items-center gap-3 group hover:bg-green-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-green-600 rounded-full ring-4 ring-green-100 group-hover:ring-green-200"></div>
+              <div className="w-2.5 h-2.5 bg-green-600 ring-4 ring-green-100 group-hover:ring-green-200"></div>
               <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-green group-hover:underline">
                 Congress Legislators
               </span>
@@ -210,9 +210,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                 href={`https://www.fec.gov/data/candidate/${representative.ids.fec[0]}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-3 py-2 min-h-[44px] rounded transition-colors"
+                className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
               >
-                <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
+                <div className="w-2.5 h-2.5 bg-purple-600 ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
                 <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 group-hover:underline">
                   FEC Campaign Finance
                 </span>
@@ -220,7 +220,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               </a>
             ) : (
               <div className="flex items-center gap-3 -mx-2 px-3 py-2 min-h-[44px] opacity-50">
-                <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100"></div>
+                <div className="w-2.5 h-2.5 bg-purple-600 ring-4 ring-purple-100"></div>
                 <span className="text-sm font-medium text-gray-700">FEC Campaign Finance</span>
                 <span className="text-xs text-gray-500 ml-auto">(N/A)</span>
               </div>
@@ -233,9 +233,9 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-orange-50 -mx-2 px-3 py-2 min-h-[44px] rounded transition-colors"
+              className="flex items-center gap-3 group hover:bg-orange-50 -mx-2 px-3 py-2 min-h-[44px] transition-colors"
             >
-              <div className="w-2.5 h-2.5 bg-orange-600 rounded-full ring-4 ring-orange-100 group-hover:ring-orange-200"></div>
+              <div className="w-2.5 h-2.5 bg-orange-600 ring-4 ring-orange-100 group-hover:ring-orange-200"></div>
               <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600 group-hover:underline">
                 U.S. Census Bureau
               </span>

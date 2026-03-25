@@ -19,10 +19,7 @@ export function SafeVotingRecordsTable(props: SafeVotingRecordsTableProps) {
       fallback={({ retry }) => (
         <div className="bg-white border border-gray-200 p-8 text-center">
           <p className="text-gray-600 mb-4">Unable to load voting records at this time.</p>
-          <button
-            onClick={retry}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
+          <button onClick={retry} className="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600">
             Try Again
           </button>
         </div>

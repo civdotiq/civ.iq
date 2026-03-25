@@ -138,7 +138,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="name"
             value={formData.name}
             onChange={e => handleInputChange('name', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="John Doe"
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
@@ -155,7 +155,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="email"
             value={formData.email}
             onChange={e => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="john@example.com"
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -174,7 +174,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="postal-code"
             value={formData.zipCode}
             onChange={e => handleInputChange('zipCode', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.zipCode ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.zipCode ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="12345"
             maxLength={10}
           />
@@ -192,7 +192,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             id="subject"
             value={formData.subject}
             onChange={e => handleInputChange('subject', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.subject ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.subject ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="Healthcare Access"
           />
           {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
@@ -208,7 +208,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             value={formData.message}
             onChange={e => handleInputChange('message', e.target.value)}
             rows={8}
-            className={`w-full px-3 py-2 border ${errors.message ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 font-mono text-sm`}
+            className={`w-full px-3 py-2 border ${errors.message ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 font-mono text-sm`}
             placeholder="I am writing to express my views on..."
             maxLength={MESSAGE_CHAR_LIMIT}
           />
@@ -227,14 +227,14 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
           <button
             type="button"
             onClick={handlePreview}
-            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
             <Mail className="w-5 h-5" />
             Preview Message
           </button>
           <a
             href={`/representatives?zip=${formData.zipCode || ''}`}
-            className="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            className="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
             title="Find all your representatives"
           >
             <Users className="w-5 h-5" />
@@ -243,7 +243,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
 
         {/* Contact Method Info */}
         {!contactMethods.hasContactForm && !contactMethods.hasEmail && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3">
             <p className="text-sm text-yellow-900 dark:text-yellow-100">
               Limited contact information available. You can draft your message and contact this
               representative through other channels.

@@ -140,7 +140,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 rounded-full transition-colors border-2 border-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 transition-colors border-2 border-black focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Close modal"
             title="Close (or press Escape)"
           >
@@ -177,7 +177,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
                             href={contributor.fecTransparencyLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                             aria-label={`View ${contributor.name} on FEC.gov (opens in new tab)`}
                           >
                             View on FEC.gov →
@@ -213,7 +213,7 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
               href={metadata.fecReceiptsLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="View all contributions on FEC.gov (opens in new tab)"
             >
               View all contributions on FEC.gov →

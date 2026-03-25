@@ -52,7 +52,7 @@ export const DynamicDistrictMap = dynamic(
     loading: () => (
       <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
+          <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading district map...</p>
         </div>
       </div>
@@ -70,7 +70,7 @@ export const DynamicInteractiveDistrictMap = dynamic(
     loading: () => (
       <div className="h-96 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
+          <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading interactive map...</p>
         </div>
       </div>
@@ -85,7 +85,7 @@ export const DynamicDistrictBoundaryMap = dynamic(
     loading: () => (
       <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
+          <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading boundary map...</p>
         </div>
       </div>
@@ -100,7 +100,7 @@ export const DynamicLeafletDistrictMap = dynamic(
     loading: () => (
       <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
+          <div className="animate-spin h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading map...</p>
         </div>
       </div>

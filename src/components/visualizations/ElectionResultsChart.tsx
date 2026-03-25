@@ -149,7 +149,7 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
               <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Control</h4>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div
-                  className="w-3 h-3 sm:w-4 sm:h-4 rounded"
+                  className="w-3 h-3 sm:w-4 sm:h-4"
                   style={{ backgroundColor: majorityStatus.color }}
                 ></div>
                 <span
@@ -171,7 +171,7 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
                   <div key={segment.party} className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <div
-                        className="w-3 h-3 sm:w-4 sm:h-4 rounded"
+                        className="w-3 h-3 sm:w-4 sm:h-4"
                         style={{ backgroundColor: segment.color }}
                       ></div>
                       <span className="text-xs sm:text-sm font-medium text-gray-700">

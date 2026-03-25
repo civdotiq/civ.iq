@@ -352,7 +352,7 @@ export default function LeafletDistrictMap({
       <div ref={mapContainer} className="h-full w-full overflow-hidden" style={{ height }} />
 
       {showControls && (
-        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 rounded p-2 border-2 border-black z-10">
+        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2 border-2 border-black z-10">
           <div className="text-xs text-gray-600">
             {districts.length} districts • MapLibre + OpenStreetMap
           </div>

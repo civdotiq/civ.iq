@@ -116,9 +116,9 @@ function FinanceDetailCard({
 
       {isLoading && (
         <div className="animate-pulse space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div className="h-4 bg-gray-200 w-3/4"></div>
+          <div className="h-4 bg-gray-200 w-1/2"></div>
+          <div className="h-4 bg-gray-200 w-2/3"></div>
         </div>
       )}
 
@@ -268,7 +268,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-green-300 transition-colors"
+            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-3 py-2 min-h-[36px] hover:bg-green-300 transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -289,7 +289,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-red-300 transition-colors"
+            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-3 py-2 min-h-[36px] hover:bg-red-300 transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -312,7 +312,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-blue-300 transition-colors"
+            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-3 py-2 min-h-[36px] hover:bg-blue-300 transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -420,10 +420,7 @@ export function FinanceTab({
           return (
             <div className="space-y-3">
               {contributorData?.topContributors?.slice(0, 20).map((contributor, index: number) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-2 hover:bg-white rounded"
-                >
+                <div key={index} className="flex justify-between items-center p-2 hover:bg-white">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-900">{contributor.name}</span>

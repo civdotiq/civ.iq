@@ -137,7 +137,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
     if (!isMultiDistrict || !multiDistrictInfo) return null;
 
     return (
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-4 p-4 bg-blue-50 border border-blue-200">
         <div className="flex items-center gap-2 mb-2">
           <AlertCircle className="w-4 h-4 text-blue-600" />
           <h4 className="font-medium text-blue-900">Multiple Districts Found</h4>
@@ -151,7 +151,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <button
               key={option.value}
               onClick={() => setSelectedDistrict(option.value)}
-              className={`w-full p-3 text-left rounded border transition-colors min-h-[44px] ${
+              className={`w-full p-3 text-left border transition-colors min-h-[44px] ${
                 selectedDistrict === option.value || (selectedDistrict === null && option.isPrimary)
                   ? 'bg-blue-100 border-blue-300'
                   : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -161,9 +161,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
                 <span className="font-medium">{option.label}</span>
                 <div className="flex items-center gap-2">
                   {option.isPrimary && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                      Primary
-                    </span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs">Primary</span>
                   )}
                   <span className="text-sm text-gray-600">{option.percentage}%</span>
                 </div>
@@ -183,13 +181,13 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
       >
         <div className="animate-pulse">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 bg-green-200 rounded"></div>
-            <div className="w-80 h-6 bg-green-200 rounded"></div>
+            <div className="w-5 h-5 bg-green-200"></div>
+            <div className="w-80 h-6 bg-green-200"></div>
           </div>
-          <div className="w-full h-4 bg-green-200 rounded mb-4"></div>
+          <div className="w-full h-4 bg-green-200 mb-4"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-full h-16 bg-green-200 rounded"></div>
+              <div key={i} className="w-full h-16 bg-green-200"></div>
             ))}
           </div>
           {cacheStatus.hasData && (
@@ -220,7 +218,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <button
               onClick={handleRetry}
               disabled={isRetrying}
-              className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 transition-colors min-h-[44px]"
+              className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors min-h-[44px]"
             >
               <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Retrying...' : 'Retry'}
@@ -268,7 +266,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
 
       {/* Stale data indicator */}
       {error && districtData && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-yellow-600" />
@@ -292,7 +290,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <h3 className="text-xl font-semibold text-green-900">
               {formatDistrictName(districtData.state, districtData.number)}
             </h3>
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium">
               119th Congress
             </span>
           </div>

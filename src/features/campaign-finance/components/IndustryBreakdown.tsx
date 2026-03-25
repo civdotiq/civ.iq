@@ -153,8 +153,8 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mb-4"></div>
+          <div className="h-64 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -344,7 +344,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div
-                  className="w-4 h-4 rounded flex-shrink-0"
+                  className="w-4 h-4 flex-shrink-0"
                   style={{ backgroundColor: industry.color }}
                 />
                 <div className="min-w-0 flex-1">
@@ -368,7 +368,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
         <h4 className="font-medium text-gray-800 mb-3">Key Insights</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {industrialConcentration > 60 && (
-            <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-yellow-50">
               <span className="text-yellow-500 text-xs mt-1"></span>
               <span className="text-sm text-yellow-800">
                 High concentration: Top 3 industries provide {industrialConcentration.toFixed(0)}%
@@ -377,7 +377,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
             </div>
           )}
           {diversificationScore > 8 && (
-            <div className="flex items-start gap-2 p-2 bg-green-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-green-50">
               <span className="text-green-500 text-xs mt-1"></span>
               <span className="text-sm text-green-800">
                 Well-diversified funding across {diversificationScore} different sectors
@@ -385,7 +385,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
             </div>
           )}
           {topIndustry && topIndustry.percentage > 30 && (
-            <div className="flex items-start gap-2 p-2 bg-blue-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-blue-50">
               <span className="text-blue-500 text-xs mt-1"></span>
               <span className="text-sm text-blue-800">
                 {topIndustry.industry} is the dominant funding source at{' '}
@@ -394,7 +394,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
             </div>
           )}
           {industrialConcentration < 40 && diversificationScore > 6 && (
-            <div className="flex items-start gap-2 p-2 bg-purple-50 rounded">
+            <div className="flex items-start gap-2 p-2 bg-purple-50">
               <span className="text-purple-500 text-xs mt-1"></span>
               <span className="text-sm text-purple-800">
                 Balanced funding distribution across multiple industries

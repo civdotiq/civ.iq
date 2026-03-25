@@ -78,7 +78,7 @@ export function InterestGroupBaskets({
         <div className="aicher-card p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Funding Diversity Metrics</h3>
           <div className="aicher-grid aicher-grid-3 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-gray-50">
               <div className="text-sm text-gray-600 mb-1">Top Interest Group</div>
               <div className="text-xl font-bold text-gray-900">
                 {metrics.topInfluencer ? (
@@ -92,7 +92,7 @@ export function InterestGroupBaskets({
               </div>
             </div>
 
-            <div className="p-4 bg-green-50 rounded-lg">
+            <div className="p-4 bg-green-50">
               <div className="text-sm text-gray-600 mb-1">Grassroots Funding</div>
               <div className="text-xl font-bold text-green-700">
                 {metrics.grassrootsPercentage.toFixed(1)}%
@@ -100,7 +100,7 @@ export function InterestGroupBaskets({
               <div className="text-xs text-gray-500">Small donors ≤ $200</div>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50">
               <div className="text-sm text-gray-600 mb-1">Funding Diversity</div>
               <div className="text-xl font-bold text-blue-700">{metrics.diversityScore}/100</div>
               <div className="text-xs text-gray-500">
@@ -114,7 +114,7 @@ export function InterestGroupBaskets({
           </div>
 
           {metrics.corporatePercentage > 0 && (
-            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="mt-4 p-3 bg-orange-50 border border-orange-200">
               <div className="text-sm text-orange-800">
                 <strong>{metrics.corporatePercentage.toFixed(1)}%</strong> from corporate interests
                 (Big Tech, Wall Street, Healthcare, Energy, Defense, etc.)
@@ -177,11 +177,11 @@ export function InterestGroupBaskets({
                 {baskets.slice(0, 8).map(basket => (
                   <div
                     key={basket.basket}
-                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+                    className="flex items-center justify-between p-2 hover:bg-gray-50"
                   >
                     <div className="flex items-center flex-1">
                       <div
-                        className="w-4 h-4 rounded mr-3 flex-shrink-0"
+                        className="w-4 h-4 mr-3 flex-shrink-0"
                         style={{ backgroundColor: basket.color }}
                       ></div>
                       <div className="min-w-0 flex-1">
@@ -241,7 +241,7 @@ export function InterestGroupBaskets({
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div
-                          className="w-3 h-3 rounded mr-2"
+                          className="w-3 h-3 mr-2"
                           style={{ backgroundColor: basket.color }}
                         ></div>
                         <div>
@@ -259,9 +259,9 @@ export function InterestGroupBaskets({
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{basket.percentage.toFixed(1)}%</div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                      <div className="w-full bg-gray-200 h-1.5 mt-1">
                         <div
-                          className="h-1.5 rounded-full"
+                          className="h-1.5"
                           style={{
                             width: `${basket.percentage}%`,
                             backgroundColor: basket.color,

@@ -74,7 +74,7 @@ export function FallbackImage({
           className={`absolute inset-0 bg-gray-100 border border-gray-200 flex items-center justify-center ${className}`}
         >
           <div className="animate-pulse">
-            <div className="w-6 h-6 bg-gray-300 rounded"></div>
+            <div className="w-6 h-6 bg-gray-300"></div>
           </div>
         </div>
       )}

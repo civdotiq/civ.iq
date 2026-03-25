@@ -102,7 +102,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
 
           <div className="flex items-center gap-2">
             <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(metrics.overall.status)}`}
+              className={`px-3 py-1 text-sm font-medium ${getStatusColor(metrics.overall.status)}`}
             >
               {metrics.overall.status}
             </span>
@@ -113,9 +113,9 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
         </div>
 
         {/* Score Breakdown Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-200 h-3">
           <div
-            className={`h-3 rounded-full transition-all duration-500 ${
+            className={`h-3 transition-all duration-500 ${
               metrics.overall.score >= 90
                 ? 'bg-green-500'
                 : metrics.overall.score >= 75
@@ -143,9 +143,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                   <div className="flex items-center gap-3">
                     <DataSourceBadge source={key} />
                     <span className="font-medium">{source.name}</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(source.status)}`}
-                    >
+                    <span className={`px-2 py-1 text-xs ${getStatusColor(source.status)}`}>
                       {source.status}
                     </span>
                   </div>

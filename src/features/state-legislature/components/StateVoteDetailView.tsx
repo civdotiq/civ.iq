@@ -71,7 +71,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-gray-900">{vote.motion_text}</h1>
           <span
-            className={`px-4 py-2 rounded-full font-semibold text-lg ${
+            className={`px-4 py-2 font-semibold text-lg ${
               vote.result === 'passed' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
@@ -93,7 +93,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
 
         {/* Bill Link */}
         {vote.bill && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-4 p-4 bg-blue-50">
             <div className="flex items-start space-x-2">
               <span className="font-semibold text-blue-900">Related Bill:</span>
               <div>
@@ -115,10 +115,8 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Vote Summary</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {vote.counts.map(count => (
-            <div key={count.option} className="text-center p-4 rounded-lg border-2 border-gray-200">
-              <div
-                className={`text-3xl font-bold ${getVoteColor(count.option)} px-3 py-1 rounded mb-2`}
-              >
+            <div key={count.option} className="text-center p-4 border-2 border-gray-200">
+              <div className={`text-3xl font-bold ${getVoteColor(count.option)} px-3 py-1 mb-2`}>
                 {count.value}
               </div>
               <div className="text-sm font-medium text-gray-600 capitalize">{count.option}</div>
@@ -138,16 +136,14 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
           return (
             <div key={option} className="mb-6 last:mb-0">
               <h3 className="text-lg font-semibold text-gray-800 mb-3 capitalize flex items-center">
-                <span className={`${getVoteColor(option)} px-3 py-1 rounded mr-2`}>
-                  {voters.length}
-                </span>
+                <span className={`${getVoteColor(option)} px-3 py-1 mr-2`}>{voters.length}</span>
                 {option}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {voters.map((voter, idx) => (
                   <div
                     key={`${voter.voter_id}-${idx}`}
-                    className="p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                    className="p-2 bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
                     {voter.voter_id ? (
                       <Link

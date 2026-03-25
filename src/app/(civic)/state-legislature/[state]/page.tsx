@@ -144,14 +144,14 @@ function LegislatorCard({
       className="block bg-white border border-gray-200 p-4 sm:p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
+        <div className="w-16 h-16 bg-gray-200 flex items-center justify-center relative overflow-hidden">
           {legislator.photoUrl ? (
             <Image
               src={legislator.photoUrl}
               alt={legislator.name}
               fill
               sizes="64px"
-              className="rounded-full object-cover"
+              className="object-cover"
             />
           ) : (
             <span className="text-lg font-medium text-gray-600">
@@ -204,7 +204,7 @@ function LegislatorCard({
                 {legislator.committees.slice(0, 3).map((committee, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-1 bg-white border-2 border-gray-300 text-xs rounded"
+                    className="inline-flex items-center px-2 py-1 bg-white border-2 border-gray-300 text-xs"
                   >
                     {committee.name}
                     {committee.role === 'chair' && <span className="ml-1 text-blue-600">•</span>}

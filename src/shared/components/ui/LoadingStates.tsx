@@ -75,9 +75,9 @@ export function ProgressBar({
           )}
         </div>
       )}
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-gray-200 h-2">
         <div
-          className="bg-civiq-blue h-2 rounded-full transition-all duration-300 ease-out"
+          className="bg-civiq-blue h-2 transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}
         />
       </div>

@@ -215,7 +215,7 @@ function BillsContent({ data }: { data: TabResponseData }) {
                     {bill.type}
                     {bill.number || ` ${bill.congress}-${index + 1}`}
                   </span>
-                  <span className="text-xs px-2 py-1 bg-white border-2 border-gray-300 rounded">
+                  <span className="text-xs px-2 py-1 bg-white border-2 border-gray-300">
                     {bill.congress}th Congress
                   </span>
                 </div>
@@ -397,7 +397,7 @@ function FinanceContent({ data, bioguideId }: { data: TabResponseData; bioguideI
           <h5 className="font-medium text-gray-900 mb-3">Top Contributors</h5>
           <div className="space-y-2">
             {topContributors.slice(0, 5).map((contributor: Contributor, index: number) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-white rounded">
+              <div key={index} className="flex justify-between items-center p-3 bg-white">
                 <div>
                   <div className="text-gray-700 font-medium">{contributor.name}</div>
                   {contributor.employer && (

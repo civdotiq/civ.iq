@@ -72,7 +72,7 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
           </ul>
 
           {error && process.env.NODE_ENV === 'development' && (
-            <details className="mt-4 p-3 bg-gray-100 rounded text-xs font-mono">
+            <details className="mt-4 p-3 bg-gray-100 text-xs font-mono">
               <summary className="cursor-pointer font-semibold text-gray-700">
                 Error Details (Development Only)
               </summary>
@@ -87,14 +87,14 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Try Again
               </button>
             )}
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Reload Page
             </button>
@@ -102,7 +102,7 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
               href="https://www.fec.gov"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Visit FEC.gov Directly
             </a>
@@ -118,7 +118,7 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
  */
 export function InlineError({ message, retry }: { message: string; retry?: () => void }) {
   return (
-    <div className="p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+    <div className="p-4 bg-red-50 border border-red-200" role="alert">
       <div className="flex items-start gap-3">
         <svg
           className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"

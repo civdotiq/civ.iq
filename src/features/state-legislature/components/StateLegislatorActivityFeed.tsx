@@ -198,7 +198,7 @@ export const StateLegislatorActivityFeed: React.FC<StateLegislatorActivityFeedPr
                   )}
                   {activity.metadata?.voteOption && (
                     <span
-                      className={`text-xs px-1.5 py-0.5 rounded ${getVoteOptionStyle(activity.metadata.voteOption)}`}
+                      className={`text-xs px-1.5 py-0.5 ${getVoteOptionStyle(activity.metadata.voteOption)}`}
                     >
                       {activity.metadata.voteOption.toUpperCase()}
                     </span>

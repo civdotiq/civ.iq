@@ -69,9 +69,9 @@ export const LoadingDots: FC<LoadingDotsProps> = ({ className, label = 'Loading'
     aria-live="polite"
     aria-label={label}
   >
-    <span className="w-2 h-2 bg-current rounded-full" aria-hidden="true"></span>
-    <span className="w-2 h-2 bg-current rounded-full" aria-hidden="true"></span>
-    <span className="w-2 h-2 bg-current rounded-full" aria-hidden="true"></span>
+    <span className="w-2 h-2 bg-current" aria-hidden="true"></span>
+    <span className="w-2 h-2 bg-current" aria-hidden="true"></span>
+    <span className="w-2 h-2 bg-current" aria-hidden="true"></span>
     <span className="sr-only">{label}</span>
   </div>
 );

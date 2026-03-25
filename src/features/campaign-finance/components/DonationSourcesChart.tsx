@@ -80,7 +80,7 @@ const CustomLegend: React.FC<LegendProps> = ({ payload }) => {
     <div className="flex flex-wrap justify-center gap-4 mt-4">
       {payload?.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color }} />
+          <div className="w-3 h-3" style={{ backgroundColor: entry.color }} />
           <span className="text-sm text-gray-700">{entry.value}</span>
         </div>
       ))}
@@ -101,12 +101,12 @@ export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
     return (
       <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
-          <div className="h-64 bg-gray-100 rounded-full w-48 mx-auto mb-4"></div>
+          <div className="h-6 bg-gray-200 w-1/3 mx-auto mb-4"></div>
+          <div className="h-64 bg-gray-100 w-48 mx-auto mb-4"></div>
           <div className="flex justify-center gap-4">
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 w-20"></div>
+            <div className="h-4 bg-gray-200 w-20"></div>
+            <div className="h-4 bg-gray-200 w-20"></div>
           </div>
         </div>
       </div>

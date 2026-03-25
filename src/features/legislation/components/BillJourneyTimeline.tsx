@@ -293,7 +293,7 @@ export function BillJourneyTimeline({
                   {/* Icon Circle */}
                   <div
                     className={`
-                      relative z-10 w-10 h-10 rounded-full flex items-center justify-center
+                      relative z-10 w-10 h-10 flex items-center justify-center
                       border-2 transition-all duration-300
                       ${
                         isCompleted
@@ -357,7 +357,7 @@ export function BillJourneyTimeline({
                   {/* Icon */}
                   <div
                     className={`
-                      relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                      relative z-10 w-10 h-10 flex items-center justify-center flex-shrink-0
                       border-2 transition-all duration-300
                       ${
                         isCompleted

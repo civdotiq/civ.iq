@@ -202,18 +202,18 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-8 bg-gray-200 w-1/3"></div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
         </div>
         <div className="space-y-2">
-          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-white border-2 border-gray-300"></div>
+          <div className="h-6 bg-white border-2 border-gray-300"></div>
+          <div className="h-6 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -320,7 +320,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
           <Filter className="h-4 w-4" />
           Filters
           {(positionFilter !== 'all' || dateFilter.start || dateFilter.end) && (
-            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
+            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 ">
               {
                 [positionFilter !== 'all', dateFilter.start || dateFilter.end].filter(Boolean)
                   .length
@@ -421,26 +421,23 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
       <div className="space-y-2 mb-8">
         <div className="flex items-center gap-3">
           <span className="w-20 text-sm">Yes</span>
-          <div className="flex-1 bg-gray-200 rounded h-6">
-            <div className="bg-green-500 h-6 rounded" style={{ width: `${yesPercent}%` }}></div>
+          <div className="flex-1 bg-gray-200 h-6">
+            <div className="bg-green-500 h-6" style={{ width: `${yesPercent}%` }}></div>
           </div>
           <span className="text-sm w-12 text-right">{yesPercent}%</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="w-20 text-sm">No</span>
-          <div className="flex-1 bg-gray-200 rounded h-6">
-            <div className="bg-red-500 h-6 rounded" style={{ width: `${noPercent}%` }}></div>
+          <div className="flex-1 bg-gray-200 h-6">
+            <div className="bg-red-500 h-6" style={{ width: `${noPercent}%` }}></div>
           </div>
           <span className="text-sm w-12 text-right">{noPercent}%</span>
         </div>
         {abstainVotes > 0 && (
           <div className="flex items-center gap-3">
             <span className="w-20 text-sm">Abstain</span>
-            <div className="flex-1 bg-gray-200 rounded h-6">
-              <div
-                className="bg-yellow-500 h-6 rounded"
-                style={{ width: `${abstainPercent}%` }}
-              ></div>
+            <div className="flex-1 bg-gray-200 h-6">
+              <div className="bg-yellow-500 h-6" style={{ width: `${abstainPercent}%` }}></div>
             </div>
             <span className="text-sm w-12 text-right">{abstainPercent}%</span>
           </div>
@@ -542,7 +539,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
                     {/* Vote Position */}
                     <td className="text-center py-3 px-3 align-top">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-block px-3 py-1  text-xs font-semibold ${
                           vote.option === 'yes'
                             ? 'bg-green-100 text-green-800 border border-green-200'
                             : vote.option === 'no'
@@ -570,7 +567,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
               <select
                 value={votesPerPage}
                 onChange={e => handleVotesPerPageChange(Number(e.target.value))}
-                className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>

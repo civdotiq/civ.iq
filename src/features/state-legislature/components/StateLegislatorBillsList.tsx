@@ -66,16 +66,16 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
+        <div className="h-8 bg-gray-200 w-1/3"></div>
+        <div className="h-6 bg-white border-2 border-gray-300 w-1/2"></div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
+          <div className="h-16 bg-white border-2 border-gray-300"></div>
         </div>
         <div className="space-y-4">
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
-          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
+          <div className="h-24 bg-white border-2 border-gray-300"></div>
         </div>
       </div>
     );
@@ -300,7 +300,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -392,12 +392,12 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">
                       {sponsorshipRole === 'primary' && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded mr-2">
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 mr-2">
                           Primary Sponsor
                         </span>
                       )}
                       {sponsorshipRole === 'cosponsor' && (
-                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded mr-2">
+                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 mr-2">
                           Co-Sponsor
                         </span>
                       )}
@@ -417,18 +417,16 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
 
                 <div className="flex flex-wrap gap-2 mb-3">
                   {bill.classification && bill.classification.length > 0 && (
-                    <span className="text-xs bg-white border-2 border-gray-300 px-2 py-1 rounded flex items-center gap-1">
+                    <span className="text-xs bg-white border-2 border-gray-300 px-2 py-1 flex items-center gap-1">
                       <Building2 className="w-3 h-3" />
                       {bill.classification[0]}
                     </span>
                   )}
                   {bill.subject && bill.subject.length > 0 && (
-                    <span className="text-xs bg-green-100 px-2 py-1 rounded">
-                      {bill.subject[0]}
-                    </span>
+                    <span className="text-xs bg-green-100 px-2 py-1">{bill.subject[0]}</span>
                   )}
                   {bill.first_action_date && (
-                    <span className="text-xs bg-white border-2 border-gray-300 px-2 py-1 rounded flex items-center gap-1">
+                    <span className="text-xs bg-white border-2 border-gray-300 px-2 py-1 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(bill.first_action_date)}
                     </span>
@@ -440,7 +438,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                   (() => {
                     const lastAction = bill.actions[bill.actions.length - 1];
                     return lastAction ? (
-                      <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                      <div className="text-sm text-gray-600 bg-gray-50 p-2">
                         <span className="font-medium">Latest Action: </span>
                         {lastAction.description} ({formatDate(lastAction.date)})
                       </div>

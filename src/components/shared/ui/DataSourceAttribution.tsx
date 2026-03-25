@@ -118,9 +118,9 @@ export function DataSourceAttribution({
   const baseClasses = 'text-sm text-gray-600 border-l-2 pl-3';
 
   const variantClasses = {
-    default: 'border-gray-300 bg-white p-3 rounded-r',
+    default: 'border-gray-300 bg-white p-3',
     compact: 'border-gray-200 py-1',
-    prominent: 'border-civiq-blue bg-blue-50 p-4 rounded-r border-2 border-black',
+    prominent: 'border-civiq-blue bg-blue-50 p-4 border-2 border-black',
   };
 
   const reliabilityColors = {
@@ -168,7 +168,7 @@ export function DataSourceAttribution({
             <div className="flex items-center gap-3 text-xs">
               <div className={`flex items-center gap-1 ${reliabilityColors[reliability]}`}>
                 <div
-                  className={`w-2 h-2 rounded-full ${
+                  className={`w-2 h-2 ${
                     reliability === 'high'
                       ? 'bg-green-500'
                       : reliability === 'medium'
@@ -188,7 +188,7 @@ export function DataSourceAttribution({
           )}
 
           {disclaimer && variant !== 'compact' && (
-            <div className="mt-2 text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+            <div className="mt-2 text-xs text-gray-600 bg-yellow-50 border border-yellow-200 px-2 py-1">
               <strong>Note:</strong> {disclaimer}
             </div>
           )}

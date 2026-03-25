@@ -117,7 +117,7 @@ export const StateCommitteeProfile: React.FC<StateCommitteeProfileProps> = ({
                       {member.party && (
                         <div className="mt-2">
                           <span
-                            className={`inline-block text-xs font-bold px-2 py-1 border rounded ${getPartyBadgeClass(member.party)}`}
+                            className={`inline-block text-xs font-bold px-2 py-1 border ${getPartyBadgeClass(member.party)}`}
                           >
                             {member.party}
                           </span>
@@ -160,7 +160,7 @@ export const StateCommitteeProfile: React.FC<StateCommitteeProfileProps> = ({
                     </div>
                     {member.party && (
                       <span
-                        className={`text-xs font-bold px-2 py-0.5 border rounded flex-shrink-0 ${getPartyBadgeClass(member.party)}`}
+                        className={`text-xs font-bold px-2 py-0.5 border flex-shrink-0 ${getPartyBadgeClass(member.party)}`}
                       >
                         {member.party.charAt(0)}
                       </span>

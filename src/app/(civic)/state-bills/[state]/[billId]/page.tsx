@@ -105,14 +105,14 @@ export default function StateBillDetailPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-10 bg-gray-200 rounded w-32"></div>
+            <div className="h-10 bg-gray-200 w-32"></div>
             <div className="bg-white border-2 border-gray-300 p-8">
-              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2 mb-6"></div>
+              <div className="h-8 bg-gray-200 w-3/4 mb-4"></div>
+              <div className="h-6 bg-gray-200 w-1/2 mb-6"></div>
               <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                <div className="h-4 bg-gray-200 w-full"></div>
+                <div className="h-4 bg-gray-200 w-5/6"></div>
+                <div className="h-4 bg-gray-200 w-4/6"></div>
               </div>
             </div>
           </div>
@@ -182,18 +182,18 @@ export default function StateBillDetailPage() {
           {/* Metadata Badges */}
           <div className="flex flex-wrap gap-2 mb-6">
             {bill.classification && bill.classification.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium">
                 <Building2 className="w-4 h-4" />
                 {bill.classification[0]}
               </span>
             )}
             {bill.chamber && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium">
                 {bill.chamber === 'upper' ? 'Senate' : 'House'}
               </span>
             )}
             {bill.session && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium">
                 <Calendar className="w-4 h-4" />
                 {bill.session}
               </span>
@@ -378,7 +378,7 @@ export default function StateBillDetailPage() {
                         {bill.subject.map((subject, index) => (
                           <span
                             key={index}
-                            className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded"
+                            className="px-3 py-1 bg-green-100 text-green-800 text-sm"
                           >
                             {subject}
                           </span>
@@ -459,7 +459,7 @@ export default function StateBillDetailPage() {
                             {action.classification.map((cls, idx) => (
                               <span
                                 key={idx}
-                                className="text-xs px-2 py-1 bg-white border border-gray-300 rounded"
+                                className="text-xs px-2 py-1 bg-white border border-gray-300"
                               >
                                 {cls}
                               </span>
@@ -494,7 +494,7 @@ export default function StateBillDetailPage() {
                             </div>
                           </div>
                           <span
-                            className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded ${
+                            className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium ${
                               vote.result === 'passed'
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'

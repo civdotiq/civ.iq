@@ -45,7 +45,7 @@ export default function RepresentativeNotFound() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
           {/* 404 Icon */}
-          <div className="mx-auto flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+          <div className="mx-auto flex items-center justify-center w-20 h-20 bg-red-100 mb-6">
             <svg
               className="w-10 h-10 text-red-600"
               fill="none"

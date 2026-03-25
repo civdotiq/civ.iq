@@ -148,7 +148,7 @@ export default function EdgeCaseTooltip({
       {/* Trigger Button */}
       <button
         onClick={() => setShowTooltip(!showTooltip)}
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${config.color} ${config.bgColor} hover:opacity-80`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${config.color} ${config.bgColor} hover:opacity-80`}
         aria-label={`Show information about ${config.title}`}
       >
         <IconComponent className="w-3 h-3" />
@@ -162,9 +162,7 @@ export default function EdgeCaseTooltip({
             className={`relative w-full max-w-md bg-white border-2 border-black-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80`}
           >
             {/* Header */}
-            <div
-              className={`px-4 py-3 rounded-t-lg ${config.bgColor} border-b ${config.borderColor}`}
-            >
+            <div className={`px-4 py-3 ${config.bgColor} border-b ${config.borderColor}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IconComponent className={`w-5 h-5 ${config.color}`} />
@@ -218,7 +216,7 @@ export default function EdgeCaseTooltip({
                 <ul className="space-y-1">
                   {config.details.map((detail, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
+                      <span className="w-1.5 h-1.5 bg-gray-400 mt-2 flex-shrink-0"></span>
                       <span>{detail}</span>
                     </li>
                   ))}

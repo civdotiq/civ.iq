@@ -60,7 +60,7 @@ export function DebugPanel() {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsVisible(true)}
-          className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 border-2 border-black"
+          className="bg-purple-600 text-white px-3 py-1 text-sm hover:bg-purple-700 border-2 border-black"
           title="Show Debug Panel (Ctrl+Shift+D)"
         >
           Debug

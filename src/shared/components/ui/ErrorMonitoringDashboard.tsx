@@ -260,7 +260,7 @@ export function ErrorMonitoringDashboard() {
               {getMostProblematicErrors().map((error, _index) => (
                 <tr key={error.errorCode} className="hover:bg-white">
                   <td className="px-4 py-4">
-                    <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
+                    <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1">
                       {error.errorCode}
                     </code>
                   </td>
@@ -270,7 +270,7 @@ export function ErrorMonitoringDashboard() {
                     {error.feedbackCount > 0 ? (
                       <div>
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          className={`inline-flex px-2 py-1 text-xs font-medium ${
                             error.helpfulRate > 70
                               ? 'bg-green-100 text-green-800'
                               : error.helpfulRate > 40
@@ -306,11 +306,11 @@ export function ErrorMonitoringDashboard() {
             <div key={index} className="border border-gray-100 p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
+                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1">
                     {report.error?.code || 'UNKNOWN'}
                   </code>
                   <span
-                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(
+                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium ${getSeverityColor(
                       report.error?.severity || 'medium'
                     )}`}
                   >
@@ -330,7 +330,7 @@ export function ErrorMonitoringDashboard() {
               {report.error?.context !== undefined && (
                 <details className="mt-2">
                   <summary className="text-xs text-gray-600 cursor-pointer">Show details</summary>
-                  <pre className="text-xs bg-white p-2 rounded mt-1 overflow-auto">
+                  <pre className="text-xs bg-white p-2 mt-1 overflow-auto">
                     {String(JSON.stringify(report.error.context, null, 2))}
                   </pre>
                 </details>
@@ -348,11 +348,11 @@ export function ErrorMonitoringDashboard() {
             <div key={index} className="border-l-4 border-gray-200 pl-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
+                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1">
                     {feedback.errorCode}
                   </code>
                   <span
-                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium ${
                       feedback.helpful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}
                   >

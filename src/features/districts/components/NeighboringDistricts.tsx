@@ -33,9 +33,9 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
         <h2 className="text-xl font-bold text-gray-900 mb-4">Neighboring Districts</h2>
         <div className="animate-pulse">
           <div className="space-y-2">
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-8 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200"></div>
+            <div className="h-8 bg-gray-200"></div>
+            <div className="h-8 bg-gray-200"></div>
           </div>
         </div>
       </div>

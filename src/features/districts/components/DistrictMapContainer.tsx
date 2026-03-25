@@ -358,7 +358,7 @@ export function DistrictMapContainer({
           <div className="text-gray-600 text-sm">{mapState.error}</div>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
           >
             Reload Page
           </button>
@@ -392,15 +392,15 @@ export function DistrictMapContainer({
         <div className="text-xs font-medium text-gray-700 mb-2">Congressional Districts</div>
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+            <div className="w-3 h-3 bg-red-600"></div>
             <span>Republican</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div className="w-3 h-3 bg-blue-600"></div>
             <span>Democratic</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-white0 rounded-full"></div>
+            <div className="w-3 h-3 bg-white0"></div>
             <span>Independent/Other</span>
           </div>
         </div>

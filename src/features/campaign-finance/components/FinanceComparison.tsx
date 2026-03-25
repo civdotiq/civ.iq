@@ -186,7 +186,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
                     <td className="py-2 pr-4">
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="w-3 h-3"
                           style={{ backgroundColor: partyColors[rep.party] }}
                         ></div>
                         <span className="font-medium">{rep.name}</span>

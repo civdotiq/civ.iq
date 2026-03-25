@@ -210,7 +210,7 @@ export default function CommitteeBiographicalInfo({
                         {data.history.previousNames.map((name, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-white border-2 border-gray-300 text-xs text-gray-700 rounded"
+                            className="px-2 py-1 bg-white border-2 border-gray-300 text-xs text-gray-700"
                           >
                             {name.name}
                           </span>
@@ -275,13 +275,13 @@ export default function CommitteeBiographicalInfo({
                           href={entity.wikipediaUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200"
+                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-xs hover:bg-blue-200"
                         >
                           {entity.name}
                           <ExternalLink className="w-3 h-3 ml-1" />
                         </a>
                       ) : (
-                        <span className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full">
+                        <span className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs">
                           {entity.name}
                         </span>
                       )}

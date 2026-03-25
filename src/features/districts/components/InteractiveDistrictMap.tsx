@@ -368,8 +368,8 @@ export function InteractiveDistrictMap({
     return (
       <div className={`bg-white border border-gray-200 p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-gray-200 mb-4 w-1/3"></div>
+          <div className="h-96 bg-gray-200"></div>
         </div>
       </div>
     );
@@ -392,7 +392,7 @@ export function InteractiveDistrictMap({
   if (!isClient) {
     return (
       <div className={`bg-white border border-gray-200 p-6 ${className}`}>
-        <div className="h-96 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
+        <div className="h-96 bg-white border-2 border-gray-300 flex items-center justify-center">
           <p className="text-gray-500">Loading interactive map...</p>
         </div>
       </div>
@@ -431,11 +431,7 @@ export function InteractiveDistrictMap({
       <div className="p-0 relative">
         {/* Interactive MapLibre Map */}
         <div className="h-96 w-full">
-          <div
-            ref={setMapContainerRef}
-            className="h-full w-full rounded-b-lg"
-            style={{ height: '384px' }}
-          />
+          <div ref={setMapContainerRef} className="h-full w-full" style={{ height: '384px' }} />
         </div>
 
         {/* Map Legend - Overlay */}
@@ -443,12 +439,12 @@ export function InteractiveDistrictMap({
           <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-900 rounded-full"></div>
+              <div className="w-3 h-3 bg-gray-900"></div>
               <span className="text-xs text-gray-600">Your Location</span>
             </div>
             {layerInfo && (
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: layerInfo.color }}></div>
+                <div className="w-3 h-3" style={{ backgroundColor: layerInfo.color }}></div>
                 <span className="text-xs text-gray-600">{layerInfo.name}</span>
               </div>
             )}

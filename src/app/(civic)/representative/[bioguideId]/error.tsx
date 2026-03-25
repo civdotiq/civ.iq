@@ -71,7 +71,7 @@ export default function Error({
             <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
               Error details (Development only)
             </summary>
-            <pre className="mt-2 p-4 bg-white border-2 border-gray-300 rounded text-xs text-red-600 overflow-auto">
+            <pre className="mt-2 p-4 bg-white border-2 border-gray-300 text-xs text-red-600 overflow-auto">
               {error.message}
               {error.stack}
             </pre>

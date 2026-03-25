@@ -124,7 +124,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                     Error Details (Development Only)
                   </summary>
-                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-xs">
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 text-xs">
                     <p className="font-medium text-red-800">Error:</p>
                     <p className="text-red-700 mb-2">{this.state.error.message}</p>
                     <p className="font-medium text-red-800">Stack:</p>

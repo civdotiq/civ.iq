@@ -71,7 +71,7 @@ export function FundraisingSources({
 
   if (totalRaised === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <div className="border border-neutral-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-semibold">Fundraising Sources</h3>
         <p className="text-neutral-600">No fundraising data available for this cycle.</p>
       </div>
@@ -79,7 +79,7 @@ export function FundraisingSources({
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <div className="border border-neutral-200 bg-white p-6">
       <div className="mb-6">
         <h3 className="mb-2 text-lg font-semibold">Fundraising Sources</h3>
         <p className="text-sm text-neutral-600">
@@ -100,7 +100,7 @@ export function FundraisingSources({
         ))}
       </div>
 
-      <div className="mt-6 rounded-lg bg-neutral-50 p-4">
+      <div className="mt-6 bg-neutral-50 p-4">
         <div className="text-sm text-neutral-700">
           <strong>Total Raised:</strong> ${(totalRaised / 1000000).toFixed(2)}M
         </div>

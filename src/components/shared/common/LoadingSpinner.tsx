@@ -17,7 +17,7 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
 
   return (
     <div
-      className={`inline-block animate-spin rounded-full border-b-2 border-civiq-blue ${sizeClasses[size]} ${className}`}
+      className={`inline-block animate-spin border-b-2 border-civiq-blue ${sizeClasses[size]} ${className}`}
     />
   );
 }

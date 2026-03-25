@@ -43,7 +43,7 @@ const CommitteeMembers = dynamic(
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4 p-4 border">
-              <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+              <div className="w-12 h-12 bg-gray-200"></div>
               <div className="flex-1">
                 <div className="h-4 w-1/3 bg-gray-200 mb-2"></div>
                 <div className="h-3 w-1/4 bg-gray-200"></div>

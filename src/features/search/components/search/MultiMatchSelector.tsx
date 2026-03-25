@@ -57,7 +57,7 @@ export function MultiMatchSelector({
           <label
             key={match.id}
             className={`
-              block p-4 border rounded-lg cursor-pointer transition-all
+              block p-4 border cursor-pointer transition-all
               ${
                 selectedId === match.id
                   ? 'border-civiq-blue bg-civiq-blue/5'

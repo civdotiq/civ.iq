@@ -123,12 +123,12 @@ export function DistrictSelector({
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
                           {district.primary && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-civiq-green text-white">
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-civiq-green text-white">
                               Primary District
                             </span>
                           )}
                           {district.confidence && district.confidence !== 'high' && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
                               {district.confidence} confidence
                             </span>
                           )}
@@ -150,7 +150,7 @@ export function DistrictSelector({
                           <p className="font-medium text-gray-900">{representative.name}</p>
                           <p className="text-sm text-gray-600">{representative.title}</p>
                           <div
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mt-2 ${getPartyColor(representative.party)}`}
+                            className={`inline-flex items-center px-2 py-1 text-xs font-medium border mt-2 ${getPartyColor(representative.party)}`}
                           >
                             {representative.party}
                           </div>
@@ -166,7 +166,7 @@ export function DistrictSelector({
                     {isSelected && isLoading && (
                       <div className="mt-4 flex items-center justify-center">
                         <div className="flex items-center space-x-2 text-civiq-blue">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue"></div>
+                          <div className="animate-spin h-4 w-4 border-b-2 border-civiq-blue"></div>
                           <span className="text-sm">Loading representatives...</span>
                         </div>
                       </div>
@@ -181,7 +181,7 @@ export function DistrictSelector({
         {/* Address Refinement Option */}
         {onRefineAddress && (
           <div className="text-center mt-6">
-            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-gray-50 border border-gray-200">
               <div className="text-sm text-gray-600">Not sure which district you&apos;re in?</div>
               <Button
                 onClick={onRefineAddress}

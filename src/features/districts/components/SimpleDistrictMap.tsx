@@ -126,8 +126,8 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
     return (
       <div className={`bg-white border-2 border-black p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-gray-200 mb-4 w-1/3"></div>
+          <div className="h-96 bg-gray-200"></div>
         </div>
       </div>
     );
@@ -305,7 +305,7 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
             {/* Legend */}
             <div className="flex items-center justify-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-black rounded-full border-2 border-white shadow"></div>
+                <div className="w-4 h-4 bg-black border-2 border-white"></div>
                 <span className="text-gray-700 aicher-heading-wide">
                   Your Location (ZIP {mapData.zipCode})
                 </span>

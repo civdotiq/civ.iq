@@ -210,7 +210,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
               <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Control</h4>
               <div className="flex items-center gap-2">
                 <div
-                  className="w-4 h-4 rounded"
+                  className="w-4 h-4"
                   style={{
                     backgroundColor:
                       majorityParty === 'Republican'
@@ -248,7 +248,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                     <div key={party.party} className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <div
-                          className="w-3 h-3 sm:w-4 sm:h-4 rounded"
+                          className="w-3 h-3 sm:w-4 sm:h-4"
                           style={{ backgroundColor: party.color }}
                         ></div>
                         <span className="text-xs sm:text-sm font-medium text-gray-700">

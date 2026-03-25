@@ -75,7 +75,7 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
                   <div className="text-sm font-semibold truncate">{chair.legislator_name}</div>
                   {chair.party && (
                     <span
-                      className={`inline-block text-xs px-1.5 py-0.5 border rounded ${getPartyColor(chair.party)}`}
+                      className={`inline-block text-xs px-1.5 py-0.5 border ${getPartyColor(chair.party)}`}
                     >
                       {chair.party.charAt(0)}
                     </span>

@@ -177,21 +177,16 @@ export function ErrorDisplay({
             {retryable && countdown === 0 && (
               <button
                 onClick={handleRetry}
-                className="px-3 py-1 text-xs font-medium bg-white rounded border hover:bg-white transition-colors"
+                className="px-3 py-1 text-xs font-medium bg-white border hover:bg-white transition-colors"
               >
                 Retry
               </button>
             )}
             {countdown > 0 && (
-              <span className="px-3 py-1 text-xs font-medium bg-white rounded border">
-                {countdown}s
-              </span>
+              <span className="px-3 py-1 text-xs font-medium bg-white border">{countdown}s</span>
             )}
             {onDismiss && (
-              <button
-                onClick={onDismiss}
-                className="p-1 hover:bg-white hover:bg-opacity-50 rounded"
-              >
+              <button onClick={onDismiss} className="p-1 hover:bg-white hover:bg-opacity-50">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -227,7 +222,7 @@ export function ErrorDisplay({
 
             {/* Timer for rate limits */}
             {countdown > 0 && (
-              <div className="mb-4 p-3 bg-white bg-opacity-50 rounded border">
+              <div className="mb-4 p-3 bg-white bg-opacity-50 border">
                 <div className="flex items-center gap-2 text-sm">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -325,13 +320,13 @@ export function ErrorDisplay({
               <div className="flex gap-3">
                 <button
                   onClick={() => handleFeedback(true)}
-                  className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  className="px-3 py-1 text-sm bg-green-600 text-white hover:bg-green-700 transition-colors"
                 >
                   Yes, helpful
                 </button>
                 <button
                   onClick={() => handleFeedback(false)}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  className="px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
                 >
                   No, confusing
                 </button>
@@ -341,7 +336,7 @@ export function ErrorDisplay({
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   placeholder="Optional: Tell us how we can improve this error message"
-                  className="w-full p-2 text-sm border border-gray-300 rounded resize-none"
+                  className="w-full p-2 text-sm border border-gray-300 resize-none"
                   rows={2}
                 />
               </div>

@@ -72,7 +72,7 @@ export function PerformanceDashboard({ showDevOnly = true }: PerformanceDashboar
           {/* Performance Grade */}
           <div className="mb-4">
             <div
-              className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+              className={`inline-block px-2 py-1 text-xs font-medium ${
                 gradeColors[summary.performanceGrade]
               }`}
             >

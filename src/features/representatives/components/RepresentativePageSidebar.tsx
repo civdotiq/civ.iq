@@ -156,7 +156,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
    <div className="bg-white border-2 border-black border border-gray-200 p-6">
     <div className="flex items-center mb-3">
      <div className="flex-shrink-0">
-      <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+      <div className="w-8 h-8 bg-indigo-100 flex items-center justify-center">
        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1h-2a1 1 0 01-1-1V4M7 4H5a1 1 0 00-1 1v16a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1z" />
        </svg>
@@ -220,7 +220,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-orange-100 flex items-center justify-center">
               <svg
                 className="w-5 h-5 text-orange-600"
                 fill="none"

@@ -23,7 +23,7 @@ import logger from '@/lib/logging/simple-logger';
 const FilterSidebar = dynamic(
   () => import('./FilterSidebar').then(mod => ({ default: mod.FilterSidebar })),
   {
-    loading: () => <div className="w-64 h-96 bg-gray-50 animate-pulse rounded-lg"></div>,
+    loading: () => <div className="w-64 h-96 bg-gray-50 animate-pulse"></div>,
     ssr: false,
   }
 );
@@ -304,7 +304,7 @@ export function RepresentativesClient({
   if (searchState.isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="inline-block animate-spin h-12 w-12 border-b-2 border-blue-600"></div>
         <p className="mt-4 text-gray-600">Loading representatives...</p>
       </div>
     );
@@ -476,7 +476,7 @@ export function RepresentativesClient({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                               rep.party === 'D'
                                 ? 'bg-blue-100 text-blue-800'
                                 : 'bg-red-100 text-red-800'

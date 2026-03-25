@@ -94,7 +94,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">White</span>
             <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-24 h-2 bg-gray-200 overflow-hidden">
                 <div className="h-full bg-blue-500" style={{ width: `${white_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
@@ -106,7 +106,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Black</span>
             <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-24 h-2 bg-gray-200 overflow-hidden">
                 <div className="h-full bg-gray-800" style={{ width: `${black_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
@@ -118,7 +118,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Hispanic</span>
             <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-24 h-2 bg-gray-200 overflow-hidden">
                 <div className="h-full bg-orange-500" style={{ width: `${hispanic_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">
@@ -130,7 +130,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Asian</span>
             <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-24 h-2 bg-gray-200 overflow-hidden">
                 <div className="h-full bg-yellow-500" style={{ width: `${asian_percent}%` }} />
               </div>
               <span className="text-gray-900 font-medium w-12 text-right">

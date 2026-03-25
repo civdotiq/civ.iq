@@ -492,14 +492,14 @@ export function AdvancedSearch() {
               className="border border-gray-200 p-6 hover:border-gray-400 transition-colors"
             >
               <div className="flex items-start gap-6">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
+                <div className="w-16 h-16 bg-gray-200 flex items-center justify-center relative overflow-hidden">
                   {rep.imageUrl ? (
                     <Image
                       src={rep.imageUrl}
                       alt={rep.name}
                       fill
                       sizes="64px"
-                      className="rounded-full object-cover"
+                      className="object-cover"
                       priority={index < 4} // Prioritize first 4 search results
                       loading={index < 4 ? 'eager' : 'lazy'}
                     />

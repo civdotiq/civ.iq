@@ -78,7 +78,7 @@ export function SortableDataTable<T extends Record<string, unknown>>({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+    <div className="overflow-hidden border border-neutral-200 bg-white">
       {title && (
         <div className="border-b border-neutral-200 px-6 py-4">
           <h3 className="text-lg font-semibold">{title}</h3>

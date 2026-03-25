@@ -246,7 +246,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
             {stateData.jurisdiction.chambers.map((chamber, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-sm"
+                className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-sm"
               >
                 {chamber.name}
               </span>

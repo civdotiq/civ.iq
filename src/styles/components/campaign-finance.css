@@ -24,7 +24,7 @@
 
 /* Chart containers */
 .campaign-finance-container .chart-container {
-  @apply bg-gray-50 rounded-lg p-4 border border-gray-200;
+  @apply bg-gray-50 p-4 border border-gray-200;
 }
 
 /* Metric cards */
@@ -39,11 +39,11 @@
 
 /* Progress bars */
 .campaign-finance-container .progress-bar {
-  @apply bg-gray-200 rounded-full h-3;
+  @apply bg-gray-200 h-3;
 }
 
 .campaign-finance-container .progress-fill {
-  @apply h-3 rounded-full transition-all duration-700 relative;
+  @apply h-3 transition-all duration-700 relative;
 }
 
 /* Empty states */
@@ -61,11 +61,11 @@
 }
 
 .debug-panel-toggle {
-  @apply bg-gray-800 text-white px-3 py-1 rounded-t text-xs font-mono hover:bg-gray-700 transition-colors;
+  @apply bg-gray-800 text-white px-3 py-1 text-xs font-mono hover:bg-gray-700 transition-colors;
 }
 
 .debug-panel-content {
-  @apply bg-gray-800 text-white p-4 rounded-l rounded-b text-xs font-mono max-w-md max-h-96 overflow-auto;
+  @apply bg-gray-800 text-white p-4 text-xs font-mono max-w-md max-h-96 overflow-auto;
 }
 
 /* Responsive adjustments */

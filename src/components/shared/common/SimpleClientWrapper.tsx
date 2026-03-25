@@ -54,7 +54,7 @@ export function SimpleClientWrapper({
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Success indicator */}
-      <div className="bg-green-500 text-white p-4 mb-4 rounded">
+      <div className="bg-green-500 text-white p-4 mb-4">
         SIMPLE CLIENT COMPONENT MOUNTED SUCCESSFULLY
       </div>
 
@@ -124,7 +124,7 @@ export function SimpleClientWrapper({
         {activeTab === 'voting' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Voting Records</h2>
-            <div className="bg-white border rounded p-4">
+            <div className="bg-white border p-4">
               <p>
                 <strong>BioGuide ID:</strong> {bioguideId}
               </p>
@@ -138,7 +138,7 @@ export function SimpleClientWrapper({
               {Array.isArray(initialData?.votes) && initialData.votes.length > 0 ? (
                 <div className="mt-4">
                   <p className="font-semibold">Sample Vote:</p>
-                  <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2">
+                  <pre className="text-xs bg-white border-2 border-gray-300 p-2 mt-2">
                     {JSON.stringify(initialData.votes[0], null, 2)}
                   </pre>
                 </div>
@@ -152,7 +152,7 @@ export function SimpleClientWrapper({
         {activeTab === 'bills' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Sponsored Legislation</h2>
-            <div className="bg-white border rounded p-4">
+            <div className="bg-white border p-4">
               <p>
                 <strong>Bills Count:</strong>{' '}
                 {Array.isArray(initialData?.bills) ? initialData.bills.length : 0}
@@ -163,7 +163,7 @@ export function SimpleClientWrapper({
               {Array.isArray(initialData?.bills) && initialData.bills.length > 0 ? (
                 <div className="mt-4">
                   <p className="font-semibold">Sample Bill:</p>
-                  <div className="bg-white border rounded p-3 mt-2">
+                  <div className="bg-white border p-3 mt-2">
                     <p>
                       <strong>Title:</strong> {initialData.bills[0]?.title || 'No title'}
                     </p>
@@ -181,7 +181,7 @@ export function SimpleClientWrapper({
                     <summary className="cursor-pointer text-sm text-gray-600">
                       View Raw Data
                     </summary>
-                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2">
+                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 mt-2">
                       {JSON.stringify(initialData.bills[0], null, 2)}
                     </pre>
                   </details>
@@ -196,7 +196,7 @@ export function SimpleClientWrapper({
         {activeTab === 'finance' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Campaign Finance</h2>
-            <div className="bg-white border rounded p-4">
+            <div className="bg-white border p-4">
               <p>
                 <strong>Finance Data Available:</strong> {initialData?.finance ? 'Yes' : 'No'}
               </p>
@@ -222,7 +222,7 @@ export function SimpleClientWrapper({
                     <summary className="cursor-pointer text-sm text-gray-600">
                       View Raw Data
                     </summary>
-                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2 max-h-40 overflow-auto">
+                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 mt-2 max-h-40 overflow-auto">
                       {JSON.stringify(initialData.finance, null, 2)}
                     </pre>
                   </details>
@@ -236,7 +236,7 @@ export function SimpleClientWrapper({
       </div>
 
       {/* Debug info */}
-      <div className="mt-8 bg-white border rounded p-4">
+      <div className="mt-8 bg-white border p-4">
         <h3 className="font-semibold mb-2">Debug Information</h3>
         <div className="text-sm space-y-1">
           <p>

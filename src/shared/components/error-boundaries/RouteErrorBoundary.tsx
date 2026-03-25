@@ -113,7 +113,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
                 <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                   Error Details (Development Only)
                 </summary>
-                <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded text-xs">
+                <div className="mt-2 p-3 bg-orange-50 border border-orange-200 text-xs">
                   <p className="font-medium text-orange-800">Route:</p>
                   <p className="text-orange-700 mb-2">{this.props.route || 'Unknown'}</p>
                   <p className="font-medium text-orange-800">Error:</p>

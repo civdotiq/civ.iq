@@ -76,7 +76,7 @@ export function DataSourceBadge({
   if (!sourceConfig) {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-white0 text-white ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs bg-white0 text-white ${className}`}
       >
         <Database className="w-3 h-3" />
         {source}
@@ -102,7 +102,7 @@ export function DataSourceBadge({
         href={sourceConfig?.url || '#'}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 ${sizeClasses[size]} rounded-full text-white hover:opacity-90 transition-opacity ${sourceConfig?.color || 'bg-white0'}`}
+        className={`inline-flex items-center gap-1 ${sizeClasses[size]} text-white hover:opacity-90 transition-opacity ${sourceConfig?.color || 'bg-white0'}`}
         title={`Data from ${sourceConfig?.displayName || source}`}
       >
         <Database className={iconSizes[size]} />
@@ -129,7 +129,7 @@ export function CacheStatusIndicator({
 }: CacheStatusIndicatorProps) {
   return (
     <div
-      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+      className={`inline-flex items-center gap-1 px-2 py-1 text-xs ${
         cached
           ? 'bg-green-100 text-green-800 border border-green-200'
           : 'bg-blue-100 text-blue-800 border border-blue-200'
@@ -139,7 +139,7 @@ export function CacheStatusIndicator({
       {cached ? (
         <Database className="w-3 h-3" />
       ) : (
-        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent animate-spin" />
       )}
       {showLabel && <span>{cached ? 'Cached' : 'Fresh'}</span>}
     </div>
@@ -191,7 +191,7 @@ export function DataQualityIndicator({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${config.color} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 text-xs border ${config.color} ${className}`}
       title={`${config.description}${validationScore ? ` (Score: ${validationScore}%)` : ''}`}
     >
       <Icon className="w-3 h-3" />
@@ -224,7 +224,7 @@ export function DataFreshnessIndicator({
   if (!isClient) {
     return (
       <div
-        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border text-gray-600 bg-white border-gray-200 ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs border text-gray-600 bg-white border-gray-200 ${className}`}
         title="Loading freshness info..."
       >
         <Clock className="w-3 h-3" />
@@ -293,7 +293,7 @@ export function DataFreshnessIndicator({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${freshnessColors[freshness]} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 text-xs border ${freshnessColors[freshness]} ${className}`}
       title={`Data fetched: ${fetchDate.toLocaleString()}${ttlInfo ? ` • ${ttlInfo}` : ''}`}
     >
       <Clock className="w-3 h-3" />

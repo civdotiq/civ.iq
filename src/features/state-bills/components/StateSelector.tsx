@@ -175,7 +175,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveState(stateCode)}
-                    className="hover:bg-blue-100 rounded-full p-0.5"
+                    className="hover:bg-blue-100 p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>

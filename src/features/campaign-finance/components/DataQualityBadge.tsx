@@ -122,7 +122,7 @@ export function DataQualityIndicator({ confidence }: { confidence: 'high' | 'med
 
   return (
     <span
-      className={`inline-block w-2 h-2 rounded-full ${colors[confidence]}`}
+      className={`inline-block w-2 h-2 ${colors[confidence]}`}
       title={labels[confidence]}
       aria-label={labels[confidence]}
       role="status"
