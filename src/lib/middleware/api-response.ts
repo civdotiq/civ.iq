@@ -63,12 +63,13 @@ export interface ErrorResponse extends ApiResponse<never> {
 export class ApiResponseBuilder<T = unknown> {
   private response: Partial<ApiResponse<T>> = {
     success: false,
-    metadata: {
-      timestamp: new Date().toISOString(),
-      dataQuality: 'unavailable',
-      dataSource: 'unknown',
-      cacheable: false,
-    },
+  };
+
+  private metadata: ApiMetadata = {
+    timestamp: new Date().toISOString(),
+    dataQuality: 'unavailable',
+    dataSource: 'unknown',
+    cacheable: false,
   };
 
   private startTime: number;
@@ -78,7 +79,7 @@ export class ApiResponseBuilder<T = unknown> {
     this.startTime = Date.now();
     this.requestId = requestId;
     if (requestId) {
-      this.response.metadata!.requestId = requestId;
+      this.metadata.requestId = requestId;
     }
   }
 
@@ -96,40 +97,40 @@ export class ApiResponseBuilder<T = unknown> {
   }
 
   quality(level: DataQuality): ApiResponseBuilder<T> {
-    this.response.metadata!.dataQuality = level;
+    this.metadata.dataQuality = level;
     return this;
   }
 
   source(dataSource: string): ApiResponseBuilder<T> {
-    this.response.metadata!.dataSource = dataSource;
+    this.metadata.dataSource = dataSource;
     return this;
   }
 
   cacheable(enabled: boolean = true): ApiResponseBuilder<T> {
-    this.response.metadata!.cacheable = enabled;
+    this.metadata.cacheable = enabled;
     return this;
   }
 
   validation(score: number, status: ValidationStatus): ApiResponseBuilder<T> {
-    this.response.metadata!.validationScore = score;
-    this.response.metadata!.validationStatus = status;
+    this.metadata.validationScore = score;
+    this.metadata.validationStatus = status;
     return this;
   }
 
   freshness(description: string): ApiResponseBuilder<T> {
-    this.response.metadata!.freshness = description;
+    this.metadata.freshness = description;
     return this;
   }
 
   build(): ApiResponse<T> {
     const processingTime = Date.now() - this.startTime;
-    this.response.metadata!.processingTime = processingTime;
+    this.metadata.processingTime = processingTime;
 
-    if (!this.response.metadata!.freshness) {
-      this.response.metadata!.freshness = `Retrieved in ${processingTime}ms`;
+    if (!this.metadata.freshness) {
+      this.metadata.freshness = `Retrieved in ${processingTime}ms`;
     }
 
-    return this.response as ApiResponse<T>;
+    return { ...this.response, metadata: this.metadata } as ApiResponse<T>;
   }
 
   toNextResponse(statusCode?: number): NextResponse {
@@ -330,6 +331,16 @@ export async function withErrorHandler<T>(
   }
 }
 
+function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'success' in value &&
+    'metadata' in value &&
+    typeof (value as Record<string, unknown>).success === 'boolean'
+  );
+}
+
 export function transformLegacyResponse<T>(
   legacyResponse: T,
   source: string,
@@ -338,8 +349,8 @@ export function transformLegacyResponse<T>(
   if (typeof legacyResponse === 'object' && legacyResponse !== null) {
     const obj = legacyResponse as Record<string, unknown>;
 
-    if ('success' in obj && 'metadata' in obj) {
-      return legacyResponse as unknown as ApiResponse<T>;
+    if (isApiResponse<T>(legacyResponse)) {
+      return legacyResponse;
     }
 
     if ('error' in obj) {

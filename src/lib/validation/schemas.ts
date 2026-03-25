@@ -341,7 +341,7 @@ export class ZipCodeValidator extends BaseValidator {
     }
 
     // Normalize ZIP code (remove extra formatting)
-    const sanitized = stringResult.data!.replace(/[^\d-]/g, '');
+    const sanitized = (stringResult.data ?? '').replace(/[^\d-]/g, '');
 
     return {
       isValid: true,
@@ -418,17 +418,23 @@ export class XSSProtection {
     }
   }
 
+  private static sanitizeArray(arr: unknown[]): unknown[] {
+    return arr.map(item => {
+      if (typeof item === 'string') {
+        return this.sanitizeHtml(item);
+      } else if (Array.isArray(item)) {
+        return this.sanitizeArray(item);
+      } else if (typeof item === 'object' && item !== null) {
+        return this.sanitizeObject(item as Record<string, unknown>);
+      }
+      return item;
+    });
+  }
+
   static sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
     // Handle arrays separately to preserve their structure
     if (Array.isArray(obj)) {
-      return (obj as unknown[]).map(item => {
-        if (typeof item === 'string') {
-          return this.sanitizeHtml(item);
-        } else if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-          return this.sanitizeObject(item as Record<string, unknown>);
-        }
-        return item;
-      }) as unknown as T;
+      return this.sanitizeArray(obj) as T & unknown[];
     }
 
     const sanitized = {} as T;

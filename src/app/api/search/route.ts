@@ -301,9 +301,10 @@ async function performSearch(filters: SearchFilters): Promise<{
 
       // Committee filter
       if (filters.committee && rep.committees) {
+        const committeeFilter = filters.committee.toLowerCase();
         const hasCommittee = rep.committees.some(c => {
           const committeeName = typeof c === 'string' ? c : c.name;
-          return committeeName.toLowerCase().includes(filters.committee!.toLowerCase());
+          return committeeName.toLowerCase().includes(committeeFilter);
         });
         if (!hasCommittee) {
           return false;

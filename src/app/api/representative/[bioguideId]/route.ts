@@ -146,8 +146,11 @@ async function getHandler(
             });
           } else if (result.data) {
             additionalData[result.type] = result.data;
-            if (!representative.metadata!.dataSources.includes('congress.gov')) {
-              representative.metadata!.dataSources.push('congress.gov');
+            if (
+              representative.metadata &&
+              !representative.metadata.dataSources.includes('congress.gov')
+            ) {
+              representative.metadata.dataSources.push('congress.gov');
             }
           }
         });

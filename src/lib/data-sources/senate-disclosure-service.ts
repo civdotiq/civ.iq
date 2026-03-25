@@ -100,7 +100,7 @@ function parseDate(dateStr: string): string {
   const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (match) {
     const [, month, day, year] = match;
-    return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
+    return `${year ?? '0000'}-${(month ?? '01').padStart(2, '0')}-${(day ?? '01').padStart(2, '0')}`;
   }
   return dateStr;
 }

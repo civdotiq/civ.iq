@@ -53,7 +53,7 @@ function getHeadline(data: BillIntelligenceInsight): {
       : '';
     const amt = formatDollars(data.sponsorAnalysis.sectorDonationAmount);
     return {
-      text: `${sponsorName} introduced this bill and sits on the ${data.sponsorCommitteeConnection!.committeeName}, which oversees it. ${sponsorName} received ${amt} from related industries${totalContext}.`,
+      text: `${sponsorName} introduced this bill and sits on the ${data.sponsorCommitteeConnection?.committeeName ?? 'relevant committee'}, which oversees it. ${sponsorName} received ${amt} from related industries${totalContext}.`,
       notable: true,
     };
   }

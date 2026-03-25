@@ -315,7 +315,7 @@ class EnhancedFECService {
     operationName: string,
     maxRetries: number = 3
   ): Promise<T> {
-    let lastError: Error;
+    let lastError: Error = new Error(`${operationName} failed`);
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -348,10 +348,10 @@ class EnhancedFECService {
     logger.error('[Enhanced FEC] Operation failed after all retries', {
       operation: operationName,
       maxRetries,
-      finalError: lastError!.message,
+      finalError: lastError.message,
     });
 
-    throw lastError!;
+    throw lastError;
   }
 
   /**

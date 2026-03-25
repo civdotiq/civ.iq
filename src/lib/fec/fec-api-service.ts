@@ -924,20 +924,23 @@ export class FECApiService {
         });
 
         const mostRecentPrincipal = sortedPrincipal[0];
+        if (!mostRecentPrincipal) {
+          return null;
+        }
         logger.warn(
           `[FEC API DIAGNOSTIC] ATTEMPT 2 SUCCESS - Using most recent principal committee:`,
           {
             candidateId,
             cycle,
-            selectedCommittee: mostRecentPrincipal!.committee_id,
-            selectedCycles: mostRecentPrincipal!.cycles,
+            selectedCommittee: mostRecentPrincipal.committee_id,
+            selectedCycles: mostRecentPrincipal.cycles,
             allPrincipalCommittees: sortedPrincipal.map(c => ({
               committee_id: c.committee_id,
               cycles: c.cycles,
             })),
           }
         );
-        return mostRecentPrincipal!.committee_id;
+        return mostRecentPrincipal.committee_id;
       }
 
       // ATTEMPT 3 (Final Fallback): Find ANY committee for the target cycle
@@ -974,18 +977,21 @@ export class FECApiService {
       // FINAL RESORT: Use first available committee
       logger.info(`[FEC API DIAGNOSTIC] FINAL RESORT - Using first available committee`);
       const firstCommittee = committees[0];
+      if (!firstCommittee) {
+        return null;
+      }
       logger.warn(
         `[FEC API DIAGNOSTIC] FINAL RESORT - Using first available committee as last fallback:`,
         {
           candidateId,
           cycle,
-          selectedCommittee: firstCommittee!.committee_id,
-          designation: firstCommittee!.designation,
-          cycles: firstCommittee!.cycles,
+          selectedCommittee: firstCommittee.committee_id,
+          designation: firstCommittee.designation,
+          cycles: firstCommittee.cycles,
           allCommittees: committees.length,
         }
       );
-      return firstCommittee!.committee_id;
+      return firstCommittee.committee_id;
     } catch (error) {
       logger.error(`[FEC API DIAGNOSTIC] Committee resolution COMPLETELY FAILED:`, {
         candidateId,

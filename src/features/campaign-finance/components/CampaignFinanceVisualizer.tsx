@@ -970,8 +970,11 @@ export function CampaignFinanceVisualizer({
                         fill={COLORS[0]}
                         cursor="pointer"
                         onClick={(_data, _index, e) => {
-                          const payload = _data as unknown as { fullName?: string };
-                          const name = payload?.fullName;
+                          // Recharts Bar onClick data carries the original data entry properties
+                          const name =
+                            _data && 'fullName' in _data && typeof _data.fullName === 'string'
+                              ? _data.fullName
+                              : undefined;
                           if (name) {
                             e?.stopPropagation?.();
                             const params = new URLSearchParams({ contributor_name: name });
@@ -1324,7 +1327,7 @@ export function CampaignFinanceVisualizer({
                               formatter={(value, name, props) => {
                                 const entry = props.payload;
                                 return [
-                                  `${formatCurrency(Number(value))} (${((Number(value) / financeData.interestGroupBaskets!.reduce((sum, b) => sum + b.totalAmount, 0)) * 100).toFixed(1)}%)`,
+                                  `${formatCurrency(Number(value))} (${((Number(value) / (financeData.interestGroupBaskets?.reduce((sum, b) => sum + b.totalAmount, 0) ?? 1)) * 100).toFixed(1)}%)`,
                                   `${entry.icon || ''} ${entry.basket}`,
                                 ];
                               }}

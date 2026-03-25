@@ -383,7 +383,7 @@ export async function GET(request: NextRequest) {
                             }
                           }
 
-                          committeeInfo.subcommittees!.push(subcommitteeInfo);
+                          (committeeInfo.subcommittees ?? []).push(subcommitteeInfo);
                         }
                       }
                     }

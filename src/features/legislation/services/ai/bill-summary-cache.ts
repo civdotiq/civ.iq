@@ -372,8 +372,10 @@ export class BillSummaryCache {
             id,
             metadata: metadataEntries[billIds.indexOf(id)],
           }))
-          .filter(item => item.metadata)
-          .sort((a, b) => a.metadata!.accessCount - b.metadata!.accessCount);
+          .filter((item): item is { id: string; metadata: NonNullable<typeof item.metadata> } =>
+            Boolean(item.metadata)
+          )
+          .sort((a, b) => a.metadata.accessCount - b.metadata.accessCount);
 
         const additionalToRemove = remainingWithMetadata
           .slice(0, Math.max(0, remainingWithMetadata.length - maxEntries))

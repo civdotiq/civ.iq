@@ -125,11 +125,12 @@ class DistrictBoundaryService {
       throw new Error('District boundary service not initialized');
     }
 
-    const stateInfo = this.metadata.states[stateFips];
+    const { metadata } = this;
+    const stateInfo = metadata.states[stateFips];
     if (!stateInfo) return [];
 
     return stateInfo.districts
-      .map(districtId => this.metadata!.districts[districtId])
+      .map(districtId => metadata.districts[districtId])
       .filter((district): district is DistrictBoundary => Boolean(district));
   }
 

@@ -247,10 +247,10 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
       return rawVotes
         .filter(v => v.bill && v.position)
         .map(v => ({
-          billType: v.bill!.type,
-          billNumber: v.bill!.number,
-          billCongress: v.bill!.congress,
-          billTitle: v.bill!.title,
+          billType: v.bill?.type ?? '',
+          billNumber: String(v.bill?.number ?? ''),
+          billCongress: v.bill?.congress ?? 0,
+          billTitle: v.bill?.title ?? '',
           position: v.position,
           date: v.date,
         }));

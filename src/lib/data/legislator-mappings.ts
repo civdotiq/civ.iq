@@ -81,16 +81,17 @@ async function loadLegislatorMap(): Promise<Map<string, LegislatorIds>> {
     const fileContents = fs.readFileSync(yamlPath, 'utf8');
     const legislators = yaml.load(fileContents) as Legislator[];
 
-    LEGISLATOR_MAP = new Map();
+    const map = new Map<string, LegislatorIds>();
 
     legislators.forEach(legislator => {
       if (legislator.id?.bioguide) {
-        LEGISLATOR_MAP!.set(legislator.id.bioguide, legislator.id);
+        map.set(legislator.id.bioguide, legislator.id);
       }
     });
 
-    logger.info(`Loaded ${LEGISLATOR_MAP.size} legislator ID mappings`);
-    return LEGISLATOR_MAP;
+    LEGISLATOR_MAP = map;
+    logger.info(`Loaded ${map.size} legislator ID mappings`);
+    return map;
   } catch (error) {
     logger.error('Failed to load legislators:', error);
     LEGISLATOR_MAP = new Map();
@@ -148,7 +149,7 @@ async function loadLegislatorInfoMap(): Promise<Map<string, LegislatorInfo>> {
     const fileContents = fs.readFileSync(yamlPath, 'utf8');
     const legislators = yaml.load(fileContents) as Legislator[];
 
-    LEGISLATOR_INFO_MAP = new Map();
+    const infoMap = new Map<string, LegislatorInfo>();
 
     legislators.forEach(legislator => {
       if (legislator.id?.bioguide && legislator.terms?.length > 0) {
@@ -174,12 +175,13 @@ async function loadLegislatorInfoMap(): Promise<Map<string, LegislatorInfo>> {
           chamber: latestTerm.type === 'sen' ? 'Senate' : 'House',
         };
 
-        LEGISLATOR_INFO_MAP!.set(legislator.id.bioguide, info);
+        infoMap.set(legislator.id.bioguide, info);
       }
     });
 
-    logger.info(`Loaded ${LEGISLATOR_INFO_MAP.size} legislator info records`);
-    return LEGISLATOR_INFO_MAP;
+    LEGISLATOR_INFO_MAP = infoMap;
+    logger.info(`Loaded ${infoMap.size} legislator info records`);
+    return infoMap;
   } catch (error) {
     logger.error('Failed to load legislator info:', error);
     LEGISLATOR_INFO_MAP = new Map();

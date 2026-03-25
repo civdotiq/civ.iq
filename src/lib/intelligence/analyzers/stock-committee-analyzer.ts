@@ -236,15 +236,16 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   }
 
   // Resolve tickers to sectors (batch)
-  const tickerList = tradesWithTickers.map(t => t.ticker!);
+  const tickerList = tradesWithTickers.map(t => t.ticker ?? '');
   const resolutionMap = await resolveTickerIndustries(tickerList);
 
   const resolvedTrades: ResolvedTrade[] = [];
   for (const trade of tradesWithTickers) {
-    const resolution = resolutionMap.get(trade.ticker!.toUpperCase().trim());
+    const ticker = trade.ticker ?? '';
+    const resolution = resolutionMap.get(ticker.toUpperCase().trim());
     if (resolution) {
       resolvedTrades.push({
-        ticker: trade.ticker!,
+        ticker,
         assetDescription: trade.assetDescription,
         transactionType: trade.transactionType,
         transactionDate: trade.transactionDate,

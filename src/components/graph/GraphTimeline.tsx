@@ -81,7 +81,7 @@ export function GraphTimeline({
     () =>
       edges
         .filter(e => e.temporal?.date)
-        .sort((a, b) => (a.temporal!.date > b.temporal!.date ? 1 : -1)),
+        .sort((a, b) => ((a.temporal?.date ?? '') > (b.temporal?.date ?? '') ? 1 : -1)),
     [edges]
   );
 
@@ -108,7 +108,7 @@ export function GraphTimeline({
 
   if (temporalEdges.length === 0) return null;
 
-  const dates = temporalEdges.map(e => new Date(e.temporal!.date).getTime());
+  const dates = temporalEdges.map(e => new Date(e.temporal?.date ?? '').getTime());
   const minDate = Math.min(...dates);
   const maxDate = Math.max(...dates);
   const range = maxDate - minDate || 1;
@@ -209,7 +209,7 @@ export function GraphTimeline({
 
           {/* Event dots */}
           {temporalEdges.map(edge => {
-            const cx = scaleX(edge.temporal!.date);
+            const cx = scaleX(edge.temporal?.date ?? '');
             const isSelected = edge.id === selectedEdgeId;
             const color = EDGE_COLORS[edge.type] ?? '#6b7280';
 
@@ -225,7 +225,7 @@ export function GraphTimeline({
                 style={{ cursor: 'pointer' }}
                 onClick={() => onEdgeClick(edge.id)}
               >
-                <title>{`${edge.label} (${edge.temporal!.date})`}</title>
+                <title>{`${edge.label} (${edge.temporal?.date ?? ''})`}</title>
               </circle>
             );
           })}

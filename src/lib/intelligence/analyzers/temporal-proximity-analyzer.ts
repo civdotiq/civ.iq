@@ -142,10 +142,14 @@ function detectProximity(
   const pairs: TemporalPattern['edgePairs'] = [];
 
   for (const cause of causeEdges) {
-    const causeDate = new Date(cause.temporal!.date);
+    const causeDateStr = cause.temporal?.date ?? '';
+    if (!causeDateStr) continue;
+    const causeDate = new Date(causeDateStr);
 
     for (const effect of effectEdges) {
-      const effectDate = new Date(effect.temporal!.date);
+      const effectDateStr = effect.temporal?.date ?? '';
+      if (!effectDateStr) continue;
+      const effectDate = new Date(effectDateStr);
       const diffMs = effectDate.getTime() - causeDate.getTime();
       const daysBetween = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
@@ -159,12 +163,12 @@ function detectProximity(
           cause: {
             edgeId: cause.id,
             label: cause.label,
-            date: cause.temporal!.date,
+            date: causeDateStr,
           },
           effect: {
             edgeId: effect.id,
             label: effect.label,
-            date: effect.temporal!.date,
+            date: effectDateStr,
           },
           daysBetween,
           amountInvolved: amount,

@@ -11,9 +11,9 @@
 export const nostrConfig = {
   // Default relays (proven set from ECHOLOCK)
   relays:
-    (process.env.NOSTR_RELAYS || '').split(',').filter(Boolean).length > 0
-      ? process.env
-          .NOSTR_RELAYS!.split(',')
+    (process.env.NOSTR_RELAYS ?? '').split(',').filter(Boolean).length > 0
+      ? (process.env.NOSTR_RELAYS ?? '')
+          .split(',')
           .map(r => r.trim())
           .filter(Boolean)
       : [
