@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Info, Loader2 } from 'lucide-react';
 import type { StateBoundaryFeature } from '@/types/state';
 

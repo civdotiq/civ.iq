@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+'use client';
+
 import { useState, useEffect } from 'react';
 import { StatisticsIcon, CheckIcon } from '@/components/icons/AicherIcons';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';

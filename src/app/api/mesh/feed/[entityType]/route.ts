@@ -57,14 +57,19 @@ export async function GET(
     // Query for NIP-78 civic intelligence events (Kind 30078)
     const result = await queryRelays(keypair.publicKey, 30078, limit);
 
-    return NextResponse.json({
-      entityType,
-      totalEvents: result.totalUniqueEvents,
-      relays: result.relayResults.length,
-      eventIds: result.eventIds,
-      configured: true,
-      meta: { generatedAt: new Date().toISOString() },
-    });
+    return NextResponse.json(
+      {
+        entityType,
+        totalEvents: result.totalUniqueEvents,
+        relays: result.relayResults.length,
+        eventIds: result.eventIds,
+        configured: true,
+        meta: { generatedAt: new Date().toISOString() },
+      },
+      {
+        headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+      }
+    );
   } catch (error) {
     logger.error('[Mesh:Feed API] Error', error as Error, { entityType });
     return ApiErrors.serverError(error as Error);

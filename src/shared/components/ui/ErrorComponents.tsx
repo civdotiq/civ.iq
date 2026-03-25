@@ -381,26 +381,6 @@ export function InlineError({ error, className = '' }: InlineErrorProps) {
   );
 }
 
-// Error toast for temporary errors
-interface ErrorToastProps {
-  error: CiviqError;
-  onDismiss: () => void;
-  duration?: number;
-}
-
-export function ErrorToast({ error, onDismiss, duration = 5000 }: ErrorToastProps) {
-  useEffect(() => {
-    const timer = setTimeout(onDismiss, duration);
-    return () => clearTimeout(timer);
-  }, [onDismiss, duration]);
-
-  return (
-    <div className="fixed bottom-4 right-4 max-w-sm bg-white border border-gray-200 border-2 border-black p-4 z-50">
-      <ErrorDisplay error={error} onDismiss={onDismiss} compact={true} />
-    </div>
-  );
-}
-
 // Network status indicator
 export function NetworkStatusIndicator() {
   const [isOnline, setIsOnline] = useState(true);

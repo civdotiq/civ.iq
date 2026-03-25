@@ -59,7 +59,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return ApiErrors.notFound('Cascade data', body.sector);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+    });
   } catch (error) {
     logger.error('[API:Cascade] Error', error as Error);
     return ApiErrors.serverError(error as Error);

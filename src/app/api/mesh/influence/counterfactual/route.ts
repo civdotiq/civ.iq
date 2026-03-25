@@ -53,7 +53,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return ApiErrors.notFound('Counterfactual data', body.bioguideId);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+    });
   } catch (error) {
     logger.error('[API:Counterfactual] Error', error as Error);
     return ApiErrors.serverError(error as Error);

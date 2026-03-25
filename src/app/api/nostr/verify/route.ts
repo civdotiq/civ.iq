@@ -110,7 +110,9 @@ export async function GET() {
       operation: 'nostr_verify',
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+    });
   } catch (error) {
     logger.error('Nostr verification failed', error as Error, {
       endpoint: '/api/nostr/verify',

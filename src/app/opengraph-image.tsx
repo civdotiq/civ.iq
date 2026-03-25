@@ -60,7 +60,15 @@ export default async function OgImage() {
             }}
           >
             {/* Logo */}
-            {logoSrc && <img src={logoSrc} width={96} height={96} style={{ marginBottom: 32 }} />}
+            {logoSrc && (
+              <img
+                src={logoSrc}
+                width={96}
+                height={96}
+                alt="CIV.IQ Logo"
+                style={{ marginBottom: 32 }}
+              />
+            )}
 
             {/* Title */}
             <div

@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+'use client';
+
 import { useState, useEffect } from 'react';
 import { TrendingUp, Wifi, Building, Users } from 'lucide-react';
 import type { EconomicProfile } from '@/types/district-enhancements';

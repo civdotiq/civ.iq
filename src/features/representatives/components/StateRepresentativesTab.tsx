@@ -4,6 +4,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+'use client';
+
 import { useState, useEffect, memo } from 'react';
 import { StateLegislatorCard } from '@/features/representatives/components/StateLegislatorCard';
 import { RepresentativeSkeleton } from '@/shared/components/ui/SkeletonComponents';

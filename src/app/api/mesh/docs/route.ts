@@ -19,7 +19,17 @@ import { meshRegistry } from '@/lib/mesh/registry';
 export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<NextResponse> {
-  ensureMeshInitialized();
+  try {
+    ensureMeshInitialized();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Mesh initialization failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
 
   const schemas = meshRegistry.getAllSchemas();
 

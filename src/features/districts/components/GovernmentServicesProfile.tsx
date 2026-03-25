@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+'use client';
+
 import { useState, useEffect } from 'react';
 import { DollarSign, FileText, Building2, Users } from 'lucide-react';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';

@@ -16,14 +16,13 @@ import {
   NetworkError,
   ServerError,
 } from '@/lib/errors/ErrorTypes';
-import { ErrorDisplay, InlineError, ErrorToast } from '@/shared/components/ui/ErrorComponents';
+import { ErrorDisplay, InlineError } from '@/shared/components/ui/ErrorComponents';
 import { EnhancedErrorBoundary } from '@/components/shared/common/EnhancedErrorBoundary';
 import { SearchValidation } from '@/features/search/components/search/SearchValidation';
 
 export function ErrorSystemDemo() {
   const [activeDemo, setActiveDemo] = useState<string>('validation');
   const [selectedError, setSelectedError] = useState<string>('');
-  const [showToast, setShowToast] = useState(false);
 
   // Sample errors for demonstration
   const sampleErrors = {
@@ -204,34 +203,6 @@ export function ErrorSystemDemo() {
             <BuggyComponent />
           </EnhancedErrorBoundary>
         </div>
-      </div>
-    ),
-
-    toast: (
-      <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Error Toast Notifications</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Object.keys(sampleErrors).map(key => (
-            <button
-              key={key}
-              onClick={() => {
-                setShowToast(false);
-                setTimeout(() => setShowToast(true), 100);
-              }}
-              className="px-3 py-2 text-sm bg-white border-2 border-gray-300 hover:bg-gray-200 rounded border text-left"
-            >
-              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-            </button>
-          ))}
-        </div>
-
-        {showToast && (
-          <ErrorToast
-            error={sampleErrors.timeout}
-            onDismiss={() => setShowToast(false)}
-            duration={10000}
-          />
-        )}
       </div>
     ),
   };
