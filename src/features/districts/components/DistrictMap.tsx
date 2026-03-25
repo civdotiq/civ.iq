@@ -59,7 +59,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     const timer = setTimeout(() => {
       if (!mapContainer.current) return; // Exit if no container
       if (mapRef.current) return; // Exit if map already exists
-      logger.info('🔍 Map useEffect triggered - checking conditions:', {
+      logger.info('Map useEffect triggered - checking conditions:', {
         hasContainer: !!mapContainer.current,
         hasExistingMap: !!mapRef.current,
         isClient: isClient,
@@ -68,7 +68,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       });
 
       if (!mapContainer.current || mapRef.current) {
-        logger.warn('⚠️ Map initialization skipped - conditions not met:', {
+        logger.warn('Map initialization skipped - conditions not met:', {
           noContainer: !mapContainer.current,
           mapExists: !!mapRef.current,
           notClient: !isClient,
@@ -79,11 +79,11 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       const initializeMap = async () => {
         try {
           // Step 2: Add diagnostic logging
-          logger.info('🗺️ Map container ready:', {
+          logger.info('Map container ready:', {
             tagName: mapContainer.current?.tagName,
             id: mapContainer.current?.id,
           });
-          logger.info('⏳ Attempting to initialize MapLibre map...');
+          logger.info('Attempting to initialize MapLibre map...');
 
           // Dynamic import MapLibre GL
           const maplibregl = (await import('maplibre-gl')).default;
@@ -142,7 +142,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           });
 
           mapRef.current = map;
-          logger.info('✅ MapLibre map successfully initialized:', {
+          logger.info('MapLibre map successfully initialized:', {
             center: map.getCenter(),
             zoom: map.getZoom(),
           });
@@ -207,7 +207,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     const hasMap = !!mapRef.current;
     const hasGeoJson = !!geoJsonData;
 
-    logger.info('🔄 District data useEffect triggered:', {
+    logger.info('District data useEffect triggered:', {
       hasMap,
       hasGeoJson,
       isClient,
@@ -215,7 +215,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     });
 
     if (!mapRef.current || !geoJsonData || !isClient || !mapLoaded) {
-      logger.warn('⚠️ Skipping district layer update - missing requirements:', {
+      logger.warn('Skipping district layer update - missing requirements:', {
         missingMap: !hasMap,
         missingGeoJson: !hasGeoJson,
         missingClient: !isClient,
@@ -226,7 +226,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
     const map = mapRef.current;
 
-    logger.info('✅ Updating map with district data:', {
+    logger.info('Updating map with district data:', {
       hasMap: !!mapRef.current,
       hasGeoJson: !!geoJsonData,
       geoJsonType: geoJsonData?.type,
@@ -236,7 +236,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
     const addDistrictLayers = () => {
       try {
-        logger.info('▶️ Attempting to load district boundaries...');
+        logger.info('Attempting to load district boundaries...');
 
         // Remove existing district layer if present
         if (map.getSource('district-boundary')) {
@@ -257,7 +257,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
         logger.info(' Adding source with config:', sourceConfig);
 
         map.addSource('district-boundary', sourceConfig);
-        logger.info(' ✅ Source added successfully.');
+        logger.info(' Source added successfully.');
 
         const isRealPolygon = dataSource === 'real_polygon_extraction';
         const fillColor = isRealPolygon ? '#22C55E' : '#3B82F6';
@@ -278,7 +278,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
         // CRITICAL FIX: Add district layers ABOVE base-map by not specifying beforeId
         // MapLibre renders layers in order, so adding after base-map puts them on top
         map.addLayer(fillLayerConfig);
-        logger.info(' ✅ Fill layer added successfully.');
+        logger.info(' Fill layer added successfully.');
 
         // Add stroke layer
         const strokeLayerConfig = {
@@ -294,7 +294,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
         logger.info(' Adding stroke layer with config:', strokeLayerConfig);
 
         map.addLayer(strokeLayerConfig);
-        logger.info(' ✅ Stroke layer added successfully.');
+        logger.info(' Stroke layer added successfully.');
 
         // Log layer order for debugging
         logger.info(
@@ -302,7 +302,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           map.getStyle().layers?.map(l => l.id)
         );
 
-        logger.info('✅ District layers added successfully');
+        logger.info('District layers added successfully');
 
         // Fit map to district bounds - handle both Polygon and MultiPolygon
         const geometry = geoJsonData.geometry;
@@ -340,11 +340,11 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
               ],
               { padding: 50 }
             );
-            logger.info('✅ Map fitted to district bounds');
+            logger.info('Map fitted to district bounds');
           }
         }
       } catch (error) {
-        logger.error('❌ Error updating map with district data:', error as Error);
+        logger.error('Error updating map with district data:', error as Error);
       }
     };
 
@@ -353,19 +353,19 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     const isMapReady = map.loaded() || map.isStyleLoaded();
 
     if (isMapReady) {
-      logger.info('✅ Map is ready, adding district layers immediately');
+      logger.info('Map is ready, adding district layers immediately');
       addDistrictLayers();
     } else {
-      logger.info('⏳ Map not yet loaded, waiting for load event...');
+      logger.info('Map not yet loaded, waiting for load event...');
       map.once('load', () => {
-        logger.info('✅ Map load event fired, adding district layers now');
+        logger.info('Map load event fired, adding district layers now');
         addDistrictLayers();
       });
 
       // FALLBACK: Also try after a short delay in case load event already fired
       setTimeout(() => {
         if (map.loaded() && !map.getSource('district-boundary')) {
-          logger.info('🔄 Fallback: Adding district layers after timeout');
+          logger.info('Fallback: Adding district layers after timeout');
           addDistrictLayers();
         }
       }, 1000);
@@ -373,7 +373,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   }, [geoJsonData, dataSource, isClient, mapLoaded]);
 
   useEffect(() => {
-    logger.info('🎯 Boundary fetch useEffect triggered:', {
+    logger.info('Boundary fetch useEffect triggered:', {
       state,
       district,
       isClient,
@@ -389,7 +389,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
         // For at-large districts or Senate, show state boundary instead
         if (isAtLarge || isSenate) {
-          logger.info('🗺️ Fetching state boundary (at-large/Senate):', { state, district });
+          logger.info('Fetching state boundary (at-large/Senate):', { state, district });
 
           const response = await fetch(`/data/states/standard/${state}.json`);
 
@@ -401,7 +401,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           }
 
           const boundary = await response.json();
-          logger.info('✅ State boundary loaded:', {
+          logger.info('State boundary loaded:', {
             state,
             hasGeometry: !!boundary?.geometry,
             geometryType: boundary?.geometry?.type,
@@ -487,7 +487,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           throw new Error(`Unknown state: ${state}`);
         }
 
-        logger.info('🌐 Fetching district boundary from Census TIGER:', {
+        logger.info('Fetching district boundary from Census TIGER:', {
           state,
           stateFips,
           district: paddedDistrict,
@@ -524,7 +524,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
         // Extract the first feature (should be the only one)
         const boundary = data.features[0];
-        logger.info('✅ District boundary received from Census TIGER:', {
+        logger.info('District boundary received from Census TIGER:', {
           hasData: !!boundary,
           type: boundary?.type,
           hasGeometry: !!boundary?.geometry,
@@ -605,12 +605,12 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
         <div className="mt-2 text-xs text-center">
           {isLiveCensusTiger ? (
             <span className="text-green-600 font-medium">
-              ✅ Live from Census TIGER API • 119th Congress ({coordinateCount.toLocaleString()}{' '}
+              Live from Census TIGER API • 119th Congress ({coordinateCount.toLocaleString()}{' '}
               coordinate points)
             </span>
           ) : isStateBoundary ? (
             <span className="text-blue-600 font-medium">
-              ✅ State boundaries ({coordinateCount.toLocaleString()} coordinate points)
+              State boundaries ({coordinateCount.toLocaleString()} coordinate points)
             </span>
           ) : (
             <span className="text-gray-500">

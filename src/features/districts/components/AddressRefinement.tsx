@@ -156,7 +156,7 @@ export function AddressRefinement({
             {error && (
               <div className="p-3 bg-red-50 border border-red-200">
                 <div className="flex items-start">
-                  <div className="text-red-600 mr-2">⚠️</div>
+                  <div className="text-red-600 mr-2"></div>
                   <div>
                     <p className="text-sm font-medium text-red-800">Address Not Found</p>
                     <p className="text-sm text-red-700 mt-1">{error}</p>
@@ -193,7 +193,7 @@ export function AddressRefinement({
 
           {/* Help Section */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
-            <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Tips for Better Results</h4>
+            <h4 className="text-sm font-semibold text-blue-900 mb-2">Tips for Better Results</h4>
             <ul className="text-xs text-blue-800 space-y-1">
               <li>• Include your full street address (number, street name, type)</li>
               <li>• Add your city and state for best accuracy</li>
@@ -208,8 +208,7 @@ export function AddressRefinement({
           {/* Privacy Notice */}
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
-              🔒 Your address is only used to determine your congressional district and is not
-              stored.
+              Your address is only used to determine your congressional district and is not stored.
             </p>
           </div>
         </div>

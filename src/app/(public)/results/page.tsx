@@ -777,7 +777,7 @@ function ResultsContent() {
                             }}
                             className="text-sm text-civiq-blue hover:text-civiq-blue/80 transition-colors inline-flex items-center space-x-1"
                           >
-                            <span>🔄</span>
+                            <span></span>
                             <span>Change selected district</span>
                           </button>
                         </div>

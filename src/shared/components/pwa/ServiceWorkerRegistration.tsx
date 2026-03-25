@@ -216,7 +216,7 @@ export function ServiceWorkerRegistration() {
           fontWeight: '500',
         }}
       >
-        <span>📱 App update available</span>
+        <span>App update available</span>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={handleUpdateAvailable}
@@ -271,7 +271,7 @@ export function ServiceWorkerRegistration() {
           fontWeight: '500',
         }}
       >
-        📡 You&apos;re offline. Some features may be limited.
+        You&apos;re offline. Some features may be limited.
       </div>
     );
   }
@@ -295,7 +295,7 @@ export function ServiceWorkerRegistration() {
           fontWeight: '500',
         }}
       >
-        🔄 Installing app for offline use...
+        Installing app for offline use...
       </div>
     );
   }

@@ -124,13 +124,13 @@ export function NewsClusterComponent({
 
         <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
           <span className="flex items-center gap-1">
-            🏛️ {cluster.sourceCount} source{cluster.sourceCount !== 1 ? 's' : ''}
+            {cluster.sourceCount} source{cluster.sourceCount !== 1 ? 's' : ''}
           </span>
           <span className="text-gray-400">•</span>
-          <span className="flex items-center gap-1">⏱️ {formatTimeSpan(cluster.timeSpan)}</span>
+          <span className="flex items-center gap-1">{formatTimeSpan(cluster.timeSpan)}</span>
           <span className="text-gray-400">•</span>
           <span className="flex items-center gap-1">
-            📊 {(cluster.relevanceScore * 100).toFixed(0)}% relevance
+            {(cluster.relevanceScore * 100).toFixed(0)}% relevance
           </span>
         </div>
       </div>

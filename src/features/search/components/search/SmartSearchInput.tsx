@@ -175,10 +175,10 @@ export function SmartSearchInput({
           {/* Input type indicator */}
           {inputType && (
             <span className="absolute right-16 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-              {inputType === 'zip' && '📍 ZIP'}
-              {inputType === 'zip_plus_4' && '📍 ZIP+4'}
-              {inputType === 'address' && '🏠 Address'}
-              {inputType === 'ambiguous' && '❓ Unclear'}
+              {inputType === 'zip' && 'ZIP'}
+              {inputType === 'zip_plus_4' && 'ZIP+4'}
+              {inputType === 'address' && 'Address'}
+              {inputType === 'ambiguous' && 'Unclear'}
             </span>
           )}
 
@@ -211,7 +211,7 @@ export function SmartSearchInput({
           {inputType === 'zip' && '✓ Valid ZIP code format'}
           {inputType === 'zip_plus_4' && '✓ Valid ZIP+4 format'}
           {inputType === 'address' && '✓ Looks like a valid address'}
-          {inputType === 'ambiguous' && '💡 Try adding more details (city, state)'}
+          {inputType === 'ambiguous' && 'Try adding more details (city, state)'}
           {!inputType && showExamples && 'Examples: 48201 or 123 Main St, Detroit, MI'}
         </p>
 
@@ -240,7 +240,7 @@ export function SmartSearchInput({
                         onClick={() => handleRecentSearchClick(search)}
                         className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 transition-colors"
                       >
-                        🕐 {search}
+                        {search}
                       </button>
                     </li>
                   ))}

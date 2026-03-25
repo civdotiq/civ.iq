@@ -175,12 +175,12 @@ export function InstallPrompt() {
     <p style="margin: 8px 0; display: flex; align-items: center;">
      <span style="margin-right: 8px;">2.</span>
      <span>Tap"Add to Home Screen"</span>
-     <span style="margin-left: 8px; font-size: 18px;">📱</span>
+
     </p>
     <p style="margin: 8px 0; display: flex; align-items: center;">
      <span style="margin-right: 8px;">3.</span>
      <span>Tap"Add"</span>
-     <span style="margin-left: 8px; font-size: 18px;">✅</span>
+
     </p>
    </div>
    <button id="ios-install-close" style="
@@ -258,7 +258,7 @@ export function InstallPrompt() {
    `}</style>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '20px' }}>📱</span>
+        <span style={{ fontSize: '20px' }}></span>
         <div>
           <div style={{ fontWeight: '600', marginBottom: '2px' }}>Install CivicHub</div>
           <div style={{ fontSize: '12px', opacity: '0.9' }}>

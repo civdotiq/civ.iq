@@ -144,11 +144,7 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
       <td className="py-3 px-3 align-top" style={{ width: '80px', minWidth: '80px' }}>
         <div className="flex items-center gap-1">
           <span className="font-medium text-blue-600 text-sm">{vote.rollNumber || 'N/A'}</span>
-          {isClickable && (
-            <span className="text-xs text-gray-400" aria-hidden="true">
-              📊
-            </span>
-          )}
+          {isClickable && <span className="text-xs text-gray-400" aria-hidden="true"></span>}
         </div>
       </td>
 

@@ -332,12 +332,12 @@ async function processBatch(
 }
 
 async function generateRSSFeedMap(): Promise<void> {
-  logger.info('🔍 Starting optimized RSS feed discovery for all members of Congress...');
+  logger.info('Starting optimized RSS feed discovery for all members of Congress...');
 
   const members = await loadCongressData();
   const total = members.length;
-  logger.info(`📊 Loaded ${total} members of Congress`);
-  logger.info(`⚡ Processing in batches of ${BATCH_SIZE} with ${BATCH_DELAY_MS}ms delays`);
+  logger.info(`Loaded ${total} members of Congress`);
+  logger.info(`Processing in batches of ${BATCH_SIZE} with ${BATCH_DELAY_MS}ms delays`);
 
   // Initialize progress bar
   const progressBar = new cliProgress.SingleBar({
@@ -360,7 +360,7 @@ async function generateRSSFeedMap(): Promise<void> {
     batches.push(members.slice(i, i + BATCH_SIZE));
   }
 
-  logger.info(`🚀 Processing ${batches.length} batches...`);
+  logger.info(`Processing ${batches.length} batches...`);
 
   // Process batches sequentially with delays between them
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
@@ -394,7 +394,7 @@ async function generateRSSFeedMap(): Promise<void> {
       }
     } catch (error) {
       allErrors.push(`Batch ${batchIndex + 1} failed: ${(error as Error).message}`);
-      logger.error(`❌ Batch ${batchIndex + 1} failed: ${(error as Error).message}`);
+      logger.error(`Batch ${batchIndex + 1} failed: ${(error as Error).message}`);
     }
   }
 
@@ -430,25 +430,25 @@ async function generateRSSFeedMap(): Promise<void> {
   const reportPath = path.resolve('rss-feed-discovery-report.json');
   await fs.writeFile(reportPath, JSON.stringify(summary, null, 2), 'utf8');
 
-  logger.info('\n🎉 Optimized RSS Feed Discovery Complete!');
+  logger.info('\nOptimized RSS Feed Discovery Complete!');
   logger.info(
-    `📊 Coverage: ${summary.membersWithFeeds}/${summary.totalMembers} members (${summary.coveragePercentage}%)`
+    `Coverage: ${summary.membersWithFeeds}/${summary.totalMembers} members (${summary.coveragePercentage}%)`
   );
-  logger.info(`📝 Feed map written to: ${outputPath}`);
-  logger.info(`📋 Full report written to: ${reportPath}`);
-  logger.info(`⚡ Performance: Processed ${total} members with parallel optimization`);
+  logger.info(`Feed map written to: ${outputPath}`);
+  logger.info(`Full report written to: ${reportPath}`);
+  logger.info(`Performance: Processed ${total} members with parallel optimization`);
 
   if (summary.coveragePercentage >= 80) {
-    logger.info('🎯 Target of >80% coverage achieved!');
+    logger.info('Target of >80% coverage achieved!');
   } else {
-    logger.warn('⚠️  Coverage below 80% target');
+    logger.warn('Coverage below 80% target');
   }
 }
 
 // Run the script
 if (require.main === module) {
   generateRSSFeedMap().catch(error => {
-    logger.error('💥 Fatal error:', error as Error);
+    logger.error('Fatal error:', error as Error);
     process.exit(1);
   });
 }

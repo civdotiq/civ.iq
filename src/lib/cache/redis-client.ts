@@ -60,7 +60,7 @@ export class RedisCache {
 
     // If we have REST API credentials, log that we'll use them
     if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-      logger.info('✅ Upstash REST API credentials detected - using REST for serverless');
+      logger.info('Upstash REST API credentials detected - using REST for serverless');
       this.redisAvailable = true;
       this.isConnected = true; // REST API doesn't need persistent connection
       this.startCleanupTask();
@@ -89,7 +89,7 @@ export class RedisCache {
     try {
       const { default: Redis } = await import('ioredis');
 
-      logger.info('🔧 Redis Config:', {
+      logger.info('Redis Config:', {
         host: config.host,
         port: config.port,
         db: config.db,
@@ -199,11 +199,11 @@ export class RedisCache {
     if (!this.client) return;
 
     try {
-      logger.info('🔌 Attempting Redis connection...');
+      logger.info('Attempting Redis connection...');
       await this.client.ping();
-      logger.info('✅ Redis connection successful');
+      logger.info('Redis connection successful');
     } catch (error) {
-      logger.error('❌ Redis connection failed:', error as Error, {
+      logger.error('Redis connection failed:', error as Error, {
         host: process.env.REDIS_HOST || 'localhost',
         port: process.env.REDIS_PORT || '6379',
       });

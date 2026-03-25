@@ -145,10 +145,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-sm text-blue-700 mt-1">Graduation Rate</p>
             <p className="text-xs text-blue-600 mt-1">
               {services.education.graduationRate >= 85
-                ? '🟢 Excellent'
+                ? 'Excellent'
                 : services.education.graduationRate >= 75
-                  ? '🟡 Good'
-                  : '🔴 Needs Improvement'}
+                  ? 'Good'
+                  : 'Needs Improvement'}
             </p>
           </div>
 
@@ -185,10 +185,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-sm text-cyan-700 mt-1">Teacher-Student Ratio</p>
             <p className="text-xs text-cyan-600 mt-1">
               {services.education.teacherToStudentRatio <= 15
-                ? '🟢 Excellent'
+                ? 'Excellent'
                 : services.education.teacherToStudentRatio <= 20
-                  ? '🟡 Good'
-                  : '🔴 High'}
+                  ? 'Good'
+                  : 'High'}
             </p>
           </div>
         </div>
@@ -236,10 +236,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
                 <p className="text-sm text-rose-700 mt-1">Health Outcome Index</p>
                 <p className="text-xs text-rose-600 mt-1">
                   {services.healthcare.healthOutcomeIndex >= 80
-                    ? '🟢 Excellent'
+                    ? 'Excellent'
                     : services.healthcare.healthOutcomeIndex >= 65
-                      ? '🟡 Good'
-                      : '🔴 Needs Improvement'}
+                      ? 'Good'
+                      : 'Needs Improvement'}
                 </p>
               </div>
             )}
@@ -266,10 +266,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
                   <p className="text-sm text-amber-700 mt-1">Healthcare Cost Index</p>
                   <p className="text-xs text-amber-600 mt-1">
                     {services.healthcare.healthcareCostIndex <= 1.0
-                      ? '🟢 Below Average'
+                      ? 'Below Average'
                       : services.healthcare.healthcareCostIndex <= 1.2
-                        ? '🟡 Average'
-                        : '🔴 Above Average'}
+                        ? 'Average'
+                        : 'Above Average'}
                   </p>
                 </div>
               )}

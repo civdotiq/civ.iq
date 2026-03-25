@@ -252,7 +252,7 @@ export function SimpleGoogleNewsFeed({
     if (error) {
       return (
         <div className="text-center py-12">
-          <div className="text-red-600 mb-4">⚠️ Failed to load news</div>
+          <div className="text-red-600 mb-4">Failed to load news</div>
           <div className="text-gray-600 mb-4">{error}</div>
           <button
             onClick={fetchNews}
@@ -267,7 +267,7 @@ export function SimpleGoogleNewsFeed({
     if (clusters.length === 0) {
       return (
         <div className="text-center py-12">
-          <div className="text-gray-600 mb-4">📰 No current news coverage available</div>
+          <div className="text-gray-600 mb-4">No current news coverage available</div>
           <div className="text-sm text-gray-500">
             No recent news articles found for {representative.firstName} {representative.lastName}
           </div>
@@ -319,10 +319,10 @@ export function SimpleGoogleNewsFeed({
                           }`}
                         >
                           {cluster.topicType === 'breaking'
-                            ? '🚨 Breaking'
+                            ? 'Breaking'
                             : cluster.topicType === 'developing'
-                              ? '📈 Developing'
-                              : '📰 Ongoing'}
+                              ? 'Developing'
+                              : 'Ongoing'}
                         </span>
                       </div>
                     </div>
@@ -343,10 +343,10 @@ export function SimpleGoogleNewsFeed({
                           }`}
                         >
                           {cluster.topicType === 'breaking'
-                            ? '🚨 Breaking'
+                            ? 'Breaking'
                             : cluster.topicType === 'developing'
-                              ? '📈 Developing'
-                              : '📰 Ongoing'}
+                              ? 'Developing'
+                              : 'Ongoing'}
                         </span>
                       </div>
                     )}

@@ -387,7 +387,7 @@ export class DataValidator {
   static logValidationErrors(errors: ValidationError[], context: string = 'Data Validation'): void {
     if (errors.length === 0) {
       // eslint-disable-next-line no-console
-      console.log(`✅ ${context}: No validation errors found`);
+      console.log(`${context}: No validation errors found`);
       return;
     }
 
@@ -395,12 +395,12 @@ export class DataValidator {
 
     if (criticalErrors.length > 0) {
       // eslint-disable-next-line no-console
-      console.error(`❌ ${context}: Critical errors found:`, criticalErrors);
+      console.error(`${context}: Critical errors found:`, criticalErrors);
     }
 
     if (warnings.length > 0) {
       // eslint-disable-next-line no-console
-      console.warn(`⚠️ ${context}: Warnings found:`, warnings);
+      console.warn(`${context}: Warnings found:`, warnings);
     }
   }
 }

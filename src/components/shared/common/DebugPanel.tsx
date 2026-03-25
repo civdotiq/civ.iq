@@ -63,7 +63,7 @@ export function DebugPanel() {
           className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 border-2 border-black"
           title="Show Debug Panel (Ctrl+Shift+D)"
         >
-          🐛 Debug
+          Debug
         </button>
       </div>
     );
@@ -72,7 +72,7 @@ export function DebugPanel() {
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-black text-green-400 p-4 border-2 border-black-xl max-w-md max-h-96 overflow-y-auto font-mono text-xs">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-white font-bold">🔍 Phase 2 Debug Panel</h3>
+        <h3 className="text-white font-bold">Phase 2 Debug Panel</h3>
         <button
           onClick={() => setIsVisible(false)}
           className="text-red-400 hover:text-red-300"
@@ -85,7 +85,7 @@ export function DebugPanel() {
       <div className="space-y-3">
         {/* Page Data */}
         <div>
-          <h4 className="text-yellow-400 font-semibold">📄 Page Data</h4>
+          <h4 className="text-yellow-400 font-semibold">Page Data</h4>
           {pageData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(pageData, null, 2)}</pre>
           ) : (
@@ -95,7 +95,7 @@ export function DebugPanel() {
 
         {/* Client Data */}
         <div>
-          <h4 className="text-blue-400 font-semibold">🔵 Client Data</h4>
+          <h4 className="text-blue-400 font-semibold">Client Data</h4>
           {clientData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(clientData, null, 2)}</pre>
           ) : (
@@ -105,7 +105,7 @@ export function DebugPanel() {
 
         {/* Bills Component Data */}
         <div>
-          <h4 className="text-orange-400 font-semibold">📊 Bills Component</h4>
+          <h4 className="text-orange-400 font-semibold">Bills Component</h4>
           {billsData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(billsData, null, 2)}</pre>
           ) : (
@@ -115,9 +115,9 @@ export function DebugPanel() {
 
         {/* Instructions */}
         <div className="text-gray-500 text-xs border-t border-gray-700 pt-2">
-          <p>💡 Press Ctrl+Shift+D to toggle</p>
-          <p>🔄 Updates every 2 seconds</p>
-          <p>📱 Navigate to profile page to see data flow</p>
+          <p>Press Ctrl+Shift+D to toggle</p>
+          <p>Updates every 2 seconds</p>
+          <p>Navigate to profile page to see data flow</p>
         </div>
       </div>
     </div>

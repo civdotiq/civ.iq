@@ -30,7 +30,7 @@ class Congress119Migrator {
   private results: MigrationResult[] = [];
 
   async migrate(): Promise<void> {
-    console.log('🚀 Starting migration to 119th Congress...\n');
+    console.log('Starting migration to 119th Congress...\n');
 
     await this.clearCaches();
     await this.validateDataSources();
@@ -41,7 +41,7 @@ class Congress119Migrator {
   }
 
   private async clearCaches(): Promise<void> {
-    console.log('🧹 Clearing outdated caches...');
+    console.log('Clearing outdated caches...');
 
     try {
       // Clear Redis caches with 118th Congress patterns
@@ -71,7 +71,7 @@ class Congress119Migrator {
   }
 
   private async validateDataSources(): Promise<void> {
-    console.log('📊 Validating data sources for 119th Congress...');
+    console.log('Validating data sources for 119th Congress...');
 
     const requiredEnvVars = ['CONGRESS_API_KEY', 'CENSUS_API_KEY', 'FEC_API_KEY'];
 
@@ -150,7 +150,7 @@ class Congress119Migrator {
   }
 
   private async updateConfiguration(): Promise<void> {
-    console.log('⚙️  Updating configuration for 119th Congress...');
+    console.log('Updating configuration for 119th Congress...');
 
     try {
       // Set current congress environment variable
@@ -169,7 +169,7 @@ class Congress119Migrator {
   }
 
   private async verifyMigration(): Promise<void> {
-    console.log('✅ Verifying migration...');
+    console.log('Verifying migration...');
 
     try {
       // Count successful steps
@@ -215,7 +215,7 @@ class Congress119Migrator {
   private recordResult(step: string, success: boolean, message: string, details?: unknown): void {
     this.results.push({ step, success, message, details });
 
-    const icon = success ? '✅' : '❌';
+    const icon = success ? '[OK]' : '[FAIL]';
     console.log(`  ${icon} ${step}: ${message}`);
 
     if (!success) {
@@ -226,37 +226,37 @@ class Congress119Migrator {
   }
 
   private printSummary(): void {
-    console.log('\n📋 Migration Summary');
+    console.log('\nMigration Summary');
     console.log('═'.repeat(50));
 
     const successful = this.results.filter(r => r.success);
     const failed = this.results.filter(r => !r.success);
 
-    console.log(`✅ Successful steps: ${successful.length}`);
-    console.log(`❌ Failed steps: ${failed.length}`);
-    console.log(`📊 Total steps: ${this.results.length}`);
+    console.log(`Successful steps: ${successful.length}`);
+    console.log(`Failed steps: ${failed.length}`);
+    console.log(`Total steps: ${this.results.length}`);
 
     if (failed.length > 0) {
-      console.log('\n❌ Failed Steps:');
+      console.log('\nFailed Steps:');
       failed.forEach(result => {
         console.log(`  • ${result.step}: ${result.message}`);
       });
 
-      console.log('\n🔧 Recommended Actions:');
+      console.log('\nRecommended Actions:');
       console.log('  1. Check environment variables in .env.local');
       console.log('  2. Verify API keys are valid for 119th Congress');
       console.log('  3. Ensure Redis is running and accessible');
       console.log('  4. Check network connectivity to government APIs');
     } else {
-      console.log('\n🎉 Migration completed successfully!');
-      console.log('\n🚀 Next Steps:');
+      console.log('\nMigration completed successfully!');
+      console.log('\nNext Steps:');
       console.log('  1. Restart the application');
       console.log('  2. Clear browser cache');
       console.log('  3. Verify all pages show 119th Congress data');
       console.log('  4. Run integration tests if available');
     }
 
-    console.log('\n📝 For more details, check the application logs.');
+    console.log('\nFor more details, check the application logs.');
   }
 }
 
@@ -264,7 +264,7 @@ class Congress119Migrator {
 if (require.main === module) {
   const migrator = new Congress119Migrator();
   migrator.migrate().catch(error => {
-    console.error('❌ Migration failed:', error);
+    console.error('Migration failed:', error);
     process.exit(1);
   });
 }

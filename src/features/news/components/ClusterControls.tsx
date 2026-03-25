@@ -183,9 +183,9 @@ export function ClusterControls({
           <div className="flex flex-wrap gap-1">
             {[
               { value: 'all', label: 'All' },
-              { value: 'breaking', label: '🚨 Breaking' },
-              { value: 'developing', label: '📈 Developing' },
-              { value: 'ongoing', label: '📰 Ongoing' },
+              { value: 'breaking', label: 'Breaking' },
+              { value: 'developing', label: 'Developing' },
+              { value: 'ongoing', label: 'Ongoing' },
             ].map(option => (
               <button
                 key={option.value}

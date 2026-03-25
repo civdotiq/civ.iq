@@ -91,77 +91,77 @@ const BASKET_METADATA: Record<
 > = {
   [InterestGroupBasket.BIG_TECH]: {
     description: 'Technology companies, internet platforms, and software firms',
-    icon: '💻',
+    icon: '',
     color: '#3B82F6', // Blue
   },
   [InterestGroupBasket.WALL_STREET]: {
     description: 'Banks, investment firms, insurance companies, and financial services',
-    icon: '💰',
+    icon: '',
     color: '#10B981', // Green
   },
   [InterestGroupBasket.HEALTHCARE_PHARMA]: {
     description: 'Pharmaceutical companies, hospitals, doctors, and health insurance',
-    icon: '🏥',
+    icon: '',
     color: '#EF4444', // Red
   },
   [InterestGroupBasket.BIG_OIL]: {
     description: 'Oil and gas companies, utilities, and energy producers',
-    icon: '⚡',
+    icon: '',
     color: '#F59E0B', // Orange
   },
   [InterestGroupBasket.DEFENSE_CONTRACTORS]: {
     description: 'Defense contractors, aerospace, and military suppliers',
-    icon: '🛡️',
+    icon: '',
     color: '#6B7280', // Gray
   },
   [InterestGroupBasket.LABOR_UNIONS]: {
     description: 'Labor unions and worker organizations',
-    icon: '👷',
+    icon: '',
     color: '#8B5CF6', // Purple
   },
   [InterestGroupBasket.TRIAL_LAWYERS]: {
     description: 'Law firms, attorneys, and legal services',
-    icon: '⚖️',
+    icon: '',
     color: '#14B8A6', // Teal
   },
   [InterestGroupBasket.AGRIBUSINESS]: {
     description: 'Farms, food processors, and agricultural companies',
-    icon: '🌾',
+    icon: '',
     color: '#84CC16', // Lime
   },
   [InterestGroupBasket.REAL_ESTATE]: {
     description: 'Real estate developers, construction firms, and contractors',
-    icon: '🏗️',
+    icon: '',
     color: '#F97316', // Orange
   },
   [InterestGroupBasket.SMALL_BUSINESS]: {
     description: 'Small businesses, retailers, and service providers',
-    icon: '🏪',
+    icon: '',
     color: '#06B6D4', // Cyan
   },
   [InterestGroupBasket.EDUCATION]: {
     description: 'Schools, universities, and education organizations',
-    icon: '📚',
+    icon: '',
     color: '#A855F7', // Purple
   },
   [InterestGroupBasket.IDEOLOGICAL]: {
     description: 'Advocacy groups, non-profits, and ideological organizations',
-    icon: '📢',
+    icon: '',
     color: '#EC4899', // Pink
   },
   [InterestGroupBasket.GRASSROOTS]: {
     description: 'Small individual donors ($200 or less per person)',
-    icon: '🌱',
+    icon: '',
     color: '#22C55E', // Green
   },
   [InterestGroupBasket.SELF_FUNDED]: {
     description: "Candidate's own money",
-    icon: '💵',
+    icon: '',
     color: '#64748B', // Slate
   },
   [InterestGroupBasket.OTHER]: {
     description: 'Other contributors not categorized above',
-    icon: '📊',
+    icon: '',
     color: '#9CA3AF', // Gray
   },
 };

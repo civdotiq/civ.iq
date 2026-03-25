@@ -164,7 +164,7 @@ export default function HealthcareTopicPage() {
 
         {/* Page Header */}
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-4xl">🏥</span>
+          <span className="text-4xl"></span>
           <h1 className="text-3xl font-bold text-gray-900">Healthcare Policy</h1>
         </div>
         <p className="text-gray-600 mb-4">

@@ -419,7 +419,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
 
       {filteredVotes.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-lg mb-2">📊</div>
+          <div className="text-lg mb-2"></div>
           <div>No votes found matching the selected criteria.</div>
           <div className="text-sm mt-2">Try adjusting your filters or search terms.</div>
         </div>

@@ -84,7 +84,7 @@ class RedisService {
     const finalConfig = { ...defaultConfig, ...config };
 
     // DEBUG: Log Redis configuration
-    logger.info('🔧 Redis Service Config:', {
+    logger.info('Redis Service Config:', {
       host: finalConfig.host,
       port: finalConfig.port,
       db: finalConfig.db,
@@ -194,11 +194,11 @@ class RedisService {
     if (!this.client) return;
 
     try {
-      logger.info('🔌 Attempting Redis connection...');
+      logger.info('Attempting Redis connection...');
       await this.client.ping();
-      logger.info('✅ Redis connection successful');
+      logger.info('Redis connection successful');
     } catch (error) {
-      logger.error('❌ Redis connection failed:', error as Error, {
+      logger.error('Redis connection failed:', error as Error, {
         host: process.env.REDIS_HOST || 'localhost',
         port: process.env.REDIS_PORT || '6379',
       });

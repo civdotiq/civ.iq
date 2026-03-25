@@ -20,21 +20,21 @@ function getFreshnessInfo(freshness?: string) {
     const timeMatch = freshness.match(/Retrieved in (\d+)ms/);
     if (timeMatch && timeMatch[1]) {
       const ms = parseInt(timeMatch[1]);
-      if (ms < 100) return { status: 'real-time', color: 'text-green-600', icon: '🔥' };
-      if (ms < 1000) return { status: 'fast', color: 'text-blue-600', icon: '⚡' };
-      return { status: 'live', color: 'text-orange-600', icon: '🐌' };
+      if (ms < 100) return { status: 'real-time', color: 'text-green-600', icon: '' };
+      if (ms < 1000) return { status: 'fast', color: 'text-blue-600', icon: '' };
+      return { status: 'live', color: 'text-orange-600', icon: '' };
     }
   }
 
   if (freshness.includes('Failed after')) {
-    return { status: 'failed', color: 'text-red-600', icon: '❌' };
+    return { status: 'failed', color: 'text-red-600', icon: '' };
   }
 
   if (freshness.includes('cached')) {
-    return { status: 'cached', color: 'text-purple-600', icon: '💾' };
+    return { status: 'cached', color: 'text-purple-600', icon: '' };
   }
 
-  return { status: 'unknown', color: 'text-gray-600', icon: '❓' };
+  return { status: 'unknown', color: 'text-gray-600', icon: '' };
 }
 
 export function DataQualityIndicator({
@@ -147,7 +147,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
     return (
       <div className="p-6 border bg-red-50 border-red-200 text-red-800">
         <div className="flex items-start gap-4">
-          <span className="text-2xl">❌</span>
+          <span className="text-2xl"></span>
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2">Unknown Error</h3>
             <p className="text-sm mb-4 opacity-90">
@@ -188,16 +188,16 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
     switch (errorData.code) {
       case 'DISTRICT_NOT_FOUND':
       case 'INVALID_ZIP_CODE':
-        return '🔍';
+        return '';
       case 'SERVICE_TEMPORARILY_UNAVAILABLE':
       case 'SERVICE_TIMEOUT':
-        return '⏱️';
+        return '';
       case 'REPRESENTATIVES_DATA_UNAVAILABLE':
-        return '📊';
+        return '';
       case 'CONFIGURATION_ERROR':
-        return '⚙️';
+        return '';
       default:
-        return '❌';
+        return '';
     }
   };
 
@@ -306,7 +306,7 @@ export function DataSourceBadge({
     if (source.includes('congress-legislators')) {
       return {
         color: 'bg-blue-100 text-blue-800',
-        icon: '🏛️',
+        icon: '',
         label: 'Congress Data',
         trustLevel: 'official',
         trustScore: 95,
@@ -314,7 +314,7 @@ export function DataSourceBadge({
     } else if (source.includes('census')) {
       return {
         color: 'bg-green-100 text-green-800',
-        icon: '🗺️',
+        icon: '',
         label: 'Census Data',
         trustLevel: 'official',
         trustScore: 98,
@@ -322,7 +322,7 @@ export function DataSourceBadge({
     } else if (source.includes('congress.gov')) {
       return {
         color: 'bg-blue-100 text-blue-800',
-        icon: '⚖️',
+        icon: '',
         label: 'Congress.gov',
         trustLevel: 'official',
         trustScore: 99,
@@ -330,7 +330,7 @@ export function DataSourceBadge({
     } else if (source.includes('fec')) {
       return {
         color: 'bg-purple-100 text-purple-800',
-        icon: '💰',
+        icon: '',
         label: 'FEC Data',
         trustLevel: 'official',
         trustScore: 92,
@@ -338,7 +338,7 @@ export function DataSourceBadge({
     } else if (source.includes('mock') || source.includes('fallback')) {
       return {
         color: 'bg-white border-2 border-gray-300 text-gray-800',
-        icon: '🔧',
+        icon: '',
         label: 'Test Data',
         trustLevel: 'synthetic',
         trustScore: 0,
@@ -346,7 +346,7 @@ export function DataSourceBadge({
     } else if (source.includes('error') || source.includes('failed')) {
       return {
         color: 'bg-red-100 text-red-800',
-        icon: '❌',
+        icon: '',
         label: 'Error',
         trustLevel: 'error',
         trustScore: 0,
@@ -354,7 +354,7 @@ export function DataSourceBadge({
     } else {
       return {
         color: 'bg-white border-2 border-gray-300 text-gray-800',
-        icon: '📊',
+        icon: '',
         label: 'Data',
         trustLevel: 'unknown',
         trustScore: 50,

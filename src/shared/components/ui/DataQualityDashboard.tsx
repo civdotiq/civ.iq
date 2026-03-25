@@ -69,13 +69,13 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return { icon: '📈', color: 'text-green-600' };
+        return { icon: '', color: 'text-green-600' };
       case 'stable':
-        return { icon: '➡️', color: 'text-blue-600' };
+        return { icon: '', color: 'text-blue-600' };
       case 'declining':
-        return { icon: '📉', color: 'text-red-600' };
+        return { icon: '', color: 'text-red-600' };
       default:
-        return { icon: '❓', color: 'text-gray-600' };
+        return { icon: '', color: 'text-gray-600' };
     }
   };
 
@@ -201,7 +201,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                       <ul className="text-sm text-gray-600 space-y-1">
                         {source.issues.map((issue, index) => (
                           <li key={index} className="flex items-start gap-2">
-                            <span className="text-yellow-500 mt-0.5">⚠</span>
+                            <span className="text-yellow-500 mt-0.5"></span>
                             {issue}
                           </li>
                         ))}
@@ -222,7 +222,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
           <div className="space-y-2">
             {metrics.recommendations.map((recommendation, index) => (
               <div key={index} className="flex items-start gap-2 p-3 bg-blue-50">
-                <span className="text-blue-500 mt-0.5">💡</span>
+                <span className="text-blue-500 mt-0.5"></span>
                 <span className="text-sm text-blue-800">{recommendation}</span>
               </div>
             ))}
@@ -324,7 +324,7 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
     <div
       className={`inline-flex items-center gap-2 px-3 py-1 border text-sm ${getColor(trustScore)} ${className}`}
     >
-      <span className="font-medium">🛡️ Trust Score: {trustScore}%</span>
+      <span className="font-medium">Trust Score: {trustScore}%</span>
       <div className="flex gap-1">
         {safeSources.map((source, index) => (
           <DataSourceBadge key={index} source={source} className="text-xs" />

@@ -139,11 +139,11 @@ export function ErrorMonitoringDashboard() {
 
   const getTrendIcon = (count: number) => {
     if (count > 10) {
-      return <span className="text-red-500">📈</span>;
+      return <span className="text-red-500"></span>;
     } else if (count > 5) {
-      return <span className="text-yellow-500">📊</span>;
+      return <span className="text-yellow-500"></span>;
     } else {
-      return <span className="text-green-500">📉</span>;
+      return <span className="text-green-500"></span>;
     }
   };
 

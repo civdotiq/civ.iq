@@ -89,13 +89,13 @@ export default function APIHealthPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'operational':
-        return '✅';
+        return 'OK';
       case 'degraded':
-        return '⚠️';
+        return '--';
       case 'error':
-        return '❌';
+        return 'ERR';
       default:
-        return '❔';
+        return '?';
     }
   };
 
@@ -162,7 +162,7 @@ export default function APIHealthPage() {
                 {Object.entries(health.environment.apiKeysConfigured).map(([key, configured]) => (
                   <div key={key} className="flex items-center gap-2">
                     <span className={configured ? 'text-green-600' : 'text-red-600'}>
-                      {configured ? '✅' : '❌'}
+                      {configured ? 'Yes' : 'No'}
                     </span>
                     <span className="text-sm capitalize">{key}</span>
                   </div>
@@ -197,7 +197,7 @@ export default function APIHealthPage() {
                         {api.details && (
                           <p className="mt-1 text-sm text-gray-600">
                             {api.details.hasData
-                              ? `✓ Returning data (${api.details.sampleSize || 0} items sampled)`
+                              ? `Returning data (${api.details.sampleSize || 0} items sampled)`
                               : 'No data returned'}
                           </p>
                         )}

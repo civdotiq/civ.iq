@@ -135,10 +135,10 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             <p className="text-sm text-green-700 mt-1">Unemployment Rate</p>
             <p className="text-xs text-green-600 mt-1">
               {economic.employment.unemploymentRate <= 4
-                ? '🟢 Low'
+                ? 'Low'
                 : economic.employment.unemploymentRate <= 6
-                  ? '🟡 Moderate'
-                  : '🔴 High'}
+                  ? 'Moderate'
+                  : 'High'}
             </p>
           </div>
 
@@ -194,10 +194,10 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
                 <p className="text-sm text-orange-700 mt-1">Bridge Condition Rating</p>
                 <p className="text-xs text-orange-600 mt-1">
                   {economic.infrastructure.bridgeConditionRating >= 80
-                    ? '🟢 Excellent'
+                    ? 'Excellent'
                     : economic.infrastructure.bridgeConditionRating >= 60
-                      ? '🟡 Good'
-                      : '🔴 Needs Work'}
+                      ? 'Good'
+                      : 'Needs Work'}
                 </p>
               </div>
             )}

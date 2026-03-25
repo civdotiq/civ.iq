@@ -55,7 +55,7 @@ export function SimpleClientWrapper({
     <div className="container mx-auto px-4 py-8">
       {/* Success indicator */}
       <div className="bg-green-500 text-white p-4 mb-4 rounded">
-        ✅ SIMPLE CLIENT COMPONENT MOUNTED SUCCESSFULLY
+        SIMPLE CLIENT COMPONENT MOUNTED SUCCESSFULLY
       </div>
 
       {/* Basic representative info */}
@@ -240,7 +240,7 @@ export function SimpleClientWrapper({
         <h3 className="font-semibold mb-2">Debug Information</h3>
         <div className="text-sm space-y-1">
           <p>
-            <strong>Component Mounted:</strong> {mounted ? '✅ Yes' : '❌ No'}
+            <strong>Component Mounted:</strong> {mounted ? 'Yes' : 'No'}
           </p>
           <p>
             <strong>Active Tab:</strong> {activeTab}
@@ -249,7 +249,7 @@ export function SimpleClientWrapper({
             <strong>Timestamp:</strong> {new Date().toISOString()}
           </p>
           <p>
-            <strong>Window Available:</strong> {typeof window !== 'undefined' ? '✅ Yes' : '❌ No'}
+            <strong>Window Available:</strong> {typeof window !== 'undefined' ? 'Yes' : 'No'}
           </p>
         </div>
       </div>

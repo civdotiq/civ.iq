@@ -16,9 +16,9 @@ interface DonorAnalysisProps {
 type ViewMode = 'size' | 'geography' | 'type';
 
 const VIEW_MODES = [
-  { value: 'size' as const, label: 'Donor Size', icon: '💰' },
-  { value: 'geography' as const, label: 'Geography', icon: '🗺️' },
-  { value: 'type' as const, label: 'Donor Type', icon: '👥' },
+  { value: 'size' as const, label: 'Donor Size', icon: '' },
+  { value: 'geography' as const, label: 'Geography', icon: '' },
+  { value: 'type' as const, label: 'Donor Type', icon: '' },
 ];
 
 export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
@@ -74,7 +74,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg">👤</span>
+              <span className="text-green-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Small Donors</h4>
             </div>
             <div className="space-y-2">
@@ -107,7 +107,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
           <div className="bg-red-50 p-4 border border-red-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-red-600 text-lg">🏢</span>
+              <span className="text-red-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Large Donors</h4>
             </div>
             <div className="space-y-2">
@@ -212,7 +212,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg">🏠</span>
+              <span className="text-blue-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">In-State</h4>
             </div>
             <div className="space-y-2">
@@ -233,7 +233,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
           <div className="bg-purple-50 p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-purple-600 text-lg">🌍</span>
+              <span className="text-purple-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Out-of-State</h4>
             </div>
             <div className="space-y-2">
@@ -294,7 +294,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg">👤</span>
+              <span className="text-green-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Individual</h4>
             </div>
             <div className="space-y-2">
@@ -311,7 +311,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
           <div className="bg-orange-50 p-4 border border-orange-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-orange-600 text-lg">🏢</span>
+              <span className="text-orange-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">PACs</h4>
             </div>
             <div className="space-y-2">
@@ -328,7 +328,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
           <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg">🎭</span>
+              <span className="text-blue-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Party</h4>
             </div>
             <div className="space-y-2">
@@ -345,7 +345,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
           <div className="bg-purple-50 p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-purple-600 text-lg">💼</span>
+              <span className="text-purple-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Self-Funded</h4>
             </div>
             <div className="space-y-2">

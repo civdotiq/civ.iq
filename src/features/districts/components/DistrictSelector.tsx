@@ -275,7 +275,7 @@ export function CompactDistrictSelector({
               onClick={onRefineAddress}
               className="text-sm text-civiq-blue hover:text-civiq-blue/80 transition-colors"
             >
-              🏠 Enter address for exact match
+              Enter address for exact match
             </button>
           </div>
         )}

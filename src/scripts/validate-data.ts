@@ -40,7 +40,7 @@ class DataValidationRunner {
   };
 
   async run(): Promise<void> {
-    console.log('🔍 Starting data validation for 119th Congress...\n');
+    console.log('Starting data validation for 119th Congress...\n');
 
     await this.validateEnvironmentVariables();
     await this.validateApiConnections();
@@ -51,7 +51,7 @@ class DataValidationRunner {
   }
 
   private async validateEnvironmentVariables(): Promise<void> {
-    console.log('🔧 Validating environment variables...');
+    console.log('Validating environment variables...');
 
     const requiredVars = ['CONGRESS_API_KEY', 'CENSUS_API_KEY', 'FEC_API_KEY'];
 
@@ -74,7 +74,7 @@ class DataValidationRunner {
         );
         this.summary.failed++;
       } else {
-        console.log(`  ✅ ${varName}: Present`);
+        console.log(`  [OK]${varName}: Present`);
         this.summary.passed++;
       }
     }
@@ -88,7 +88,7 @@ class DataValidationRunner {
         );
         this.summary.warnings++;
       } else {
-        console.log(`  ✅ ${varName}: ${process.env[varName]}`);
+        console.log(`  [OK]${varName}: ${process.env[varName]}`);
         this.summary.passed++;
       }
     }
@@ -103,7 +103,7 @@ class DataValidationRunner {
       );
       this.summary.failed++;
     } else if (currentCongress === '119') {
-      console.log('  ✅ CURRENT_CONGRESS: Correctly set to 119');
+      console.log('  [OK]CURRENT_CONGRESS: Correctly set to 119');
       this.summary.passed++;
     }
 
@@ -111,7 +111,7 @@ class DataValidationRunner {
   }
 
   private async validateApiConnections(): Promise<void> {
-    console.log('\n🌐 Testing API connections...');
+    console.log('\nTesting API connections...');
 
     const apis = [
       {
@@ -149,7 +149,7 @@ class DataValidationRunner {
         });
 
         if (response.ok) {
-          console.log(`  ✅ ${api.name}: Connection successful (${response.status})`);
+          console.log(`  [OK]${api.name}: Connection successful (${response.status})`);
           this.summary.passed++;
           this.summary.sources.push(api.source);
         } else {
@@ -172,7 +172,7 @@ class DataValidationRunner {
   }
 
   private async validateSampleData(): Promise<void> {
-    console.log('\n📊 Validating sample data for 119th Congress...');
+    console.log('\nValidating sample data for 119th Congress...');
 
     // Sample representative data
     const sampleRepData = {
@@ -189,7 +189,7 @@ class DataValidationRunner {
 
     if (repValidation.isValid) {
       console.log(
-        `  ✅ Representative data validation passed (${repValidation.confidence}% confidence)`
+        `  [OK]Representative data validation passed (${repValidation.confidence}% confidence)`
       );
       this.summary.passed++;
     } else {
@@ -216,7 +216,7 @@ class DataValidationRunner {
 
     if (financeValidation.isValid) {
       console.log(
-        `  ✅ Finance data validation passed (${financeValidation.confidence}% confidence)`
+        `  [OK]Finance data validation passed (${financeValidation.confidence}% confidence)`
       );
       this.summary.passed++;
     } else {
@@ -239,7 +239,7 @@ class DataValidationRunner {
     const newsValidation = dataValidator.validateNewsData(sampleNewsData, 'newsapi');
 
     if (newsValidation.isValid) {
-      console.log(`  ✅ News data validation passed (${newsValidation.confidence}% confidence)`);
+      console.log(`  [OK]News data validation passed (${newsValidation.confidence}% confidence)`);
       this.summary.passed++;
     } else {
       newsValidation.errors.forEach(error => this.recordIssue('error', 'data-validation', error));
@@ -248,17 +248,17 @@ class DataValidationRunner {
   }
 
   private async generateReport(): Promise<void> {
-    console.log('\n📋 Generating data quality report...');
+    console.log('\nGenerating data quality report...');
 
     const report = dataValidator.generateQualityReport(this.summary.sources);
 
-    console.log(`  📊 Total validations: ${report.totalRecords}`);
-    console.log(`  ✅ Valid records: ${report.validRecords}`);
-    console.log(`  ❌ Error rate: ${report.errorRate.toFixed(1)}%`);
-    console.log(`  🎯 Average confidence: ${report.averageConfidence.toFixed(1)}%`);
+    console.log(`  Total validations: ${report.totalRecords}`);
+    console.log(`  Valid records: ${report.validRecords}`);
+    console.log(`  Error rate: ${report.errorRate.toFixed(1)}%`);
+    console.log(`  Average confidence: ${report.averageConfidence.toFixed(1)}%`);
 
     if (report.commonIssues.length > 0) {
-      console.log('\n  🔍 Common issues found:');
+      console.log('\n  Common issues found:');
       report.commonIssues.slice(0, 5).forEach(issue => {
         console.log(`    • ${issue.type}: ${issue.count} occurrences`);
       });
@@ -268,7 +268,7 @@ class DataValidationRunner {
   private recordIssue(type: 'error' | 'warning', source: string, message: string): void {
     this.summary.issues.push({ type, source, message });
 
-    const icon = type === 'error' ? '❌' : '⚠️';
+    const icon = type === 'error' ? 'ERROR' : 'WARN';
     console.log(`  ${icon} ${source}: ${message}`);
 
     if (type === 'error') {
@@ -279,36 +279,36 @@ class DataValidationRunner {
   }
 
   private printSummary(): void {
-    console.log('\n📋 Validation Summary');
+    console.log('\nValidation Summary');
     console.log('═'.repeat(50));
 
-    console.log(`🔍 Total checks: ${this.summary.totalChecks}`);
-    console.log(`✅ Passed: ${this.summary.passed}`);
-    console.log(`❌ Failed: ${this.summary.failed}`);
-    console.log(`⚠️  Warnings: ${this.summary.warnings}`);
+    console.log(`Total checks: ${this.summary.totalChecks}`);
+    console.log(`Passed: ${this.summary.passed}`);
+    console.log(`Failed: ${this.summary.failed}`);
+    console.log(`Warnings: ${this.summary.warnings}`);
 
     const successRate =
       this.summary.totalChecks > 0
         ? ((this.summary.passed / this.summary.totalChecks) * 100).toFixed(1)
         : '0';
 
-    console.log(`📊 Success rate: ${successRate}%`);
+    console.log(`Success rate: ${successRate}%`);
 
     if (this.summary.failed > 0) {
-      console.log('\n❌ Critical Issues:');
+      console.log('\nCritical Issues:');
       this.summary.issues
         .filter(issue => issue.type === 'error')
         .forEach(issue => {
           console.log(`  • ${issue.source}: ${issue.message}`);
         });
 
-      console.log('\n🔧 Recommended Actions:');
+      console.log('\nRecommended Actions:');
       console.log('  1. Check .env.local file for missing API keys');
       console.log('  2. Verify API keys are valid and active');
       console.log('  3. Check network connectivity to government APIs');
       console.log('  4. Review data formats and validation rules');
     } else if (this.summary.warnings > 0) {
-      console.log('\n⚠️  Warnings (non-critical):');
+      console.log('\nWarnings (non-critical):');
       this.summary.issues
         .filter(issue => issue.type === 'warning')
         .forEach(issue => {
@@ -317,11 +317,11 @@ class DataValidationRunner {
     }
 
     if (this.summary.failed === 0 && this.summary.warnings === 0) {
-      console.log('\n🎉 All validations passed successfully!');
-      console.log('✨ Your data sources are ready for 119th Congress.');
+      console.log('\nAll validations passed successfully!');
+      console.log('Your data sources are ready for 119th Congress.');
     }
 
-    console.log('\n📝 For detailed logs, check the application log files.');
+    console.log('\nFor detailed logs, check the application log files.');
   }
 }
 
@@ -329,7 +329,7 @@ class DataValidationRunner {
 if (require.main === module) {
   const validator = new DataValidationRunner();
   validator.run().catch(error => {
-    console.error('❌ Data validation failed:', error);
+    console.error('Data validation failed:', error);
     process.exit(1);
   });
 }

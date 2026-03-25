@@ -65,17 +65,17 @@ export default function CommitteeActivityTimeline({
   const getTimelineIcon = (type: TimelineItem['type']) => {
     switch (type) {
       case 'bill':
-        return '📋';
+        return '';
       case 'report':
-        return '📊';
+        return '';
       case 'hearing':
-        return '👥';
+        return '';
       case 'markup':
-        return '✏️';
+        return '';
       case 'vote':
-        return '🗳️';
+        return '';
       case 'amendment':
-        return '📝';
+        return '';
       default:
         return '•';
     }

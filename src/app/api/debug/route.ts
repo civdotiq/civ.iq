@@ -247,38 +247,38 @@ function generateRecommendations(diagnostic: DiagnosticResult): string[] {
 
   // Check API keys
   if (!diagnostic.apiKeys.congressApi) {
-    recommendations.push('❌ CONGRESS_API_KEY is missing - representative data will be limited');
+    recommendations.push('CONGRESS_API_KEY is missing - representative data will be limited');
   }
   if (!diagnostic.apiKeys.fecApi) {
-    recommendations.push('⚠️ FEC_API_KEY is missing - campaign finance data unavailable');
+    recommendations.push('FEC_API_KEY is missing - campaign finance data unavailable');
   }
   if (!diagnostic.apiKeys.censusApi) {
-    recommendations.push('⚠️ CENSUS_API_KEY is missing - demographic data unavailable');
+    recommendations.push('CENSUS_API_KEY is missing - demographic data unavailable');
   }
 
   // Check NEXT_PUBLIC_APP_URL
   if (!diagnostic.environment.appUrl) {
     recommendations.push(
-      '❌ NEXT_PUBLIC_APP_URL is not set - client-side API calls may fail on Vercel'
+      'NEXT_PUBLIC_APP_URL is not set - client-side API calls may fail on Vercel'
     );
   }
 
   // Check API tests
   if (!diagnostic.apiTests.representativeApi.success) {
     recommendations.push(
-      `❌ Representative API failed: ${diagnostic.apiTests.representativeApi.error || 'Unknown error'}`
+      `Representative API failed: ${diagnostic.apiTests.representativeApi.error || 'Unknown error'}`
     );
   }
 
   if (!diagnostic.apiTests.votesApi.success) {
     recommendations.push(
-      `❌ Votes API failed: ${diagnostic.apiTests.votesApi.error || 'Unknown error'}`
+      `Votes API failed: ${diagnostic.apiTests.votesApi.error || 'Unknown error'}`
     );
   }
 
   if (!diagnostic.apiTests.billsApi.success) {
     recommendations.push(
-      `❌ Bills API failed: ${diagnostic.apiTests.billsApi.error || 'Unknown error'}`
+      `Bills API failed: ${diagnostic.apiTests.billsApi.error || 'Unknown error'}`
     );
   }
 
@@ -287,32 +287,32 @@ function generateRecommendations(diagnostic: DiagnosticResult): string[] {
     diagnostic.apiTests.representativeApi.success &&
     !diagnostic.apiTests.representativeApi.dataReturned
   ) {
-    recommendations.push('⚠️ Representative API returns 200 but no data');
+    recommendations.push('Representative API returns 200 but no data');
   }
 
   if (diagnostic.apiTests.votesApi.success && !diagnostic.apiTests.votesApi.dataReturned) {
-    recommendations.push('⚠️ Votes API returns 200 but no votes array');
+    recommendations.push('Votes API returns 200 but no votes array');
   }
 
   if (diagnostic.apiTests.billsApi.success && !diagnostic.apiTests.billsApi.dataReturned) {
-    recommendations.push('⚠️ Bills API returns 200 but no bills array');
+    recommendations.push('Bills API returns 200 but no bills array');
   }
 
   // Check response times
   if (diagnostic.apiTests.representativeApi.responseTime > 5000) {
     recommendations.push(
-      `⚠️ Representative API is slow (${diagnostic.apiTests.representativeApi.responseTime}ms) - consider caching`
+      `Representative API is slow (${diagnostic.apiTests.representativeApi.responseTime}ms) - consider caching`
     );
   }
 
   if (diagnostic.apiTests.votesApi.responseTime > 10000) {
     recommendations.push(
-      `⚠️ Votes API is slow (${diagnostic.apiTests.votesApi.responseTime}ms) - may timeout on Vercel`
+      `Votes API is slow (${diagnostic.apiTests.votesApi.responseTime}ms) - may timeout on Vercel`
     );
   }
 
   if (recommendations.length === 0) {
-    recommendations.push('✅ All systems operational!');
+    recommendations.push('All systems operational!');
   }
 
   return recommendations;

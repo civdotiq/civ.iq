@@ -17,9 +17,9 @@ interface FundraisingTrendsProps {
 type ViewMode = 'timeline' | 'quarterly' | 'projections';
 
 const VIEW_MODES = [
-  { value: 'timeline' as const, label: 'Timeline', icon: '📈' },
-  { value: 'quarterly' as const, label: 'Quarterly', icon: '📊' },
-  { value: 'projections' as const, label: 'Projections', icon: '🔮' },
+  { value: 'timeline' as const, label: 'Timeline', icon: '' },
+  { value: 'quarterly' as const, label: 'Quarterly', icon: '' },
+  { value: 'projections' as const, label: 'Projections', icon: '' },
 ];
 
 export function FundraisingTrends({ data, className = '' }: FundraisingTrendsProps) {
@@ -64,8 +64,8 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   const getTrendIndicator = (current: number, previous: number) => {
     if (previous === 0) return { icon: '→', color: 'text-gray-400' };
     const change = ((current - previous) / previous) * 100;
-    if (change > 5) return { icon: '↗️', color: 'text-green-500' };
-    if (change < -5) return { icon: '↘️', color: 'text-red-500' };
+    if (change > 5) return { icon: '↗', color: 'text-green-500' };
+    if (change < -5) return { icon: '↘', color: 'text-red-500' };
     return { icon: '→', color: 'text-gray-400' };
   };
 
@@ -120,7 +120,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600 text-lg">💰</span>
+              <span className="text-blue-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Total Raised</h4>
             </div>
             <div className="text-2xl font-bold text-blue-600">
@@ -130,7 +130,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
           <div className="bg-red-50 p-4 border border-red-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-red-600 text-lg">💸</span>
+              <span className="text-red-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Total Spent</h4>
             </div>
             <div className="text-2xl font-bold text-red-600">
@@ -140,7 +140,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
           <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-green-600 text-lg">🏦</span>
+              <span className="text-green-600 text-lg"></span>
               <h4 className="font-semibold text-gray-900">Cash on Hand</h4>
             </div>
             <div className="text-2xl font-bold text-green-600">
@@ -150,7 +150,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
           <div className={`p-4 border ${getEfficiencyBackground(data.summary.efficiency)}`}>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">⚡</span>
+              <span className="text-lg"></span>
               <h4 className="font-semibold text-gray-900">Efficiency</h4>
             </div>
             <div className={`text-2xl font-bold ${getEfficiencyColor(data.summary.efficiency)}`}>
@@ -420,7 +420,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             <div className="space-y-4">
               <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-green-600 text-lg">📈</span>
+                  <span className="text-green-600 text-lg"></span>
                   <h5 className="font-medium text-gray-900">Next Quarter Projection</h5>
                 </div>
                 <div className="space-y-2">
@@ -454,7 +454,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
               <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-orange-600 text-lg">⏰</span>
+                  <span className="text-orange-600 text-lg"></span>
                   <h5 className="font-medium text-gray-900">Runway Analysis</h5>
                 </div>
                 <div className="space-y-2">
@@ -494,7 +494,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
             <div className="bg-white p-4 border-2 border-black">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-purple-600 text-lg">🎯</span>
+                <span className="text-purple-600 text-lg"></span>
                 <h5 className="font-medium text-gray-900">Performance Targets</h5>
               </div>
               <div className="space-y-4">

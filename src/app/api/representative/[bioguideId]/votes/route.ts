@@ -398,7 +398,7 @@ async function fetchRollCallVoteDetails(
 } | null> {
   const cacheKey = `rollcall:${congress}:${chamber}:${session}:${rollNumber}`;
 
-  logger.debug(`🔍 Fetching roll-call details`, {
+  logger.debug(`Fetching roll-call details`, {
     congress,
     chamber,
     session,
@@ -408,13 +408,13 @@ async function fetchRollCallVoteDetails(
 
   // Check cache first (24 hour TTL)
   if (voteCache.has(cacheKey)) {
-    logger.debug(`📋 Cache hit for roll-call ${rollNumber}`, { cacheKey });
+    logger.debug(`Cache hit for roll-call ${rollNumber}`, { cacheKey });
     return voteCache.get(cacheKey) as VoteDetailCache;
   }
 
   try {
     const url = `https://api.congress.gov/v3/${chamber}-vote/${congress}/${session}/${rollNumber}?format=json`;
-    logger.debug(`🌐 Calling Congress.gov API`, { url, rollNumber });
+    logger.debug(`Calling Congress.gov API`, { url, rollNumber });
 
     const response = await fetch(url, {
       headers: {
@@ -426,7 +426,7 @@ async function fetchRollCallVoteDetails(
       signal: AbortSignal.timeout(10000),
     });
 
-    logger.debug(`📡 Congress.gov API response`, {
+    logger.debug(`Congress.gov API response`, {
       rollNumber,
       status: response.status,
       ok: response.ok,
@@ -434,7 +434,7 @@ async function fetchRollCallVoteDetails(
     });
 
     if (!response.ok) {
-      logger.warn(`❌ Roll-call vote not found: ${rollNumber}`, {
+      logger.warn(`Roll-call vote not found: ${rollNumber}`, {
         congress,
         chamber,
         session,
@@ -448,7 +448,7 @@ async function fetchRollCallVoteDetails(
     const voteData = data.houseRollCallVote || data.senateRollCallVote;
 
     if (voteData) {
-      logger.debug(`✅ Roll-call data retrieved successfully`, {
+      logger.debug(`Roll-call data retrieved successfully`, {
         rollNumber,
         hasVotePartyTotal: !!voteData.votePartyTotal,
         votePartyTotalLength: voteData.votePartyTotal?.length || 0,
@@ -461,13 +461,13 @@ async function fetchRollCallVoteDetails(
       return voteData;
     }
 
-    logger.warn(`❌ No vote data found in response`, {
+    logger.warn(`No vote data found in response`, {
       rollNumber,
       responseKeys: Object.keys(data),
     });
     return null;
   } catch (error) {
-    logger.error('❌ Error fetching roll-call details', error as Error, {
+    logger.error('Error fetching roll-call details', error as Error, {
       rollNumber,
       congress,
       chamber,
@@ -582,7 +582,7 @@ async function getHouseVotes(
       let enrichedBillTitle = vote.bill?.title || 'Vote without associated bill';
 
       if (rollNumber > 0) {
-        logger.debug(`🔄 Starting enrichment for vote`, {
+        logger.debug(`Starting enrichment for vote`, {
           bioguideId,
           voteId: vote.voteId,
           rollNumber,
@@ -661,7 +661,7 @@ async function getHouseVotes(
 
               enrichedPartyBreakdown = partyBreakdown;
 
-              logger.debug(`✅ Enrichment successful for Roll Call #${rollNumber}`, {
+              logger.debug(`Enrichment successful for Roll Call #${rollNumber}`, {
                 bioguideId,
                 rollNumber,
                 hasTotal: !!enrichedTotal,
@@ -696,25 +696,21 @@ async function getHouseVotes(
               }
             }
           } else {
-            logger.debug(`❌ No roll-call details returned for Roll Call #${rollNumber}`, {
+            logger.debug(`No roll-call details returned for Roll Call #${rollNumber}`, {
               bioguideId,
               rollNumber,
               voteId: vote.voteId,
             });
           }
         } catch (enrichmentError) {
-          logger.error(
-            `❌ Failed to enrich vote Roll Call #${rollNumber}`,
-            enrichmentError as Error,
-            {
-              bioguideId,
-              rollNumber,
-              voteId: vote.voteId,
-            }
-          );
+          logger.error(`Failed to enrich vote Roll Call #${rollNumber}`, enrichmentError as Error, {
+            bioguideId,
+            rollNumber,
+            voteId: vote.voteId,
+          });
         }
       } else {
-        logger.debug(`⚠️ Skipping enrichment - no valid roll number`, {
+        logger.debug(`Skipping enrichment - no valid roll number`, {
           bioguideId,
           voteId: vote.voteId,
           rollNumber,

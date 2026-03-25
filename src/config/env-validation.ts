@@ -123,7 +123,7 @@ export function logEnvironmentValidation(): void {
 
   if (result.errors.length > 0) {
     // eslint-disable-next-line no-console
-    console.error('❌ Environment validation failed:');
+    console.error('Environment validation failed:');
     result.errors.forEach(error => {
       // eslint-disable-next-line no-console
       console.error(`  - ${error}`);
@@ -131,13 +131,13 @@ export function logEnvironmentValidation(): void {
 
     if (isProduction) {
       // eslint-disable-next-line no-console
-      console.error('\n⚠️  Application may not function correctly in production!\n');
+      console.error('\nApplication may not function correctly in production!\n');
     }
   }
 
   if (result.warnings.length > 0 && !isProduction) {
     // eslint-disable-next-line no-console
-    console.warn('⚠️  Environment warnings (not blocking in development):');
+    console.warn('Environment warnings (not blocking in development):');
     result.warnings.forEach(warning => {
       // eslint-disable-next-line no-console
       console.warn(`  - ${warning}`);
@@ -146,7 +146,7 @@ export function logEnvironmentValidation(): void {
 
   if (result.isValid && result.warnings.length === 0) {
     // eslint-disable-next-line no-console
-    console.log('✅ Environment validation passed');
+    console.log('Environment validation passed');
   }
 }
 

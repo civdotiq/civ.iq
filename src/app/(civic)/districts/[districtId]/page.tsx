@@ -138,23 +138,23 @@ export default function DistrictPage() {
     async function fetchDistrict() {
       try {
         setLoading(true);
-        logger.info('🔄 Starting fetch for district:', districtId);
+        logger.info('Starting fetch for district:', districtId);
 
         const response = await fetch(`/api/districts/${districtId}`);
-        logger.info('📡 Fetch response:', response.status, response.statusText);
+        logger.info('Fetch response:', response.status, response.statusText);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch district: ${response.status}`);
         }
 
         const data: APIResponse = await response.json();
-        logger.info('✅ District data loaded:', data.district.name);
+        logger.info('District data loaded:', data.district.name);
         setDistrict(data.district);
       } catch (err) {
-        logger.error('❌ District fetch error:', err);
+        logger.error('District fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load district');
       } finally {
-        logger.info('🏁 District loading complete');
+        logger.info('District loading complete');
         setLoading(false);
       }
     }

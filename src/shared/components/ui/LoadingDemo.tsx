@@ -163,7 +163,7 @@ export function LoadingDemo() {
           timeoutMessage="This is taking longer than expected"
         >
           <div className="bg-green-50 border border-green-200 p-6 text-center">
-            <p className="text-green-800 font-medium">✓ Loading Complete!</p>
+            <p className="text-green-800 font-medium">Loading Complete!</p>
             <p className="text-green-600 mt-1">Data loaded successfully.</p>
           </div>
         </LoadingStateWrapper>
@@ -171,7 +171,7 @@ export function LoadingDemo() {
         {smartLoading.showTimeout && (
           <div className="bg-yellow-50 border border-yellow-200 p-4">
             <p className="text-yellow-800 text-sm">
-              ⏱️ Timeout detected after {Math.round(smartLoading.timeElapsed / 1000)}s
+              Timeout detected after {Math.round(smartLoading.timeElapsed / 1000)}s
             </p>
           </div>
         )}
@@ -213,7 +213,7 @@ export function LoadingDemo() {
 
           {!multiStageLoading.loading && multiStageLoading.progress === 100 && (
             <div className="bg-green-50 border border-green-200 p-6 text-center">
-              <p className="text-green-800 font-medium">✓ All Stages Complete!</p>
+              <p className="text-green-800 font-medium">All Stages Complete!</p>
             </div>
           )}
         </div>

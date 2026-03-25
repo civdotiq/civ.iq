@@ -240,7 +240,7 @@ export function analyzeBundleSize(): void {
   );
 
   // eslint-disable-next-line no-console
-  console.group('📦 Bundle Analysis');
+  console.group('Bundle Analysis');
   // eslint-disable-next-line no-console
   console.log(`Total JS Size: ${(totalSize / 1024).toFixed(2)} KB`);
   // eslint-disable-next-line no-console

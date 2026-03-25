@@ -243,7 +243,7 @@ export function ErrorSystemDemo() {
         <h2 className="text-xl font-semibold mb-4">Error System Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <h3 className="font-medium mb-2 text-green-700">✅ Specific Messages</h3>
+            <h3 className="font-medium mb-2 text-green-700">Specific Messages</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• No more &quot;Something went wrong&quot;</li>
               <li>• Context-aware error descriptions</li>
@@ -253,7 +253,7 @@ export function ErrorSystemDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2 text-blue-700">🔄 Recovery Actions</h3>
+            <h3 className="font-medium mb-2 text-blue-700">Recovery Actions</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Smart retry with exponential backoff</li>
               <li>• Context-appropriate action buttons</li>
@@ -263,7 +263,7 @@ export function ErrorSystemDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2 text-purple-700">📊 User Feedback</h3>
+            <h3 className="font-medium mb-2 text-purple-700">User Feedback</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• &quot;Was this helpful?&quot; collection</li>
               <li>• Optional improvement comments</li>
@@ -273,7 +273,7 @@ export function ErrorSystemDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2 text-red-700">⚡ Smart Timeouts</h3>
+            <h3 className="font-medium mb-2 text-red-700">Smart Timeouts</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Automatic timeout detection</li>
               <li>• Progressive timeout messages</li>
@@ -283,7 +283,7 @@ export function ErrorSystemDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2 text-orange-700">🎯 Contextual Help</h3>
+            <h3 className="font-medium mb-2 text-orange-700">Contextual Help</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Format examples (ZIP: 48201)</li>
               <li>• Similar alternatives suggestions</li>
@@ -293,7 +293,7 @@ export function ErrorSystemDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2 text-teal-700">🔍 Error Monitoring</h3>
+            <h3 className="font-medium mb-2 text-teal-700">Error Monitoring</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Comprehensive error tracking</li>
               <li>• Pattern analysis and trends</li>

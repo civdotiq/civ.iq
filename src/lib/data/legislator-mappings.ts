@@ -89,10 +89,10 @@ async function loadLegislatorMap(): Promise<Map<string, LegislatorIds>> {
       }
     });
 
-    logger.info(`✅ Loaded ${LEGISLATOR_MAP.size} legislator ID mappings`);
+    logger.info(`Loaded ${LEGISLATOR_MAP.size} legislator ID mappings`);
     return LEGISLATOR_MAP;
   } catch (error) {
-    logger.error('❌ Failed to load legislators:', error);
+    logger.error('Failed to load legislators:', error);
     LEGISLATOR_MAP = new Map();
     return LEGISLATOR_MAP;
   }
@@ -178,10 +178,10 @@ async function loadLegislatorInfoMap(): Promise<Map<string, LegislatorInfo>> {
       }
     });
 
-    logger.info(`✅ Loaded ${LEGISLATOR_INFO_MAP.size} legislator info records`);
+    logger.info(`Loaded ${LEGISLATOR_INFO_MAP.size} legislator info records`);
     return LEGISLATOR_INFO_MAP;
   } catch (error) {
-    logger.error('❌ Failed to load legislator info:', error);
+    logger.error('Failed to load legislator info:', error);
     LEGISLATOR_INFO_MAP = new Map();
     return LEGISLATOR_INFO_MAP;
   }

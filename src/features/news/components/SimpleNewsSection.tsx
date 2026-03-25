@@ -379,7 +379,7 @@ export function SimpleNewsSection({
     return (
       <div className={`${styles.newsSection} ${styles.container} ${className}`}>
         <div className={styles.errorContainer}>
-          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorIcon}></div>
           <div className={styles.errorTitle}>Unable to load news</div>
           <div className={styles.errorMessage}>{error.message || 'Failed to fetch news'}</div>
           <button onClick={handleRetry} className={styles.retryButton}>
@@ -394,7 +394,7 @@ export function SimpleNewsSection({
     return (
       <div className={`${styles.newsSection} ${styles.container} ${className}`}>
         <div className={styles.emptyContainer}>
-          <div className={styles.emptyIcon}>📰</div>
+          <div className={styles.emptyIcon}></div>
           <div className={styles.emptyTitle}>No recent news coverage</div>
           <div className={styles.emptyMessage}>
             No recent articles found for {representative.firstName} {representative.lastName}

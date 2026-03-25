@@ -177,15 +177,15 @@ export function generateValidationReport(): string {
   lines.push('');
 
   if (apiKeyResults.isValid) {
-    lines.push('✅ All required API keys are valid');
+    lines.push('All required API keys are valid');
   } else {
-    lines.push('❌ API key validation failed:');
+    lines.push('API key validation failed:');
     apiKeyResults.errors.forEach(error => lines.push(`  - ${error}`));
   }
 
   if (apiKeyResults.warnings.length > 0) {
     lines.push('');
-    lines.push('⚠️  Warnings:');
+    lines.push('Warnings:');
     apiKeyResults.warnings.forEach(warning => lines.push(`  - ${warning}`));
   }
 
@@ -194,12 +194,12 @@ export function generateValidationReport(): string {
     lines.push('=== Production Configuration ===');
 
     if (!prodResults.isValid) {
-      lines.push('❌ Production configuration errors:');
+      lines.push('Production configuration errors:');
       prodResults.errors.forEach(error => lines.push(`  - ${error}`));
     }
 
     if (prodResults.warnings.length > 0) {
-      lines.push('⚠️  Production warnings:');
+      lines.push('Production warnings:');
       prodResults.warnings.forEach(warning => lines.push(`  - ${warning}`));
     }
   }

@@ -369,7 +369,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {industrialConcentration > 60 && (
             <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded">
-              <span className="text-yellow-500 text-xs mt-1">⚠️</span>
+              <span className="text-yellow-500 text-xs mt-1"></span>
               <span className="text-sm text-yellow-800">
                 High concentration: Top 3 industries provide {industrialConcentration.toFixed(0)}%
                 of funding
@@ -378,7 +378,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
           )}
           {diversificationScore > 8 && (
             <div className="flex items-start gap-2 p-2 bg-green-50 rounded">
-              <span className="text-green-500 text-xs mt-1">✅</span>
+              <span className="text-green-500 text-xs mt-1"></span>
               <span className="text-sm text-green-800">
                 Well-diversified funding across {diversificationScore} different sectors
               </span>
@@ -386,7 +386,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
           )}
           {topIndustry && topIndustry.percentage > 30 && (
             <div className="flex items-start gap-2 p-2 bg-blue-50 rounded">
-              <span className="text-blue-500 text-xs mt-1">📊</span>
+              <span className="text-blue-500 text-xs mt-1"></span>
               <span className="text-sm text-blue-800">
                 {topIndustry.industry} is the dominant funding source at{' '}
                 {topIndustry.percentage.toFixed(0)}%
@@ -395,7 +395,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
           )}
           {industrialConcentration < 40 && diversificationScore > 6 && (
             <div className="flex items-start gap-2 p-2 bg-purple-50 rounded">
-              <span className="text-purple-500 text-xs mt-1">🎯</span>
+              <span className="text-purple-500 text-xs mt-1"></span>
               <span className="text-sm text-purple-800">
                 Balanced funding distribution across multiple industries
               </span>

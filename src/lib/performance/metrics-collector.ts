@@ -160,11 +160,11 @@ class MetricsCollector {
       return 'No performance data collected yet.';
     }
 
-    let report = '📊 Performance Report\n';
+    let report = 'Performance Report\n';
     report += '═'.repeat(80) + '\n\n';
 
     for (const summary of summaries) {
-      report += `📍 ${summary.route}\n`;
+      report += `${summary.route}\n`;
       report += `├─ Requests: ${summary.count}\n`;
       report += `├─ Avg Duration: ${summary.avgDuration.toFixed(2)}ms\n`;
       report += `├─ P50/P95/P99: ${summary.p50Duration.toFixed(2)}/${summary.p95Duration.toFixed(

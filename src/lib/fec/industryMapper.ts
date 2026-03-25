@@ -44,7 +44,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'medicine',
     ],
     color: '#ef4444',
-    icon: '🏥',
+    icon: '',
   },
   {
     id: 'finance',
@@ -83,7 +83,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'pension',
     ],
     color: '#10b981',
-    icon: '🏦',
+    icon: '',
   },
   {
     id: 'technology',
@@ -130,7 +130,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'cryptocurrency',
     ],
     color: '#3b82f6',
-    icon: '💻',
+    icon: '',
   },
   {
     id: 'energy',
@@ -172,7 +172,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'fossil fuel',
     ],
     color: '#f59e0b',
-    icon: '⚡',
+    icon: '',
   },
   {
     id: 'defense',
@@ -207,7 +207,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'helicopter',
     ],
     color: '#6b7280',
-    icon: '🛡️',
+    icon: '',
   },
   {
     id: 'real-estate',
@@ -241,7 +241,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'zoning',
     ],
     color: '#8b5cf6',
-    icon: '🏠',
+    icon: '',
   },
   {
     id: 'legal',
@@ -276,7 +276,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'civil law',
     ],
     color: '#0f172a',
-    icon: '⚖️',
+    icon: '',
   },
   {
     id: 'education',
@@ -317,7 +317,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'diploma',
     ],
     color: '#dc2626',
-    icon: '🎓',
+    icon: '',
   },
   {
     id: 'healthcare-services',
@@ -347,7 +347,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'imaging',
     ],
     color: '#059669',
-    icon: '🩺',
+    icon: '',
   },
   {
     id: 'agriculture',
@@ -395,7 +395,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'wine',
     ],
     color: '#65a30d',
-    icon: '🌾',
+    icon: '',
   },
   {
     id: 'transportation',
@@ -441,7 +441,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'ship',
     ],
     color: '#0ea5e9',
-    icon: '🚛',
+    icon: '',
   },
   {
     id: 'media',
@@ -492,7 +492,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'amazon prime',
     ],
     color: '#f97316',
-    icon: '📺',
+    icon: '',
   },
   {
     id: 'retail',
@@ -537,7 +537,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'advertising',
     ],
     color: '#ec4899',
-    icon: '🛒',
+    icon: '',
   },
   {
     id: 'labor',
@@ -581,7 +581,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'pension',
     ],
     color: '#dc2626',
-    icon: '👷',
+    icon: '',
   },
   {
     id: 'nonprofit',
@@ -621,7 +621,7 @@ export const INDUSTRY_CATEGORIES: IndustryCategory[] = [
       'freedom',
     ],
     color: '#16a34a',
-    icon: '🤝',
+    icon: '',
   },
 ];
 
@@ -842,7 +842,7 @@ export function getIndustryColor(industryId: string): string {
  */
 export function getIndustryIcon(industryId: string): string {
   const industry = getIndustryById(industryId);
-  return industry?.icon || '📊';
+  return industry?.icon || '';
 }
 
 /**

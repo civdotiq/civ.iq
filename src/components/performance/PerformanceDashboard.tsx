@@ -51,7 +51,7 @@ export function PerformanceDashboard({ showDevOnly = true }: PerformanceDashboar
           }`}
           title="Click to expand performance metrics"
         >
-          ⚡ {summary.performanceGrade.toUpperCase()}
+          {summary.performanceGrade.toUpperCase()}
         </button>
       )}
 

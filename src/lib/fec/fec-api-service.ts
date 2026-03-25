@@ -470,7 +470,7 @@ export class FECApiService {
 
           if (nonConduitContributions.length > 0) {
             logger.info(
-              `[FEC API] ✅ SUCCESS: Found ${nonConduitContributions.length} non-conduit contributions (${allContributions.length} total) from committee ${committeeId} in cycle ${cycle}`
+              `[FEC API] SUCCESS: Found ${nonConduitContributions.length} non-conduit contributions (${allContributions.length} total) from committee ${committeeId} in cycle ${cycle}`
             );
             // Return up to the requested count of non-conduit contributions
             const result = nonConduitContributions.slice(0, count);
@@ -480,7 +480,7 @@ export class FECApiService {
             return result;
           } else if (allContributions.length > 0) {
             logger.warn(
-              `[FEC API] ⚠️ WARNING: Only found conduit contributions for committee ${committeeId}, returning them anyway`
+              `[FEC API] WARNING: Only found conduit contributions for committee ${committeeId}, returning them anyway`
             );
             const result = allContributions.slice(0, count);
             govCache
@@ -893,7 +893,7 @@ export class FECApiService {
 
       if (principalExactCycle) {
         logger.info(
-          `[FEC API DIAGNOSTIC] ✓ ATTEMPT 1 SUCCESS - Found principal committee ${principalExactCycle.committee_id} for exact cycle ${cycle}`
+          `[FEC API DIAGNOSTIC] ATTEMPT 1 SUCCESS - Found principal committee ${principalExactCycle.committee_id} for exact cycle ${cycle}`
         );
         return principalExactCycle.committee_id;
       }
@@ -925,7 +925,7 @@ export class FECApiService {
 
         const mostRecentPrincipal = sortedPrincipal[0];
         logger.warn(
-          `[FEC API DIAGNOSTIC] ⚠ ATTEMPT 2 SUCCESS - Using most recent principal committee:`,
+          `[FEC API DIAGNOSTIC] ATTEMPT 2 SUCCESS - Using most recent principal committee:`,
           {
             candidateId,
             cycle,
@@ -961,7 +961,7 @@ export class FECApiService {
       });
 
       if (anyCycleCommittee) {
-        logger.warn(`[FEC API DIAGNOSTIC] ⚠ ATTEMPT 3 SUCCESS - Using non-principal committee:`, {
+        logger.warn(`[FEC API DIAGNOSTIC] ATTEMPT 3 SUCCESS - Using non-principal committee:`, {
           candidateId,
           cycle,
           selectedCommittee: anyCycleCommittee.committee_id,
@@ -975,7 +975,7 @@ export class FECApiService {
       logger.info(`[FEC API DIAGNOSTIC] FINAL RESORT - Using first available committee`);
       const firstCommittee = committees[0];
       logger.warn(
-        `[FEC API DIAGNOSTIC] ⚠ FINAL RESORT - Using first available committee as last fallback:`,
+        `[FEC API DIAGNOSTIC] FINAL RESORT - Using first available committee as last fallback:`,
         {
           candidateId,
           cycle,

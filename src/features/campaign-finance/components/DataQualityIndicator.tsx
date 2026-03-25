@@ -44,19 +44,19 @@ export const DataQualityIndicator: React.FC<DataQualityIndicatorProps> = ({
   // Quality level styling
   const qualityStyles = {
     high: {
-      icon: '✅',
+      icon: '',
       bgColor: 'bg-green-50',
       textColor: 'text-green-800',
       borderColor: 'border-green-200',
     },
     medium: {
-      icon: '⚠️',
+      icon: '',
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-800',
       borderColor: 'border-yellow-200',
     },
     low: {
-      icon: '⚠️',
+      icon: '',
       bgColor: 'bg-red-50',
       textColor: 'text-red-800',
       borderColor: 'border-red-200',

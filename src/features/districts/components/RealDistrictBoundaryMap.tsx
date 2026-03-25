@@ -192,7 +192,7 @@ export function RealDistrictBoundaryMap({
       const district = mapState.district;
 
       // CRITICAL FIX: Fetch actual district geometry from GeoJSON instead of using bbox rectangle
-      logger.info('📡 Fetching actual district geometry from GeoJSON file...', {
+      logger.info('Fetching actual district geometry from GeoJSON file...', {
         districtId: district.id,
         geoid: district.geoid,
       });
@@ -206,7 +206,7 @@ export function RealDistrictBoundaryMap({
       }
 
       const geojsonData = await geojsonResponse.json();
-      logger.info('✅ GeoJSON loaded, searching for district geometry...', {
+      logger.info('GeoJSON loaded, searching for district geometry...', {
         totalFeatures: geojsonData.features?.length,
       });
 
@@ -217,7 +217,7 @@ export function RealDistrictBoundaryMap({
       );
 
       if (!districtFeature) {
-        logger.warn('⚠️ District geometry not found in GeoJSON, falling back to bbox', {
+        logger.warn('District geometry not found in GeoJSON, falling back to bbox', {
           geoid: district.geoid,
           districtId: district.id,
         });
@@ -250,7 +250,7 @@ export function RealDistrictBoundaryMap({
           },
         };
       } else {
-        logger.info('✅ Found real district geometry!', {
+        logger.info('Found real district geometry!', {
           geometryType: districtFeature.geometry?.type,
           coordinateCount:
             districtFeature.geometry?.type === 'Polygon'

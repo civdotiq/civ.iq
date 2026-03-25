@@ -14,11 +14,11 @@ interface FundingNarrativeProps {
 }
 
 const profileIcons = {
-  grassroots: '🌱',
-  traditional: '🏛️',
-  'self-funded': '💰',
-  mixed: '⚖️',
-  'pac-heavy': '🏢',
+  grassroots: '',
+  traditional: '',
+  'self-funded': '',
+  mixed: '',
+  'pac-heavy': '',
 };
 
 const profileColors = {

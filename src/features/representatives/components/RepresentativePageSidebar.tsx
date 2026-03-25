@@ -173,7 +173,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
      onClick={() => setIsModalOpen(true)}
      className="block w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
     >
-     🎴 Create Trading Card
+     Create Trading Card
     </button>
     
     <TradingCardPreview 
