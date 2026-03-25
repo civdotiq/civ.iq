@@ -350,29 +350,43 @@ export default async function StateDelegationPage({ params }: PageProps) {
 
             {/* Related Links */}
             <section className="bg-white border-2 border-black p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Related Resources</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Link
-                  href={`/state-legislature/${normalizedCode.toLowerCase()}`}
-                  className="flex items-center gap-2 text-civiq-blue hover:underline"
-                >
-                  <span>→</span>
-                  <span>{stateName} State Legislature</span>
-                </Link>
-                <Link
-                  href={`/state-bills/${normalizedCode.toLowerCase()}`}
-                  className="flex items-center gap-2 text-civiq-blue hover:underline"
-                >
-                  <span>→</span>
-                  <span>{stateName} State Bills</span>
-                </Link>
-                <Link
-                  href="/representatives"
-                  className="flex items-center gap-2 text-civiq-blue hover:underline"
-                >
-                  <span>→</span>
-                  <span>All Federal Representatives</span>
-                </Link>
+              <h2 className="text-lg font-bold text-gray-900 mb-6">Related Resources</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Federal */}
+                <div className="border-l-4 border-l-black pl-4">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
+                    Federal
+                  </h3>
+                  <Link
+                    href="/representatives"
+                    className="flex items-center gap-2 text-civiq-blue hover:underline"
+                  >
+                    <span>→</span>
+                    <span>All Federal Representatives</span>
+                  </Link>
+                </div>
+                {/* State */}
+                <div className="border-l-4 border-l-gray-300 pl-4">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
+                    State
+                  </h3>
+                  <div className="space-y-2">
+                    <Link
+                      href={`/state-legislature/${normalizedCode.toLowerCase()}`}
+                      className="flex items-center gap-2 text-civiq-blue hover:underline"
+                    >
+                      <span>→</span>
+                      <span>{stateName} State Legislature</span>
+                    </Link>
+                    <Link
+                      href={`/state-bills/${normalizedCode.toLowerCase()}`}
+                      className="flex items-center gap-2 text-civiq-blue hover:underline"
+                    >
+                      <span>→</span>
+                      <span>{stateName} State Bills</span>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
