@@ -3,10 +3,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // Roll call XML parser for Senate and House voting data
 import { XMLParser } from 'fast-xml-parser';
+import type { HouseXmlVoteData, SenateXmlVoteData } from '@/types/xml-vote-data';
 
 export interface RollCallVote {
   memberId: string;
@@ -77,14 +76,14 @@ export class RollCallParser {
   private parseSenateRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
       if (!parsed || typeof parsed !== 'object') return null;
-      const parsedObj = parsed as Record<string, any>;
+      const parsedObj = parsed as SenateXmlVoteData;
       const vote = parsedObj.roll_call_vote;
       if (!vote) return null;
 
       // Extract metadata
-      const congress = parseInt(vote.congress) || 0;
-      const session = parseInt(vote.session) || 0;
-      const rollNumber = parseInt(vote.vote_number) || 0;
+      const congress = parseInt(vote.congress ?? '') || 0;
+      const session = parseInt(vote.session ?? '') || 0;
+      const rollNumber = parseInt(vote.vote_number ?? '') || 0;
 
       const votes: RollCallVote[] = [];
       const members = vote.members?.member;
@@ -98,11 +97,11 @@ export class RollCallParser {
           const partyStateMatch = fullName.match(/\(([DR])-([A-Z]{2})\)$/);
 
           votes.push({
-            memberId: member.lis_member_id || '',
-            memberName: member.last_name || '',
-            party: partyStateMatch ? partyStateMatch[1] : '',
-            state: partyStateMatch ? partyStateMatch[2] : '',
-            vote: this.normalizeVote(member.vote_cast),
+            memberId: member.lis_member_id ?? '',
+            memberName: member.last_name ?? '',
+            party: partyStateMatch?.[1] ?? '',
+            state: partyStateMatch?.[2] ?? '',
+            vote: this.normalizeVote(member.vote_cast ?? ''),
           });
         }
       }
@@ -135,16 +134,16 @@ export class RollCallParser {
   private parseHouseRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
       if (!parsed || typeof parsed !== 'object') return null;
-      const parsedObj = parsed as Record<string, any>;
+      const parsedObj = parsed as HouseXmlVoteData;
       const rollCall = parsedObj['rollcall-vote'];
       if (!rollCall) return null;
 
       const metadata = rollCall['vote-metadata'];
       const voteData = rollCall['vote-data'];
 
-      const congress = parseInt(metadata?.congress) || 0;
-      const session = parseInt(metadata?.session) || 0;
-      const rollNumber = parseInt(metadata?.rollcall_num) || 0;
+      const congress = parseInt(metadata?.congress ?? '') || 0;
+      const session = parseInt(metadata?.session ?? '') || 0;
+      const rollNumber = parseInt(metadata?.rollcall_num ?? '') || 0;
 
       const votes: RollCallVote[] = [];
       const recordedVotes = voteData?.['recorded-vote'];
@@ -156,11 +155,11 @@ export class RollCallParser {
           const legislator = vote.legislator;
           if (legislator) {
             votes.push({
-              memberId: legislator['@_name-id'] || '',
-              memberName: legislator['@_unaccented-name'] || '',
-              party: legislator['@_party'] || '',
-              state: legislator['@_state'] || '',
-              vote: this.normalizeVote(vote.vote),
+              memberId: legislator['@_name-id'] ?? '',
+              memberName: legislator['@_unaccented-name'] ?? '',
+              party: legislator['@_party'] ?? '',
+              state: legislator['@_state'] ?? '',
+              vote: this.normalizeVote(vote.vote ?? ''),
             });
           }
         }

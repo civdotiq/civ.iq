@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import logger from '@/lib/logging/simple-logger';
+import type { HouseXmlVoteData, SenateXmlVoteData } from '@/types/xml-vote-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,9 +90,9 @@ export async function GET(
     // Parse based on chamber
     let data;
     if (chamber === 'house') {
-      data = parseHouseVote(xmlData, voteId, congress, rollNumber);
+      data = parseHouseVote(xmlData as HouseXmlVoteData, voteId, congress, rollNumber);
     } else {
-      data = parseSenateVote(xmlData, voteId, congress, rollNumber);
+      data = parseSenateVote(xmlData as SenateXmlVoteData, voteId, congress, rollNumber);
     }
 
     if (!data) {
@@ -116,9 +117,8 @@ function getYearFromCongress(congress: number): number {
   return 2025 + (congress - 119) * 2;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseHouseVote(
-  xmlData: Record<string, any>,
+  xmlData: HouseXmlVoteData,
   voteId: string,
   congress: string,
   rollNumber: string
@@ -170,9 +170,8 @@ function parseHouseVote(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseSenateVote(
-  xmlData: Record<string, any>,
+  xmlData: SenateXmlVoteData,
   voteId: string,
   congress: string,
   rollNumber: string

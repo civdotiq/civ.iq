@@ -32,8 +32,7 @@ export interface DatasetMetadata {
   columns: DatasetColumn[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface DatasetResult<T = Record<string, any>> {
+export interface DatasetResult<T = unknown> {
   metadata: DatasetMetadata;
   data: T[];
 }

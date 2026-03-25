@@ -171,9 +171,19 @@ async function fetchWithRetry(
   return null;
 }
 
+/** OpenStates jurisdiction API response shape */
+interface StateJurisdiction {
+  name?: string;
+  latest_session?: {
+    name?: string;
+    start_date?: string;
+    end_date?: string;
+  };
+  chambers?: { chamber?: string; name?: string }[];
+}
+
 // Fetch state jurisdiction info from OpenStates API
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
+async function fetchStateJurisdiction(stateAbbrev: string): Promise<StateJurisdiction | null> {
   const monitor = monitorExternalApi(
     'openstates',
     'jurisdiction',
@@ -193,7 +203,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     }
 
     monitor.end(true, 200);
-    const data = await response.json();
+    const data = (await response.json()) as StateJurisdiction;
     logger.info('Successfully fetched state jurisdiction', {
       stateAbbrev,
       jurisdictionName: data.name,
@@ -466,7 +476,7 @@ export async function GET(
 
         return {
           state: state.toUpperCase(),
-          stateName: jurisdiction.name,
+          stateName: jurisdiction.name || state.toUpperCase(),
           lastUpdated: new Date().toISOString(),
           session: {
             name: jurisdiction.latest_session?.name || '2024 Session',
@@ -479,10 +489,7 @@ export async function GET(
           },
           chambers: {
             upper: {
-              name:
-                ((jurisdiction.chambers as Record<string, unknown>[] | undefined)?.find(
-                  (c: Record<string, unknown>) => c.chamber === 'upper'
-                )?.name as string) || 'State Senate',
+              name: jurisdiction.chambers?.find(c => c.chamber === 'upper')?.name || 'State Senate',
               title: 'Senator',
               totalSeats: upperLegislators.length,
               democraticSeats: upperPartyCount['Democratic'] || 0,
@@ -491,9 +498,8 @@ export async function GET(
             },
             lower: {
               name:
-                ((jurisdiction.chambers as Record<string, unknown>[] | undefined)?.find(
-                  (c: Record<string, unknown>) => c.chamber === 'lower'
-                )?.name as string) || 'House of Representatives',
+                jurisdiction.chambers?.find(c => c.chamber === 'lower')?.name ||
+                'House of Representatives',
               title: 'Representative',
               totalSeats: lowerLegislators.length,
               democraticSeats: lowerPartyCount['Democratic'] || 0,
