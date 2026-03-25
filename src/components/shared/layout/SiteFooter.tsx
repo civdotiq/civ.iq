@@ -61,6 +61,15 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           <Link href="/open" className={linkClass}>
             Open Data
           </Link>
+          <span className={separatorClass}>•</span>
+          <a
+            href="https://www.npmjs.com/org/civiq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            npm Packages
+          </a>
         </div>
 
         {/* Open Protocols */}

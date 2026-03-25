@@ -31,6 +31,11 @@ export const metadata: Metadata = {
     'congressional district widget',
     'open government data',
     'bulk civic data',
+    'campaign finance API',
+    'FEC API',
+    'OpenStates API',
+    'civic data npm',
+    'government data rate limits',
   ],
 };
 
@@ -231,8 +236,103 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
             </pre>
           </div>
 
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">Example Response</span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
+              {`{
+  "data": [
+    {
+      "bioguideId": "S000770",
+      "name": "Debbie Stabenow",
+      "party": "Democrat",
+      "state": "MI",
+      "district": null,
+      "chamber": "Senate",
+      "title": "Senator",
+      "phone": "(202) 224-4822",
+      "website": "https://stabenow.senate.gov",
+      "yearsInOffice": 24,
+      "nextElection": "2026"
+    }
+  ],
+  "pagination": { "total": 13, "limit": 100, "offset": 0, "hasMore": false },
+  "meta": {
+    "apiVersion": "v1",
+    "timestamp": "2026-03-25T14:32:15.894Z",
+    "source": "congress-legislators",
+    "license": "MIT",
+    "documentation": "https://civdotiq.org/docs/api"
+  }
+}`}
+            </pre>
+          </div>
+
           <p className="text-xs text-gray-500">
             Returns JSON. No authentication required. Cached for 1 hour.
+          </p>
+        </section>
+
+        {/* Rate Limits */}
+        <section id="rate-limits" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Rate Limits</h2>
+          <p className="text-gray-600 mb-grid-3">
+            All endpoints are rate-limited per IP using a sliding window. No API key required — but
+            respect the limits so the service stays free for everyone.
+          </p>
+
+          <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Endpoint</th>
+                  <th className="text-left p-grid-2 font-semibold">Limit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">/api/v1/*</td>
+                  <td className="p-grid-2">60 requests / minute</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">/api/feed/*</td>
+                  <td className="p-grid-2">60 requests / minute</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">/api/representatives</td>
+                  <td className="p-grid-2">60 requests / minute</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">/api/district-map</td>
+                  <td className="p-grid-2">30 requests / minute</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">/api/* (other)</td>
+                  <td className="p-grid-2">100 requests / minute</td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2 font-mono text-xs">Default</td>
+                  <td className="p-grid-2">200 requests / minute</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-sm text-gray-600">
+            Rate limit headers are included in every response:{' '}
+            <code className="text-xs bg-gray-50 px-1">X-RateLimit-Limit</code>,{' '}
+            <code className="text-xs bg-gray-50 px-1">X-RateLimit-Remaining</code>,{' '}
+            <code className="text-xs bg-gray-50 px-1">X-RateLimit-Reset</code>. If you hit the
+            limit, you&apos;ll receive a <code className="text-xs bg-gray-50 px-1">429</code>{' '}
+            response. Need higher limits?{' '}
+            <a
+              href="https://github.com/civdotiq/civ.iq/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] underline hover:no-underline"
+            >
+              Open an issue
+            </a>
+            .
           </p>
         </section>
 
@@ -595,31 +695,356 @@ const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119')
         </section>
 
         {/* npm Packages */}
-        <section className="mb-grid-8">
+        <section id="npm" className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">npm Packages</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Standalone packages you can use in your own civic tech projects. All MIT licensed.
+          </p>
+
+          <div className="grid grid-cols-1 gap-grid-3">
+            <div className="border-2 border-gray-200 p-grid-3">
+              <div className="flex items-start justify-between mb-grid-2">
+                <div>
+                  <h3 className="font-mono font-bold text-base">@civiq/sdk</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Typed TypeScript client for all 181 CIV.IQ API endpoints. Covers
+                    representatives, bills, votes, committees, districts, intelligence, search,
+                    states, and the civic graph. Works in Node.js, Deno, and browsers.
+                  </p>
+                </div>
+                <a
+                  href="https://www.npmjs.com/package/@civiq/sdk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#3ea2d4] underline hover:no-underline whitespace-nowrap ml-grid-2"
+                >
+                  View on npm
+                </a>
+              </div>
+              <pre className="bg-gray-50 border border-gray-200 p-grid-2 text-sm overflow-x-auto">
+                npm install @civiq/sdk
+              </pre>
+            </div>
+
+            <div className="border-2 border-gray-200 p-grid-3">
+              <div className="flex items-start justify-between mb-grid-2">
+                <div>
+                  <h3 className="font-mono font-bold text-base">@civiq/civic-statistics</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Statistical utilities tuned for civic data — correlation analysis, peer
+                    comparison, confidence scoring, anomaly detection, and significance testing with
+                    civic-domain defaults and minimum sample sizes.
+                  </p>
+                </div>
+                <a
+                  href="https://www.npmjs.com/package/@civiq/civic-statistics"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#3ea2d4] underline hover:no-underline whitespace-nowrap ml-grid-2"
+                >
+                  View on npm
+                </a>
+              </div>
+              <pre className="bg-gray-50 border border-gray-200 p-grid-2 text-sm overflow-x-auto">
+                npm install @civiq/civic-statistics
+              </pre>
+            </div>
+
+            <div className="border-2 border-gray-200 p-grid-3">
+              <div className="flex items-start justify-between mb-grid-2">
+                <div>
+                  <h3 className="font-mono font-bold text-base">@civiq/entity-resolution</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Entity resolution for civic data — committee and agency alias matching, industry
+                    taxonomy classification, ticker-to-sector resolution, FEC contributor
+                    deduplication, and lobbying issue-to-policy mapping.
+                  </p>
+                </div>
+                <a
+                  href="https://www.npmjs.com/package/@civiq/entity-resolution"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#3ea2d4] underline hover:no-underline whitespace-nowrap ml-grid-2"
+                >
+                  View on npm
+                </a>
+              </div>
+              <pre className="bg-gray-50 border border-gray-200 p-grid-2 text-sm overflow-x-auto">
+                npm install @civiq/entity-resolution
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        {/* Data Sources */}
+        <section id="data-sources" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Data Sources</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Every data point on CIV.IQ comes from an official government source. We never fabricate
+            or estimate data. If a source is unavailable, we return empty results — not guesses.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-3 mb-grid-3">
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                Federal Legislative
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>Congress.gov API v3 — bills, members, committees, votes, hearings</li>
+                <li>Senate.gov XML — Senate roll call votes</li>
+                <li>House Clerk XML — House roll call votes</li>
+                <li>GovInfo.gov API — hearing transcripts, reports</li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                State Legislative
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>OpenStates GraphQL — all 50 states: legislators, bills, committees, votes</li>
+                <li>Wikidata SPARQL — state executives, judiciary, biographies</li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                Money &amp; Influence
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>FEC.gov (OpenFEC) — campaign finance, contributions, expenditures</li>
+                <li>Senate LDA API — lobbying disclosures, registrants, issues</li>
+                <li>SEC EDGAR — financial disclosures, stock transactions</li>
+                <li>USASpending.gov API v2 — federal contracts and grants by district</li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                Regulatory &amp; Policy
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>Federal Register API — rules, proposed rules, notices, executive orders</li>
+                <li>Regulations.gov — public comment periods</li>
+                <li>CourtListener — federal court opinions</li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                Demographics &amp; Economy
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>Census Bureau ACS — demographics, income, education by district</li>
+                <li>Census Geocoder — address-to-district resolution</li>
+                <li>BLS API — employment, wages, labor statistics</li>
+                <li>FRED (Federal Reserve) — economic indicators</li>
+                <li>EIA — state energy profiles</li>
+                <li>FDIC — banking institution data</li>
+                <li>Treasury — fiscal data</li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-grid-2">
+                Health, Safety &amp; Environment
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>EPA ECHO — environmental compliance, facilities</li>
+                <li>FDA — drug recalls, food safety</li>
+                <li>CMS — hospital data, Medicare spending</li>
+                <li>NIH Reporter — research grants</li>
+                <li>FEMA — disaster declarations</li>
+                <li>CFPB — consumer complaints</li>
+                <li>OSHA — workplace safety inspections</li>
+                <li>NOAA — climate and weather data</li>
+                <li>NHTSA — vehicle safety recalls</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Data Freshness */}
+        <section id="freshness" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Data Freshness</h2>
+          <p className="text-gray-600 mb-grid-3">
+            API responses are cached using Incremental Static Regeneration (ISR). The cache
+            automatically refreshes at these intervals from the upstream government sources:
+          </p>
+
           <div className="border-2 border-gray-200 overflow-x-auto">
             <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Update Frequency</th>
+                  <th className="text-left p-grid-2 font-semibold">Data Types</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/sdk</td>
+                  <td className="p-grid-2 font-medium">5 minutes</td>
+                  <td className="p-grid-2 text-gray-600">News, trending bills, search results</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-medium">1 hour</td>
                   <td className="p-grid-2 text-gray-600">
-                    TypeScript client for all CIV.IQ API endpoints.
+                    Votes, bills, campaign finance, lobbying
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/civic-statistics</td>
+                  <td className="p-grid-2 font-medium">24 hours</td>
                   <td className="p-grid-2 text-gray-600">
-                    Correlation, peer comparison, confidence scoring.
+                    Representatives, committees, districts, demographics
                   </td>
                 </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-medium">30 days</td>
+                  <td className="p-grid-2 text-gray-600">Geocoding results, address lookups</td>
+                </tr>
                 <tr>
-                  <td className="p-grid-2 font-mono font-bold text-sm">@civiq/entity-resolution</td>
-                  <td className="p-grid-2 text-gray-600">
-                    Committee/agency matching, industry taxonomy.
-                  </td>
+                  <td className="p-grid-2 font-medium">6 months</td>
+                  <td className="p-grid-2 text-gray-600">Historical voting records</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* Coverage & Limitations */}
+        <section id="coverage" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Coverage &amp; Limitations</h2>
+          <p className="text-gray-600 mb-grid-3">
+            We believe in being transparent about what our data covers and where gaps exist.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-3">
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-grid-2">What&apos;s covered</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>
+                  <span className="font-medium">Congress:</span> 119th (current), plus historical
+                  116th–118th sessions
+                </li>
+                <li>
+                  <span className="font-medium">State legislatures:</span> All 50 states via
+                  OpenStates
+                </li>
+                <li>
+                  <span className="font-medium">Campaign finance:</span> Federal FEC data, current
+                  and historical cycles
+                </li>
+                <li>
+                  <span className="font-medium">Districts:</span> All 435 House districts + 6
+                  at-large (AK, DE, ND, SD, VT, WY)
+                </li>
+                <li>
+                  <span className="font-medium">Lobbying:</span> Federal lobbying disclosures (LDA)
+                </li>
+              </ul>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-grid-2">Known limitations</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>
+                  <span className="font-medium">State campaign finance:</span> Not yet available
+                  (FollowTheMoney.org API is in maintenance)
+                </li>
+                <li>
+                  <span className="font-medium">Local government:</span> City and county level data
+                  is not yet covered
+                </li>
+                <li>
+                  <span className="font-medium">Real-time votes:</span> Vote data may lag 1–24 hours
+                  behind the official record
+                </li>
+                <li>
+                  <span className="font-medium">Upstream outages:</span> If a government API is
+                  down, affected endpoints return cached data or empty results
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* API Versioning & Status */}
+        <section id="status" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">API Status &amp; Versioning</h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-3">
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-grid-2">Status</h3>
+              <p className="text-sm text-gray-600 mb-grid-2">
+                Check API health and upstream connectivity in real time:
+              </p>
+              <a
+                href="/api/health"
+                className="text-sm text-[#3ea2d4] underline hover:no-underline font-mono"
+              >
+                GET /api/health
+              </a>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-grid-2">Versioning</h3>
+              <p className="text-sm text-gray-600 mb-grid-2">
+                The public API is currently <strong>v1</strong>. We follow semantic versioning:
+                breaking changes will only ship in a new major version with at least 90 days notice.
+                Non-breaking additions (new fields, new endpoints) ship continuously.
+              </p>
+              <Link
+                href="/api/v1/changelog"
+                className="text-sm text-[#3ea2d4] underline hover:no-underline"
+              >
+                View API Changelog
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Support */}
+        <section id="support" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Support</h2>
+          <p className="text-gray-600 mb-grid-3">
+            CIV.IQ is open source and community-supported. Here&apos;s how to get help:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-grid-3">
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-1">Bug Reports</h3>
+              <p className="text-sm text-gray-600 mb-grid-2">
+                Found an issue with the API, data accuracy, or documentation?
+              </p>
+              <a
+                href="https://github.com/civdotiq/civ.iq/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#3ea2d4] underline hover:no-underline"
+              >
+                Open a GitHub Issue
+              </a>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-1">Feature Requests</h3>
+              <p className="text-sm text-gray-600 mb-grid-2">
+                Need an endpoint, dataset, or integration that doesn&apos;t exist yet?
+              </p>
+              <a
+                href="https://github.com/civdotiq/civ.iq/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#3ea2d4] underline hover:no-underline"
+              >
+                Request on GitHub
+              </a>
+            </div>
+            <div className="border-2 border-gray-200 p-grid-3">
+              <h3 className="font-bold mb-1">Contribute</h3>
+              <p className="text-sm text-gray-600 mb-grid-2">
+                PRs welcome. The entire platform is MIT licensed and open source.
+              </p>
+              <a
+                href="https://github.com/civdotiq/civ.iq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#3ea2d4] underline hover:no-underline"
+              >
+                GitHub Repository
+              </a>
+            </div>
           </div>
         </section>
 
@@ -640,11 +1065,22 @@ const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119')
               href="/migrate/google-civic"
               className="text-[#3ea2d4] underline hover:no-underline"
             >
-              Migration Guide
+              Google Civic API Migration Guide
             </Link>
             <Link href="/api/v1/changelog" className="text-[#3ea2d4] underline hover:no-underline">
               API Changelog
             </Link>
+            <a
+              href="https://www.npmjs.com/org/civiq"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#3ea2d4] underline hover:no-underline"
+            >
+              npm Packages
+            </a>
+            <a href="/api/health" className="text-[#3ea2d4] underline hover:no-underline">
+              API Status
+            </a>
           </div>
         </section>
 
