@@ -155,17 +155,6 @@ interface CampaignFinanceData {
   };
 }
 
-interface LobbyingData {
-  lobbyingData: {
-    totalRelevantSpending: number;
-    affectedCommittees: number;
-    topCompanies: Array<{
-      name: string;
-      totalSpending: number;
-    }>;
-  };
-}
-
 interface CampaignFinanceVisualizerProps {
   financeData: CampaignFinanceData;
   representative: {
@@ -198,16 +187,8 @@ export function CampaignFinanceVisualizer({
   bioguideId: _bioguideId,
 }: CampaignFinanceVisualizerProps) {
   const [activeTab, setActiveTab] = useState<
-    | 'overview'
-    | 'charts'
-    | 'interest-groups'
-    | 'lobbying'
-    | 'stock-trades'
-    | 'expenditures'
-    | 'contributions'
+    'overview' | 'charts' | 'interest-groups' | 'stock-trades' | 'expenditures' | 'contributions'
   >('overview');
-  const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
-  const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [comprehensiveData, setComprehensiveData] = useState<CampaignFinanceData | null>(null);
   const [isLoadingComprehensive, setIsLoadingComprehensive] = useState(!!_bioguideId);
@@ -358,24 +339,6 @@ export function CampaignFinanceVisualizer({
     fullSector: industry.sector,
   }));
 
-  // Fetch lobbying data when lobbying tab is active
-  useEffect(() => {
-    if (activeTab === 'lobbying' && _bioguideId) {
-      setIsLoadingLobbying(true);
-      fetch(`/api/representative/${_bioguideId}/lobbying`)
-        .then(response => response.json())
-        .then((data: LobbyingData) => {
-          setLobbyingData(data);
-        })
-        .catch(() => {
-          setLobbyingData(null);
-        })
-        .finally(() => {
-          setIsLoadingLobbying(false);
-        });
-    }
-  }, [activeTab, _bioguideId]);
-
   // Screen reader announcement for data load
   useEffect(() => {
     if (financeData && _representative) {
@@ -389,7 +352,6 @@ export function CampaignFinanceVisualizer({
       overview: 'Overview',
       charts: 'Charts',
       'interest-groups': 'Interest Groups',
-      lobbying: 'Lobbying',
       'stock-trades': 'Stock Trades',
       expenditures: 'Expenditures',
       contributions: 'Contributions',
@@ -404,28 +366,13 @@ export function CampaignFinanceVisualizer({
       | 'overview'
       | 'charts'
       | 'interest-groups'
-      | 'lobbying'
       | 'stock-trades'
       | 'expenditures'
       | 'contributions'
   ) => {
     const tabs: Array<
-      | 'overview'
-      | 'charts'
-      | 'interest-groups'
-      | 'lobbying'
-      | 'stock-trades'
-      | 'expenditures'
-      | 'contributions'
-    > = [
-      'overview',
-      'charts',
-      'interest-groups',
-      'lobbying',
-      'stock-trades',
-      'expenditures',
-      'contributions',
-    ];
+      'overview' | 'charts' | 'interest-groups' | 'stock-trades' | 'expenditures' | 'contributions'
+    > = ['overview', 'charts', 'interest-groups', 'stock-trades', 'expenditures', 'contributions'];
     const currentIndex = tabs.indexOf(tabId);
 
     let newTab: typeof tabId | undefined;
@@ -534,7 +481,6 @@ export function CampaignFinanceVisualizer({
               { id: 'overview', name: 'Overview' },
               { id: 'charts', name: 'Charts' },
               { id: 'interest-groups', name: 'Interest Groups' },
-              { id: 'lobbying', name: 'Lobbying' },
               { id: 'stock-trades', name: 'Stock Trades' },
               { id: 'expenditures', name: 'Expenditures' },
               { id: 'contributions', name: 'Contributors' },
@@ -552,7 +498,7 @@ export function CampaignFinanceVisualizer({
                       | 'overview'
                       | 'charts'
                       | 'interest-groups'
-                      | 'lobbying'
+                      | 'stock-trades'
                       | 'expenditures'
                       | 'contributions'
                   )
@@ -564,7 +510,7 @@ export function CampaignFinanceVisualizer({
                       | 'overview'
                       | 'charts'
                       | 'interest-groups'
-                      | 'lobbying'
+                      | 'stock-trades'
                       | 'expenditures'
                       | 'contributions'
                   )
@@ -1534,100 +1480,6 @@ export function CampaignFinanceVisualizer({
                   showChart={true}
                   showTable={true}
                 />
-              )}
-            </div>
-          )}
-
-          {/* Corporate Lobbying Tab */}
-          {activeTab === 'lobbying' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Corporate Lobbying</h3>
-
-              {isLoadingLobbying ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Loading lobbying data...</p>
-                </div>
-              ) : lobbyingData && lobbyingData.lobbyingData.totalRelevantSpending > 0 ? (
-                <div className="space-y-6">
-                  {/* Simple Lobbying Summary */}
-                  <div className="bg-white p-4">
-                    <h4 className="text-md font-semibold text-gray-900 mb-3">Lobbying Summary</h4>
-                    <hr className="border-gray-300 mb-4" />
-
-                    <div className="space-y-2 font-mono text-sm">
-                      <div className="flex justify-between">
-                        <span>Total Spending:</span>
-                        <span className="font-semibold">
-                          {formatCurrency(lobbyingData.lobbyingData.totalRelevantSpending)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Committees Affected:</span>
-                        <span className="font-semibold">
-                          {lobbyingData.lobbyingData.affectedCommittees}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Active Companies:</span>
-                        <span className="font-semibold">
-                          {lobbyingData.lobbyingData.topCompanies.length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Top Companies - Simple Table */}
-                  {lobbyingData.lobbyingData.topCompanies.length > 0 && (
-                    <div>
-                      <h4 className="text-md font-semibold text-gray-900 mb-3">
-                        Top Lobbying Companies
-                      </h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white">
-                          <thead className="bg-white">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                Company
-                              </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                Spending
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {lobbyingData.lobbyingData.topCompanies.slice(0, 10).map(company => (
-                              <tr
-                                key={`company-${company.name}-${company.totalSpending}`}
-                                className="hover:bg-white"
-                              >
-                                <td className="px-4 py-2 text-sm text-gray-900">
-                                  <a
-                                    href={`https://lda.senate.gov/filings/public/filing/search/?client_name=${encodeURIComponent(company.name)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#3ea2d4] hover:underline"
-                                  >
-                                    {company.name}
-                                  </a>
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-900">
-                                  {formatCurrency(company.totalSpending)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No significant lobbying activity found</p>
-                  <p className="text-sm mt-2">
-                    No companies are actively lobbying this representative&apos;s committees
-                  </p>
-                </div>
               )}
             </div>
           )}
