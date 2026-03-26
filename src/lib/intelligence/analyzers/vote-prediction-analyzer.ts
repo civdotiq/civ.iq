@@ -156,6 +156,7 @@ async function computeAndCache(
       predictions.aggregatedShapFactors.length > 0 ? predictions.aggregatedShapFactors : undefined,
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(...data.votes.map(v => v.date)),
     methodology:
       'XGBoost model trained on real vote records and campaign finance data. ' +

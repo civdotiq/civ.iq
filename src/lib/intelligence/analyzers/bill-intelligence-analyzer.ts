@@ -244,6 +244,7 @@ async function computeAndCache(
     relatedLobbyingOrgs: lobbyingOrgs,
     narrative,
     confidence: conf,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(bill.introducedDate, bill.status.lastAction.date),
     methodology:
       'Sponsor/cosponsor campaign contributions aggregated by industry sector from FEC filings. ' +

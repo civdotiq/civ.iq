@@ -193,6 +193,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(freshestVoteDate),
     methodology:
       'PAC recipients identified via FEC disbursement data. ' +

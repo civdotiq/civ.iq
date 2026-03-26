@@ -215,6 +215,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    confidenceMethod: 'mixed',
     dataAsOf: freshestDate(...regulationNodes.map(r => r.publicationDate)),
     methodology:
       'Regulations identified via Federal Register API, filtered by agency. ' +

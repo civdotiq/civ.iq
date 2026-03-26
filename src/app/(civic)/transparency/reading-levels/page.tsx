@@ -182,7 +182,7 @@ export default function ReadingLevelDashboard() {
               <div key={grade} className="flex-1 flex flex-col items-center">
                 <span className="text-xs text-gray-500 mb-1">{count || ''}</span>
                 <div
-                  className={`w-full ${isPass ? 'bg-civiq-green' : 'bg-civiq-red'}`}
+                  className={`w-full ${isPass ? 'bg-civiq-blue' : 'bg-amber-600'}`}
                   style={{ height: `${Math.max(heightPct, count > 0 ? 2 : 0)}%` }}
                 />
                 <span className="text-xs mt-1">{grade}</span>
@@ -193,9 +193,9 @@ export default function ReadingLevelDashboard() {
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <span>Grade Level</span>
           <span>
-            <span className="inline-block w-3 h-2 bg-civiq-green mr-1" />
+            <span className="inline-block w-3 h-2 bg-civiq-blue mr-1" />
             Pass (&le;8)
-            <span className="inline-block w-3 h-2 bg-civiq-red ml-3 mr-1" />
+            <span className="inline-block w-3 h-2 bg-amber-600 ml-3 mr-1" />
             Fail (&gt;8)
           </span>
         </div>
@@ -211,7 +211,7 @@ export default function ReadingLevelDashboard() {
                 <span className="text-xs text-gray-500 w-20 shrink-0">{day.date}</span>
                 <div className="flex-1 bg-gray-100 h-4">
                   <div
-                    className={`h-full ${day.passRate >= 80 ? 'bg-civiq-green' : 'bg-civiq-red'}`}
+                    className={`h-full ${day.passRate >= 80 ? 'bg-civiq-blue' : 'bg-amber-600'}`}
                     style={{ width: `${day.passRate}%` }}
                   />
                 </div>

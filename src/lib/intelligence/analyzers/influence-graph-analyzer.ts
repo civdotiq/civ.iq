@@ -170,6 +170,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    confidenceMethod: 'mixed',
     dataAsOf: freshestDate(
       chainInsight.dataAsOf,
       ...graphChains.flatMap(c => (c.regulationNode ? [c.regulationNode.publicationDate] : [])),

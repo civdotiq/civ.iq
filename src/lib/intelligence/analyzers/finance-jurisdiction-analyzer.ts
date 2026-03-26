@@ -137,6 +137,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(data.freshestContributionDate),
     methodology:
       'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +

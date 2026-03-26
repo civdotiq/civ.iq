@@ -76,7 +76,7 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
               <summary className="cursor-pointer font-semibold text-gray-700">
                 Error Details (Development Only)
               </summary>
-              <pre className="mt-2 text-civiq-red whitespace-pre-wrap">{error.message}</pre>
+              <pre className="mt-2 text-amber-700 whitespace-pre-wrap">{error.message}</pre>
               {error.stack && (
                 <pre className="mt-2 text-gray-600 whitespace-pre-wrap">{error.stack}</pre>
               )}
@@ -118,10 +118,10 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
  */
 export function InlineError({ message, retry }: { message: string; retry?: () => void }) {
   return (
-    <div className="p-4 bg-civiq-red/10 border border-civiq-red" role="alert">
+    <div className="p-4 bg-amber-50 border border-amber-600" role="alert">
       <div className="flex items-start gap-3">
         <svg
-          className="w-5 h-5 text-civiq-red flex-shrink-0 mt-0.5"
+          className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
           fill="currentColor"
           viewBox="0 0 20 20"
           aria-hidden="true"
@@ -133,11 +133,11 @@ export function InlineError({ message, retry }: { message: string; retry?: () =>
           />
         </svg>
         <div className="flex-1">
-          <p className="text-sm text-civiq-red">{message}</p>
+          <p className="text-sm text-amber-700">{message}</p>
           {retry && (
             <button
               onClick={retry}
-              className="mt-2 text-sm font-medium text-civiq-red hover:text-civiq-red focus:outline-none focus:underline"
+              className="mt-2 text-sm font-medium text-amber-700 hover:text-amber-800 focus:outline-none focus:underline"
             >
               Try Again
             </button>

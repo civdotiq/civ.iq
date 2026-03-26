@@ -160,6 +160,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(
       ...stats.issueAlignments.flatMap(a => a.matchedBills.map(b => b.introducedDate)),
       ...data.matchedFilings.map(f => `${f.filingYear}-12-31`)

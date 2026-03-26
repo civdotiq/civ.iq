@@ -149,6 +149,7 @@ async function computeAndCache(
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate)),
     methodology:
       `Stock trades from STOCK Act disclosures ` +

@@ -132,6 +132,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(...actions.map(a => a.date)),
     methodology:
       'Enforcement actions aggregated from EPA ECHO, OSHA inspections (DOL API), and CFPB complaints. ' +
@@ -158,28 +159,45 @@ async function fetchEnforcementActions(scope: EnforcementScope): Promise<Enforce
   const stateFilter = scope.type === 'state' ? scope.state : undefined;
   const orgFilter = scope.type === 'organization' ? scope.name : undefined;
 
-  // SIC code filter for sector scope — use the primary (first) range's 2-digit prefix.
-  // Multiple ranges exist for sectors like Energy (mining, petroleum, pipelines, utilities),
-  // but API filters only accept one value. The post-fetch sector filter at line 184
-  // ensures correct results; this pre-filter just reduces API noise for the primary range.
-  const sicCodeFilter =
+  // SIC code filter for sector scope — collect ALL unique 2-digit prefixes from all ranges.
+  // Sectors like Energy span multiple SIC ranges (mining 10-14, petroleum 29-30, pipelines 46,
+  // utilities 49), so we query each prefix in parallel for better API coverage.
+  const sicPrefixes =
     scope.type === 'sector'
-      ? (() => {
-          const ranges = sectorToSicRanges(scope.sector);
-          const firstRange = ranges[0];
-          if (!firstRange) return undefined;
-          return String(firstRange.start).slice(0, 2);
-        })()
-      : undefined;
+      ? [...new Set(sectorToSicRanges(scope.sector).map(r => String(r.start).slice(0, 2)))]
+      : [];
 
-  // Fetch from all three agencies in parallel
-  const [epaActions, oshaActions, cfpbActions] = await Promise.all([
-    fetchEPAActions(stateFilter, sicCodeFilter, orgFilter),
-    fetchOSHAActions(stateFilter, sicCodeFilter, orgFilter),
-    fetchCFPBActions(stateFilter, orgFilter),
-  ]);
+  // Fetch from all agencies in parallel, querying each SIC prefix separately
+  const fetchPromises: Promise<EnforcementAction[]>[] = [];
 
-  actions.push(...epaActions, ...oshaActions, ...cfpbActions);
+  if (sicPrefixes.length > 1) {
+    // Multiple SIC prefixes: parallel calls per prefix, then deduplicate
+    for (const prefix of sicPrefixes) {
+      fetchPromises.push(fetchEPAActions(stateFilter, prefix, orgFilter));
+      fetchPromises.push(fetchOSHAActions(stateFilter, prefix, orgFilter));
+    }
+    fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
+  } else {
+    // Single or no SIC prefix: original behavior
+    const sicCodeFilter = sicPrefixes[0];
+    fetchPromises.push(fetchEPAActions(stateFilter, sicCodeFilter, orgFilter));
+    fetchPromises.push(fetchOSHAActions(stateFilter, sicCodeFilter, orgFilter));
+    fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
+  }
+
+  const results = await Promise.all(fetchPromises);
+
+  // Deduplicate by agency + organization + date (parallel prefix queries may overlap)
+  const seen = new Set<string>();
+  for (const batch of results) {
+    for (const action of batch) {
+      const key = `${action.agency}|${action.organization}|${action.date}|${action.penaltyAmount}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        actions.push(action);
+      }
+    }
+  }
 
   // If sector scope, filter to matching sector
   if (scope.type === 'sector') {
@@ -325,14 +343,15 @@ function computeStats(actions: EnforcementAction[]): EnforcementInsight['stats']
     penalties: data.penalties,
   }));
 
-  // Trend: compare first half vs second half by date
+  // Trend: compare actions in first vs second half of TIME PERIOD
   const dated = actions.filter(a => a.date).sort((a, b) => a.date.localeCompare(b.date));
   let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
 
   if (dated.length >= 6) {
-    const mid = Math.floor(dated.length / 2);
-    const firstHalf = dated.slice(0, mid).length;
-    const secondHalf = dated.slice(mid).length;
+    const timestamps = dated.map(a => new Date(a.date).getTime());
+    const midDate = (timestamps[0]! + timestamps[timestamps.length - 1]!) / 2;
+    const firstHalf = dated.filter(a => new Date(a.date).getTime() <= midDate).length;
+    const secondHalf = dated.filter(a => new Date(a.date).getTime() > midDate).length;
     const ratio = firstHalf > 0 ? secondHalf / firstHalf : 1;
     if (ratio > 1.3) trend = 'increasing';
     else if (ratio < 0.7) trend = 'decreasing';

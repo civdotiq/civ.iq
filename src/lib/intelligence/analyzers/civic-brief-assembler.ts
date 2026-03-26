@@ -18,6 +18,7 @@ import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
+import { getBillsSummary } from '@/services/congress/optimized-congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector } from '@civiq/entity-resolution';
@@ -180,6 +181,7 @@ async function computeAndCache(
     patterns,
     summary,
     confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(fjInsight?.dataAsOf, icInsight?.dataAsOf),
     methodology: METHODOLOGY,
     disclaimer: DISCLAIMER,
@@ -287,17 +289,20 @@ async function fetchVotingData(
   };
 
   try {
-    const votes =
+    // Fetch votes and bill sponsorship counts in parallel
+    const [votes, billsSummary] = await Promise.all([
       chamber === 'House'
-        ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 50)
-        : await batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 50);
+        ? batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 50)
+        : batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 50),
+      getBillsSummary(bioguideId).catch(() => null),
+    ]);
 
     return {
       totalVotes: votes.length,
       partyAlignmentPct: null, // Enriched from temporal analyzer cache
       missedVotePct: null,
-      billsSponsored: 0, // Not available from batch voting service
-      billsCosponsored: 0, // Not available from batch voting service
+      billsSponsored: billsSummary?.currentCongress.count ?? 0,
+      billsCosponsored: billsSummary?.cosponsoredCount ?? 0,
     };
   } catch (error) {
     logger.warn('[CivicBrief] Vote fetch failed', {

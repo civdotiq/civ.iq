@@ -298,6 +298,7 @@ async function computeAndCache(
     },
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+    confidenceMethod: 'mixed',
     dataAsOf: freshestDate(...votes.map(v => v.date)),
     methodology:
       'Traces lobbying filings → campaign contributions → committee membership → ' +

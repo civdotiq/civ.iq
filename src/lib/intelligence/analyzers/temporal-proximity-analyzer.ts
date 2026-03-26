@@ -122,6 +122,7 @@ export async function analyzeTemporalProximity(
     totalPatternsDetected,
     narrative,
     confidence,
+    confidenceMethod: 'computed',
     dataAsOf: freshestDate(...edgeDates),
     methodology:
       'Temporal proximity analysis: edges with dates are compared within configurable windows. ' +

@@ -244,7 +244,7 @@ export function DataFreshnessIndicator({
   const freshness = ageMinutes < 5 ? 'fresh' : ageMinutes < 30 ? 'recent' : 'older';
 
   const freshnessColors = {
-    fresh: 'text-civiq-green bg-civiq-green/10 border-civiq-green',
+    fresh: 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue',
     recent: 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue',
     older: 'text-gray-600 bg-white border-gray-200',
   };
