@@ -19,7 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { buildStockTradeLeaderboard } from '@/lib/intelligence/analyzers/stock-trade-leaderboard-analyzer';
-import type { StockTradeLeaderboardResponse } from '@/lib/intelligence/types';
+import type { StockTradeLeaderboardResponse, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -74,16 +74,21 @@ export async function GET(
         {
           error:
             'No stock trade leaderboard data available. Trade data is populated as member pages are visited.',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
         },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Stock trade leaderboard error', error as Error, {
       chamber: chamber ?? 'all',

@@ -17,6 +17,7 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector } from '@civiq/entity-resolution';
@@ -29,6 +30,7 @@ import {
   trackInsightCacheHit,
   withInsightTracking,
 } from './shared';
+import { mean, sampleStandardDeviation } from '../statistics/civic-stats';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
 import { getTopicsForCommittee } from '@/lib/connections/committee-agency-map';
 import { detectPatterns } from './civic-brief-patterns';
@@ -42,6 +44,7 @@ import type {
   BriefPattern,
   FinanceJurisdictionInsight,
   InfluenceChainInsight,
+  TemporalVoteInsight,
 } from '../types';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
@@ -112,34 +115,51 @@ async function computeAndCache(
   const cycle = getCurrentElectionCycle();
   const fecId = getFECIdFromBioguide(bioguideId);
 
-  const [fundingData, fjInsight, icInsight] = await Promise.all([
+  const [fundingData, fjInsight, icInsight, temporalInsight] = await Promise.all([
     fetchFundingData(fecId, cycle, identity),
     fetchCachedInsight<FinanceJurisdictionInsight>(`insight:finance_jurisdiction:${bioguideId}`),
     fetchCachedInsight<InfluenceChainInsight>(`insight:influence_chain:${bioguideId}`),
+    fetchCachedInsight<TemporalVoteInsight>(`insight:temporal_votes:${bioguideId}`),
   ]);
 
-  // 4. Assemble voting data from batch API
-  const votingData = await fetchVotingData(bioguideId);
+  // 4. Assemble voting data via direct service call
+  const votingData = await fetchVotingData(bioguideId, rep.chamber as 'House' | 'Senate');
+
+  // Enrich partyAlignmentPct from temporal insight if available
+  if (votingData.partyAlignmentPct === null && temporalInsight?.quarters?.length) {
+    const avgAlignment = mean(temporalInsight.quarters.map(q => q.alignmentScore)) * 100;
+    votingData.partyAlignmentPct = Math.round(avgAlignment * 10) / 10;
+  }
+
+  // Cache in-state pct for peer aggregation (fire-and-forget)
+  if (fundingData.inStatePct !== null) {
+    cacheInStatePctScore(bioguideId, rep.chamber, fundingData.inStatePct);
+  }
 
   // 5. Assemble oversight data
   const oversightData = assembleOversight(fjInsight, icInsight);
 
-  // 6. Detect patterns
+  // 6. Fetch peer stats in parallel
+  const [peerPartyStats, peerInStateStats] = await Promise.all([
+    fetchPeerPartyAlignmentStats(bioguideId, rep.chamber, rep.party),
+    fetchPeerInStatePctStats(bioguideId, rep.chamber),
+  ]);
+
+  // 7. Detect patterns
   const patternInput: PatternInput = {
     identity,
     funding: fundingData,
     voting: votingData,
     oversight: oversightData,
-    // Peer stats — use defaults when not available from cached insights
-    peerPartyAlignmentPct: null,
-    peerPartyAlignmentStd: null,
-    peerInStatePctMean: null,
-    peerInStatePctStd: null,
+    peerPartyAlignmentPct: peerPartyStats?.mean ?? null,
+    peerPartyAlignmentStd: peerPartyStats?.std ?? null,
+    peerInStatePctMean: peerInStateStats?.mean ?? null,
+    peerInStatePctStd: peerInStateStats?.std ?? null,
   };
 
   const patterns = detectPatterns(patternInput);
 
-  // 7. Generate AI summary or fallback
+  // 8. Generate AI summary or fallback
   const { summary, source } = await generateBriefSummary(
     identity,
     fundingData,
@@ -254,50 +274,112 @@ async function fetchFundingData(
   }
 }
 
-async function fetchVotingData(bioguideId: string): Promise<BriefVoting> {
+async function fetchVotingData(
+  bioguideId: string,
+  chamber: 'House' | 'Senate'
+): Promise<BriefVoting> {
+  const empty: BriefVoting = {
+    totalVotes: 0,
+    partyAlignmentPct: null,
+    missedVotePct: null,
+    billsSponsored: 0,
+    billsCosponsored: 0,
+  };
+
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/representative/${bioguideId}/batch`,
-      { next: { revalidate: 3600 } }
-    );
-
-    if (!response.ok) {
-      return {
-        totalVotes: 0,
-        partyAlignmentPct: null,
-        missedVotePct: null,
-        billsSponsored: 0,
-        billsCosponsored: 0,
-      };
-    }
-
-    const batch = await response.json();
-    const data = batch?.data ?? {};
-
-    const votes = data.votes;
-    const bills = data.bills;
+    const votes =
+      chamber === 'House'
+        ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 50)
+        : await batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 50);
 
     return {
-      totalVotes: Array.isArray(votes) ? votes.length : 0,
-      partyAlignmentPct: null, // Computed by temporal analyzer, not in batch
+      totalVotes: votes.length,
+      partyAlignmentPct: null, // Enriched from temporal analyzer cache
       missedVotePct: null,
-      billsSponsored: bills?.sponsored?.count ?? 0,
-      billsCosponsored: bills?.cosponsored?.count ?? 0,
+      billsSponsored: 0, // Not available from batch voting service
+      billsCosponsored: 0, // Not available from batch voting service
     };
-  } catch {
-    return {
-      totalVotes: 0,
-      partyAlignmentPct: null,
-      missedVotePct: null,
-      billsSponsored: 0,
-      billsCosponsored: 0,
-    };
+  } catch (error) {
+    logger.warn('[CivicBrief] Vote fetch failed', {
+      bioguideId,
+      error: (error as Error).message,
+    });
+    return empty;
   }
 }
 
 async function fetchCachedInsight<T>(cacheKey: string): Promise<T | null> {
   try {
     return await getRedisCache().get<T>(cacheKey);
+  } catch {
+    return null;
+  }
+}
+
+/** Cache in-state funding percentage for peer aggregation. */
+function cacheInStatePctScore(bioguideId: string, chamber: string, inStatePct: number): void {
+  getRedisCache()
+    .set(`brief-instate-pct:${chamber}:${bioguideId}`, inStatePct, 24 * 60 * 60)
+    .catch(() => {
+      /* non-fatal */
+    });
+}
+
+interface PeerStats {
+  mean: number;
+  std: number;
+}
+
+const MIN_PEER_COUNT = 5;
+
+/** Fetch peer party alignment stats from cached temporal alignment scores. */
+async function fetchPeerPartyAlignmentStats(
+  bioguideId: string,
+  chamber: string,
+  party: string
+): Promise<PeerStats | null> {
+  try {
+    const pattern = `temporal-alignment-party:${chamber}:${party}:*`;
+    const keys = await getRedisCache().keys(pattern);
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEER_COUNT) return null;
+
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const scores = values
+      .filter((v): v is number => v !== null && typeof v === 'number')
+      .map(v => v * 100); // Convert 0-1 to 0-100 for pattern detectors
+
+    if (scores.length < MIN_PEER_COUNT) return null;
+
+    return {
+      mean: mean(scores),
+      std: sampleStandardDeviation(scores),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch peer in-state funding percentage stats from cached values. */
+async function fetchPeerInStatePctStats(
+  bioguideId: string,
+  chamber: string
+): Promise<PeerStats | null> {
+  try {
+    const pattern = `brief-instate-pct:${chamber}:*`;
+    const keys = await getRedisCache().keys(pattern);
+    const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
+    if (peerKeys.length < MIN_PEER_COUNT) return null;
+
+    const values = await getRedisCache().mget<number>(peerKeys);
+    const scores = values.filter((v): v is number => v !== null && typeof v === 'number');
+
+    if (scores.length < MIN_PEER_COUNT) return null;
+
+    return {
+      mean: mean(scores),
+      std: sampleStandardDeviation(scores),
+    };
   } catch {
     return null;
   }

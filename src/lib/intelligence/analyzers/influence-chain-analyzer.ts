@@ -27,6 +27,7 @@ import {
   getResolvedCommittees,
 } from '../entity-resolution/lobbying-committee-resolver';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
+import { LINK_CONFIDENCE } from '../confidence-constants';
 import {
   getCurrentElectionCycle,
   freshestDate,
@@ -798,7 +799,7 @@ function buildChainLinks(
   links.push({
     type: 'committee',
     label: `${rep.name} sits on ${committeeName}`,
-    confidence: 0.95,
+    confidence: LINK_CONFIDENCE.committee,
     data: {
       committeeName,
     },
@@ -808,7 +809,7 @@ function buildChainLinks(
   links.push({
     type: 'bill_match',
     label: `${vote.billTitle} classified in lobbied sectors`,
-    confidence: 0.7,
+    confidence: LINK_CONFIDENCE.billSectorMatch,
     data: {
       billId: vote.billId,
       billTitle: vote.billTitle,
@@ -820,7 +821,7 @@ function buildChainLinks(
   links.push({
     type: 'vote',
     label: `${rep.name} voted ${vote.position} on ${vote.billId}`,
-    confidence: 1.0,
+    confidence: LINK_CONFIDENCE.vote,
     data: {
       position: vote.position,
       date: vote.date,

@@ -19,6 +19,7 @@ import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.serv
 import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
+import type { InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -107,7 +108,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
 
     if (!geocodeResult.congressionalDistrict) {
       return NextResponse.json(
-        { error: 'Could not resolve congressional district for this address' },
+        {
+          error: 'Could not resolve congressional district for this address',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
@@ -118,11 +123,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
       false
     );
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Representatives] POST error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -148,7 +156,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
 
     if (districts.length === 0) {
       return NextResponse.json(
-        { error: `No congressional district found for ZIP ${zip}` },
+        {
+          error: `No congressional district found for ZIP ${zip}`,
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
@@ -162,11 +174,14 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
       multiDistrict
     );
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Representatives] GET error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

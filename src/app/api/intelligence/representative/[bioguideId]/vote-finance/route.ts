@@ -15,7 +15,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import type { VoteFinanceInsight } from '@/lib/intelligence/types';
+import { classifyError } from '@/lib/intelligence/error-utils';
+import type { VoteFinanceInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -34,26 +35,36 @@ export async function GET(
 
   try {
     logger.info('[Intelligence] Vote-finance request', { bioguideId: upperId });
+    const errors: InsightError[] = [];
 
-    const insight = await analyzeVoteFinance(upperId).catch(error => {
-      logger.error('[Intelligence] Vote-finance analyzer failed', error as Error, {
-        bioguideId: upperId,
-      });
+    const insight = await analyzeVoteFinance(upperId).catch(e => {
+      errors.push(classifyError(e, 'vote-finance-analyzer'));
       return null;
     });
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Vote-finance analysis not available for this legislator' },
+        {
+          error: 'Vote-finance analysis not available for this legislator',
+          errors,
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+    return NextResponse.json(
+      {
+        ...insight,
+        errors,
+        status: errors.length === 0 ? ('complete' as const) : ('partial' as const),
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Vote-finance error', error as Error, {
       bioguideId: upperId,

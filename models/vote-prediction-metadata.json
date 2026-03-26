@@ -221,5 +221,6 @@
       "feature": "bill_affects_misc_business",
       "meanAbsShap": 0.011068139225244522
     }
-  ]
+  ],
+  "expectedValue": 0.38316673040390015
 }

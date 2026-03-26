@@ -29,7 +29,7 @@ import {
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { oshaService } from '@/lib/data-sources/osha-service';
 import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
-import { sicToSector, resolveCompanyName } from '@civiq/entity-resolution';
+import { sicToSector, sectorToSicRanges, resolveCompanyName } from '@civiq/entity-resolution';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import type { EnforcementAction, EnforcementInsight, PeerComparison } from '../types';
@@ -158,9 +158,19 @@ async function fetchEnforcementActions(scope: EnforcementScope): Promise<Enforce
   const stateFilter = scope.type === 'state' ? scope.state : undefined;
   const orgFilter = scope.type === 'organization' ? scope.name : undefined;
 
-  // SIC code filter for sector scope
-  // Note: sector-to-SIC is a many-to-many mapping; we search broadly
-  const sicCodeFilter = scope.type === 'sector' ? undefined : undefined;
+  // SIC code filter for sector scope — use the primary (first) range's 2-digit prefix.
+  // Multiple ranges exist for sectors like Energy (mining, petroleum, pipelines, utilities),
+  // but API filters only accept one value. The post-fetch sector filter at line 184
+  // ensures correct results; this pre-filter just reduces API noise for the primary range.
+  const sicCodeFilter =
+    scope.type === 'sector'
+      ? (() => {
+          const ranges = sectorToSicRanges(scope.sector);
+          const firstRange = ranges[0];
+          if (!firstRange) return undefined;
+          return String(firstRange.start).slice(0, 2);
+        })()
+      : undefined;
 
   // Fetch from all three agencies in parallel
   const [epaActions, oshaActions, cfpbActions] = await Promise.all([

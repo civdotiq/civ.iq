@@ -16,7 +16,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { assembleCivicBrief } from '@/lib/intelligence/analyzers/civic-brief-assembler';
-import type { CivicBriefInsight } from '@/lib/intelligence/types';
+import { classifyError } from '@/lib/intelligence/error-utils';
+import type { CivicBriefInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -35,26 +36,32 @@ export async function GET(
 
   try {
     logger.info('[Intelligence] Civic brief request', { bioguideId: upperId });
+    const errors: InsightError[] = [];
 
-    const insight = await assembleCivicBrief(upperId).catch(error => {
-      logger.error('[Intelligence] Civic brief failed', error as Error, {
-        bioguideId: upperId,
-      });
+    const insight = await assembleCivicBrief(upperId).catch(e => {
+      errors.push(classifyError(e, 'civic-brief-assembler'));
       return null;
     });
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Civic brief not available for this legislator' },
+        {
+          error: 'Civic brief not available for this legislator',
+          errors,
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors, status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Civic brief error', error as Error, {
       bioguideId: upperId,

@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { buildSectorLeaderboard } from '@/lib/intelligence/analyzers/sector-leaderboard-analyzer';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
-import type { SectorLeaderboardResponse } from '@/lib/intelligence/types';
+import type { SectorLeaderboardResponse, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -96,16 +96,23 @@ export async function GET(
 
     if (!result) {
       return NextResponse.json(
-        { error: `No leaderboard data available for sector: ${sector}` },
+        {
+          error: `No leaderboard data available for sector: ${sector}`,
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Sector leaderboard error', error as Error, {
       sector,

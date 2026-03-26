@@ -18,6 +18,30 @@ import type { GovernmentEntityResolution, TickerResolution } from '@civiq/entity
 export type { PeerComparison, GovernmentEntityResolution, TickerResolution };
 export type { AnomalyFlag, AnomalyResult } from '@civiq/civic-statistics';
 
+// ── Error Reporting ──────────────────────────────────────────────────
+
+/** Structured error from an upstream data source or internal computation. */
+export interface InsightError {
+  /** Data source that failed, e.g., "senate-lda", "fec-api", "congress-gov". */
+  source: string;
+  /** Error classification. */
+  type: 'upstream_timeout' | 'upstream_error' | 'insufficient_data' | 'internal_error';
+  /** Human-readable error message. */
+  message: string;
+  /** ISO timestamp when the error occurred. */
+  timestamp: string;
+}
+
+/** Wrapper for insight API responses with error reporting. */
+export interface InsightResponse<T> {
+  /** The insight data, or null if unavailable. */
+  data: T | null;
+  /** Errors encountered during computation. */
+  errors: InsightError[];
+  /** Whether all data sources succeeded. */
+  status: 'complete' | 'partial' | 'unavailable';
+}
+
 // ── Base Types ───────────────────────────────────────────────────────
 
 /**
@@ -27,6 +51,8 @@ export type { AnomalyFlag, AnomalyResult } from '@civiq/civic-statistics';
 export interface InsightBase {
   /** Confidence score: 0-1. Below 0.6 = hidden, 0.6-0.8 = amber, above 0.8 = green. */
   confidence: number;
+  /** Whether confidence was computed from data or estimated by heuristic. */
+  confidenceMethod?: 'computed' | 'heuristic' | 'mixed';
   /** ISO timestamp of the freshest source data used in this insight. */
   dataAsOf: string;
   /** Human-readable description of how this insight was computed. */

@@ -366,10 +366,19 @@ describe('civic-brief-assembler', () => {
     },
   }));
 
+  jest.mock('@/features/representatives/services/batch-voting-service', () => ({
+    batchVotingService: {
+      getHouseMemberVotes: jest.fn(() => Promise.resolve([])),
+      getSenateMemberVotes: jest.fn(() => Promise.resolve([])),
+    },
+  }));
+
   jest.mock('@/lib/cache/redis-client', () => ({
     getRedisCache: () => ({
       get: jest.fn(() => Promise.resolve(null)),
       set: jest.fn(() => Promise.resolve(true)),
+      keys: jest.fn(() => Promise.resolve([])),
+      mget: jest.fn(() => Promise.resolve([])),
     }),
   }));
 
@@ -418,12 +427,6 @@ describe('civic-brief-assembler', () => {
 
     const { generateAIText } = await import('@/lib/ai/provider');
     (generateAIText as jest.Mock).mockRejectedValue(new Error('AI unavailable'));
-
-    // Mock fetch for batch API
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({}),
-    }) as jest.Mock;
 
     const { assembleCivicBrief } = await import(
       '@/lib/intelligence/analyzers/civic-brief-assembler'

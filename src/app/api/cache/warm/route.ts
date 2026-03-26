@@ -8,9 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
+// Intelligence analyzers imported dynamically below to avoid pulling in AI deps at module level
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Cache warming can take time
+export const maxDuration = 300; // Cache warming: up to 5 min for intelligence scope
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -106,6 +107,61 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Intelligence analyzer warming (when ?scope=intelligence)
+    const scope = request.nextUrl.searchParams.get('scope');
+    const intelligenceResults: {
+      bioguideId: string;
+      financeJurisdiction: boolean;
+      voteFinance: boolean;
+      duration: number;
+    }[] = [];
+
+    if (scope === 'intelligence') {
+      logger.info('Warming intelligence analyzer caches for leaders');
+
+      const { analyzeFinanceJurisdiction } = await import(
+        '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer'
+      );
+      const { analyzeVoteFinance } = await import(
+        '@/lib/intelligence/analyzers/vote-finance-analyzer'
+      );
+
+      for (const bioguideId of leaderBioguideIds) {
+        const intelStart = Date.now();
+        let fjOk = false;
+        let vfOk = false;
+
+        try {
+          await analyzeFinanceJurisdiction(bioguideId);
+          fjOk = true;
+        } catch (error) {
+          logger.error('Intelligence warm failed: finance-jurisdiction', error as Error, {
+            bioguideId,
+          });
+        }
+
+        try {
+          await analyzeVoteFinance(bioguideId);
+          vfOk = true;
+        } catch (error) {
+          logger.error('Intelligence warm failed: vote-finance', error as Error, { bioguideId });
+        }
+
+        intelligenceResults.push({
+          bioguideId,
+          financeJurisdiction: fjOk,
+          voteFinance: vfOk,
+          duration: Date.now() - intelStart,
+        });
+      }
+
+      logger.info('Intelligence warming completed', {
+        total: intelligenceResults.length,
+        fjSuccess: intelligenceResults.filter(r => r.financeJurisdiction).length,
+        vfSuccess: intelligenceResults.filter(r => r.voteFinance).length,
+      });
+    }
+
     const totalDuration = Date.now() - startTime;
     const successCount = results.filter(r => r.success).length;
 
@@ -119,10 +175,20 @@ export async function POST(request: NextRequest) {
       success: true,
       totalDuration,
       results,
+      ...(intelligenceResults.length > 0 ? { intelligence: intelligenceResults } : {}),
       summary: {
         total: results.length,
         successful: successCount,
         failed: results.length - successCount,
+        ...(intelligenceResults.length > 0
+          ? {
+              intelligence: {
+                total: intelligenceResults.length,
+                financeJurisdiction: intelligenceResults.filter(r => r.financeJurisdiction).length,
+                voteFinance: intelligenceResults.filter(r => r.voteFinance).length,
+              },
+            }
+          : {}),
       },
     });
   } catch (error) {
@@ -136,9 +202,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// GET endpoint for manual triggering (if needed)
-export async function GET(request: NextRequest) {
-  return POST(request);
 }

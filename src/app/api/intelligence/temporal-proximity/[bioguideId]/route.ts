@@ -20,6 +20,7 @@ import {
   type TemporalProximityInsight,
 } from '@/lib/intelligence/analyzers/temporal-proximity-analyzer';
 import { toCanonicalId } from '@/lib/graph/normalize';
+import type { InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -44,18 +45,25 @@ export async function GET(
 
     if (!neighborhood) {
       return NextResponse.json(
-        { error: 'Temporal analysis not available for this legislator' },
+        {
+          error: 'Temporal analysis not available for this legislator',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
     const insight = await analyzeTemporalProximity(neighborhood, upperId);
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Temporal proximity error', error as Error, {
       bioguideId: upperId,

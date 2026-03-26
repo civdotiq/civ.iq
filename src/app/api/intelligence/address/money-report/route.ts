@@ -31,6 +31,7 @@ import type {
   MoneyReportCardInsight,
   RepMoneyMetrics,
   DistrictAggregates,
+  InsightError,
 } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
@@ -309,7 +310,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<MoneyRepo
 
     if (!geocodeResult.congressionalDistrict) {
       return NextResponse.json(
-        { error: 'Could not resolve congressional district for this address' },
+        {
+          error: 'Could not resolve congressional district for this address',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
@@ -326,11 +331,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<MoneyRepo
       'MoneyReportPipeline'
     );
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[MoneyReport] POST error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -356,7 +364,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
 
     if (districts.length === 0) {
       return NextResponse.json(
-        { error: `No congressional district found for ZIP ${zip}` },
+        {
+          error: `No congressional district found for ZIP ${zip}`,
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
@@ -376,11 +388,14 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
       'MoneyReportPipeline'
     );
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[MoneyReport] GET error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

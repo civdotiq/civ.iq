@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
-import type { LobbyingPipelineInsight } from '@/lib/intelligence/types';
+import type { LobbyingPipelineInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -49,16 +49,23 @@ export async function GET(
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Insufficient lobbying data for this committee' },
+        {
+          error: 'Insufficient lobbying data for this committee',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Committee lobbying pipeline error', error as Error, {
       committeeId: upperCode,

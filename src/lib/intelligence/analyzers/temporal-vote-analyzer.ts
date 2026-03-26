@@ -24,9 +24,12 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { fecApiService } from '@/lib/fec/fec-api-service';
 import {
   freshestDate,
   generateInsightNarrative,
+  getCurrentElectionCycle,
   trackInsightCacheHit,
   withInsightTracking,
 } from './shared';
@@ -323,7 +326,7 @@ async function computeAndCache(
   }
 
   // 4. Detect shifts
-  const shifts = detectShifts(quarters, data);
+  const shifts = await detectShifts(quarters, data, bioguideId);
 
   // 5. Classify overall trend
   const overallTrend = classifyTrend(quarters, shifts);
@@ -368,7 +371,7 @@ async function computeAndCache(
   };
 
   await cacheInsight(cacheKey, insight);
-  await cachePeerScore(bioguideId, avgAlignment, data.chamber, data.state);
+  await cachePeerScore(bioguideId, avgAlignment, data.chamber, data.state, data.party);
 
   return insight;
 }
@@ -541,7 +544,11 @@ function getSessionFromDate(dateStr: string): number {
 
 // ── Shift Detection ─────────────────────────────────────────────────
 
-function detectShifts(quarters: QuarterData[], data: FetchedData): VoteShift[] {
+async function detectShifts(
+  quarters: QuarterData[],
+  data: FetchedData,
+  bioguideId: string
+): Promise<VoteShift[]> {
   const shifts: VoteShift[] = [];
 
   for (let i = 0; i < quarters.length; i++) {
@@ -557,7 +564,7 @@ function detectShifts(quarters: QuarterData[], data: FetchedData): VoteShift[] {
         magnitude: Math.round(magnitude * 1000) / 10, // Convert to percentage points with 1 decimal
         direction: deviation > 0 ? 'increase' : 'decrease',
         context: {
-          newCommittees: [], // Populated below if we can determine timing
+          newCommittees: [], // Committee assignment dates not available in current data
           largeContributions: 0,
           electionProximity: isElectionProximity(q.quarter, data.nextElection),
         },
@@ -565,8 +572,56 @@ function detectShifts(quarters: QuarterData[], data: FetchedData): VoteShift[] {
     }
   }
 
-  // Enrich shifts with contribution context (async but we run synchronously for each shift)
+  // Enrich shifts with FEC contribution context
+  if (shifts.length > 0) {
+    await enrichShiftsWithContributions(shifts, bioguideId);
+  }
+
   return shifts;
+}
+
+/** Count large contributions (>$2,000) received during each shift quarter. */
+async function enrichShiftsWithContributions(
+  shifts: VoteShift[],
+  bioguideId: string
+): Promise<void> {
+  try {
+    const fecId = getFECIdFromBioguide(bioguideId);
+    if (!fecId) return;
+
+    const cycle = getCurrentElectionCycle();
+    const contributions = await fecApiService.getSampleContributions(fecId, cycle);
+    if (!contributions?.length) return;
+
+    for (const shift of shifts) {
+      const { start, end } = quarterDateRange(shift.quarter);
+      const largeInQuarter = contributions.filter(c => {
+        const amount =
+          typeof c.contribution_receipt_amount === 'number' ? c.contribution_receipt_amount : 0;
+        if (amount <= 2000) return false;
+        const date = (c.contribution_receipt_date ?? '').slice(0, 10);
+        return date >= start && date <= end;
+      });
+      shift.context.largeContributions = largeInQuarter.length;
+    }
+  } catch {
+    // Non-fatal — leave largeContributions as 0
+  }
+}
+
+/** Convert "2025-Q1" to date range {start: "2025-01-01", end: "2025-03-31"}. */
+function quarterDateRange(quarter: string): { start: string; end: string } {
+  const match = quarter.match(/^(\d{4})-Q(\d)$/);
+  if (!match) return { start: '1970-01-01', end: '1970-01-01' };
+  const year = match[1]!;
+  const q = parseInt(match[2]!, 10);
+  const startMonth = (q - 1) * 3 + 1;
+  const endMonth = startMonth + 2;
+  const lastDay = new Date(parseInt(year, 10), endMonth, 0).getDate();
+  return {
+    start: `${year}-${String(startMonth).padStart(2, '0')}-01`,
+    end: `${year}-${String(endMonth).padStart(2, '0')}-${lastDay}`,
+  };
 }
 
 /** Check whether a quarter falls within 6 months of the next election. */
@@ -630,14 +685,18 @@ async function cachePeerScore(
   bioguideId: string,
   avgAlignment: number,
   chamber: string,
-  state: string
+  state: string,
+  party: string
 ): Promise<void> {
   try {
-    await getRedisCache().set(
-      alignmentCacheKey(chamber, state, bioguideId),
-      avgAlignment,
-      CACHE_TTL
-    );
+    await Promise.all([
+      getRedisCache().set(alignmentCacheKey(chamber, state, bioguideId), avgAlignment, CACHE_TTL),
+      getRedisCache().set(
+        `temporal-alignment-party:${chamber}:${party}:${bioguideId}`,
+        avgAlignment,
+        CACHE_TTL
+      ),
+    ]);
   } catch {
     // Non-fatal
   }

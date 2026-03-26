@@ -135,6 +135,14 @@ const SIC_RANGES: SicRange[] = [
 ];
 
 /**
+ * Reverse lookup: given an IndustrySector, return all SIC code ranges that map to it.
+ * Returns an empty array if no ranges match.
+ */
+export function sectorToSicRanges(sector: IndustrySector): { start: number; end: number }[] {
+  return SIC_RANGES.filter(r => r.sector === sector).map(({ start, end }) => ({ start, end }));
+}
+
+/**
  * Resolve a 4-digit SIC code string to an IndustrySector.
  * Returns null if the code is invalid or falls outside all known ranges.
  */

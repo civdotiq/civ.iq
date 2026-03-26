@@ -18,7 +18,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { analyzeInfluenceGraph } from '@/lib/intelligence/analyzers/influence-graph-analyzer';
-import type { InfluenceGraphInsight } from '@/lib/intelligence/types';
+import { classifyError } from '@/lib/intelligence/error-utils';
+import type { InfluenceGraphInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,21 +38,34 @@ export async function GET(
 
   try {
     logger.info('[Intelligence] Influence graph request', { bioguideId: upperId });
+    const errors: InsightError[] = [];
 
-    const insight = await analyzeInfluenceGraph(upperId).catch(() => null);
+    const insight = await analyzeInfluenceGraph(upperId).catch(e => {
+      errors.push(classifyError(e, 'influence-graph-analyzer'));
+      return null;
+    });
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Influence graph analysis not available for this legislator' },
+        {
+          error: 'Influence graph analysis not available for this legislator',
+          errors,
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=3600',
-      },
-    });
+    const status = errors.length === 0 ? 'complete' : 'partial';
+
+    return NextResponse.json(
+      { ...insight, errors, status },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Influence graph error', error as Error, {
       bioguideId: upperId,

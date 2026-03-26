@@ -39,6 +39,7 @@ import {
   getResolvedCommittees,
 } from '../entity-resolution/lobbying-committee-resolver';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
+import { LINK_CONFIDENCE } from '../confidence-constants';
 import type { RegulationInsight, RegulationNode, PeerComparison } from '../types';
 
 /** Redis cache TTL: 3 days */
@@ -138,7 +139,7 @@ async function computeAndCache(
       rin: doc.regulation_id_number ?? null,
       commentCount: 0,
       linkMethod: 'committee_agency',
-      linkConfidence: 0.8,
+      linkConfidence: LINK_CONFIDENCE.regulationLink,
     });
   }
 

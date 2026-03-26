@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
-import type { VotePredictionInsight } from '@/lib/intelligence/types';
+import type { VotePredictionInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -39,16 +39,23 @@ export async function GET(
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Vote prediction not available for this legislator' },
+        {
+          error: 'Vote prediction not available for this legislator',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Vote prediction error', error as Error, {
       bioguideId: upperId,

@@ -63,6 +63,10 @@ export function freshestDate(...dates: (string | undefined | null)[]): string {
   return valid[0]!;
 }
 
+// ── Error Classification (re-exported from error-utils) ─────────────
+
+export { classifyError, insufficientDataError } from '../error-utils';
+
 // ── FEC Election Cycle ──────────────────────────────────────────────
 
 /**

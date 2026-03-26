@@ -33,6 +33,11 @@ except ImportError:
     print("ERROR: hdbscan not installed. Run: pip install hdbscan")
     sys.exit(1)
 
+try:
+    from sklearn.metrics import silhouette_score
+except ImportError:
+    silhouette_score = None
+
 
 # ── Configuration ────────────────────────────────────────────────────
 
@@ -89,7 +94,7 @@ def main():
         n_components=2,
         metric="cosine",
         random_state=42,
-        n_neighbors=15,
+        n_neighbors=10,
         min_dist=0.1,
     )
     coords_2d = reducer.fit_transform(X)
@@ -103,15 +108,27 @@ def main():
     # 4. HDBSCAN clustering on full 13-dim space (not 2D projection)
     print("Running HDBSCAN...")
     clusterer = hdbscan.HDBSCAN(
-        min_cluster_size=5,
-        min_samples=3,
+        min_cluster_size=3,
+        min_samples=2,
         metric="euclidean",  # On L1-normalized vectors
+        cluster_selection_epsilon=0.1,
     )
     labels = clusterer.fit_predict(X)
 
     n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise = int(np.sum(labels == -1))
-    print(f"Found {n_clusters} clusters, {n_noise} noise points")
+    noise_pct = round(100 * n_noise / len(labels), 1) if len(labels) > 0 else 0
+
+    # Quality report
+    print(f"\n── Quality Report ──")
+    print(f"Clusters: {n_clusters}")
+    print(f"Noise: {n_noise}/{len(labels)} ({noise_pct}%)")
+    if silhouette_score is not None and n_clusters >= 2:
+        non_noise_mask = labels != -1
+        if np.sum(non_noise_mask) >= 2:
+            sil = silhouette_score(X[non_noise_mask], labels[non_noise_mask])
+            print(f"Silhouette score: {sil:.3f}")
+    print()
 
     # 5. Compute cluster metadata
     clusters = {}

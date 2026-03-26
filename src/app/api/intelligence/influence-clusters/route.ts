@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import type { InsightError } from '@/lib/intelligence/types';
 import {
   getInfluenceClusters,
   getLegislatorCluster,
@@ -33,23 +34,34 @@ export async function GET(request: NextRequest) {
       const result = getLegislatorCluster(bioguideId.toUpperCase());
       if (!result) {
         return NextResponse.json(
-          { error: 'Legislator not found in cluster data' },
+          {
+            error: 'Legislator not found in cluster data',
+            errors: [] as InsightError[],
+            status: 'unavailable' as const,
+          },
           { status: 404 }
         );
       }
 
-      return NextResponse.json(result, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-        },
-      });
+      return NextResponse.json(
+        { ...result, errors: [] as InsightError[], status: 'complete' as const },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+          },
+        }
+      );
     }
 
     // Full cluster data
     const data = getInfluenceClusters();
     if (!data) {
       return NextResponse.json(
-        { error: 'Cluster data not available — run compute-influence-clusters.py first' },
+        {
+          error: 'Cluster data not available — run compute-influence-clusters.py first',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
@@ -66,6 +78,8 @@ export async function GET(request: NextRequest) {
           topSectors: c.metadata.topSectors,
           partyComposition: c.metadata.partyComposition,
         })),
+        errors: [] as InsightError[],
+        status: 'complete' as const,
       },
       {
         headers: {

@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { extractPreambleFacts } from '@/lib/intelligence/analyzers/federal-register-extractor';
 import type { PreambleExtractionInsight } from '@/types/federal-register';
+import type { InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -49,17 +50,24 @@ export async function GET(
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Insufficient data for preamble extraction' },
+        {
+          error: 'Insufficient data for preamble extraction',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        // 24-hour CDN cache — preamble content is immutable
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          // 24-hour CDN cache — preamble content is immutable
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Preamble extraction error', error as Error, { documentNumber });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -54,7 +54,7 @@ export {
 } from './lobbying-committee-resolver';
 
 // ── SIC Sector Map ───────────────────────────────────────────────────
-export { sicToSector } from './sic-sector-map';
+export { sicToSector, sectorToSicRanges } from './sic-sector-map';
 
 // ── Ticker Industry Resolver ─────────────────────────────────────────
 export { resolveTickerIndustry, resolveTickerIndustries } from './ticker-industry-resolver';

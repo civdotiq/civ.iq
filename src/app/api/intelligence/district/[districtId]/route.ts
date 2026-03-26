@@ -15,9 +15,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
-import type { DistrictIntelligenceSummary } from '@/lib/intelligence/types';
+import { classifyError } from '@/lib/intelligence/error-utils';
+import type { DistrictIntelligenceSummary, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -47,6 +49,7 @@ export async function GET(
 
   try {
     logger.info('[Intelligence] District intelligence request', { districtId });
+    const errors: InsightError[] = [];
 
     const allReps = await getAllEnhancedRepresentatives();
 
@@ -67,13 +70,25 @@ export async function GET(
     // For each representative, get finance-jurisdiction overlap (cached)
     const representatives = await Promise.all(
       matchedReps.map(async rep => {
-        const fjInsight = await analyzeFinanceJurisdiction(rep.bioguideId).catch(() => null);
+        const fjInsight = await analyzeFinanceJurisdiction(rep.bioguideId).catch(e => {
+          errors.push(classifyError(e, 'finance-jurisdiction-analyzer'));
+          return null;
+        });
 
-        // Count available insights: fj counts as 1, stock trades as another
+        // Count available insights by checking actual cached data
         let insightsAvailable = 0;
         if (fjInsight) insightsAvailable++;
-        // Other insights are always potentially available
-        insightsAvailable += 2; // vote-finance + temporal are always attempted
+
+        const [vfCached, temporalCached] = await Promise.all([
+          getRedisCache()
+            .get(`insight:vote_finance:${rep.bioguideId}`)
+            .catch(() => null),
+          getRedisCache()
+            .get(`insight:temporal_votes:${rep.bioguideId}`)
+            .catch(() => null),
+        ]);
+        if (vfCached) insightsAvailable++;
+        if (temporalCached) insightsAvailable++;
 
         return {
           bioguideId: rep.bioguideId,
@@ -87,16 +102,22 @@ export async function GET(
       })
     );
 
+    const hasData = representatives.some(r => r.insightsAvailable > 0);
+    const status = errors.length === 0 ? 'complete' : hasData ? 'partial' : 'unavailable';
+
     const response: DistrictIntelligenceSummary = {
       districtId,
       representatives,
     };
 
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...response, errors, status },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] District intelligence error', error as Error, { districtId });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

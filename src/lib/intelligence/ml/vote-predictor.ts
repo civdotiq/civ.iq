@@ -87,6 +87,8 @@ export interface VotePredictionModelMetadata {
     feature: string;
     meanAbsShap: number;
   }>;
+  /** Base rate (expected value) from SHAP — the average prediction across training set. */
+  expectedValue?: number;
 }
 
 export interface FeatureVector {
@@ -374,9 +376,11 @@ export async function predictVote(fv: FeatureVector): Promise<VotePrediction | n
 /**
  * Infer directional SHAP factors from model metadata and feature values.
  *
- * Direction heuristic: if the feature value is non-zero and the overall
- * prediction leans yea (prob > 0.5), features with high SHAP importance
- * and high values push "toward_yea"; if prob < 0.5, they push "toward_nay".
+ * Uses the expected value (base rate from SHAP) to infer per-feature direction:
+ * - Binary features (party_R, bill_affects_*, sponsor_same_party): if active (1)
+ *   and prediction is above expected value, feature pushes toward_yea; below → toward_nay.
+ * - Continuous features (donor_pct_*, years_in_office, bill_cosponsor_count):
+ *   above-zero values with above-expected predictions push toward_yea.
  * Features with zero values are "neutral" (not active for this prediction).
  */
 export function computeShapFactors(
@@ -392,8 +396,8 @@ export function computeShapFactors(
     Number.isFinite(yeaProbability) && yeaProbability >= 0 && yeaProbability <= 1
       ? yeaProbability
       : 0.5;
-  const predictedDirection: 'toward_yea' | 'toward_nay' =
-    safeYeaProb >= 0.5 ? 'toward_yea' : 'toward_nay';
+  const expectedValue = metadata.expectedValue ?? 0.383;
+  const aboveBaseline = safeYeaProb > expectedValue;
 
   return shapSource
     .slice(0, 8) // consider top 8 candidates
@@ -408,8 +412,37 @@ export function computeShapFactors(
       if (!isActive) {
         direction = 'neutral';
       } else {
-        // Active features with high SHAP push in the prediction's direction
-        direction = predictedDirection;
+        const isBinary =
+          sf.feature.startsWith('party_') ||
+          sf.feature.startsWith('bill_affects_') ||
+          sf.feature === 'sponsor_same_party' ||
+          sf.feature === 'chamber_Senate';
+
+        if (isBinary) {
+          // Binary feature active (1): if prediction is above base rate,
+          // this feature contributed to pushing it up (toward_yea)
+          direction = aboveBaseline ? 'toward_yea' : 'toward_nay';
+        } else {
+          // Continuous feature: high SHAP importance + above-baseline prediction
+          // means this feature likely pushed the prediction up. But for features
+          // like donor_pct_labor (which correlate with D votes/nay on R bills),
+          // the direction depends on the feature's relationship with the outcome.
+          //
+          // Heuristic: use the SHAP mean magnitude relative to the prediction's
+          // deviation from expected value. If they point the same way, the feature
+          // pushed in the prediction's direction.
+          const predictionDeviation = safeYeaProb - expectedValue;
+          const featureInfluence = sf.meanAbsShap * featureValue;
+          // Large SHAP * large value = strong influence in prediction's direction
+          direction =
+            predictionDeviation >= 0
+              ? featureInfluence > 0.01
+                ? 'toward_yea'
+                : 'toward_nay'
+              : featureInfluence > 0.01
+                ? 'toward_nay'
+                : 'toward_yea';
+        }
       }
 
       return {

@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
-import type { TemporalVoteInsight } from '@/lib/intelligence/types';
+import type { TemporalVoteInsight, InsightError } from '@/lib/intelligence/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -40,16 +40,23 @@ export async function GET(
 
     if (!insight) {
       return NextResponse.json(
-        { error: 'Insufficient voting data for temporal analysis' },
+        {
+          error: 'Insufficient voting data for temporal analysis',
+          errors: [] as InsightError[],
+          status: 'unavailable' as const,
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(insight, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
-      },
-    });
+    return NextResponse.json(
+      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Intelligence] Temporal vote insights error', error as Error, {
       bioguideId: upperId,

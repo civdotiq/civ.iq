@@ -11,7 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { GET } from '@/app/api/cache/warm/route';
+import { POST } from '@/app/api/cache/warm/route';
 
 describe('Cache Warming Route', () => {
   const routeSource = fs.readFileSync(
@@ -20,14 +20,14 @@ describe('Cache Warming Route', () => {
   );
 
   describe('exports', () => {
-    it('should export GET function', () => {
-      expect(typeof GET).toBe('function');
+    it('should export POST function', () => {
+      expect(typeof POST).toBe('function');
     });
   });
 
   describe('source-level contracts', () => {
-    it('should have maxDuration of 60', () => {
-      expect(routeSource).toMatch(/maxDuration\s*=\s*60/);
+    it('should have maxDuration of 300', () => {
+      expect(routeSource).toMatch(/maxDuration\s*=\s*300/);
     });
 
     it('should require CACHE_WARM_SECRET auth', () => {

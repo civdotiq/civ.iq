@@ -59,6 +59,16 @@ jest.mock('@/features/representatives/services/batch-voting-service', () => ({
   },
 }));
 
+jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
+  getFECIdFromBioguide: jest.fn(() => null),
+}));
+
+jest.mock('@/lib/fec/fec-api-service', () => ({
+  fecApiService: {
+    getSampleContributions: jest.fn(() => Promise.resolve([])),
+  },
+}));
+
 jest.mock('@/lib/connections/committee-agency-map', () => ({
   ALL_COMMITTEE_MAPPINGS: [],
 }));

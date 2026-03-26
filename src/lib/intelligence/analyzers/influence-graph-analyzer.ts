@@ -36,6 +36,7 @@ import {
   getBillSectors,
 } from './shared';
 import { analyzeInfluenceChains } from './influence-chain-analyzer';
+import { analyzeEnforcement } from './enforcement-analyzer';
 import { findRegulationsForBill } from '@/lib/data-sources/federal-register-service';
 import { courtListenerService } from '@/lib/data-sources/courtlistener-service';
 import { fredEconomicService } from '@/lib/data-sources/fred-economic-service';
@@ -205,16 +206,12 @@ async function extendChain(
 
   // Get bill sectors for policy area
   const billSectors = await getBillSectors(chain.billId, chain.billTitle);
-  const policyArea = billSectors.length > 0 ? billSectors[0]! : '';
+  const policyArea = billSectors.length > 0 ? billSectors[0] : null;
 
   // Step 1: Find regulation nodes for this bill
   let regulationNode: RegulationNode | null = null;
   try {
-    const regulations = await findRegulationsForBill(
-      chain.billTitle,
-      String(policyArea),
-      committees
-    );
+    const regulations = await findRegulationsForBill(chain.billTitle, policyArea ?? '', committees);
     // Pick the highest confidence regulation
     if (regulations.length > 0) {
       regulationNode = regulations.sort((a, b) => b.linkConfidence - a.linkConfidence)[0]!;
@@ -225,12 +222,22 @@ async function extendChain(
     });
   }
 
-  // Step 2: Get enforcement actions for the regulation's agency/sector
-  const enforcementActions: EnforcementAction[] = [];
-  // Enforcement data comes from the enforcement analyzer but we don't want to
-  // trigger full analysis here — just note that enforcement data is available
-  // for the sectors this chain touches. The UI will link to the enforcement
-  // detail pages.
+  // Step 2: Get enforcement actions for the chain's primary sector
+  let enforcementActions: EnforcementAction[] = [];
+  if (policyArea) {
+    try {
+      const enforcementInsight = await withTimeout(
+        analyzeEnforcement({ type: 'sector', sector: policyArea }),
+        10_000,
+        'EnforcementForGraph'
+      );
+      if (enforcementInsight?.actions) {
+        enforcementActions = enforcementInsight.actions.slice(0, 3);
+      }
+    } catch {
+      // Timeout or failure — keep empty array
+    }
+  }
 
   // Step 3: Search court cases for the agency
   const courtCases: Array<{
