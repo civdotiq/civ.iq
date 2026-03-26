@@ -70,8 +70,8 @@ export class ComponentErrorBoundary extends Component<Props, State> {
 
       // Component-level error UI
       return (
-        <div className="p-4 bg-civiq-red/10 border border-civiq-red">
-          <div className="flex items-center space-x-2 text-civiq-red">
+        <div className="p-4 bg-amber-50 border border-amber-600">
+          <div className="flex items-center space-x-2 text-amber-700">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -88,13 +88,13 @@ export class ComponentErrorBoundary extends Component<Props, State> {
             </svg>
             <span className="font-medium">{this.props.componentName || 'Component'} Error</span>
           </div>
-          <p className="text-civiq-red text-sm mt-2">
+          <p className="text-amber-700 text-sm mt-2">
             This component encountered an error and couldn&apos;t render properly.
           </p>
           <Button
             onClick={this.handleRetry}
             variant="secondary"
-            className="mt-3 text-civiq-red border-civiq-red hover:bg-civiq-red/10"
+            className="mt-3 text-amber-700 border-amber-600 hover:bg-amber-50"
             size="sm"
           >
             Try Again
@@ -102,16 +102,16 @@ export class ComponentErrorBoundary extends Component<Props, State> {
 
           {process.env.NODE_ENV === 'development' && this.state.error && (
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-medium text-civiq-red hover:text-civiq-red">
+              <summary className="cursor-pointer text-sm font-medium text-amber-700 hover:text-amber-700">
                 Error Details (Development Only)
               </summary>
-              <div className="mt-2 p-2 bg-civiq-red/10 border border-civiq-red text-xs">
-                <p className="font-medium text-civiq-red">Component:</p>
-                <p className="text-civiq-red mb-2">{this.props.componentName || 'Unknown'}</p>
-                <p className="font-medium text-civiq-red">Error:</p>
-                <p className="text-civiq-red mb-2">{this.state.error.message}</p>
-                <p className="font-medium text-civiq-red">Stack:</p>
-                <pre className="text-civiq-red whitespace-pre-wrap text-xs">
+              <div className="mt-2 p-2 bg-amber-50 border border-amber-600 text-xs">
+                <p className="font-medium text-amber-700">Component:</p>
+                <p className="text-amber-700 mb-2">{this.props.componentName || 'Unknown'}</p>
+                <p className="font-medium text-amber-700">Error:</p>
+                <p className="text-amber-700 mb-2">{this.state.error.message}</p>
+                <p className="font-medium text-amber-700">Stack:</p>
+                <pre className="text-amber-700 whitespace-pre-wrap text-xs">
                   {this.state.error.stack}
                 </pre>
               </div>

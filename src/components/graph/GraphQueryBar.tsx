@@ -128,8 +128,8 @@ export function GraphQueryBar({ onResults }: GraphQueryBarProps) {
 
       {/* Error + suggestions */}
       {error && (
-        <div className="p-3 border-2 border-[#e11d07] bg-civiq-red/10 dark:bg-civiq-red">
-          <p className="type-sm text-[#e11d07]">{error}</p>
+        <div className="p-3 border-2 border-amber-600 bg-amber-50 dark:bg-amber-900/30">
+          <p className="type-sm text-amber-700">{error}</p>
           {suggestions.length > 0 && (
             <div className="mt-2 space-y-1">
               <p className="type-xs text-gray-500">Try one of these:</p>

@@ -144,7 +144,7 @@ export function FloorActivity() {
         <button
           onClick={() => setActiveTab('house')}
           className={`flex-1 px-4 py-3 text-sm font-bold transition-colors ${
-            activeTab === 'house' ? 'bg-gray-100 border-b-4 border-civiq-red' : 'hover:bg-gray-50'
+            activeTab === 'house' ? 'bg-gray-100 border-b-4 border-civiq-blue' : 'hover:bg-gray-50'
           }`}
         >
           HOUSE ({houseItemCount} bills)
@@ -155,7 +155,7 @@ export function FloorActivity() {
             activeTab === 'senate' ? 'bg-gray-100 border-b-4 border-civiq-blue' : 'hover:bg-gray-50'
           }`}
         >
-          SENATE {senateIsLive && <span className="ml-1 text-civiq-green">● LIVE</span>}
+          SENATE {senateIsLive && <span className="ml-1 text-civiq-blue">● LIVE</span>}
         </button>
       </div>
 

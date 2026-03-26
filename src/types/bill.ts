@@ -232,13 +232,13 @@ export function getBillStatusColor(status: BillStatus): string {
     introduced: 'bg-civiq-blue/10 text-civiq-blue',
     referred: 'bg-gray-100 text-gray-600',
     reported: 'bg-civiq-blue/10 text-civiq-blue',
-    passed_house: 'bg-civiq-green/10 text-civiq-green',
-    passed_senate: 'bg-civiq-green/10 text-civiq-green',
-    passed_both: 'bg-civiq-green/10 text-civiq-green',
-    failed: 'bg-civiq-red/10 text-civiq-red',
-    enacted: 'bg-emerald-100 text-emerald-800',
-    vetoed: 'bg-civiq-red/10 text-civiq-red',
-    pocket_vetoed: 'bg-civiq-red/10 text-civiq-red',
+    passed_house: 'bg-civiq-blue/10 text-civiq-blue',
+    passed_senate: 'bg-civiq-blue/10 text-civiq-blue',
+    passed_both: 'bg-civiq-blue/10 text-civiq-blue',
+    failed: 'bg-amber-50 text-amber-700',
+    enacted: 'bg-civiq-blue/10 text-civiq-blue',
+    vetoed: 'bg-amber-50 text-amber-700',
+    pocket_vetoed: 'bg-amber-50 text-amber-700',
   };
   return colorMap[status] || 'bg-gray-100 text-gray-800';
 }

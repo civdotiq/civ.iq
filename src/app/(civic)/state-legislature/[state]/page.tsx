@@ -21,6 +21,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { encodeBase64Url } from '@/lib/url-encoding';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
@@ -466,17 +467,17 @@ export default function StateLegislaturePage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-civiq-blue">
-            Home
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <Link href="/states" className="hover:text-civiq-blue">
-            States
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900">{legislatureData.stateName} Legislature</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'States', href: '/states' },
+            {
+              label: `${legislatureData.stateName} Legislature`,
+              href: `/state-legislature/${state}`,
+            },
+          ]}
+          className="mb-6"
+        />
 
         {/* Page header */}
         <div className="bg-gradient-to-r from-civiq-blue to-civiq-blue text-white p-4 sm:p-8 mb-8">

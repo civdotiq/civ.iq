@@ -17,6 +17,7 @@ import {
   getStateName,
 } from '@/lib/data/us-states';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 
 interface PageProps {
   params: Promise<{
@@ -149,9 +150,9 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
   if (!data || !data.success) {
     return (
       <main className="container mx-auto px-4 py-8">
-        <div className="bg-civiq-red/10 border-2 border-civiq-red p-6 text-center">
-          <h1 className="text-2xl font-bold text-civiq-red mb-2">Error Loading Committees</h1>
-          <p className="text-civiq-red">
+        <div className="bg-amber-50 border-2 border-amber-600 p-6 text-center">
+          <h1 className="text-2xl font-bold text-amber-700 mb-2">Error Loading Committees</h1>
+          <p className="text-amber-700">
             {data?.error || 'Failed to load committee data. Please try again later.'}
           </p>
         </div>
@@ -177,21 +178,18 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
       />
 
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-civiq-blue">
-          Home
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/states" className="hover:text-civiq-blue">
-          States
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
-          {state.toUpperCase()} {legislatureType}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="font-medium text-gray-900">Committees</span>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'States', href: '/states' },
+          {
+            label: `${state.toUpperCase()} ${legislatureType}`,
+            href: `/state-legislature/${state}`,
+          },
+          { label: 'Committees', href: `/state-legislature/${state}/committees` },
+        ]}
+        className="mb-6"
+      />
 
       {/* Header */}
       <div className="bg-white border-2 border-black mb-6">

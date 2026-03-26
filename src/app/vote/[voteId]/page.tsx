@@ -280,8 +280,8 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 className={`text-2xl font-bold ${
                   voteDetail.result.toLowerCase().includes('passed') ||
                   voteDetail.result.toLowerCase().includes('agreed')
-                    ? 'text-civiq-green'
-                    : 'text-civiq-red'
+                    ? 'text-civiq-blue'
+                    : 'text-amber-600'
                 }`}
               >
                 {voteDetail.result}

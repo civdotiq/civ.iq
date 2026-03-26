@@ -125,7 +125,7 @@ export function SearchValidation({
           onChange={handleInputChange}
           placeholder={placeholder}
           className={`w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-transparent ${
-            error ? 'border-civiq-red bg-civiq-red/10' : 'border-gray-300'
+            error ? 'border-amber-600 bg-amber-50' : 'border-gray-300'
           }`}
           disabled={isValidating}
         />

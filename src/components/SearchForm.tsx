@@ -304,10 +304,10 @@ export default function SearchForm() {
         </div>
       )}
       {error && (
-        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-civiq-red/10 border-2 border-civiq-red text-xs sm:text-sm text-civiq-red">
+        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-amber-50 border-2 border-amber-600 text-xs sm:text-sm text-amber-700">
           <div className="flex items-start">
             <svg
-              className="w-4 sm:w-5 h-4 sm:h-5 text-civiq-red mt-0.5 mr-grid-1 flex-shrink-0"
+              className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600 mt-0.5 mr-grid-1 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -324,14 +324,14 @@ export default function SearchForm() {
                 {error.type !== 'invalid_zip' && (
                   <button
                     onClick={handleRetry}
-                    className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-civiq-red text-white text-sm font-bold uppercase tracking-aicher hover:bg-civiq-red transition-colors border-2 border-black"
+                    className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-amber-600 text-white text-sm font-bold uppercase tracking-aicher hover:bg-amber-700 transition-colors border-2 border-black"
                   >
                     Try Again
                   </button>
                 )}
                 <button
                   onClick={handleClearError}
-                  className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-white border-2 border-civiq-red text-civiq-red text-sm font-bold uppercase tracking-aicher hover:bg-civiq-red/10 transition-colors"
+                  className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-white border-2 border-amber-600 text-amber-700 text-sm font-bold uppercase tracking-aicher hover:bg-amber-50 transition-colors"
                 >
                   Dismiss
                 </button>

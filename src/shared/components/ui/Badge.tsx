@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'party-rep' | 'party-dem';
   size?: 'sm' | 'md';
   className?: string;
 }
@@ -21,10 +21,12 @@ export const Badge: FC<BadgeProps> = ({
 }) => {
   const variants = {
     default: 'bg-white border-2 border-gray-300 text-gray-800',
-    success: 'bg-civiq-green/10 text-civiq-green',
+    success: 'bg-civiq-blue/10 text-civiq-blue',
     warning: 'bg-gray-100 text-gray-600',
-    danger: 'bg-civiq-red/10 text-civiq-red',
+    danger: 'bg-amber-50 text-amber-700',
     info: 'bg-civiq-blue/10 text-civiq-blue',
+    'party-rep': 'bg-civiq-red/10 text-civiq-red',
+    'party-dem': 'bg-civiq-green/10 text-civiq-green',
   };
 
   const sizes = {
@@ -52,12 +54,12 @@ interface PartyBadgeProps {
 }
 
 export const PartyBadge: FC<PartyBadgeProps> = ({ party, className }) => {
-  const getVariant = () => {
+  const getVariant = (): BadgeProps['variant'] => {
     switch (party) {
       case 'Republican':
-        return 'danger';
+        return 'party-rep';
       case 'Democrat':
-        return 'info';
+        return 'party-dem';
       default:
         return 'default';
     }

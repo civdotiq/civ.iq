@@ -77,7 +77,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
           <div className="text-center p-8">
             <div className="mb-4">
               <svg
-                className="w-16 h-16 text-civiq-red mx-auto"
+                className="w-16 h-16 text-amber-600 mx-auto"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -105,7 +105,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                   Error Details (Development Only)
                 </summary>
-                <pre className="aicher-card mt-2 p-4 text-xs text-civiq-red overflow-auto">
+                <pre className="aicher-card mt-2 p-4 text-xs text-amber-700 overflow-auto">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>
@@ -134,7 +134,7 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg
-                className="w-5 h-5 text-civiq-red"
+                className="w-5 h-5 text-amber-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -148,15 +148,15 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
               </svg>
             </div>
             <div className="ml-3 flex-1">
-              <h3 className="aicher-heading text-sm text-civiq-red">Unable to load data</h3>
-              <p className="aicher-heading-wide text-sm text-civiq-red mt-1">
+              <h3 className="aicher-heading text-sm text-amber-700">Unable to load data</h3>
+              <p className="aicher-heading-wide text-sm text-amber-700 mt-1">
                 There was a problem connecting to our data sources. This could be due to high
                 traffic or a temporary server issue.
               </p>
               <div className="mt-3">
                 <button
                   onClick={retry}
-                  className="aicher-button text-sm text-civiq-red px-3 py-1 transition-colors"
+                  className="aicher-button text-sm text-amber-700 px-3 py-1 transition-colors"
                 >
                   Retry
                 </button>

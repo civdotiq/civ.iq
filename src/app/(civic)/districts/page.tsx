@@ -188,8 +188,8 @@ export default function DistrictsPage() {
 
           {/* Districts data - loads progressively */}
           {error ? (
-            <div className="bg-civiq-red/10 border-2 border-civiq-red p-8 mb-8 text-center">
-              <div className="text-civiq-red text-lg font-medium mb-2">
+            <div className="bg-amber-50 border-2 border-amber-600 p-8 mb-8 text-center">
+              <div className="text-amber-700 text-lg font-medium mb-2">
                 {errorType === 'rate-limit'
                   ? 'Too Many Requests'
                   : errorType === 'timeout'
@@ -207,7 +207,7 @@ export default function DistrictsPage() {
                 </div>
               )}
               {circuitState === 'open' && (
-                <div className="text-sm text-civiq-red mb-4">
+                <div className="text-sm text-amber-700 mb-4">
                   Service temporarily unavailable. Will retry automatically in 30 seconds.
                 </div>
               )}
@@ -242,9 +242,9 @@ export default function DistrictsPage() {
                       <span
                         className={
                           cacheStatus === 'hit'
-                            ? 'text-civiq-green'
+                            ? 'text-civiq-blue'
                             : cacheStatus === 'stale'
-                              ? 'text-civiq-red'
+                              ? 'text-amber-600'
                               : 'text-gray-600'
                         }
                       >
@@ -254,10 +254,10 @@ export default function DistrictsPage() {
                       <span
                         className={
                           circuitState === 'open'
-                            ? 'text-civiq-red'
+                            ? 'text-amber-600'
                             : circuitState === 'half-open'
-                              ? 'text-civiq-red'
-                              : 'text-civiq-green'
+                              ? 'text-amber-600'
+                              : 'text-civiq-blue'
                         }
                       >
                         {circuitState}

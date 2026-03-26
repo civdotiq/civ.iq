@@ -20,14 +20,14 @@ function getFreshnessInfo(freshness?: string) {
     const timeMatch = freshness.match(/Retrieved in (\d+)ms/);
     if (timeMatch && timeMatch[1]) {
       const ms = parseInt(timeMatch[1]);
-      if (ms < 100) return { status: 'real-time', color: 'text-civiq-green', icon: '' };
+      if (ms < 100) return { status: 'real-time', color: 'text-civiq-blue', icon: '' };
       if (ms < 1000) return { status: 'fast', color: 'text-civiq-blue', icon: '' };
-      return { status: 'live', color: 'text-civiq-red', icon: '' };
+      return { status: 'live', color: 'text-amber-600', icon: '' };
     }
   }
 
   if (freshness.includes('Failed after')) {
-    return { status: 'failed', color: 'text-civiq-red', icon: '' };
+    return { status: 'failed', color: 'text-amber-600', icon: '' };
   }
 
   if (freshness.includes('cached')) {
@@ -59,7 +59,7 @@ export function DataQualityIndicator({
     switch (quality) {
       case 'high':
         return {
-          color: 'bg-civiq-green/10 text-civiq-green border-civiq-green',
+          color: 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue',
           icon: '✓',
           label: 'High Quality',
           description: 'Complete and current data',
@@ -73,14 +73,14 @@ export function DataQualityIndicator({
         };
       case 'low':
         return {
-          color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
+          color: 'bg-amber-50 text-amber-700 border-amber-600',
           icon: '!',
           label: 'Low Quality',
           description: 'Limited data available',
         };
       case 'unavailable':
         return {
-          color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
+          color: 'bg-amber-50 text-amber-700 border-amber-600',
           icon: '✗',
           label: 'Unavailable',
           description: 'Data could not be retrieved',
@@ -145,7 +145,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   // Defensive programming: handle missing props gracefully
   if (!error && !metadata) {
     return (
-      <div className="p-6 border bg-civiq-red/10 border-civiq-red text-civiq-red">
+      <div className="p-6 border bg-amber-50 border-amber-600 text-amber-700">
         <div className="flex items-start gap-4">
           <span className="text-2xl"></span>
           <div className="flex-1">
@@ -219,7 +219,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   const severity = getErrorSeverity();
   const severityStyles = {
     warning: 'bg-gray-100 border-gray-300 text-gray-600',
-    error: 'bg-civiq-red/10 border-civiq-red text-civiq-red',
+    error: 'bg-amber-50 border-amber-600 text-amber-700',
   };
 
   return (
@@ -313,7 +313,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('census')) {
       return {
-        color: 'bg-civiq-green/10 text-civiq-green',
+        color: 'bg-civiq-blue/10 text-civiq-blue',
         icon: '',
         label: 'Census Data',
         trustLevel: 'official',
@@ -345,7 +345,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('error') || source.includes('failed')) {
       return {
-        color: 'bg-civiq-red/10 text-civiq-red',
+        color: 'bg-amber-50 text-amber-700',
         icon: '',
         label: 'Error',
         trustLevel: 'error',

@@ -252,7 +252,7 @@ export function SimpleGoogleNewsFeed({
     if (error) {
       return (
         <div className="text-center py-12">
-          <div className="text-civiq-red mb-4">Failed to load news</div>
+          <div className="text-amber-700 mb-4">Failed to load news</div>
           <div className="text-gray-600 mb-4">{error}</div>
           <button
             onClick={fetchNews}

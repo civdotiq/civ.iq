@@ -8,6 +8,7 @@
 import React from 'react';
 import useSWR from 'swr';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 
 interface FinanceData {
   totalRaised: number;
@@ -122,7 +123,7 @@ function FinanceDetailCard({
         </div>
       )}
 
-      {error && <div className="text-civiq-red text-sm">Failed to load data</div>}
+      {error && <div className="text-amber-700 text-sm">Failed to load data</div>}
 
       {data && !isLoading && !error && renderContent(data)}
     </div>
@@ -166,19 +167,20 @@ export function FinanceTab({
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <div className="text-civiq-red mb-2">Failed to load financial data</div>
-        <div className="text-sm text-gray-500">Please try refreshing the page</div>
-      </div>
+      <EmptyState
+        title="Failed to load financial data"
+        description="Please try refreshing the page."
+        action={{ label: 'Retry', onClick: () => window.location.reload() }}
+      />
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-8">
-        <div className="text-gray-600 mb-2">No campaign finance data available</div>
-        <div className="text-sm text-gray-400">Financial data is sourced from FEC filings</div>
-      </div>
+      <EmptyState
+        title="No campaign finance data available"
+        description="No FEC filings found for this representative in the current cycle."
+      />
     );
   }
 

@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 
 interface Bill {
   id: string;
@@ -120,19 +121,20 @@ export const BillsTab = React.memo(
 
     if (error) {
       return (
-        <div className="text-center py-8">
-          <div className="text-civiq-red mb-2">Failed to load sponsored bills</div>
-          <div className="text-sm text-gray-500">Please try refreshing the page</div>
-        </div>
+        <EmptyState
+          title="Failed to load sponsored bills"
+          description="Please try refreshing the page."
+          action={{ label: 'Retry', onClick: () => window.location.reload() }}
+        />
       );
     }
 
     if (!data || !data.sponsored || !data.sponsored.bills) {
       return (
-        <div className="text-center py-8">
-          <div className="text-gray-600 mb-2">No bills data available</div>
-          <div className="text-sm text-gray-400">Bill data is sourced from Congress.gov</div>
-        </div>
+        <EmptyState
+          title="No sponsored bills found"
+          description="No bills sponsored or cosponsored by this representative were found in the current Congress."
+        />
       );
     }
 

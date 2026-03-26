@@ -124,9 +124,9 @@ export function DataSourceAttribution({
   };
 
   const reliabilityColors = {
-    high: 'text-civiq-green border-civiq-green',
+    high: 'text-civiq-blue border-civiq-blue',
     medium: 'text-gray-600 border-gray-300',
-    low: 'text-civiq-red border-civiq-red',
+    low: 'text-amber-600 border-amber-600',
   };
 
   const reliabilityLabels = {
@@ -170,10 +170,10 @@ export function DataSourceAttribution({
                 <div
                   className={`w-2 h-2 ${
                     reliability === 'high'
-                      ? 'bg-civiq-green'
+                      ? 'bg-civiq-blue'
                       : reliability === 'medium'
                         ? 'bg-gray-500'
-                        : 'bg-civiq-red'
+                        : 'bg-amber-600'
                   }`}
                 />
                 {reliabilityLabels[reliability]}

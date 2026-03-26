@@ -114,8 +114,8 @@ export function InterestGroupBaskets({
           </div>
 
           {metrics.corporatePercentage > 0 && (
-            <div className="mt-4 p-3 bg-civiq-red/10 border border-civiq-red">
-              <div className="text-sm text-civiq-red">
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-600">
+              <div className="text-sm text-amber-700">
                 <strong>{metrics.corporatePercentage.toFixed(1)}%</strong> from corporate interests
                 (Big Tech, Wall Street, Healthcare, Energy, Defense, etc.)
               </div>

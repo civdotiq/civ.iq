@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/shared/components/navigation/Header';
 import { SiteFooter } from '@/components/shared/layout/SiteFooter';
 import { LiteModeProvider } from '@/lib/lite-mode/context';
+import { ToastProvider } from '@/shared/components/ui/Toast';
 import { OrganizationSchema, WebSiteSchema } from '@/components/seo/JsonLd';
 
 // Google Analytics Measurement ID
@@ -77,7 +78,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#e11d07',
+  themeColor: '#3ea2d4',
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
@@ -149,13 +150,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <LiteModeProvider>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main id="main-content" className="flex-grow pt-14">
-              {children}
-            </main>
-            <SiteFooter />
-          </div>
+          <ToastProvider>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main id="main-content" className="flex-grow pt-14">
+                {children}
+              </main>
+              <SiteFooter />
+            </div>
+          </ToastProvider>
         </LiteModeProvider>
       </body>
     </html>

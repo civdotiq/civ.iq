@@ -37,10 +37,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-4 py-3 border transition-all duration-200',
+            'w-full px-4 py-3 border transition-all duration-200 rounded-interactive',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             error
-              ? 'border-civiq-red focus:border-civiq-red focus:ring-civiq-red/20'
+              ? 'border-amber-600 focus:border-amber-600 focus:ring-amber-600/20'
               : 'border-gray-300 focus:border-civiq-blue focus:ring-civiq-blue/20',
             className
           )}
@@ -49,7 +49,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p id={errorId} className="mt-1 text-sm text-civiq-red" role="alert" aria-live="polite">
+          <p id={errorId} className="mt-1 text-sm text-amber-700" role="alert" aria-live="polite">
             {error}
           </p>
         )}
@@ -85,7 +85,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           aria-label={ariaLabel}
           className={cn(
-            'w-full pl-12 pr-12 py-3 border border-gray-300 ',
+            'w-full pl-12 pr-12 py-3 border border-gray-300 rounded-interactive',
             'focus:outline-none focus:ring-2 focus:ring-civiq-blue/20 focus:border-civiq-blue',
             'transition-all duration-200',
             className

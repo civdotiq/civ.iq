@@ -483,12 +483,12 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             {isPassed ? (
-                              <CheckCircle className="w-5 h-5 text-civiq-green" />
+                              <CheckCircle className="w-5 h-5 text-civiq-blue" />
                             ) : (
-                              <XCircle className="w-5 h-5 text-civiq-red" />
+                              <XCircle className="w-5 h-5 text-amber-600" />
                             )}
                             <span
-                              className={`font-semibold ${isPassed ? 'text-civiq-green' : 'text-civiq-red'}`}
+                              className={`font-semibold ${isPassed ? 'text-civiq-blue' : 'text-amber-600'}`}
                             >
                               {vote.result}
                             </span>

@@ -123,9 +123,9 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
           </div>
 
           {/* Selection Method */}
-          <div className="bg-civiq-green/10 border-2 border-civiq-green p-4">
+          <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4">
             <div className="text-sm text-gray-700 font-medium mb-1">Selection Method</div>
-            <div className="text-sm text-civiq-green font-semibold">
+            <div className="text-sm text-civiq-blue font-semibold">
               {formatSelectionMethod(courtSystem.supremeCourt.selectionMethod)}
             </div>
           </div>

@@ -101,7 +101,7 @@
   /* 3. Size-Dependent Letter-Spacing - Optical adjustments */
   --tracking-display: -0.02em; /* 48px+ headings - tighten */
   --tracking-heading: 0.02em; /* 24-32px - slight */
-  --tracking-body: 0.05em; /* 14-18px - standard */
+  --tracking-body: 0.025em; /* 14-18px - tighter for readability */
   --tracking-label: 0.08em; /* 12px and under - open up */
 
   /* 4. Cool Blue Variant - For data visualization */
@@ -111,9 +111,22 @@
   /* 5. Status Color Semantics - Separating action from information */
   --color-action: var(--aicher-blue); /* Buttons, links */
   --color-info: #4b5563; /* Neutral information */
-  --color-success: var(--aicher-green); /* Confirmations */
-  --color-error: var(--aicher-red); /* Errors only */
+  --color-success: var(--aicher-blue); /* Confirmations — blue, not green (green = Democrat) */
+  --color-error: #b45309; /* Errors — amber, not red (red = Republican) */
+  --color-error-bg: #fffbeb;
+  --color-success-bg: #eff6ff;
   --color-warning: #d97706; /* Warnings (amber) */
+
+  /* Party color tokens — ONLY for political party identification */
+  --party-democrat: var(--aicher-green);
+  --party-republican: var(--aicher-red);
+  --party-independent: #6b7280;
+
+  /* Interactive affordance tokens */
+  --radius-interactive: 3px;
+  --radius-layout: 0px;
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-tooltip: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════ */
@@ -183,12 +196,12 @@
 }
 
 .dark .aicher-tab.active {
-  background: var(--aicher-red);
+  background: var(--aicher-blue);
   color: white;
 }
 
 .dark .aicher-tab.active::after {
-  background: var(--aicher-red);
+  background: var(--aicher-blue);
 }
 
 .dark .aicher-metric-card {
@@ -302,8 +315,8 @@
 }
 
 .dark .legislation-status-passed {
-  background: #0a2a15;
-  border-color: var(--aicher-green);
+  background: #1a2a35;
+  border-color: var(--aicher-blue);
 }
 
 .dark .legislation-status-active {
@@ -312,8 +325,8 @@
 }
 
 .dark .legislation-status-failed {
-  background: #2a1a1a;
-  border-color: var(--aicher-red);
+  background: #2a2010;
+  border-color: var(--color-error);
 }
 
 /* High-DPI Border Adjustment - Hairline dividers on retina */
@@ -463,7 +476,6 @@ body {
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: var(--tracking-heading);
-  text-transform: uppercase;
 }
 
 .aicher-heading-wide {
@@ -471,7 +483,6 @@ body {
   font-size: var(--type-lg);
   font-weight: 600;
   letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
 }
 
 .aicher-label {
@@ -521,9 +532,19 @@ body {
   border-radius: 50% !important;
 }
 
-/* No rounded corners by default */
+/* No rounded corners for layout; subtle radius for interactive elements */
 .aicher-no-radius * {
-  border-radius: 0 !important;
+  border-radius: var(--radius-layout);
+}
+
+.aicher-no-radius button,
+.aicher-no-radius input,
+.aicher-no-radius select,
+.aicher-no-radius textarea,
+.aicher-no-radius [role='button'],
+.aicher-no-radius .badge,
+.aicher-no-radius .chip {
+  border-radius: var(--radius-interactive);
 }
 
 /* Hover states without shadows */
@@ -597,14 +618,14 @@ body {
   background: white;
 }
 
-/* Status indicators */
+/* Status indicators — blue for success, amber for error (party colors reserved) */
 .aicher-status-success {
-  background: var(--aicher-green);
+  background: var(--color-success);
   color: white;
 }
 
 .aicher-status-error {
-  background: var(--aicher-red);
+  background: var(--color-error);
   color: white;
 }
 
@@ -868,7 +889,7 @@ body {
 }
 
 .aicher-tab.active {
-  background: var(--aicher-red);
+  background: var(--aicher-blue);
   color: white;
 }
 
@@ -879,7 +900,7 @@ body {
   left: 0;
   right: 0;
   height: calc(var(--grid) * 0.75);
-  background: var(--aicher-red);
+  background: var(--aicher-blue);
 }
 
 .aicher-tab:hover:not(.active) {
@@ -898,7 +919,7 @@ body {
 
 .aicher-progress-fill {
   height: 100%;
-  background: var(--aicher-green);
+  background: var(--aicher-blue);
   transition: width 0.3s ease;
 }
 
@@ -1132,9 +1153,9 @@ body {
 }
 
 .legislation-status-passed {
-  background: #d1fae5;
-  color: #065f46;
-  border-color: var(--aicher-green);
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: var(--aicher-blue);
 }
 
 .legislation-status-active {
@@ -1144,9 +1165,9 @@ body {
 }
 
 .legislation-status-failed {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: var(--aicher-red);
+  background: #fffbeb;
+  color: #92400e;
+  border-color: var(--color-error);
 }
 
 /* Committee Cards with Rotating Colors */
@@ -1396,16 +1417,16 @@ body {
 }
 
 .status-success {
-  background-color: #ecfdf5;
+  background-color: var(--color-success-bg);
   border-left: var(--border-emphasis) solid var(--color-success);
-  color: #065f46;
+  color: #1e40af;
   padding: calc(var(--grid) * 2);
 }
 
 .status-error {
-  background-color: #fef2f2;
+  background-color: var(--color-error-bg);
   border-left: var(--border-emphasis) solid var(--color-error);
-  color: #991b1b;
+  color: #92400e;
   padding: calc(var(--grid) * 2);
 }
 
@@ -1416,7 +1437,16 @@ body {
   padding: calc(var(--grid) * 2);
 }
 
-/* 6. Grid Debug Overlay (Dev Tool) */
+/* 6. Shadow Utilities — Elevation for modals, dropdowns, tooltips only */
+.aicher-shadow-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+.aicher-shadow-tooltip {
+  box-shadow: var(--shadow-tooltip);
+}
+
+/* 7. Grid Debug Overlay (Dev Tool) */
 .debug-grid {
   position: relative;
 }

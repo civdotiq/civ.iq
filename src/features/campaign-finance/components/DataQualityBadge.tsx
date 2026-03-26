@@ -41,7 +41,7 @@ export function DataQualityBadge({
       description: 'Partial FEC data available, some details may be limited',
     },
     low: {
-      color: 'bg-civiq-red/10 text-civiq-red border-civiq-red',
+      color: 'bg-amber-50 text-amber-700 border-amber-600',
       icon: '?',
       text: 'Limited Data',
       description: 'Minimal FEC data available, may be incomplete or outdated',
@@ -111,7 +111,7 @@ export function DataQualityIndicator({ confidence }: { confidence: 'high' | 'med
   const colors = {
     high: 'bg-civiq-green',
     medium: 'bg-gray-500',
-    low: 'bg-civiq-red',
+    low: 'bg-amber-600',
   };
 
   const labels = {

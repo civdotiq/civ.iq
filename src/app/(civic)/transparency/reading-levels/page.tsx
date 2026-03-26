@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 
 interface DailyStats {
   date: string;
@@ -48,13 +49,14 @@ export default function ReadingLevelDashboard() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-8">
-        <nav className="text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-civiq-blue">
-            Home
-          </a>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900">Reading Level Compliance</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Transparency', href: '/transparency' },
+            { label: 'Reading Level Compliance', href: '/transparency/reading-levels' },
+          ]}
+          className="mb-6"
+        />
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 w-1/3" />
@@ -67,13 +69,14 @@ export default function ReadingLevelDashboard() {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-8">
-        <nav className="text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-civiq-blue">
-            Home
-          </a>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900">Reading Level Compliance</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Transparency', href: '/transparency' },
+            { label: 'Reading Level Compliance', href: '/transparency/reading-levels' },
+          ]}
+          className="mb-6"
+        />
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
         <p className="text-civiq-red">Failed to load data: {error}</p>
       </div>
@@ -144,7 +147,7 @@ export default function ReadingLevelDashboard() {
           <p className="text-xs text-gray-500 uppercase tracking-wide">Pass Rate</p>
           <p
             className={`text-3xl font-bold mt-1 ${
-              aggregate.passRate >= 80 ? 'text-civiq-green' : 'text-civiq-red'
+              aggregate.passRate >= 80 ? 'text-civiq-blue' : 'text-amber-600'
             }`}
           >
             {aggregate.passRate}%
@@ -156,8 +159,8 @@ export default function ReadingLevelDashboard() {
           <p
             className={`text-3xl font-bold mt-1 ${
               aggregate.avgFleschEase >= aggregate.fleschEaseTarget
-                ? 'text-civiq-green'
-                : 'text-civiq-red'
+                ? 'text-civiq-blue'
+                : 'text-amber-600'
             }`}
           >
             {aggregate.avgFleschEase}

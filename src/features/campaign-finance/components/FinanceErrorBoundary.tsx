@@ -44,7 +44,7 @@ function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () 
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0">
           <svg
-            className="w-8 h-8 text-civiq-red"
+            className="w-8 h-8 text-amber-600"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

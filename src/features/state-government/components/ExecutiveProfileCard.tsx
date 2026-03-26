@@ -143,7 +143,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
 
             {/* Incumbent Badge */}
             {official.isIncumbent && (
-              <span className="ml-2 inline-block px-3 py-1 text-xs font-bold bg-civiq-green/10 text-civiq-green border-2 border-civiq-green">
+              <span className="ml-2 inline-block px-3 py-1 text-xs font-bold bg-civiq-blue/10 text-civiq-blue border-2 border-civiq-blue">
                 INCUMBENT
               </span>
             )}

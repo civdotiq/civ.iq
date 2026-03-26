@@ -93,9 +93,9 @@ export default function EdgeCaseTooltip({
     'low-confidence': {
       icon: AlertTriangle,
       title: 'Low Confidence Mapping',
-      color: 'text-civiq-red',
-      bgColor: 'bg-civiq-red/10',
-      borderColor: 'border-civiq-red',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-600',
       description: 'The district mapping for this ZIP code has lower confidence.',
       details: [
         'Data source may be incomplete or outdated',
@@ -108,9 +108,9 @@ export default function EdgeCaseTooltip({
     unmapped: {
       icon: AlertTriangle,
       title: 'Unmapped ZIP Code',
-      color: 'text-civiq-red',
-      bgColor: 'bg-civiq-red/10',
-      borderColor: 'border-civiq-red',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-600',
       description: 'This ZIP code could not be mapped to a congressional district.',
       details: [
         'ZIP code may be invalid or no longer in use',
@@ -159,7 +159,7 @@ export default function EdgeCaseTooltip({
       {showTooltip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 sm:absolute sm:inset-auto sm:bg-transparent sm:p-0">
           <div
-            className={`relative w-full max-w-md bg-white border-2 border-black-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80`}
+            className={`relative w-full max-w-md bg-white border-2 border-black-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80 shadow-tooltip`}
           >
             {/* Header */}
             <div className={`px-4 py-3 ${config.bgColor} border-b ${config.borderColor}`}>

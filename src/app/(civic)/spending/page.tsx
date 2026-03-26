@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MapPin, Loader2 } from 'lucide-react';
+import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import type {
   DistrictSpendingResponse,
@@ -97,18 +99,16 @@ function SpendingPageContent() {
 
         {/* Loading */}
         {loading && (
-          <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-8 text-center">
-            <div className="aicher-loading w-8 h-8 mx-auto mb-3" />
-            <p className="text-gray-600 dark:text-gray-400">
-              Loading spending data for {districtId}...
-            </p>
+          <div>
+            <p className="text-sm text-gray-500 mb-4">Loading spending data for {districtId}...</p>
+            <SkeletonLoader variant="stat" count={3} />
           </div>
         )}
 
         {/* Error */}
         {error && !loading && (
-          <div className="border-l-4 border-[#e11d07] bg-civiq-red/10 dark:bg-civiq-red/20 p-4 mb-8">
-            <p className="text-[#e11d07] dark:text-civiq-red font-semibold">Error</p>
+          <div className="border-l-4 border-amber-600 bg-amber-50 dark:bg-amber-900/20 p-4 mb-8">
+            <p className="text-amber-700 dark:text-amber-400 font-semibold">Error</p>
             <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{error}</p>
           </div>
         )}
@@ -170,11 +170,10 @@ function SpendingPageContent() {
 
         {/* Empty state - no district selected */}
         {!districtId && !loading && !error && (
-          <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-8 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
-              Enter your address or select a state and district above to view federal spending data.
-            </p>
-          </div>
+          <EmptyState
+            title="Select a district"
+            description="Enter your address or select a state and district above to view federal spending data."
+          />
         )}
       </main>
     </div>

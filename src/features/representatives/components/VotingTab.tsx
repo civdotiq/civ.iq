@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
 import {
@@ -344,19 +345,11 @@ const VotingTabComponent = React.memo(
 
     if (!data || !data.votes) {
       return (
-        <div className="text-center py-8">
-          <div className="text-gray-600 mb-2">No voting records available</div>
-          <div className="text-sm text-gray-400 mb-4">
-            Voting data is sourced from Congress.gov and Senate XML feeds
-          </div>
-          <div className="text-xs text-gray-500 bg-white p-3 max-w-md mx-auto">
-            <div className="font-medium mb-1">Phase 3 Update:</div>
-            <div>
-              House voting XML parsing was recently improved. If you expect to see voting data,
-              please try refreshing the page.
-            </div>
-          </div>
-        </div>
+        <EmptyState
+          title="No voting records found"
+          description="No voting records found for this representative in the current session. Data is sourced from Congress.gov and Senate XML feeds."
+          action={{ label: 'Refresh', onClick: () => window.location.reload() }}
+        />
       );
     }
 

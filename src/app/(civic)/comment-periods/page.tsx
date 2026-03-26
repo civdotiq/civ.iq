@@ -146,7 +146,7 @@ export default function CommentPeriodsPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <div className="text-civiq-red mb-2">Failed to load comment periods</div>
+              <div className="text-amber-700 mb-2">Failed to load comment periods</div>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-[#3592c0]"

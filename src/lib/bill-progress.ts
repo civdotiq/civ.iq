@@ -282,13 +282,13 @@ export function getStageColor(stage: BillProgressStage): string {
     introduced: '#3ea2d4', // civiq-blue
     committee: '#3ea2d4',
     floor: '#3ea2d4',
-    'passed-chamber': '#0a9338', // civiq-green
+    'passed-chamber': '#3ea2d4', // blue — bill status, not party
     'second-chamber': '#3ea2d4',
-    'passed-legislature': '#0a9338',
+    'passed-legislature': '#3ea2d4',
     executive: '#3ea2d4',
-    signed: '#0a9338',
-    vetoed: '#e11d07', // civiq-red
-    failed: '#e11d07',
+    signed: '#3ea2d4',
+    vetoed: '#b45309', // amber — bill status, not party
+    failed: '#b45309',
   };
 
   return colors[stage] ?? '#3ea2d4';

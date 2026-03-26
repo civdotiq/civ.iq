@@ -45,13 +45,13 @@ const DATA_SOURCES = {
     displayName: 'U.S. Census',
     url: 'https://www.census.gov',
     description: 'Congressional district mapping data',
-    color: 'bg-civiq-red',
+    color: 'bg-gray-700',
   },
   'house-senate-clerk-xml': {
     displayName: 'House/Senate Clerk',
     url: 'https://clerk.house.gov',
     description: 'Official voting records from House/Senate Clerk',
-    color: 'bg-civiq-red',
+    color: 'bg-gray-700',
   },
 } as const;
 
@@ -131,8 +131,8 @@ export function CacheStatusIndicator({
     <div
       className={`inline-flex items-center gap-1 px-2 py-1 text-xs ${
         cached
-          ? 'bg-civiq-green/10 text-civiq-green border border-civiq-green'
-          : 'bg-civiq-blue/10 text-civiq-blue border border-civiq-blue'
+          ? 'bg-civiq-blue/10 text-civiq-blue border border-civiq-blue'
+          : 'bg-gray-100 text-gray-600 border border-gray-300'
       } ${className}`}
       title={cached ? 'Data served from cache for faster loading' : 'Fresh data from source'}
     >
@@ -162,7 +162,7 @@ export function DataQualityIndicator({
   const qualityConfig = {
     high: {
       icon: CheckCircle,
-      color: 'text-civiq-green bg-civiq-green/10 border-civiq-green',
+      color: 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue',
       label: 'High Quality',
       description: 'Complete and validated data',
     },
@@ -174,13 +174,13 @@ export function DataQualityIndicator({
     },
     low: {
       icon: AlertCircle,
-      color: 'text-civiq-red bg-civiq-red/10 border-civiq-red',
+      color: 'text-amber-700 bg-amber-50 border-amber-600',
       label: 'Low Quality',
       description: 'Limited data availability',
     },
     unavailable: {
       icon: AlertCircle,
-      color: 'text-civiq-red bg-civiq-red/10 border-civiq-red',
+      color: 'text-amber-700 bg-amber-50 border-amber-600',
       label: 'Unavailable',
       description: 'Data currently unavailable',
     },

@@ -29,9 +29,15 @@ export default {
         'civiq-green': '#0a9338',
         'civiq-blue': '#3ea2d4',
         'civiq-blue-cool': '#2d8fc9',
-        // Status semantic colors
+        // Status semantic colors (not party colors)
         'status-info': '#4b5563',
         'status-warning': '#d97706',
+        'status-error': '#b45309',
+        'status-success': '#3ea2d4',
+        // Party identification colors
+        'party-dem': '#0a9338',
+        'party-rep': '#e11d07',
+        'party-ind': '#6b7280',
       },
       // Otl Aicher 8px grid system - Complete scale
       spacing: {
@@ -63,8 +69,15 @@ export default {
         // Size-dependent tracking (references CSS variables)
         'aicher-display': 'var(--tracking-display, -0.02em)',
         'aicher-heading': 'var(--tracking-heading, 0.02em)',
-        'aicher-body': 'var(--tracking-body, 0.05em)',
+        'aicher-body': 'var(--tracking-body, 0.025em)',
         'aicher-label': 'var(--tracking-label, 0.08em)',
+      },
+      borderRadius: {
+        interactive: '3px',
+      },
+      boxShadow: {
+        elevated: '0 4px 12px rgba(0,0,0,0.12)',
+        tooltip: '0 2px 6px rgba(0,0,0,0.15)',
       },
       animation: {
         shimmer: 'shimmer 2s infinite',

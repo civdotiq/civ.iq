@@ -163,7 +163,7 @@ export function SmartSearchInput({
               w-full px-4 py-3 pr-24 text-lg border
               transition-all duration-200
               ${isValid === true ? 'border-civiq-green bg-civiq-green/10' : ''}
-              ${isValid === false ? 'border-civiq-red bg-civiq-red/10' : ''}
+              ${isValid === false ? 'border-amber-600 bg-amber-50' : ''}
               ${isValid === null ? 'border-gray-300' : ''}
               focus:outline-none focus:ring-2 focus:ring-civiq-blue/50
             `}

@@ -48,11 +48,11 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
         : 'border-gray-200 bg-white text-gray-700';
 
   return (
-    <div className={`bg-white border-2 border-black accent-bar-red ${className}`}>
+    <div className={`bg-white border-2 border-black accent-bar-blue ${className}`}>
       <div className="p-6 border-b-2 border-black">
         <div className="flex items-center gap-3">
-          <RepresentativesIcon className="w-6 h-6 text-civiq-red" />
-          <h3 className="aicher-heading text-lg text-civiq-red">Personal Information</h3>
+          <RepresentativesIcon className="w-6 h-6 text-civiq-blue" />
+          <h3 className="aicher-heading text-lg text-civiq-blue">Personal Information</h3>
         </div>
       </div>
       <div className="p-6 space-y-4">

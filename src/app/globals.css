@@ -42,7 +42,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-civiq-green text-white border-civiq-green hover:bg-white hover:text-civiq-green;
+    @apply btn bg-civiq-blue text-white border-civiq-blue hover:bg-white hover:text-civiq-blue;
   }
 
   .btn-secondary {
@@ -419,7 +419,7 @@ select:disabled {
 
 /* Enhanced button styles - Ulm School: no gradients, solid colors */
 .btn-gradient {
-  @apply bg-civiq-blue text-white font-bold uppercase tracking-aicher px-6 py-3 border-2 border-black transition-all duration-300 hover:bg-civiq-green active:scale-95;
+  @apply bg-civiq-blue text-white font-bold uppercase tracking-aicher px-6 py-3 border-2 border-black transition-all duration-300 hover:bg-white hover:text-civiq-blue active:scale-95;
 }
 
 .btn-gradient:hover {
@@ -478,7 +478,7 @@ select:disabled {
 
 /* Tooltip styles - Ulm School: geometric rectangles */
 .tooltip {
-  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 border-2 border-black opacity-0 pointer-events-none transition-opacity duration-200;
+  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 border-2 border-black opacity-0 pointer-events-none transition-opacity duration-200 shadow-tooltip;
 }
 
 .tooltip-visible {
@@ -491,7 +491,7 @@ select:disabled {
 }
 
 .progress-bar-fill {
-  @apply absolute inset-y-0 left-0 bg-civiq-green transition-all duration-500 ease-out;
+  @apply absolute inset-y-0 left-0 bg-civiq-blue transition-all duration-500 ease-out;
 }
 
 /* Subtle link underline animation */
