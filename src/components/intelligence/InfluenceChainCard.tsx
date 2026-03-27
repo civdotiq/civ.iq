@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
-import { BillLink } from '@/components/shared/links/EntityLinks';
+import { BillLink, LobbyLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChainInsight, InfluenceChain } from '@/lib/intelligence/types';
 
 interface InfluenceChainCardProps {
@@ -83,7 +83,11 @@ function ChainItem({ chain }: { chain: InfluenceChain }) {
     <div className="border-2 border-gray-200 p-3 mb-3">
       {/* Chain header */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <span className="type-sm font-medium text-gray-900">{chain.organization}</span>
+        <LobbyLink
+          registrantId={chain.registrantId}
+          name={chain.organization}
+          className="type-sm font-medium"
+        />
         <span className="type-xs text-gray-500 aicher-heading-wide flex-shrink-0">
           {formatCompact(chain.lobbyingSpending)}
         </span>

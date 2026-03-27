@@ -257,7 +257,7 @@ async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
   // Group by organization
   const orgMap = new Map<
     string,
-    { spending: number; filingCount: number; issueCodes: Set<string> }
+    { spending: number; filingCount: number; issueCodes: Set<string>; registrantId?: string }
   >();
 
   for (const filing of matchedFilings) {
@@ -265,6 +265,14 @@ async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
     const existing = orgMap.get(orgName) ?? { spending: 0, filingCount: 0, issueCodes: new Set() };
     existing.spending += filing.income || 0;
     existing.filingCount += 1;
+    // Track registrant ID for self-lobbying orgs (registrant === client)
+    if (
+      !existing.registrantId &&
+      filing.registrant?.name &&
+      filing.registrant.name.toLowerCase() === filing.client.name.toLowerCase()
+    ) {
+      existing.registrantId = filing.registrant.id;
+    }
     for (const issue of filing.issues) {
       existing.issueCodes.add(issue.code);
     }
@@ -274,6 +282,7 @@ async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
   const topOrganizations: LobbyingOrganizationActivity[] = Array.from(orgMap.entries())
     .map(([name, data]) => ({
       name,
+      registrantId: data.registrantId,
       totalSpending: data.spending,
       filingCount: data.filingCount,
       issueCodes: Array.from(data.issueCodes),

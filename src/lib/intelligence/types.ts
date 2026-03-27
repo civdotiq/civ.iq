@@ -185,6 +185,8 @@ export interface TemporalVoteInsight extends InsightBase {
 export interface LobbyingOrganizationActivity {
   /** Organization name (client from LDA filing). */
   name: string;
+  /** Senate LDA registrant ID, if this org lobbies on its own behalf. */
+  registrantId?: string;
   /** Total spending across matched filings. */
   totalSpending: number;
   /** Number of filings mentioning this committee. */
@@ -585,6 +587,8 @@ export interface InfluenceChainLink {
 
 export interface InfluenceChain {
   organization: string;
+  /** Senate LDA registrant ID, if this org lobbies on its own behalf. */
+  registrantId?: string;
   lobbyingSpending: number;
   contributionAmount: number;
   billId: string;

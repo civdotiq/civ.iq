@@ -87,11 +87,12 @@ export function LobbyLink({ registrantId, name, className }: LobbyLinkProps) {
 
 interface SectorLinkProps {
   sector: string | null | undefined;
+  label?: string;
   className?: string;
 }
 
-export function SectorLink({ sector, className }: SectorLinkProps) {
-  if (!sector) return null;
+export function SectorLink({ sector, label, className }: SectorLinkProps) {
+  if (!sector) return label ? <span className={className}>{label}</span> : null;
   return (
     <Link
       href={`/industry/${encodeURIComponent(sector)}`}

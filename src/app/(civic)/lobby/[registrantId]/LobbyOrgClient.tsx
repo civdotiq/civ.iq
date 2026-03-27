@@ -18,7 +18,7 @@ export function LobbyOrgClient({ profile }: Props) {
   const hasEnoughData =
     (profile.issueAreas.length > 0 ? 1 : 0) +
       (profile.governmentContacts.length > 0 ? 1 : 0) +
-      (profile.yearlySpending.length > 0 ? 1 : 0) +
+      (profile.yearlySpending.length > 1 ? 1 : 0) +
       (profile.linkedPAC ? 1 : 0) +
       (profile.topClients.length > 0 ? 1 : 0) >=
     3;

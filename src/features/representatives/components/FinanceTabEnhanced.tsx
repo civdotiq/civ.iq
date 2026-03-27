@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import { ContributorsModal } from '@/features/campaign-finance/components/ContributorsModal';
-import { SectorLink } from '@/components/shared/links/EntityLinks';
+import { SectorLink, PACLink } from '@/components/shared/links/EntityLinks';
 
 interface FinanceData {
   totalRaised: number;
@@ -1113,7 +1113,11 @@ export const FinanceTabEnhanced = React.memo(
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{pac.pacName}</span>
+                      <PACLink
+                        committeeId={pac.pacId}
+                        name={pac.pacName}
+                        className="font-medium text-sm"
+                      />
                       <a
                         href={pac.fecLink}
                         target="_blank"
@@ -1186,7 +1190,14 @@ export const FinanceTabEnhanced = React.memo(
                       <span className="text-xs text-gray-500">({sponsor.sponsorState})</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                      <span>via {sponsor.pacName}</span>
+                      <span>
+                        via{' '}
+                        <PACLink
+                          committeeId={sponsor.pacId}
+                          name={sponsor.pacName}
+                          className="text-xs"
+                        />
+                      </span>
                       <a
                         href={sponsor.fecLink}
                         target="_blank"

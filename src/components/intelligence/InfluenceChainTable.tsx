@@ -5,7 +5,7 @@
 
 'use client';
 
-import { BillLink, CommitteeLink } from '@/components/shared/links/EntityLinks';
+import { BillLink, CommitteeLink, LobbyLink } from '@/components/shared/links/EntityLinks';
 import type {
   LobbyingPipelineInsight,
   LobbyingOrganizationActivity,
@@ -119,7 +119,9 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
               <tbody>
                 {insight.topOrganizations.map((org: LobbyingOrganizationActivity) => (
                   <tr key={org.name} className="border-b border-gray-200">
-                    <td className="py-2 pr-4 text-gray-900">{org.name}</td>
+                    <td className="py-2 pr-4 text-gray-900">
+                      <LobbyLink registrantId={org.registrantId} name={org.name} />
+                    </td>
                     <td className="py-2 pr-4 text-right text-gray-700">
                       {formatCurrency(org.totalSpending)}
                     </td>

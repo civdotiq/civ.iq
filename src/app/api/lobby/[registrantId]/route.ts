@@ -140,14 +140,104 @@ async function fetchWikiEnrichment(orgName: string): Promise<WikiEnrichment | nu
     const page = Object.values(pages)[0];
     if (!page || page.missing) return null;
 
+    // Fetch structured data from Wikidata
+    const wikidata = await fetchWikidataOrg(orgName);
+
     return {
       summary: page.extract?.slice(0, 500) ?? null,
       imageUrl: page.thumbnail?.source ?? null,
       pageUrl: page.fullurl ?? null,
-      foundingDate: null,
-      headquarters: null,
-      website: null,
-      wikidataId: null,
+      foundingDate: wikidata?.foundingDate ?? null,
+      headquarters: wikidata?.headquarters ?? null,
+      website: wikidata?.website ?? null,
+      wikidataId: wikidata?.wikidataId ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWikidataOrg(orgName: string): Promise<{
+  foundingDate: string | null;
+  headquarters: string | null;
+  website: string | null;
+  wikidataId: string | null;
+} | null> {
+  try {
+    // Search Wikidata for the organization by name
+    const searchUrl =
+      `https://www.wikidata.org/w/api.php?` +
+      new URLSearchParams({
+        action: 'wbsearchentities',
+        format: 'json',
+        language: 'en',
+        type: 'item',
+        limit: '3',
+        search: orgName,
+        origin: '*',
+      });
+
+    const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(5_000) });
+    if (!searchRes.ok) return null;
+
+    const searchData = (await searchRes.json()) as {
+      search?: Array<{ id: string; label: string; description?: string }>;
+    };
+
+    // Find the best match — prefer results described as organizations/companies
+    const match =
+      searchData.search?.find(
+        r =>
+          r.description?.toLowerCase().includes('organization') ||
+          r.description?.toLowerCase().includes('company') ||
+          r.description?.toLowerCase().includes('corporation') ||
+          r.description?.toLowerCase().includes('association') ||
+          r.description?.toLowerCase().includes('institute')
+      ) ?? searchData.search?.[0];
+
+    if (!match) return null;
+
+    const qid = match.id;
+
+    // SPARQL for structured fields: founding date (P571), headquarters (P159), website (P856)
+    const sparql = `
+      SELECT ?foundingDate ?hqLabel ?website WHERE {
+        OPTIONAL { wd:${qid} wdt:P571 ?foundingDate . }
+        OPTIONAL { wd:${qid} wdt:P159 ?hq . }
+        OPTIONAL { wd:${qid} wdt:P856 ?website . }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+      LIMIT 1
+    `;
+
+    const sparqlUrl =
+      `https://query.wikidata.org/sparql?` + new URLSearchParams({ query: sparql, format: 'json' });
+
+    const sparqlRes = await fetch(sparqlUrl, {
+      headers: { Accept: 'application/sparql-results+json', 'User-Agent': 'CIV.IQ/1.0' },
+      signal: AbortSignal.timeout(8_000),
+    });
+
+    if (!sparqlRes.ok)
+      return { foundingDate: null, headquarters: null, website: null, wikidataId: qid };
+
+    const sparqlData = (await sparqlRes.json()) as {
+      results?: {
+        bindings?: Array<{
+          foundingDate?: { value: string };
+          hqLabel?: { value: string };
+          website?: { value: string };
+        }>;
+      };
+    };
+
+    const binding = sparqlData.results?.bindings?.[0];
+
+    return {
+      foundingDate: binding?.foundingDate?.value?.slice(0, 10) ?? null,
+      headquarters: binding?.hqLabel?.value ?? null,
+      website: binding?.website?.value ?? null,
+      wikidataId: qid,
     };
   } catch {
     return null;
@@ -207,7 +297,7 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
   // Total spending
   let totalSpending = 0;
   for (const f of filings) {
-    totalSpending += parseFloat(f.income ?? '0') || parseFloat(f.expenses ?? '0') || 0;
+    totalSpending += Math.max(parseFloat(f.income ?? '0') || 0, parseFloat(f.expenses ?? '0') || 0);
   }
 
   // Unique lobbyists
@@ -223,7 +313,7 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
   // Yearly spending
   const yearMap = new Map<number, { spending: number; count: number }>();
   for (const f of filings) {
-    const amount = parseFloat(f.income ?? '0') || parseFloat(f.expenses ?? '0') || 0;
+    const amount = Math.max(parseFloat(f.income ?? '0') || 0, parseFloat(f.expenses ?? '0') || 0);
     const existing = yearMap.get(f.filing_year) ?? { spending: 0, count: 0 };
     existing.spending += amount;
     existing.count += 1;

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { BillLink } from '@/components/shared/links/EntityLinks';
+import { BillLink, LobbyLink, CommitteeLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChain } from '@/lib/intelligence/types';
 
 interface MoneyFlowChainProps {
@@ -98,17 +98,20 @@ function FlowNode({ children, className = '' }: { children: React.ReactNode; cla
   );
 }
 
-/** Find the committee label from the chain links */
-function getCommitteeLabel(chain: InfluenceChain): string {
+/** Extract committee info from the chain links */
+function getCommitteeInfo(chain: InfluenceChain): { name: string; code: string | null } {
   const committeeLink = chain.links.find(l => l.type === 'committee');
-  return committeeLink?.label ?? 'Committee';
+  return {
+    name: (committeeLink?.data?.committeeName as string) ?? 'Committee',
+    code: (committeeLink?.data?.committeeCode as string) ?? null,
+  };
 }
 
 export function MoneyFlowChain({ chain, className = '' }: MoneyFlowChainProps) {
   const truncatedTitle =
     chain.billTitle.length > 60 ? chain.billTitle.slice(0, 60) + '...' : chain.billTitle;
 
-  const committeeLabel = getCommitteeLabel(chain);
+  const committee = getCommitteeInfo(chain);
 
   return (
     <div
@@ -121,7 +124,11 @@ export function MoneyFlowChain({ chain, className = '' }: MoneyFlowChainProps) {
         <div className="flex items-center gap-2">
           <ConfidenceDot confidence={chain.chainConfidence} />
           <div>
-            <div className="type-sm font-medium text-gray-900">{chain.organization}</div>
+            <LobbyLink
+              registrantId={chain.registrantId}
+              name={chain.organization}
+              className="type-sm font-medium"
+            />
             <div className="type-xs text-gray-500 aicher-heading-wide">
               {formatCompact(chain.lobbyingSpending)} lobbying
             </div>
@@ -136,7 +143,7 @@ export function MoneyFlowChain({ chain, className = '' }: MoneyFlowChainProps) {
       {/* Committee node */}
       <FlowNode>
         <div className="type-xs text-gray-500 aicher-heading-wide">Committee</div>
-        <div className="type-sm text-gray-900">{committeeLabel}</div>
+        <CommitteeLink code={committee.code} name={committee.name} className="type-sm" />
       </FlowNode>
 
       {/* Edge */}

@@ -198,10 +198,12 @@ interface RepData {
   state: string;
   chamber: 'House' | 'Senate';
   committeeNames: Set<string>;
+  committeeCodesByName: Map<string, string>;
 }
 
 interface LobbyingOrgSummary {
   name: string;
+  registrantId?: string;
   totalSpending: number;
   filingCount: number;
   issueCodes: string[];
@@ -327,9 +329,14 @@ async function fetchRepresentative(bioguideId: string): Promise<RepData | null> 
     }
 
     const committeeNames = new Set<string>();
+    const committeeCodesByName = new Map<string, string>();
 
     for (const c of rep.committees ?? []) {
       committeeNames.add(c.name);
+      const code = (c as Record<string, unknown>).thomas_id ?? (c as Record<string, unknown>).id;
+      if (typeof code === 'string' && code) {
+        committeeCodesByName.set(c.name, code);
+      }
     }
 
     return {
@@ -338,6 +345,7 @@ async function fetchRepresentative(bioguideId: string): Promise<RepData | null> 
       state: rep.state,
       chamber: rep.chamber,
       committeeNames,
+      committeeCodesByName,
     };
   } catch (error) {
     logger.warn('[InfluenceChain] Failed to fetch representative', {
@@ -381,9 +389,18 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
       const orgName = filing.client.name;
       const existing = orgMap.get(orgName);
 
+      // Track registrant ID for orgs that lobby on their own behalf
+      const isSelfLobby =
+        filing.registrant?.name &&
+        filing.registrant.name.toLowerCase() === filing.client.name.toLowerCase();
+      const selfRegistrantId = isSelfLobby ? filing.registrant.id : undefined;
+
       if (existing) {
         existing.totalSpending += filing.income ?? 0;
         existing.filingCount += 1;
+        if (selfRegistrantId && !existing.registrantId) {
+          existing.registrantId = selfRegistrantId;
+        }
         for (const issue of filing.issues) {
           if (!existing.issueCodes.includes(issue.code)) {
             existing.issueCodes.push(issue.code);
@@ -394,6 +411,7 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
       } else {
         orgMap.set(orgName, {
           name: orgName,
+          registrantId: selfRegistrantId,
           totalSpending: filing.income ?? 0,
           filingCount: 1,
           issueCodes: filing.issues.map(i => i.code),
@@ -671,6 +689,7 @@ function assembleChains(
 
       allChains.push({
         organization: org.name,
+        registrantId: org.registrantId,
         lobbyingSpending: org.totalSpending,
         contributionAmount: contribution?.amount ?? 0,
         billId: vote.billId,
@@ -796,6 +815,7 @@ function buildChainLinks(
 
   // Link 3: Committee — use the committee this org actually targeted
   const committeeName = findMatchingCommittee(org, rep);
+  const committeeCode = rep.committeeCodesByName.get(committeeName);
 
   links.push({
     type: 'committee',
@@ -803,6 +823,7 @@ function buildChainLinks(
     confidence: LINK_CONFIDENCE.committee,
     data: {
       committeeName,
+      committeeCode: committeeCode ?? null,
     },
   });
 
