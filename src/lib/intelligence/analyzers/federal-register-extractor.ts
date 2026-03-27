@@ -24,6 +24,8 @@ import {
   generateInsightNarrative,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { extractEntities } from '@/lib/intelligence/embeddings/civic-ner';
 import type { CivicEntity } from '@/lib/intelligence/embeddings/types';
@@ -151,6 +153,9 @@ async function computeAndCache(
     );
   }
 
+  const sc = new SourceCollector();
+  sc.add('Federal Register', doc.publication_date);
+
   const insight: PreambleExtractionInsight = {
     documentNumber,
     title: doc.title,
@@ -168,6 +173,11 @@ async function computeAndCache(
     dataAsOf: doc.publication_date,
     methodology: methodologyParts.join(' '),
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence,
+      hasAnomaly: extraction.costEstimates.length > 0,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

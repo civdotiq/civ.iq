@@ -36,6 +36,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
@@ -123,6 +125,10 @@ async function computeAndCache(
   // 5. Generate narrative
   const { narrative, source } = await generateNarrative(data, stats, peer);
 
+  const sc = new SourceCollector();
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('Congress.gov committees', '119th Congress');
+
   const insight: FinanceJurisdictionInsight = {
     bioguideId,
     overlapScore: stats.overlapScore,
@@ -143,6 +149,14 @@ async function computeAndCache(
       'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
       'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: stats.overlapScore,
+      peerAverage: peer?.peerAverage,
+      percentileRank: peer?.percentileRank,
+      confidence:
+        source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

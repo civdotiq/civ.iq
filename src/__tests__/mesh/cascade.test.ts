@@ -41,6 +41,12 @@ jest.mock('@/lib/intelligence/ml/vote-predictor', () => ({
 jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   getBillSectors: jest.fn().mockResolvedValue(['Energy']),
   withTimeout: jest.fn((promise: Promise<unknown>) => promise),
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 
 jest.mock('@/features/representatives/services/congress.service', () => ({

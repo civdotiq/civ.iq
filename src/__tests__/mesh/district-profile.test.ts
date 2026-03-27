@@ -56,6 +56,12 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
     source: 'statistical-fallback',
   }),
   getCurrentElectionCycle: jest.fn().mockReturnValue(2026),
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 
 import { cosineSimilarity } from '@/lib/mesh/district-profile';

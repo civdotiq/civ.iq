@@ -36,6 +36,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { classifyBillSectors } from '../embeddings';
 import { confidenceScore } from '../statistics/civic-stats';
@@ -233,6 +235,12 @@ async function computeAndCache(
     lobbyingSimilarity
   );
 
+  const sc = new SourceCollector();
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('Congress.gov bills', '119th Congress');
+  sc.add('Senate LDA filings', '119th Congress', lobbyingOrgs);
+  if (storyContext.voteOutcome) sc.add('Congress.gov roll calls', '119th Congress');
+
   const insight: BillIntelligenceInsight = {
     billId,
     billTitle: bill.title,
@@ -255,6 +263,11 @@ async function computeAndCache(
       (storyContext.voteOutcome ? ' Vote data from Congress.gov roll calls.' : '') +
       (storyContext.fiscalImpact ? ' Fiscal estimates from CBO.' : ''),
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence: conf,
+      hasAnomaly: lobbyingSimilarity?.hasStrongMatches,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
     // Story context fields

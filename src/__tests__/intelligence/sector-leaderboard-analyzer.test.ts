@@ -31,6 +31,12 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   trackInsightCacheHit: jest.fn(),
   withInsightTracking: jest.fn((_name: string, fn: () => Promise<unknown>) => fn()),
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 
 const mockGetEnhancedRepresentative = jest.fn();

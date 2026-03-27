@@ -7,6 +7,8 @@
 
 import { useState } from 'react';
 import { ConfidenceBadge } from './ConfidenceBadge';
+import { SignalBadge } from './SignalBadge';
+import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import { BillLink, LobbyLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChainInsight, InfluenceChain } from '@/lib/intelligence/types';
@@ -27,18 +29,6 @@ function formatCompact(amount: number): string {
     return `$${(amount / 1_000).toFixed(0)}K`;
   }
   return `$${amount.toFixed(0)}`;
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
 }
 
 const INITIAL_DISPLAY_COUNT = 5;
@@ -137,9 +127,12 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
   return (
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <h3 className="aicher-heading type-lg text-gray-900">Influence Chains</h3>
-        <ConfidenceBadge confidence={insight.confidence} />
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <SignalBadge signal={insight.signal ?? 'pattern'} />
+          <h3 className="aicher-heading type-lg text-gray-900 truncate">Influence Chains</h3>
+        </div>
+        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
       </div>
 
       {/* Key stats row */}
@@ -183,10 +176,12 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
       <p className="type-sm text-gray-700 leading-relaxed mb-4">{insight.narrative}</p>
 
       {/* Footer */}
-      <p className="type-xs text-gray-400">
-        {insight.chainsDropped > 0 && <>{insight.chainsDropped} low-confidence chains omitted · </>}
-        Analysis based on data through {formatDate(insight.dataAsOf)}
-      </p>
+      {insight.chainsDropped > 0 && (
+        <p className="type-xs text-gray-400 mb-1">
+          {insight.chainsDropped} low-confidence chains omitted
+        </p>
+      )}
+      <SourceCitation sources={insight.sources ?? []} dataAsOf={insight.dataAsOf} />
 
       <InsightDisclaimer
         disclaimer={insight.disclaimer}

@@ -63,6 +63,96 @@ export function freshestDate(...dates: (string | undefined | null)[]): string {
   return valid[0]!;
 }
 
+// ── Signal Classification ────────────────────────────────────────────
+
+import type { InsightSignal, InsightSource } from '../types';
+
+export type { InsightSignal, InsightSource };
+
+/**
+ * Central signal classifier — derives signal type from insight data.
+ * Keeps classification consistent across all analyzers.
+ *
+ * Rules:
+ * - alert: value exceeds 2× peer average, or peer percentile > 90th / < 10th
+ * - pattern: statistically significant finding (confidence ≥ 0.7)
+ * - tracking: data present, trend observable, but not yet significant
+ * - baseline: reference measurement, no notable deviation
+ */
+export function classifySignal(params: {
+  /** The insight's primary metric (0-1 scale). */
+  value?: number;
+  /** Peer group average for comparison. */
+  peerAverage?: number;
+  /** Percentile rank among peers (0-100). */
+  percentileRank?: number;
+  /** Confidence score (0-1). */
+  confidence: number;
+  /** Whether an anomaly was explicitly flagged by the stats layer. */
+  hasAnomaly?: boolean;
+  /** Overall trend if available. */
+  trend?: 'stable' | 'increasing' | 'decreasing' | 'volatile';
+}): InsightSignal {
+  // Explicit anomaly always wins
+  if (params.hasAnomaly) return 'alert';
+
+  // Extreme percentile rank
+  if (params.percentileRank !== undefined) {
+    if (params.percentileRank >= 90 || params.percentileRank <= 10) return 'alert';
+  }
+
+  // Value exceeds 2× peer average
+  if (
+    params.value !== undefined &&
+    params.peerAverage !== undefined &&
+    params.peerAverage > 0 &&
+    params.value >= params.peerAverage * 2
+  ) {
+    return 'alert';
+  }
+
+  // Volatile trend is alert-worthy
+  if (params.trend === 'volatile') return 'alert';
+
+  // Confident finding is a pattern
+  if (params.confidence >= 0.7) return 'pattern';
+
+  // Some data but low confidence — tracking
+  if (params.confidence >= 0.5) return 'tracking';
+
+  // Everything else is baseline
+  return 'baseline';
+}
+
+// ── Source Collector ─────────────────────────────────────────────────
+
+/**
+ * Accumulates data source citations during analyzer execution.
+ * Call `add()` as each API responds, then `toSources()` to emit the array.
+ */
+export class SourceCollector {
+  private entries: InsightSource[] = [];
+
+  add(name: string, period: string, recordCount?: number): void {
+    // Deduplicate by name — update if already tracked
+    const existing = this.entries.find(e => e.name === name);
+    if (existing) {
+      existing.period = period;
+      if (recordCount !== undefined) existing.recordCount = recordCount;
+    } else {
+      this.entries.push({ name, period, recordCount });
+    }
+  }
+
+  toSources(): InsightSource[] {
+    return [...this.entries];
+  }
+
+  get count(): number {
+    return this.entries.length;
+  }
+}
+
 // ── Error Classification (re-exported from error-utils) ─────────────
 
 export { classifyError, insufficientDataError } from '../error-utils';

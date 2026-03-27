@@ -30,6 +30,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { mean, sampleStandardDeviation } from '../statistics/civic-stats';
 import { getJurisdictionSectorsForTopics } from '@/lib/connections/policy-area-map';
@@ -172,6 +174,11 @@ async function computeAndCache(
   // Compute confidence based on data availability
   const confidence = computeConfidence(fundingData, votingData, oversightData);
 
+  const sc = new SourceCollector();
+  sc.add('Congress.gov', '119th Congress');
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  if (icInsight) sc.add('Senate LDA filings', '119th Congress');
+
   const brief: CivicBriefInsight = {
     bioguideId,
     identity,
@@ -185,6 +192,11 @@ async function computeAndCache(
     dataAsOf: freshestDate(fjInsight?.dataAsOf, icInsight?.dataAsOf),
     methodology: METHODOLOGY,
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence,
+      hasAnomaly: patterns.some(p => p.significance >= 0.8),
+    }),
+    sources: sc.toSources(),
     source,
     lastAnalyzedAt: new Date().toISOString(),
   };

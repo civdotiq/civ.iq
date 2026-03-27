@@ -34,6 +34,8 @@ import {
   trackInsightCacheHit,
   withInsightTracking,
   getBillSectors,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { analyzeInfluenceChains } from './influence-chain-analyzer';
 import { analyzeEnforcement } from './enforcement-analyzer';
@@ -155,6 +157,11 @@ async function computeAndCache(
   // 7. Generate narrative
   const { narrative, source } = await generateNarrative(bioguideId, graphChains, graphStats, peer);
 
+  const sc = new SourceCollector();
+  sc.add('Influence chain data', '119th Congress', graphChains.length);
+  sc.add('Federal Register API', 'Current', graphStats.regulationLinks);
+  sc.add('EPA/OSHA enforcement', 'Recent', graphStats.enforcementLinks);
+
   const insight: InfluenceGraphInsight = {
     bioguideId,
     chains: graphChains,
@@ -182,6 +189,11 @@ async function computeAndCache(
       'EPA/OSHA enforcement data, CourtListener federal court dockets, and FRED economic indicators. ' +
       'Chain confidence is the minimum confidence across all links.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+      hasAnomaly: graphChains.some(c => c.chainConfidence >= 0.8),
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

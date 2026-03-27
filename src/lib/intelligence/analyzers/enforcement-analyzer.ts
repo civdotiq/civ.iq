@@ -25,6 +25,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { oshaService } from '@/lib/data-sources/osha-service';
@@ -118,6 +120,23 @@ async function computeAndCache(
   // 6. Generate narrative
   const { narrative, source } = await generateNarrative(scope, stats, peer);
 
+  const sc = new SourceCollector();
+  sc.add(
+    'EPA ECHO',
+    'Recent enforcement actions',
+    stats.byAgency.find(a => a.agency === 'EPA')?.count
+  );
+  sc.add(
+    'OSHA inspections',
+    'Recent inspections',
+    stats.byAgency.find(a => a.agency === 'OSHA')?.count
+  );
+  sc.add(
+    'CFPB complaints',
+    'Recent complaints',
+    stats.byAgency.find(a => a.agency === 'CFPB')?.count
+  );
+
   const insight: EnforcementInsight = {
     scope,
     actions: actions.slice(0, 50), // Cap at 50 for response size
@@ -139,6 +158,11 @@ async function computeAndCache(
       'Organizations matched across agencies via entity resolution. ' +
       'SIC codes normalized to 13-sector industry model.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+      trend: stats.trend,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

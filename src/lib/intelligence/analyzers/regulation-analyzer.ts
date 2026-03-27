@@ -26,6 +26,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import {
   getCommitteesForAgency,
@@ -198,6 +200,11 @@ async function computeAndCache(
     peer
   );
 
+  const sc = new SourceCollector();
+  sc.add('Federal Register API', 'Current rulemakings', regulationNodes.length);
+  sc.add('Senate LDA filings', '119th Congress');
+  sc.add('Regulations.gov comments', 'Current');
+
   const insight: RegulationInsight = {
     agencySlug,
     agencyName,
@@ -223,6 +230,11 @@ async function computeAndCache(
       'Lobbying-comment overlap detected by matching LDA filing organizations against Regulations.gov commenters. ' +
       'Data from Federal Register API and Senate LDA disclosures.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+      hasAnomaly: lobbyingCommentOverlap.some(o => o.isOverlap),
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

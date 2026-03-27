@@ -48,6 +48,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 
 /** Redis cache TTL: 7 days */
@@ -129,6 +131,15 @@ async function computeAndCache(
   // 5. Generate insight
   const { narrative, source } = await generateNarrative(data, stats, peer);
 
+  const sc = new SourceCollector();
+  sc.add(
+    data.chamber === 'Senate' ? 'Senate Stock Watcher' : 'House Clerk disclosures',
+    '119th Congress',
+    data.totalTrades
+  );
+  sc.add('SEC EDGAR SIC codes', 'Current');
+  sc.add('Congress.gov committees', '119th Congress');
+
   const insight: StockCommitteeInsight = {
     bioguideId,
     totalTrades: data.totalTrades,
@@ -158,6 +169,14 @@ async function computeAndCache(
       'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
       'Expected overlap rate = jurisdiction sectors / 13 total sectors.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: stats.overlapRate,
+      peerAverage: peer?.peerAverage ?? stats.expectedOverlapRate,
+      percentileRank: peer?.percentileRank,
+      confidence:
+        source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

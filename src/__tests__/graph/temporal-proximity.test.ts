@@ -24,6 +24,12 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
     valid.sort((a, b) => Date.parse(b) - Date.parse(a));
     return valid[0]!;
   },
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 
 function makeNode(id: string): GraphNode {

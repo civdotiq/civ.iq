@@ -12,6 +12,12 @@ jest.mock('@/lib/graph/hydrator');
 jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   withTimeout: jest.fn(<T>(p: Promise<T>) => p),
   ANALYZER_TIMEOUT_MS: 55_000,
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,

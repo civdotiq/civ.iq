@@ -75,6 +75,12 @@ const mockWithTimeout = jest.fn();
 jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   generateInsightNarrative: (...args: unknown[]) => mockGenerateInsightNarrative(...args),
   withTimeout: (...args: unknown[]) => mockWithTimeout(...args),
+  classifySignal: jest.fn(() => 'pattern' as const),
+  SourceCollector: jest.fn().mockImplementation(() => ({
+    add: jest.fn(),
+    toSources: jest.fn(() => []),
+    count: 0,
+  })),
 }));
 
 const mockConfidenceScore = jest.fn();

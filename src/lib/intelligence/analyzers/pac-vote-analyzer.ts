@@ -33,6 +33,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import {
   confidenceScore,
@@ -174,6 +176,10 @@ async function computeAndCache(
     peerCount: peer?.peerCount ?? 0,
   });
 
+  const sc = new SourceCollector();
+  sc.add('FEC disbursements', `${getCurrentElectionCycle()} cycle`);
+  sc.add('Congress.gov roll calls', '119th Congress');
+
   const insight: PACVoteInsight = {
     committeeId,
     committeeName: classification.name,
@@ -200,6 +206,13 @@ async function computeAndCache(
       'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
       'Yea rates compared to same-party baselines on the same roll calls.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: stats.aggregateYeaRate,
+      peerAverage: peer?.peerAverage ?? stats.aggregateBaselineYeaRate,
+      percentileRank: peer?.percentileRank,
+      confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

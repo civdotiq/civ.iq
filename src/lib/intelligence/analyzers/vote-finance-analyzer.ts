@@ -39,6 +39,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
@@ -123,6 +125,10 @@ async function computeAndCache(
   // 5. Generate insight
   const { narrative, source } = await generateNarrative(data, stats, peer);
 
+  const sc = new SourceCollector();
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('Congress.gov roll calls', '119th Congress', data.votes.length);
+
   const insight: VoteFinanceInsight = {
     bioguideId,
     correlations: stats.correlations,
@@ -144,6 +150,14 @@ async function computeAndCache(
       'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
       'Spearman rank correlation across sectors with 10+ votes.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: stats.overallAlignment,
+      peerAverage: peer?.peerAverage,
+      percentileRank: peer?.percentileRank,
+      confidence:
+        source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

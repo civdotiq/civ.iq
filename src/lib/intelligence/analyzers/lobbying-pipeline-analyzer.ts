@@ -28,6 +28,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
@@ -141,6 +143,10 @@ async function computeAndCache(
   // 7. Generate insight
   const { narrative, source } = await generateNarrative(committeeMapping, stats, peer);
 
+  const sc = new SourceCollector();
+  sc.add('Senate LDA filings', '119th Congress', data.matchedFilings.length);
+  sc.add('Congress.gov bills', '119th Congress', stats.matchedBillCount);
+
   const insight: LobbyingPipelineInsight = {
     committeeCode,
     committeeName: committeeMapping.committeeName,
@@ -170,6 +176,14 @@ async function computeAndCache(
       'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +
       'Data from Senate LDA disclosures and Congress.gov.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: stats.totalSpending,
+      peerAverage: peer?.peerAverage,
+      percentileRank: peer?.percentileRank,
+      confidence:
+        source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

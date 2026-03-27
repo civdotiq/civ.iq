@@ -18,7 +18,12 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { confidenceScore } from '@/lib/intelligence/statistics/civic-stats';
-import { freshestDate, generateInsightNarrative } from '@/lib/intelligence/analyzers/shared';
+import {
+  freshestDate,
+  generateInsightNarrative,
+  classifySignal,
+  SourceCollector,
+} from '@/lib/intelligence/analyzers/shared';
 import { trackInsightRun } from '@/lib/analytics/insight-tracker';
 import type { InsightBase } from '@/lib/intelligence/types';
 import type { GraphNeighborhood, GraphEdge } from '@/types/graph';
@@ -116,6 +121,12 @@ export async function analyzeTemporalProximity(
     cacheHit: false,
   });
 
+  const sc = new SourceCollector();
+  if (donationEdges.length > 0) sc.add('FEC contributions', 'Recent', donationEdges.length);
+  if (voteEdges.length > 0) sc.add('Congress.gov roll calls', '119th Congress', voteEdges.length);
+  if (lobbyingEdges.length > 0)
+    sc.add('Senate LDA filings', '119th Congress', lobbyingEdges.length);
+
   return {
     bioguideId,
     patterns,
@@ -128,6 +139,11 @@ export async function analyzeTemporalProximity(
       'Temporal proximity analysis: edges with dates are compared within configurable windows. ' +
       'Proximity score = 1 - (daysBetween / windowDays). Significance based on instance count and proximity.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence,
+      hasAnomaly: patterns.some(p => p.significance === 'high'),
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: now,
     source,
   };

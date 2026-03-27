@@ -37,6 +37,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import type {
   InfluenceChainInsight,
@@ -286,6 +288,11 @@ async function computeAndCache(
   // 9. Generate narrative
   const { narrative, source } = await generateNarrative(rep, chains, peer);
 
+  const sc = new SourceCollector();
+  sc.add('Senate LDA filings', '119th Congress');
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('Congress.gov roll calls', '119th Congress', votes.length);
+
   const insight: InfluenceChainInsight = {
     bioguideId,
     chains,
@@ -308,6 +315,14 @@ async function computeAndCache(
       'Levenshtein similarity (threshold > 0.8). Bills classified by sector using ' +
       'AI summaries with keyword fallback.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: chains.length,
+      peerAverage: peer?.peerAverage,
+      percentileRank: peer?.percentileRank,
+      confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+      hasAnomaly: chains.some(c => c.chainConfidence >= 0.8),
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

@@ -30,6 +30,8 @@ import {
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import {
   predictVote,
@@ -130,6 +132,11 @@ async function computeAndCache(
   // 6. Generate narrative
   const { narrative, source } = await generateNarrative(data, predictions, peer, metadata);
 
+  const sc = new SourceCollector();
+  sc.add('Congress.gov roll calls', '119th Congress', data.votes.length);
+  sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
+  sc.add('XGBoost vote model', `Accuracy: ${(metadata.testAccuracy * 100).toFixed(0)}%`);
+
   const insight: VotePredictionInsight = {
     bioguideId,
     independenceScore: {
@@ -164,6 +171,13 @@ async function computeAndCache(
       "voted against the model's donor-predicted position. " +
       `Model test accuracy: ${(metadata.testAccuracy * 100).toFixed(0)}%.`,
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      value: predictions.independenceScore,
+      peerAverage: peer?.peerAverage,
+      percentileRank: peer?.percentileRank,
+      confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

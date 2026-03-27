@@ -107,6 +107,12 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => {
     }),
     withInsightTracking: jest.fn((_name: string, fn: () => Promise<unknown>) => fn()),
     trackInsightCacheHit: jest.fn(),
+    classifySignal: jest.fn(() => 'pattern' as const),
+    SourceCollector: jest.fn().mockImplementation(() => ({
+      add: jest.fn(),
+      toSources: jest.fn(() => []),
+      count: 0,
+    })),
   };
 });
 

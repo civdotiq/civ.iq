@@ -32,6 +32,8 @@ import {
   getCurrentElectionCycle,
   trackInsightCacheHit,
   withInsightTracking,
+  classifySignal,
+  SourceCollector,
 } from './shared';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
@@ -346,6 +348,10 @@ async function computeAndCache(
   // 8. Generate insight
   const { narrative, source } = await generateNarrative(data, quarters, shifts, overallTrend, peer);
 
+  const sc = new SourceCollector();
+  sc.add('Congress.gov roll calls', '119th Congress', data.votes.length);
+  sc.add('House Clerk / Senate XML', '119th Congress');
+
   const insight: TemporalVoteInsight = {
     bioguideId,
     quarters,
@@ -367,6 +373,12 @@ async function computeAndCache(
       'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +
       'Shifts detected when quarterly alignment deviates >10 percentage points from trailing 4-quarter average.',
     disclaimer: DISCLAIMER,
+    signal: classifySignal({
+      confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
+      trend: overallTrend,
+      hasAnomaly: shifts.length > 0,
+    }),
+    sources: sc.toSources(),
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };

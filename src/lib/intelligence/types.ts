@@ -42,6 +42,29 @@ export interface InsightResponse<T> {
   status: 'complete' | 'partial' | 'unavailable';
 }
 
+// ── Signal Taxonomy ──────────────────────────────────────────────────
+
+/**
+ * Classifies the urgency/type of an insight for UI prioritization.
+ * - alert: Anomaly or threshold breach — demands attention (amber left border)
+ * - pattern: Detected statistical pattern — worth knowing (blue left border)
+ * - tracking: Ongoing metric — context for later (gray, quieter)
+ * - baseline: Reference comparison — no action implied (gray, most quiet)
+ */
+export type InsightSignal = 'alert' | 'pattern' | 'tracking' | 'baseline';
+
+// ── Source Citation ──────────────────────────────────────────────────
+
+/** Structured citation for a single data source used in an insight. */
+export interface InsightSource {
+  /** Human-readable source name, e.g., "FEC filings", "Senate LDA". */
+  name: string;
+  /** Time period covered, e.g., "Q3-Q4 2025", "119th Congress". */
+  period: string;
+  /** Number of records sampled or used, if known. */
+  recordCount?: number;
+}
+
 // ── Base Types ───────────────────────────────────────────────────────
 
 /**
@@ -63,6 +86,10 @@ export interface InsightBase {
   lastAnalyzedAt: string;
   /** Whether AI narrative was used or fell back to statistical summary. */
   source: 'ai-generated' | 'statistical-fallback';
+  /** Signal classification for UI prioritization. Defaults to 'pattern' if absent. */
+  signal?: InsightSignal;
+  /** Structured source citations for provenance display. */
+  sources?: InsightSource[];
 }
 
 // ── Industry Correlation ─────────────────────────────────────────────

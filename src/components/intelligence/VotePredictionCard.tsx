@@ -6,6 +6,8 @@
 'use client';
 
 import { ConfidenceBadge } from './ConfidenceBadge';
+import { SignalBadge } from './SignalBadge';
+import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import { ShapFactorsBar } from './ShapFactorsBar';
 import type { VotePredictionInsight } from '@/lib/intelligence/types';
@@ -15,28 +17,19 @@ interface VotePredictionCardProps {
   className?: string;
 }
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export function VotePredictionCard({ insight, className = '' }: VotePredictionCardProps) {
-  const { independenceScore, notableDeviations, modelAccuracy } = insight;
+  const { independenceScore, notableDeviations } = insight;
   const pctIndependent = (independenceScore.score * 100).toFixed(0);
 
   return (
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <h3 className="aicher-heading type-lg text-gray-900">Voting pattern analysis</h3>
-        <ConfidenceBadge confidence={insight.confidence} />
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <SignalBadge signal={insight.signal ?? 'pattern'} />
+          <h3 className="aicher-heading type-lg text-gray-900 truncate">Voting pattern analysis</h3>
+        </div>
+        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
       </div>
 
       {/* Key stats row */}
@@ -102,10 +95,11 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
       )}
 
       {/* Footer */}
-      <p className="type-xs text-gray-400">
-        Model accuracy: {(modelAccuracy * 100).toFixed(0)}% · Analysis based on data through{' '}
-        {formatDate(insight.dataAsOf)}
-      </p>
+      <SourceCitation
+        sources={insight.sources ?? []}
+        dataAsOf={insight.dataAsOf}
+        className="mt-3"
+      />
 
       <InsightDisclaimer
         disclaimer={insight.disclaimer}
