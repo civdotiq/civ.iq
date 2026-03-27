@@ -24,7 +24,7 @@ export default async function IndustrySectorLayout({
       />
       <CollectionPageSchema
         name={`${sectorName} - Industry Sector`}
-        description={`Federal legislation, congressional committees, and government agencies connected to the ${sectorName.toLowerCase()} industry sector.`}
+        description={`Federal legislation, congressional committees, lobbying organizations, and enforcement activity connected to the ${sectorName.toLowerCase()} industry sector.`}
         url={`https://civdotiq.org/industry/${sector}`}
       />
       {children}

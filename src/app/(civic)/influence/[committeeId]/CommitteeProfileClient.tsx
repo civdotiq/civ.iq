@@ -13,6 +13,7 @@ import { MetricCard } from '@/features/campaign-finance/components/MetricCard';
 import { SortableDataTable } from '@/features/campaign-finance/components/SortableDataTable';
 import { PACVoteTable } from '@/components/intelligence/PACVoteTable';
 import { InsightCard, pacVoteKeyStats } from '@/components/intelligence/InsightCard';
+import { SectorLink } from '@/components/shared/links/EntityLinks';
 import type { CommitteeProfile, ResolvedRecipient } from '@/types/influence';
 import type { PACVoteInsight } from '@/lib/intelligence/types';
 
@@ -76,11 +77,17 @@ function toTableRow(r: ResolvedRecipient): RecipientTableRow {
 
 interface CommitteeProfileClientProps {
   profile: CommitteeProfile;
+  sector?: string | null;
+  pacTypeExplanation?: string | null;
 }
 
 const fetcher = (url: string) => fetch(url).then(r => (r.ok ? r.json() : null));
 
-export function CommitteeProfileClient({ profile }: CommitteeProfileClientProps) {
+export function CommitteeProfileClient({
+  profile,
+  sector,
+  pacTypeExplanation,
+}: CommitteeProfileClientProps) {
   const { committee, totals, recipients, metadata } = profile;
 
   const { data: pacInsight } = useSWR<PACVoteInsight>(
@@ -176,6 +183,23 @@ export function CommitteeProfileClient({ profile }: CommitteeProfileClientProps)
         fecUrl={committee.fecUrl}
         party={committee.party}
       />
+
+      {/* Sector & PAC Type */}
+      {(sector || pacTypeExplanation) && (
+        <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+          {sector && (
+            <div className="mb-3">
+              <span className="text-xs tracking-wider text-gray-500 uppercase">Sector</span>
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-0.5">
+                <SectorLink sector={sector} />
+              </p>
+            </div>
+          )}
+          {pacTypeExplanation && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">{pacTypeExplanation}</p>
+          )}
+        </div>
+      )}
 
       {/* Financial Summary */}
       {totals && (

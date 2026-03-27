@@ -2,11 +2,31 @@
 
 ## Vision
 
-Every noun on the site becomes a page. Every entity name becomes a link. A citizen sees "American Petroleum Institute" on a representative's finance tab and clicks through to a page showing every legislator they donated to, every bill they lobbied on, every regulation they commented on, every enforcement action against them. No dead ends. No starting over.
+Every noun on the site becomes a page. Every entity name becomes a link. A citizen sees "American Petroleum Institute" on a representative's finance tab and clicks through to a page that explains what that organization is, what it advocates for, and how it engages with Congress — all from public government records. No dead ends. No starting over. No jargon.
 
 The data for this already exists across the analyzers. There's no new computation — just a new front door to existing data. A PAC page is the pac-vote analyzer's output reorganized around the PAC. A committee page is the lobbying pipeline analyzer reorganized around the committee. An industry page is the sector leaderboard plus enforcement plus regulation data.
 
 This turns the site from a collection of isolated profiles into an actual navigable web.
+
+## Binding Principle
+
+CIV.IQ organizes government data that exists publicly on many different websites, and makes it easier to understand for the average citizen. Both halves matter equally. A page that organizes data but doesn't help a citizen understand it is incomplete. Every entity page must:
+
+1. **Present public government records** from their original sources (Senate LDA, FEC, Congress.gov, Federal Register, EPA ECHO, etc.), attributed and linked.
+2. **Explain what the data means** in plain language at a Flesch-Kincaid grade level of 8 or below — the same standard the intelligence layer already enforces.
+3. **Define terms a non-expert wouldn't know.** "LD-2 disclosure" means nothing. "Quarterly lobbying report filed with the U.S. Senate" does.
+4. **Lead with comprehension, follow with detail.** Each section opens with a plain-language summary of what it shows and why it matters, then presents the data.
+5. **Use the intelligence layer's existing rules.** No causation claims. Confidence and methodology disclosed. Data source attribution on every section.
+
+## Page Tiers
+
+Not every entity has enough data to justify a full page. Publishing a page with just a name and a spending number isn't making government data easier to understand — it's thin content.
+
+**Full page** — Entity has enough data for 3+ sections with real content, 5+ outbound entity links, and a meaningful plain-language summary. Gets a dedicated route and full page treatment.
+
+**Info card** — Entity exists in the data but doesn't meet the full page threshold. Rendered as an expandable inline card wherever the entity appears (e.g., on a representative's finance tab or a committee's lobbying section). Shows what's available — name, total spending, issue areas — without pretending it's a complete page. Links to the original government data source (Senate LDA search, FEC lookup).
+
+For lobbying organizations: the ~500-1,000 most active registrants (by filing count and spending) will likely qualify for full pages. The remaining ~11,000 get info cards. The quality gate is automated but the threshold is honest — we'd rather show a useful card than a hollow page.
 
 ---
 
@@ -55,15 +75,22 @@ We already integrate Wikidata (99% rep coverage), Wikipedia (98% rep coverage, c
 
 ### New sources to integrate
 
-| Source                            | What it gives us                                                                                  | Free?                   | Use for                                                                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------- |
-| **Wikidata (expanded)**           | Org descriptions, founding dates, HQ locations, logos, parent companies, industry classifications | Yes                     | Lobbying org pages, PAC pages, agency pages                                |
-| **Wikipedia (expanded)**          | Org summaries, history, key people, controversies section                                         | Yes                     | Any entity with a Wikipedia article                                        |
-| **ProPublica Nonprofit Explorer** | 990 tax filings for nonprofits — revenue, expenses, executive compensation                        | Yes, API                | PACs organized as 501(c)(4)s, trade associations                           |
-| **Regulations.gov API**           | Public comments on regulations — who commented, positions taken                                   | Yes, API key            | Lobbying org pages (which regs they commented on)                          |
-| **OpenCorporates**                | Company registry data — jurisdiction, status, officers, filings                                   | Free tier (limited)     | Verifying lobbying org / PAC parent company identity                       |
-| **USASpending.gov (expanded)**    | Federal contracts and grants by recipient org                                                     | Yes, already integrated | Agency pages, lobbying org pages (do they also receive federal contracts?) |
-| **IRS Exempt Org data**           | Tax-exempt status, EIN, ruling date, asset size                                                   | Yes, bulk download      | PAC/nonprofit classification and size                                      |
+| Source                         | What it gives us                                                                                  | Free?                   | Use for                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------- |
+| **Wikidata (expanded)**        | Org descriptions, founding dates, HQ locations, logos, parent companies, industry classifications | Yes                     | Lobbying org pages, PAC pages, agency pages                          |
+| **Wikipedia (expanded)**       | Org summaries, history, key people                                                                | Yes                     | Any entity with a Wikipedia article                                  |
+| **Regulations.gov API**        | Public comments on regulations — who commented, positions taken                                   | Yes, API key            | Lobbying org pages (what regulations this org publicly commented on) |
+| **USASpending.gov (expanded)** | Federal contracts and grants by recipient org                                                     | Yes, already integrated | Agency pages, lobbying org pages                                     |
+| **IRS Exempt Org data**        | Tax-exempt status, EIN, ruling date, asset size                                                   | Yes, bulk download      | PAC/nonprofit classification and size                                |
+
+### Future / if needed
+
+These sources don't directly serve the comprehension goal but could be useful later for entity verification or deeper enrichment:
+
+| Source                            | What it gives us                                                | Why deferred                                                                                                         |
+| --------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **ProPublica Nonprofit Explorer** | 990 tax filings — revenue, expenses, executive compensation     | Exec compensation and financial internals serve investigative use cases, not civic comprehension. Revisit if needed. |
+| **OpenCorporates**                | Company registry data — jurisdiction, status, officers, filings | Useful as backend entity verification, not as citizen-facing content. Integrate as internal plumbing if needed.      |
 
 ### The Wikipedia/Wikidata pattern
 
@@ -113,6 +140,10 @@ Every subsequent phase needs these components. Building them first means every n
 
 ## Phase 2: Lobbying Organization Pages (~4-5 hrs)
 
+### Comprehension goal
+
+After visiting a lobbying org page, a citizen understands: what this organization is, what policy areas it advocates for, how much it spends on lobbying, and which parts of Congress it engages with. A citizen who has never heard of lobbying disclosures should leave this page knowing more than when they arrived.
+
 ### Why this is the priority
 
 Lobbying orgs are the most important missing node. They appear in:
@@ -144,43 +175,59 @@ But clicking any of those names is a dead end today.
 
 - Wikidata SPARQL → description, founding date, HQ, logo, parent org, website
 - Wikipedia REST API → summary paragraph, image
-- ProPublica Nonprofit Explorer → 990 data if nonprofit (revenue, assets, exec compensation)
+
+### Entity resolution confidence
+
+Cross-references that rely on entity resolution (lobbying org → PAC, lobbying org → enforcement target) must communicate match quality to the citizen:
+
+- **High confidence (≥ 0.8)**: Present the connection directly. "This organization also operates the [PAC Name] political action committee."
+- **Moderate confidence (0.6–0.8)**: Qualify the language. "This organization appears to be associated with [PAC Name] based on name matching."
+- **Below 0.6**: Do not display the connection. The match isn't reliable enough to present as fact.
+
+This uses the existing confidence constants in `confidence-constants.ts`. The citizen doesn't see a number — they see honest language.
 
 ### Page sections
 
+Each section opens with a plain-language summary explaining what the section shows and why it matters, before presenting the data. All narrative text must meet Flesch-Kincaid grade ≤ 8.
+
 1. **Identity header**
    - Name, description (from Wikidata/Wikipedia or "Lobbying organization registered with the U.S. Senate")
+   - Plain-language explanation of what lobbying disclosure means: "Organizations that lobby the federal government are required to file public reports with the U.S. Senate. This page shows [Org Name]'s public filings."
    - Founded, headquarters, website, parent org (if Wikidata has it)
    - Total lobbying spending (current cycle + all time)
    - Number of filings, number of lobbyists employed
-   - PAC badge: if entity resolution links to a FEC committee, show "Also operates [PAC Name]" with `<PACLink>`
+   - PAC badge: if entity resolution links to a FEC committee (confidence ≥ 0.8), show "Also operates [PAC Name]" with `<PACLink>`. If 0.6–0.8, show "May be associated with [PAC Name]."
 
 2. **Issues & legislation**
-   - LDA issue codes grouped and labeled (e.g., "Energy/Nuclear", "Trade", "Defense")
+   - Section intro: "These are the policy areas [Org Name] reported lobbying on, and bills in Congress related to those areas."
+   - LDA issue codes grouped and labeled in plain language (e.g., "Energy and nuclear power", "International trade", "National defense") — not raw codes
    - For each issue area: bills in current Congress matching that issue code
    - Each bill rendered with `<BillLink>`, showing title, status, sponsor with `<RepLink>`
-   - This answers: "What specific legislation is this organization trying to influence?"
+   - This answers: "What policy areas does this organization advocate for?"
 
-3. **Government targets**
-   - Committees targeted (from LDA government_entities field)
-   - Each committee with `<CommitteeLink>`, showing number of filings targeting it
-   - Agencies targeted (resolved via committee-agency-map)
-   - This answers: "Who in government are they talking to?"
+3. **Congressional activity**
+   - Section intro: "These are the committees and agencies [Org Name] reported contacting in its lobbying filings."
+   - Committees contacted (from LDA government_entities field — this is a self-reported field in the org's own filings)
+   - Each committee with `<CommitteeLink>`, showing number of filings mentioning it
+   - Agencies contacted (resolved via committee-agency-map)
+   - This answers: "Which parts of Congress and the federal government does this organization engage with?"
 
-4. **Connected legislators**
-   - If PAC exists: representatives who received donations from the PAC
-   - Each rep with `<RepLink>`, party, state, amount received, committee overlap
-   - Sorted by amount, showing whether the rep sits on a targeted committee
-   - If no PAC: show committee members of targeted committees (different framing: "Legislators on committees this organization lobbies")
-   - This answers: "Which legislators are connected to this organization?"
+4. **PAC activity** (only if entity resolution links to a FEC committee)
+   - Section intro: "This organization also operates a political action committee (PAC), which makes campaign contributions to candidates for federal office. PAC contributions are reported to the Federal Election Commission."
+   - Representatives who received contributions from the PAC
+   - Each rep with `<RepLink>`, party, state, amount received
+   - This answers: "Which candidates has this organization's PAC contributed to?"
+   - Note: committee overlap information is available on each representative's own page — no need to re-derive it here
 
 5. **Enforcement & regulatory activity**
-   - EPA/OSHA enforcement actions against this org (by name match via entity resolution)
-   - Regulations.gov comments filed by this org (if we integrate that API)
+   - Section intro: "These are federal enforcement actions involving [Org Name] from EPA and OSHA public records."
+   - EPA/OSHA enforcement actions against this org (subject to entity resolution confidence thresholds above)
+   - Regulations.gov comments filed by this org (if we integrate that API) — framed as: "Public comments [Org Name] submitted on proposed federal regulations"
    - Federal Register regulations affecting this org's sector
-   - This answers: "Is this organization also subject to government oversight?"
+   - This answers: "Is this organization also subject to federal regulation?"
 
 6. **Historical spending chart**
+   - Section intro: "[Org Name]'s reported lobbying spending over time, from Senate disclosure filings."
    - Simple bar chart of lobbying spending by year (from LDA filings grouped by year)
    - Shows trend — increasing, decreasing, stable
 
@@ -223,38 +270,40 @@ The LDA data alone (filings, spending) is on Senate.gov. OpenSecrets repackages 
 
 ## Phase 3: Industry/Sector Page Enrichment (~3-4 hrs)
 
+### Comprehension goal
+
+After visiting an industry page, a citizen understands: what this sector is, how much political activity it generates, who the major organizations are, and what legislation and regulation is currently relevant to it. This page makes a complex policy area approachable.
+
 ### Current state
 
 The `/industry/[sector]` page is the thinnest entity page. It shows a leaderboard, a legislation list, and a committee list. It's a client component with SWR. No Wikipedia/Wikidata enrichment. No enforcement. No lobbying. No PACs.
 
 ### What to add
 
+All sections open with a plain-language summary (Flesch-Kincaid grade ≤ 8).
+
 1. **Sector overview** (new section, top of page)
    - Wikipedia summary for the industry (e.g., "Defense industry in the United States")
+   - Plain-language context: what this industry does, why it interacts with government
    - Total political spending in this sector (from FEC aggregate data)
    - Total lobbying spending (from LDA filings filtered by issue codes mapping to this sector)
    - Number of active PACs, lobbying orgs
 
-2. **Top PACs in this sector** (new section)
-   - PACs classified into this sector via `categorizePACByName`
-   - Each with `<PACLink>`, total disbursements, recipient count
-   - Answers: "Who are the major political donors in this industry?"
+2. **Major organizations** (new section)
+   - Top PACs classified into this sector via `categorizePACByName`, each with `<PACLink>`, total disbursements, recipient count
+   - Top lobbying registrants whose filings match this sector's issue codes, each with `<LobbyLink>`, total spending, number of filings
+   - Section intro: "These are the largest political action committees and lobbying organizations active in [sector], based on public FEC and Senate disclosure filings."
 
-3. **Top lobbying organizations** (new section)
-   - Lobbying registrants whose filings match this sector's issue codes
-   - Each with `<LobbyLink>`, total spending, number of filings
-   - Answers: "Who is lobbying on behalf of this industry?"
-
-4. **Enforcement landscape** (new section)
+3. **Enforcement landscape** (new section)
+   - Section intro: "Federal agencies enforce regulations in this sector. This is a summary of recent enforcement activity from EPA and OSHA public records."
    - Enforcement actions from enforcement-analyzer with sector scope
    - Total actions, total penalties, trend (increasing/decreasing)
    - Top enforced companies with entity links
-   - Answers: "How heavily regulated/enforced is this industry?"
 
-5. **Regulatory activity** (new section)
+4. **Regulatory activity** (new section)
+   - Section intro: "These are active and recent federal regulations being written or updated that affect the [sector] sector."
    - Active rulemakings from Federal Register filtered by sector's agencies
    - Each regulation with `<RegulationLink>`
-   - Answers: "What rules are being written that affect this industry?"
 
 ### Data sources
 
@@ -268,6 +317,10 @@ Currently `CollectionPageSchema`. Add `about` with industry topic, add `hasPart`
 
 ## Phase 4: PAC Page Enrichment (~2-3 hrs)
 
+### Comprehension goal
+
+After visiting a PAC page, a citizen understands: what a PAC is, what type of PAC this is, what industry it's associated with, who it has contributed to, and whether a related organization also lobbies Congress. A citizen who has never heard of a PAC should leave understanding this one.
+
 ### Current state
 
 `/influence/[committeeId]` shows FEC committee info, financial totals, and resolved recipients with links to representative profiles. No intelligence layer data. No sector classification. No lobbying connection.
@@ -276,28 +329,28 @@ Currently `CollectionPageSchema`. Add `about` with industry topic, add `hasPart`
 
 1. **Sector & classification** (new section or header enrichment)
    - Industry sector from `categorizePACByName` with `<SectorLink>`
-   - PAC type explanation (e.g., "Connected PAC" = corporate-affiliated, "Non-Connected" = ideological)
+   - PAC type explanation in plain language (e.g., "This is a Connected PAC, meaning it is affiliated with a corporation or trade association. It raises money from the organization's employees and members." vs. "This is a Non-Connected PAC, meaning it raises money around a cause or ideology rather than a specific company.")
    - Wikidata/Wikipedia summary of parent organization if available
 
 2. **Voting alignment** (new section — from pac-vote-analyzer)
+   - Section intro: "This shows how legislators who received contributions from this PAC voted on bills related to the PAC's policy area, compared to the overall average."
    - Aggregate yea rate on sector-relevant bills across all recipients
    - Comparison to party baseline
    - Peer comparison to other PACs in same sector
-   - Narrative from pac-vote-analyzer
+   - Narrative from pac-vote-analyzer (existing intelligence layer output, already Flesch-Kincaid validated)
 
-3. **Connected lobbying org** (new section)
-   - If entity resolution matches this PAC to a lobbying registrant, show `<LobbyLink>` with lobbying spending
+3. **Related lobbying activity** (new section)
+   - If entity resolution matches this PAC to a lobbying registrant (subject to confidence thresholds from Phase 2), show `<LobbyLink>` with lobbying spending
+   - Section intro: "The organization behind this PAC also files lobbying disclosures with the U.S. Senate."
    - Show overlapping issue areas between lobbying activity and PAC sector
-   - Answers: "Does this PAC's parent organization also lobby?"
 
 4. **Recipient details enrichment**
    - Add committee membership info per recipient (which committees do they sit on?)
-   - Flag recipients who sit on committees relevant to PAC's sector
    - Add `<SectorLink>` and `<CommitteeLink>` references
 
 ### Schema.org
 
-Change from `GovernmentOrganizationSchema` to `OrganizationSchema`. Add `funder` relationship to recipient legislators.
+Change from `GovernmentOrganizationSchema` to `OrganizationSchema`. Do not use `funder` relationship — Schema.org's `funder` implies financial support of an entity, which mischaracterizes campaign contributions. Use `makesOffer` or omit the PAC-to-recipient relationship from structured data and let the page content speak for itself.
 
 ---
 
@@ -357,11 +410,11 @@ After all entity pages exist and are enriched, do a systematic audit of every en
 
 | Page           | Current Schema         | Add/Fix                                                            |
 | -------------- | ---------------------- | ------------------------------------------------------------------ |
-| Representative | ProfilePage, Person    | `memberOf` → committees, `funder` → top donors                     |
+| Representative | ProfilePage, Person    | `memberOf` → committees                                            |
 | Bill           | Legislation            | `sponsor` → Person, `legislationPassedBy` → GovernmentOrganization |
 | Vote           | LegislativeEvent       | `about` → Legislation link                                         |
 | Committee      | GovernmentOrganization | `member` → Person[], `subOrganization`                             |
-| PAC            | GovernmentOrganization | Change to Organization, add `funder`                               |
+| PAC            | GovernmentOrganization | Change to Organization (no `funder` — see Phase 4 note)            |
 | Industry       | CollectionPage         | Add `about` with industry topic                                    |
 | Lobby Org      | (new)                  | Organization with structured fields                                |
 | Regulation     | (audit)                | Legislation or CreativeWork                                        |
@@ -374,17 +427,19 @@ Validation script: `scripts/validate-entity-links.ts` — renders each entity pa
 
 ### Anti-slop quality gates
 
-A page must have:
+A full page must have:
 
 - 3+ sections with real data (not just an empty state)
 - 5+ outbound entity links to other CIV.IQ pages
-- Narrative or contextual text (not just data tables)
+- Plain-language summary per section (Flesch-Kincaid grade ≤ 8)
+- Terms a non-expert wouldn't know are explained in context (not in a glossary — inline)
 - Schema.org JSON-LD markup
 - `generateMetadata` with entity-specific title and description
-- Data source attribution
+- Data source attribution for every section
 - Breadcrumb navigation
+- Entity resolution cross-references respect confidence thresholds (≥ 0.8 direct, 0.6–0.8 qualified, < 0.6 omitted)
 
-Pages that don't meet these gates show an "insufficient data" message instead of publishing thin content.
+Pages that don't meet the data threshold (3+ sections, 5+ links) render as info cards, not full pages. Info cards link to the original government data source (Senate LDA search, FEC lookup) so the citizen can still access the raw record.
 
 ---
 
@@ -407,8 +462,12 @@ Phase 1 is the foundation. Phases 2-4 can partially overlap (different pages). P
 
 ## What Success Looks Like
 
-A citizen enters their address. They see their representative's page. They notice "Defense: $145,000" linked to the Defense industry page. They click through. They see the sector leaderboard, top PACs, and a lobbying org — American Petroleum Institute. They click API's lobbying page. They see API lobbied the Armed Services Committee on 3 energy bills, and their PAC donated to 12 committee members. They click one of those bills. They see the vote breakdown and the sponsor's funding context.
+A citizen enters their address. They see their representative's page. Under campaign finance, they notice "Defense: $145,000" and don't know what that means. "Defense" is a link. They click it.
 
-Five pages. Zero dead ends. Every click revealed a connection they didn't know existed. They never used search. They never needed to know what to look for.
+The industry page opens with a paragraph explaining what the defense sector is and how it interacts with Congress. Below that, they see the scale — total lobbying and PAC spending across the sector — and the major organizations involved. One name they recognize: Lockheed Martin. They've heard of them. They click through.
 
-That's the navigable web of civic information.
+The lobbying org page tells them, in plain language, that Lockheed Martin is registered to lobby the federal government and files quarterly reports with the U.S. Senate. It spent $12.4 million on lobbying last year, focused on defense and aerospace policy. The page shows which committees they contacted and which bills relate to those policy areas. Each one is a link to a page that explains what the bill does.
+
+The citizen didn't know any of this 3 minutes ago. They didn't need to know what "LDA" means, or how to search Senate.gov, or what a lobbying disclosure is. The site organized publicly available government records from four different federal websites and explained them in language they could follow.
+
+That's the product. Not a trail of connections for experts to follow — a set of pages that make government data legible to anyone.

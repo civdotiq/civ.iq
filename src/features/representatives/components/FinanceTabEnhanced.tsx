@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import { ContributorsModal } from '@/features/campaign-finance/components/ContributorsModal';
+import { SectorLink } from '@/components/shared/links/EntityLinks';
 
 interface FinanceData {
   totalRaised: number;
@@ -821,7 +822,8 @@ export const FinanceTabEnhanced = React.memo(
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900">
-                          {industry.industry}
+                          <SectorLink sector={industry.sector} className="font-medium" />
+                          {industry.category ? `: ${industry.category}` : ''}
                         </span>
                         {industry.fecVerifyLink && (
                           <a

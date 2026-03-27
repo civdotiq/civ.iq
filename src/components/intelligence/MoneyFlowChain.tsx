@@ -5,6 +5,7 @@
 
 'use client';
 
+import { BillLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChain } from '@/lib/intelligence/types';
 
 interface MoneyFlowChainProps {
@@ -145,9 +146,7 @@ export function MoneyFlowChain({ chain, className = '' }: MoneyFlowChainProps) {
       {/* Bill node */}
       <FlowNode className="md:max-w-[220px]">
         <div className="type-xs text-gray-500 aicher-heading-wide">Bill</div>
-        <div className="type-sm text-gray-900" title={chain.billTitle}>
-          {truncatedTitle}
-        </div>
+        <BillLink billId={chain.billId} title={truncatedTitle} className="type-sm" />
         {chain.textSimilarity !== null && (
           <div className="type-xs text-gray-400">
             {(chain.textSimilarity * 100).toFixed(0)}% text match

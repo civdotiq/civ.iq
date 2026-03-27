@@ -5,18 +5,20 @@
  * Influence Committee Profile Page
  *
  * Server-rendered page showing committee details, financial totals,
- * and all resolved recipients linked to CIV.IQ representative profiles.
+ * resolved recipients, sector classification, and lobbying connections.
  */
 
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
+import { categorizePACByName } from '@/lib/fec/industry-taxonomy';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
-import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { PACPageSchema } from './PACPageSchema';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -78,6 +80,22 @@ async function getCommitteeProfile(
   }
 }
 
+function getPACTypeExplanation(designation: string | undefined): string | null {
+  if (!designation) return null;
+  switch (designation) {
+    case 'B':
+      return 'This is a Lobbyist/Registrant PAC, meaning it is operated by a registered federal lobbyist or lobbying firm.';
+    case 'D':
+      return 'This is a Leadership PAC, meaning it is associated with a current or former elected official. Leadership PACs raise money to support other candidates.';
+    case 'J':
+      return 'This is a Joint Fundraising Committee that raises money to distribute among multiple candidates or committees.';
+    case 'U':
+      return 'This is an Unauthorized committee — it is not authorized by any candidate.';
+    default:
+      return null;
+  }
+}
+
 export default async function CommitteeProfilePage({ params, searchParams }: PageProps) {
   const { committeeId } = await params;
   const resolvedSearchParams = await searchParams;
@@ -88,20 +106,20 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   }
 
   const profile = await getCommitteeProfile(committeeId, cycle);
+  if (!profile) notFound();
 
-  if (!profile) {
-    notFound();
-  }
+  // Sector classification
+  const classification = categorizePACByName(profile.committee.name);
+  const pacTypeExplanation = getPACTypeExplanation(profile.committee.designation);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
       <main className="container mx-auto px-4 py-8">
-        {/* Structured Data for SEO */}
-        <GovernmentOrganizationSchema
+        <PACPageSchema
           name={profile.committee.name}
           description={`${profile.committee.typeFull} — ${profile.committee.designationFull}. FEC ID: ${profile.committee.committeeId}`}
           url={`https://civdotiq.org/influence/${committeeId}`}
-          parentOrganization={profile.committee.party || 'Federal Election Commission'}
+          sector={classification?.sector ?? null}
         />
         <BreadcrumbSchema
           items={[
@@ -111,22 +129,20 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
           ]}
         />
 
-        {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-[#3ea2d4]">
-            Home
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <Link href="/influence" className="hover:text-[#3ea2d4]">
-            Influence
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
-            {profile.committee.name}
-          </span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Influence', href: '/influence' },
+            { label: profile.committee.name, href: `/influence/${committeeId}` },
+          ]}
+          className="mb-6"
+        />
 
-        <CommitteeProfileClient profile={profile} />
+        <CommitteeProfileClient
+          profile={profile}
+          sector={classification?.sector ?? null}
+          pacTypeExplanation={pacTypeExplanation}
+        />
 
         <OpenDataStrip apiUrl={`/api/influence/${committeeId}?cycle=${cycle}`} />
       </main>
@@ -145,8 +161,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       return { title: `Committee ${committeeId}` };
     }
 
-    const title = `${committeeInfo.name} - Campaign Contributions`;
-    const description = `See where ${committeeInfo.name} sends money. View all Congressional recipients, amounts, and party breakdown for the ${cycle} cycle.`;
+    const classification = categorizePACByName(committeeInfo.name);
+    const sectorStr = classification?.sector ? ` in the ${classification.sector} sector` : '';
+
+    const title = `${committeeInfo.name} — Campaign contributions`;
+    const description = `See where ${committeeInfo.name}${sectorStr} sends money. View all Congressional recipients, amounts, and party breakdown for the ${cycle} cycle.`;
 
     return {
       title,

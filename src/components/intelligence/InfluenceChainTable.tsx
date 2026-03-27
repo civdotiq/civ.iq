@@ -5,6 +5,7 @@
 
 'use client';
 
+import { BillLink, CommitteeLink } from '@/components/shared/links/EntityLinks';
 import type {
   LobbyingPipelineInsight,
   LobbyingOrganizationActivity,
@@ -68,7 +69,8 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
       {/* Summary */}
       <div className="bg-white border-2 border-gray-900 p-4 sm:p-6">
         <h3 className="aicher-heading type-lg text-gray-900 mb-4">
-          Lobbying Pipeline: {insight.chamber} {insight.committeeName}
+          Lobbying Pipeline: {insight.chamber}{' '}
+          <CommitteeLink code={insight.committeeCode} name={insight.committeeName} />
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
@@ -162,9 +164,11 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
                     <div className="mt-2 space-y-1">
                       {alignment.matchedBills.slice(0, 3).map(bill => (
                         <div key={bill.id} className="type-xs text-gray-600">
-                          <a href={`/bill/${bill.id}`} className="text-[#3ea2d4] hover:underline">
-                            {bill.type} {bill.number}
-                          </a>
+                          <BillLink
+                            billId={bill.id}
+                            title={`${bill.type} ${bill.number}`}
+                            className="type-xs"
+                          />
                           {' — '}
                           <span className="text-gray-500">
                             {bill.title.length > 80

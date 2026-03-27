@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
+import { BillLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChainInsight, InfluenceChain } from '@/lib/intelligence/types';
 
 interface InfluenceChainCardProps {
@@ -105,7 +106,7 @@ function ChainItem({ chain }: { chain: InfluenceChain }) {
 
       {/* Chain footer */}
       <div className="flex items-center flex-wrap gap-2 mt-3 pt-3 border-t-2 border-gray-100">
-        <span className="type-xs text-gray-700">{truncatedTitle}</span>
+        <BillLink billId={chain.billId} title={truncatedTitle} className="type-xs" />
         <VoteBadge vote={chain.vote} />
         {chain.textSimilarity !== null && (
           <span className="type-xs text-gray-500">
