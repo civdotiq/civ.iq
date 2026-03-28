@@ -31,6 +31,8 @@ export default [
       '.archive/**',
       // Package build artifacts
       'packages/*/dist/**',
+      // Python virtual environment
+      '.venv/**',
     ],
   },
   ...tseslint.configs.recommended,
