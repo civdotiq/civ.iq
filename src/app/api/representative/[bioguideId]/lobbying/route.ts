@@ -155,13 +155,48 @@ export async function GET(
           return null;
         }
 
-        // Process data for response
-        const totalRelevantSpending = committeeLobbyingData.reduce(
-          (sum, committee) => sum + committee.totalSpending,
-          0
-        );
+        // De-duplicate filings across committees — a single LDA filing
+        // can match multiple committees by keyword, but its income should
+        // only be counted once for totals, company aggregation, and
+        // industry breakdown.
+        const uniqueFilingMap = new Map<
+          string,
+          {
+            id: string;
+            company: string;
+            amount: number;
+            issues: string[];
+            quarter: string;
+            year: number;
+            committees: string[];
+          }
+        >();
 
-        // Get top companies across all committees
+        committeeLobbyingData.forEach(committeeData => {
+          committeeData.filings.forEach(filing => {
+            const existing = uniqueFilingMap.get(filing.id);
+            if (!existing) {
+              uniqueFilingMap.set(filing.id, {
+                id: filing.id,
+                company: filing.company,
+                amount: filing.amount,
+                issues: filing.issues,
+                quarter: filing.quarter,
+                year: filing.year,
+                committees: [committeeData.committee],
+              });
+            } else if (!existing.committees.includes(committeeData.committee)) {
+              existing.committees.push(committeeData.committee);
+            }
+          });
+        });
+
+        const uniqueFilings = Array.from(uniqueFilingMap.values());
+
+        // Process data for response — use de-duplicated filings
+        const totalRelevantSpending = uniqueFilings.reduce((sum, filing) => sum + filing.amount, 0);
+
+        // Get top companies across all committees (de-duplicated)
         const allCompanies: Record<
           string,
           {
@@ -171,22 +206,20 @@ export async function GET(
           }
         > = {};
 
-        committeeLobbyingData.forEach(committeeData => {
-          committeeData.filings.forEach(filing => {
-            if (!allCompanies[filing.company]) {
-              allCompanies[filing.company] = {
-                totalSpending: 0,
-                committees: new Set(),
-                filings: 0,
-              };
-            }
-            const company = allCompanies[filing.company];
-            if (company) {
-              company.totalSpending += filing.amount;
-              company.committees.add(committeeData.committee);
-              company.filings += 1;
-            }
-          });
+        uniqueFilings.forEach(filing => {
+          if (!allCompanies[filing.company]) {
+            allCompanies[filing.company] = {
+              totalSpending: 0,
+              committees: new Set(),
+              filings: 0,
+            };
+          }
+          const company = allCompanies[filing.company];
+          if (company) {
+            company.totalSpending += filing.amount;
+            filing.committees.forEach(c => company.committees.add(c));
+            company.filings += 1;
+          }
         });
 
         const topCompanies = Object.entries(allCompanies)
@@ -199,26 +232,41 @@ export async function GET(
           .sort((a, b) => b.totalSpending - a.totalSpending)
           .slice(0, 10);
 
-        // Committee breakdown
-        const committeeBreakdown = committeeLobbyingData.map(committee => ({
-          committee: committee.committee,
-          totalSpending: committee.totalSpending,
-          companyCount: committee.companyCount,
-          topIssues: Array.from(new Set(committee.filings.flatMap(f => f.issues).slice(0, 5))),
-        }));
+        // Committee breakdown — use proportional attribution so committee
+        // totals sum to totalRelevantSpending. When a filing matches N
+        // committees, each committee is attributed income / N.
+        const committeeBreakdown = committeeLobbyingData.map(committeeResult => {
+          let attributedSpending = 0;
+          committeeResult.filings.forEach(filing => {
+            const uniqueFiling = uniqueFilingMap.get(filing.id);
+            const matchedCommitteeCount = uniqueFiling?.committees.length ?? 1;
+            attributedSpending += filing.amount / matchedCommitteeCount;
+          });
 
-        // Generate quarterly trend (simplified)
+          return {
+            committee: committeeResult.committee,
+            totalSpending: attributedSpending,
+            companyCount: committeeResult.companyCount,
+            topIssues: Array.from(new Set(committeeResult.filings.flatMap(f => f.issues))).slice(
+              0,
+              5
+            ),
+          };
+        });
+
+        // Generate quarterly trend from de-duplicated filings
         const currentYear = new Date().getFullYear();
+        const quarterLabels = [
+          'first_quarter',
+          'second_quarter',
+          'third_quarter',
+          'fourth_quarter',
+        ];
         const quarterlyTrend = [];
         for (let q = 1; q <= 4; q++) {
-          const quarterSpending = committeeLobbyingData.reduce((sum, committee) => {
-            return (
-              sum +
-              committee.filings
-                .filter(f => f.year === currentYear - 1 && f.quarter === `Q${q}`)
-                .reduce((qSum, f) => qSum + f.amount, 0)
-            );
-          }, 0);
+          const quarterSpending = uniqueFilings
+            .filter(f => f.year === currentYear - 1 && f.quarter === quarterLabels[q - 1])
+            .reduce((sum, f) => sum + f.amount, 0);
 
           quarterlyTrend.push({
             quarter: `Q${q}`,
@@ -227,16 +275,14 @@ export async function GET(
           });
         }
 
-        // Industry breakdown — aggregate by LDA issue labels from filings
+        // Industry breakdown — aggregate by LDA issue labels from de-duplicated filings
         const issueSpending: Record<string, number> = {};
-        committeeLobbyingData.forEach(committeeData => {
-          committeeData.filings.forEach(filing => {
-            const amount = filing.amount;
-            const issues = filing.issues.length > 0 ? filing.issues : ['Other'];
-            const perIssueAmount = amount / issues.length;
-            issues.forEach(issue => {
-              issueSpending[issue] = (issueSpending[issue] || 0) + perIssueAmount;
-            });
+        uniqueFilings.forEach(filing => {
+          const amount = filing.amount;
+          const issues = filing.issues.length > 0 ? filing.issues : ['Other'];
+          const perIssueAmount = amount / issues.length;
+          issues.forEach(issue => {
+            issueSpending[issue] = (issueSpending[issue] || 0) + perIssueAmount;
           });
         });
 

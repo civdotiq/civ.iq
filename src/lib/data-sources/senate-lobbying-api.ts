@@ -107,6 +107,7 @@ export interface CommitteeLobbyingData {
   totalSpending: number;
   companyCount: number;
   filings: Array<{
+    id: string;
     company: string;
     amount: number;
     issues: string[];
@@ -392,6 +393,7 @@ export class SenateLobbyingAPI {
           const uniqueCompanies = new Set(relevantFilings.map(filing => filing.client.name));
 
           const filings = relevantFilings.map(filing => ({
+            id: filing.id,
             company: filing.client.name,
             amount: filing.income || 0,
             issues: Array.isArray(filing.issues) ? filing.issues.map(i => i.description) : [],
@@ -403,7 +405,7 @@ export class SenateLobbyingAPI {
             committee,
             totalSpending,
             companyCount: uniqueCompanies.size,
-            filings: filings.sort((a, b) => b.amount - a.amount).slice(0, 10), // Top 10 by spending
+            filings: filings.sort((a, b) => b.amount - a.amount),
           });
         }
       }
