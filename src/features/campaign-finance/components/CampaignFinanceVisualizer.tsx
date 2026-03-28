@@ -416,7 +416,7 @@ export function CampaignFinanceVisualizer({
     individualContributions > 0 ||
     (financeData?.top_contributors && financeData.top_contributors.length > 0);
 
-  if (isLoadingComprehensive && !financeData) {
+  if (isLoadingComprehensive && !comprehensiveData && !hasData) {
     return (
       <div className="aicher-card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance</h3>
