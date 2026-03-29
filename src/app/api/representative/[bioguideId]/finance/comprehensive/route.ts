@@ -597,7 +597,14 @@ export async function GET(
     }
 
     // Calculate Interest Group Baskets
-    const interestGroupBaskets = categorizeIntoBaskets(contributions);
+    // Use individual contributions (with employer/occupation data) for accurate
+    // sector classification. Raw contributions include committee transfers and
+    // PAC-to-PAC transfers that lack employer data and misclassify as "Other".
+    const basketInput =
+      individualContributionsForIndustry.length > 0
+        ? individualContributionsForIndustry
+        : contributions;
+    const interestGroupBaskets = categorizeIntoBaskets(basketInput);
     const interestGroupMetrics = getInterestGroupMetrics(interestGroupBaskets);
 
     logger.info('[Comprehensive Finance API] Interest Group data processed', {

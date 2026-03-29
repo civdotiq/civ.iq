@@ -18,7 +18,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { IndustrySector, categorizeContribution } from './industry-taxonomy';
+import { IndustrySector, categorizeContributionSmart } from './industry-taxonomy';
 
 /**
  * Interest Group Basket - Citizen-friendly categorization
@@ -212,10 +212,12 @@ export function categorizeIntoBaskets(
       continue; // Don't double-count as both grassroots and sector
     }
 
-    // Categorize by industry sector
-    const categorization = categorizeContribution(
+    // Categorize by industry sector (smart: falls back to contributor name matching
+    // when employer/occupation are missing, e.g. for PAC contributions)
+    const categorization = categorizeContributionSmart(
       contrib.contributor_employer,
-      contrib.contributor_occupation
+      contrib.contributor_occupation,
+      contrib.contributor_name
     );
 
     // Map sector to interest group basket
