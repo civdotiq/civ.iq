@@ -78,24 +78,38 @@ export async function resolveCommitteeRecipients(
     // Try to resolve recipient_id as a committee ID to find candidate_ids
     let candidateId: string | null = null;
     let bioguideId: string | null = null;
+    let fecParty: string | null = null;
 
     // First check if recipient_id looks like a committee ID (starts with C)
     if (recipientId.startsWith('C')) {
       try {
         const committeeInfo = await fecApiService.getCommitteeInfo(recipientId);
-        if (committeeInfo?.candidate_ids && committeeInfo.candidate_ids.length > 0) {
-          // Try each candidate_id for a bioguide match
-          for (const cId of committeeInfo.candidate_ids) {
-            const bgId = getBioguideFromFEC(cId);
-            if (bgId) {
-              candidateId = cId;
-              bioguideId = bgId;
-              break;
-            }
+        if (committeeInfo) {
+          // Extract party from FEC committee data
+          if (committeeInfo.party) {
+            const partyMap: Record<string, string> = {
+              DEM: 'Democrat',
+              REP: 'Republican',
+              IND: 'Independent',
+              LIB: 'Libertarian',
+              GRE: 'Green',
+            };
+            fecParty = partyMap[committeeInfo.party] ?? committeeInfo.party;
           }
-          // Even without bioguide match, record the candidate ID
-          if (!candidateId && committeeInfo.candidate_ids[0]) {
-            candidateId = committeeInfo.candidate_ids[0];
+          if (committeeInfo.candidate_ids && committeeInfo.candidate_ids.length > 0) {
+            // Try each candidate_id for a bioguide match
+            for (const cId of committeeInfo.candidate_ids) {
+              const bgId = getBioguideFromFEC(cId);
+              if (bgId) {
+                candidateId = cId;
+                bioguideId = bgId;
+                break;
+              }
+            }
+            // Even without bioguide match, record the candidate ID
+            if (!candidateId && committeeInfo.candidate_ids[0]) {
+              candidateId = committeeInfo.candidate_ids[0];
+            }
           }
         }
       } catch {
@@ -113,7 +127,7 @@ export async function resolveCommitteeRecipients(
     }
 
     // Enrich with representative details from our mapping
-    const party: string | null = null;
+    const party: string | null = fecParty;
     let state: string | null = null;
     let chamber: 'House' | 'Senate' | null = null;
     let district: string | null = null;
@@ -128,11 +142,8 @@ export async function resolveCommitteeRecipients(
         civiqProfileLink = `/representative/${bioguideId}`;
       }
 
-      // Get party from the full bioguide mapping
       const fullMapping = bioguideToFECMapping[bioguideId];
       if (fullMapping) {
-        // Party isn't in our mapping, but we can infer from the committee info
-        // or leave it null to be filled by the front-end
         state = state ?? fullMapping.state;
         chamber = chamber ?? (fullMapping.office === 'H' ? 'House' : 'Senate');
         district = district ?? fullMapping.district ?? null;

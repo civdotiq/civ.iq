@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
@@ -288,12 +289,11 @@ async function CommitteeContent({
                   size="lg"
                 />
                 <div>
-                  <Link
-                    href={`/representative/${committee.leadership.chair.representative.bioguideId}`}
-                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
-                  >
-                    {committee.leadership.chair.representative.name}
-                  </Link>
+                  <RepLink
+                    bioguideId={committee.leadership.chair.representative.bioguideId}
+                    name={committee.leadership.chair.representative.name}
+                    className="text-lg font-medium"
+                  />
                   <p className="text-gray-600">
                     {committee.leadership.chair.representative.party} •{' '}
                     {committee.leadership.chair.representative.state}
@@ -322,12 +322,11 @@ async function CommitteeContent({
                   size="lg"
                 />
                 <div>
-                  <Link
-                    href={`/representative/${committee.leadership.rankingMember.representative.bioguideId}`}
-                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
-                  >
-                    {committee.leadership.rankingMember.representative.name}
-                  </Link>
+                  <RepLink
+                    bioguideId={committee.leadership.rankingMember.representative.bioguideId}
+                    name={committee.leadership.rankingMember.representative.name}
+                    className="text-lg font-medium"
+                  />
                   <p className="text-gray-600">
                     {committee.leadership.rankingMember.representative.party} •{' '}
                     {committee.leadership.rankingMember.representative.state}

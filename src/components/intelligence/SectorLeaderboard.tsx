@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorLeaderboardResponse, SectorLeaderboardEntry } from '@/lib/intelligence/types';
 
@@ -241,12 +242,11 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
                 <tr key={entry.bioguideId} className="hover:bg-gray-50">
                   <td className="type-xs text-gray-400 p-2">{entry.rank}</td>
                   <td className="type-xs p-2">
-                    <Link
-                      href={`/representative/${entry.bioguideId}?tab=intelligence`}
-                      className="text-[#3ea2d4] hover:underline font-medium"
-                    >
-                      {entry.name}
-                    </Link>
+                    <RepLink
+                      bioguideId={entry.bioguideId}
+                      name={entry.name}
+                      className="font-medium"
+                    />
                   </td>
                   <td className="p-2 text-center">
                     <span

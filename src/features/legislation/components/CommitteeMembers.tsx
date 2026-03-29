@@ -8,6 +8,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -434,12 +435,11 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                         className="mr-3"
                       />
                       <div>
-                        <Link
-                          href={`/representative/${member.representative.bioguideId}`}
-                          className="text-sm font-medium text-civiq-blue hover:text-civiq-blue"
-                        >
-                          {member.representative.name}
-                        </Link>
+                        <RepLink
+                          bioguideId={member.representative.bioguideId}
+                          name={member.representative.name}
+                          className="text-sm font-medium"
+                        />
                         <div className="text-xs text-gray-500">{member.representative.title}</div>
                       </div>
                     </div>

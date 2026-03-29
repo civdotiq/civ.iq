@@ -13,7 +13,7 @@ import { MetricCard } from '@/features/campaign-finance/components/MetricCard';
 import { SortableDataTable } from '@/features/campaign-finance/components/SortableDataTable';
 import { PACVoteTable } from '@/components/intelligence/PACVoteTable';
 import { InsightCard, pacVoteKeyStats } from '@/components/intelligence/InsightCard';
-import { SectorLink } from '@/components/shared/links/EntityLinks';
+import { SectorLink, LobbyLink } from '@/components/shared/links/EntityLinks';
 import type { CommitteeProfile, ResolvedRecipient } from '@/types/influence';
 import type { PACVoteInsight } from '@/lib/intelligence/types';
 
@@ -94,6 +94,29 @@ export function CommitteeProfileClient({
     `/api/intelligence/pac/${committee.committeeId}`,
     fetcher,
     { revalidateOnFocus: false }
+  );
+
+  // Search for related lobbying registrant by deriving org name from PAC name
+  const lobbySearchName = committee.name
+    .replace(/\s+(PAC|POLITICAL ACTION COMMITTEE|FUND|COMMITTEE)$/i, '')
+    .replace(/\s+(FOR GOOD GOVERNMENT|FOR AMERICA|EMPLOYEES?)$/i, '')
+    .trim();
+  const { data: lobbyMatch } = useSWR<{
+    registrantId: string;
+    name: string;
+    totalSpending: number;
+    issueAreas: Array<{ code: string; label: string }>;
+  } | null>(
+    lobbySearchName.length > 5
+      ? `/api/lobby/search?q=${encodeURIComponent(lobbySearchName)}`
+      : null,
+    async (url: string) => {
+      // Search Senate LDA for registrants matching this name
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
   const tableData = recipients.map(toTableRow);
@@ -282,6 +305,46 @@ export function CommitteeProfileClient({
             keyStats={pacVoteKeyStats(pacInsight)}
           />
           <PACVoteTable insight={pacInsight} />
+        </div>
+      )}
+
+      {/* Related Lobbying Activity */}
+      {lobbyMatch && (
+        <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Related lobbying activity
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            The organization behind this PAC also files lobbying disclosures with the U.S. Senate.
+          </p>
+
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <LobbyLink
+              registrantId={lobbyMatch.registrantId}
+              name={lobbyMatch.name}
+              className="font-medium"
+            />
+            {lobbyMatch.totalSpending > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {lobbyMatch.totalSpending >= 1_000_000
+                  ? `$${(lobbyMatch.totalSpending / 1_000_000).toFixed(1)}M`
+                  : `$${(lobbyMatch.totalSpending / 1_000).toFixed(0)}K`}{' '}
+                in reported lobbying spending
+              </p>
+            )}
+            {lobbyMatch.issueAreas.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {lobbyMatch.issueAreas.map(i => (
+                  <span
+                    key={i.code}
+                    className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                  >
+                    {i.label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

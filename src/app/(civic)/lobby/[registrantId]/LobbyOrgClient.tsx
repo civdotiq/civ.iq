@@ -1,6 +1,6 @@
 'use client';
 
-import { CommitteeLink, PACLink } from '@/components/shared/links/EntityLinks';
+import { CommitteeLink, PACLink, BillLink, RepLink } from '@/components/shared/links/EntityLinks';
 import { DataSourceAttribution } from '@/components/shared/ui/DataSourceAttribution';
 import type { LobbyingOrgProfile } from '@/app/api/lobby/[registrantId]/route';
 
@@ -15,15 +15,17 @@ interface Props {
 }
 
 export function LobbyOrgClient({ profile }: Props) {
-  const hasEnoughData =
+  const sectionCount =
     (profile.issueAreas.length > 0 ? 1 : 0) +
-      (profile.governmentContacts.length > 0 ? 1 : 0) +
-      (profile.yearlySpending.length > 1 ? 1 : 0) +
-      (profile.linkedPAC ? 1 : 0) +
-      (profile.topClients.length > 0 ? 1 : 0) >=
-    3;
+    (profile.governmentContacts.length > 0 ? 1 : 0) +
+    (profile.yearlySpending.length > 1 ? 1 : 0) +
+    (profile.linkedPAC ? 1 : 0) +
+    (profile.topClients.length > 0 ? 1 : 0) +
+    (profile.relatedBills.length > 0 ? 1 : 0) +
+    (profile.pacRecipients.length > 0 ? 1 : 0) +
+    (profile.enforcement && profile.enforcement.actionCount > 0 ? 1 : 0);
 
-  if (!hasEnoughData) {
+  if (sectionCount < 3) {
     return <InfoCard profile={profile} />;
   }
 
@@ -31,9 +33,14 @@ export function LobbyOrgClient({ profile }: Props) {
     <div className="space-y-8">
       <IdentityHeader profile={profile} />
       {profile.issueAreas.length > 0 && <IssuesSection profile={profile} />}
+      {profile.relatedBills.length > 0 && <RelatedBillsSection profile={profile} />}
       {profile.governmentContacts.length > 0 && <CongressionalActivity profile={profile} />}
+      {profile.pacRecipients.length > 0 && <PACRecipientsSection profile={profile} />}
       {profile.linkedPAC && profile.linkedPAC.confidence >= 0.6 && (
         <PACActivity profile={profile} />
+      )}
+      {profile.enforcement && profile.enforcement.actionCount > 0 && (
+        <EnforcementSection profile={profile} />
       )}
       {profile.yearlySpending.length > 1 && <SpendingChart profile={profile} />}
       {profile.topClients.length > 0 && <TopClients profile={profile} />}
@@ -178,8 +185,9 @@ function IssuesSection({ profile }: Props) {
         Issues and policy areas
       </h2>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        These are the policy areas {profile.name} reported lobbying on in its filings with the U.S.
-        Senate.
+        These are the topics {profile.name} is trying to influence in Congress. When an organization
+        lobbies, it reports which policy areas it focused on. This tells you what legislation and
+        government decisions this organization cares about.
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -193,6 +201,12 @@ function IssuesSection({ profile }: Props) {
           </span>
         ))}
       </div>
+
+      {profile.issueAreas.length > 0 && profile.relatedBills.length === 0 && (
+        <p className="text-xs text-gray-400 mt-3">
+          No matching bills found in the current Congress for these issue areas.
+        </p>
+      )}
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
@@ -215,8 +229,9 @@ function CongressionalActivity({ profile }: Props) {
         Congressional activity
       </h2>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        These are the committees and agencies {profile.name} reported contacting in its lobbying
-        filings. This is a self-reported field in the organization&apos;s own filings.
+        Congressional committees write and vote on legislation. When {profile.name} contacts a
+        committee, it is trying to shape the bills that committee is working on. These are the parts
+        of Congress and the federal government this organization reported engaging with.
       </p>
 
       {committees.length > 0 && (
@@ -375,6 +390,182 @@ function TopClients({ profile }: Props) {
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
         sourceUrl="https://lda.senate.gov"
+        reliability="high"
+        variant="compact"
+        className="mt-4"
+      />
+    </div>
+  );
+}
+
+function RelatedBillsSection({ profile }: Props) {
+  return (
+    <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        Related legislation
+      </h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        These are bills currently in Congress that match the policy areas {profile.name} reported
+        lobbying on. This shows what legislation could be affected by this organization&apos;s
+        lobbying activity.
+      </p>
+
+      <div className="space-y-3">
+        {profile.relatedBills.map(bill => (
+          <div key={bill.billId} className="p-3 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <BillLink
+                billId={bill.billId}
+                title={`${bill.type}. ${bill.number}`}
+                className="font-semibold text-sm"
+              />
+              {bill.policyArea && (
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">
+                  {bill.policyArea}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-800 dark:text-gray-300 line-clamp-2 mb-1">
+              {bill.title}
+            </p>
+            {bill.sponsorName && (
+              <p className="text-xs text-gray-500">
+                Sponsor:{' '}
+                <RepLink
+                  bioguideId={bill.sponsorBioguideId}
+                  name={bill.sponsorName}
+                  className="text-xs"
+                />
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <DataSourceAttribution
+        sourceName="Congress.gov"
+        sourceUrl="https://congress.gov"
+        reliability="high"
+        variant="compact"
+        className="mt-4"
+      />
+    </div>
+  );
+}
+
+function PACRecipientsSection({ profile }: Props) {
+  return (
+    <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">PAC recipients</h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        A political action committee (PAC) collects money from an organization&apos;s employees and
+        members, then donates it to political candidates. These are the members of Congress who
+        received campaign money from {profile.name}&apos;s PAC. You can click any name to see their
+        full profile, including how they voted on issues this organization lobbied on.
+      </p>
+
+      <div className="space-y-1">
+        {profile.pacRecipients.map(r => (
+          <div
+            key={r.recipientName}
+            className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+          >
+            <div className="flex items-center gap-2">
+              <RepLink
+                bioguideId={r.bioguideId}
+                name={r.recipientName}
+                className="text-sm font-medium"
+              />
+              {r.party && (
+                <span
+                  className={`px-1.5 py-0.5 text-xs font-bold text-white ${
+                    r.party === 'Democratic' || r.party === 'Democrat'
+                      ? 'bg-[#0a9338]'
+                      : r.party === 'Republican'
+                        ? 'bg-[#e11d07]'
+                        : 'bg-gray-500'
+                  }`}
+                >
+                  {r.party === 'Democratic' || r.party === 'Democrat'
+                    ? 'D'
+                    : r.party === 'Republican'
+                      ? 'R'
+                      : 'I'}
+                </span>
+              )}
+              {r.state && <span className="text-xs text-gray-500">{r.state}</span>}
+            </div>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {formatCurrency(r.totalAmount)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <DataSourceAttribution
+        sourceName="Federal Election Commission"
+        sourceUrl="https://www.fec.gov"
+        reliability="high"
+        variant="compact"
+        className="mt-4"
+      />
+    </div>
+  );
+}
+
+function EnforcementSection({ profile }: Props) {
+  if (!profile.enforcement) return null;
+
+  return (
+    <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        Enforcement activity
+      </h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Federal agencies like the EPA and OSHA enforce health, safety, and environmental laws. These
+        are enforcement actions &mdash; investigations, fines, or violations &mdash; involving{' '}
+        {profile.name}. This shows whether the organization that lobbies Congress is also subject to
+        government regulation. Enforcement actions may be resolved without a finding of wrongdoing.
+      </p>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <span className="text-xs tracking-wider text-gray-500 uppercase">Actions</span>
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {profile.enforcement.actionCount}
+          </p>
+        </div>
+        <div>
+          <span className="text-xs tracking-wider text-gray-500 uppercase">Agencies</span>
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {profile.enforcement.topActions.length}
+          </p>
+        </div>
+      </div>
+
+      {profile.enforcement.topActions.length > 0 && (
+        <div className="space-y-1 mb-4">
+          {profile.enforcement.topActions.map(a => (
+            <div
+              key={a.agency}
+              className="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800 last:border-0"
+            >
+              <span className="text-sm text-gray-900 dark:text-gray-100">{a.agency}</span>
+              <span className="text-xs text-gray-500">{a.count} actions</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {profile.enforcement.narrative && (
+        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          {profile.enforcement.narrative}
+        </p>
+      )}
+
+      <DataSourceAttribution
+        sourceName="EPA ECHO, OSHA"
+        sourceUrl="https://echo.epa.gov"
         reliability="high"
         variant="compact"
         className="mt-4"

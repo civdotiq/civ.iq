@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { sanitizeBillHtml } from '@/utils/sanitize';
 import Link from 'next/link';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import {
   ExternalLink,
   Calendar,
@@ -655,12 +656,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   size="md"
                 />
                 <div>
-                  <Link
-                    href={`/representative/${bill.sponsor.representative.bioguideId}`}
-                    className="text-lg font-medium text-civiq-blue hover:text-civiq-blue"
-                  >
-                    {bill.sponsor.representative.name}
-                  </Link>
+                  <RepLink
+                    bioguideId={bill.sponsor.representative.bioguideId}
+                    name={bill.sponsor.representative.name}
+                    className="text-lg font-medium"
+                  />
                   <p className="text-gray-600">
                     {bill.sponsor.representative.party === 'D'
                       ? 'Democrat'
@@ -700,12 +700,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/representative/${cosponsor.representative.bioguideId}`}
-                          className="text-sm font-medium text-civiq-blue hover:text-civiq-blue truncate block"
-                        >
-                          {cosponsor.representative.name}
-                        </Link>
+                        <RepLink
+                          bioguideId={cosponsor.representative.bioguideId}
+                          name={cosponsor.representative.name}
+                          className="text-sm font-medium truncate block"
+                        />
                         <p className="text-xs text-gray-500 truncate">
                           {cosponsor.representative.party === 'D'
                             ? 'D'

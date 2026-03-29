@@ -18,6 +18,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import { CommitteeLink } from '@/components/shared/links/EntityLinks';
 
 interface ProfileOverviewProps {
   representative: EnhancedRepresentative;
@@ -303,7 +304,14 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
               {representative.committees.map((committee, index) => (
                 <div key={index} className="flex items-start justify-between p-3 bg-white">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{committee.name}</div>
+                    <CommitteeLink
+                      code={
+                        ((committee as Record<string, unknown>).thomas_id as string | undefined) ??
+                        null
+                      }
+                      name={committee.name}
+                      className="font-medium"
+                    />
                     {committee.role && (
                       <div className="text-sm text-civiq-blue font-medium">{committee.role}</div>
                     )}
