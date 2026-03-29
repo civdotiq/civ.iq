@@ -6,7 +6,7 @@ import { SectorLeaderboard } from '@/components/intelligence/SectorLeaderboard';
 import { CascadeSection } from '@/components/mesh/CascadeSection';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
-import { CommitteeLink, BillLink } from '@/components/shared/links/EntityLinks';
+import { CommitteeLink, BillLink, PACLink, LobbyLink } from '@/components/shared/links/EntityLinks';
 import { DataSourceAttribution } from '@/components/shared/ui/DataSourceAttribution';
 
 interface SectorBill {
@@ -36,6 +36,30 @@ interface IndustryConnectionsResponse {
     dataSources: string[];
     joinType: string;
     dataQuality: 'complete' | 'partial' | 'degraded';
+  };
+}
+
+interface IndustryOrganizationsResponse {
+  topPACs: Array<{
+    committeeId: string;
+    name: string;
+    sector: string;
+    totalDisbursements: number;
+  }>;
+  topLobbyingOrgs: Array<{
+    registrantId: string;
+    name: string;
+    totalSpending: number;
+    filingCount: number;
+  }>;
+  metrics: {
+    totalLobbyingSpending: number;
+    activePACCount: number;
+    activeLobbyingOrgCount: number;
+  };
+  metadata: {
+    generatedAt: string;
+    dataSources: string[];
   };
 }
 
@@ -88,6 +112,12 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
     { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
+  const { data: orgsData } = useSWR<IndustryOrganizationsResponse>(
+    `/api/industry/${encodeURIComponent(sector)}/organizations`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
+  );
+
   return (
     <div className="space-y-8">
       {/* Sector overview */}
@@ -103,6 +133,36 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
             Federal legislation, congressional committees, lobbying organizations, and enforcement
             activity related to the {displayName.toLowerCase()} sector.
           </p>
+        )}
+
+        {orgsData?.metrics && (
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div>
+              <span className="text-xs tracking-wider text-gray-500 uppercase">Active PACs</span>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {orgsData.metrics.activePACCount}
+              </p>
+            </div>
+            <div>
+              <span className="text-xs tracking-wider text-gray-500 uppercase">Lobbying orgs</span>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {orgsData.metrics.activeLobbyingOrgCount}
+              </p>
+            </div>
+            <div>
+              <span className="text-xs tracking-wider text-gray-500 uppercase">
+                Lobbying spending
+              </span>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                $
+                {orgsData.metrics.totalLobbyingSpending >= 1_000_000
+                  ? `${(orgsData.metrics.totalLobbyingSpending / 1_000_000).toFixed(1)}M`
+                  : orgsData.metrics.totalLobbyingSpending >= 1_000
+                    ? `${(orgsData.metrics.totalLobbyingSpending / 1_000).toFixed(0)}K`
+                    : orgsData.metrics.totalLobbyingSpending.toLocaleString()}
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
@@ -158,6 +218,91 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Major Organizations */}
+          {orgsData && (orgsData.topPACs.length > 0 || orgsData.topLobbyingOrgs.length > 0) && (
+            <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Major organizations
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                These are the largest political action committees and lobbying organizations active
+                in {displayName.toLowerCase()}, based on public FEC and Senate disclosure filings.
+              </p>
+
+              {orgsData.topPACs.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">
+                    Top PACs
+                  </h3>
+                  <div className="space-y-1">
+                    {orgsData.topPACs.map(pac => (
+                      <div
+                        key={pac.committeeId}
+                        className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      >
+                        <PACLink
+                          committeeId={pac.committeeId}
+                          name={pac.name}
+                          className="text-sm font-medium"
+                        />
+                        {pac.totalDisbursements > 0 && (
+                          <span className="text-xs text-gray-500 tabular-nums">
+                            $
+                            {pac.totalDisbursements >= 1_000_000
+                              ? `${(pac.totalDisbursements / 1_000_000).toFixed(1)}M`
+                              : pac.totalDisbursements >= 1_000
+                                ? `${(pac.totalDisbursements / 1_000).toFixed(0)}K`
+                                : pac.totalDisbursements.toLocaleString()}{' '}
+                            disbursed
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {orgsData.topLobbyingOrgs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">
+                    Top lobbying organizations
+                  </h3>
+                  <div className="space-y-1">
+                    {orgsData.topLobbyingOrgs.map(org => (
+                      <div
+                        key={org.registrantId}
+                        className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      >
+                        <LobbyLink
+                          registrantId={org.registrantId}
+                          name={org.name}
+                          className="text-sm font-medium"
+                        />
+                        <span className="text-xs text-gray-500 tabular-nums">
+                          $
+                          {org.totalSpending >= 1_000_000
+                            ? `${(org.totalSpending / 1_000_000).toFixed(1)}M`
+                            : org.totalSpending >= 1_000
+                              ? `${(org.totalSpending / 1_000).toFixed(0)}K`
+                              : org.totalSpending.toLocaleString()}{' '}
+                          · {org.filingCount} filing{org.filingCount !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <DataSourceAttribution
+                sourceName="FEC, Senate LDA"
+                sourceUrl="https://www.fec.gov"
+                reliability="high"
+                variant="compact"
+                className="mt-4"
+              />
             </div>
           )}
 
