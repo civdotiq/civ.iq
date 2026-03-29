@@ -80,6 +80,69 @@ async function getCommitteeProfile(
   }
 }
 
+/** Derive the parent organization name from a PAC name by stripping common suffixes. */
+function deriveParentOrgName(pacName: string): string {
+  return pacName
+    .replace(/\s+(PAC|POLITICAL ACTION COMMITTEE|FUND|COMMITTEE)$/i, '')
+    .replace(/\s+(FOR GOOD GOVERNMENT|FOR AMERICA|EMPLOYEES?)$/i, '')
+    .trim();
+}
+
+/** Fetch a short Wikipedia summary for the parent organization behind a PAC. */
+async function fetchParentOrgSummary(pacName: string): Promise<string | null> {
+  const orgName = deriveParentOrgName(pacName);
+  if (orgName.length < 4 || orgName === pacName) return null;
+
+  try {
+    const searchUrl =
+      `https://en.wikipedia.org/w/api.php?` +
+      new URLSearchParams({
+        action: 'query',
+        format: 'json',
+        list: 'search',
+        srsearch: orgName,
+        srlimit: '3',
+        origin: '*',
+      });
+
+    const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(5_000) });
+    if (!searchRes.ok) return null;
+
+    const searchData = (await searchRes.json()) as {
+      query?: { search?: Array<{ title: string }> };
+    };
+    const title = searchData.query?.search?.[0]?.title;
+    if (!title) return null;
+
+    const extractUrl =
+      `https://en.wikipedia.org/w/api.php?` +
+      new URLSearchParams({
+        action: 'query',
+        format: 'json',
+        prop: 'extracts',
+        exintro: 'true',
+        explaintext: 'true',
+        titles: title,
+        origin: '*',
+      });
+
+    const extractRes = await fetch(extractUrl, { signal: AbortSignal.timeout(5_000) });
+    if (!extractRes.ok) return null;
+
+    const extractData = (await extractRes.json()) as {
+      query?: { pages?: Record<string, { extract?: string; missing?: boolean }> };
+    };
+    const pages = extractData.query?.pages;
+    if (!pages) return null;
+    const page = Object.values(pages)[0];
+    if (!page || page.missing) return null;
+
+    return page.extract?.slice(0, 400) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function getPACTypeExplanation(designation: string | undefined): string | null {
   if (!designation) return null;
   switch (designation) {
@@ -108,9 +171,10 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   const profile = await getCommitteeProfile(committeeId, cycle);
   if (!profile) notFound();
 
-  // Sector classification
+  // Sector classification + Wikipedia summary for parent org (parallel)
   const classification = categorizePACByName(profile.committee.name);
   const pacTypeExplanation = getPACTypeExplanation(profile.committee.designation);
+  const parentOrgSummary = await fetchParentOrgSummary(profile.committee.name);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
@@ -142,6 +206,7 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
           profile={profile}
           sector={classification?.sector ?? null}
           pacTypeExplanation={pacTypeExplanation}
+          parentOrgSummary={parentOrgSummary}
         />
 
         <OpenDataStrip apiUrl={`/api/influence/${committeeId}?cycle=${cycle}`} />

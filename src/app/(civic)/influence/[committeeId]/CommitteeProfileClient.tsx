@@ -79,6 +79,7 @@ interface CommitteeProfileClientProps {
   profile: CommitteeProfile;
   sector?: string | null;
   pacTypeExplanation?: string | null;
+  parentOrgSummary?: string | null;
 }
 
 const fetcher = (url: string) => fetch(url).then(r => (r.ok ? r.json() : null));
@@ -87,6 +88,7 @@ export function CommitteeProfileClient({
   profile,
   sector,
   pacTypeExplanation,
+  parentOrgSummary,
 }: CommitteeProfileClientProps) {
   const { committee, totals, recipients, metadata } = profile;
 
@@ -208,7 +210,7 @@ export function CommitteeProfileClient({
       />
 
       {/* Sector & PAC Type */}
-      {(sector || pacTypeExplanation) && (
+      {(sector || pacTypeExplanation || parentOrgSummary) && (
         <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
           {sector && (
             <div className="mb-3">
@@ -220,6 +222,12 @@ export function CommitteeProfileClient({
           )}
           {pacTypeExplanation && (
             <p className="text-sm text-gray-600 dark:text-gray-400">{pacTypeExplanation}</p>
+          )}
+          {parentOrgSummary && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
+              {parentOrgSummary}
+              <span className="text-xs text-gray-400 ml-1">— Wikipedia</span>
+            </p>
           )}
         </div>
       )}
@@ -296,9 +304,19 @@ export function CommitteeProfileClient({
       {/* Party Breakdown Chart - only show if we have party data */}
       {linkedRecipients.length > 0 && <RecipientsByParty recipients={linkedRecipients} />}
 
-      {/* PAC Vote Intelligence */}
+      {/* Voting alignment */}
       {pacInsight && pacInsight.recipientVotes && (
         <div className="space-y-4">
+          <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Voting alignment
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              This shows how legislators who received contributions from this PAC voted on bills
+              related to the PAC&apos;s policy area, compared to the overall average. Alignment does
+              not prove influence — it shows a pattern worth understanding.
+            </p>
+          </div>
           <InsightCard
             title="PAC Vote Tracing"
             insight={pacInsight}
