@@ -40,14 +40,27 @@ const makeLobbyingData = () => ({
     totalRelevantSpending: 5_000_000,
     affectedCommittees: 3,
     topCompanies: [
-      { name: 'Acme Corp', totalSpending: 2_000_000, committees: ['Energy'], recentFilings: 5 },
+      {
+        name: 'Acme Corp',
+        registrantId: '301',
+        totalSpending: 2_000_000,
+        committees: ['Energy'],
+        recentFilings: 5,
+      },
       {
         name: 'Tech Inc',
+        registrantId: '302',
         totalSpending: 1_500_000,
         committees: ['Commerce', 'Energy'],
         recentFilings: 3,
       },
-      { name: 'Zero Corp', totalSpending: 0, committees: ['Energy'], recentFilings: 1 },
+      {
+        name: 'Zero Corp',
+        registrantId: '303',
+        totalSpending: 0,
+        committees: ['Energy'],
+        recentFilings: 1,
+      },
     ],
     committeeBreakdown: [
       {
@@ -266,10 +279,10 @@ describe('LobbyingTab', () => {
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText(/filing-only activity/)).toBeInTheDocument();
-    // Zero Corp is a link in the collapsible section
+    // Zero Corp links to internal lobby profile page
     const zeroCorp = screen.getByText('Zero Corp');
     expect(zeroCorp.tagName).toBe('A');
-    expect(zeroCorp).toHaveAttribute('href', expect.stringContaining('lda.senate.gov'));
+    expect(zeroCorp).toHaveAttribute('href', '/lobby/303');
   });
 
   it('renders issue tags in committee breakdown', () => {
@@ -319,7 +332,7 @@ describe('LobbyingTab', () => {
     expect(ldaLink).toHaveAttribute('href', 'https://lda.senate.gov/filings/public/filing/search/');
   });
 
-  it('links organization names to Senate LDA search', () => {
+  it('links organization names to internal lobby profile', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },
       { data: undefined, error: undefined, isLoading: false }
@@ -327,8 +340,7 @@ describe('LobbyingTab', () => {
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     const acmeLink = screen.getByText('Acme Corp');
     expect(acmeLink.tagName).toBe('A');
-    expect(acmeLink).toHaveAttribute('href', expect.stringContaining('lda.senate.gov'));
-    expect(acmeLink).toHaveAttribute('href', expect.stringContaining('Acme'));
+    expect(acmeLink).toHaveAttribute('href', '/lobby/301');
   });
 
   it('hides industry breakdown when only Other category exists', () => {

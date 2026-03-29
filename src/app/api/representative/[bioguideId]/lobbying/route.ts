@@ -23,6 +23,7 @@ interface RepresentativeLobbyingData {
     affectedCommittees: number;
     topCompanies: Array<{
       name: string;
+      registrantId: string | null;
       totalSpending: number;
       committees: string[];
       recentFilings: number;
@@ -164,6 +165,7 @@ export async function GET(
           {
             id: string;
             company: string;
+            registrantId: string;
             amount: number;
             issues: string[];
             quarter: string;
@@ -179,6 +181,7 @@ export async function GET(
               uniqueFilingMap.set(filing.id, {
                 id: filing.id,
                 company: filing.company,
+                registrantId: filing.registrantId,
                 amount: filing.amount,
                 issues: filing.issues,
                 quarter: filing.quarter,
@@ -203,6 +206,7 @@ export async function GET(
             totalSpending: number;
             committees: Set<string>;
             filings: number;
+            registrantId: string | null;
           }
         > = {};
 
@@ -212,6 +216,7 @@ export async function GET(
               totalSpending: 0,
               committees: new Set(),
               filings: 0,
+              registrantId: filing.registrantId ?? null,
             };
           }
           const company = allCompanies[filing.company];
@@ -219,12 +224,17 @@ export async function GET(
             company.totalSpending += filing.amount;
             filing.committees.forEach(c => company.committees.add(c));
             company.filings += 1;
+            // Keep the first non-null registrantId we see
+            if (!company.registrantId && filing.registrantId) {
+              company.registrantId = filing.registrantId;
+            }
           }
         });
 
         const topCompanies = Object.entries(allCompanies)
           .map(([name, data]) => ({
             name,
+            registrantId: data.registrantId,
             totalSpending: data.totalSpending,
             committees: Array.from(data.committees),
             recentFilings: data.filings,

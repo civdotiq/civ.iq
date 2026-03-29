@@ -10,6 +10,7 @@ import useSWR from 'swr';
 import { MoneyFlowChain } from '@/components/intelligence/MoneyFlowChain';
 import { InsightDisclaimer } from '@/components/intelligence/InsightDisclaimer';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { LobbyLink } from '@/components/shared/links/EntityLinks';
 import type { InfluenceChainInsight } from '@/lib/intelligence/types';
 
 interface LobbyingTabProps {
@@ -19,6 +20,7 @@ interface LobbyingTabProps {
 
 interface LobbyingCompany {
   name: string;
+  registrantId: string | null;
   totalSpending: number;
   committees: string[];
   recentFilings: number;
@@ -310,14 +312,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                           <span className="type-xs text-gray-400 aicher-heading flex-shrink-0">
                             #{i + 1}
                           </span>
-                          <a
-                            href={ldaSearchUrl(company.name)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="type-sm font-medium text-[#3ea2d4] hover:underline break-words"
-                          >
-                            {company.name}
-                          </a>
+                          <LobbyLink
+                            registrantId={company.registrantId}
+                            name={company.name}
+                            className="type-sm font-medium break-words"
+                          />
                         </div>
                         <span className="type-sm font-medium text-gray-900 aicher-heading-wide flex-shrink-0">
                           {formatCompact(company.totalSpending)}
@@ -367,14 +366,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                           key={company.name}
                           className="flex items-center justify-between py-1 border-t border-gray-100"
                         >
-                          <a
-                            href={ldaSearchUrl(company.name)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="type-xs text-[#3ea2d4] hover:underline"
-                          >
-                            {company.name}
-                          </a>
+                          <LobbyLink
+                            registrantId={company.registrantId}
+                            name={company.name}
+                            className="type-xs"
+                          />
                           <a
                             href={ldaSearchUrl(company.name)}
                             target="_blank"

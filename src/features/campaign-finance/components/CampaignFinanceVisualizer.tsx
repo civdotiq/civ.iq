@@ -31,6 +31,7 @@ import { StockTradesSection } from './StockTradesSection';
 import { SecFilingsSection } from './SecFilingsSection';
 import { TradeSectorBreakdown } from '@/components/intelligence/TradeSectorBreakdown';
 import { StockTradeRankBadge } from '@/components/intelligence/StockTradeRankBadge';
+import { PACLink } from '@/components/shared/links/EntityLinks';
 
 // Chart colors - using centralized brand palette
 const COLORS = CHART_COLORS;
@@ -1524,18 +1525,7 @@ export function CampaignFinanceVisualizer({
                             <tr key={idx} className="border-b">
                               <td className="py-2">{exp.date}</td>
                               <td className="py-2">
-                                {exp.committeeId ? (
-                                  <a
-                                    href={`https://www.fec.gov/data/committee/${exp.committeeId}/`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#3ea2d4] hover:underline"
-                                  >
-                                    {exp.pacName}
-                                  </a>
-                                ) : (
-                                  exp.pacName
-                                )}
+                                <PACLink committeeId={exp.committeeId ?? null} name={exp.pacName} />
                               </td>
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />
@@ -1576,18 +1566,7 @@ export function CampaignFinanceVisualizer({
                             <tr key={idx} className="border-b">
                               <td className="py-2">{exp.date}</td>
                               <td className="py-2">
-                                {exp.committeeId ? (
-                                  <a
-                                    href={`https://www.fec.gov/data/committee/${exp.committeeId}/`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#3ea2d4] hover:underline"
-                                  >
-                                    {exp.pacName}
-                                  </a>
-                                ) : (
-                                  exp.pacName
-                                )}
+                                <PACLink committeeId={exp.committeeId ?? null} name={exp.pacName} />
                               </td>
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />

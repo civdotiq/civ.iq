@@ -109,6 +109,7 @@ export interface CommitteeLobbyingData {
   filings: Array<{
     id: string;
     company: string;
+    registrantId: string;
     amount: number;
     issues: string[];
     quarter: string;
@@ -395,6 +396,7 @@ export class SenateLobbyingAPI {
           const filings = relevantFilings.map(filing => ({
             id: filing.id,
             company: filing.client.name,
+            registrantId: filing.registrant.id,
             amount: filing.income || 0,
             issues: Array.isArray(filing.issues) ? filing.issues.map(i => i.description) : [],
             quarter: filing.filingPeriod,
