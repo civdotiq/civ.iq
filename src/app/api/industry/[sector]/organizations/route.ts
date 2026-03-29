@@ -135,25 +135,32 @@ export async function GET(
           const issueCodes = getSectorIssueCodes(sector);
           const topCodes = issueCodes.slice(0, 3);
 
-          for (const code of topCodes) {
-            const url = `https://lda.senate.gov/api/v1/filings/?general_issue_code=${code}&page_size=50`;
+          const fetchIssueFilings = async (code: string): Promise<LDAFilingResult[]> => {
+            try {
+              const url = `https://lda.senate.gov/api/v1/filings/?general_issue_code=${code}&page_size=50`;
+              const res = await fetch(url, {
+                headers: {
+                  Accept: 'application/json',
+                  'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+                },
+                signal: AbortSignal.timeout(15_000),
+              });
+              if (!res.ok) return [];
+              const data = await res.json();
+              return data?.results ?? [];
+            } catch {
+              return [];
+            }
+          };
 
-            const res = await fetch(url, {
-              headers: {
-                Accept: 'application/json',
-                'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
-              },
-              signal: AbortSignal.timeout(15_000),
-            });
+          const allFilingResults = await Promise.all(topCodes.map(fetchIssueFilings));
 
-            if (!res.ok) continue;
-            const data = await res.json();
-            const filings: LDAFilingResult[] = data?.results ?? [];
-
+          for (const filings of allFilingResults) {
             for (const filing of filings) {
               const regId = filing.registrant.id;
-              const spending =
-                parseFloat(filing.income ?? '0') || parseFloat(filing.expenses ?? '0') || 0;
+              const income = parseFloat(filing.income ?? '0') || 0;
+              const expenses = parseFloat(filing.expenses ?? '0') || 0;
+              const spending = Math.max(income, expenses);
 
               const existing = lobbyingMap.get(regId);
               if (existing) {
@@ -204,7 +211,7 @@ export async function GET(
           },
         } satisfies IndustryOrganizationsResponse;
       },
-      24 * 60 * 60 * 1000 // 24 hours
+      24 * 60 * 60 // 24 hours (seconds)
     );
 
     if (!result) {
