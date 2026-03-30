@@ -352,18 +352,9 @@ Each item must organize publicly available civic data and make it easy for citiz
    - Civic value: ground-truth crime data vs political rhetoric about public safety
    - Needs `DATA_GOV_API_KEY`
 
-3. **FDA** (~2h) — Add recalls section to industry pages (pharma/food sectors)
-   - Create API route `/api/industry/{sector}/recalls`
-   - Call `searchRecalls()` filtered by sector keywords
-   - Show: active recalls with severity badges (Class I = danger)
-   - Civic value: regulatory enforcement visibility — are agencies doing their job in industries reps oversee?
-   - Optional `OPENFDA_API_KEY`
+~~3. **FDA** — REMOVED. Consumer safety (product recalls) is not civic intelligence about representation.~~
 
-4. **Open Payments** (~2h) — Add pharma payments section to health industry page
-   - Create API route `/api/industry/health/pharma-payments`
-   - Show: top payers, top specialties, payment amounts by state
-   - Civic value: transparency into health industry financial relationships that shape policy
-   - No API key needed
+~~4. **Open Payments** — REMOVED. Payments to doctors are healthcare transparency, not civic data about how government represents citizens.~~
 
 ---
 
@@ -382,8 +373,8 @@ One phase at a time. Implement → test → commit → move on. No phase starts 
 | 6   | Money report card page                                     | ~5h    | `[x]`  | 78b2e242 |
 | 7   | Influence graph visualization                              | ~6h    | `[x]`  | 84af5a96 |
 | 8   | Elections page (federal/state hierarchy)                   | ~4h    | `[x]`  | pending  |
-| 9   | Enforcement explorer                                       | ~5h    | `[x]`  | pending  |
-| 10  | Civic data services (HUD, FBI, FDA, Open Payments)         | ~9h    | `[x]`  | pending  |
+| 9   | Enforcement explorer                                       | ~5h    | `[x]`  | f7e36ea3 |
+| 10  | Civic data services (HUD, FBI, FDA, Open Payments)         | ~9h    | `[x]`  | f7e36ea3 |
 
 ### Per-Phase Checkpoint
 
@@ -463,14 +454,14 @@ After implementing each phase, before committing:
 
 ### Data Services With Zero UI Exposure (MCP-Only)
 
-| Service       | File                                            | API Key                       | Key Data                                                        | Phase 10 |
-| ------------- | ----------------------------------------------- | ----------------------------- | --------------------------------------------------------------- | -------- |
-| FBI UCR       | `src/lib/data-sources/fbi-ucr-service.ts`       | `DATA_GOV_API_KEY` (required) | State crime rates, national comparison, clearance rates, trends | Yes      |
-| FDA           | `src/lib/data-sources/fda-service.ts`           | `OPENFDA_API_KEY` (optional)  | Drug/food/device recalls (Class I-III), adverse events          | Yes      |
-| HUD           | `src/lib/data-sources/hud-service.ts`           | `HUD_API_TOKEN` (required)    | Fair market rents, income limits by county                      | Yes      |
-| Open Payments | `src/lib/data-sources/open-payments-service.ts` | None                          | Pharma payments to doctors by company/specialty                 | Yes      |
-| NOAA          | `src/lib/data-sources/noaa-service.ts`          | `NOAA_TOKEN` (required)       | Climate normals, severe weather events with damage              | Dropped  |
-| NHTSA         | `src/lib/data-sources/nhtsa-service.ts`         | None                          | Vehicle recalls (parkIt flag), safety complaints                | Dropped  |
+| Service           | File                                      | API Key                       | Key Data                                                        | Phase 10 |
+| ----------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------- | -------- |
+| FBI UCR           | `src/lib/data-sources/fbi-ucr-service.ts` | `DATA_GOV_API_KEY` (required) | State crime rates, national comparison, clearance rates, trends | Yes      |
+| ~~FDA~~           | ~~removed~~                               | —                             | ~~Removed: consumer safety, not civic intelligence~~            | —        |
+| HUD               | `src/lib/data-sources/hud-service.ts`     | `HUD_API_TOKEN` (required)    | Fair market rents, income limits by county                      | Yes      |
+| ~~Open Payments~~ | ~~removed~~                               | —                             | ~~Removed: payments to doctors, not civic representation data~~ | —        |
+| NOAA              | `src/lib/data-sources/noaa-service.ts`    | `NOAA_TOKEN` (required)       | Climate normals, severe weather events with damage              | Dropped  |
+| NHTSA             | `src/lib/data-sources/nhtsa-service.ts`   | None                          | Vehicle recalls (parkIt flag), safety complaints                | Dropped  |
 
 ### Dead Pages
 

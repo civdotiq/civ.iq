@@ -188,13 +188,13 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
       {!isLoading && data?.stats && (
         <div className="border-2 border-gray-200 p-3 mb-4 flex flex-wrap gap-4">
           <div>
-            <span className="type-xs text-gray-500">Mean sector vote rate</span>
+            <span className="type-xs text-gray-500">Average sector vote rate</span>
             <div className="aicher-heading type-2xl text-gray-900">
               {data.stats.mean.toFixed(1)}%
             </div>
           </div>
           <div>
-            <span className="type-xs text-gray-500">Median</span>
+            <span className="type-xs text-gray-500">Typical (middle value)</span>
             <div className="aicher-heading type-2xl text-gray-900">
               {data.stats.median.toFixed(1)}%
             </div>

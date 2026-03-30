@@ -11,14 +11,12 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
-import { openPaymentsService } from '@/lib/data-sources/open-payments-service';
 import { femaService } from '@/lib/data-sources/fema-service';
 import { cfpbComplaintService } from '@/lib/data-sources/cfpb-complaint-service';
 import { eiaService } from '@/lib/data-sources/eia-service';
 import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-service';
 import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
 import { fdicService } from '@/lib/data-sources/fdic-service';
-import { fdaService } from '@/lib/data-sources/fda-service';
 import { nhtsaService } from '@/lib/data-sources/nhtsa-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
@@ -126,7 +124,6 @@ export function registerIntelligenceTools(server: McpServer): void {
           epaFacilities,
           hospitals,
           nursingHomes,
-          paymentAggs,
           disasters,
           complaints,
           energyProfile,
@@ -137,7 +134,6 @@ export function registerIntelligenceTools(server: McpServer): void {
           epaEchoService.searchFacilities({ state, limit: 50 }).catch(() => []),
           cmsProviderService.searchHospitals(state).catch(() => []),
           cmsProviderService.searchNursingHomes(state).catch(() => []),
-          openPaymentsService.getPaymentAggregates(state).catch(() => null),
           femaService.searchDisasters({ state, limit: 20 }).catch(() => []),
           cfpbComplaintService.getComplaintAggregates(state).catch(() => null),
           eiaService.getStateEnergyProfile(state).catch(() => null),
@@ -163,12 +159,6 @@ export function registerIntelligenceTools(server: McpServer): void {
           health: {
             hospitals: hospitals.length,
             nursingHomes: nursingHomes.length,
-            pharmaPayments: paymentAggs
-              ? {
-                  totalAmount: paymentAggs.totalAmount,
-                  topCompanies: paymentAggs.byCompany.slice(0, 5),
-                }
-              : null,
           },
           safety: {
             recentDisasters: disasters.length,
@@ -238,13 +228,6 @@ export function registerIntelligenceTools(server: McpServer): void {
         // Map sector to regulatory agencies and policy areas
         const regulatoryData: Record<string, unknown> = {};
         const agenciesChecked: string[] = [];
-
-        // FDA data (health sector)
-        if (sectorLower.includes('health') || sectorLower.includes('pharma')) {
-          const recalls = await fdaService.searchRecalls({ limit: 20 });
-          regulatoryData.fdaRecalls = recalls.length;
-          agenciesChecked.push('FDA');
-        }
 
         // EPA data (energy, environment)
         if (sectorLower.includes('energy') || sectorLower.includes('environment')) {

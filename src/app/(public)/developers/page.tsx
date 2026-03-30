@@ -48,7 +48,7 @@ const INTEGRATION_CARDS = [
   },
   {
     title: 'MCP Server',
-    detail: '54 tools, 9 domains',
+    detail: '48 tools, 9 domains',
     description: 'Connect AI agents to live civic data via the Model Context Protocol.',
     href: '#mcp',
   },
@@ -85,7 +85,7 @@ const MCP_DOMAINS = [
   { domain: 'Intelligence', examples: 'analyze_vote_prediction, get_influence_chain' },
   { domain: 'Civic', examples: 'get_district_info, lookup_address_district' },
   { domain: 'Environment', examples: 'search_epa_facilities, get_district_environmental_profile' },
-  { domain: 'Health', examples: 'search_hospitals, search_open_payments, search_fda_recalls' },
+  { domain: 'Health', examples: 'search_healthcare_providers, get_district_healthcare_profile' },
   { domain: 'Safety', examples: 'search_fema_disasters, search_consumer_complaints' },
   { domain: 'Economy', examples: 'get_state_energy_profile, search_fdic_institutions' },
 ];

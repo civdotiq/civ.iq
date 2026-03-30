@@ -15,7 +15,6 @@ import { eiaService } from '@/lib/data-sources/eia-service';
 import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-service';
 import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
 import { fdicService } from '@/lib/data-sources/fdic-service';
-import { openPaymentsService } from '@/lib/data-sources/open-payments-service';
 
 export function registerResources(server: McpServer): void {
   // Legislator profile resource
@@ -178,8 +177,7 @@ export function registerResources(server: McpServer): void {
       list: undefined,
     }),
     {
-      description:
-        'Healthcare profile for a congressional district (hospitals, nursing homes, pharma payments)',
+      description: 'Healthcare profile for a congressional district (hospitals, nursing homes)',
       mimeType: 'application/json',
     },
     async (uri, variables) => {
@@ -189,18 +187,14 @@ export function registerResources(server: McpServer): void {
           : variables.stateCode
         )?.toUpperCase() ?? '';
       try {
-        const [hospitals, nursingHomes, payments] = await Promise.all([
+        const [hospitals, nursingHomes] = await Promise.all([
           cmsProviderService.searchHospitals(state),
           cmsProviderService.searchNursingHomes(state),
-          openPaymentsService.getPaymentAggregates(state).catch(() => null),
         ]);
         const result = {
           state,
           hospitals: hospitals.length,
           nursingHomes: nursingHomes.length,
-          pharmaPayments: payments
-            ? { total: payments.totalPayments, amount: payments.totalAmount }
-            : null,
         };
         return {
           contents: [
