@@ -14,6 +14,7 @@ import {
   BreadcrumbSchema,
   ItemListSchema,
 } from '@/components/seo/JsonLd';
+import { CongressStatsBox } from './CongressStatsBox';
 
 export const metadata: Metadata = {
   title: 'United States Congress | Senators, Representatives & Committees',
@@ -199,28 +200,8 @@ export default function CongressHubPage() {
             U.S. territories.
           </p>
 
-          {/* Quick Stats Box */}
-          <div className="bg-white border-2 border-gray-200 p-4 my-6">
-            <h3 className="font-bold text-gray-800 mb-3">119th Congress at a Glance</h3>
-            <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <dt className="text-gray-500">Senators</dt>
-                <dd className="text-2xl font-bold text-gray-900">100</dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">Representatives</dt>
-                <dd className="text-2xl font-bold text-gray-900">435</dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">Committees</dt>
-                <dd className="text-2xl font-bold text-gray-900">45+</dd>
-              </div>
-              <div>
-                <dt className="text-gray-500">Session</dt>
-                <dd className="text-2xl font-bold text-gray-900">2025-27</dd>
-              </div>
-            </dl>
-          </div>
+          {/* Live Stats Box — fetches from /api/congress/119th/stats */}
+          <CongressStatsBox />
         </section>
 
         {/* Senate Section */}
