@@ -327,45 +327,42 @@ Federal and state elections are separate tiers. The page hierarchy reflects this
 
 ---
 
-## Phase 10: District Page Enrichment with MCP-Only Data
+## Phase 10: Civic Data Services — Housing, Safety, Health Accountability
 
-**Citizen question**: "What about housing costs, crime, and safety in my area?"
-**Effort**: ~12 hours total | **Value**: Medium | **Dependencies**: API keys for FBI, NOAA, HUD
+**Citizen question**: "What public data about housing, crime, and health industry influence affects my community?"
+**Effort**: ~9 hours total | **Value**: Medium | **Dependencies**: API keys for FBI, HUD
 
-### Changes (by data source, prioritized by citizen relevance)
+### Guiding filter
+
+Each item must organize publicly available civic data and make it easy for citizens to understand. Dropped NOAA (weather isn't civic accountability) and NHTSA (consumer safety lookup, not civic intelligence).
+
+### Changes (by data source, prioritized by civic relevance)
 
 1. **HUD** (~3h) — Add "Housing Affordability" section to district page
    - Create API route `/api/district/{districtId}/housing`
    - Call `getFairMarketRents()` + `getIncomeLimits()` by county FIPS
    - Show: fair market rent by bedroom count, income limit thresholds
+   - Civic value: citizens can see if housing policy matches their district's reality
    - Needs `HUD_API_TOKEN`
 
 2. **FBI UCR** (~2h) — Add "Public Safety" section to state page
    - Create API route `/api/states/{state}/crime`
    - Call `getCrimeStatsByState()` + `getCrimeTrend()`
    - Show: crime rates vs national average, clearance rates, trend chart
+   - Civic value: ground-truth crime data vs political rhetoric about public safety
    - Needs `DATA_GOV_API_KEY`
 
 3. **FDA** (~2h) — Add recalls section to industry pages (pharma/food sectors)
    - Create API route `/api/industry/{sector}/recalls`
    - Call `searchRecalls()` filtered by sector keywords
    - Show: active recalls with severity badges (Class I = danger)
+   - Civic value: regulatory enforcement visibility — are agencies doing their job in industries reps oversee?
    - Optional `OPENFDA_API_KEY`
 
-4. **NHTSA** (~2h) — Standalone vehicle safety search or automotive industry page section
-   - Create API route `/api/safety/vehicles`
-   - Call `searchRecalls()` + `searchComplaints()`
-   - Show: recalls with `parkIt` flag, crash/fire/injury counts
-   - No API key needed
-
-5. **NOAA** (~2h) — Add climate section to state page
-   - Create API route `/api/states/{state}/climate`
-   - Show: temperature/precip normals, severe weather event summary
-   - Needs `NOAA_TOKEN`
-
-6. **Open Payments** (~2h) — Add pharma payments section to health industry page
+4. **Open Payments** (~2h) — Add pharma payments section to health industry page
    - Create API route `/api/industry/health/pharma-payments`
    - Show: top payers, top specialties, payment amounts by state
+   - Civic value: transparency into health industry financial relationships that shape policy
    - No API key needed
 
 ---
@@ -374,19 +371,19 @@ Federal and state elections are separate tiers. The page hierarchy reflects this
 
 One phase at a time. Implement → test → commit → move on. No phase starts until the previous one is committed.
 
-| #   | Phase                                                         | Effort | Status | Commit   |
-| --- | ------------------------------------------------------------- | ------ | ------ | -------- |
-| 1   | Finance tab enrichment                                        | ~3h    | `[x]`  | aad52709 |
-| 2   | Intelligence dropped fields                                   | ~2h    | `[x]`  | 547fb5ec |
-| 3   | District tab (alignment + connections)                        | ~2h    | `[x]`  | 15337408 |
-| 4   | Congress 119th live stats                                     | ~30m   | `[x]`  | 8128319a |
-| 5   | State page revival (Overview + Legislature)                   | ~4h    | `[x]`  | 32629f6a |
-| 5B  | Election cycle utility + Elections tab (2025 data pending)    | ~3h    | `[x]`  | 5798c635 |
-| 6   | Money report card page                                        | ~5h    | `[x]`  | 78b2e242 |
-| 7   | Influence graph visualization                                 | ~6h    | `[x]`  | 84af5a96 |
-| 8   | Elections page (federal/state hierarchy)                      | ~4h    | `[x]`  | pending  |
-| 9   | Enforcement explorer                                          | ~5h    | `[ ]`  |          |
-| 10  | MCP data services (HUD, FBI, FDA, NHTSA, NOAA, Open Payments) | ~12h   | `[ ]`  |          |
+| #   | Phase                                                      | Effort | Status | Commit   |
+| --- | ---------------------------------------------------------- | ------ | ------ | -------- |
+| 1   | Finance tab enrichment                                     | ~3h    | `[x]`  | aad52709 |
+| 2   | Intelligence dropped fields                                | ~2h    | `[x]`  | 547fb5ec |
+| 3   | District tab (alignment + connections)                     | ~2h    | `[x]`  | 15337408 |
+| 4   | Congress 119th live stats                                  | ~30m   | `[x]`  | 8128319a |
+| 5   | State page revival (Overview + Legislature)                | ~4h    | `[x]`  | 32629f6a |
+| 5B  | Election cycle utility + Elections tab (2025 data pending) | ~3h    | `[x]`  | 5798c635 |
+| 6   | Money report card page                                     | ~5h    | `[x]`  | 78b2e242 |
+| 7   | Influence graph visualization                              | ~6h    | `[x]`  | 84af5a96 |
+| 8   | Elections page (federal/state hierarchy)                   | ~4h    | `[x]`  | pending  |
+| 9   | Enforcement explorer                                       | ~5h    | `[x]`  | pending  |
+| 10  | Civic data services (HUD, FBI, FDA, Open Payments)         | ~9h    | `[x]`  | pending  |
 
 ### Per-Phase Checkpoint
 
@@ -466,14 +463,14 @@ After implementing each phase, before committing:
 
 ### Data Services With Zero UI Exposure (MCP-Only)
 
-| Service       | File                                            | API Key                       | Key Data                                                        |
-| ------------- | ----------------------------------------------- | ----------------------------- | --------------------------------------------------------------- |
-| FBI UCR       | `src/lib/data-sources/fbi-ucr-service.ts`       | `DATA_GOV_API_KEY` (required) | State crime rates, national comparison, clearance rates, trends |
-| FDA           | `src/lib/data-sources/fda-service.ts`           | `OPENFDA_API_KEY` (optional)  | Drug/food/device recalls (Class I-III), adverse events          |
-| NOAA          | `src/lib/data-sources/noaa-service.ts`          | `NOAA_TOKEN` (required)       | Climate normals, severe weather events with damage              |
-| NHTSA         | `src/lib/data-sources/nhtsa-service.ts`         | None                          | Vehicle recalls (parkIt flag), safety complaints                |
-| HUD           | `src/lib/data-sources/hud-service.ts`           | `HUD_API_TOKEN` (required)    | Fair market rents, income limits by county                      |
-| Open Payments | `src/lib/data-sources/open-payments-service.ts` | None                          | Pharma payments to doctors by company/specialty                 |
+| Service       | File                                            | API Key                       | Key Data                                                        | Phase 10 |
+| ------------- | ----------------------------------------------- | ----------------------------- | --------------------------------------------------------------- | -------- |
+| FBI UCR       | `src/lib/data-sources/fbi-ucr-service.ts`       | `DATA_GOV_API_KEY` (required) | State crime rates, national comparison, clearance rates, trends | Yes      |
+| FDA           | `src/lib/data-sources/fda-service.ts`           | `OPENFDA_API_KEY` (optional)  | Drug/food/device recalls (Class I-III), adverse events          | Yes      |
+| HUD           | `src/lib/data-sources/hud-service.ts`           | `HUD_API_TOKEN` (required)    | Fair market rents, income limits by county                      | Yes      |
+| Open Payments | `src/lib/data-sources/open-payments-service.ts` | None                          | Pharma payments to doctors by company/specialty                 | Yes      |
+| NOAA          | `src/lib/data-sources/noaa-service.ts`          | `NOAA_TOKEN` (required)       | Climate normals, severe weather events with damage              | Dropped  |
+| NHTSA         | `src/lib/data-sources/nhtsa-service.ts`         | None                          | Vehicle recalls (parkIt flag), safety complaints                | Dropped  |
 
 ### Dead Pages
 

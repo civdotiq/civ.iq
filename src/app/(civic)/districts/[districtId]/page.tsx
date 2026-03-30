@@ -19,6 +19,7 @@ import { DistrictRelevantBills } from '@/features/districts/components/DistrictR
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import { EconomicIndicatorsSection } from '@/features/districts/components/EconomicIndicatorsSection';
 import { CommunityProfileSection } from '@/features/districts/components/CommunityProfileSection';
+import { HousingAffordabilitySection } from '@/features/districts/components/HousingAffordabilitySection';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -280,6 +281,9 @@ export default function DistrictPage() {
 
             {/* Community Profile */}
             <CommunityProfileSection districtId={districtId} />
+
+            {/* Housing Affordability */}
+            <HousingAffordabilitySection districtId={districtId} />
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />

@@ -21,6 +21,58 @@ import type { RaceResultFull } from '@/types/elections';
 
 // ── Types ────────────────────────────────────────────────────────────
 
+interface EnforcementAction {
+  agency: 'EPA' | 'OSHA' | 'SEC' | 'CFPB';
+  actionType: string;
+  organization: string;
+  penaltyAmount: number;
+  date: string;
+  state: string;
+}
+
+interface EnforcementInsightResponse {
+  scope: { type: 'state'; state: string };
+  actions: EnforcementAction[];
+  stats: {
+    totalActions: number;
+    totalPenalties: number;
+    byAgency: Array<{ agency: string; count: number; penalties: number }>;
+    trend: 'increasing' | 'decreasing' | 'stable';
+    periodMonths: number;
+  };
+  narrative: string;
+  confidence: number;
+  dataAsOf: string;
+  methodology: string;
+  disclaimer: string;
+  sources: Array<{ name: string; url?: string }>;
+}
+
+interface CrimeStats {
+  state: string;
+  year: number;
+  population: number;
+  offenses: Record<string, { actual: number; rate: number; clearances: number }>;
+  nationalComparison: Record<string, { rate: number }>;
+  coveragePercent: number;
+}
+
+interface CrimeTrendPoint {
+  year: number;
+  stateRate: number;
+  nationalRate: number;
+}
+
+interface CrimeResponse {
+  state: string;
+  crimeStats: CrimeStats;
+  trends: {
+    violent: CrimeTrendPoint[];
+    property: CrimeTrendPoint[];
+  };
+  dataSource: string;
+}
+
 interface StateExecutive {
   id: string;
   name: string;
@@ -228,6 +280,18 @@ function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: s
     SWR_OPTIONS
   );
 
+  const { data: enforcement, isLoading: enforcementLoading } = useSWR<EnforcementInsightResponse>(
+    `/api/intelligence/enforcement/state/${stateCode}`,
+    fetcher,
+    { ...SWR_OPTIONS, dedupingInterval: 600_000 }
+  );
+
+  const { data: crimeData, isLoading: crimeLoading } = useSWR<CrimeResponse>(
+    `/api/states/${stateCode}/crime`,
+    fetcher,
+    { ...SWR_OPTIONS, dedupingInterval: 600_000 }
+  );
+
   return (
     <div className="space-y-6">
       {/* Demographics stats */}
@@ -346,6 +410,18 @@ function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: s
       )}
 
       {demographics && <p className="type-xs text-gray-400">Source: {demographics.data_source}</p>}
+
+      {/* Enforcement */}
+      {enforcementLoading && <SkeletonCard />}
+      {enforcement && enforcement.stats && (
+        <EnforcementSection enforcement={enforcement} stateName={stateName} />
+      )}
+
+      {/* Public Safety */}
+      {crimeLoading && <SkeletonCard />}
+      {crimeData && crimeData.crimeStats && (
+        <PublicSafetySection crimeData={crimeData} stateName={stateName} />
+      )}
 
       {/* Link to delegation */}
       <Link
@@ -713,6 +789,286 @@ function RaceResultCard({ title, result }: { title: string; result: RaceResultFu
       </p>
     </div>
   );
+}
+
+// ── Enforcement Section ──────────────────────────────────────────────
+
+function formatPenalty(amount: number): string {
+  if (amount >= 1_000_000_000) return `$${(amount / 1_000_000_000).toFixed(1)}B`;
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
+}
+
+const TREND_LABELS: Record<string, string> = {
+  increasing: 'Increasing',
+  decreasing: 'Decreasing',
+  stable: 'Stable',
+};
+
+function EnforcementSection({
+  enforcement,
+  stateName,
+}: {
+  enforcement: EnforcementInsightResponse;
+  stateName: string;
+}) {
+  const [showActions, setShowActions] = useState(false);
+  const { stats, narrative, actions } = enforcement;
+
+  return (
+    <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
+      <h2 className="aicher-heading type-lg text-gray-900 mb-2">Federal Enforcement Activity</h2>
+      <p className="type-sm text-gray-600 mb-4">
+        Federal agency enforcement actions in {stateName} from EPA, OSHA, and CFPB public records.
+      </p>
+
+      {/* Narrative */}
+      {narrative && (
+        <p className="type-sm text-gray-700 mb-4 border-l-[3px] border-[#3ea2d4] pl-3">
+          {narrative}
+        </p>
+      )}
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <StatBox label="Total actions" value={String(stats.totalActions)} />
+        <StatBox label="Total penalties" value={formatPenalty(stats.totalPenalties)} />
+        <StatBox label="Trend" value={TREND_LABELS[stats.trend] ?? stats.trend} />
+        <StatBox
+          label="Period"
+          value={
+            stats.periodMonths >= 12
+              ? `${Math.round(stats.periodMonths / 12)} yr`
+              : `${stats.periodMonths} mo`
+          }
+        />
+      </div>
+
+      {/* Agency breakdown */}
+      {stats.byAgency.length > 0 && (
+        <div className="mb-4">
+          <h3 className="type-sm aicher-heading text-gray-500 mb-2">By agency</h3>
+          <div className="space-y-1">
+            {stats.byAgency.map(a => (
+              <div
+                key={a.agency}
+                className="flex items-center justify-between type-sm py-1.5 border-b border-gray-100 last:border-0"
+              >
+                <span className="text-gray-900 font-medium">{a.agency}</span>
+                <span className="text-gray-500 tabular-nums">
+                  {a.count} action{a.count !== 1 ? 's' : ''} · {formatPenalty(a.penalties)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent actions (expandable) */}
+      {actions.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowActions(prev => !prev)}
+            className="type-xs text-[#3ea2d4] aicher-heading py-2 min-h-[44px] inline-flex items-center"
+            aria-expanded={showActions}
+          >
+            {showActions ? 'Hide recent actions' : `Show ${actions.length} recent actions`}
+          </button>
+          {showActions && (
+            <div className="space-y-1 mt-2">
+              {actions.slice(0, 20).map((action, i) => (
+                <div
+                  key={i}
+                  className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0 type-xs"
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="text-gray-900">{action.organization}</span>
+                    <span className="text-gray-400 ml-2">
+                      {action.agency} · {action.actionType}
+                    </span>
+                  </div>
+                  <span className="text-gray-500 tabular-nums flex-shrink-0 ml-2">
+                    {action.penaltyAmount > 0 ? formatPenalty(action.penaltyAmount) : '—'}
+                  </span>
+                </div>
+              ))}
+              {actions.length > 20 && (
+                <p className="type-xs text-gray-400 pt-1">Showing 20 of {actions.length} actions</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <p className="type-xs text-gray-400 mt-3">
+        Sources: EPA ECHO, OSHA, CFPB
+        {enforcement.dataAsOf &&
+          ` · Data as of ${new Date(enforcement.dataAsOf).toLocaleDateString()}`}
+      </p>
+    </div>
+  );
+}
+
+// ── Public Safety Section ────────────────────────────────────────────
+
+function PublicSafetySection({
+  crimeData,
+  stateName,
+}: {
+  crimeData: CrimeResponse;
+  stateName: string;
+}) {
+  const { crimeStats, trends } = crimeData;
+  const violent = crimeStats.offenses['violent-crime'];
+  const property = crimeStats.offenses['property-crime'];
+  const nationalViolent = crimeStats.nationalComparison['violent-crime'];
+  const nationalProperty = crimeStats.nationalComparison['property-crime'];
+
+  return (
+    <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
+      <h2 className="aicher-heading type-lg text-gray-900 mb-2">Public Safety</h2>
+      <p className="type-sm text-gray-600 mb-4">
+        FBI Uniform Crime Report data for {stateName}. Ground-truth crime statistics vs political
+        rhetoric.
+      </p>
+
+      {/* Key stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {violent && (
+          <>
+            <StatBox label="Violent crime rate" value={`${violent.rate.toFixed(0)}`} />
+            {nationalViolent && (
+              <StatBox label="National avg" value={`${nationalViolent.rate.toFixed(0)}`} />
+            )}
+          </>
+        )}
+        {property && (
+          <>
+            <StatBox label="Property crime rate" value={`${property.rate.toFixed(0)}`} />
+            {nationalProperty && (
+              <StatBox label="National avg" value={`${nationalProperty.rate.toFixed(0)}`} />
+            )}
+          </>
+        )}
+      </div>
+      <p className="type-xs text-gray-400 mb-4">Rates per 100,000 residents</p>
+
+      {/* Comparison context */}
+      {violent && nationalViolent && (
+        <p className="type-sm text-gray-700 mb-4 border-l-[3px] border-[#3ea2d4] pl-3">
+          {stateName}&apos;s violent crime rate is{' '}
+          {violent.rate > nationalViolent.rate
+            ? `${((violent.rate / nationalViolent.rate - 1) * 100).toFixed(0)}% above`
+            : `${((1 - violent.rate / nationalViolent.rate) * 100).toFixed(0)}% below`}{' '}
+          the national average.
+          {property && nationalProperty && (
+            <>
+              {' '}
+              Property crime is{' '}
+              {property.rate > nationalProperty.rate
+                ? `${((property.rate / nationalProperty.rate - 1) * 100).toFixed(0)}% above`
+                : `${((1 - property.rate / nationalProperty.rate) * 100).toFixed(0)}% below`}{' '}
+              the national average.
+            </>
+          )}
+        </p>
+      )}
+
+      {/* Offense breakdown */}
+      {Object.keys(crimeStats.offenses).length > 2 && (
+        <div className="mb-4">
+          <h3 className="type-sm aicher-heading text-gray-500 mb-2">By offense type</h3>
+          <div className="space-y-1">
+            {Object.entries(crimeStats.offenses)
+              .filter(([key]) => key !== 'violent-crime' && key !== 'property-crime')
+              .slice(0, 8)
+              .map(([key, data]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between type-sm py-1.5 border-b border-gray-100 last:border-0"
+                >
+                  <span className="text-gray-900">{formatOffenseLabel(key)}</span>
+                  <span className="text-gray-500 tabular-nums">
+                    {data.actual.toLocaleString()} ({data.rate.toFixed(1)}/100K)
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Trend summary */}
+      {trends.violent.length > 1 && (
+        <TrendSummary violent={trends.violent} property={trends.property} />
+      )}
+
+      <p className="type-xs text-gray-400 mt-3">
+        Source: {crimeData.dataSource}
+        {crimeStats.year && ` · ${crimeStats.year} data`}
+        {crimeStats.coveragePercent < 100 &&
+          ` · ${crimeStats.coveragePercent.toFixed(0)}% agency coverage`}
+      </p>
+    </div>
+  );
+}
+
+const OFFENSE_LABELS: Record<string, string> = {
+  HOM: 'Homicide',
+  RPE: 'Rape',
+  ROB: 'Robbery',
+  ASS: 'Aggravated assault',
+  BUR: 'Burglary',
+  LAR: 'Larceny/theft',
+  MVT: 'Motor vehicle theft',
+  ARS: 'Arson',
+};
+
+function TrendSummary({
+  violent,
+  property,
+}: {
+  violent: CrimeTrendPoint[];
+  property: CrimeTrendPoint[];
+}) {
+  const vFirst = violent[0];
+  const vLast = violent[violent.length - 1];
+  const pFirst = property[0];
+  const pLast = property[property.length - 1];
+
+  if (!vFirst || !vLast) return null;
+
+  const vChange = (((vLast.stateRate - vFirst.stateRate) / vFirst.stateRate) * 100).toFixed(1);
+  const vDir = vLast.stateRate > vFirst.stateRate ? 'up' : 'down';
+
+  return (
+    <div>
+      <h3 className="type-sm aicher-heading text-gray-500 mb-2">5-year trend</h3>
+      <div className="flex gap-4 type-xs text-gray-600">
+        <span>
+          Violent crime: {vDir} {Math.abs(Number(vChange))}% ({vFirst.year}–{vLast.year})
+        </span>
+        {pFirst &&
+          pLast &&
+          (() => {
+            const pChange = (
+              ((pLast.stateRate - pFirst.stateRate) / pFirst.stateRate) *
+              100
+            ).toFixed(1);
+            const pDir = pLast.stateRate > pFirst.stateRate ? 'up' : 'down';
+            return (
+              <span>
+                Property crime: {pDir} {Math.abs(Number(pChange))}% ({pFirst.year}–{pLast.year})
+              </span>
+            );
+          })()}
+      </div>
+    </div>
+  );
+}
+
+function formatOffenseLabel(key: string): string {
+  return OFFENSE_LABELS[key] ?? key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 // ── UI Primitives ────────────────────────────────────────────────────
