@@ -583,14 +583,25 @@ function ElectionsTab({ stateCode, stateName }: { stateCode: string; stateName: 
   const next = getNextElectionYear(stateCode);
   const cycleLabel = getElectionCycleLabel(stateCode);
 
-  // We only have 2024 data from MEDSL. Show it if the state had 2024 elections.
-  const has2024Data = electionGroup !== 'odd-year'; // odd-year states didn't have state races in 2024
-  const showYear = has2024Data ? 2024 : null;
+  // Determine which year to fetch governor data from
+  const isOddYear = electionGroup === 'odd-year';
+  // NJ and VA have 2025 data; MS and LA next vote in 2027
+  const has2025Gov = isOddYear && (stateCode === 'NJ' || stateCode === 'VA');
+  const govYear = has2025Gov ? 2025 : isOddYear ? null : 2024;
 
-  // Fetch governor result for 2024 (if applicable)
+  // Fetch governor result from the appropriate year
   const { data: govResult, isLoading: govLoading } = useSWR<
     RaceResultFull | { dataAvailable: false }
-  >(showYear ? `/api/elections/2024?type=governor&state=${stateCode}` : null, fetcher, SWR_OPTIONS);
+  >(
+    govYear ? `/api/elections/${govYear}?type=governor&state=${stateCode}` : null,
+    fetcher,
+    SWR_OPTIONS
+  );
+
+  const govDataAvailable =
+    govResult && !('dataAvailable' in govResult && govResult.dataAvailable === false);
+  const govNoElection =
+    govResult && 'dataAvailable' in govResult && govResult.dataAvailable === false;
 
   return (
     <div className="space-y-6">
@@ -614,44 +625,38 @@ function ElectionsTab({ stateCode, stateName }: { stateCode: string; stateName: 
         <p className="type-sm text-gray-600">{cycleLabel}</p>
       </div>
 
-      {/* 2024 Results */}
-      {has2024Data && (
+      {/* Governor results */}
+      {govYear && (
         <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
-          <h2 className="aicher-heading type-lg text-gray-900 mb-4">2024 State Election Results</h2>
+          <h2 className="aicher-heading type-lg text-gray-900 mb-4">
+            {govYear} State Election Results
+          </h2>
 
-          {/* Governor */}
           {govLoading && <SkeletonCard />}
-          {govResult && 'dataAvailable' in govResult && govResult.dataAvailable === false && (
+          {govNoElection && (
             <p className="type-sm text-gray-500 mb-4">
-              No gubernatorial election in {stateName} in 2024.
+              No gubernatorial election in {stateName} in {govYear}.
             </p>
           )}
-          {govResult && !('dataAvailable' in govResult && govResult.dataAvailable === false) && (
+          {govDataAvailable && (
             <RaceResultCard title={`${stateName} Governor`} result={govResult as RaceResultFull} />
           )}
-          {/* Note: state-leg results are per-district, too granular for a state-level summary.
-              A future enhancement could show aggregate seat flips or overall party balance. */}
         </div>
       )}
 
-      {/* Odd-year state notice */}
-      {!has2024Data && (
+      {/* MS/LA notice — odd-year states without 2025 data */}
+      {isOddYear && !has2025Gov && (
         <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
           <h2 className="aicher-heading type-lg text-gray-900 mb-4">Recent Elections</h2>
           <p className="type-sm text-gray-600">
-            {stateName} holds state elections in odd years. The most recent election was in{' '}
-            {mostRecent}.
-          </p>
-          <p className="type-sm text-gray-500 mt-2">
-            Results for {mostRecent} are not yet available in our database. Election data is sourced
-            from the MIT Election Data and Science Lab (MEDSL), which publishes official results
-            after certification.
+            {stateName} holds state elections in odd years. The next gubernatorial election is in
+            2027.
           </p>
         </div>
       )}
 
       <p className="type-xs text-gray-400">
-        Source: MIT Election Data and Science Lab (MEDSL) via Harvard Dataverse
+        Sources: MIT Election Data and Science Lab (MEDSL); Ballotpedia (2025)
       </p>
     </div>
   );
