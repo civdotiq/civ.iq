@@ -785,7 +785,8 @@ export type BriefPatternType =
   | 'donor-concentration'
   | 'in-state-funding-ratio'
   | 'committee-power-position'
-  | 'lobbying-legislation-alignment';
+  | 'lobbying-legislation-alignment'
+  | 'legislative-effectiveness';
 
 export interface BriefPattern {
   type: BriefPatternType;
@@ -821,6 +822,8 @@ export interface BriefVoting {
   missedVotePct: number | null;
   billsSponsored: number;
   billsCosponsored: number;
+  /** Bills that moved past introduction (reported, passed chamber, enacted). */
+  billsProgressed?: number;
 }
 
 export interface BriefOversight {

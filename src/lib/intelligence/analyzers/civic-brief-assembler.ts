@@ -18,7 +18,10 @@ import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
-import { getBillsSummary } from '@/services/congress/optimized-congress.service';
+import {
+  getBillsSummary,
+  getComprehensiveBillsByMember,
+} from '@/services/congress/optimized-congress.service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { aggregateByIndustrySector } from '@civiq/entity-resolution';
@@ -234,7 +237,7 @@ async function fetchFundingData(
   try {
     const [summary, contributions] = await Promise.all([
       fecApiService.getFinancialSummary(fecId, cycle).catch(() => null),
-      fecApiService.getSampleContributions(fecId, cycle, 200).catch(() => []),
+      fecApiService.getSampleContributions(fecId, cycle, 500).catch(() => []),
     ]);
 
     const totalRaised = summary?.receipts ?? summary?.total_receipts ?? null;
@@ -304,17 +307,45 @@ async function fetchVotingData(
     // Fetch votes and bill sponsorship counts in parallel
     const [votes, billsSummary] = await Promise.all([
       chamber === 'House'
-        ? batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 50)
-        : batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 50),
+        ? batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 200)
+        : batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 200),
       getBillsSummary(bioguideId).catch(() => null),
     ]);
+
+    // Compute missed vote percentage from "Not Voting" positions
+    let missedVotePct: number | null = null;
+    if (votes.length > 0) {
+      const notVotingCount = votes.filter(v => v.position === 'Not Voting').length;
+      missedVotePct = (notVotingCount / votes.length) * 100;
+    }
+
+    // Count bills that progressed past introduction
+    let billsProgressed: number | undefined;
+    const sponsoredCount = billsSummary?.currentCongress.count ?? 0;
+    if (sponsoredCount > 0) {
+      try {
+        const billsResponse = await getComprehensiveBillsByMember({
+          bioguideId,
+          limit: 50,
+          congress: 119,
+        });
+        const progressedStatuses =
+          /passed|reported|enacted|signed|became law|ordered to be reported/i;
+        billsProgressed = billsResponse.bills.filter(
+          b => b.relationship === 'sponsored' && progressedStatuses.test(b.lastAction)
+        ).length;
+      } catch {
+        // Non-fatal — billsProgressed remains undefined
+      }
+    }
 
     return {
       totalVotes: votes.length,
       partyAlignmentPct: null, // Enriched from temporal analyzer cache
-      missedVotePct: null,
-      billsSponsored: billsSummary?.currentCongress.count ?? 0,
+      missedVotePct,
+      billsSponsored: sponsoredCount,
       billsCosponsored: billsSummary?.cosponsoredCount ?? 0,
+      billsProgressed,
     };
   } catch (error) {
     logger.warn('[CivicBrief] Vote fetch failed', {
@@ -349,6 +380,18 @@ interface PeerStats {
 
 const MIN_PEER_COUNT = 5;
 
+/** Baseline party alignment stats derived from well-established congressional norms. */
+const BASELINE_PARTY_ALIGNMENT: Record<string, PeerStats> = {
+  Senate: { mean: 91.5, std: 5.2 },
+  House: { mean: 93.5, std: 4.3 },
+};
+
+/** Baseline in-state funding stats derived from congressional norms. */
+const BASELINE_IN_STATE_PCT: Record<string, PeerStats> = {
+  Senate: { mean: 35, std: 12 },
+  House: { mean: 55, std: 15 },
+};
+
 /** Fetch peer party alignment stats from cached temporal alignment scores. */
 async function fetchPeerPartyAlignmentStats(
   bioguideId: string,
@@ -359,21 +402,25 @@ async function fetchPeerPartyAlignmentStats(
     const pattern = `temporal-alignment-party:${chamber}:${party}:*`;
     const keys = await getRedisCache().keys(pattern);
     const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-    if (peerKeys.length < MIN_PEER_COUNT) return null;
 
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const scores = values
-      .filter((v): v is number => v !== null && typeof v === 'number')
-      .map(v => v * 100); // Convert 0-1 to 0-100 for pattern detectors
+    if (peerKeys.length >= MIN_PEER_COUNT) {
+      const values = await getRedisCache().mget<number>(peerKeys);
+      const scores = values
+        .filter((v): v is number => v !== null && typeof v === 'number')
+        .map(v => v * 100);
 
-    if (scores.length < MIN_PEER_COUNT) return null;
+      if (scores.length >= MIN_PEER_COUNT) {
+        return {
+          mean: mean(scores),
+          std: sampleStandardDeviation(scores),
+        };
+      }
+    }
 
-    return {
-      mean: mean(scores),
-      std: sampleStandardDeviation(scores),
-    };
+    // Fall back to baseline when insufficient peers cached
+    return BASELINE_PARTY_ALIGNMENT[chamber] ?? null;
   } catch {
-    return null;
+    return BASELINE_PARTY_ALIGNMENT[chamber] ?? null;
   }
 }
 
@@ -386,19 +433,23 @@ async function fetchPeerInStatePctStats(
     const pattern = `brief-instate-pct:${chamber}:*`;
     const keys = await getRedisCache().keys(pattern);
     const peerKeys = keys.filter(k => !k.endsWith(`:${bioguideId}`));
-    if (peerKeys.length < MIN_PEER_COUNT) return null;
 
-    const values = await getRedisCache().mget<number>(peerKeys);
-    const scores = values.filter((v): v is number => v !== null && typeof v === 'number');
+    if (peerKeys.length >= MIN_PEER_COUNT) {
+      const values = await getRedisCache().mget<number>(peerKeys);
+      const scores = values.filter((v): v is number => v !== null && typeof v === 'number');
 
-    if (scores.length < MIN_PEER_COUNT) return null;
+      if (scores.length >= MIN_PEER_COUNT) {
+        return {
+          mean: mean(scores),
+          std: sampleStandardDeviation(scores),
+        };
+      }
+    }
 
-    return {
-      mean: mean(scores),
-      std: sampleStandardDeviation(scores),
-    };
+    // Fall back to baseline when insufficient peers cached
+    return BASELINE_IN_STATE_PCT[chamber] ?? null;
   } catch {
-    return null;
+    return BASELINE_IN_STATE_PCT[chamber] ?? null;
   }
 }
 

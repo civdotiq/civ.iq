@@ -25,8 +25,6 @@ function formatCompact(amount: number): string {
 
 export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps) {
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
-  const [showFullAnalysis, setShowFullAnalysis] = useState(false);
-
   const { identity, funding, voting, oversight, patterns, summary } = insight;
 
   // Show top 2 findings above the fold
@@ -181,90 +179,82 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
               )}
             </div>
           )}
+          {funding.contributionsSampled > 0 && (
+            <p className="type-xs text-gray-400 mt-2">
+              Based on {funding.contributionsSampled.toLocaleString()} itemized contributions
+            </p>
+          )}
         </div>
       )}
 
-      {/* Full Analysis — collapsed by default */}
+      {/* Full Analysis — always visible */}
       {hasFullAnalysis && (
-        <div className="border-t-2 border-gray-100 pt-4">
-          <button
-            onClick={() => setShowFullAnalysis(prev => !prev)}
-            className="type-sm text-[#3ea2d4] aicher-heading py-2 min-h-[44px] inline-flex items-center aicher-focus"
-            aria-expanded={showFullAnalysis}
-          >
-            {showFullAnalysis ? 'Hide full analysis' : 'Show full analysis'}
-          </button>
+        <div className="border-t-2 border-gray-100 pt-4 space-y-4">
+          {/* Additional findings */}
+          {additionalFindings.length > 0 && (
+            <div>
+              <h4 className="aicher-heading type-xs text-gray-500 mb-2">Additional findings</h4>
+              {additionalFindings.map((pattern, i) => (
+                <Finding
+                  key={pattern.type}
+                  pattern={pattern}
+                  expanded={expandedFinding === i + 2}
+                  onToggle={() => setExpandedFinding(expandedFinding === i + 2 ? null : i + 2)}
+                />
+              ))}
+            </div>
+          )}
 
-          {showFullAnalysis && (
-            <div className="mt-4 space-y-4">
-              {/* Additional findings */}
-              {additionalFindings.length > 0 && (
-                <div>
-                  <h4 className="aicher-heading type-xs text-gray-500 mb-2">Additional findings</h4>
-                  {additionalFindings.map((pattern, i) => (
-                    <Finding
-                      key={pattern.type}
-                      pattern={pattern}
-                      expanded={expandedFinding === i + 2}
-                      onToggle={() => setExpandedFinding(expandedFinding === i + 2 ? null : i + 2)}
-                    />
-                  ))}
-                </div>
-              )}
+          {/* Voting record */}
+          {voting.totalVotes > 0 && (
+            <div>
+              <h4 className="aicher-heading type-xs text-gray-500 mb-2">Voting record</h4>
+              <p className="type-sm text-gray-700">
+                {voting.totalVotes} recent votes analyzed
+                {voting.partyAlignmentPct !== null &&
+                  ` · ${voting.partyAlignmentPct.toFixed(0)}% with party`}
+                {voting.billsSponsored > 0 && ` · ${voting.billsSponsored} bills sponsored`}
+                {voting.billsCosponsored > 0 && ` · ${voting.billsCosponsored} cosponsored`}
+              </p>
+              <p className="type-xs text-gray-400 mt-1">
+                Based on {voting.totalVotes} most recent roll-call votes
+              </p>
+            </div>
+          )}
 
-              {/* Voting record */}
-              {voting.totalVotes > 0 && (
-                <div>
-                  <h4 className="aicher-heading type-xs text-gray-500 mb-2">Voting record</h4>
-                  <p className="type-sm text-gray-700">
-                    {voting.totalVotes} votes cast
-                    {voting.partyAlignmentPct !== null &&
-                      ` · ${voting.partyAlignmentPct.toFixed(0)}% with party`}
-                    {voting.billsSponsored > 0 && ` · ${voting.billsSponsored} bills sponsored`}
-                    {voting.billsCosponsored > 0 && ` · ${voting.billsCosponsored} cosponsored`}
-                  </p>
-                </div>
-              )}
+          {/* Lobbying connections */}
+          {oversight.topLobbyingMatches.length > 0 && (
+            <div>
+              <h4 className="aicher-heading type-xs text-gray-500 mb-2">Lobbying connections</h4>
+              {oversight.topLobbyingMatches.map((m, i) => (
+                <p key={i} className="type-sm text-gray-700 mb-1">
+                  {m.filing} lobbied on issues related to the bill &ldquo;{m.bill}&rdquo;
+                  {m.similarity > 0 && (
+                    <span className="text-gray-400">
+                      {' '}
+                      ({(m.similarity * 100).toFixed(0)}% text overlap)
+                    </span>
+                  )}
+                </p>
+              ))}
+            </div>
+          )}
 
-              {/* Lobbying connections */}
-              {oversight.topLobbyingMatches.length > 0 && (
-                <div>
-                  <h4 className="aicher-heading type-xs text-gray-500 mb-2">
-                    Lobbying connections
-                  </h4>
-                  {oversight.topLobbyingMatches.map((m, i) => (
-                    <p key={i} className="type-sm text-gray-700 mb-1">
-                      {m.filing} lobbied on issues related to the bill &ldquo;{m.bill}&rdquo;
-                      {m.similarity > 0 && (
-                        <span className="text-gray-400">
-                          {' '}
-                          ({(m.similarity * 100).toFixed(0)}% text overlap)
-                        </span>
-                      )}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* Committees */}
-              {identity.committees.length > 0 && (
-                <div>
-                  <h4 className="aicher-heading type-xs text-gray-500 mb-2">Committees</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {identity.committees.map(c => (
-                      <span
-                        key={c.name}
-                        className="type-xs border-2 border-gray-200 px-2 py-1 text-gray-700"
-                      >
-                        {c.name}
-                        {c.role !== 'Member' && (
-                          <span className="text-gray-500 ml-1">({c.role})</span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* Committees */}
+          {identity.committees.length > 0 && (
+            <div>
+              <h4 className="aicher-heading type-xs text-gray-500 mb-2">Committees</h4>
+              <div className="flex flex-wrap gap-2">
+                {identity.committees.map(c => (
+                  <span
+                    key={c.name}
+                    className="type-xs border-2 border-gray-200 px-2 py-1 text-gray-700"
+                  >
+                    {c.name}
+                    {c.role !== 'Member' && <span className="text-gray-500 ml-1">({c.role})</span>}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -272,11 +262,6 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
 
       {/* Sources + disclaimer — always visible but compact */}
       <div className="mt-4 pt-3 border-t-2 border-gray-100">
-        {funding.contributionsSampled > 0 && (
-          <p className="type-xs text-gray-400 mb-1">
-            Based on {funding.contributionsSampled.toLocaleString()} itemized contributions
-          </p>
-        )}
         <p className="type-xs text-gray-400 mb-1">
           Sources: Congress.gov, FEC.gov, Senate lobbying disclosures
         </p>

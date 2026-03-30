@@ -40,7 +40,7 @@ export interface PatternInput {
   peerInStatePctStd: number | null;
 }
 
-/** Run all 7 pattern detectors and return significant ones, sorted by significance */
+/** Run all 8 pattern detectors and return significant ones, sorted by significance */
 export function detectPatterns(input: PatternInput): BriefPattern[] {
   const detectors: Array<(input: PatternInput) => BriefPattern | null> = [
     detectFundingJurisdictionOverlap,
@@ -50,6 +50,7 @@ export function detectPatterns(input: PatternInput): BriefPattern[] {
     detectCommitteePowerPosition,
     detectLobbyingLegislationAlignment,
     detectLegislationFocusShift,
+    detectLegislativeEffectiveness,
   ];
 
   return detectors
@@ -303,7 +304,50 @@ function detectCommitteePowerPosition(input: PatternInput): BriefPattern | null 
   };
 }
 
-// ── Pattern 7: Lobbying-Legislation Alignment ────────────────────────
+// ── Pattern 7: Legislative Effectiveness ──────────────────────────────
+
+function detectLegislativeEffectiveness(input: PatternInput): BriefPattern | null {
+  const { billsSponsored, billsProgressed } = input.voting;
+  if (billsProgressed === undefined || billsSponsored < 3) return null;
+
+  const progressRate = billsProgressed / billsSponsored;
+  // Typical progression rate is ~5-10%. Above 10% is noteworthy, above 20% is remarkable.
+  // Below 1% with enough bills is also noteworthy (all bills stalled).
+  const last = lastName(input.identity.name);
+
+  if (progressRate >= 0.1) {
+    const significance = progressRate >= 0.2 ? 2.5 : 1.8;
+    return {
+      type: 'legislative-effectiveness',
+      headline: `${billsProgressed} of ${billsSponsored} bills ${last} wrote moved past introduction — better than typical.`,
+      detail: `Most bills in Congress never get a hearing — only about 5-10% of sponsored bills advance past introduction. ${input.identity.name} got ${billsProgressed} of their ${billsSponsored} bills to clear that hurdle this session, a ${(progressRate * 100).toFixed(0)}% success rate. This suggests ${last}'s legislation is getting traction with colleagues.`,
+      dataPoints: {
+        billsSponsored,
+        billsProgressed,
+        progressRate: Math.round(progressRate * 100),
+      },
+      significance,
+    };
+  }
+
+  if (billsSponsored >= 10 && billsProgressed === 0) {
+    return {
+      type: 'legislative-effectiveness',
+      headline: `None of ${last}'s ${billsSponsored} bills have moved past introduction.`,
+      detail: `${input.identity.name} has written ${billsSponsored} bills this session, but none have advanced past the introduction stage. This is not unusual — most bills die in committee — but it means none of ${last}'s legislative priorities have gained enough support to move forward yet.`,
+      dataPoints: {
+        billsSponsored,
+        billsProgressed: 0,
+        progressRate: 0,
+      },
+      significance: 1.6,
+    };
+  }
+
+  return null;
+}
+
+// ── Pattern 8: Lobbying-Legislation Alignment ────────────────────────
 
 function detectLobbyingLegislationAlignment(input: PatternInput): BriefPattern | null {
   if (

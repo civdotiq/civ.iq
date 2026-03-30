@@ -84,12 +84,24 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     SWR_OPTIONS
   );
 
-  const primaryCommittee = committeeCodes?.[0];
-  const { data: lobbyingData, isLoading: lobbyingLoading } = useSWR<LobbyingPipelineInsight>(
-    primaryCommittee ? `/api/intelligence/committee/${primaryCommittee}` : null,
+  // Fetch lobbying data for top 3 committees (fixed hook count for React rules)
+  const topCommittees = (committeeCodes ?? []).slice(0, 3);
+  const { data: lobbyingData0, isLoading: lobbyingLoading0 } = useSWR<LobbyingPipelineInsight>(
+    topCommittees[0] ? `/api/intelligence/committee/${topCommittees[0]}` : null,
     fetcher,
     SWR_OPTIONS
   );
+  const { data: lobbyingData1, isLoading: lobbyingLoading1 } = useSWR<LobbyingPipelineInsight>(
+    topCommittees[1] ? `/api/intelligence/committee/${topCommittees[1]}` : null,
+    fetcher,
+    SWR_OPTIONS
+  );
+  const { data: lobbyingData2, isLoading: lobbyingLoading2 } = useSWR<LobbyingPipelineInsight>(
+    topCommittees[2] ? `/api/intelligence/committee/${topCommittees[2]}` : null,
+    fetcher,
+    SWR_OPTIONS
+  );
+  const lobbyingLoading = lobbyingLoading0 || lobbyingLoading1 || lobbyingLoading2;
 
   const { data: stockData, isLoading: stockLoading } = useSWR<StockCommitteeInsight>(
     `/api/intelligence/representative/${bioguideId}/stock-trades`,
@@ -136,7 +148,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     financeJurisdictionData?.overlapScore != null ? financeJurisdictionData : null;
   const voteFinance = voteFinanceData?.overallCorrelation != null ? voteFinanceData : null;
   const temporal = temporalData?.quarters ? temporalData : null;
-  const lobbying = lobbyingData?.committeeCode ? lobbyingData : null;
+  const lobbyingResults = [lobbyingData0, lobbyingData1, lobbyingData2].filter(
+    (d): d is LobbyingPipelineInsight => d?.committeeCode != null
+  );
+  const lobbying = lobbyingResults.length > 0 ? lobbyingResults[0]! : null;
   const stock = stockData?.flaggedTrades ? stockData : null;
   const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
   const influenceChain = influenceChainData?.chains ? influenceChainData : null;
@@ -170,7 +185,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     fjError &&
     vfError &&
     !temporalData &&
-    !lobbyingData &&
+    !lobbyingData0 &&
     !stockData &&
     !votePredictionData &&
     !influenceChainData &&
@@ -204,17 +219,17 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const nothingYet = !hasAnyInsight && !allDoneLoading;
 
   // Count available detailed analyses for the summary label
-  const detailedCount = [
-    financeJurisdiction,
-    voteFinance,
-    temporal,
-    lobbying,
-    influenceChain,
-    influenceGraph,
-    votePrediction,
-    stock,
-    temporalProximity,
-  ].filter(Boolean).length;
+  const detailedCount =
+    [
+      financeJurisdiction,
+      voteFinance,
+      temporal,
+      influenceChain,
+      influenceGraph,
+      votePrediction,
+      stock,
+      temporalProximity,
+    ].filter(Boolean).length + lobbyingResults.length;
   // Always-rendered sections (What-If, Clusters) add to the count
   const totalDetailedCount = detailedCount + 2;
   // Always show details section — What-If and Clusters are always available,
@@ -301,18 +316,20 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
               <AnomalyFlagsDisplay anomalies={temporal.peerComparison.anomalies} />
             )}
 
-            {/* Lobbying Pipeline */}
-            {lobbying && (
-              <>
-                <InfluenceChainTable insight={lobbying} />
+            {/* Lobbying Pipeline — top 3 committees */}
+            {lobbyingResults.map(lob => (
+              <div key={lob.committeeCode}>
+                <InfluenceChainTable insight={lob} />
                 <InsightCard
-                  title="Who lobbies this committee?"
-                  insight={lobbying}
-                  keyStats={lobbyingPipelineKeyStats(lobbying)}
+                  title={`Who lobbies ${lob.committeeName ?? lob.committeeCode}?`}
+                  insight={lob}
+                  keyStats={lobbyingPipelineKeyStats(lob)}
                 />
-              </>
+              </div>
+            ))}
+            {lobbyingLoading && lobbyingResults.length === 0 && topCommittees.length > 0 && (
+              <InsightPlaceholder />
             )}
-            {lobbyingLoading && !lobbying && primaryCommittee && <InsightPlaceholder />}
 
             {/* Influence Chain */}
             {influenceChain && <InfluenceChainCard insight={influenceChain} />}
