@@ -119,93 +119,114 @@ function makeInsight(overrides: Partial<InfluenceGraphInsight> = {}): InfluenceG
       peerGroupLabel: 'House members',
       percentileRank: 78,
     },
-    narrative: 'This representative has above-average influence graph complexity.',
+    narrative:
+      'This representative has above-average connections between lobbying and legislation.',
     ...overrides,
   };
 }
 
 describe('InfluenceGraphCard', () => {
-  it('renders header with title and confidence', () => {
+  it('renders citizen-friendly title', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('Influence Graph')).toBeInTheDocument();
+    expect(screen.getByText('How lobbying money becomes policy')).toBeInTheDocument();
   });
 
-  it('renders stats row', () => {
-    render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('5')).toBeInTheDocument(); // total chains
-    expect(screen.getByText('3')).toBeInTheDocument(); // regulation links
-    expect(screen.getByText('2')).toBeInTheDocument(); // enforcement links
-    expect(screen.getByText('Chains traced')).toBeInTheDocument();
-    expect(screen.getByText('Regulation links')).toBeInTheDocument();
-    expect(screen.getByText('Enforcement links')).toBeInTheDocument();
+  it('renders narrative at the top, before stats', () => {
+    const { container } = render(<InfluenceGraphCard insight={makeInsight()} />);
+    const narrative = screen.getByText(/above-average connections/);
+    const statsLabel = screen.getByText('Paths from money to policy');
+    // Narrative should appear before stats in DOM order
+    const allElements = container.querySelectorAll('*');
+    const narrativeIndex = Array.from(allElements).indexOf(narrative.closest('p')!);
+    const statsIndex = Array.from(allElements).indexOf(statsLabel.closest('div')!);
+    expect(narrativeIndex).toBeLessThan(statsIndex);
   });
 
-  it('renders peer comparison', () => {
+  it('renders plain-language stats', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('78th')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('Paths from money to policy')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Connected regulations')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Enforcement actions')).toBeInTheDocument();
+  });
+
+  it('renders peer comparison as a sentence', () => {
+    render(<InfluenceGraphCard insight={makeInsight()} />);
+    expect(screen.getByText(/More money-to-policy connections than/)).toBeInTheDocument();
+    expect(screen.getByText('78%')).toBeInTheDocument();
     expect(screen.getByText(/House members/)).toBeInTheDocument();
   });
 
-  it('renders narrative', () => {
-    render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(
-      screen.getByText('This representative has above-average influence graph complexity.')
-    ).toBeInTheDocument();
-  });
-
-  it('renders disclaimer', () => {
+  it('renders disclaimer and methodology', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
     expect(screen.getByText('Correlation does not imply causation.')).toBeInTheDocument();
   });
 
-  it('shows dropped chains count', () => {
+  it('shows transparency about dropped paths', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('2 low-confidence chains omitted')).toBeInTheDocument();
+    expect(screen.getByText(/2 additional paths found but excluded/)).toBeInTheDocument();
+  });
+
+  // ── Chain story summaries ───────────────────────────────────────────
+
+  it('renders a plain-language story summary for each chain', () => {
+    render(<InfluenceGraphCard insight={makeInsight()} />);
+    expect(screen.getByText(/Acme Industries PAC spent \$2\.5M lobbying/)).toBeInTheDocument();
+    expect(screen.getByText(/voted in favor of/)).toBeInTheDocument();
+  });
+
+  // ── Step question labels ────────────────────────────────────────────
+
+  it('uses question labels instead of jargon', () => {
+    render(<InfluenceGraphCard insight={makeInsight()} />);
+    expect(screen.getByText('Who spent money?')).toBeInTheDocument();
+    expect(screen.getByText('What was voted on?')).toBeInTheDocument();
+    expect(screen.getByText('Did regulators act?')).toBeInTheDocument();
+    expect(screen.getByText('Was anyone penalized?')).toBeInTheDocument();
+    expect(screen.getByText('Any court cases?')).toBeInTheDocument();
+    expect(screen.getByText('What changed?')).toBeInTheDocument();
   });
 
   it('renders lobbying step with spending', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('LOBBYING')).toBeInTheDocument();
-    expect(screen.getByText(/\$2\.5M spent/)).toBeInTheDocument();
-    expect(screen.getByText(/\$50K in campaign contributions/)).toBeInTheDocument();
+    expect(screen.getByText(/spent \$2\.5M on lobbying/)).toBeInTheDocument();
+    expect(screen.getByText(/Also gave \$50K in campaign contributions/)).toBeInTheDocument();
   });
 
   it('renders vote step with bill and badge', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('VOTE')).toBeInTheDocument();
     expect(screen.getByText('YEA')).toBeInTheDocument();
-    expect(screen.getByText(/72% text match/)).toBeInTheDocument();
   });
 
-  it('renders regulation step', () => {
+  it('renders regulation step in plain language', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('REGULATION')).toBeInTheDocument();
-    expect(screen.getByText('EPA')).toBeInTheDocument();
+    expect(screen.getByText(/EPA proposed a rule/)).toBeInTheDocument();
     expect(screen.getByText(/Clean Air Standards/)).toBeInTheDocument();
-    expect(screen.getByText('COMMENT PERIOD')).toBeInTheDocument();
-    expect(screen.getByText(/1,500 comments/)).toBeInTheDocument();
+    expect(screen.getByText(/1,500 public comments/)).toBeInTheDocument();
   });
 
   it('renders enforcement step', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('ENFORCEMENT')).toBeInTheDocument();
-    expect(screen.getByText(/1 action/)).toBeInTheDocument();
+    expect(screen.getByText(/took 1 enforcement action/)).toBeInTheDocument();
     expect(screen.getByText(/\$500K in penalties/)).toBeInTheDocument();
   });
 
   it('renders court step', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('COURT')).toBeInTheDocument();
     expect(screen.getByText('EPA v. Acme Industries')).toBeInTheDocument();
     expect(screen.getByText(/D\.C\. Circuit/)).toBeInTheDocument();
   });
 
   it('renders outcome step', () => {
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('OUTCOME')).toBeInTheDocument();
-    expect(screen.getByText(/Industrial emissions index/)).toBeInTheDocument();
+    expect(screen.getByText(/Industrial emissions index moved/)).toBeInTheDocument();
     expect(screen.getByText(/-12\.0%/)).toBeInTheDocument();
+    expect(screen.getByText(/compared to national avg/)).toBeInTheDocument();
   });
+
+  // ── Missing steps ──────────────────────────────────────────────────
 
   it('omits steps when data is absent', () => {
     const chain = makeChain({
@@ -215,31 +236,51 @@ describe('InfluenceGraphCard', () => {
       outcomeSignals: [],
     });
     render(<InfluenceGraphCard insight={makeInsight({ chains: [chain] })} />);
-    expect(screen.getByText('LOBBYING')).toBeInTheDocument();
-    expect(screen.getByText('VOTE')).toBeInTheDocument();
-    expect(screen.queryByText('REGULATION')).not.toBeInTheDocument();
-    expect(screen.queryByText('ENFORCEMENT')).not.toBeInTheDocument();
-    expect(screen.queryByText('COURT')).not.toBeInTheDocument();
-    expect(screen.queryByText('OUTCOME')).not.toBeInTheDocument();
-    // Step count should be 2
-    expect(screen.getByText('2-step chain')).toBeInTheDocument();
+    expect(screen.getByText('Who spent money?')).toBeInTheDocument();
+    expect(screen.getByText('What was voted on?')).toBeInTheDocument();
+    expect(screen.queryByText('Did regulators act?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Was anyone penalized?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Any court cases?')).not.toBeInTheDocument();
+    expect(screen.queryByText('What changed?')).not.toBeInTheDocument();
   });
 
-  it('shows correct step count for full chain', () => {
+  // ── Methodology toggle ─────────────────────────────────────────────
+
+  it('hides confidence scores by default, shows on toggle', async () => {
+    const user = userEvent.setup();
     render(<InfluenceGraphCard insight={makeInsight()} />);
-    expect(screen.getByText('6-step chain')).toBeInTheDocument();
+
+    // Analyst metrics hidden by default
+    expect(screen.queryByText(/Chain confidence: 82%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/text similarity/i)).not.toBeInTheDocument();
+
+    // Click methodology toggle
+    await user.click(screen.getByText('Show confidence scores and methodology'));
+
+    // Now visible
+    expect(screen.getByText(/Chain confidence: 82%/)).toBeInTheDocument();
+    expect(screen.getByText(/Lobbying text \/ bill text similarity: 72%/)).toBeInTheDocument();
+    expect(screen.getByText(/Regulation linked via committee agency/)).toBeInTheDocument();
+
+    // Toggle off
+    await user.click(screen.getByText('Hide technical detail'));
+    expect(screen.queryByText(/Chain confidence: 82%/)).not.toBeInTheDocument();
   });
 
-  it('shows empty state when no chains', () => {
+  // ── Empty and expand states ─────────────────────────────────────────
+
+  it('shows empty state when no paths', () => {
     render(
       <InfluenceGraphCard
         insight={makeInsight({ chains: [], totalChainsDetected: 0, chainsDropped: 0 })}
       />
     );
-    expect(screen.getByText(/No influence chains with extended graph data/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No traceable paths from lobbying spending to legislation/)
+    ).toBeInTheDocument();
   });
 
-  it('handles show all toggle for more than 3 chains', async () => {
+  it('handles show all toggle for more than 3 paths', async () => {
     const user = userEvent.setup();
     const chains = [
       makeChain({ organization: 'Org A' }),
@@ -249,11 +290,10 @@ describe('InfluenceGraphCard', () => {
     ];
     render(<InfluenceGraphCard insight={makeInsight({ chains })} />);
 
-    // Initially shows 3, hides 4th
-    expect(screen.getByText(/Show all 4 chains/)).toBeInTheDocument();
+    expect(screen.getByText(/Show all 4 paths/)).toBeInTheDocument();
 
-    await user.click(screen.getByText(/Show all 4 chains/));
-    expect(screen.getByText('Show fewer chains')).toBeInTheDocument();
+    await user.click(screen.getByText(/Show all 4 paths/));
+    expect(screen.getByText('Show fewer')).toBeInTheDocument();
   });
 
   it('hides peer comparison when percentile is 0', () => {
@@ -267,6 +307,11 @@ describe('InfluenceGraphCard', () => {
       },
     });
     render(<InfluenceGraphCard insight={insight} />);
-    expect(screen.queryByText('Peer percentile')).not.toBeInTheDocument();
+    expect(screen.queryByText(/More money-to-policy connections/)).not.toBeInTheDocument();
+  });
+
+  it('renders chain intro text explaining public records', () => {
+    render(<InfluenceGraphCard insight={makeInsight()} />);
+    expect(screen.getByText(/Each path below traces public records/)).toBeInTheDocument();
   });
 });
