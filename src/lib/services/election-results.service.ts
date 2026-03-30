@@ -127,4 +127,67 @@ export function getStateLegResult2024(districtKey: string): RaceResultOrUnavaila
   return toFull(result, office, districtKey);
 }
 
+/**
+ * Bulk query: all statewide results for a given office type.
+ * Optional state filter narrows to one state.
+ */
+export function getAllStatewideResults2024(
+  office: 'US_PRESIDENT' | 'US_SENATE' | 'GOVERNOR',
+  stateFilter?: string
+): RaceResultFull[] {
+  const officeLabel =
+    office === 'US_PRESIDENT' ? 'PRESIDENT' : office === 'US_SENATE' ? 'SENATE' : 'GOVERNOR';
+  const suffix = `-${officeLabel}`;
+
+  const results: RaceResultFull[] = [];
+  for (const [key, raw] of Object.entries(STATEWIDE_RESULTS_2024)) {
+    if (!key.endsWith(suffix)) continue;
+    const st = key.slice(0, key.indexOf('-'));
+    if (stateFilter && st !== stateFilter.toUpperCase()) continue;
+    results.push(toFull(raw, office, key));
+  }
+  return results.sort((a, b) => a.districtId.localeCompare(b.districtId));
+}
+
+/**
+ * Bulk query: all House results, optionally filtered by state.
+ */
+export function getAllHouseResults2024(stateFilter?: string): RaceResultFull[] {
+  const results: RaceResultFull[] = [];
+  for (const [key, raw] of Object.entries(HOUSE_RESULTS_2024)) {
+    const st = key.slice(0, key.indexOf('-'));
+    if (stateFilter && st !== stateFilter.toUpperCase()) continue;
+    results.push(toFull(raw, 'US_HOUSE', key));
+  }
+  return results.sort((a, b) => a.districtId.localeCompare(b.districtId));
+}
+
+/**
+ * Bulk query: all state legislature results. State filter required (data is huge).
+ */
+export function getAllStateLegResults2024(
+  stateFilter: string,
+  chamberFilter?: 'upper' | 'lower'
+): RaceResultFull[] {
+  const stateUpper = stateFilter.toUpperCase();
+  const prefix = `${stateUpper}-`;
+
+  const results: RaceResultFull[] = [];
+  for (const [key, raw] of Object.entries(STATE_LEG_RESULTS_2024)) {
+    if (!key.startsWith(prefix)) continue;
+    const chamber = key.split('-')[1];
+    if (chamberFilter && chamber !== chamberFilter) continue;
+    const office: ElectionOffice = chamber === 'upper' ? 'STATE_SENATE' : 'STATE_HOUSE';
+    results.push(toFull(raw, office, key));
+  }
+  return results.sort((a, b) => {
+    const aChamber = a.districtId.split('-')[1] || '';
+    const bChamber = b.districtId.split('-')[1] || '';
+    if (aChamber !== bChamber) return aChamber.localeCompare(bChamber);
+    const aNum = parseInt(a.districtId.split('-')[2] || '0', 10);
+    const bNum = parseInt(b.districtId.split('-')[2] || '0', 10);
+    return aNum - bNum;
+  });
+}
+
 export { ELECTION_2024_METADATA };

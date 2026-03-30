@@ -47,12 +47,14 @@ const navigationSections: NavSection[] = [
       { name: 'Your Reps', href: '/your-reps' },
       { name: 'Money Report', href: '/your-reps/money-report' },
       { name: 'Connections', href: '/investigate' },
+      { name: 'Elections', href: '/elections/federal' },
     ],
   },
   {
     name: 'State',
     items: [
       { name: 'Legislatures', href: '/states' },
+      { name: 'Elections', href: '/elections/state' },
       { name: 'Districts', href: '/state-districts' },
       { name: 'Bills', href: '/state-bills' },
     ],
