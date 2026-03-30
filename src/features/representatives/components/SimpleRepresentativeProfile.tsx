@@ -22,6 +22,7 @@ import {
   NewsIcon,
   IntelligenceIcon,
   LobbyingIcon,
+  DistrictIcon,
 } from '@/components/icons/AicherIcons';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
@@ -64,6 +65,14 @@ const IntelligenceTab = dynamic(
 
 const LobbyingTab = dynamic(
   () => import('./LobbyingTab').then(mod => ({ default: mod.LobbyingTab })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
+
+const DistrictTab = dynamic(
+  () => import('./DistrictTab').then(mod => ({ default: mod.DistrictTab })),
   {
     loading: TabLoadingSpinner,
     ssr: false,
@@ -194,6 +203,8 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [congress, fec];
     case 'news':
       return [googleNews];
+    case 'district':
+      return [congress, fec, legislators];
     default:
       return [congress, fec, legislators];
   }
@@ -328,6 +339,23 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                 })
               );
             }
+            // Prefetch district tab endpoints
+            if (tabId === 'district') {
+              const alignmentUrl = `/api/representative/${representative.bioguideId}/civic-alignment`;
+              const connectionsUrl = `/api/representative/${representative.bioguideId}/connections`;
+              preload(alignmentUrl, () =>
+                fetch(alignmentUrl).then(res => {
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return res.json();
+                })
+              );
+              preload(connectionsUrl, () =>
+                fetch(connectionsUrl).then(res => {
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return res.json();
+                })
+              );
+            }
             // Also prefetch influence-chain data for lobbying/intelligence tabs
             if ((tabId === 'lobbying' || tabId === 'intelligence') && committeeCodes.length > 0) {
               const chainUrl = `/api/intelligence/representative/${representative.bioguideId}/influence-chain`;
@@ -421,6 +449,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           icon: <NewsIcon className="w-4 h-4" />,
           description: 'Recent media coverage',
         },
+        {
+          id: 'district',
+          label: 'District',
+          icon: <DistrictIcon className="w-4 h-4" />,
+          description: 'District alignment, spending, hearings, and local officials',
+        },
       ],
       []
     );
@@ -485,6 +519,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               className="-mx-6 -my-6 p-6"
             />
           );
+        case 'district':
+          return <DistrictTab bioguideId={representative.bioguideId} />;
         default:
           return <ContactInfoTab representative={representative} />;
       }
