@@ -35,6 +35,23 @@ export default function YourRepsPage() {
 
         {/* Form */}
         <RepresentativeLookupForm />
+
+        {/* Money Report CTA */}
+        <div className="mt-8 border-2 border-gray-900 dark:border-[#444] p-4 sm:p-6 max-w-2xl">
+          <h2 className="aicher-heading type-base text-gray-900 dark:text-gray-100 mb-2">
+            Money Report Card
+          </h2>
+          <p className="type-sm text-gray-600 dark:text-gray-400 mb-3">
+            See how campaign contributions correlate with voting patterns for all your
+            representatives in one view.
+          </p>
+          <Link
+            href="/your-reps/money-report"
+            className="inline-flex items-center border-2 border-[#3ea2d4] text-[#3ea2d4] px-4 py-2 type-sm font-bold hover:bg-[#3ea2d4] hover:text-white transition-colors min-h-[44px]"
+          >
+            Get your Money Report Card
+          </Link>
+        </div>
       </main>
     </div>
   );

@@ -45,6 +45,7 @@ const navigationSections: NavSection[] = [
       { name: 'Influence', href: '/influence' },
       { name: 'Industries', href: '/industry' },
       { name: 'Your Reps', href: '/your-reps' },
+      { name: 'Money Report', href: '/your-reps/money-report' },
       { name: 'Connections', href: '/investigate' },
     ],
   },
