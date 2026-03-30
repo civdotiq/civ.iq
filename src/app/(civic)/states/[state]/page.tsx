@@ -1,855 +1,614 @@
-'use client';
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect } from 'react';
-import clientLogger from '@/lib/logging/logger-client';
+'use client';
+
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
-// Modular D3 imports for optimal bundle size
-import { select } from 'd3-selection';
-import { scaleBand, scaleLinear } from 'd3-scale';
-import { axisBottom, axisLeft } from 'd3-axis';
-import { lineRadial, curveLinearClosed } from 'd3-shape';
 import Link from 'next/link';
+import useSWR from 'swr';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
+import { getStateName, normalizeStateIdentifier } from '@/lib/data/us-states';
 
-// Types
-interface StateData {
+// ── Types ────────────────────────────────────────────────────────────
+
+interface StateExecutive {
+  id: string;
   name: string;
-  abbreviation: string;
-  capital: string;
-  largestCity: string;
+  position: string;
+  party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
+  termStart: string;
+  termEnd: string;
+  photoUrl?: string;
+  keyInitiatives: string[];
+}
+
+interface ExecutivesResponse {
+  state: string;
+  stateName: string;
+  executives: StateExecutive[];
+  nextElection: { date: string; offices: string[] };
+  partyBreakdown: Record<string, number>;
+}
+
+interface DemographicsResponse {
+  state_code: string;
+  state_name: string;
   population: number;
-  area: number;
-  gdp: number;
-  medianIncome: number;
-  unemploymentRate: number;
-  educationBachelor: number;
-  senators: Array<{
-    name: string;
-    party: string;
-    nextElection: number;
-  }>;
-  houseMembers: number;
-  governor: {
-    name: string;
-    party: string;
-    termEnds: number;
+  median_age: number;
+  median_household_income: number;
+  per_capita_income: number;
+  poverty_rate: number;
+  demographics: Record<string, number>;
+  education: {
+    high_school_or_higher: number;
+    bachelors_or_higher: number;
+    graduate_or_professional: number;
   };
-  legislature: {
-    upperHouse: {
-      name: string;
-      seats: number;
-      democratSeats: number;
-      republicanSeats: number;
-    };
-    lowerHouse: {
-      name: string;
-      seats: number;
-      democratSeats: number;
-      republicanSeats: number;
-    };
-  };
-  electoralVotes: number;
-  presidentialHistory: Array<{
-    year: number;
-    winner: string;
-    margin: number;
-  }>;
-  keyIssues: Array<{
-    name: string;
-    importance: number; // 0-100
-  }>;
-  districts: Array<{
-    number: string;
-    representative: string;
-    party: string;
-    cookPVI: string;
-  }>;
+  housing: { median_home_value: number; median_rent: number; homeownership_rate: number };
+  employment: { labor_force_participation_rate: number; unemployment_rate: number };
+  data_source: string;
+  survey_year: number;
 }
 
-// State map component
-function StateMap({ stateAbbr }: { stateAbbr: string }) {
-  useEffect(() => {
-    const container = select('#state-map');
-    container.selectAll('*').remove();
-
-    const width = 600;
-    const height = 400;
-
-    const svg = container
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', `0 0 ${width} ${height}`);
-
-    // Placeholder for actual state map
-    // In production, this would load actual GeoJSON data
-    const g = svg.append('g');
-
-    // Placeholder visualization
-    g.append('rect')
-      .attr('x', 50)
-      .attr('y', 50)
-      .attr('width', width - 100)
-      .attr('height', height - 100)
-      .attr('fill', '#e5e7eb')
-      .attr('stroke', '#9ca3af')
-      .attr('stroke-width', 2)
-      .attr('rx', 8);
-
-    g.append('text')
-      .attr('x', width / 2)
-      .attr('y', height / 2)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '24px')
-      .attr('fill', '#6b7280')
-      .text(`${stateAbbr} Congressional Districts`);
-
-    // Add district labels
-    const districts = Array.from({ length: 8 }, (_, i) => ({
-      id: i + 1,
-      x: 100 + (i % 4) * 120,
-      y: 150 + Math.floor(i / 4) * 100,
-    }));
-
-    g.selectAll('.district')
-      .data(districts)
-      .enter()
-      .append('g')
-      .attr('class', 'district')
-      .each(function (d) {
-        const district = select(this);
-
-        district
-          .append('circle')
-          .attr('cx', d.x)
-          .attr('cy', d.y)
-          .attr('r', 30)
-          .attr('fill', (d, i) => ((i as number) % 2 === 0 ? '#3b82f6' : '#ef4444'))
-          .attr('opacity', 0.3)
-          .on('mouseover', function () {
-            select(this).attr('opacity', 0.6);
-          })
-          .on('mouseout', function () {
-            select(this).attr('opacity', 0.3);
-          });
-
-        district
-          .append('text')
-          .attr('x', d.x)
-          .attr('y', d.y)
-          .attr('text-anchor', 'middle')
-          .attr('dy', '.35em')
-          .attr('font-size', '14px')
-          .attr('font-weight', 'bold')
-          .text(`CD-${d.id}`);
-      });
-  }, [stateAbbr]);
-
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Congressional Districts Map</h3>
-      <div id="state-map"></div>
-    </div>
-  );
-}
-
-// Party control visualization
-function PartyControl({ legislature }: { legislature: StateData['legislature'] }) {
-  const { upperHouse, lowerHouse } = legislature;
-
-  const calculateControl = (dem: number, rep: number) => {
-    const total = dem + rep;
-    const demPercent = (dem / total) * 100;
-    return {
-      control: dem > rep ? 'Democratic' : 'Republican',
-      margin: Math.abs(dem - rep),
-      demPercent,
-    };
-  };
-
-  const upperControl = calculateControl(upperHouse.democratSeats, upperHouse.republicanSeats);
-  const lowerControl = calculateControl(lowerHouse.democratSeats, lowerHouse.republicanSeats);
-
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">State Legislature Control</h3>
-
-      <div className="space-y-6">
-        {/* Upper House */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium text-gray-700">{upperHouse.name}</h4>
-            <span
-              className={`text-sm font-medium ${
-                upperControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
-              }`}
-            >
-              {upperControl.control} Control (+{upperControl.margin})
-            </span>
-          </div>
-          <div className="relative h-8 bg-gray-200 overflow-hidden">
-            <div
-              className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
-              style={{ width: `${upperControl.demPercent}%` }}
-            />
-            <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
-              <span className="text-white">{upperHouse.democratSeats}D</span>
-              <span className="text-gray-700">{upperHouse.republicanSeats}R</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Lower House */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium text-gray-700">{lowerHouse.name}</h4>
-            <span
-              className={`text-sm font-medium ${
-                lowerControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
-              }`}
-            >
-              {lowerControl.control} Control (+{lowerControl.margin})
-            </span>
-          </div>
-          <div className="relative h-8 bg-gray-200 overflow-hidden">
-            <div
-              className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
-              style={{ width: `${lowerControl.demPercent}%` }}
-            />
-            <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
-              <span className="text-white">{lowerHouse.democratSeats}D</span>
-              <span className="text-gray-700">{lowerHouse.republicanSeats}R</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Trifecta Status */}
-        <div className="mt-4 p-4 bg-white">
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Trifecta Status:</span>{' '}
-            {upperControl.control === lowerControl.control ? (
-              <span
-                className={`font-medium ${
-                  upperControl.control === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
-                }`}
-              >
-                {upperControl.control} Trifecta
-              </span>
-            ) : (
-              <span className="font-medium text-gray-600">Divided Government</span>
-            )}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Presidential voting history
-function PresidentialHistory({ history }: { history: StateData['presidentialHistory'] }) {
-  useEffect(() => {
-    const container = select('#presidential-chart');
-    container.selectAll('*').remove();
-
-    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-    const width = 600 - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
-
-    const svg = container
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    const x = scaleBand()
-      .range([0, width])
-      .domain(history.map(d => d.year.toString()))
-      .padding(0.1);
-
-    const y = scaleLinear().domain([-20, 20]).range([height, 0]);
-
-    svg.append('g').attr('transform', `translate(0,${height})`).call(axisBottom(x));
-
-    svg.append('g').call(axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
-
-    // Add zero line
-    svg
-      .append('line')
-      .attr('x1', 0)
-      .attr('x2', width)
-      .attr('y1', y(0))
-      .attr('y2', y(0))
-      .attr('stroke', '#9ca3af')
-      .attr('stroke-dasharray', '3,3');
-
-    // Add bars
-    svg
-      .selectAll('.bar')
-      .data(history)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', d => x(d.year.toString()) || 0)
-      .attr('width', x.bandwidth())
-      .attr('y', d => (d.margin > 0 ? y(d.margin) : y(0)))
-      .attr('height', d => Math.abs(y(d.margin) - y(0)))
-      .attr('fill', d => (d.winner === 'Democratic' ? '#3b82f6' : '#ef4444'));
-
-    // Add labels
-    svg
-      .selectAll('.label')
-      .data(history)
-      .enter()
-      .append('text')
-      .attr('x', d => (x(d.year.toString()) || 0) + x.bandwidth() / 2)
-      .attr('y', d => y(d.margin) + (d.margin > 0 ? -5 : 15))
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '12px')
-      .text(d => `${Math.abs(d.margin)}%`);
-
-    // Add legend
-    const legend = svg.append('g').attr('transform', `translate(${width - 100}, 0)`);
-
-    legend
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', 18)
-      .attr('height', 18)
-      .style('fill', '#3b82f6');
-
-    legend.append('text').attr('x', 25).attr('y', 9).attr('dy', '.35em').text('Democratic');
-
-    legend
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 25)
-      .attr('width', 18)
-      .attr('height', 18)
-      .style('fill', '#ef4444');
-
-    legend.append('text').attr('x', 25).attr('y', 34).attr('dy', '.35em').text('Republican');
-  }, [history]);
-
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Presidential Election History</h3>
-      <div id="presidential-chart"></div>
-    </div>
-  );
-}
-
-// Key issues radar chart
-function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
-  useEffect(() => {
-    const container = select('#issues-radar');
-    container.selectAll('*').remove();
-
-    const width = 400;
-    const height = 400;
-    const margin = 60;
-    const radius = Math.min(width, height) / 2 - margin;
-
-    const svg = container
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', `translate(${width / 2},${height / 2})`);
-
-    const angleSlice = (Math.PI * 2) / issues.length;
-
-    // Scales
-    const rScale = scaleLinear().range([0, radius]).domain([0, 100]);
-
-    // Grid circles
-    const gridLevels = 5;
-    for (let level = 0; level < gridLevels; level++) {
-      const levelRadius = (radius / gridLevels) * (level + 1);
-
-      svg
-        .append('circle')
-        .attr('r', levelRadius)
-        .style('fill', 'none')
-        .style('stroke', '#e5e7eb')
-        .style('stroke-width', '1px');
-
-      if (level === gridLevels - 1) {
-        svg
-          .append('text')
-          .attr('x', 5)
-          .attr('y', -levelRadius)
-          .attr('dy', '0.4em')
-          .style('font-size', '10px')
-          .style('fill', '#9ca3af')
-          .text('100');
-      }
-    }
-
-    // Axis lines
-    issues.forEach((d, i) => {
-      svg
-        .append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', radius * Math.cos(angleSlice * i - Math.PI / 2))
-        .attr('y2', radius * Math.sin(angleSlice * i - Math.PI / 2))
-        .style('stroke', '#e5e7eb')
-        .style('stroke-width', '1px');
-    });
-
-    // Axis labels
-    issues.forEach((d, i) => {
-      const angle = angleSlice * i - Math.PI / 2;
-      const labelRadius = radius + 20;
-
-      svg
-        .append('text')
-        .attr('x', labelRadius * Math.cos(angle))
-        .attr('y', labelRadius * Math.sin(angle))
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .style('font-size', '12px')
-        .text(d.name);
-    });
-
-    // Data area
-    const radarLine = lineRadial<StateData['keyIssues'][0]>()
-      .radius(d => rScale(d.importance))
-      .angle((d, i) => i * angleSlice)
-      .curve(curveLinearClosed);
-
-    svg
-      .append('path')
-      .datum(issues)
-      .attr('d', radarLine)
-      .style('fill', '#3b82f6')
-      .style('fill-opacity', 0.3)
-      .style('stroke', '#3b82f6')
-      .style('stroke-width', 2);
-
-    // Data points
-    svg
-      .selectAll('.radar-point')
-      .data(issues)
-      .enter()
-      .append('circle')
-      .attr('class', 'radar-point')
-      .attr('r', 4)
-      .attr('cx', (d, i) => rScale(d.importance) * Math.cos(angleSlice * i - Math.PI / 2))
-      .attr('cy', (d, i) => rScale(d.importance) * Math.sin(angleSlice * i - Math.PI / 2))
-      .style('fill', '#3b82f6')
-      .style('stroke', '#fff')
-      .style('stroke-width', 2);
-  }, [issues]);
-
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Policy Issues</h3>
-      <div id="issues-radar"></div>
-    </div>
-  );
-}
-
-// District competitiveness chart
-function DistrictCompetitiveness({ districts }: { districts: StateData['districts'] }) {
-  const getPVIValue = (pvi: string) => {
-    if (pvi === 'EVEN') return 0;
-    const match = pvi.match(/([DR])\+(\d+)/);
-    if (!match) return 0;
-    const [, party, value] = match;
-    return party === 'D' ? -parseInt(value || '0') : parseInt(value || '0');
-  };
-
-  const sortedDistricts = [...districts].sort(
-    (a, b) => getPVIValue(a.cookPVI) - getPVIValue(b.cookPVI)
-  );
-
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">District Competitiveness</h3>
-      <div className="space-y-2">
-        {sortedDistricts.map(district => {
-          const pviValue = getPVIValue(district.cookPVI);
-          const isCompetitive = Math.abs(pviValue) <= 5;
-
-          return (
-            <div key={district.number} className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700 w-16">CD-{district.number}</span>
-              <div className="flex-1 relative h-6 bg-gray-200 overflow-hidden">
-                <div
-                  className={`absolute h-full transition-all duration-500 ${
-                    pviValue < 0 ? 'bg-civiq-blue right-1/2' : 'bg-civiq-red left-1/2'
-                  }`}
-                  style={{
-                    width: `${Math.abs(pviValue) * 2}%`,
-                    maxWidth: '50%',
-                  }}
-                />
-                {isCompetitive && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5">
-                      Competitive
-                    </span>
-                  </div>
-                )}
-              </div>
-              <span
-                className={`text-sm font-medium w-20 text-right ${
-                  district.party === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'
-                }`}
-              >
-                {district.cookPVI}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-600">
-        <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-civiq-blue"></div>
-          Democratic Lean
-        </span>
-        <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-gray-300"></div>
-          Even
-        </span>
-        <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-civiq-red"></div>
-          Republican Lean
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// State statistics card
-function StatCard({
-  title,
-  value,
-  subtitle,
-  trend,
-}: {
+interface LegislatureChamber {
+  name: string;
   title: string;
-  value: string | number;
-  subtitle?: string;
-  trend?: { value: number; positive: boolean };
-}) {
-  return (
-    <div className="bg-white border border-gray-200 p-6">
-      <h3 className="text-sm font-medium text-gray-600">{title}</h3>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-      {trend && (
-        <div
-          className={`flex items-center gap-1 mt-2 text-sm ${
-            trend.positive ? 'text-civiq-green' : 'text-civiq-red'
-          }`}
-        >
-          <span>{trend.positive ? '↑' : '↓'}</span>
-          <span>{Math.abs(trend.value)}%</span>
-        </div>
-      )}
-    </div>
-  );
+  totalSeats: number;
+  democraticSeats: number;
+  republicanSeats: number;
+  otherSeats: number;
 }
 
-// Main State Overview Page
+interface StateLegislator {
+  id: string;
+  name: string;
+  party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
+  chamber: 'upper' | 'lower';
+  district: string;
+  photoUrl?: string;
+}
+
+interface LegislatureResponse {
+  state: string;
+  stateName: string;
+  session: { name: string; startDate: string; endDate: string; status?: string };
+  chambers: { upper: LegislatureChamber; lower: LegislatureChamber };
+  legislators: StateLegislator[];
+  totalCount: number;
+  error?: string;
+}
+
+// ── Fetcher ──────────────────────────────────────────────────────────
+
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+};
+
+const SWR_OPTIONS = { revalidateOnFocus: false, dedupingInterval: 300_000 };
+
+// ── Helpers ──────────────────────────────────────────────────────────
+
+const PARTY_COLORS: Record<string, string> = {
+  Democratic: '#0a9338',
+  Republican: '#e11d07',
+  Independent: '#6b7280',
+  Other: '#6b7280',
+};
+
+function formatCurrency(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  return `$${amount.toLocaleString()}`;
+}
+
+function formatPosition(position: string): string {
+  return position.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ── Main Page ────────────────────────────────────────────────────────
+
 export default function StateOverviewPage() {
   const params = useParams();
-  const stateId = params.state as string;
+  const rawState = params.state as string;
+  const stateCode = normalizeStateIdentifier(rawState);
+  const stateName = stateCode ? getStateName(stateCode) : undefined;
 
-  const [stateData, setStateData] = useState<StateData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'legislature' | 'elections' | 'districts'
-  >('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'legislature'>('overview');
 
-  useEffect(() => {
-    fetchStateData();
-  }, [stateId]);
-
-  const fetchStateData = async () => {
-    setLoading(true);
-    try {
-      // REMOVED: All hardcoded state political data that could mislead citizens
-      // Previously included fake senators (Alex Padilla, outdated Laphonza Butler reference),
-      // hardcoded governor (Gavin Newsom), fake legislative party breakdowns,
-      // and fabricated district representatives with random party assignments
-
-      // Set null to show proper loading/unavailable state from real APIs
-      setStateData(null);
-    } catch (error) {
-      clientLogger.error(
-        'Error fetching state data',
-        error instanceof Error ? error : new Error(String(error))
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (!stateCode || !stateName) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
-          <p className="mt-4 text-gray-600">Loading state data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stateData) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl text-gray-600">State not found</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center border-2 border-gray-200 p-8 bg-white max-w-md">
+          <p className="aicher-heading type-lg text-gray-900 mb-2">State not found</p>
+          <p className="type-sm text-gray-500 mb-4">
+            &ldquo;{rawState}&rdquo; is not a recognized U.S. state code.
+          </p>
+          <Link href="/states" className="type-sm text-[#3ea2d4] aicher-heading">
+            Browse all states
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="container mx-auto px-4 py-8">
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-civiq-blue">
+    <div className="min-h-screen bg-gray-50">
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <nav className="type-sm text-gray-500 mb-4">
+          <Link href="/" className="hover:text-[#3ea2d4]">
             Home
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <Link href="/states" className="hover:text-civiq-blue">
+          <Link href="/states" className="hover:text-[#3ea2d4]">
             States
           </Link>
           <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900">{stateData.name}</span>
+          <span className="text-gray-900">{stateName}</span>
         </nav>
 
-        {/* State header */}
-        <div className="bg-gradient-to-r from-civiq-blue to-civiq-blue text-white p-8 mb-8">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-white/20 flex items-center justify-center">
-              <span className="text-4xl font-bold">{stateData.abbreviation}</span>
+        {/* Header */}
+        <div className="border-2 border-gray-900 bg-white p-6 sm:p-8 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 border-2 border-gray-900 flex items-center justify-center flex-shrink-0">
+              <span className="aicher-heading type-2xl text-gray-900">{stateCode}</span>
             </div>
             <div>
-              <h1 className="text-4xl font-bold mb-2">{stateData.name}</h1>
-              <p className="text-xl text-civiq-blue">
-                Capital: {stateData.capital} • Largest City: {stateData.largestCity}
-              </p>
+              <h1 className="aicher-heading text-3xl text-gray-900">{stateName}</h1>
+              <p className="type-sm text-gray-500 mt-1">State government overview</p>
             </div>
           </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Population"
-            value={stateData.population.toLocaleString()}
-            subtitle="2023 estimate"
-            trend={{ value: 1.2, positive: true }}
-          />
-          <StatCard
-            title="GDP"
-            value={`$${(stateData.gdp / 1e12).toFixed(1)}T`}
-            subtitle="Gross Domestic Product"
-          />
-          <StatCard
-            title="Median Income"
-            value={`$${stateData.medianIncome.toLocaleString()}`}
-            subtitle="Household median"
-            trend={{ value: 3.5, positive: true }}
-          />
-          <StatCard
-            title="Electoral Votes"
-            value={stateData.electoralVotes}
-            subtitle="Presidential elections"
-          />
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white border-2 border-black p-1 mb-8">
-          <nav className="flex">
-            {(['overview', 'legislature', 'elections', 'districts'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === tab
-                    ? 'bg-civiq-blue text-white'
-                    : 'text-gray-700 hover:bg-white border-2 border-gray-300'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </nav>
+        {/* Tab navigation */}
+        <div className="flex gap-1 mb-6">
+          {(['overview', 'legislature'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-3 min-h-[44px] type-sm aicher-heading transition-colors ${
+                activeTab === tab
+                  ? 'border-2 border-gray-900 bg-white text-gray-900 border-b-[3px] border-b-[#3ea2d4]'
+                  : 'border-2 border-gray-200 text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              {tab === 'overview' ? 'Overview' : 'Legislature'}
+            </button>
+          ))}
         </div>
 
         {/* Tab content */}
-        <div className="space-y-8">
-          {activeTab === 'overview' && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <StateMap stateAbbr={stateData.abbreviation} />
-                <KeyIssuesRadar issues={stateData.keyIssues} />
-              </div>
-
-              {/* State leadership */}
-              <div className="bg-white border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Leadership</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">Governor</h4>
-                    <p className="text-lg font-semibold">{stateData.governor.name}</p>
-                    <p className="text-sm text-gray-600">{stateData.governor.party}</p>
-                    <p className="text-sm text-gray-500">
-                      Term ends: {stateData.governor.termEnds}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">U.S. Senators</h4>
-                    {stateData.senators.map((senator, i) => (
-                      <div key={i} className="mb-2">
-                        <p className="font-semibold">{senator.name}</p>
-                        <p className="text-sm text-gray-600">
-                          {senator.party} • Next election: {senator.nextElection}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">U.S. House Delegation</h4>
-                    <p className="text-3xl font-bold">{stateData.houseMembers}</p>
-                    <p className="text-sm text-gray-600">Representatives</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'legislature' && (
-            <>
-              <PartyControl legislature={stateData.legislature} />
-
-              {/* Additional legislature info */}
-              <div className="bg-white border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Statistics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-3">Education & Employment</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Bachelor&apos;s Degree or Higher</span>
-                        <span className="font-medium">{stateData.educationBachelor}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Unemployment Rate</span>
-                        <span className="font-medium">{stateData.unemploymentRate}%</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-3">Geographic Info</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Area</span>
-                        <span className="font-medium">{stateData.area.toLocaleString()} sq mi</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Population Density</span>
-                        <span className="font-medium">
-                          {Math.round(stateData.population / stateData.area)} per sq mi
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'elections' && (
-            <>
-              <PresidentialHistory history={stateData.presidentialHistory} />
-
-              {/* Electoral trends */}
-              <div className="bg-white border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Electoral Trends</h3>
-                <div className="prose max-w-none">
-                  <p className="text-gray-600">
-                    {stateData.name} has {stateData.electoralVotes} electoral votes in presidential
-                    elections. The state has voted{' '}
-                    {stateData.presidentialHistory[0]?.winner || 'Unknown'} in the last{' '}
-                    {
-                      stateData.presidentialHistory.filter(
-                        h => h.winner === stateData.presidentialHistory[0]?.winner
-                      ).length
-                    }{' '}
-                    presidential elections.
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'districts' && (
-            <>
-              <DistrictCompetitiveness districts={stateData.districts} />
-
-              {/* District delegation breakdown */}
-              <div className="bg-white border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  House Delegation Breakdown
-                </h3>
-                <div className="flex items-center justify-center gap-8">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-civiq-blue">
-                      {stateData.districts.filter(d => d.party === 'Democratic').length}
-                    </p>
-                    <p className="text-sm text-gray-600">Democrats</p>
-                  </div>
-                  <div className="text-gray-400">vs</div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-civiq-red">
-                      {stateData.districts.filter(d => d.party === 'Republican').length}
-                    </p>
-                    <p className="text-sm text-gray-600">Republicans</p>
-                  </div>
-                </div>
-                <div className="mt-4 text-center text-sm text-gray-600">
-                  {stateData.districts.filter(d => Math.abs(getPVIValue(d.cookPVI)) <= 5).length}{' '}
-                  competitive districts
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {activeTab === 'overview' && <OverviewTab stateCode={stateCode} stateName={stateName} />}
+        {activeTab === 'legislature' && <LegislatureTab stateCode={stateCode} />}
 
         <ExploreFooter
           variant="state"
-          currentSection="State Overview"
+          currentSection={stateName}
           relatedLinks={[
             { href: '/states', label: 'All 50 States' },
-            { href: '/state-bills', label: 'State Bill Search' },
-            { href: '/state-districts', label: 'State Districts' },
-            { href: '/glossary', label: 'Glossary' },
+            { href: `/delegation/${stateCode}`, label: `${stateCode} Congressional Delegation` },
           ]}
         />
       </main>
     </div>
   );
+}
 
-  function getPVIValue(pvi: string): number {
-    if (pvi === 'EVEN') return 0;
-    const match = pvi.match(/([DR])\+(\d+)/);
-    if (!match) return 0;
-    const [, party, value] = match;
-    return party === 'D' ? -parseInt(value || '0') : parseInt(value || '0');
+// ── Overview Tab ─────────────────────────────────────────────────────
+
+function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: string }) {
+  const { data: execs, isLoading: execsLoading } = useSWR<ExecutivesResponse>(
+    `/api/state-executives/${stateCode}`,
+    fetcher,
+    SWR_OPTIONS
+  );
+
+  const { data: demographics, isLoading: demoLoading } = useSWR<DemographicsResponse>(
+    `/api/state-demographics/${stateCode}`,
+    fetcher,
+    SWR_OPTIONS
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Demographics stats */}
+      {demoLoading && <SkeletonGrid count={4} />}
+      {demographics && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatBox label="Population" value={demographics.population.toLocaleString()} />
+          <StatBox
+            label="Median income"
+            value={formatCurrency(demographics.median_household_income)}
+          />
+          <StatBox
+            label="Unemployment"
+            value={`${demographics.employment.unemployment_rate.toFixed(1)}%`}
+          />
+          <StatBox label="Median age" value={demographics.median_age.toFixed(1)} />
+        </div>
+      )}
+
+      {/* State executives */}
+      {execsLoading && <SkeletonCard />}
+      {execs && execs.executives.length > 0 && (
+        <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
+          <h2 className="aicher-heading type-lg text-gray-900 mb-4">State Leadership</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {execs.executives.slice(0, 6).map(exec => (
+              <div key={exec.id} className="border-2 border-gray-200 p-3">
+                <div className="flex items-start gap-3">
+                  <span
+                    className="inline-block w-3 h-3 mt-1 flex-shrink-0 border-2 border-gray-300"
+                    style={{ backgroundColor: PARTY_COLORS[exec.party] ?? '#6b7280' }}
+                    title={exec.party}
+                  />
+                  <div>
+                    <p className="type-sm font-medium text-gray-900">{exec.name}</p>
+                    <p className="type-xs text-gray-500">{formatPosition(exec.position)}</p>
+                    {exec.termEnd && (
+                      <p className="type-xs text-gray-400">
+                        Term ends {new Date(exec.termEnd).getFullYear()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {execs.nextElection?.date && (
+            <p className="type-xs text-gray-400 mt-4">
+              Next statewide election:{' '}
+              {new Date(execs.nextElection.date).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          )}
+        </div>
+      )}
+      {execs && execs.executives.length === 0 && (
+        <EmptyState message="State executive data not yet available from Wikidata for this state." />
+      )}
+
+      {/* Education + Housing */}
+      {demographics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
+            <h3 className="aicher-heading type-sm text-gray-500 mb-3">Education</h3>
+            <div className="space-y-2">
+              <DataRow
+                label="High school or higher"
+                value={`${demographics.education.high_school_or_higher.toFixed(1)}%`}
+              />
+              <DataRow
+                label="Bachelor's or higher"
+                value={`${demographics.education.bachelors_or_higher.toFixed(1)}%`}
+              />
+              <DataRow
+                label="Graduate or professional"
+                value={`${demographics.education.graduate_or_professional.toFixed(1)}%`}
+              />
+            </div>
+          </div>
+          <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
+            <h3 className="aicher-heading type-sm text-gray-500 mb-3">Housing</h3>
+            <div className="space-y-2">
+              <DataRow
+                label="Median home value"
+                value={formatCurrency(demographics.housing.median_home_value)}
+              />
+              <DataRow
+                label="Median rent"
+                value={formatCurrency(demographics.housing.median_rent)}
+              />
+              <DataRow
+                label="Homeownership rate"
+                value={`${demographics.housing.homeownership_rate.toFixed(1)}%`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Poverty + Labor */}
+      {demographics && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatBox label="Poverty rate" value={`${demographics.poverty_rate.toFixed(1)}%`} />
+          <StatBox
+            label="Per capita income"
+            value={formatCurrency(demographics.per_capita_income)}
+          />
+          <StatBox
+            label="Labor participation"
+            value={`${demographics.employment.labor_force_participation_rate.toFixed(1)}%`}
+          />
+        </div>
+      )}
+
+      {demographics && <p className="type-xs text-gray-400">Source: {demographics.data_source}</p>}
+
+      {/* Link to delegation */}
+      <Link
+        href={`/delegation/${stateCode}`}
+        className="block border-2 border-[#3ea2d4] text-[#3ea2d4] type-sm text-center font-bold py-3 hover:bg-[#3ea2d4] hover:text-white transition-colors"
+      >
+        View {stateName} congressional delegation
+      </Link>
+    </div>
+  );
+}
+
+// ── Legislature Tab ──────────────────────────────────────────────────
+
+function LegislatureTab({ stateCode }: { stateCode: string }) {
+  const { data, isLoading, error } = useSWR<LegislatureResponse>(
+    `/api/state-legislature/${stateCode}`,
+    fetcher,
+    SWR_OPTIONS
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <SkeletonCard />
+        <SkeletonGrid count={6} />
+      </div>
+    );
   }
+
+  if (error || !data) {
+    return <EmptyState message="State legislature data temporarily unavailable from OpenStates." />;
+  }
+
+  if (data.error || data.totalCount === 0) {
+    return <EmptyState message="State legislature data not currently available for this state." />;
+  }
+
+  const { chambers, session, legislators } = data;
+  const isUnicameral = chambers.lower.totalSeats === 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Session info */}
+      {session.name && session.name !== 'Data Unavailable' && (
+        <div className="border-2 border-gray-200 bg-white p-4">
+          <p className="type-sm text-gray-700">
+            <span className="aicher-heading">Current session:</span> {session.name}
+            {session.status && (
+              <span className="ml-2 type-xs text-gray-400">({session.status})</span>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Chamber party control bars */}
+      <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
+        <h2 className="aicher-heading type-lg text-gray-900 mb-4">Party Control</h2>
+        <div className="space-y-6">
+          <ChamberBar chamber={chambers.upper} />
+          {!isUnicameral && <ChamberBar chamber={chambers.lower} />}
+          {isUnicameral && (
+            <p className="type-xs text-gray-400">Nebraska has a unicameral legislature.</p>
+          )}
+
+          {/* Trifecta note */}
+          {!isUnicameral && chambers.upper.totalSeats > 0 && chambers.lower.totalSeats > 0 && (
+            <TrifectaStatus upper={chambers.upper} lower={chambers.lower} />
+          )}
+        </div>
+      </div>
+
+      {/* Legislator roster */}
+      {legislators.length > 0 && (
+        <LegislatorRoster
+          legislators={legislators}
+          chambers={chambers}
+          isUnicameral={isUnicameral}
+        />
+      )}
+
+      <p className="type-xs text-gray-400">Source: OpenStates</p>
+    </div>
+  );
+}
+
+// ── Sub-components ───────────────────────────────────────────────────
+
+function ChamberBar({ chamber }: { chamber: LegislatureChamber }) {
+  if (chamber.totalSeats === 0) return null;
+
+  const demPct = (chamber.democraticSeats / chamber.totalSeats) * 100;
+  const repPct = (chamber.republicanSeats / chamber.totalSeats) * 100;
+  const demLead = chamber.democraticSeats > chamber.republicanSeats;
+  const margin = Math.abs(chamber.democraticSeats - chamber.republicanSeats);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="type-sm font-medium text-gray-900">{chamber.name}</h3>
+        <span className="type-xs text-gray-500">
+          {demLead ? 'D' : 'R'}+{margin} of {chamber.totalSeats}
+        </span>
+      </div>
+      <div className="flex h-6 border-2 border-gray-200 overflow-hidden">
+        <div
+          className="h-full"
+          style={{ width: `${demPct}%`, backgroundColor: '#0a9338' }}
+          title={`Democrat: ${chamber.democraticSeats}`}
+        />
+        <div
+          className="h-full"
+          style={{ width: `${repPct}%`, backgroundColor: '#e11d07' }}
+          title={`Republican: ${chamber.republicanSeats}`}
+        />
+        {chamber.otherSeats > 0 && (
+          <div
+            className="h-full bg-gray-400"
+            style={{ width: `${(chamber.otherSeats / chamber.totalSeats) * 100}%` }}
+            title={`Other: ${chamber.otherSeats}`}
+          />
+        )}
+      </div>
+      <div className="flex justify-between mt-1 type-xs text-gray-500">
+        <span>{chamber.democraticSeats} D</span>
+        {chamber.otherSeats > 0 && <span>{chamber.otherSeats} I/Other</span>}
+        <span>{chamber.republicanSeats} R</span>
+      </div>
+    </div>
+  );
+}
+
+function TrifectaStatus({
+  upper,
+  lower,
+}: {
+  upper: LegislatureChamber;
+  lower: LegislatureChamber;
+}) {
+  const upperDemLead = upper.democraticSeats > upper.republicanSeats;
+  const lowerDemLead = lower.democraticSeats > lower.republicanSeats;
+  const isTrifecta = upperDemLead === lowerDemLead;
+
+  return (
+    <p className="type-xs text-gray-500 border-t-2 border-gray-100 pt-3">
+      <span className="aicher-heading">Legislature control:</span>{' '}
+      {isTrifecta ? (
+        <span style={{ color: upperDemLead ? '#0a9338' : '#e11d07' }}>
+          {upperDemLead ? 'Democratic' : 'Republican'} control of both chambers
+        </span>
+      ) : (
+        <span className="text-gray-600">Divided — chambers controlled by different parties</span>
+      )}
+    </p>
+  );
+}
+
+function LegislatorRoster({
+  legislators,
+  chambers,
+  isUnicameral,
+}: {
+  legislators: StateLegislator[];
+  chambers: LegislatureResponse['chambers'];
+  isUnicameral: boolean;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const upper = legislators.filter(l => l.chamber === 'upper');
+  const lower = legislators.filter(l => l.chamber === 'lower');
+
+  const INITIAL_SHOW = 10;
+
+  return (
+    <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
+      <h2 className="aicher-heading type-lg text-gray-900 mb-4">
+        Current Members ({legislators.length})
+      </h2>
+
+      {/* Upper chamber */}
+      {upper.length > 0 && (
+        <div className="mb-6">
+          <h3 className="type-sm aicher-heading text-gray-500 mb-2">
+            {chambers.upper.name} ({upper.length})
+          </h3>
+          <LegislatorList legislators={showAll ? upper : upper.slice(0, INITIAL_SHOW)} />
+        </div>
+      )}
+
+      {/* Lower chamber */}
+      {!isUnicameral && lower.length > 0 && (
+        <div>
+          <h3 className="type-sm aicher-heading text-gray-500 mb-2">
+            {chambers.lower.name} ({lower.length})
+          </h3>
+          <LegislatorList legislators={showAll ? lower : lower.slice(0, INITIAL_SHOW)} />
+        </div>
+      )}
+
+      {legislators.length > INITIAL_SHOW * (isUnicameral ? 1 : 2) && (
+        <button
+          onClick={() => setShowAll(prev => !prev)}
+          className="mt-4 type-xs text-[#3ea2d4] aicher-heading py-2 min-h-[44px] inline-flex items-center"
+          aria-expanded={showAll}
+        >
+          {showAll ? 'Show fewer' : `Show all ${legislators.length} members`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function LegislatorList({ legislators }: { legislators: StateLegislator[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+      {legislators.map(leg => (
+        <div key={leg.id} className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50">
+          <span
+            className="inline-block w-2.5 h-2.5 flex-shrink-0 border border-gray-300"
+            style={{ backgroundColor: PARTY_COLORS[leg.party] ?? '#6b7280' }}
+            title={leg.party}
+          />
+          <span className="type-sm text-gray-900 truncate">{leg.name}</span>
+          <span className="type-xs text-gray-400 flex-shrink-0">Dist. {leg.district}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── UI Primitives ────────────────────────────────────────────────────
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-2 border-gray-200 bg-white p-3">
+      <div className="aicher-heading type-2xl text-gray-900">{value}</div>
+      <div className="type-xs text-gray-500 aicher-heading-wide">{label}</div>
+    </div>
+  );
+}
+
+function DataRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between type-sm">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-medium text-gray-900">{value}</span>
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="border-2 border-gray-200 bg-white p-6 text-center">
+      <p className="type-sm text-gray-500">{message}</p>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="border-2 border-gray-200 bg-white p-6 animate-pulse">
+      <div className="h-5 bg-gray-100 w-40 mb-4" />
+      <div className="space-y-3">
+        <div className="h-16 bg-gray-100" />
+        <div className="h-16 bg-gray-100" />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid({ count }: { count: number }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="border-2 border-gray-200 bg-white p-3 animate-pulse">
+          <div className="h-8 bg-gray-100 w-16 mb-1" />
+          <div className="h-3 bg-gray-100 w-20" />
+        </div>
+      ))}
+    </div>
+  );
 }
