@@ -76,6 +76,38 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
       {/* Summary — the hero element. This is what citizens read. */}
       <p className="type-base text-gray-900 leading-relaxed mb-6">{summary}</p>
 
+      {/* Key numbers — quick stats citizens scan */}
+      {(funding.totalSpent !== null ||
+        funding.cashOnHand !== null ||
+        voting.missedVotePct !== null) && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+          {funding.totalSpent !== null && (
+            <div className="border-2 border-gray-200 p-3">
+              <div className="aicher-heading type-2xl text-gray-900">
+                {formatCompact(funding.totalSpent)}
+              </div>
+              <div className="type-xs text-gray-500 aicher-heading-wide">Spent</div>
+            </div>
+          )}
+          {funding.cashOnHand !== null && (
+            <div className="border-2 border-gray-200 p-3">
+              <div className="aicher-heading type-2xl text-gray-900">
+                {formatCompact(funding.cashOnHand)}
+              </div>
+              <div className="type-xs text-gray-500 aicher-heading-wide">Cash on hand</div>
+            </div>
+          )}
+          {voting.missedVotePct !== null && (
+            <div className="border-2 border-gray-200 p-3">
+              <div className="aicher-heading type-2xl text-gray-900">
+                {voting.missedVotePct.toFixed(1)}%
+              </div>
+              <div className="type-xs text-gray-500 aicher-heading-wide">Votes missed</div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Key Findings — top 2 only */}
       {topFindings.length > 0 && (
         <div className="mb-6">
@@ -240,6 +272,11 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
 
       {/* Sources + disclaimer — always visible but compact */}
       <div className="mt-4 pt-3 border-t-2 border-gray-100">
+        {funding.contributionsSampled > 0 && (
+          <p className="type-xs text-gray-400 mb-1">
+            Based on {funding.contributionsSampled.toLocaleString()} itemized contributions
+          </p>
+        )}
         <p className="type-xs text-gray-400 mb-1">
           Sources: Congress.gov, FEC.gov, Senate lobbying disclosures
         </p>

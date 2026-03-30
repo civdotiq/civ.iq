@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -120,6 +121,65 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
           </span>
         )}
       </div>
+
+      {/* Shift context disclosures */}
+      {shifts.length > 0 && <ShiftContextList shifts={shifts} />}
+    </div>
+  );
+}
+
+function ShiftContextList({ shifts }: { shifts: VoteShift[] }) {
+  const [expandedShift, setExpandedShift] = useState<string | null>(null);
+
+  const shiftsWithContext = shifts.filter(
+    s =>
+      s.context.newCommittees.length > 0 ||
+      s.context.largeContributions > 0 ||
+      s.context.electionProximity
+  );
+
+  if (shiftsWithContext.length === 0) return null;
+
+  return (
+    <div className="mt-4 border-t-2 border-gray-100 pt-3 space-y-1">
+      <h4 className="aicher-heading type-xs text-gray-500 mb-2">Why these shifts?</h4>
+      {shiftsWithContext.map(shift => {
+        const isExpanded = expandedShift === shift.quarter;
+        return (
+          <div key={shift.quarter}>
+            <button
+              onClick={() => setExpandedShift(isExpanded ? null : shift.quarter)}
+              className="w-full text-left flex items-start gap-2 py-2 min-h-[44px] aicher-focus"
+              aria-expanded={isExpanded}
+            >
+              <span className="text-gray-400 mt-0.5 flex-shrink-0" aria-hidden="true">
+                {isExpanded ? '−' : '+'}
+              </span>
+              <span className="type-sm text-gray-900">
+                {shift.quarter}: {shift.magnitude.toFixed(1)}pp {shift.direction}
+              </span>
+            </button>
+            {isExpanded && (
+              <div className="ml-5 pb-2 space-y-1">
+                {shift.context.newCommittees.length > 0 && (
+                  <p className="type-xs text-gray-600">
+                    Joined: {shift.context.newCommittees.join(', ')}
+                  </p>
+                )}
+                {shift.context.largeContributions > 0 && (
+                  <p className="type-xs text-gray-600">
+                    {shift.context.largeContributions} large contribution
+                    {shift.context.largeContributions !== 1 ? 's' : ''} received this quarter
+                  </p>
+                )}
+                {shift.context.electionProximity && (
+                  <p className="type-xs text-gray-600">Within 6 months of next election</p>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

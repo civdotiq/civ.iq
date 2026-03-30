@@ -62,6 +62,36 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
         <ShapFactorsBar factors={insight.shapFactors} />
       )}
 
+      {/* Top predictive factors — citizen-readable version */}
+      {insight.topPredictiveFactors && insight.topPredictiveFactors.length > 0 && (
+        <div className="mb-4">
+          <h4 className="aicher-heading type-sm text-gray-900 mb-2">
+            What drives voting predictions
+          </h4>
+          <div className="space-y-2">
+            {insight.topPredictiveFactors.map((factor, i) => (
+              <div key={factor.feature} className="flex items-center gap-3">
+                <span className="type-xs text-gray-400 aicher-heading w-4 text-right">{i + 1}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="type-sm text-gray-700">{factor.humanLabel}</span>
+                    <span className="type-xs aicher-heading text-gray-500">
+                      {(factor.importance * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 border border-gray-200 mt-1">
+                    <div
+                      className="h-full bg-[#3ea2d4]"
+                      style={{ width: `${Math.min(factor.importance * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Notable deviations table */}
       {notableDeviations.length > 0 && (
         <div className="mb-4">

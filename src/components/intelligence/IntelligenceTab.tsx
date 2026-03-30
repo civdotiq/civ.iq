@@ -264,6 +264,11 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
             )}
             {vfLoading && !voteFinance && <InsightPlaceholder />}
 
+            {/* Vote-Finance Anomalies */}
+            {voteFinance?.peerComparison?.anomalies && (
+              <AnomalyFlagsDisplay anomalies={voteFinance.peerComparison.anomalies} />
+            )}
+
             {/* Temporal */}
             {temporal && (
               <>
@@ -276,6 +281,11 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
               </>
             )}
             {temporalLoading && !temporal && <InsightPlaceholder tall />}
+
+            {/* Temporal Anomalies */}
+            {temporal?.peerComparison?.anomalies && (
+              <AnomalyFlagsDisplay anomalies={temporal.peerComparison.anomalies} />
+            )}
 
             {/* Lobbying Pipeline */}
             {lobbying && (
