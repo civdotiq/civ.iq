@@ -32,6 +32,10 @@ import { SecFilingsSection } from './SecFilingsSection';
 import { TradeSectorBreakdown } from '@/components/intelligence/TradeSectorBreakdown';
 import { StockTradeRankBadge } from '@/components/intelligence/StockTradeRankBadge';
 import { PACLink } from '@/components/shared/links/EntityLinks';
+import { FundingNarrative } from './FundingNarrative';
+import { generateFundingNarrative } from '@/lib/campaign-finance/narrative';
+import { GeographicBreakdown } from './GeographicBreakdown';
+import { DynamicFundraisingTrends } from '@/components/dynamic';
 
 // Chart colors - using centralized brand palette
 const COLORS = CHART_COLORS;
@@ -111,6 +115,78 @@ interface CampaignFinanceData {
     description: string;
     committeeId?: string;
   }>;
+
+  // Comprehensive endpoint fields (previously dropped)
+  geographic?: {
+    topStates: Array<{
+      state: string;
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    }>;
+    inDistrict?: { amount: number; percentage: number; contributionCount: number };
+    outOfDistrict?: { amount: number; percentage: number; contributionCount: number };
+  };
+  donorMetrics?: {
+    totalDonors: number;
+    smallDonors: number;
+    smallDonorPercentage: number;
+    averageSmallDonation: number;
+    medianDonation: number;
+    averageDonation: number;
+    largestDonation: number;
+  };
+  sectorSummary?: {
+    business: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topIndustries: Array<{ name: string; amount: number }>;
+    };
+    labor: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topUnions: Array<{ name: string; amount: number }>;
+    };
+    ideological: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topCauses: Array<{ name: string; amount: number }>;
+    };
+    other: { amount: number; percentage: number; contributionCount: number };
+  };
+  organizations?: {
+    topOrganizations: Array<{
+      name: string;
+      totalAmount: number;
+      contributionCount: number;
+      percentage: number;
+      employees: number;
+      fecVerifyLink: string;
+    }>;
+    metadata: {
+      totalOrganizations: number;
+      totalFromOrganizations: number;
+      excludedCategories: string[];
+    };
+  };
+  leadershipPACSponsors?: Array<{
+    sponsorName: string;
+    sponsorBioguideId: string;
+    sponsorState: string;
+    pacName: string;
+    pacId: string;
+    amount: number;
+    date: string;
+    fecLink: string;
+  }>;
+  conduitAggregates?: {
+    actblue?: { totalAmount: number; contributionCount: number; individualDonors: number };
+    winred?: { totalAmount: number; contributionCount: number; individualDonors: number };
+  };
+  contributionTrends?: Array<{ month: string; amount: number; count: number }>;
 
   // Phase 5 fields
   dataQuality?: {
@@ -254,6 +330,14 @@ export function CampaignFinanceVisualizer({
                 data.interestGroups?.pacContributions?.supportingExpenditures || [],
               opposingExpenditures:
                 data.interestGroups?.pacContributions?.opposingExpenditures || [],
+              // Map previously dropped comprehensive fields
+              geographic: data.geographic || null,
+              donorMetrics: data.donorMetrics || null,
+              sectorSummary: data.sectorSummary || null,
+              organizations: data.organizations || null,
+              leadershipPACSponsors: data.pacDirect?.leadershipPACSponsors || null,
+              conduitAggregates: data.contributors?.conduitAggregates || null,
+              contributionTrends: data.contributors?.contributionTrends || null,
               // Map other comprehensive data
               industry_breakdown: data.industries?.topIndustries || [],
               top_contributors: data.contributors?.topContributors || [],
@@ -310,6 +394,36 @@ export function CampaignFinanceVisualizer({
     financeData?.partyContributions || currentCycleData?.party_contributions || 0;
   const candidateContributions =
     financeData?.candidateContributions || currentCycleData?.candidate_contributions || 0;
+
+  // Generate funding narrative from available data
+  const fundingNarrative =
+    totalRaised > 0
+      ? generateFundingNarrative({
+          totalRaised,
+          totalSpent,
+          cashOnHand,
+          donations: {
+            individual: individualContributions,
+            pac: pacContributions,
+            party: partyContributions,
+            candidate: candidateContributions,
+          },
+          topContributors: (financeData?.top_contributors || []).map(
+            (c: { name: string; total_amount?: number; totalAmount?: number }) => ({
+              name: c.name,
+              amount: c.totalAmount ?? c.total_amount ?? 0,
+              type: 'individual',
+            })
+          ),
+          industryBreakdown: (financeData?.industry_breakdown || []).map(
+            (i: { sector: string; amount: number; percentage: number }) => ({
+              industry: i.sector,
+              amount: i.amount,
+              percentage: i.percentage,
+            })
+          ),
+        })
+      : null;
 
   // Prepare chart data
   const donationBreakdown = [
@@ -536,6 +650,47 @@ export function CampaignFinanceVisualizer({
               tabIndex={0}
               className="space-y-6"
             >
+              {/* Funding Narrative — plain-language profile card */}
+              {fundingNarrative && (
+                <FundingNarrative
+                  narrative={fundingNarrative}
+                  representativeName={_representative?.name}
+                />
+              )}
+
+              {/* Donor Metrics — key stats row */}
+              {financeData?.donorMetrics && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-gray-50 border-2 border-gray-200">
+                    <div className="text-sm text-gray-600 mb-1">Total Donors</div>
+                    <div className="text-xl font-bold text-gray-900">
+                      {financeData.donorMetrics.totalDonors.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 border-2 border-gray-200">
+                    <div className="text-sm text-gray-600 mb-1">Small-Donor %</div>
+                    <div className="text-xl font-bold text-gray-900">
+                      {financeData.donorMetrics.smallDonorPercentage.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {financeData.donorMetrics.smallDonors.toLocaleString()} donors ≤$200
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 border-2 border-gray-200">
+                    <div className="text-sm text-gray-600 mb-1">Average Donation</div>
+                    <div className="text-xl font-bold text-gray-900">
+                      {formatCurrency(financeData.donorMetrics.averageDonation)}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 border-2 border-gray-200">
+                    <div className="text-sm text-gray-600 mb-1">Median Donation</div>
+                    <div className="text-xl font-bold text-gray-900">
+                      {formatCurrency(financeData.donorMetrics.medianDonation)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Hero Summary - Enhanced Overview */}
               <HeroSummary
                 representativeName={_representative?.name || 'Representative'}
@@ -584,6 +739,150 @@ export function CampaignFinanceVisualizer({
                   cycle={currentCycleData?.cycle}
                 />
               )}
+
+              {/* Geographic Breakdown — in-state vs out-of-state */}
+              {financeData?.geographic?.topStates &&
+                financeData.geographic.topStates.length > 0 && (
+                  <GeographicBreakdown
+                    data={financeData.geographic.topStates.map(s => ({
+                      state: s.state,
+                      stateName: s.state,
+                      amount: s.amount,
+                      percentage: s.percentage,
+                      count: s.contributionCount,
+                    }))}
+                    dataQuality={{
+                      totalContributionsAnalyzed:
+                        financeData.dataQuality?.geography?.totalContributionsAnalyzed ?? 0,
+                      contributionsWithState:
+                        financeData.dataQuality?.geography?.contributionsWithState ?? 0,
+                      completenessPercentage:
+                        financeData.dataQuality?.geography?.completenessPercentage ?? 0,
+                    }}
+                    totalRaised={totalRaised}
+                  />
+                )}
+
+              {/* Sector Summary — Business vs Labor vs Ideological */}
+              {financeData?.sectorSummary && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Sector Breakdown</h4>
+                  <hr className="border-gray-300 mb-4" />
+                  {/* 3-segment bar */}
+                  <div className="h-8 flex overflow-hidden border-2 border-gray-300 mb-4">
+                    {financeData.sectorSummary.business.percentage > 0 && (
+                      <div
+                        className="h-full bg-[#3ea2d4]"
+                        style={{ width: `${financeData.sectorSummary.business.percentage}%` }}
+                        title={`Business: ${financeData.sectorSummary.business.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {financeData.sectorSummary.labor.percentage > 0 && (
+                      <div
+                        className="h-full bg-[#d97706]"
+                        style={{ width: `${financeData.sectorSummary.labor.percentage}%` }}
+                        title={`Labor: ${financeData.sectorSummary.labor.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                    {financeData.sectorSummary.ideological.percentage > 0 && (
+                      <div
+                        className="h-full bg-gray-500"
+                        style={{ width: `${financeData.sectorSummary.ideological.percentage}%` }}
+                        title={`Ideological: ${financeData.sectorSummary.ideological.percentage.toFixed(1)}%`}
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    {[
+                      {
+                        label: 'Business',
+                        data: financeData.sectorSummary.business,
+                        color: 'bg-[#3ea2d4]',
+                      },
+                      {
+                        label: 'Labor',
+                        data: financeData.sectorSummary.labor,
+                        color: 'bg-[#d97706]',
+                      },
+                      {
+                        label: 'Ideological',
+                        data: financeData.sectorSummary.ideological,
+                        color: 'bg-gray-500',
+                      },
+                      {
+                        label: 'Other',
+                        data: financeData.sectorSummary.other,
+                        color: 'bg-gray-300',
+                      },
+                    ]
+                      .filter(item => item.data.amount > 0)
+                      .map(item => (
+                        <div key={item.label} className="flex items-center gap-2">
+                          <div className={`w-3 h-3 ${item.color}`} />
+                          <span className="text-gray-700">{item.label}</span>
+                          <span className="font-medium ml-auto">
+                            {formatCurrency(item.data.amount)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Leadership PAC Sponsors — "PAC money from these politicians" */}
+              {financeData?.leadershipPACSponsors &&
+                financeData.leadershipPACSponsors.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold text-gray-900 mb-3">
+                      Leadership PAC Sponsors
+                    </h4>
+                    <hr className="border-gray-300 mb-4" />
+                    <p className="text-xs text-gray-500 mb-3">
+                      PAC contributions from other members of Congress
+                    </p>
+                    <div className="space-y-2">
+                      {financeData.leadershipPACSponsors.slice(0, 10).map((sponsor, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                        >
+                          <div>
+                            <a
+                              href={`/representative/${sponsor.sponsorBioguideId}`}
+                              className="text-civiq-blue hover:underline font-medium text-sm"
+                            >
+                              {sponsor.sponsorName}
+                            </a>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({sponsor.sponsorState})
+                            </span>
+                            <div className="text-xs text-gray-500">{sponsor.pacName}</div>
+                          </div>
+                          <div className="text-sm font-semibold">
+                            {formatCurrency(sponsor.amount)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Conduit Aggregates — ActBlue/WinRed disclosure */}
+              {financeData?.conduitAggregates &&
+                (() => {
+                  const actblue = financeData.conduitAggregates?.actblue;
+                  const winred = financeData.conduitAggregates?.winred;
+                  const conduit = actblue || winred;
+                  const conduitName = actblue ? 'ActBlue' : 'WinRed';
+                  if (!conduit || conduit.individualDonors === 0) return null;
+                  return (
+                    <div className="mt-6 p-3 bg-gray-50 border border-gray-200 text-sm text-gray-600">
+                      {conduit.individualDonors.toLocaleString()} individuals contributed{' '}
+                      {formatCurrency(conduit.totalAmount)} through {conduitName} (
+                      {conduit.contributionCount.toLocaleString()} transactions)
+                    </div>
+                  );
+                })()}
 
               {/* PAC Types Breakdown */}
               {financeData?.pacContributionsByType && (
@@ -1203,6 +1502,132 @@ export function CampaignFinanceVisualizer({
                   </div>
                 )}
 
+              {/* Fundraising Trends — Timeline, Quarterly, Projections */}
+              {financeData?.contributionTrends && financeData.contributionTrends.length > 0 && (
+                <DynamicFundraisingTrends
+                  data={{
+                    summary: {
+                      totalRaised,
+                      totalSpent,
+                      cashOnHand,
+                      burnRate: totalRaised > 0 ? Math.round((totalSpent / totalRaised) * 100) : 0,
+                      quarterlyAverage:
+                        totalRaised /
+                        Math.max(1, Math.ceil(financeData.contributionTrends.length / 3)),
+                      efficiency:
+                        totalRaised > 0 ? Math.round((totalSpent / totalRaised) * 100) : 0,
+                    },
+                    breakdown: {
+                      individual: {
+                        amount: individualContributions,
+                        percent:
+                          totalRaised > 0
+                            ? Math.round((individualContributions / totalRaised) * 100)
+                            : 0,
+                      },
+                      pac: {
+                        amount: pacContributions,
+                        percent:
+                          totalRaised > 0 ? Math.round((pacContributions / totalRaised) * 100) : 0,
+                      },
+                      party: {
+                        amount: partyContributions,
+                        percent:
+                          totalRaised > 0
+                            ? Math.round((partyContributions / totalRaised) * 100)
+                            : 0,
+                      },
+                      candidate: {
+                        amount: candidateContributions,
+                        percent:
+                          totalRaised > 0
+                            ? Math.round((candidateContributions / totalRaised) * 100)
+                            : 0,
+                      },
+                      smallDonors: {
+                        amount: 0,
+                        percent: 0,
+                        count: financeData.donorMetrics?.smallDonors ?? 0,
+                      },
+                      largeDonors: { amount: 0, percent: 0, count: 0 },
+                    },
+                    industries: [],
+                    geography: {
+                      inState: {
+                        amount: financeData.geographic?.inDistrict?.amount ?? 0,
+                        percent: financeData.geographic?.inDistrict?.percentage ?? 0,
+                        count: financeData.geographic?.inDistrict?.contributionCount ?? 0,
+                      },
+                      outOfState: {
+                        amount: financeData.geographic?.outOfDistrict?.amount ?? 0,
+                        percent: financeData.geographic?.outOfDistrict?.percentage ?? 0,
+                        count: financeData.geographic?.outOfDistrict?.contributionCount ?? 0,
+                      },
+                      topStates: [],
+                      diversityScore: 0,
+                    },
+                    timeline: (() => {
+                      // Aggregate monthly contribution trends into quarterly
+                      const quarterMap = new Map<string, { raised: number; count: number }>();
+                      for (const t of financeData.contributionTrends ?? []) {
+                        const [year, month] = t.month.split('-');
+                        const q = `Q${Math.ceil(Number(month) / 3)}`;
+                        const key = `${year}-${q}`;
+                        const existing = quarterMap.get(key) ?? { raised: 0, count: 0 };
+                        quarterMap.set(key, {
+                          raised: existing.raised + t.amount,
+                          count: existing.count + t.count,
+                        });
+                      }
+                      return Array.from(quarterMap.entries()).map(([key, val]) => {
+                        const parts = key.split('-');
+                        return {
+                          period: parts[0] ?? '',
+                          quarter: parts[1] ?? '',
+                          raised: val.raised,
+                          spent: 0,
+                          netChange: val.raised,
+                          cashOnHand: 0,
+                          burnRate: 0,
+                          contributorCount: val.count,
+                        };
+                      });
+                    })(),
+                    donors: {
+                      smallDonorMetrics: {
+                        averageAmount: financeData.donorMetrics?.averageSmallDonation ?? 0,
+                        count: financeData.donorMetrics?.smallDonors ?? 0,
+                        percentage: financeData.donorMetrics?.smallDonorPercentage ?? 0,
+                        grassrootsScore: 0,
+                      },
+                      largeDonorMetrics: {
+                        averageAmount: 0,
+                        count: 0,
+                        percentage: 0,
+                        dependencyScore: 0,
+                      },
+                      repeatDonors: { count: 0, percentage: 0, averageTotal: 0 },
+                    },
+                    expenditures: {
+                      categories: [],
+                      efficiency: {
+                        adminCosts: 0,
+                        fundraisingCosts: 0,
+                        programCosts: 0,
+                        efficiencyRatio: 0,
+                      },
+                    },
+                    metadata: {
+                      dataSource: 'FEC',
+                      lastUpdated: new Date().toISOString(),
+                      coverage: 0,
+                      dataQuality: financeData.dataQuality?.overallDataConfidence ?? 'medium',
+                      cyclesCovered: [],
+                    },
+                  }}
+                />
+              )}
+
               {/* No charts available message */}
               {donationBreakdown.length === 0 &&
                 topContributorsData.length === 0 &&
@@ -1590,6 +2015,68 @@ export function CampaignFinanceVisualizer({
           {/* Contributions Tab - Simple Table */}
           {activeTab === 'contributions' && (
             <div className="space-y-6">
+              {/* Top Contributing Organizations (employer-aggregated) */}
+              {financeData?.organizations?.topOrganizations &&
+                financeData.organizations.topOrganizations.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Top Contributing Organizations
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Aggregated by employer name from individual contributions.{' '}
+                      {financeData.organizations.metadata.totalOrganizations.toLocaleString()}{' '}
+                      organizations identified.
+                    </p>
+                    <div className="overflow-x-auto -mx-6 sm:mx-0">
+                      <div className="inline-block min-w-full align-middle px-6 sm:px-0">
+                        <table className="min-w-full bg-white">
+                          <thead className="bg-white">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Organization
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                                Total
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                                Employees
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                                % of Total
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {financeData.organizations.topOrganizations.slice(0, 15).map(org => (
+                              <tr key={org.name} className="hover:bg-white">
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <a
+                                    href={org.fecVerifyLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-civiq-blue hover:underline"
+                                  >
+                                    {org.name}
+                                  </a>
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900 text-right font-medium">
+                                  {formatCurrency(org.totalAmount)}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-500 text-right">
+                                  {org.employees}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-500 text-right">
+                                  {org.percentage.toFixed(1)}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Contributions</h3>
                 {financeData?.dataQuality && (
