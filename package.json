@@ -80,7 +80,7 @@
     "perf:baseline": "npm run perf:benchmark && mv performance-results-*.json performance-baseline.json"
   },
   "dependencies": {
-    "@ai-sdk/google": "3.0.29",
+    "@ai-sdk/google": "3.0.53",
     "@heroicons/react": "2.2.0",
     "@huggingface/transformers": "3.8.1",
     "@mapbox/mbtiles": "0.12.1",
@@ -88,10 +88,10 @@
     "@modelcontextprotocol/sdk": "1.25.2",
     "@types/d3": "^7.4.3",
     "@types/js-yaml": "4.0.9",
-    "@upstash/ratelimit": "2.0.7",
+    "@upstash/ratelimit": "2.0.8",
     "@upstash/redis": "1.35.8",
-    "ai": "6.0.90",
-    "autoprefixer": "^10.4.21",
+    "ai": "6.0.141",
+    "autoprefixer": "^10.4.27",
     "cli-progress": "3.12.0",
     "clsx": "^2.1.1",
     "csv-parse": "6.1.0",
@@ -108,7 +108,7 @@
     "maplibre-gl": "5.7.0",
     "mcp-handler": "1.0.7",
     "next": "16.1.6",
-    "nostr-tools": "2.23.1",
+    "nostr-tools": "2.23.3",
     "pbf": "4.0.1",
     "pdf-parse": "1.1.1",
     "pmtiles": "4.3.0",
@@ -118,12 +118,12 @@
     "react-window": "1.8.11",
     "recharts": "^3.0.0",
     "rss-parser": "3.13.0",
-    "simple-statistics": "7.8.8",
+    "simple-statistics": "7.8.9",
     "swr": "2.3.4",
     "tailwind-merge": "^3.3.1",
     "ws": "8.19.0",
     "zod": "4.1.11",
-    "zustand": "5.0.6"
+    "zustand": "5.0.12"
   },
   "devDependencies": {
     "@eslint/compat": "2.0.0",
