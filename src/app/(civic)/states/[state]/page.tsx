@@ -11,6 +11,13 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { getStateName, normalizeStateIdentifier } from '@/lib/data/us-states';
+import {
+  getElectionGroup,
+  getElectionCycleLabel,
+  getMostRecentElectionYear,
+  getNextElectionYear,
+} from '@/lib/data/state-election-cycles';
+import type { RaceResultFull } from '@/types/elections';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -117,7 +124,7 @@ export default function StateOverviewPage() {
   const stateCode = normalizeStateIdentifier(rawState);
   const stateName = stateCode ? getStateName(stateCode) : undefined;
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'legislature'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'legislature' | 'elections'>('overview');
 
   if (!stateCode || !stateName) {
     return (
@@ -166,24 +173,32 @@ export default function StateOverviewPage() {
 
         {/* Tab navigation */}
         <div className="flex gap-1 mb-6">
-          {(['overview', 'legislature'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 min-h-[44px] type-sm aicher-heading transition-colors ${
-                activeTab === tab
-                  ? 'border-2 border-gray-900 bg-white text-gray-900 border-b-[3px] border-b-[#3ea2d4]'
-                  : 'border-2 border-gray-200 text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              {tab === 'overview' ? 'Overview' : 'Legislature'}
-            </button>
-          ))}
+          {(['overview', 'legislature', 'elections'] as const).map(tab => {
+            const labels = {
+              overview: 'Overview',
+              legislature: 'Legislature',
+              elections: 'Elections',
+            };
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-3 min-h-[44px] type-sm aicher-heading transition-colors ${
+                  activeTab === tab
+                    ? 'border-2 border-gray-900 bg-white text-gray-900 border-b-[3px] border-b-[#3ea2d4]'
+                    : 'border-2 border-gray-200 text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab content */}
         {activeTab === 'overview' && <OverviewTab stateCode={stateCode} stateName={stateName} />}
         {activeTab === 'legislature' && <LegislatureTab stateCode={stateCode} />}
+        {activeTab === 'elections' && <ElectionsTab stateCode={stateCode} stateName={stateName} />}
 
         <ExploreFooter
           variant="state"
@@ -556,6 +571,141 @@ function LegislatorList({ legislators }: { legislators: StateLegislator[] }) {
           <span className="type-xs text-gray-400 flex-shrink-0">Dist. {leg.district}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── Elections Tab ────────────────────────────────────────────────────
+
+function ElectionsTab({ stateCode, stateName }: { stateCode: string; stateName: string }) {
+  const electionGroup = getElectionGroup(stateCode);
+  const mostRecent = getMostRecentElectionYear(stateCode);
+  const next = getNextElectionYear(stateCode);
+  const cycleLabel = getElectionCycleLabel(stateCode);
+
+  // We only have 2024 data from MEDSL. Show it if the state had 2024 elections.
+  const has2024Data = electionGroup !== 'odd-year'; // odd-year states didn't have state races in 2024
+  const showYear = has2024Data ? 2024 : null;
+
+  // Fetch governor result for 2024 (if applicable)
+  const { data: govResult, isLoading: govLoading } = useSWR<
+    RaceResultFull | { dataAvailable: false }
+  >(showYear ? `/api/elections/2024?type=governor&state=${stateCode}` : null, fetcher, SWR_OPTIONS);
+
+  return (
+    <div className="space-y-6">
+      {/* Election cycle info */}
+      <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
+        <h2 className="aicher-heading type-lg text-gray-900 mb-4">Election Schedule</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <StatBox label="Most recent" value={String(mostRecent)} />
+          <StatBox label="Next election" value={String(next)} />
+          <StatBox
+            label="Cycle type"
+            value={
+              electionGroup === 'odd-year'
+                ? 'Odd-year'
+                : electionGroup === '2-year-senate'
+                  ? '2-year senate'
+                  : 'Standard'
+            }
+          />
+        </div>
+        <p className="type-sm text-gray-600">{cycleLabel}</p>
+      </div>
+
+      {/* 2024 Results */}
+      {has2024Data && (
+        <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
+          <h2 className="aicher-heading type-lg text-gray-900 mb-4">2024 State Election Results</h2>
+
+          {/* Governor */}
+          {govLoading && <SkeletonCard />}
+          {govResult && 'dataAvailable' in govResult && govResult.dataAvailable === false && (
+            <p className="type-sm text-gray-500 mb-4">
+              No gubernatorial election in {stateName} in 2024.
+            </p>
+          )}
+          {govResult && !('dataAvailable' in govResult && govResult.dataAvailable === false) && (
+            <RaceResultCard title={`${stateName} Governor`} result={govResult as RaceResultFull} />
+          )}
+          {/* Note: state-leg results are per-district, too granular for a state-level summary.
+              A future enhancement could show aggregate seat flips or overall party balance. */}
+        </div>
+      )}
+
+      {/* Odd-year state notice */}
+      {!has2024Data && (
+        <div className="border-2 border-gray-200 bg-white p-4 sm:p-6">
+          <h2 className="aicher-heading type-lg text-gray-900 mb-4">Recent Elections</h2>
+          <p className="type-sm text-gray-600">
+            {stateName} holds state elections in odd years. The most recent election was in{' '}
+            {mostRecent}.
+          </p>
+          <p className="type-sm text-gray-500 mt-2">
+            Results for {mostRecent} are not yet available in our database. Election data is sourced
+            from the MIT Election Data and Science Lab (MEDSL), which publishes official results
+            after certification.
+          </p>
+        </div>
+      )}
+
+      <p className="type-xs text-gray-400">
+        Source: MIT Election Data and Science Lab (MEDSL) via Harvard Dataverse
+      </p>
+    </div>
+  );
+}
+
+function RaceResultCard({ title, result }: { title: string; result: RaceResultFull }) {
+  const demPct = result.demPct;
+  const repPct = result.repPct;
+  const otherPct = 100 - demPct - repPct;
+
+  return (
+    <div className="border-2 border-gray-200 p-4 mb-4">
+      <h3 className="type-sm aicher-heading text-gray-900 mb-3">{title}</h3>
+      <div className="flex h-6 border border-gray-200 overflow-hidden mb-2">
+        {demPct > 0 && (
+          <div
+            className="h-full"
+            style={{ width: `${demPct}%`, backgroundColor: '#0a9338' }}
+            title={`Democrat: ${demPct.toFixed(1)}%`}
+          />
+        )}
+        {repPct > 0 && (
+          <div
+            className="h-full"
+            style={{ width: `${repPct}%`, backgroundColor: '#e11d07' }}
+            title={`Republican: ${repPct.toFixed(1)}%`}
+          />
+        )}
+        {otherPct > 0.5 && (
+          <div
+            className="h-full bg-gray-400"
+            style={{ width: `${otherPct}%` }}
+            title={`Other: ${otherPct.toFixed(1)}%`}
+          />
+        )}
+      </div>
+      <div className="flex justify-between type-xs text-gray-600">
+        <span>
+          D: {demPct.toFixed(1)}% ({result.dem.toLocaleString()})
+        </span>
+        <span>
+          R: {repPct.toFixed(1)}% ({result.rep.toLocaleString()})
+        </span>
+      </div>
+      <p className="type-xs text-gray-500 mt-2">
+        Winner:{' '}
+        <span
+          className="font-medium"
+          style={{ color: result.winner === 'D' ? '#0a9338' : '#e11d07' }}
+        >
+          {result.winner === 'D' ? 'Democrat' : 'Republican'}
+        </span>{' '}
+        by {result.margin.toFixed(1)} points ({result.total.toLocaleString()} total votes)
+      </p>
     </div>
   );
 }
