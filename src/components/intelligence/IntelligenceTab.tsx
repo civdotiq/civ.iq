@@ -19,6 +19,7 @@ import { InfluenceChainTable } from './InfluenceChainTable';
 import { StockOverlapTable } from './StockOverlapTable';
 import { VotePredictionCard } from './VotePredictionCard';
 import { InfluenceChainCard } from './InfluenceChainCard';
+import { InfluenceGraphCard } from './InfluenceGraphCard';
 import { CivicBriefCard } from './CivicBriefCard';
 import { InfluenceClusterChart } from './InfluenceClusterChart';
 import { TemporalProximityCard } from './TemporalProximityCard';
@@ -35,6 +36,7 @@ import type {
   StockCommitteeInsight,
   VotePredictionInsight,
   InfluenceChainInsight,
+  InfluenceGraphInsight,
 } from '@/lib/intelligence/types';
 
 interface IntelligenceTabProps {
@@ -109,6 +111,13 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       SWR_OPTIONS
     );
 
+  const { data: influenceGraphData, isLoading: influenceGraphLoading } =
+    useSWR<InfluenceGraphInsight>(
+      `/api/intelligence/representative/${bioguideId}/influence-graph`,
+      fetcher,
+      { ...SWR_OPTIONS, dedupingInterval: 600000 } // 10 min — expensive endpoint
+    );
+
   const { data: civicBriefData, isLoading: civicBriefLoading } = useSWR<CivicBriefInsight>(
     `/api/intelligence/representative/${bioguideId}/brief`,
     fetcher,
@@ -131,6 +140,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   const stock = stockData?.flaggedTrades ? stockData : null;
   const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
   const influenceChain = influenceChainData?.chains ? influenceChainData : null;
+  const influenceGraph = influenceGraphData?.graphStats ? influenceGraphData : null;
   const civicBrief = civicBriefData?.identity ? civicBriefData : null;
   const temporalProximity = temporalProximityData?.patterns ? temporalProximityData : null;
 
@@ -143,6 +153,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     stock ||
     votePrediction ||
     influenceChain ||
+    influenceGraph ||
     temporalProximity;
   const allDoneLoading =
     !civicBriefLoading &&
@@ -153,6 +164,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     !stockLoading &&
     !votePredictionLoading &&
     !influenceChainLoading &&
+    !influenceGraphLoading &&
     !temporalProximityLoading;
   const allErrored =
     fjError &&
@@ -161,7 +173,8 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     !lobbyingData &&
     !stockData &&
     !votePredictionData &&
-    !influenceChainData;
+    !influenceChainData &&
+    !influenceGraphData;
 
   // If all primary sources errored out, show error message
   if (allErrored && allDoneLoading) {
@@ -197,6 +210,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     temporal,
     lobbying,
     influenceChain,
+    influenceGraph,
     votePrediction,
     stock,
     temporalProximity,
@@ -303,6 +317,10 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
             {/* Influence Chain */}
             {influenceChain && <InfluenceChainCard insight={influenceChain} />}
             {influenceChainLoading && !influenceChain && <InsightPlaceholder />}
+
+            {/* Influence Graph — extended chains with regulation, enforcement, outcomes */}
+            {influenceGraph && <InfluenceGraphCard insight={influenceGraph} />}
+            {influenceGraphLoading && !influenceGraph && <InsightPlaceholder tall />}
 
             {/* Vote Prediction */}
             {votePrediction && <VotePredictionCard insight={votePrediction} />}
