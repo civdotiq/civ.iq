@@ -41,7 +41,7 @@ interface QuarterlyTrend {
 
 interface IndustryBreakdown {
   industry: string;
-  spending: number;
+  filingCount: number;
   percentage: number;
 }
 
@@ -243,14 +243,18 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
               )}
               {hasIndustry && (
                 <div className="border-2 border-gray-200 p-3">
-                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Industry Breakdown</h4>
+                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Issue Areas</h4>
+                  <p className="type-xs text-gray-500 mb-3">
+                    By number of filings mentioning each issue
+                  </p>
                   <div className="space-y-2">
                     {industryBreakdown.slice(0, 5).map(ind => (
                       <div key={ind.industry}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="type-xs text-gray-700">{ind.industry}</span>
                           <span className="type-xs text-gray-500 aicher-heading-wide">
-                            {formatCompact(ind.spending)} ({ind.percentage.toFixed(0)}%)
+                            {ind.filingCount} {ind.filingCount === 1 ? 'filing' : 'filings'} (
+                            {ind.percentage.toFixed(0)}%)
                           </span>
                         </div>
                         <div

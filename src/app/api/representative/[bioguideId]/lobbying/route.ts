@@ -42,7 +42,7 @@ interface RepresentativeLobbyingData {
       }>;
       industryBreakdown: Array<{
         industry: string;
-        spending: number;
+        filingCount: number;
         percentage: number;
       }>;
     };
@@ -285,24 +285,26 @@ export async function GET(
           });
         }
 
-        // Industry breakdown — aggregate by LDA issue labels from de-duplicated filings
-        const issueSpending: Record<string, number> = {};
+        // Industry breakdown — count filings per LDA issue area (not dollar allocation).
+        // Senate LDA filings report total spending across ALL issues in a filing.
+        // There is no per-issue dollar breakdown, so we count how many filings
+        // mention each issue area. This is the only honest representation.
+        const issueFilingCount: Record<string, number> = {};
         uniqueFilings.forEach(filing => {
-          const amount = filing.amount;
           const issues = filing.issues.length > 0 ? filing.issues : ['Other'];
-          const perIssueAmount = amount / issues.length;
           issues.forEach(issue => {
-            issueSpending[issue] = (issueSpending[issue] || 0) + perIssueAmount;
+            issueFilingCount[issue] = (issueFilingCount[issue] || 0) + 1;
           });
         });
 
-        const industryBreakdown = Object.entries(issueSpending)
+        const totalFilings = uniqueFilings.length;
+        const industryBreakdown = Object.entries(issueFilingCount)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 6)
-          .map(([industry, spending]) => ({
+          .map(([industry, filingCount]) => ({
             industry,
-            spending,
-            percentage: totalRelevantSpending > 0 ? (spending / totalRelevantSpending) * 100 : 0,
+            filingCount,
+            percentage: totalFilings > 0 ? (filingCount / totalFilings) * 100 : 0,
           }));
 
         return {

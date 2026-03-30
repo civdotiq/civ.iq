@@ -78,9 +78,9 @@ const makeLobbyingData = () => ({
         { quarter: 'Q4', year: 2025, spending: 1_200_000 },
       ],
       industryBreakdown: [
-        { industry: 'Healthcare', spending: 2_000_000, percentage: 40 },
-        { industry: 'Technology', spending: 1_500_000, percentage: 30 },
-        { industry: 'Energy', spending: 1_000_000, percentage: 20 },
+        { industry: 'Healthcare', filingCount: 8, percentage: 40 },
+        { industry: 'Technology', filingCount: 6, percentage: 30 },
+        { industry: 'Energy', filingCount: 4, percentage: 20 },
       ],
     },
   },
@@ -314,7 +314,7 @@ describe('LobbyingTab', () => {
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(screen.getByText('Industry Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Issue Areas')).toBeInTheDocument();
     expect(screen.getByText('Healthcare')).toBeInTheDocument();
     expect(screen.getByText('Technology')).toBeInTheDocument();
   });
@@ -352,7 +352,7 @@ describe('LobbyingTab', () => {
         { quarter: 'Q3', year: 2025, spending: 0 },
         { quarter: 'Q4', year: 2025, spending: 0 },
       ],
-      industryBreakdown: [{ industry: 'Other', spending: 1_000_000, percentage: 100 }],
+      industryBreakdown: [{ industry: 'Other', filingCount: 5, percentage: 100 }],
     };
     setupSWR(
       { data, error: undefined, isLoading: false },
