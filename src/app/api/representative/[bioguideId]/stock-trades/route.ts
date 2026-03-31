@@ -63,6 +63,9 @@ export async function GET(
 
     const isSenate = repData.chamber === 'Senate';
 
+    const currentYear = new Date().getFullYear();
+    const coverageYears = 5;
+
     // Fetch stock trades via appropriate service + circuit breaker
     const trades = isSenate
       ? await circuitBreakers.senateStockWatcher.execute(async () => {
@@ -74,15 +77,37 @@ export async function GET(
           return houseDisclosureService.getTradesForMember(bioguideId);
         });
 
-    const currentYear = new Date().getFullYear();
+    // Fetch annual financial disclosures (House only — every member files these)
+    const annualDisclosures = isSenate
+      ? []
+      : await circuitBreakers.houseClerk
+          .execute(async () => {
+            return houseDisclosureService.getAnnualDisclosuresForMember(bioguideId);
+          })
+          .catch(err => {
+            logger.warn('Failed to fetch annual disclosures', {
+              bioguideId,
+              error: String(err),
+            });
+            return [];
+          });
+
+    const yearsChecked = isSenate
+      ? []
+      : Array.from({ length: coverageYears }, (_, i) => currentYear - i).sort();
+
     const response: StockTradeResponse = {
       trades,
+      annualDisclosures,
       member: { bioguideId, name: repData.name, stateDistrict },
       metadata: {
         dataSource: isSenate ? 'senate-stock-watcher' : 'house-clerk-disclosures',
         lastUpdated: new Date().toISOString(),
         totalFilings: new Set(trades.map(t => t.filingId)).size,
-        coveragePeriod: isSenate ? '2012-2021' : `${currentYear - 1}-${currentYear}`,
+        coveragePeriod: isSenate
+          ? '2012-2021'
+          : `${currentYear - coverageYears + 1}-${currentYear}`,
+        yearsChecked,
         note: isSenate
           ? trades.length > 0
             ? 'Data from STOCK Act Periodic Transaction Reports filed with the Senate Office of Public Records. ' +
@@ -92,7 +117,7 @@ export async function GET(
               'This may mean the Senator had no reportable transactions or their filings were not electronically processed.'
           : trades.length > 0
             ? 'Data from STOCK Act Periodic Transaction Reports filed with the U.S. House Office of the Clerk. Transactions over $1,000 must be disclosed within 45 days.'
-            : 'No STOCK Act financial disclosures found for this representative. Disclosures are required under the STOCK Act of 2012 for securities transactions over $1,000.',
+            : 'No Periodic Transaction Reports found. This representative has not disclosed securities transactions over $1,000 in the years checked.',
       },
     };
 
@@ -122,12 +147,14 @@ export async function GET(
     return NextResponse.json(
       {
         trades: [],
+        annualDisclosures: [],
         member: { bioguideId, name: 'Unknown', stateDistrict: '' },
         metadata: {
           dataSource: isCircuitOpen ? 'circuit-open' : 'service-error',
           lastUpdated: new Date().toISOString(),
           totalFilings: 0,
           coveragePeriod: 'Error',
+          yearsChecked: [],
           note: isCircuitOpen
             ? 'STOCK Act disclosure data is temporarily unavailable. The data service may be experiencing issues. Please try again later.'
             : 'STOCK Act disclosure data is temporarily unavailable due to a service error. Please try again later.',

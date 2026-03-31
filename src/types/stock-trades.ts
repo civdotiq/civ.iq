@@ -91,9 +91,18 @@ export interface StockTrade {
   sourceUrl: string;
 }
 
+/** Annual Financial Disclosure filing metadata (not parsed — links to PDF) */
+export interface AnnualDisclosure {
+  docId: string;
+  year: number;
+  filingDate: string;
+  pdfUrl: string;
+}
+
 /** API response shape for /api/representative/[bioguideId]/stock-trades */
 export interface StockTradeResponse {
   trades: StockTrade[];
+  annualDisclosures: AnnualDisclosure[];
   member: {
     bioguideId: string;
     name: string;
@@ -104,6 +113,7 @@ export interface StockTradeResponse {
     lastUpdated: string;
     totalFilings: number;
     coveragePeriod: string;
+    yearsChecked: number[];
     note: string;
   };
 }

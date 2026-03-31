@@ -14,9 +14,11 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 const mockHouseGetTrades = jest.fn();
+const mockHouseGetAnnualDisclosures = jest.fn().mockResolvedValue([]);
 jest.mock('@/lib/data-sources/house-disclosure-service', () => ({
   houseDisclosureService: {
     getTradesForMember: (...args: unknown[]) => mockHouseGetTrades(...args),
+    getAnnualDisclosuresForMember: (...args: unknown[]) => mockHouseGetAnnualDisclosures(...args),
   },
 }));
 
@@ -95,6 +97,7 @@ const mockSenateTrade = {
 describe('GET /api/representative/[bioguideId]/stock-trades', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockHouseGetAnnualDisclosures.mockResolvedValue([]);
   });
 
   it('returns 400 for empty bioguide ID', async () => {
@@ -102,8 +105,6 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     mockGetEnhancedRepresentative.mockResolvedValue(null);
 
     const response = await GET(req, { params });
-    // Empty string is falsy — but the route checks !bioguideId
-    // An empty string from params will be falsy
     expect(response.status).toBe(400);
   });
 
@@ -153,7 +154,6 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const response = await GET(req, { params });
     const data: StockTradeResponse = await response.json();
 
-    // Senate rep has no district, so stateDistrict = AL00
     expect(data.trades[0]!.stateDistrict).toBe('AL00');
   });
 
@@ -200,7 +200,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const data: StockTradeResponse = await response.json();
 
     expect(data.trades).toEqual([]);
-    expect(data.metadata.note).toContain('STOCK Act of 2012');
+    expect(data.metadata.note).toContain('Periodic Transaction Reports');
   });
 
   it('returns 500 on service error', async () => {
@@ -214,6 +214,51 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const data: StockTradeResponse = await response.json();
     expect(data.trades).toEqual([]);
     expect(data.metadata.dataSource).toBe('service-error');
+  });
+
+  it('includes yearsChecked for House members', async () => {
+    const { req, params } = createRequest('P000197');
+    mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
+    mockHouseGetTrades.mockResolvedValue([]);
+
+    const response = await GET(req, { params });
+    const data: StockTradeResponse = await response.json();
+
+    expect(data.metadata.yearsChecked).toBeDefined();
+    expect(data.metadata.yearsChecked.length).toBe(5);
+    const sorted = [...data.metadata.yearsChecked].sort((a, b) => a - b);
+    expect(data.metadata.yearsChecked).toEqual(sorted);
+  });
+
+  it('includes annualDisclosures in response', async () => {
+    const mockDisclosures = [
+      {
+        docId: '20012345',
+        year: 2025,
+        filingDate: '2025-05-15',
+        pdfUrl: 'https://example.com/2025.pdf',
+      },
+    ];
+    const { req, params } = createRequest('P000197');
+    mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
+    mockHouseGetTrades.mockResolvedValue([mockTrade]);
+    mockHouseGetAnnualDisclosures.mockResolvedValue(mockDisclosures);
+
+    const response = await GET(req, { params });
+    const data: StockTradeResponse = await response.json();
+
+    expect(data.annualDisclosures).toEqual(mockDisclosures);
+  });
+
+  it('returns empty annualDisclosures for Senate members', async () => {
+    const { req, params } = createRequest('T000476');
+    mockGetEnhancedRepresentative.mockResolvedValue(mockSenateRep);
+    mockSenateGetTrades.mockResolvedValue([mockSenateTrade]);
+
+    const response = await GET(req, { params });
+    const data: StockTradeResponse = await response.json();
+
+    expect(data.annualDisclosures).toEqual([]);
   });
 
   it('returns 200 with member metadata', async () => {

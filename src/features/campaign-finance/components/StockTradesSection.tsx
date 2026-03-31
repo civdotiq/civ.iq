@@ -6,10 +6,10 @@
 'use client';
 
 import useSWR from 'swr';
-import { TrendingUp, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { TrendingUp, AlertCircle, RefreshCw, ExternalLink, FileText, Search } from 'lucide-react';
 import { DataSourceAttribution, DATA_SOURCES } from '@/components/shared/ui/DataSourceAttribution';
 import { StockTradeSummary } from '@/components/intelligence/StockTradeSummary';
-import type { StockTradeResponse, StockTrade } from '@/types/stock-trades';
+import type { StockTradeResponse, StockTrade, AnnualDisclosure } from '@/types/stock-trades';
 import { useMemo, useState } from 'react';
 
 interface StockTradesSectionProps {
@@ -152,18 +152,56 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
   }
 
   if (!data || data.trades.length === 0) {
-    if (data?.metadata?.note) {
-      return (
-        <div className="bg-white border-2 border-black p-6 mt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-civiq-blue" aria-hidden="true" />
-            STOCK Act Disclosures
-          </h4>
-          <p className="text-sm text-gray-500">{data.metadata.note}</p>
+    return (
+      <div className="bg-white border-2 border-black p-6 mt-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-civiq-blue" aria-hidden="true" />
+          STOCK Act Disclosures
+        </h4>
+
+        {/* Empty state with context */}
+        <div className="border-2 border-gray-200 p-5">
+          <div className="flex items-start gap-3">
+            <Search className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium text-gray-900 mb-1">No stock transactions found</p>
+              <p className="text-sm text-gray-600 mb-3">
+                {data?.metadata?.note ??
+                  'No Periodic Transaction Reports found for this representative.'}
+              </p>
+              {data?.metadata?.yearsChecked && data.metadata.yearsChecked.length > 0 && (
+                <p className="text-xs text-gray-500 mb-3">
+                  Checked House Clerk records for {formatYearsChecked(data.metadata.yearsChecked)}.
+                  Members must disclose securities transactions over $1,000 within 45 days under the
+                  STOCK Act of 2012.
+                </p>
+              )}
+              <a
+                href="https://disclosures-clerk.house.gov/FinancialDisclosure#Search"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-civiq-blue hover:underline"
+              >
+                Verify on House Clerk website
+                <ExternalLink className="w-3 h-3" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
         </div>
-      );
-    }
-    return null;
+
+        {/* Annual disclosures — shown even when no PTR trades exist */}
+        {data?.annualDisclosures && data.annualDisclosures.length > 0 && (
+          <AnnualDisclosuresSection disclosures={data.annualDisclosures} />
+        )}
+
+        <DataSourceAttribution
+          {...DATA_SOURCES.HOUSE_CLERK}
+          lastUpdated={data?.metadata?.lastUpdated}
+          variant="compact"
+          className="mt-4"
+        />
+      </div>
+    );
   }
 
   const paperFilings = data.trades.filter(t => t.isPaperFiling);
@@ -333,6 +371,11 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
         </div>
       )}
 
+      {/* Annual disclosures */}
+      {data.annualDisclosures && data.annualDisclosures.length > 0 && (
+        <AnnualDisclosuresSection disclosures={data.annualDisclosures} />
+      )}
+
       <DataSourceAttribution
         {...DATA_SOURCES.HOUSE_CLERK}
         lastUpdated={data.metadata.lastUpdated}
@@ -341,6 +384,46 @@ export function StockTradesSection({ bioguideId }: StockTradesSectionProps) {
       />
     </div>
   );
+}
+
+/** Annual Financial Disclosure filings — links to full PDF documents */
+function AnnualDisclosuresSection({ disclosures }: { disclosures: AnnualDisclosure[] }) {
+  return (
+    <div className="mt-4 border-2 border-gray-200 p-4">
+      <h5 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+        <FileText className="w-4 h-4 text-gray-500" aria-hidden="true" />
+        Annual Financial Disclosures
+      </h5>
+      <p className="text-xs text-gray-500 mb-3">
+        Full financial disclosure reports filed annually with the House Clerk. These cover assets,
+        income, liabilities, and outside positions.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {disclosures.map(d => (
+          <a
+            key={d.docId}
+            href={d.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border-2 border-gray-300 hover:border-civiq-blue text-gray-900 hover:text-civiq-blue transition-colors"
+            aria-label={`View ${d.year} annual financial disclosure (PDF)`}
+          >
+            <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+            {d.year}
+            <ExternalLink className="w-3 h-3 text-gray-400" aria-hidden="true" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Format an array of years into a human-readable range string */
+function formatYearsChecked(years: number[]): string {
+  if (years.length === 0) return '';
+  const sorted = [...years].sort((a, b) => a - b);
+  if (sorted.length === 1) return String(sorted[0]);
+  return `${sorted[0]}\u2013${sorted[sorted.length - 1]}`;
 }
 
 /** Compact filter dropdown */

@@ -24,11 +24,14 @@ import { XMLParser } from 'fast-xml-parser';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
-import type { StockTrade, HouseClerkFiling } from '@/types/stock-trades';
+import type { StockTrade, HouseClerkFiling, AnnualDisclosure } from '@/types/stock-trades';
 import { ASSET_TYPE_CODES } from '@/types/stock-trades';
 
 const BASE_URL = 'https://disclosures-clerk.house.gov';
 const USER_AGENT = 'CIV.IQ/1.0 (Civic Information Platform)';
+
+/** Number of years back to search for filings (current year + N-1 prior years) */
+const COVERAGE_YEARS = 5;
 
 /** In-memory cache for name→bioguide resolution (refreshes with service) */
 let memberLookupCache: Map<string, { bioguideId: string; name: string }> | null = null;
@@ -37,11 +40,11 @@ const MEMBER_LOOKUP_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export class HouseDisclosureService {
   /**
-   * Fetch and parse the annual XML index of financial disclosure filings.
-   * Returns only PTR (Periodic Transaction Report) entries.
+   * Fetch and parse the full annual XML index of financial disclosure filings.
+   * Returns all filing types (PTR, Annual, Amendment, etc.).
    */
-  async fetchFilingIndex(year: number): Promise<HouseClerkFiling[]> {
-    const cacheKey = `house-disclosure-index:${year}`;
+  private async fetchFullFilingIndex(year: number): Promise<HouseClerkFiling[]> {
+    const cacheKey = `house-disclosure-full-index:${year}`;
 
     return cachedFetch(
       cacheKey,
@@ -84,7 +87,7 @@ export class HouseDisclosureService {
         const memberArray = Array.isArray(members) ? members : [members];
 
         const filings: HouseClerkFiling[] = memberArray
-          .filter((m: Record<string, unknown>) => m && m.FilingType === 'P')
+          .filter((m: Record<string, unknown>) => m)
           .map((m: Record<string, unknown>) => ({
             first: String(m.First || m.first || ''),
             last: String(m.Last || m.last || ''),
@@ -98,13 +101,29 @@ export class HouseDisclosureService {
         logger.info('Parsed House disclosure index', {
           year,
           totalEntries: memberArray.length,
-          ptrEntries: filings.length,
         });
 
         return filings;
       },
       86400 // 24 hours in seconds
     );
+  }
+
+  /**
+   * Fetch and parse the annual XML index of financial disclosure filings.
+   * Returns only PTR (Periodic Transaction Report) entries.
+   */
+  async fetchFilingIndex(year: number): Promise<HouseClerkFiling[]> {
+    const allFilings = await this.fetchFullFilingIndex(year);
+    const ptrFilings = allFilings.filter(f => f.filingType === 'P');
+
+    logger.info('Filtered PTR filings from index', {
+      year,
+      totalEntries: allFilings.length,
+      ptrEntries: ptrFilings.length,
+    });
+
+    return ptrFilings;
   }
 
   /**
@@ -462,6 +481,14 @@ export class HouseDisclosureService {
   }
 
   /**
+   * Get the array of years to search for filings.
+   */
+  private getCoverageYears(): number[] {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: COVERAGE_YEARS }, (_, i) => currentYear - i).reverse();
+  }
+
+  /**
    * Get all stock trades for a specific representative.
    */
   async getTradesForMember(bioguideId: string): Promise<StockTrade[]> {
@@ -473,8 +500,7 @@ export class HouseDisclosureService {
         // Build member lookup before filtering (sync resolver needs the cache)
         await this.buildMemberLookup();
 
-        const currentYear = new Date().getFullYear();
-        const years = [currentYear - 1, currentYear];
+        const years = this.getCoverageYears();
         const allTrades: StockTrade[] = [];
 
         for (const year of years) {
@@ -554,8 +580,7 @@ export class HouseDisclosureService {
     // Ensure lookup is built
     await this.buildMemberLookup();
 
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 1, currentYear];
+    const years = this.getCoverageYears();
     const results: { filing: HouseClerkFiling; year: number }[] = [];
 
     for (const year of years) {
@@ -573,6 +598,52 @@ export class HouseDisclosureService {
     }
 
     return results;
+  }
+
+  /**
+   * Get annual financial disclosure filings for a member (FilingType 'A').
+   * Returns metadata + PDF links — does not parse PDF contents.
+   */
+  async getAnnualDisclosuresForMember(bioguideId: string): Promise<AnnualDisclosure[]> {
+    const cacheKey = `annual-disclosures:${bioguideId}`;
+
+    return cachedFetch(
+      cacheKey,
+      async () => {
+        await this.buildMemberLookup();
+
+        const years = this.getCoverageYears();
+        const results: AnnualDisclosure[] = [];
+
+        for (const year of years) {
+          try {
+            const allFilings = await this.fetchFullFilingIndex(year);
+            const annualFilings = allFilings.filter(f => f.filingType === 'A');
+
+            for (const filing of annualFilings) {
+              const resolved = this.resolveBioguideIdSync(filing);
+              if (resolved === bioguideId) {
+                results.push({
+                  docId: filing.docId,
+                  year: Number(filing.year) || year,
+                  filingDate: filing.filingDate ? this.parseDate(filing.filingDate) : `${year}-01-01`,
+                  pdfUrl: `${BASE_URL}/public_disc/financial-pdfs/${year}/${filing.docId}.pdf`,
+                });
+              }
+            }
+          } catch (error) {
+            logger.error('Error fetching annual disclosures for year', error as Error, {
+              bioguideId,
+              year,
+            });
+          }
+        }
+
+        // Sort by year descending
+        return results.sort((a, b) => b.year - a.year);
+      },
+      21600 // 6 hours in seconds
+    );
   }
 }
 
