@@ -115,7 +115,7 @@ export default function SpendingSearch({
             {isSearching ? 'Searching...' : 'Search'}
           </button>
         </div>
-        {addressError && <p className="text-sm text-[#e11d07] mt-2">{addressError}</p>}
+        {addressError && <p className="text-sm text-amber-600 mt-2">{addressError}</p>}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Your address is used only to determine your congressional district and is not stored.
         </p>

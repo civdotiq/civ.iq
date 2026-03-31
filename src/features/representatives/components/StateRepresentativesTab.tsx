@@ -185,9 +185,9 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
   if (error) {
     return (
-      <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
-        <p className="text-civiq-red font-medium">Error</p>
-        <p className="text-civiq-red mt-1">{error}</p>
+      <div className="bg-amber-50 border border-amber-600 p-6 text-center">
+        <p className="text-amber-600 font-medium">Error</p>
+        <p className="text-amber-600 mt-1">{error}</p>
       </div>
     );
   }

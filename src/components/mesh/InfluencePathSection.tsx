@@ -217,7 +217,7 @@ export function InfluencePathSection() {
           {loading ? 'Tracing...' : 'Trace Connections'}
         </button>
 
-        {error && <p className="text-xs text-[#e11d07] mt-3">{error}</p>}
+        {error && <p className="text-xs text-amber-600 mt-3">{error}</p>}
       </div>
 
       {/* Results */}

@@ -104,7 +104,7 @@ export function CascadeSection({ sector }: CascadeSectionProps) {
           {loading ? 'Simulating...' : 'Run Simulation'}
         </button>
 
-        {error && <p className="text-xs text-[#e11d07] mt-3">{error}</p>}
+        {error && <p className="text-xs text-amber-600 mt-3">{error}</p>}
       </div>
 
       {result && <CascadeSummary result={result} />}

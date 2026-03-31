@@ -225,7 +225,7 @@ export function AddressPrompt({
                 </>
               )}
             </button>
-            {locationError && <p className="mt-2 text-sm text-civiq-red">{locationError}</p>}
+            {locationError && <p className="mt-2 text-sm text-amber-600">{locationError}</p>}
           </div>
 
           {/* Divider */}

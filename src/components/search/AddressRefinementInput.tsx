@@ -119,10 +119,10 @@ export function AddressRefinementInput({
 
         {/* Validation Error */}
         {validationError && (
-          <div className="bg-civiq-red/10 border border-civiq-red p-3">
+          <div className="bg-amber-50 border border-amber-600 p-3">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-civiq-red flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-civiq-red">{validationError}</p>
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-600">{validationError}</p>
             </div>
           </div>
         )}

@@ -23,25 +23,25 @@ export default function NotFound() {
             <p className="text-sm font-bold text-gray-900 mb-3">Try one of these instead:</p>
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start">
-                <span className="text-civiq-red mr-2 font-bold">&bull;</span>
+                <span className="text-gray-400 mr-2 font-bold">&bull;</span>
                 <Link href="/" className="text-civiq-blue hover:text-civiq-blue/80">
                   Search by address
                 </Link>
               </li>
               <li className="flex items-start">
-                <span className="text-civiq-red mr-2 font-bold">&bull;</span>
+                <span className="text-gray-400 mr-2 font-bold">&bull;</span>
                 <Link href="/representatives" className="text-civiq-blue hover:text-civiq-blue/80">
                   Browse all representatives
                 </Link>
               </li>
               <li className="flex items-start">
-                <span className="text-civiq-red mr-2 font-bold">&bull;</span>
+                <span className="text-gray-400 mr-2 font-bold">&bull;</span>
                 <Link href="/committees" className="text-civiq-blue hover:text-civiq-blue/80">
                   Explore congressional committees
                 </Link>
               </li>
               <li className="flex items-start">
-                <span className="text-civiq-red mr-2 font-bold">&bull;</span>
+                <span className="text-gray-400 mr-2 font-bold">&bull;</span>
                 <Link href="/legislation" className="text-civiq-blue hover:text-civiq-blue/80">
                   Track legislation
                 </Link>

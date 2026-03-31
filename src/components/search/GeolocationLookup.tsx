@@ -134,12 +134,12 @@ export function GeolocationLookup({
       )}
 
       {locationError && (
-        <div className="bg-civiq-red/10 border border-civiq-red p-3 sm:p-4 mb-3 sm:mb-4">
+        <div className="bg-amber-50 border border-amber-600 p-3 sm:p-4 mb-3 sm:mb-4">
           <div className="flex items-start gap-2 sm:gap-3">
-            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-civiq-red flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-civiq-red text-sm sm:text-base">Location Error</div>
-              <div className="text-xs sm:text-sm text-civiq-red mt-1">{locationError}</div>
+              <div className="font-medium text-amber-700 text-sm sm:text-base">Location Error</div>
+              <div className="text-xs sm:text-sm text-amber-600 mt-1">{locationError}</div>
             </div>
           </div>
         </div>

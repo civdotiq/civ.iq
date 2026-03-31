@@ -96,7 +96,7 @@ export function FloorActivity() {
   if (error || !data) {
     return (
       <div className="border-2 border-black p-6">
-        <div className="flex items-center gap-2 text-civiq-red">
+        <div className="flex items-center gap-2 text-amber-600">
           <AlertCircle className="w-5 h-5" />
           <span>Unable to load floor schedule</span>
         </div>

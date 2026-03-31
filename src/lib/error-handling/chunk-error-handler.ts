@@ -313,7 +313,7 @@ class ChunkErrorHandler {
         'background: white; padding: 2rem; max-width: 400px; text-align: center;';
 
       const heading = document.createElement('h3');
-      heading.style.cssText = 'color: #e11d07; margin: 0 0 1rem 0;';
+      heading.style.cssText = 'color: #b45309; margin: 0 0 1rem 0;';
       heading.textContent = 'Connection Issue';
 
       const paragraph = document.createElement('p');

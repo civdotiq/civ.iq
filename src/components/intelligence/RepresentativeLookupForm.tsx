@@ -205,11 +205,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading || !canSubmit()}
-          className={buttonClasses}
-        >
+        <button type="submit" disabled={loading || !canSubmit()} className={buttonClasses}>
           {loading ? 'Finding your representatives...' : 'Find My Representatives'}
         </button>
       </form>
@@ -225,8 +221,8 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
 
       {/* Error state */}
       {error && (
-        <div className="border-2 border-[#e11d07] p-4 mt-4">
-          <p className="type-sm text-[#e11d07]">{error}</p>
+        <div className="border-2 border-amber-600 p-4 mt-4">
+          <p className="type-sm text-amber-600">{error}</p>
         </div>
       )}
 
@@ -236,10 +232,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
           <p className="type-sm text-gray-500 mb-4">
             {result.state} District {result.district}
             {result.multiDistrict && (
-              <span className="text-gray-400">
-                {' '}
-                (multiple districts found — showing primary)
-              </span>
+              <span className="text-gray-400"> (multiple districts found — showing primary)</span>
             )}
           </p>
 

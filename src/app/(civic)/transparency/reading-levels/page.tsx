@@ -78,7 +78,7 @@ export default function ReadingLevelDashboard() {
           className="mb-6"
         />
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
-        <p className="text-civiq-red">Failed to load data: {error}</p>
+        <p className="text-amber-600">Failed to load data: {error}</p>
       </div>
     );
   }

@@ -76,11 +76,11 @@ export default function APIHealthPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'operational':
-        return 'text-civiq-green bg-civiq-green/10';
+        return 'text-civiq-blue bg-civiq-blue/10';
       case 'degraded':
         return 'text-gray-600 bg-gray-100';
       case 'error':
-        return 'text-civiq-red bg-civiq-red/10';
+        return 'text-amber-600 bg-amber-50';
       default:
         return 'text-gray-600 bg-white';
     }
@@ -119,11 +119,11 @@ export default function APIHealthPage() {
         )}
 
         {error && (
-          <div className="bg-civiq-red/10 border border-civiq-red p-4 mb-4">
-            <p className="text-civiq-red">Error: {error}</p>
+          <div className="bg-amber-50 border border-amber-600 p-4 mb-4">
+            <p className="text-amber-600">Error: {error}</p>
             <button
               onClick={fetchHealth}
-              className="mt-2 text-civiq-red underline hover:text-civiq-red"
+              className="mt-2 text-amber-600 underline hover:text-amber-700"
             >
               Try Again
             </button>
@@ -161,7 +161,7 @@ export default function APIHealthPage() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {Object.entries(health.environment.apiKeysConfigured).map(([key, configured]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <span className={configured ? 'text-civiq-green' : 'text-civiq-red'}>
+                    <span className={configured ? 'text-civiq-blue' : 'text-amber-600'}>
                       {configured ? 'Yes' : 'No'}
                     </span>
                     <span className="text-sm capitalize">{key}</span>
@@ -189,7 +189,7 @@ export default function APIHealthPage() {
                         </div>
 
                         {api.error && (
-                          <p className="mt-1 text-sm text-civiq-red">Error: {api.error}</p>
+                          <p className="mt-1 text-sm text-amber-600">Error: {api.error}</p>
                         )}
 
                         {api.details && (
@@ -227,11 +227,11 @@ export default function APIHealthPage() {
                 </p>
                 <p className="text-sm text-gray-600">Degraded</p>
               </div>
-              <div className="bg-civiq-red/10 p-4 text-center">
-                <p className="text-3xl font-bold text-civiq-red">
+              <div className="bg-amber-50 p-4 text-center">
+                <p className="text-3xl font-bold text-amber-600">
                   {health.apis.filter(a => a.status === 'error').length}
                 </p>
-                <p className="text-sm text-civiq-red">Error</p>
+                <p className="text-sm text-amber-600">Error</p>
               </div>
             </div>
           </>

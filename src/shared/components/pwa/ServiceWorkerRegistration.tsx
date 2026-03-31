@@ -203,10 +203,10 @@ export function ServiceWorkerRegistration() {
           left: '20px',
           right: '20px',
           zIndex: 1000,
-          background: '#e11d07',
+          background: '#b45309',
           color: 'white',
           padding: '16px',
-          borderRadius: '8px',
+          borderRadius: '4px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           display: 'flex',
           alignItems: 'center',
@@ -222,7 +222,7 @@ export function ServiceWorkerRegistration() {
             onClick={handleUpdateAvailable}
             style={{
               background: 'white',
-              color: '#e11d07',
+              color: '#b45309',
               border: 'none',
               padding: '8px 16px',
               borderRadius: '4px',

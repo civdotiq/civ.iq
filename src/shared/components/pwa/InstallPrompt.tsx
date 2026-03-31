@@ -184,11 +184,11 @@ export function InstallPrompt() {
     </p>
    </div>
    <button id="ios-install-close" style="
-    background: #e11d07;
+    background: #3ea2d4;
     color: white;
     border: none;
     padding: 12px 24px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -230,7 +230,7 @@ export function InstallPrompt() {
         left: '20px',
         right: '20px',
         zIndex: 1000,
-        background: 'linear-gradient(135deg, #e11d07, #0a9338)',
+        background: '#3ea2d4',
         color: 'white',
         padding: '16px',
         borderRadius: '12px',
@@ -272,7 +272,7 @@ export function InstallPrompt() {
           onClick={handleInstallClick}
           style={{
             background: 'white',
-            color: '#e11d07',
+            color: '#3ea2d4',
             border: 'none',
             padding: '10px 16px',
             borderRadius: '6px',

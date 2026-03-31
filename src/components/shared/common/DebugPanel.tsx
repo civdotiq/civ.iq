@@ -81,7 +81,7 @@ export function DebugPanel() {
         <h3 className="text-white font-bold">Phase 2 Debug Panel</h3>
         <button
           onClick={() => setIsVisible(false)}
-          className="text-civiq-red hover:text-civiq-red"
+          className="text-amber-600 hover:text-amber-700"
           title="Hide Debug Panel (Ctrl+Shift+D)"
         >
           ✕
@@ -111,7 +111,7 @@ export function DebugPanel() {
 
         {/* Bills Component Data */}
         <div>
-          <h4 className="text-civiq-red font-semibold">Bills Component</h4>
+          <h4 className="text-amber-600 font-semibold">Bills Component</h4>
           {billsData ? (
             <pre className="text-xs overflow-x-auto">{JSON.stringify(billsData, null, 2)}</pre>
           ) : (

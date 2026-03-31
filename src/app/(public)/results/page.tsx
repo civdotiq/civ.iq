@@ -614,7 +614,7 @@ function ResultsContent() {
               </span>
             )}
             {multiDistrictData && !selectedDistrict && (
-              <span className="ml-2 text-civiq-red">
+              <span className="ml-2 text-amber-600">
                 • Multiple districts found - please select
               </span>
             )}
@@ -732,8 +732,8 @@ function ResultsContent() {
                     )}
 
                   {loading.error && (
-                    <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
-                      <div className="text-civiq-red mb-4">
+                    <div className="bg-amber-50 border border-amber-600 p-6 text-center">
+                      <div className="text-amber-600 mb-4">
                         <svg
                           className="w-12 h-12 mx-auto"
                           fill="none"
@@ -748,8 +748,8 @@ function ResultsContent() {
                           />
                         </svg>
                       </div>
-                      <p className="text-civiq-red font-medium">Unable to find representatives</p>
-                      <p className="text-civiq-red mt-1">{loading.error.message}</p>
+                      <p className="text-amber-600 font-medium">Unable to find representatives</p>
+                      <p className="text-amber-600 mt-1">{loading.error.message}</p>
                       <div className="flex gap-4 justify-center mt-4">
                         <button
                           onClick={() => loading.retry()}
@@ -923,9 +923,9 @@ function ResultsContent() {
 
         {/* Show error state if no search query */}
         {!zipCode && !address && !query && (
-          <div className="bg-civiq-red/10 border border-civiq-red p-6 text-center">
-            <p className="text-civiq-red font-medium">Error</p>
-            <p className="text-civiq-red mt-1">No search query provided</p>
+          <div className="bg-amber-50 border border-amber-600 p-6 text-center">
+            <p className="text-amber-600 font-medium">Error</p>
+            <p className="text-amber-600 mt-1">No search query provided</p>
             <Link href="/" className="inline-block mt-4 text-civiq-blue hover:underline">
               ← Go to search page
             </Link>

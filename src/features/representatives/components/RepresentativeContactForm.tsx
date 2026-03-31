@@ -130,7 +130,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
         {/* Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Your Name <span className="text-civiq-red">*</span>
+            Your Name <span className="text-amber-600">*</span>
           </label>
           <input
             type="text"
@@ -138,16 +138,16 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="name"
             value={formData.name}
             onChange={e => handleInputChange('name', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.name ? 'border-civiq-red' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.name ? 'border-amber-600' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="John Doe"
           />
-          {errors.name && <p className="text-civiq-red text-sm mt-1">{errors.name}</p>}
+          {errors.name && <p className="text-amber-600 text-sm mt-1">{errors.name}</p>}
         </div>
 
         {/* Email */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Your Email <span className="text-civiq-red">*</span>
+            Your Email <span className="text-amber-600">*</span>
           </label>
           <input
             type="email"
@@ -155,16 +155,16 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="email"
             value={formData.email}
             onChange={e => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.email ? 'border-civiq-red' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.email ? 'border-amber-600' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="john@example.com"
           />
-          {errors.email && <p className="text-civiq-red text-sm mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-amber-600 text-sm mt-1">{errors.email}</p>}
         </div>
 
         {/* ZIP Code */}
         <div>
           <label htmlFor="zipCode" className="block text-sm font-medium mb-1">
-            Your ZIP Code <span className="text-civiq-red">*</span>
+            Your ZIP Code <span className="text-amber-600">*</span>
           </label>
           <input
             type="text"
@@ -174,48 +174,48 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             autoComplete="postal-code"
             value={formData.zipCode}
             onChange={e => handleInputChange('zipCode', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.zipCode ? 'border-civiq-red' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.zipCode ? 'border-amber-600' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="12345"
             maxLength={10}
           />
-          {errors.zipCode && <p className="text-civiq-red text-sm mt-1">{errors.zipCode}</p>}
+          {errors.zipCode && <p className="text-amber-600 text-sm mt-1">{errors.zipCode}</p>}
           <p className="text-xs text-gray-500 mt-1">Used to verify you&apos;re a constituent</p>
         </div>
 
         {/* Subject */}
         <div>
           <label htmlFor="subject" className="block text-sm font-medium mb-1">
-            Subject <span className="text-civiq-red">*</span>
+            Subject <span className="text-amber-600">*</span>
           </label>
           <input
             type="text"
             id="subject"
             value={formData.subject}
             onChange={e => handleInputChange('subject', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.subject ? 'border-civiq-red' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
+            className={`w-full px-3 py-2 border ${errors.subject ? 'border-amber-600' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800`}
             placeholder="Healthcare Access"
           />
-          {errors.subject && <p className="text-civiq-red text-sm mt-1">{errors.subject}</p>}
+          {errors.subject && <p className="text-amber-600 text-sm mt-1">{errors.subject}</p>}
         </div>
 
         {/* Message */}
         <div>
           <label htmlFor="message" className="block text-sm font-medium mb-1">
-            Your Message <span className="text-civiq-red">*</span>
+            Your Message <span className="text-amber-600">*</span>
           </label>
           <textarea
             id="message"
             value={formData.message}
             onChange={e => handleInputChange('message', e.target.value)}
             rows={8}
-            className={`w-full px-3 py-2 border ${errors.message ? 'border-civiq-red' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800 font-mono text-sm`}
+            className={`w-full px-3 py-2 border ${errors.message ? 'border-amber-600' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-civiq-blue focus:border-transparent bg-white dark:bg-gray-800 font-mono text-sm`}
             placeholder="I am writing to express my views on..."
             maxLength={MESSAGE_CHAR_LIMIT}
           />
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mt-1">
-            {errors.message && <p className="text-civiq-red text-sm">{errors.message}</p>}
+            {errors.message && <p className="text-amber-600 text-sm">{errors.message}</p>}
             <span
-              className={`text-sm font-medium sm:ml-auto ${messageLength > MESSAGE_CHAR_LIMIT * 0.9 ? 'text-civiq-red font-semibold' : 'text-gray-600'}`}
+              className={`text-sm font-medium sm:ml-auto ${messageLength > MESSAGE_CHAR_LIMIT * 0.9 ? 'text-amber-600 font-semibold' : 'text-gray-600'}`}
             >
               {messageLength} / {MESSAGE_CHAR_LIMIT} characters
             </span>

@@ -11,9 +11,9 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateName } from '@/lib/data/us-states';
-import Link from 'next/link';
 import { StateVoteDetailView } from '@/features/state-legislature/components/StateVoteDetailView';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 
 interface PageProps {
   params: Promise<{
@@ -111,21 +111,15 @@ export default async function StateVotePage({ params }: PageProps) {
         ]}
       />
 
-      <nav className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-civiq-blue">
-          Home
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/states" className="hover:text-civiq-blue">
-          States
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
-          {state.toUpperCase()}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="font-medium text-gray-900">{motionLabel}</span>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'States', href: '/states' },
+          { label: state.toUpperCase(), href: `/state-legislature/${state}` },
+          { label: motionLabel, href: `/state-legislature/${state}/vote/${id}` },
+        ]}
+        className="mb-6"
+      />
 
       <StateVoteDetailView vote={vote} state={state} />
     </div>

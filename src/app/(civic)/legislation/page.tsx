@@ -275,12 +275,12 @@ export default function LegislationPage() {
               <p className="text-gray-600">Fetching the latest legislation data</p>
             </div>
           ) : error ? (
-            <div className="bg-white border-2 border-civiq-red p-12 text-center">
-              <h3 className="text-lg font-medium text-civiq-red mb-2">Unable to Load Bills</h3>
-              <p className="text-civiq-red mb-4">{error}</p>
+            <div className="bg-white border-2 border-amber-600 p-12 text-center">
+              <h3 className="text-lg font-medium text-amber-700 mb-2">Unable to Load Bills</h3>
+              <p className="text-amber-600 mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-civiq-red text-white hover:bg-civiq-red transition-colors"
+                className="px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
                 Try Again
               </button>

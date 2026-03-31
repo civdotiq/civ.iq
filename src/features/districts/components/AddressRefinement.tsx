@@ -154,13 +154,13 @@ export function AddressRefinement({
 
             {/* Error Display */}
             {error && (
-              <div className="p-3 bg-civiq-red/10 border border-civiq-red">
+              <div className="p-3 bg-amber-50 border border-amber-600">
                 <div className="flex items-start">
-                  <div className="text-civiq-red mr-2"></div>
+                  <div className="text-amber-600 mr-2"></div>
                   <div>
-                    <p className="text-sm font-medium text-civiq-red">Address Not Found</p>
-                    <p className="text-sm text-civiq-red mt-1">{error}</p>
-                    <p className="text-xs text-civiq-red mt-2">
+                    <p className="text-sm font-medium text-amber-600">Address Not Found</p>
+                    <p className="text-sm text-amber-600 mt-1">{error}</p>
+                    <p className="text-xs text-amber-600 mt-2">
                       Try including more details like your full street address, city, and state.
                     </p>
                   </div>
@@ -296,7 +296,7 @@ export function InlineAddressRefinement({
           className="w-full"
         />
 
-        {error && <div className="text-xs text-civiq-red text-center">{error}</div>}
+        {error && <div className="text-xs text-amber-600 text-center">{error}</div>}
 
         {isLoading && (
           <div className="flex items-center justify-center text-sm text-civiq-blue">

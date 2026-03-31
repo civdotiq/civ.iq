@@ -59,11 +59,11 @@ export default function MultiDistrictIndicator({
   const getConfidenceColor = (confidence: 'high' | 'medium' | 'low' = 'high'): string => {
     switch (confidence) {
       case 'high':
-        return 'text-civiq-green bg-civiq-green/10';
+        return 'text-civiq-blue bg-civiq-blue/10';
       case 'medium':
         return 'text-gray-600 bg-gray-100';
       case 'low':
-        return 'text-civiq-red bg-civiq-red/10';
+        return 'text-amber-600 bg-amber-50';
       default:
         return 'text-gray-600 bg-white';
     }
@@ -94,12 +94,12 @@ export default function MultiDistrictIndicator({
 
   if (districts.length === 0) {
     return (
-      <div className="bg-civiq-red/10 border border-civiq-red p-4 mb-4">
-        <div className="flex items-center gap-2 text-civiq-red">
+      <div className="bg-amber-50 border border-amber-600 p-4 mb-4">
+        <div className="flex items-center gap-2 text-amber-600">
           <AlertTriangle className="w-5 h-5" />
           <span className="font-semibold">ZIP Code Not Found</span>
         </div>
-        <p className="text-civiq-red mt-2">
+        <p className="text-amber-600 mt-2">
           ZIP code {zipCode} could not be mapped to a congressional district.
         </p>
       </div>

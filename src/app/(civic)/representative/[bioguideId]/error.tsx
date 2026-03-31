@@ -25,7 +25,7 @@ export default function Error({
       <div className="max-w-md w-full bg-white border-2 border-black p-8 text-center">
         <div className="mb-4">
           <svg
-            className="w-16 h-16 text-civiq-red mx-auto"
+            className="w-16 h-16 text-amber-600 mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -71,7 +71,7 @@ export default function Error({
             <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
               Error details (Development only)
             </summary>
-            <pre className="mt-2 p-4 bg-white border-2 border-gray-300 text-xs text-civiq-red overflow-auto">
+            <pre className="mt-2 p-4 bg-white border-2 border-gray-300 text-xs text-amber-600 overflow-auto">
               {error.message}
               {error.stack}
             </pre>

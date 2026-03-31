@@ -24,10 +24,10 @@ export function PerformanceDashboard({ showDevOnly = true }: PerformanceDashboar
 
   const summary = performanceData.getMetricsSummary();
   const gradeColors = {
-    excellent: 'text-civiq-green bg-civiq-green/10',
+    excellent: 'text-civiq-blue bg-civiq-blue/10',
     good: 'text-civiq-blue bg-civiq-blue/10',
     'needs-improvement': 'text-gray-600 bg-gray-100',
-    poor: 'text-civiq-red bg-civiq-red/10',
+    poor: 'text-amber-600 bg-amber-50',
   };
 
   const formatTime = (ms?: number) => {

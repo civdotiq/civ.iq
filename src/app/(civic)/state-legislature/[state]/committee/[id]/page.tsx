@@ -4,7 +4,6 @@
  */
 
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { StateCommitteeProfile } from '@/features/state-legislature/components/StateCommitteeProfile';
 import type { StateCommittee, StateParty } from '@/types/state-legislature';
@@ -13,6 +12,7 @@ import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateName } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 
 interface PageProps {
   params: Promise<{
@@ -144,26 +144,16 @@ export default async function StateCommitteePage({ params }: PageProps) {
         ]}
       />
 
-      {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-civiq-blue">
-          Home
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/states" className="hover:text-civiq-blue">
-          States
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
-          {state.toUpperCase()} Legislature
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href={`/state-legislature/${state}/committees`} className="hover:text-civiq-blue">
-          Committees
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="font-medium text-gray-900">{committee.name}</span>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'States', href: '/states' },
+          { label: `${state.toUpperCase()} Legislature`, href: `/state-legislature/${state}` },
+          { label: 'Committees', href: `/state-legislature/${state}/committees` },
+          { label: committee.name, href: `/state-legislature/${state}/committee/${id}` },
+        ]}
+        className="mb-6"
+      />
 
       <StateCommitteeProfile committee={committee} state={state} />
     </main>

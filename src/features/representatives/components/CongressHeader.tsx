@@ -175,14 +175,14 @@ export default function CongressHeader({
 
   if (error) {
     return (
-      <div className={`bg-civiq-red/10 border border-civiq-red p-6 mb-6 ${className}`}>
+      <div className={`bg-amber-50 border border-amber-600 p-6 mb-6 ${className}`}>
         <div className="flex items-center gap-2 mb-2">
-          <Users className="w-5 h-5 text-civiq-red" />
-          <h3 className="text-lg font-semibold text-civiq-red">
+          <Users className="w-5 h-5 text-amber-600" />
+          <h3 className="text-lg font-semibold text-amber-700">
             Unable to load Congress statistics
           </h3>
         </div>
-        <p className="text-sm text-civiq-red">{error}</p>
+        <p className="text-sm text-amber-600">{error}</p>
       </div>
     );
   }

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 // D3 imports removed - not used in current implementation
 import { Suspense } from 'react';
+import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
@@ -28,13 +29,8 @@ const RealDistrictMapContainer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
-        <div className="text-center">
-          <div className="inline-block animate-spin h-8 w-8 border-2 border-civiq-blue border-t-transparent mb-2"></div>
-          <p className="text-sm uppercase tracking-aicher font-bold text-gray-600">
-            Loading district boundaries...
-          </p>
-        </div>
+      <div className="h-96 bg-white border-2 border-black p-6">
+        <SkeletonLoader variant="card" count={2} />
       </div>
     ),
   }

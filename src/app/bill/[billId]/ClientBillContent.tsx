@@ -44,6 +44,7 @@ import { BillSpendingSection } from '@/features/legislation/components/BillSpend
 import { BillIntelligenceSection } from '@/components/intelligence/BillIntelligenceSection';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
 
 interface ClientBillContentProps {
   billId: string;
@@ -176,20 +177,14 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 w-1/3"></div>
-        <div className="h-6 bg-white border-2 border-gray-300 w-1/2"></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="h-16 bg-white border-2 border-gray-300"></div>
-          <div className="h-16 bg-white border-2 border-gray-300"></div>
-          <div className="h-16 bg-white border-2 border-gray-300"></div>
-          <div className="h-16 bg-white border-2 border-gray-300"></div>
-        </div>
-        <div className="space-y-4">
-          <div className="h-24 bg-white border-2 border-gray-300"></div>
-          <div className="h-24 bg-white border-2 border-gray-300"></div>
-          <div className="h-24 bg-white border-2 border-gray-300"></div>
-        </div>
+      <div className="space-y-4">
+        <SkeletonLoader variant="text" />
+        <SkeletonLoader
+          variant="stat"
+          count={4}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
+        />
+        <SkeletonLoader variant="card" count={3} />
       </div>
     );
   }

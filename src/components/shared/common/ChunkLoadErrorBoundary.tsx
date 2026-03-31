@@ -202,7 +202,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
           <div className="text-center p-8">
             <div className="mb-4">
               <svg
-                className="w-16 h-16 text-civiq-red mx-auto"
+                className="w-16 h-16 text-amber-600 mx-auto"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -221,7 +221,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
             </p>
             <button
               onClick={this.retry}
-              className="bg-civiq-red text-white px-4 py-2 hover:bg-civiq-red transition-colors"
+              className="bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue/90 transition-colors"
             >
               Try Again
             </button>
