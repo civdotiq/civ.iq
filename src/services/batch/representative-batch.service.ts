@@ -601,6 +601,8 @@ export async function getRepresentativeSummary(bioguideId: string) {
     billsSponsored?: number;
     billsCosponsored?: number;
     totalRaised?: number;
+    totalSpent?: number;
+    cashOnHand?: number;
     votesParticipated?: number;
     lastUpdated: string;
   }>(cacheKey);
@@ -645,6 +647,8 @@ export async function getRepresentativeSummary(bioguideId: string) {
         0,
       billsCosponsored: (billsData as { cosponsoredCount?: number })?.cosponsoredCount ?? 0,
       totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
+      totalSpent: (financeData as { totalSpent?: number })?.totalSpent ?? 0,
+      cashOnHand: (financeData as { cashOnHand?: number })?.cashOnHand ?? 0,
       votesParticipated:
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
         (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
@@ -660,6 +664,8 @@ export async function getRepresentativeSummary(bioguideId: string) {
       billsSponsored: 0,
       billsCosponsored: 0,
       totalRaised: 0,
+      totalSpent: 0,
+      cashOnHand: 0,
       votesParticipated: undefined,
       lastUpdated: new Date().toISOString(),
     };
