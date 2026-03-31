@@ -24,7 +24,7 @@ interface Bill {
   relationship?: 'sponsored' | 'cosponsored';
 }
 
-interface BillsResponse {
+export interface BillsResponse {
   sponsored: {
     count: number;
     bills: Bill[];

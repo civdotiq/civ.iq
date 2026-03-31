@@ -5,79 +5,13 @@
 
 'use client';
 
-import React, { useState, Suspense, useCallback, useMemo, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import useSWR, { preload } from 'swr';
+import React, { useState, useMemo, useEffect } from 'react';
+import useSWR from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
 import { HeroStatsHeader } from './HeroStatsHeader';
-import { TabNavigation, TabItem } from './TabNavigation';
-import { ContactInfoTab } from './ContactInfoTab';
-import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
-import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
-import {
-  RepresentativeIcon,
-  StatisticsIcon,
-  LegislationIcon,
-  FinanceIcon,
-  NewsIcon,
-  IntelligenceIcon,
-  LobbyingIcon,
-  DistrictIcon,
-} from '@/components/icons/AicherIcons';
+import { RepresentativeDashboard, REPRESENTATIVE_SECTIONS } from './RepresentativeDashboard';
+import { useSectionNavigation } from '@/shared/components/dashboard';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
-import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
-
-// Dynamically import heavy tabs to reduce initial bundle size
-const FinanceTab = dynamic(
-  () =>
-    import('@/features/campaign-finance/components/CampaignFinanceVisualizer').then(mod => ({
-      default: mod.CampaignFinanceVisualizer,
-    })),
-  {
-    loading: TabLoadingSpinner,
-    ssr: false,
-  }
-);
-
-const VotingTabComponent = dynamic(
-  () => import('./VotingTab').then(mod => ({ default: mod.VotingTab })),
-  {
-    loading: TabLoadingSpinner,
-    ssr: false,
-  }
-);
-
-const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.BillsTab })), {
-  loading: TabLoadingSpinner,
-  ssr: false,
-});
-
-const IntelligenceTab = dynamic(
-  () =>
-    import('@/components/intelligence/IntelligenceTab').then(mod => ({
-      default: mod.IntelligenceTab,
-    })),
-  {
-    loading: TabLoadingSpinner,
-    ssr: false,
-  }
-);
-
-const LobbyingTab = dynamic(
-  () => import('./LobbyingTab').then(mod => ({ default: mod.LobbyingTab })),
-  {
-    loading: TabLoadingSpinner,
-    ssr: false,
-  }
-);
-
-const DistrictTab = dynamic(
-  () => import('./DistrictTab').then(mod => ({ default: mod.DistrictTab })),
-  {
-    loading: TabLoadingSpinner,
-    ssr: false,
-  }
-);
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
@@ -213,9 +147,10 @@ function getDataSourcesForTab(tabId: string): Array<{
 // Memoized component to prevent unnecessary re-renders
 export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfileProps>(
   ({ representative }) => {
-    const [activeTab, setActiveTab] = useState('overview');
+    const { activeSection, navigateToSection, navigateBack } = useSectionNavigation({
+      validSections: [...REPRESENTATIVE_SECTIONS],
+    });
     const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['overview']));
-    const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Fetch lightweight summary data for Key Stats
     const {
@@ -297,94 +232,18 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       }
     );
 
-    // Track when a tab is selected
+    // Track when a section is drilled into
     useEffect(() => {
-      setLoadedTabs(prev => new Set([...prev, activeTab]));
-    }, [activeTab]);
+      if (activeSection) {
+        setLoadedTabs(prev => new Set([...prev, activeSection]));
+      }
+    }, [activeSection]);
 
     // Memoize committee codes to avoid re-creation on every render
     const committeeCodes = useMemo(
       () => deriveCommitteeCodes(representative.committees),
       [representative.committees]
     );
-
-    // Prefetch tab data on hover
-    const handleTabHover = useCallback(
-      (tabId: string) => {
-        // Clear any existing timeout
-        if (prefetchTimeoutRef.current) {
-          clearTimeout(prefetchTimeoutRef.current);
-        }
-
-        // Set a new timeout to prefetch after 200ms hover
-        prefetchTimeoutRef.current = setTimeout(() => {
-          if (!loadedTabs.has(tabId)) {
-            // Preload the tab's data
-            const endpoint =
-              tabId === 'voting'
-                ? 'votes'
-                : tabId === 'legislation'
-                  ? 'bills'
-                  : tabId === 'finance'
-                    ? 'finance'
-                    : tabId === 'lobbying'
-                      ? 'lobbying'
-                      : null;
-            if (endpoint) {
-              const url = `/api/representative/${representative.bioguideId}/${endpoint}`;
-              preload(url, () =>
-                fetch(url).then(res => {
-                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                  return res.json();
-                })
-              );
-            }
-            // Prefetch district tab endpoints
-            if (tabId === 'district') {
-              const alignmentUrl = `/api/representative/${representative.bioguideId}/civic-alignment`;
-              const connectionsUrl = `/api/representative/${representative.bioguideId}/connections`;
-              preload(alignmentUrl, () =>
-                fetch(alignmentUrl).then(res => {
-                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                  return res.json();
-                })
-              );
-              preload(connectionsUrl, () =>
-                fetch(connectionsUrl).then(res => {
-                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                  return res.json();
-                })
-              );
-            }
-            // Also prefetch influence-chain data for lobbying/intelligence tabs
-            if ((tabId === 'lobbying' || tabId === 'intelligence') && committeeCodes.length > 0) {
-              const chainUrl = `/api/intelligence/representative/${representative.bioguideId}/influence-chain`;
-              preload(chainUrl, () =>
-                fetch(chainUrl).then(res => {
-                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                  return res.json();
-                })
-              );
-            }
-          }
-        }, 200);
-      },
-      [representative.bioguideId, loadedTabs, committeeCodes]
-    );
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-      return () => {
-        if (prefetchTimeoutRef.current) {
-          clearTimeout(prefetchTimeoutRef.current);
-        }
-      };
-    }, []);
-
-    // Memoized tab change handler
-    const handleTabChange = useCallback((tabId: string) => {
-      setActiveTab(tabId);
-    }, []);
 
     // Compute next election year
     const nextElection = useMemo(() => {
@@ -404,135 +263,11 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       [representative.committees]
     );
 
-    // Build tabs — counts are already shown in the hero stats section
-    const tabsWithBadges: TabItem[] = useMemo(
-      () => [
-        {
-          id: 'overview',
-          label: 'Overview',
-          icon: <RepresentativeIcon className="w-4 h-4" />,
-          description: 'Personal details and committee memberships',
-        },
-        {
-          id: 'voting',
-          label: 'Voting Records',
-          icon: <StatisticsIcon className="w-4 h-4" />,
-          description: 'Voting history and positions',
-        },
-        {
-          id: 'legislation',
-          label: 'Sponsored Bills',
-          icon: <LegislationIcon className="w-4 h-4" />,
-          description: 'Bills sponsored and co-sponsored',
-        },
-        {
-          id: 'finance',
-          label: 'Campaign Finance',
-          icon: <FinanceIcon className="w-4 h-4" />,
-          description: 'Fundraising and expenditures',
-        },
-        {
-          id: 'lobbying',
-          label: 'Lobbying',
-          icon: <LobbyingIcon className="w-4 h-4" />,
-          description: 'Who lobbies your representative and how much they spend',
-        },
-        {
-          id: 'intelligence',
-          label: 'Intelligence',
-          icon: <IntelligenceIcon className="w-4 h-4" />,
-          description: 'AI-powered analysis of finance, voting, and committee patterns',
-        },
-        {
-          id: 'news',
-          label: 'Recent News',
-          icon: <NewsIcon className="w-4 h-4" />,
-          description: 'Recent media coverage',
-        },
-        {
-          id: 'district',
-          label: 'District',
-          icon: <DistrictIcon className="w-4 h-4" />,
-          description: 'District alignment, spending, hearings, and local officials',
-        },
-      ],
-      []
+    // Get data sources for current section (or default when on grid view)
+    const dataSources = useMemo(
+      () => getDataSourcesForTab(activeSection ?? 'default'),
+      [activeSection]
     );
-
-    // Get data sources for current tab
-    const dataSources = useMemo(() => getDataSourcesForTab(activeTab), [activeTab]);
-
-    // Memoized tab rendering to prevent unnecessary re-renders
-    const renderActiveTab = useMemo(() => {
-      switch (activeTab) {
-        case 'overview':
-          return <ContactInfoTab representative={representative} />;
-        case 'voting':
-          return (
-            <VotingTabComponent
-              bioguideId={representative.bioguideId}
-              sharedData={batchData?.data?.votes}
-              sharedLoading={batchLoading}
-              sharedError={batchError}
-            />
-          );
-        case 'legislation':
-          return (
-            <BillsTab
-              bioguideId={representative.bioguideId}
-              representativeName={representative.name}
-              sharedData={batchData?.data?.bills}
-              sharedLoading={batchLoading}
-              sharedError={batchError}
-            />
-          );
-        case 'finance':
-          return (
-            <FinanceTab
-              financeData={batchData?.data?.finance || summaryData?.data?.finance || {}}
-              representative={{
-                name: representative.name,
-                party: representative.party,
-              }}
-              bioguideId={representative.bioguideId}
-            />
-          );
-        case 'lobbying':
-          return (
-            <LobbyingTab
-              bioguideId={representative.bioguideId}
-              hasCommittees={committeeCodes.length > 0}
-            />
-          );
-        case 'intelligence':
-          return (
-            <IntelligenceTab
-              bioguideId={representative.bioguideId}
-              committeeCodes={committeeCodes}
-            />
-          );
-        case 'news':
-          return (
-            <ClusteredNewsSection
-              representative={representative}
-              initialLimit={20}
-              className="-mx-6 -my-6 p-6"
-            />
-          );
-        case 'district':
-          return <DistrictTab bioguideId={representative.bioguideId} />;
-        default:
-          return <ContactInfoTab representative={representative} />;
-      }
-    }, [
-      activeTab,
-      representative,
-      batchData,
-      batchLoading,
-      batchError,
-      summaryData,
-      committeeCodes,
-    ]);
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -558,43 +293,26 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                   : undefined,
               }}
               loading={summaryLoading}
-              onStatClick={handleTabChange}
+              onStatClick={navigateToSection}
               nextElection={nextElection}
               focusAreas={focusAreas}
             />
           </div>
 
-          {/* Main Content Area - Full width with tabs */}
+          {/* Main Content Area - Section Dashboard */}
           <div className="bg-white aicher-border mb-rhythm-section">
-            {/* Tab Navigation with hover prefetch and dynamic badges */}
-            <TabNavigation
-              tabs={tabsWithBadges}
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              onTabHover={handleTabHover}
+            <RepresentativeDashboard
+              representative={representative}
+              summaryData={summaryData}
+              summaryLoading={summaryLoading}
+              batchData={batchData}
+              batchLoading={batchLoading}
+              batchError={batchError}
+              committeeCodes={committeeCodes}
+              activeSection={activeSection}
+              onSectionSelect={navigateToSection}
+              onBack={navigateBack}
             />
-
-            {/* Tab Content with responsive padding, error boundary, and Suspense */}
-            <div className="p-4 sm:p-6">
-              <ErrorBoundary
-                key={activeTab}
-                fallback={({ error: _error, retry }) => (
-                  <div className="border-2 border-gray-200 p-6 text-center min-h-[200px] flex flex-col items-center justify-center">
-                    <p className="type-sm text-gray-500">
-                      This tab failed to load. Please try again.
-                    </p>
-                    <button
-                      onClick={retry}
-                      className="mt-3 type-xs text-[#3ea2d4] aicher-heading-wide py-2 min-h-[44px] inline-flex items-center aicher-focus"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                )}
-              >
-                <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab}</Suspense>
-              </ErrorBoundary>
-            </div>
           </div>
 
           {/* Data Sources Attribution - context-aware */}

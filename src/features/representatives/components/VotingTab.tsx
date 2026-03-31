@@ -39,7 +39,7 @@ function widenColumns<T extends object>(
   return cols as ExportColumn<T & Record<string, unknown>>[];
 }
 
-interface VoteResponse {
+export interface VoteResponse {
   votes: Vote[];
   totalResults: number;
   member: {
