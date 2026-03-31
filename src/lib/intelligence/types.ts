@@ -788,12 +788,18 @@ export type BriefPatternType =
   | 'lobbying-legislation-alignment'
   | 'legislative-effectiveness';
 
+export interface BriefPatternSource {
+  label: string;
+  url: string;
+}
+
 export interface BriefPattern {
   type: BriefPatternType;
   headline: string;
   detail: string;
   dataPoints: Record<string, number | string>;
   significance: number;
+  sources?: BriefPatternSource[];
 }
 
 export interface BriefIdentity {

@@ -302,6 +302,24 @@ function Finding({
       {expanded && (
         <div className="ml-5 pb-2">
           <p className="type-sm text-gray-600 leading-relaxed">{pattern.detail}</p>
+          {pattern.sources && pattern.sources.length > 0 && (
+            <p className="type-xs text-gray-400 mt-2">
+              {'Source: '}
+              {pattern.sources.map((src, idx) => (
+                <span key={src.url}>
+                  {idx > 0 && ', '}
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#3ea2d4] underline hover:text-[#2b7a9e]"
+                  >
+                    {src.label}
+                  </a>
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       )}
     </div>

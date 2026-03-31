@@ -15,6 +15,7 @@
 
 import type {
   BriefPattern,
+  BriefPatternSource,
   BriefFunding,
   BriefVoting,
   BriefIdentity,
@@ -38,6 +39,10 @@ export interface PatternInput {
   peerInStatePctMean: number | null;
   /** Std dev of in-state funding % among peers */
   peerInStatePctStd: number | null;
+  /** Bioguide ID for constructing citation URLs */
+  bioguideId: string;
+  /** FEC candidate ID for constructing FEC URLs (null if unmapped) */
+  fecId: string | null;
 }
 
 /** Run all 8 pattern detectors and return significant ones, sorted by significance */
@@ -79,6 +84,22 @@ function lastName(name: string): string {
   return last;
 }
 
+function congressSource(bioguideId: string): BriefPatternSource {
+  return { label: 'Congress.gov', url: `https://www.congress.gov/member/_/${bioguideId}` };
+}
+
+function fecSource(fecId: string | null): BriefPatternSource {
+  if (fecId) return { label: 'FEC.gov', url: `https://www.fec.gov/data/candidate/${fecId}/` };
+  return { label: 'FEC.gov', url: 'https://www.fec.gov/data/' };
+}
+
+function ldaSource(): BriefPatternSource {
+  return {
+    label: 'Senate LDA filings',
+    url: 'https://lda.senate.gov/filings/public/filing/search/',
+  };
+}
+
 // ── Pattern 1: Funding-Jurisdiction Overlap ──────────────────────────
 
 function detectFundingJurisdictionOverlap(input: PatternInput): BriefPattern | null {
@@ -110,6 +131,7 @@ function detectFundingJurisdictionOverlap(input: PatternInput): BriefPattern | n
       topOverlapAmount: topOverlap.amount,
     },
     significance,
+    sources: [fecSource(input.fecId), congressSource(input.bioguideId)],
   };
 }
 
@@ -152,6 +174,7 @@ function detectVotingPartyDivergence(input: PatternInput): BriefPattern | null {
         totalVotes: input.voting.totalVotes,
       },
       significance: absZ,
+      sources: [congressSource(input.bioguideId)],
     };
   }
 
@@ -166,6 +189,7 @@ function detectVotingPartyDivergence(input: PatternInput): BriefPattern | null {
       totalVotes: input.voting.totalVotes,
     },
     significance: absZ,
+    sources: [congressSource(input.bioguideId)],
   };
 }
 
@@ -190,6 +214,7 @@ function detectLegislationFocusShift(input: PatternInput): BriefPattern | null {
         cosponsorRatio: Math.round(ratio * 10) / 10,
       },
       significance: ratio < 2 ? 2.0 : 1.6,
+      sources: [congressSource(input.bioguideId)],
     };
   }
 
@@ -222,6 +247,7 @@ function detectDonorConcentration(input: PatternInput): BriefPattern | null {
       secondSectorPct: Math.round((input.funding.topSectors[1]?.pct ?? 0) * 10) / 10,
     },
     significance,
+    sources: [fecSource(input.fecId)],
   };
 }
 
@@ -257,6 +283,7 @@ function detectInStateFundingRatio(input: PatternInput): BriefPattern | null {
         contributionsSampled: input.funding.contributionsSampled,
       },
       significance: absZ,
+      sources: [fecSource(input.fecId)],
     };
   }
 
@@ -271,6 +298,7 @@ function detectInStateFundingRatio(input: PatternInput): BriefPattern | null {
       contributionsSampled: input.funding.contributionsSampled,
     },
     significance: absZ,
+    sources: [fecSource(input.fecId)],
   };
 }
 
@@ -301,6 +329,7 @@ function detectCommitteePowerPosition(input: PatternInput): BriefPattern | null 
       roles: powerRoles.map(c => `${c.role} of ${c.name}`).join('; '),
     },
     significance,
+    sources: [congressSource(input.bioguideId)],
   };
 }
 
@@ -327,6 +356,7 @@ function detectLegislativeEffectiveness(input: PatternInput): BriefPattern | nul
         progressRate: Math.round(progressRate * 100),
       },
       significance,
+      sources: [congressSource(input.bioguideId)],
     };
   }
 
@@ -341,6 +371,7 @@ function detectLegislativeEffectiveness(input: PatternInput): BriefPattern | nul
         progressRate: 0,
       },
       significance: 1.6,
+      sources: [congressSource(input.bioguideId)],
     };
   }
 
@@ -376,5 +407,6 @@ function detectLobbyingLegislationAlignment(input: PatternInput): BriefPattern |
       topSimilarity: Math.round(topMatch.similarity * 100),
     },
     significance,
+    sources: [ldaSource(), congressSource(input.bioguideId)],
   };
 }

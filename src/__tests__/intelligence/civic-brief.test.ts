@@ -92,6 +92,8 @@ function makePatternInput(overrides: Partial<PatternInput> = {}): PatternInput {
     peerPartyAlignmentStd: 4,
     peerInStatePctMean: 55,
     peerInStatePctStd: 8,
+    bioguideId: 'J000299',
+    fecId: 'H8LA04011',
     ...overrides,
   };
 }

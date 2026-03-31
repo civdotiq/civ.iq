@@ -161,6 +161,8 @@ async function computeAndCache(
     peerPartyAlignmentStd: peerPartyStats?.std ?? null,
     peerInStatePctMean: peerInStateStats?.mean ?? null,
     peerInStatePctStd: peerInStateStats?.std ?? null,
+    bioguideId,
+    fecId: fecId ?? null,
   };
 
   const patterns = detectPatterns(patternInput);
