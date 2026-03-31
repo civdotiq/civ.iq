@@ -27,13 +27,13 @@ export function BillSummaryWithLinks({
   const [activeTab, setActiveTab] = useState<'summary' | 'keypoints' | 'impact'>('summary');
 
   const getReadingLevelColor = (level: number) => {
-    if (level <= 8) return 'text-civiq-green bg-civiq-green/10';
+    if (level <= 8) return 'text-civiq-blue bg-civiq-blue/10';
     if (level <= 10) return 'text-gray-600 bg-gray-100';
     return 'text-civiq-red bg-civiq-red/10';
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-civiq-green';
+    if (confidence >= 0.8) return 'text-civiq-blue';
     if (confidence >= 0.6) return 'text-gray-600';
     return 'text-civiq-red';
   };

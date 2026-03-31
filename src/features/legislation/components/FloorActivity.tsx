@@ -121,7 +121,7 @@ export function FloorActivity() {
               href={data.liveStreams.house}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-red text-white text-xs font-bold hover:bg-civiq-red transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-civiq-blue text-white text-xs font-bold hover:bg-civiq-blue/90 transition-colors"
             >
               <Play className="w-3 h-3" />
               HOUSE LIVE

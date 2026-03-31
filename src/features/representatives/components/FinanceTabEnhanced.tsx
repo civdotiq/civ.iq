@@ -441,7 +441,7 @@ export const FinanceTabEnhanced = React.memo(
     }
 
     if (error) {
-      return <div className="text-center py-8 text-civiq-red">Failed to load financial data</div>;
+      return <div className="text-center py-8 text-amber-600">Failed to load financial data</div>;
     }
 
     if (!data) {

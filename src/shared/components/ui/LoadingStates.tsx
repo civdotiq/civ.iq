@@ -160,7 +160,7 @@ export function LoadingStateWrapper({
     return (
       <ComponentErrorBoundary componentName="LoadingStateWrapper">
         <div className="flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-civiq-red mb-4">
+          <div className="text-amber-600 mb-4">
             <svg
               className="w-12 h-12 mx-auto"
               fill="none"

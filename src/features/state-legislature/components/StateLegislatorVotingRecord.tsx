@@ -223,7 +223,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-civiq-red mb-2">Failed to load voting records</div>
+        <div className="text-amber-600 mb-2">Failed to load voting records</div>
         <div className="text-sm text-gray-500 mb-4">
           Voting data may not be available for all state legislators.
         </div>

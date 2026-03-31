@@ -111,7 +111,7 @@ export function Pagination({
         px-3 py-2 text-sm font-medium transition-colors
         ${
           currentPage === 1
-            ? 'bg-civiq-red text-white'
+            ? 'bg-civiq-blue text-white'
             : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
         }
         ${loading ? 'opacity-50 cursor-not-allowed' : ''}
@@ -137,7 +137,7 @@ export function Pagination({
        px-3 py-2 text-sm font-medium transition-colors
        ${
          currentPage === page
-           ? 'bg-civiq-red text-white'
+           ? 'bg-civiq-blue text-white'
            : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
        }
        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
@@ -160,7 +160,7 @@ export function Pagination({
         px-3 py-2 text-sm font-medium transition-colors
         ${
           currentPage === totalPages
-            ? 'bg-civiq-red text-white'
+            ? 'bg-civiq-blue text-white'
             : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
         }
         ${loading ? 'opacity-50 cursor-not-allowed' : ''}
@@ -293,7 +293,7 @@ export function SimplePagination({
      ${
        currentPage <= 1 || loading
          ? 'text-gray-400 cursor-not-allowed'
-         : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
+         : 'text-civiq-blue hover:bg-civiq-blue hover:text-white border border-civiq-blue'
      }
     `}
       >
@@ -312,7 +312,7 @@ export function SimplePagination({
      ${
        currentPage >= totalPages || loading
          ? 'text-gray-400 cursor-not-allowed'
-         : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
+         : 'text-civiq-blue hover:bg-civiq-blue hover:text-white border border-civiq-blue'
      }
     `}
       >

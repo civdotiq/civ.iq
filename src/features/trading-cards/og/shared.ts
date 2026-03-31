@@ -15,7 +15,7 @@ export function getPartyColor(party: string): string {
   const p = party.toLowerCase();
   if (p.includes('democrat')) return '#3ea2d4';
   if (p.includes('republican')) return '#e11d07';
-  if (p.includes('independent')) return '#0a9338';
+  if (p.includes('independent')) return '#6b7280';
   return '#666666';
 }
 

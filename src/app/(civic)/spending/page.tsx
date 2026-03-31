@@ -304,7 +304,7 @@ function SpendingByGeography() {
           <span className="ml-2 text-sm text-gray-500">Loading geographic data...</span>
         </div>
       ) : geoError ? (
-        <div className="text-center py-8 text-sm text-[#e11d07]">{geoError}</div>
+        <div className="text-center py-8 text-sm text-amber-600">{geoError}</div>
       ) : sorted.length === 0 ? (
         <div className="text-center py-8 text-sm text-gray-500">
           No geographic spending data available

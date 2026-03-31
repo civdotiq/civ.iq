@@ -92,9 +92,9 @@ export function InterestGroupBaskets({
               </div>
             </div>
 
-            <div className="p-4 bg-civiq-green/10">
+            <div className="p-4 bg-civiq-blue/10">
               <div className="text-sm text-gray-600 mb-1">Grassroots Funding</div>
-              <div className="text-xl font-bold text-civiq-green">
+              <div className="text-xl font-bold text-civiq-blue">
                 {metrics.grassrootsPercentage.toFixed(1)}%
               </div>
               <div className="text-xs text-gray-500">Small donors ≤ $200</div>

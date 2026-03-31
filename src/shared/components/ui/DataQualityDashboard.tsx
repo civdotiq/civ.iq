@@ -39,7 +39,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-civiq-green';
+    if (score >= 90) return 'text-civiq-blue';
     if (score >= 75) return 'text-gray-600';
     if (score >= 50) return 'text-civiq-red';
     return 'text-civiq-red';
@@ -48,7 +48,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent':
-        return 'bg-civiq-green/10 text-civiq-green';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'good':
         return 'bg-civiq-blue/10 text-civiq-blue';
       case 'fair':
@@ -56,7 +56,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
       case 'poor':
         return 'bg-civiq-red/10 text-civiq-red';
       case 'healthy':
-        return 'bg-civiq-green/10 text-civiq-green';
+        return 'bg-civiq-blue/10 text-civiq-blue';
       case 'degraded':
         return 'bg-gray-100 text-gray-600';
       case 'failed':
@@ -69,7 +69,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return { icon: '', color: 'text-civiq-green' };
+        return { icon: '', color: 'text-civiq-blue' };
       case 'stable':
         return { icon: '', color: 'text-civiq-blue' };
       case 'declining':
@@ -117,7 +117,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
           <div
             className={`h-3 transition-all duration-500 ${
               metrics.overall.score >= 90
-                ? 'bg-civiq-green'
+                ? 'bg-civiq-blue'
                 : metrics.overall.score >= 75
                   ? 'bg-gray-500'
                   : metrics.overall.score >= 50
@@ -248,7 +248,7 @@ export function InlineQualityScore({
   trend = 'stable',
 }: InlineQualityScoreProps) {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-civiq-green';
+    if (score >= 90) return 'text-civiq-blue';
     if (score >= 75) return 'text-gray-600';
     if (score >= 50) return 'text-civiq-red';
     return 'text-civiq-red';
@@ -314,7 +314,7 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
 
   const trustScore = calculateTrustScore(safeSources);
   const getColor = (score: number) => {
-    if (score >= 90) return 'text-civiq-green bg-civiq-green/10 border-civiq-green';
+    if (score >= 90) return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
     if (score >= 75) return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
     if (score >= 50) return 'text-gray-600 bg-gray-100 border-gray-300';
     return 'text-civiq-red bg-civiq-red/10 border-civiq-red';

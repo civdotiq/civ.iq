@@ -76,7 +76,11 @@ export const SkeletonLoader: FC<SkeletonLoaderProps> = ({
   }[variant];
 
   return (
-    <div className={cn('space-y-4', className)} role="status" aria-label="Loading content">
+    <div
+      className={cn(!className && 'space-y-4', className)}
+      role="status"
+      aria-label="Loading content"
+    >
       {Array.from({ length: count }, (_, i) => (
         <Component key={i} />
       ))}

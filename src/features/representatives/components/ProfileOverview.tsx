@@ -372,7 +372,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://youtube.com/${representative.socialMedia.youtube}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-civiq-red text-white hover:bg-civiq-red transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-civiq-blue text-white hover:bg-civiq-blue/90 transition-colors"
               >
                 <span>YouTube</span>
                 <ExternalLink className="w-3 h-3" />

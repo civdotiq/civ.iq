@@ -120,9 +120,9 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
   if (error) {
     return (
       <div className="p-grid-3">
-        <div className="bg-civiq-red/10 border-2 border-civiq-red p-grid-3">
-          <h3 className="text-xl font-bold text-civiq-red mb-grid-2">Error Loading Votes</h3>
-          <p className="text-civiq-red">{error}</p>
+        <div className="bg-amber-50 border-2 border-amber-600 p-grid-3">
+          <h3 className="text-xl font-bold text-amber-600 mb-grid-2">Error Loading Votes</h3>
+          <p className="text-amber-600">{error}</p>
         </div>
       </div>
     );

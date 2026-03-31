@@ -64,9 +64,9 @@ export default function EdgeCaseTooltip({
     'at-large': {
       icon: Info,
       title: 'At-Large District',
-      color: 'text-civiq-green',
-      bgColor: 'bg-civiq-green/10',
-      borderColor: 'border-civiq-green',
+      color: 'text-civiq-blue',
+      bgColor: 'bg-civiq-blue/10',
+      borderColor: 'border-civiq-blue',
       description: 'This state has only one House representative serving the entire state.',
       details: [
         'States with populations too small for multiple districts',

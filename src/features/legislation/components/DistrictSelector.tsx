@@ -153,7 +153,7 @@ export function DistrictSelector({
             </button>
           )}
         </form>
-        {inputError && <p className="text-xs text-civiq-red mt-1">{inputError}</p>}
+        {inputError && <p className="text-xs text-amber-600 mt-1">{inputError}</p>}
       </div>
     );
   }

@@ -246,7 +246,7 @@ const PACTypeBadge: React.FC<{ type: string }> = ({ type }) => {
   const config = {
     superPac: { label: 'Super PAC', color: 'bg-civiq-blue/10 text-civiq-blue' },
     traditional: { label: 'PAC', color: 'bg-civiq-blue/10 text-civiq-blue' },
-    leadership: { label: 'Leadership PAC', color: 'bg-civiq-green/10 text-civiq-green' },
+    leadership: { label: 'Leadership PAC', color: 'bg-civiq-blue/10 text-civiq-blue' },
     hybrid: { label: 'Hybrid PAC', color: 'bg-civiq-red/10 text-civiq-red' },
     unknown: { label: 'Unknown', color: 'bg-gray-100 text-gray-800' },
   };

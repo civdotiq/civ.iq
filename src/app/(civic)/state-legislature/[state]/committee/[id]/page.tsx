@@ -135,7 +135,11 @@ export default async function StateCommitteePage({ params }: PageProps) {
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
-          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          { name: 'States', url: 'https://civdotiq.org/states' },
+          {
+            name: `${stateName} Legislature`,
+            url: `https://civdotiq.org/state-legislature/${state}`,
+          },
           { name: 'Committees', url: `https://civdotiq.org/state-legislature/${state}/committees` },
           {
             name: committee.name,

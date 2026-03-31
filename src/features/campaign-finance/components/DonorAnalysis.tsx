@@ -40,13 +40,13 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 70) return 'text-civiq-green';
+    if (score >= 70) return 'text-civiq-blue';
     if (score >= 40) return 'text-gray-600';
     return 'text-civiq-red';
   };
 
   const getScoreBackground = (score: number): string => {
-    if (score >= 70) return 'bg-civiq-green/10';
+    if (score >= 70) return 'bg-civiq-blue/10';
     if (score >= 40) return 'bg-gray-100';
     return 'bg-civiq-red/10';
   };

@@ -45,9 +45,9 @@ export const DataQualityIndicator: React.FC<DataQualityIndicatorProps> = ({
   const qualityStyles = {
     high: {
       icon: '',
-      bgColor: 'bg-civiq-green/10',
-      textColor: 'text-civiq-green',
-      borderColor: 'border-civiq-green',
+      bgColor: 'bg-civiq-blue/10',
+      textColor: 'text-civiq-blue',
+      borderColor: 'border-civiq-blue',
     },
     medium: {
       icon: '',

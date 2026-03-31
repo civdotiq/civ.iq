@@ -59,7 +59,7 @@ function DistrictNeedsSection({ needs }: { needs: CivicAlignmentReport['district
   const severityStyles = {
     high: 'bg-civiq-red/10 text-civiq-red',
     moderate: 'bg-gray-100 text-gray-600',
-    low: 'bg-civiq-green/10 text-civiq-green',
+    low: 'bg-civiq-blue/10 text-civiq-blue',
   };
 
   return (

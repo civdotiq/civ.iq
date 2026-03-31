@@ -109,7 +109,7 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-civiq-red mb-2">Failed to load connections data</div>
+        <div className="text-amber-600 mb-2">Failed to load connections data</div>
         <div className="text-sm text-gray-500">Please try refreshing the page</div>
       </div>
     );

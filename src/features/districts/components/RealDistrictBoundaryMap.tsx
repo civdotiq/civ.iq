@@ -348,7 +348,7 @@ export function RealDistrictBoundaryMap({
         style={{ height }}
       >
         <div className="text-center p-6">
-          <div className="text-civiq-red text-lg font-medium mb-2">District Map Error</div>
+          <div className="text-amber-600 text-lg font-medium mb-2">District Map Error</div>
           <div className="text-gray-600 text-sm">{mapState.error}</div>
           <div className="text-xs text-gray-500 mt-2">District ID: {districtId}</div>
         </div>

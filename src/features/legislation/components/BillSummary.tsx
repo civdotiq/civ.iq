@@ -42,15 +42,15 @@ export function BillSummary({
   const [activeTab, setActiveTab] = useState<'summary' | 'keypoints' | 'impact'>('summary');
 
   const getReadingLevelColor = (level: number) => {
-    if (level <= 8) return 'text-civiq-green bg-civiq-green/10';
+    if (level <= 8) return 'text-civiq-blue bg-civiq-blue/10';
     if (level <= 10) return 'text-gray-600 bg-gray-100';
-    return 'text-civiq-red bg-civiq-red/10';
+    return 'text-amber-600 bg-amber-50';
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-civiq-green';
+    if (confidence >= 0.8) return 'text-civiq-blue';
     if (confidence >= 0.6) return 'text-gray-600';
-    return 'text-civiq-red';
+    return 'text-amber-600';
   };
 
   const formatDate = (dateString: string) => {
@@ -281,11 +281,11 @@ interface BillSummaryErrorProps {
 
 export function BillSummaryError({ error, onRetry, className = '' }: BillSummaryErrorProps) {
   return (
-    <div className={`bg-white border border-civiq-red border-2 border-black ${className}`}>
+    <div className={`bg-white border border-amber-600 border-2 border-black ${className}`}>
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="h-5 w-5 text-civiq-red" />
-          <span className="text-sm font-medium text-civiq-red">Summary Unavailable</span>
+          <AlertCircle className="h-5 w-5 text-amber-600" />
+          <span className="text-sm font-medium text-amber-600">Summary Unavailable</span>
         </div>
         <p className="text-gray-700 mb-4">
           {error ||
@@ -294,7 +294,7 @@ export function BillSummaryError({ error, onRetry, className = '' }: BillSummary
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-3 py-2 bg-civiq-red text-white text-sm font-medium hover:bg-civiq-red transition-colors"
+            className="px-3 py-2 bg-civiq-blue text-white text-sm font-medium hover:bg-civiq-blue/90 transition-colors"
           >
             Try Again
           </button>

@@ -24,7 +24,7 @@ export function ConfidenceBadge({ confidence, className = '' }: ConfidenceBadgeP
   const isHigh = confidence >= 0.8;
   const label = isHigh ? 'High confidence' : 'Moderate confidence';
   const colorClasses = isHigh
-    ? 'border-[#0a9338] bg-civiq-green/10 text-[#0a9338]'
+    ? 'border-civiq-blue bg-civiq-blue/10 text-civiq-blue'
     : 'border-amber-500 bg-amber-50 text-amber-700';
 
   return (
@@ -32,7 +32,7 @@ export function ConfidenceBadge({ confidence, className = '' }: ConfidenceBadgeP
       className={`inline-flex items-center gap-1 px-2 py-1 border-2 aicher-heading type-xs ${colorClasses} ${className}`}
       title={`Confidence score: ${(confidence * 100).toFixed(0)}%`}
     >
-      <span className={`w-2 h-2 ${isHigh ? 'bg-[#0a9338]' : 'bg-amber-500'}`} aria-hidden="true" />
+      <span className={`w-2 h-2 ${isHigh ? 'bg-civiq-blue' : 'bg-amber-500'}`} aria-hidden="true" />
       {label}
     </span>
   );

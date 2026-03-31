@@ -331,7 +331,7 @@ export default function LeafletDistrictMap({
         style={{ height }}
       >
         <div className="text-center p-6">
-          <div className="text-civiq-red text-lg font-medium mb-2">Map Loading Error</div>
+          <div className="text-amber-600 text-lg font-medium mb-2">Map Loading Error</div>
           <div className="text-gray-600 text-sm">{mapState.error}</div>
         </div>
       </div>

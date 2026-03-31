@@ -29,7 +29,7 @@ export function DataQualityBadge({
 }: DataQualityBadgeProps) {
   const config = {
     high: {
-      color: 'bg-civiq-green/10 text-civiq-green border-civiq-green',
+      color: 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue',
       icon: '✓',
       text: 'High Quality',
       description: 'Complete FEC data with detailed contribution information',
@@ -109,7 +109,7 @@ export function DataQualityBadge({
  */
 export function DataQualityIndicator({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const colors = {
-    high: 'bg-civiq-green',
+    high: 'bg-civiq-blue',
     medium: 'bg-gray-500',
     low: 'bg-amber-600',
   };

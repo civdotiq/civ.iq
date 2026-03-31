@@ -50,13 +50,13 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   };
 
   const getEfficiencyColor = (efficiency: number): string => {
-    if (efficiency >= 80) return 'text-civiq-green';
+    if (efficiency >= 80) return 'text-civiq-blue';
     if (efficiency >= 60) return 'text-gray-600';
     return 'text-civiq-red';
   };
 
   const getEfficiencyBackground = (efficiency: number): string => {
-    if (efficiency >= 80) return 'bg-civiq-green/10';
+    if (efficiency >= 80) return 'bg-civiq-blue/10';
     if (efficiency >= 60) return 'bg-gray-100';
     return 'bg-civiq-red/10';
   };

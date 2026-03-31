@@ -106,6 +106,7 @@ export default async function StateVotePage({ params }: PageProps) {
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'States', url: 'https://civdotiq.org/states' },
           { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
           { name: motionLabel, url: `https://civdotiq.org/state-legislature/${state}/vote/${id}` },
         ]}
