@@ -33,9 +33,19 @@ export const nostrConfig = {
   // NIP-23: Long-form content (parameterized replaceable)
   eventKind: 30023 as const,
 
+  // Kind 1: Short text notes for social timeline visibility
+  alertEventKind: 1 as const,
+
+  // Publish both Kind 30023 (article) and Kind 1 (alert) for each event
+  enableDualPublish: (process.env.NOSTR_DUAL_PUBLISH ?? 'true') !== 'false',
+
   // Redis dedup key prefix and TTL
   dedupPrefix: 'nostr:published:',
   dedupTTL: 30 * 24 * 60 * 60,
+
+  // NIP-11 relay capability negotiation
+  enableNip11Check: (process.env.NOSTR_NIP11_CHECK ?? 'true') !== 'false',
+  nip11CacheTTL: 24 * 60 * 60, // 24 hours in seconds
 
   // State legislature event detection (most reliable OpenStates coverage)
   enabledStates: [

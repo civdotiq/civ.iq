@@ -42,6 +42,20 @@ export interface CivicEvent {
     | StateBillIntroducedEvent
     | StateBillActionEvent
     | StateVoteEvent;
+  /** Set by detectors when upstream data has changed — triggers deletion of the original */
+  _correction?: {
+    originalNostrEventId: string;
+    originalNoteId: string;
+  };
+}
+
+/** Dedup entry stored in Redis alongside the event ID */
+export interface DedupEntry {
+  eventId: string;
+  nostrEventId: string;
+  noteId: string;
+  contentHash: string;
+  publishedAt: number;
 }
 
 export interface BillActionEvent {
@@ -151,6 +165,14 @@ export interface RelayPublishResult {
   eventId: string;
 }
 
+/** Staleness info for a state's OpenStates data */
+export interface StateStalenessInfo {
+  state: string;
+  stale: boolean;
+  lastUpdate: string | null;
+  billsChecked: number;
+}
+
 /** Nostr publisher run summary */
 export interface NostrPublishRun {
   eventsDetected: number;
@@ -159,6 +181,8 @@ export interface NostrPublishRun {
   eventsFailed: number;
   activityPubAdded: number;
   activityPubDelivered: number;
+  alertEventsPublished?: number;
+  stateStaleness?: StateStalenessInfo[];
   relayResults: RelayPublishResult[];
   totalTime: number;
 }

@@ -37,7 +37,7 @@ export async function publishProfileMetadata(privateKey: Uint8Array): Promise<Re
   };
 
   const signed = finalizeEvent(unsignedEvent, privateKey);
-  const result = await publishToRelays(signed);
+  const result = await publishToRelays(signed, undefined, { skipNip11Check: true });
 
   logger.info('NIP-01 profile metadata published', {
     successCount: result.successCount,
@@ -62,7 +62,7 @@ export async function publishRelayList(privateKey: Uint8Array): Promise<RelayPub
   };
 
   const signed = finalizeEvent(unsignedEvent, privateKey);
-  const result = await publishToRelays(signed);
+  const result = await publishToRelays(signed, undefined, { skipNip11Check: true });
 
   logger.info('NIP-65 relay list published', {
     relays: nostrConfig.relays.length,

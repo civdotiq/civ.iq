@@ -12,7 +12,13 @@
 
 import { activitypubConfig } from '@/config/activitypub.config';
 import type { CivicEvent } from '@/types/nostr';
-import type { APCreateActivity, APUpdateActivity, APNote, APHashtag } from '@/types/activitypub';
+import type {
+  APCreateActivity,
+  APUpdateActivity,
+  APDeleteActivity,
+  APNote,
+  APHashtag,
+} from '@/types/activitypub';
 import { getRedisCache } from '@/lib/cache/redis-client';
 
 const PUBLIC = 'https://www.w3.org/ns/activitystreams#Public';
@@ -138,6 +144,40 @@ export async function getOutboxItems(
   }
 
   return { items, total };
+}
+
+/** Create a Delete activity with Tombstone for a previously published note */
+export function createDeleteActivity(noteId: string): APDeleteActivity {
+  const { actor } = activitypubConfig;
+
+  return {
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    type: 'Delete',
+    id: `${noteId}/activity#delete-${Date.now()}`,
+    actor: actor.id,
+    to: [PUBLIC],
+    object: { type: 'Tombstone', id: noteId },
+  };
+}
+
+/** Remove a note from the outbox (activity key + index entry) */
+export async function removeFromOutbox(noteId: string): Promise<void> {
+  const cache = getRedisCache();
+
+  // Remove the activity itself
+  const activityKey = `${activitypubConfig.outboxKey}:${noteId}`;
+  await cache.delete(activityKey);
+
+  // Remove from index
+  const indexKey = `${activitypubConfig.outboxKey}:index`;
+  const index = (await cache.get<string[]>(indexKey)) ?? [];
+  const filtered = index.filter(entry => {
+    const parsed = JSON.parse(entry) as { id: string };
+    return parsed.id !== noteId;
+  });
+  if (filtered.length !== index.length) {
+    await cache.set(indexKey, filtered, activitypubConfig.outboxTTL);
+  }
 }
 
 function escapeHtml(str: string): string {

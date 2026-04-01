@@ -111,6 +111,12 @@ async function handleFollow(follow: APFollowActivity): Promise<NextResponse> {
     if (!inbox) {
       return NextResponse.json({ error: 'Remote actor has no inbox' }, { status: 422 });
     }
+
+    // Extract shared inbox for O(instances) delivery optimization
+    const sharedInbox: string | undefined = actor.endpoints?.sharedInbox;
+
+    // Add follower with shared inbox if available
+    await addFollower(actorId, inbox, sharedInbox);
   } catch (error) {
     logger.error('ActivityPub inbox: failed to fetch remote actor', error as Error, {
       actorId,
@@ -118,9 +124,6 @@ async function handleFollow(follow: APFollowActivity): Promise<NextResponse> {
     });
     return NextResponse.json({ error: 'Failed to fetch remote actor' }, { status: 502 });
   }
-
-  // Add follower
-  await addFollower(actorId, inbox);
 
   // Send Accept back to the follower's inbox
   const accept = {

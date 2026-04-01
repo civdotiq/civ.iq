@@ -32,6 +32,10 @@ jest.mock('nostr-tools/pure', () => ({
   }),
 }));
 
+jest.mock('nostr-tools/nip19', () => ({
+  naddrEncode: () => 'naddr1mock',
+}));
+
 jest.mock('nostr-tools/pool', () => ({
   SimplePool: jest.fn().mockImplementation(() => ({
     publish: jest.fn().mockResolvedValue(undefined),
@@ -211,6 +215,124 @@ describe('Nostr Event Creation', () => {
       const dTag = signed.tags.find((t: string[]) => t[0] === 'd');
       expect(dTag[1]).toBe(`civiq:${type}:test-${type}-1`);
     }
+  });
+});
+
+describe('Nostr Deletion Event (Kind 5, NIP-09)', () => {
+  const mockPrivateKey = new Uint8Array(32).fill(1);
+
+  test('creates Kind 5 deletion event', () => {
+    const { createDeletionEvent } = require('../events');
+    const signed = createDeletionEvent(
+      'original-event-id-123',
+      'Data corrected upstream',
+      mockPrivateKey
+    );
+    expect(signed.kind).toBe(5);
+  });
+
+  test('has e-tag referencing original event', () => {
+    const { createDeletionEvent } = require('../events');
+    const signed = createDeletionEvent('original-event-id-123', 'Data corrected', mockPrivateKey);
+    const eTag = signed.tags.find((t: string[]) => t[0] === 'e');
+    expect(eTag).toBeDefined();
+    expect(eTag[1]).toBe('original-event-id-123');
+  });
+
+  test('content is the reason string', () => {
+    const { createDeletionEvent } = require('../events');
+    const signed = createDeletionEvent('id-abc', 'Upstream correction', mockPrivateKey);
+    expect(signed.content).toBe('Upstream correction');
+  });
+});
+
+describe('Nostr Alert Event (Kind 1)', () => {
+  const mockPrivateKey = new Uint8Array(32).fill(1);
+  const mockPubkey = 'abcd1234';
+  const mockArticleEventId = 'mock-article-event-id';
+
+  const baseCivicEvent: CivicEvent = {
+    type: 'bill-action',
+    id: 'hr1234-119-action-2025-01-15',
+    timestamp: 1705276800,
+    title: 'H.R. 1234: Passed House',
+    summary: 'Test Bill Title — Passed House',
+    tags: ['legislation', 'house'],
+    source: {
+      url: 'https://www.congress.gov/bill/119th-congress/house-bill/1234',
+      api: 'congress.gov',
+    },
+    data: {
+      billId: 'hr1234-119',
+      billType: 'hr',
+      billNumber: '1234',
+      congress: 119,
+      actionText: 'Passed House',
+      actionDate: '2025-01-15',
+      chamber: 'House',
+    },
+  };
+
+  test('creates Kind 1 event', () => {
+    const { createSignedAlertEvent } = require('../events');
+    const signed = createSignedAlertEvent(
+      baseCivicEvent,
+      mockPrivateKey,
+      mockArticleEventId,
+      mockPubkey
+    );
+    expect(signed.kind).toBe(1);
+  });
+
+  test('includes naddr reference in content', () => {
+    const { createSignedAlertEvent } = require('../events');
+    const signed = createSignedAlertEvent(
+      baseCivicEvent,
+      mockPrivateKey,
+      mockArticleEventId,
+      mockPubkey
+    );
+    expect(signed.content).toContain('nostr:naddr1mock');
+  });
+
+  test('has e-tag referencing article with mention marker', () => {
+    const { createSignedAlertEvent } = require('../events');
+    const signed = createSignedAlertEvent(
+      baseCivicEvent,
+      mockPrivateKey,
+      mockArticleEventId,
+      mockPubkey
+    );
+    const eTag = signed.tags.find((t: string[]) => t[0] === 'e');
+    expect(eTag).toBeDefined();
+    expect(eTag[1]).toBe(mockArticleEventId);
+    expect(eTag[3]).toBe('mention');
+  });
+
+  test('includes event tags as t tags plus civictech', () => {
+    const { createSignedAlertEvent } = require('../events');
+    const signed = createSignedAlertEvent(
+      baseCivicEvent,
+      mockPrivateKey,
+      mockArticleEventId,
+      mockPubkey
+    );
+    const tTags = signed.tags.filter((t: string[]) => t[0] === 't').map((t: string[]) => t[1]);
+    expect(tTags).toContain('legislation');
+    expect(tTags).toContain('house');
+    expect(tTags).toContain('civictech');
+  });
+
+  test('content includes title and summary', () => {
+    const { createSignedAlertEvent } = require('../events');
+    const signed = createSignedAlertEvent(
+      baseCivicEvent,
+      mockPrivateKey,
+      mockArticleEventId,
+      mockPubkey
+    );
+    expect(signed.content).toContain('H.R. 1234: Passed House');
+    expect(signed.content).toContain('Test Bill Title — Passed House');
   });
 });
 

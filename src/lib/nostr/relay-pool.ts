@@ -13,14 +13,26 @@ import { SimplePool } from 'nostr-tools/pool';
 import type { VerifiedEvent } from 'nostr-tools/pure';
 import type { RelayPublishResult } from '@/types/nostr';
 import { nostrConfig } from '@/config/nostr.config';
+import { filterCapableRelays } from './relay-info';
 import logger from '@/lib/logging/simple-logger';
+
+export interface PublishOptions {
+  skipNip11Check?: boolean;
+}
 
 /** Publish a signed event to multiple relays with timeout per relay */
 export async function publishToRelays(
   event: VerifiedEvent,
-  relayUrls?: string[]
+  relayUrls?: string[],
+  options?: PublishOptions
 ): Promise<RelayPublishResult> {
-  const relays = relayUrls || nostrConfig.relays;
+  let relays = relayUrls || nostrConfig.relays;
+
+  // Pre-filter relays via NIP-11 capability check
+  if (nostrConfig.enableNip11Check && !options?.skipNip11Check) {
+    const payloadSize = JSON.stringify(event).length;
+    relays = await filterCapableRelays(relays, payloadSize);
+  }
   const pool = new SimplePool();
   const successes: string[] = [];
   const failures: Array<{ url: string; error: string }> = [];

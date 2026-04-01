@@ -17,14 +17,19 @@
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { activitypubConfig } from '@/config/activitypub.config';
 
-interface FollowerEntry {
+export interface FollowerEntry {
   actorId: string;
   inbox: string;
+  sharedInbox?: string;
   followedAt: string;
 }
 
 /** Add a follower */
-export async function addFollower(actorId: string, inbox: string): Promise<void> {
+export async function addFollower(
+  actorId: string,
+  inbox: string,
+  sharedInbox?: string
+): Promise<void> {
   const cache = getRedisCache();
   const followers = await getFollowerEntries();
 
@@ -34,6 +39,7 @@ export async function addFollower(actorId: string, inbox: string): Promise<void>
   followers.push({
     actorId,
     inbox,
+    sharedInbox,
     followedAt: new Date().toISOString(),
   });
 
@@ -66,8 +72,12 @@ export async function getFollowerIds(): Promise<string[]> {
   return entries.map(f => f.actorId);
 }
 
-/** Get all follower inboxes (for delivering activities) */
+/** Get all follower inboxes (for delivering activities), preferring shared inbox */
 export async function getFollowerInboxes(): Promise<string[]> {
   const entries = await getFollowerEntries();
-  return entries.map(f => f.inbox);
+  const inboxSet = new Set<string>();
+  for (const f of entries) {
+    inboxSet.add(f.sharedInbox ?? f.inbox);
+  }
+  return [...inboxSet];
 }

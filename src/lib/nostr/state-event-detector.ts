@@ -16,8 +16,9 @@ import type {
   StateBillIntroducedEvent,
   StateBillActionEvent,
   StateVoteEvent,
+  StateStalenessInfo,
 } from '@/types/nostr';
-import type { OpenStatesBill } from '@/lib/openstates-api';
+
 import logger from '@/lib/logging/simple-logger';
 
 const OPENSTATES_BASE = 'https://v3.openstates.org';
@@ -189,6 +190,125 @@ function buildStateVote(
     },
     data,
   };
+}
+
+/** Staleness threshold: 14 days without updated_at activity */
+const STALENESS_THRESHOLD_DAYS = 14;
+
+/** Check staleness for a set of bills */
+export function checkStateStaleness(state: string, bills: OpenStatesV3Bill[]): StateStalenessInfo {
+  if (bills.length === 0) {
+    // No data to judge from — don't flag as stale
+    return { state: state.toUpperCase(), stale: false, lastUpdate: null, billsChecked: 0 };
+  }
+
+  // Find the most recent updated_at across all bills
+  let mostRecentUpdate: Date | null = null;
+  for (const bill of bills) {
+    const updated = new Date(bill.updated_at);
+    if (!mostRecentUpdate || updated > mostRecentUpdate) {
+      mostRecentUpdate = updated;
+    }
+  }
+
+  const daysSinceUpdate = mostRecentUpdate
+    ? (Date.now() - mostRecentUpdate.getTime()) / (1000 * 60 * 60 * 24)
+    : Infinity;
+
+  const stale = daysSinceUpdate > STALENESS_THRESHOLD_DAYS;
+
+  if (stale) {
+    logger.warn(`OpenStates data stale for ${state.toUpperCase()}`, {
+      state: state.toUpperCase(),
+      lastUpdate: mostRecentUpdate?.toISOString() ?? null,
+      daysSinceUpdate: Math.round(daysSinceUpdate),
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return {
+    state: state.toUpperCase(),
+    stale,
+    lastUpdate: mostRecentUpdate?.toISOString() ?? null,
+    billsChecked: bills.length,
+  };
+}
+
+export interface StateEventsWithStaleness {
+  events: CivicEvent[];
+  staleness: StateStalenessInfo[];
+}
+
+/** Detect state legislature events with staleness monitoring */
+export async function detectStateEventsWithStaleness(): Promise<StateEventsWithStaleness> {
+  if (!process.env.OPENSTATES_API_KEY) {
+    logger.info('OpenStates API key not configured, skipping state events', {
+      operation: 'nostr_publisher',
+    });
+    return { events: [], staleness: [] };
+  }
+
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+  const staleness: StateStalenessInfo[] = [];
+  const states = nostrConfig.enabledStates;
+
+  for (const state of states) {
+    try {
+      const bills = await fetchStateBills(state);
+
+      // Check staleness
+      staleness.push(checkStateStaleness(state, bills));
+
+      logger.info(`Fetched ${bills.length} state bills for ${state.toUpperCase()}`, {
+        state,
+        operation: 'nostr_publisher',
+      });
+
+      for (const bill of bills) {
+        if (bill.first_action_date) {
+          const introId = `state-bill-intro-${state}-${bill.identifier}-${bill.session}`;
+          const introDedupKey = `${nostrConfig.dedupPrefix}${introId}`;
+          const introPublished = await cache.exists(introDedupKey);
+
+          if (!introPublished) {
+            events.push(buildStateBillIntroduced(bill, state));
+          }
+        }
+
+        if (bill.latest_action_date && bill.latest_action_description) {
+          const actionId = `state-bill-action-${state}-${bill.identifier}-${bill.latest_action_date}`;
+          const actionDedupKey = `${nostrConfig.dedupPrefix}${actionId}`;
+          const actionPublished = await cache.exists(actionDedupKey);
+
+          if (!actionPublished) {
+            const latestAction = bill.actions[0];
+            if (latestAction) {
+              events.push(buildStateBillAction(bill, latestAction, state));
+            }
+          }
+        }
+
+        for (const vote of bill.votes) {
+          const voteIdSuffix = vote.id.split('/').pop() ?? vote.id;
+          const voteEventId = `state-vote-${state}-${voteIdSuffix}`;
+          const voteDedupKey = `${nostrConfig.dedupPrefix}${voteEventId}`;
+          const votePublished = await cache.exists(voteDedupKey);
+
+          if (!votePublished) {
+            events.push(buildStateVote(bill, vote, state));
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(`Failed to detect state events for ${state.toUpperCase()}`, error as Error, {
+        state,
+        operation: 'nostr_publisher',
+      });
+    }
+  }
+
+  return { events, staleness };
 }
 
 /** Detect state legislature events across enabled states */

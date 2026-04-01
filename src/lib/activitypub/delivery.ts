@@ -10,11 +10,21 @@
  * Uses HTTP Signatures (draft-cavage) for authentication.
  */
 
-import { getFollowerInboxes } from './followers';
+import { getFollowerInboxes, getFollowerEntries, removeFollower } from './followers';
 import { signRequest } from './http-signatures';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import type { APCreateActivity, APUpdateActivity } from '@/types/activitypub';
+import type { APCreateActivity, APUpdateActivity, APDeleteActivity } from '@/types/activitypub';
 import logger from '@/lib/logging/simple-logger';
+
+/** Error thrown when a remote inbox returns HTTP 410 Gone */
+export class GoneError extends Error {
+  readonly inbox: string;
+  constructor(inbox: string) {
+    super(`HTTP 410 Gone: ${inbox}`);
+    this.name = 'GoneError';
+    this.inbox = inbox;
+  }
+}
 
 const RETRY_PREFIX = 'activitypub:retry:accept:';
 const MAX_ATTEMPTS = 3;
@@ -26,7 +36,7 @@ export interface DeliveryResult {
 }
 
 /** Activity types that can be delivered to followers */
-type DeliverableActivity = APCreateActivity | APUpdateActivity;
+type DeliverableActivity = APCreateActivity | APUpdateActivity | APDeleteActivity;
 
 /** Deliver an activity to all follower inboxes */
 export async function deliverToFollowers(activity: DeliverableActivity): Promise<DeliveryResult> {
@@ -45,16 +55,38 @@ export async function deliverToFollowers(activity: DeliverableActivity): Promise
   let delivered = 0;
   let failed = 0;
 
+  const goneInboxes: string[] = [];
+
   for (const [i, result] of results.entries()) {
     if (result.status === 'fulfilled') {
       delivered++;
     } else {
       failed++;
+      const reason = result.reason;
+      if (reason instanceof GoneError) {
+        goneInboxes.push(reason.inbox);
+      }
       logger.warn('ActivityPub delivery failed', {
         inbox: uniqueInboxes[i],
-        error: result.reason instanceof Error ? result.reason.message : 'Unknown',
+        error: reason instanceof Error ? reason.message : 'Unknown',
         operation: 'activitypub_delivery',
       });
+    }
+  }
+
+  // Prune followers whose inboxes returned 410 Gone
+  if (goneInboxes.length > 0) {
+    const entries = await getFollowerEntries();
+    for (const goneInbox of goneInboxes) {
+      const toRemove = entries.filter(f => f.inbox === goneInbox || f.sharedInbox === goneInbox);
+      for (const entry of toRemove) {
+        await removeFollower(entry.actorId);
+        logger.info('ActivityPub: pruned 410 Gone follower', {
+          actorId: entry.actorId,
+          inbox: goneInbox,
+          operation: 'activitypub_delivery',
+        });
+      }
     }
   }
 
@@ -84,6 +116,10 @@ async function deliverToInbox(inbox: string, body: string): Promise<void> {
     },
     signal: AbortSignal.timeout(10000),
   });
+
+  if (response.status === 410) {
+    throw new GoneError(inbox);
+  }
 
   if (!response.ok && response.status !== 202) {
     throw new Error(`HTTP ${response.status}`);
