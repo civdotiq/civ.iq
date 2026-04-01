@@ -542,6 +542,106 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
   };
 }
 
+/**
+ * Fetch and assemble a lobbying org profile directly (no HTTP round-trip).
+ * Used by both the API route and the server-rendered page.
+ */
+export async function getLobbyingOrgProfile(
+  registrantId: string
+): Promise<LobbyingOrgProfile | null> {
+  if (!registrantId || !/^\d+$/.test(registrantId)) return null;
+
+  return cachedFetch(
+    `lobby-profile:${registrantId}`,
+    async () => {
+      const url = `https://lda.senate.gov/api/v1/filings/?registrant_id=${registrantId}&page_size=50`;
+
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+        },
+        signal: AbortSignal.timeout(15_000),
+      });
+
+      if (!response.ok) {
+        logger.warn('[LobbyAPI] Senate LDA API error', { status: response.status, registrantId });
+        return null;
+      }
+
+      const data = await response.json();
+      const rawFilings: RawLDAFiling[] = data?.results ?? [];
+
+      if (rawFilings.length === 0) return null;
+
+      // Paginate to get more filings if available
+      let nextUrl: string | null = data?.next ?? null;
+      let pageCount = 1;
+      while (nextUrl && pageCount < 5) {
+        try {
+          const nextRes = await fetch(nextUrl, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+            },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (!nextRes.ok) break;
+          const nextData = await nextRes.json();
+          rawFilings.push(...(nextData?.results ?? []));
+          nextUrl = nextData?.next ?? null;
+          pageCount++;
+        } catch {
+          break;
+        }
+      }
+
+      const profile = assembleProfile(registrantId, rawFilings);
+
+      // Enrich with Wikipedia and PAC linkage in parallel
+      const [wiki, linkedPAC] = await Promise.all([
+        fetchWikiEnrichment(profile.name),
+        findLinkedPAC(profile.name),
+      ]);
+
+      profile.wiki = wiki;
+      if (linkedPAC && linkedPAC.confidence >= 0.6) {
+        profile.linkedPAC = linkedPAC;
+      }
+
+      if (wiki) {
+        profile.metadata.dataSources.push('Wikipedia');
+      }
+      if (linkedPAC && linkedPAC.confidence >= 0.6) {
+        profile.metadata.dataSources.push('Federal Election Commission (FEC)');
+      }
+
+      // Fetch bills, PAC recipients, and enforcement in parallel
+      const [relatedBills, pacRecipients, enforcement] = await Promise.all([
+        fetchRelatedBills(profile.issueAreas.map(i => i.code)),
+        linkedPAC && linkedPAC.confidence >= 0.6
+          ? fetchPACRecipients(linkedPAC.committeeId)
+          : Promise.resolve([]),
+        fetchEnforcement(profile.name),
+      ]);
+
+      profile.relatedBills = relatedBills;
+      profile.pacRecipients = pacRecipients;
+      profile.enforcement = enforcement;
+
+      if (relatedBills.length > 0) {
+        profile.metadata.dataSources.push('Congress.gov');
+      }
+      if (enforcement && enforcement.actionCount > 0) {
+        profile.metadata.dataSources.push('EPA ECHO, OSHA');
+      }
+
+      return profile;
+    },
+    24 * 60 * 60 // 24 hours cache
+  );
+}
+
 export async function GET(_request: Request, { params }: PageProps) {
   const { registrantId } = await params;
 
@@ -550,98 +650,7 @@ export async function GET(_request: Request, { params }: PageProps) {
   }
 
   try {
-    const profile = await cachedFetch(
-      `lobby-profile:${registrantId}`,
-      async () => {
-        // First, search by registrant ID via the name lookup
-        // The Senate LDA API uses registrant names, not IDs, for search
-        // We need to fetch filings that match this registrant ID
-        const url = `https://lda.senate.gov/api/v1/filings/?registrant_id=${registrantId}&page_size=50`;
-
-        const response = await fetch(url, {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
-          },
-          signal: AbortSignal.timeout(15_000),
-        });
-
-        if (!response.ok) {
-          logger.warn('[LobbyAPI] Senate LDA API error', { status: response.status, registrantId });
-          return null;
-        }
-
-        const data = await response.json();
-        const rawFilings: RawLDAFiling[] = data?.results ?? [];
-
-        if (rawFilings.length === 0) return null;
-
-        // Paginate to get more filings if available
-        let nextUrl: string | null = data?.next ?? null;
-        let pageCount = 1;
-        while (nextUrl && pageCount < 5) {
-          try {
-            const nextRes = await fetch(nextUrl, {
-              headers: {
-                Accept: 'application/json',
-                'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
-              },
-              signal: AbortSignal.timeout(15_000),
-            });
-            if (!nextRes.ok) break;
-            const nextData = await nextRes.json();
-            rawFilings.push(...(nextData?.results ?? []));
-            nextUrl = nextData?.next ?? null;
-            pageCount++;
-          } catch {
-            break;
-          }
-        }
-
-        const profile = assembleProfile(registrantId, rawFilings);
-
-        // Enrich with Wikipedia and PAC linkage in parallel
-        const [wiki, linkedPAC] = await Promise.all([
-          fetchWikiEnrichment(profile.name),
-          findLinkedPAC(profile.name),
-        ]);
-
-        profile.wiki = wiki;
-        if (linkedPAC && linkedPAC.confidence >= 0.6) {
-          profile.linkedPAC = linkedPAC;
-        }
-
-        if (wiki) {
-          profile.metadata.dataSources.push('Wikipedia');
-        }
-        if (linkedPAC && linkedPAC.confidence >= 0.6) {
-          profile.metadata.dataSources.push('Federal Election Commission (FEC)');
-        }
-
-        // Fetch bills, PAC recipients, and enforcement in parallel
-        const [relatedBills, pacRecipients, enforcement] = await Promise.all([
-          fetchRelatedBills(profile.issueAreas.map(i => i.code)),
-          linkedPAC && linkedPAC.confidence >= 0.6
-            ? fetchPACRecipients(linkedPAC.committeeId)
-            : Promise.resolve([]),
-          fetchEnforcement(profile.name),
-        ]);
-
-        profile.relatedBills = relatedBills;
-        profile.pacRecipients = pacRecipients;
-        profile.enforcement = enforcement;
-
-        if (relatedBills.length > 0) {
-          profile.metadata.dataSources.push('Congress.gov');
-        }
-        if (enforcement && enforcement.actionCount > 0) {
-          profile.metadata.dataSources.push('EPA ECHO, OSHA');
-        }
-
-        return profile;
-      },
-      24 * 60 * 60 // 24 hours cache
-    );
+    const profile = await getLobbyingOrgProfile(registrantId);
 
     if (!profile) {
       return ApiErrors.notFound('Lobbying organization', registrantId);

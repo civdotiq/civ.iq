@@ -12,25 +12,12 @@ import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { LobbyOrgClient } from './LobbyOrgClient';
 import { LobbyOrgSchema } from './LobbyOrgSchema';
-import type { LobbyingOrgProfile } from '@/app/api/lobby/[registrantId]/route';
+import { getLobbyingOrgProfile } from '@/app/api/lobby/[registrantId]/route';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ registrantId: string }>;
-}
-
-async function getLobbyingOrg(registrantId: string): Promise<LobbyingOrgProfile | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
-  try {
-    const res = await fetch(`${baseUrl}/api/lobby/${registrantId}`, {
-      next: { revalidate: 43200 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
 }
 
 export default async function LobbyOrgPage({ params }: PageProps) {
@@ -40,7 +27,7 @@ export default async function LobbyOrgPage({ params }: PageProps) {
     notFound();
   }
 
-  const profile = await getLobbyingOrg(registrantId);
+  const profile = await getLobbyingOrgProfile(registrantId);
   if (!profile) notFound();
 
   const pageUrl = `https://civdotiq.org/lobby/${registrantId}`;
@@ -77,7 +64,7 @@ export default async function LobbyOrgPage({ params }: PageProps) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
     const { registrantId } = await params;
-    const profile = await getLobbyingOrg(registrantId);
+    const profile = await getLobbyingOrgProfile(registrantId);
 
     if (!profile) {
       return { title: `Lobbying Organization ${registrantId}` };
