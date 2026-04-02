@@ -31,8 +31,8 @@ export const CHART_COLORS = [
  * Semantic colors for specific data types
  */
 export const SEMANTIC_COLORS = {
-  // Political party colors
-  democrat: BRAND_COLORS.blue,
+  // Political party colors (design system: green=Democrat, red=Republican)
+  democrat: BRAND_COLORS.green,
   republican: BRAND_COLORS.red,
   independent: '#64748b',
 

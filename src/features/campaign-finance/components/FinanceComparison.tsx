@@ -59,9 +59,9 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
   };
 
   const partyColors = {
-    Democrat: '#3B82F6',
-    Republican: '#EF4444',
-    Independent: '#8B5CF6',
+    Democrat: '#0a9338',
+    Republican: '#e11d07',
+    Independent: '#6B7280',
   };
 
   // Prepare comparison data for charts

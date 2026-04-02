@@ -128,7 +128,7 @@ function SpendingPageContent() {
               </Link>
             </div>
 
-            <SpendingSummaryCards summary={data.summary} />
+            <SpendingSummaryCards summary={data.summary} dataQuality={data.metadata?.dataQuality} />
 
             <SpendingBreakdownChart
               contractSpending={data.summary.contractSpending}

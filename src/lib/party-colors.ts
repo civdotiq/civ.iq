@@ -13,15 +13,15 @@ export type Party = 'democrat' | 'republican' | 'independent' | 'unknown';
  */
 const PARTY_COLORS = {
   democrat: {
-    text: 'text-civiq-blue',
-    bg: 'bg-civiq-blue/10',
-    hex: '#3B82F6',
-    hexLight: '#DBEAFE',
+    text: 'text-civiq-green',
+    bg: 'bg-civiq-green/10',
+    hex: '#0a9338',
+    hexLight: '#E6F4EA',
   },
   republican: {
     text: 'text-civiq-red',
     bg: 'bg-civiq-red/10',
-    hex: '#EF4444',
+    hex: '#e11d07',
     hexLight: '#FEE2E2',
   },
   independent: {

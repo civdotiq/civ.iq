@@ -291,7 +291,11 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                 votesParticipated: summaryData?.success
                   ? summaryData.data?.votesParticipated
                   : undefined,
-                financeCycle: summaryData?.success ? summaryData.data?.financeCycle : undefined,
+                financeCycle: summaryData?.success
+                  ? summaryData.data?.financeCycle
+                  : batchData?.success
+                    ? batchData.data?.finance?.metadata?.matchedCycle
+                    : undefined,
               }}
               loading={summaryLoading}
               onStatClick={navigateToSection}

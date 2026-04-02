@@ -117,7 +117,7 @@ const BASKET_METADATA: Record<
   [InterestGroupBasket.LABOR_UNIONS]: {
     description: 'Labor unions and worker organizations',
     icon: '',
-    color: '#8B5CF6', // Purple
+    color: '#475569', // Slate gray (no purple in design system)
   },
   [InterestGroupBasket.TRIAL_LAWYERS]: {
     description: 'Law firms, attorneys, and legal services',

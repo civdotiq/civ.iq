@@ -5,6 +5,7 @@ import { formatCompactCurrency, getFiscalYearLabel } from '../utils/format';
 
 interface SpendingSummaryCardsProps {
   summary: DistrictSpendingSummary;
+  dataQuality?: 'complete' | 'partial';
 }
 
 interface MetricCardProps {
@@ -23,12 +24,18 @@ function MetricCard({ label, value, subtitle }: MetricCardProps) {
   );
 }
 
-export default function SpendingSummaryCards({ summary }: SpendingSummaryCardsProps) {
+export default function SpendingSummaryCards({ summary, dataQuality }: SpendingSummaryCardsProps) {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
         Spending Overview &mdash; {getFiscalYearLabel(summary.fiscalYear)}
       </h3>
+      {dataQuality === 'partial' && (
+        <p className="text-xs text-amber-700 dark:text-amber-400 border border-amber-300 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 mb-4">
+          Aggregate spending data temporarily unavailable. Totals shown are based on top awards only
+          and may undercount actual district spending.
+        </p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           label="Total Spending"

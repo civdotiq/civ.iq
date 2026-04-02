@@ -29,15 +29,15 @@ export const PARTIES = {
     code: 'D' as const,
     name: 'Democratic' as const,
     fullName: 'Democratic Party' as const,
-    color: '#0015BC' as const, // Official Democratic blue
-    bgClass: 'bg-civiq-blue/10' as const,
-    textClass: 'text-civiq-blue' as const,
+    color: '#0a9338' as const, // CIV.IQ green — party identification only
+    bgClass: 'bg-civiq-green/10' as const,
+    textClass: 'text-civiq-green' as const,
   },
   REPUBLICAN: {
     code: 'R' as const,
     name: 'Republican' as const,
     fullName: 'Republican Party' as const,
-    color: '#E81B23' as const, // Official Republican red
+    color: '#e11d07' as const, // CIV.IQ red — party identification only
     bgClass: 'bg-civiq-red/10' as const,
     textClass: 'text-civiq-red' as const,
   },
@@ -45,9 +45,9 @@ export const PARTIES = {
     code: 'I' as const,
     name: 'Independent' as const,
     fullName: 'Independent' as const,
-    color: '#8B4789' as const, // Purple for independents
-    bgClass: 'bg-civiq-blue/10' as const,
-    textClass: 'text-civiq-blue' as const,
+    color: '#6B7280' as const, // Neutral gray — no purple in design system
+    bgClass: 'bg-gray-100' as const,
+    textClass: 'text-gray-600' as const,
   },
 } as const;
 

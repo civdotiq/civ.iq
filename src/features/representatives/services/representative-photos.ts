@@ -78,7 +78,7 @@ export function getAvatarBackgroundColor(name: string): string {
   const colors = [
     '#3B82F6', // Blue
     '#10B981', // Emerald
-    '#8B5CF6', // Violet
+    '#6B7280', // Gray (no purple/violet in design system)
     '#F59E0B', // Amber
     '#EF4444', // Red
     '#06B6D4', // Cyan
@@ -98,15 +98,15 @@ export function getPartyColor(party: string): string {
   const normalizedParty = party.toLowerCase();
 
   if (normalizedParty.includes('democrat') || normalizedParty.includes('dem')) {
-    return '#3B82F6'; // Blue
+    return '#0a9338'; // civiq-green (Democrat party color)
   }
 
   if (normalizedParty.includes('republican') || normalizedParty.includes('rep')) {
-    return '#EF4444'; // Red
+    return '#e11d07'; // civiq-red (Republican party color)
   }
 
   if (normalizedParty.includes('independent') || normalizedParty.includes('ind')) {
-    return '#8B5CF6'; // Purple
+    return '#6B7280'; // Gray (no purple in design system)
   }
 
   return '#6B7280'; // Gray for others

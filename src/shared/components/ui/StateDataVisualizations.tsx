@@ -114,7 +114,7 @@ function ChamberComposition({
       .attr('y', d => yScale(d.chamber)!)
       .attr('width', d => xScale(d.democratic))
       .attr('height', yScale.bandwidth())
-      .attr('fill', '#3B82F6');
+      .attr('fill', '#0a9338');
 
     // Draw Republican bars
     g.selectAll('.rep-bar')
@@ -126,7 +126,7 @@ function ChamberComposition({
       .attr('y', d => yScale(d.chamber)!)
       .attr('width', d => xScale(d.republican))
       .attr('height', yScale.bandwidth())
-      .attr('fill', '#EF4444');
+      .attr('fill', '#e11d07');
 
     // Draw Other bars
     g.selectAll('.other-bar')
@@ -138,7 +138,7 @@ function ChamberComposition({
       .attr('y', d => yScale(d.chamber)!)
       .attr('width', d => xScale(d.other))
       .attr('height', yScale.bandwidth())
-      .attr('fill', '#8B5CF6');
+      .attr('fill', '#6B7280');
 
     // Add seat count labels
     g.selectAll('.seat-label')
@@ -335,7 +335,7 @@ function VotingPatterns({
 
     const colorScale = scaleOrdinal()
       .domain(['Democratic', 'Republican', 'Independent'])
-      .range(['#3B82F6', '#EF4444', '#8B5CF6']);
+      .range(['#0a9338', '#e11d07', '#6B7280']);
 
     // Draw circles
     g.selectAll('.voting-circle')
