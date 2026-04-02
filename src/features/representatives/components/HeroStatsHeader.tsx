@@ -25,6 +25,7 @@ interface HeroStatsHeaderProps {
     votesParticipated?: number;
     totalRaised?: number;
     committees?: number;
+    financeCycle?: number;
   };
   loading?: boolean;
   onStatClick?: (tabId: string) => void;
@@ -355,7 +356,9 @@ export function HeroStatsHeader({
                   <div className="text-3xl font-bold text-gray-900">
                     {stats.totalRaised !== undefined ? formatCurrency(stats.totalRaised) : '—'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Current cycle</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {stats.financeCycle ? `${stats.financeCycle} Cycle` : 'Current cycle'}
+                  </div>
                 </>
               )}
             </button>

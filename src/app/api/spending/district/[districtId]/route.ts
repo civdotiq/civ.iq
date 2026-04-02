@@ -43,6 +43,8 @@ export async function GET(
     const result = await getDistrictSpending(state, district);
     const fiscalYear = new Date().getFullYear();
 
+    const aggregateAvailable = result.aggregate !== null;
+
     return NextResponse.json(
       {
         success: true,
@@ -68,6 +70,11 @@ export async function GET(
           generatedAt: new Date().toISOString(),
           dataSource: 'usaspending.gov',
           fiscalYear,
+          dataQuality: aggregateAvailable ? 'complete' : 'partial',
+          ...(!aggregateAvailable && {
+            dataNote:
+              'Aggregate spending API unavailable; totalSpending is sum of top-10 contracts and grants only',
+          }),
         },
       },
       {

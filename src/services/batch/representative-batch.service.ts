@@ -578,6 +578,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     totalSpent?: number;
     cashOnHand?: number;
     votesParticipated?: number;
+    financeCycle?: number;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -629,6 +630,8 @@ export async function getRepresentativeSummary(bioguideId: string) {
         (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
         (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
         0,
+      financeCycle: (financeData as { metadata?: { matchedCycle?: number } })?.metadata
+        ?.matchedCycle,
       lastUpdated: new Date().toISOString(),
     };
 

@@ -745,27 +745,40 @@ class OpenStatesAPI {
     query?: string
   ): Promise<OpenStatesBill[]> {
     const jurisdiction = state.toLowerCase();
+    const maxPages = 10; // Safety cap to avoid runaway pagination
 
-    const params: Record<string, string | number> = {
-      jurisdiction,
-      per_page: Math.min(limit, 100), // v3 max is 100 per page
-    };
+    let filteredBills: V3Bill[] = [];
+    let page = 1;
+    let hasMore = true;
 
-    if (session) params.session = session;
-    if (subject) params.subject = subject;
-    if (query) params.q = query; // OpenStates full-text search parameter
+    // Paginate to collect enough chamber-filtered results (matching getBillsBySponsor pattern)
+    while (hasMore && filteredBills.length < limit && page <= maxPages) {
+      const params: Record<string, string | number> = {
+        jurisdiction,
+        per_page: Math.min(20, 100), // /bills endpoint max is 20 per page
+        page,
+      };
 
-    const response = await this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params);
+      if (session) params.session = session;
+      if (subject) params.subject = subject;
+      if (query) params.q = query;
 
-    // Filter by chamber if specified and transform to our format
-    return response.results
-      .filter(bill => {
+      const response = await this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params);
+
+      const pageFiltered = response.results.filter(bill => {
         if (!chamber || !bill.from_organization) return true;
-        const orgClass = bill.from_organization.classification;
-        return orgClass === chamber;
-      })
-      .slice(0, limit)
-      .map(bill => this.transformBill(bill));
+        return bill.from_organization.classification === chamber;
+      });
+      filteredBills = filteredBills.concat(pageFiltered);
+
+      hasMore = page < response.pagination.max_page && response.results.length > 0;
+      page++;
+
+      // If no chamber filter, one page may suffice — don't over-fetch
+      if (!chamber) break;
+    }
+
+    return filteredBills.slice(0, limit).map(bill => this.transformBill(bill));
   }
 
   /**

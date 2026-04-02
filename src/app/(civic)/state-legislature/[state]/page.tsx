@@ -511,7 +511,9 @@ export default function StateLegislaturePage() {
           </div>
           <div className="bg-white border border-gray-200 p-6 text-center">
             <Calendar className="w-8 h-8 text-civiq-blue mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">2024</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {legislatureData.session?.name || new Date().getFullYear().toString()}
+            </p>
             <p className="text-sm text-gray-600">Current Session</p>
           </div>
           <div className="bg-white border border-gray-200 p-6 text-center">

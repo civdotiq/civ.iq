@@ -919,11 +919,11 @@ export const FECUtils = {
   getPartyColor(party: string): string {
     switch (party?.toUpperCase()) {
       case 'DEM':
-        return '#3B82F6'; // Blue
+        return '#0a9338'; // civiq-green (Democrat party color)
       case 'REP':
-        return '#EF4444'; // Red
+        return '#e11d07'; // civiq-red (Republican party color)
       case 'IND':
-        return '#8B5CF6'; // Purple
+        return '#6B7280'; // Gray (no purple in design system)
       default:
         return '#6B7280'; // Gray
     }

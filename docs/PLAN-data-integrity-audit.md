@@ -117,7 +117,7 @@ Both files import the old `fecAPI` class and only call `getCandidateFinancials`.
 
 ---
 
-## WAVE 3: Data Quality Improvements (8 issues, 1 commit)
+## WAVE 3: Data Quality Improvements (8 issues, 1 commit) ✅ COMPLETE
 
 All independent; can be implemented in any order.
 

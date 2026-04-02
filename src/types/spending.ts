@@ -81,6 +81,8 @@ export interface DistrictSpendingResponse {
     dataSource: string;
     fiscalYear: number;
     cacheHit?: boolean;
+    dataQuality?: 'complete' | 'partial';
+    dataNote?: string;
   };
   error?: string;
 }

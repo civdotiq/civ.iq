@@ -335,7 +335,7 @@ export class FECApiService {
         do {
           try {
             const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&page=${page}`
+              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&two_year_transaction_period=${cycle}&per_page=${perPage}&page=${page}`
             );
 
             if (response.results) {
@@ -424,7 +424,7 @@ export class FECApiService {
 
         try {
           const perPage = 100;
-          const baseUrl = `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&sort=-contribution_receipt_amount`;
+          const baseUrl = `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&two_year_transaction_period=${cycle}&per_page=${perPage}&sort=-contribution_receipt_amount`;
 
           // Fetch page 1 first to learn total count
           const firstPage = await this.makeRequest<FECApiResponse<FECContribution>>(
@@ -558,7 +558,7 @@ export class FECApiService {
         const committeeId = await this.getPrincipalCommitteeId(candidateId, cycle);
         if (committeeId) {
           const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-            `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=1&page=1`
+            `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&two_year_transaction_period=${cycle}&per_page=1&page=1`
           );
           estimatedCount = response.pagination.count;
         }
@@ -1274,7 +1274,7 @@ export class FECApiService {
       );
 
       let results = response.results ?? [];
-      let { pagination } = response;
+      const { pagination } = response;
 
       // If the query matches a known acronym, also search the expanded name
       // and merge results. Many major PACs register under full names only.
@@ -1290,11 +1290,8 @@ export class FECApiService {
             const seen = new Set(results.map(r => r.committee_id));
             const newResults = expandedResults.filter(r => !seen.has(r.committee_id));
             // Prepend expanded results (they're the ones the user actually wants)
+            // Keep original API count — the extra merged results are a page-1 bonus
             results = [...newResults, ...results];
-            pagination = {
-              ...pagination,
-              count: pagination.count + newResults.length,
-            };
           }
         } catch {
           // Expanded search failed; original results are fine

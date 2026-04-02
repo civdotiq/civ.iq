@@ -83,6 +83,8 @@ export interface SecSearchResult {
     periodOfReport: string;
   }>;
   total: number;
+  /** True when SEC reports total as "gte" (lower bound), meaning actual count exceeds the reported number */
+  totalIsApproximate?: boolean;
 }
 
 /** Company financial facts (XBRL data) */

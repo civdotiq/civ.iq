@@ -185,6 +185,7 @@ export class SecEdgarService {
             query,
             hits,
             total: data.hits?.total?.value ?? hits.length,
+            totalIsApproximate: data.hits?.total?.relation === 'gte',
           } as SecSearchResult;
         },
         1800 // 30 minutes
