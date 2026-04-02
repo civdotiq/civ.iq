@@ -205,8 +205,21 @@ export function GlobalSearch() {
   const committeesOffset = billsOffset + (results?.bills.length || 0);
   const fecCommitteesOffset = committeesOffset + (results?.committees.length || 0);
 
+  // Build screen reader announcement for aria-live region
+  const liveAnnouncement = (() => {
+    if (isLoading && query.length >= 2) return 'Searching...';
+    if (!results || !isOpen) return '';
+    if (results.totalResults === 0) return 'No results found';
+    return `${results.totalResults} result${results.totalResults === 1 ? '' : 's'} found`;
+  })();
+
   return (
     <div ref={containerRef} className="relative">
+      {/* Screen reader status announcements (WCAG 4.1.3) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {liveAnnouncement}
+      </div>
+
       {/* Search Input */}
       <div className="relative flex items-center">
         <Search className="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -226,6 +239,7 @@ export function GlobalSearch() {
           aria-label="Global search - prefix with state code for state legislators (e.g. CA: smith)"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
+          aria-controls="global-search-listbox"
         />
         {query && (
           <button
@@ -253,7 +267,7 @@ export function GlobalSearch() {
           )}
 
           {!isLoading && results && results.totalResults > 0 && (
-            <div role="listbox">
+            <div role="listbox" id="global-search-listbox">
               {/* State Filter Indicator */}
               {results.stateFilter && (
                 <div className="px-3 py-1 bg-civiq-blue/10 text-xs text-civiq-blue border-b border-gray-200">
