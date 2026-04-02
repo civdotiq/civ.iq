@@ -4,8 +4,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-'use client';
-
 import Link from 'next/link';
 import { GlossaryClient } from './GlossaryClient';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import FeatureGrid from '@/components/landing/FeatureGrid';
 import QuickStartPaths from '@/components/landing/QuickStartPaths';
-export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   return (
