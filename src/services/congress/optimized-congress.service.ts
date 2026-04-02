@@ -636,25 +636,24 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
   }
 
   try {
-    // Fetch sponsored bills and cosponsored count in parallel
-    const [currentData, cosponsoredCount] = await Promise.all([
-      getOptimizedBillsByMember({
-        bioguideId,
-        limit: 10,
-        page: 1,
-        congress: 119,
-      }),
+    const apiKey = process.env.CONGRESS_API_KEY;
+    if (!apiKey) throw new Error('Congress API key not configured');
+
+    // Use fetchSponsoredLegislation which does proper client-side congress filtering
+    // (Congress.gov API ignores the congress param — pagination.count is always all-time)
+    const [sponsoredData, cosponsoredCount] = await Promise.all([
+      fetchSponsoredLegislation(bioguideId, apiKey, 119, 250, 1),
       fetchCosponsoredCount(bioguideId),
     ]);
 
     const result: BillsSummaryResult = {
       currentCongress: {
-        count: currentData.pagination.total,
+        count: sponsoredData.total,
         congress: 119,
       },
       cosponsoredCount,
-      totalCareer: currentData.pagination.total,
-      recentBills: currentData.bills.slice(0, 5).map(bill => ({
+      totalCareer: sponsoredData.total,
+      recentBills: sponsoredData.bills.slice(0, 5).map(bill => ({
         title: bill.title,
         date: bill.introducedDate,
         type: bill.type,
