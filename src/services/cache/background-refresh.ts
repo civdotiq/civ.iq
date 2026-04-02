@@ -7,7 +7,7 @@ import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import {
-  getOptimizedBillsByMember,
+  getComprehensiveBillsByMember,
   getBillsSummary,
 } from '@/services/congress/optimized-congress.service';
 import { fecAPI } from '@/lib/fec-api';
@@ -111,8 +111,8 @@ async function refreshRepresentative(
         });
 
         // Cache first page of bills
-        const billsKey = `bills:${bioguideId}:119:25:1`;
-        const billsData = await getOptimizedBillsByMember({
+        const billsKey = `comprehensive-bills:${bioguideId}:119:25:1`;
+        const billsData = await getComprehensiveBillsByMember({
           bioguideId,
           limit: 25,
           page: 1,

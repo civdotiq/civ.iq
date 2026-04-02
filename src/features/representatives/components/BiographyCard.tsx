@@ -33,7 +33,7 @@ interface BillData {
 
 interface BatchData {
   bills?: {
-    totalCareer?: number;
+    totalCurrentCongress?: number;
     currentCongress?: {
       count: number;
       congress: number;
@@ -283,7 +283,7 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   // Process batch data for legislative stats
   const batchData: BatchData | null = batchResponse?.success ? batchResponse.data : null;
   const legislativeStats: LegislativeStats = {
-    billsSponsored: batchData?.bills?.totalCareer || 0,
+    billsSponsored: batchData?.bills?.totalCurrentCongress || 0,
     committeesCount: representative.committees?.length || 0,
     yearsInOffice: calculateYearsInOffice(representative.terms as Term[]),
   };

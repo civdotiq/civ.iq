@@ -6,9 +6,10 @@
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import {
-  getOptimizedBillsByMember,
+  getComprehensiveBillsByMember,
   getBillsSummary,
 } from '@/services/congress/optimized-congress.service';
+import { createLegacyResponse } from '@/services/congress/bill-response-utils';
 import { fecAPI } from '@/lib/fec-api';
 
 export interface BatchRequest {
@@ -158,43 +159,13 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
         if (options.bills?.summaryOnly) {
           result = await getBillsSummary(bioguideId);
         } else {
-          const billsResult = await getOptimizedBillsByMember({
+          const billsResult = await getComprehensiveBillsByMember({
             bioguideId,
             limit: options.bills?.limit || 25,
             page: options.bills?.page || 1,
           });
 
-          // Transform to legacy format for backward compatibility
-          result = {
-            // Legacy format expected by BillsTab
-            sponsoredLegislation: billsResult.bills,
-
-            // Enhanced format with counts and structure
-            sponsored: {
-              count: billsResult.bills.length,
-              bills: billsResult.bills,
-            },
-            cosponsored: {
-              count: 0,
-              bills: [],
-            },
-
-            // Summary
-            totalSponsored: billsResult.bills.length,
-            totalCosponsored: 0,
-            totalBills: billsResult.bills.length,
-
-            // Include pagination info
-            pagination: billsResult.pagination,
-
-            metadata: {
-              ...billsResult.metadata,
-              source: 'Congress.gov API (Optimized)',
-              congressLabel: `119th Congress`,
-              dataStructure: 'enhanced',
-              note: 'Cosponsored bills require separate API implementation',
-            },
-          };
+          result = createLegacyResponse(billsResult, 119);
         }
         break;
       }
