@@ -42,7 +42,7 @@ export function InsightDisclaimer({
       </button>
 
       {expanded && (
-        <div className="mt-2 p-3 bg-gray-50 border-2 border-gray-200">
+        <div className="mt-2 p-3 bg-gray-50">
           <p className="type-xs text-gray-600">{methodology}</p>
           <p className="type-xs text-gray-400 mt-2">
             Source: {source === 'ai-generated' ? 'AI-generated narrative' : 'Statistical summary'}

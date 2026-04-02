@@ -74,17 +74,17 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {formatCurrency(insight.totalSpending)}
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Total lobbying</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.organizationCount}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Organizations</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.matchedBillCount}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Matched bills</div>
           </div>
@@ -150,7 +150,7 @@ export function InfluenceChainTable({ insight, className = '' }: InfluenceChainT
               .filter((a: TimelineAlignment) => a.lobbyingSpending > 0)
               .slice(0, 8)
               .map((alignment: TimelineAlignment) => (
-                <div key={alignment.issueCode} className="border-2 border-gray-200 p-3">
+                <div key={alignment.issueCode} className="bg-gray-50 p-3">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className="aicher-heading type-sm text-gray-900">
                       {alignment.issueLabel}

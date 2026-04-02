@@ -37,27 +37,27 @@ export function StockOverlapTable({ insight, className = '' }: StockOverlapTable
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.totalTrades}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Total trades</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {insight.totalResolvableTrades}
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Resolvable</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.flaggedTradeCount}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Flagged</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {(insight.overlapRate * 100).toFixed(1)}%
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Overlap rate</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {(insight.expectedOverlapRate * 100).toFixed(1)}%
             </div>
@@ -78,7 +78,7 @@ export function StockOverlapTable({ insight, className = '' }: StockOverlapTable
                   b.flaggedTradeCount - a.flaggedTradeCount
               )
               .map((c: CommitteeTradeOverlap) => (
-                <div key={c.committeeCode} className="border-2 border-gray-200 p-3">
+                <div key={c.committeeCode} className="bg-gray-50 p-3">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className="aicher-heading type-sm text-gray-900">{c.committeeName}</span>
                     <span className="type-sm text-gray-700 whitespace-nowrap">

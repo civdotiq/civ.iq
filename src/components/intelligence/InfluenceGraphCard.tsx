@@ -210,7 +210,7 @@ function ChainPipeline({
   showMethodology: boolean;
 }) {
   return (
-    <div className="border-2 border-gray-200 dark:border-[#444] p-4 mb-3">
+    <div className="bg-gray-50 dark:bg-[#2a2a2e] p-4 mb-3">
       {/* Plain-language story summary */}
       <p className="type-sm text-gray-800 dark:text-gray-200 mb-3 leading-relaxed">
         {chainSummary(chain)}
@@ -267,14 +267,14 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
       className={`bg-white dark:bg-[#222226] border-2 border-gray-900 dark:border-[#444] p-4 sm:p-6 ${className}`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <SignalBadge signal={insight.signal ?? 'pattern'} />
-          <h3 className="aicher-heading type-lg text-gray-900 dark:text-gray-100">
-            How lobbying money becomes policy
-          </h3>
-        </div>
-        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
+      <div className="flex items-center gap-2 min-w-0 mb-2">
+        <SignalBadge signal={insight.signal ?? 'pattern'} />
+        <h3 className="aicher-heading type-lg text-gray-900 dark:text-gray-100">
+          How lobbying money becomes policy
+        </h3>
+      </div>
+      <div className="mb-3">
+        <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
       {/* Narrative — leads the card */}
@@ -284,7 +284,7 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
 
       {/* Stats row — plain language */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-        <div className="border-2 border-gray-200 dark:border-[#444] p-3">
+        <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
           <div className="aicher-heading type-2xl text-gray-900 dark:text-gray-100">
             {insight.totalChainsDetected}
           </div>
@@ -292,13 +292,13 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
             Paths from money to policy
           </div>
         </div>
-        <div className="border-2 border-gray-200 dark:border-[#444] p-3">
+        <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
           <div className="aicher-heading type-2xl text-gray-900 dark:text-gray-100">
             {insight.graphStats.regulationLinks}
           </div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Connected regulations</div>
         </div>
-        <div className="border-2 border-gray-200 dark:border-[#444] p-3">
+        <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
           <div className="aicher-heading type-2xl text-gray-900 dark:text-gray-100">
             {insight.graphStats.enforcementLinks}
           </div>
@@ -320,7 +320,7 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
 
       {/* Chain pipelines */}
       {insight.chains.length === 0 ? (
-        <div className="border-2 border-gray-200 p-4">
+        <div className="bg-gray-50 p-4">
           <p className="type-sm text-gray-500">
             No traceable paths from lobbying spending to legislation found for this representative.
           </p>

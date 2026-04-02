@@ -40,10 +40,10 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
 
     // Add seats by party (Republicans first, then Democrats, then Independents)
     for (let i = 0; i < data.republicans; i++) {
-      allSeats.push({ party: 'Republican', color: '#dc2626' });
+      allSeats.push({ party: 'Republican', color: '#e11d07' });
     }
     for (let i = 0; i < data.democrats; i++) {
-      allSeats.push({ party: 'Democrat', color: '#2563eb' });
+      allSeats.push({ party: 'Democrat', color: '#0a9338' });
     }
     for (let i = 0; i < data.independents; i++) {
       allSeats.push({ party: 'Independent', color: '#6b7280' });
@@ -129,8 +129,8 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
 
   const partyCounts = useMemo(() => {
     return [
-      { party: 'Republican', count: data.republicans, color: '#dc2626' },
-      { party: 'Democrat', count: data.democrats, color: '#2563eb' },
+      { party: 'Republican', count: data.republicans, color: '#e11d07' },
+      { party: 'Democrat', count: data.democrats, color: '#0a9338' },
       { party: 'Independent', count: data.independents, color: '#6b7280' },
     ].filter(p => p.count > 0);
   }, [data]);
@@ -214,9 +214,9 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                   style={{
                     backgroundColor:
                       majorityParty === 'Republican'
-                        ? '#dc2626'
+                        ? '#e11d07'
                         : majorityParty === 'Democrat'
-                          ? '#2563eb'
+                          ? '#0a9338'
                           : '#6b7280',
                   }}
                 ></div>
@@ -225,9 +225,9 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                   style={{
                     color:
                       majorityParty === 'Republican'
-                        ? '#dc2626'
+                        ? '#e11d07'
                         : majorityParty === 'Democrat'
-                          ? '#2563eb'
+                          ? '#0a9338'
                           : '#6b7280',
                   }}
                 >

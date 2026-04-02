@@ -28,7 +28,7 @@ export function CommitteeIntelligence({ committeeId }: CommitteeIntelligenceProp
 
   if (isLoading) {
     return (
-      <div className="border-2 border-gray-200 p-6 animate-pulse">
+      <div className="bg-gray-50 p-6 animate-pulse">
         <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
         <div className="h-32 bg-gray-200 border-2 border-gray-300" />
       </div>

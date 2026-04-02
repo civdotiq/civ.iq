@@ -38,6 +38,11 @@ export default {
         'party-dem': '#0a9338',
         'party-rep': '#e11d07',
         'party-ind': '#6b7280',
+        // Chromatic greys — Aicher/ERCO tradition for categorical data visualization
+        'data-vlau': '#6b6b83',
+        'data-vlau-light': '#8e8ea0',
+        'data-greige': '#b8b5a9',
+        'data-greige-light': '#d4d2c9',
       },
       // Otl Aicher 8px grid system - Complete scale
       spacing: {

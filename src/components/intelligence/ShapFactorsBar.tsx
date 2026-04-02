@@ -27,7 +27,7 @@ export function ShapFactorsBar({ factors, className = '' }: ShapFactorsBarProps)
   return (
     <div className={`mb-4 ${className}`}>
       <h4 className="aicher-heading type-sm text-gray-900 mb-2">Key factors driving prediction</h4>
-      <div className="border-2 border-gray-200 p-3">
+      <div className="bg-gray-50 p-3">
         <div className="space-y-2">
           {factors.map(factor => {
             const barWidth = maxImportance > 0 ? (factor.importance / maxImportance) * 100 : 0;

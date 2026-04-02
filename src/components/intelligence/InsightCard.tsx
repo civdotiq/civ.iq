@@ -80,24 +80,20 @@ export function InsightCard({
     <div
       className={`bg-white border-2 border-gray-900 border-l-4 ${borderClass} p-4 sm:p-6 ${className}`}
     >
-      {/* Header: signal badge + title + confidence */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <SignalBadge signal={signal} />
-          <h3 className="aicher-heading type-lg text-gray-900 truncate">{title}</h3>
-        </div>
-        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
+      {/* Header: signal badge + title */}
+      <div className="flex items-center gap-2 min-w-0 mb-3">
+        <SignalBadge signal={signal} />
+        <h3 className="aicher-heading type-lg text-gray-900 truncate">{title}</h3>
+      </div>
+
+      {/* Confidence + source — in primary reading flow */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <ConfidenceBadge confidence={insight.confidence} />
+        <SourceCitation sources={insight.sources ?? []} dataAsOf={insight.dataAsOf} />
       </div>
 
       {/* Narrative — primary content */}
       <p className="type-sm text-gray-700 leading-relaxed mb-3">{insight.narrative}</p>
-
-      {/* Source citation line */}
-      <SourceCitation
-        sources={insight.sources ?? []}
-        dataAsOf={insight.dataAsOf}
-        className="mb-3"
-      />
 
       {/* Collapsible key stats */}
       {keyStats.length > 0 && (
@@ -113,7 +109,7 @@ export function InsightCard({
           {statsOpen && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
               {keyStats.map(stat => (
-                <div key={stat.label} className="border-2 border-gray-200 p-3">
+                <div key={stat.label} className="bg-gray-50 p-3">
                   <div className="aicher-heading type-2xl text-gray-900">
                     {stat.value}
                     {stat.delta && (

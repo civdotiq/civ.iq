@@ -80,7 +80,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
         voting.missedVotePct !== null) && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {funding.totalSpent !== null && (
-            <div className="border-2 border-gray-200 p-3">
+            <div className="bg-gray-50 p-3">
               <div className="aicher-heading type-2xl text-gray-900">
                 {formatCompact(funding.totalSpent)}
               </div>
@@ -88,7 +88,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
             </div>
           )}
           {funding.cashOnHand !== null && (
-            <div className="border-2 border-gray-200 p-3">
+            <div className="bg-gray-50 p-3">
               <div className="aicher-heading type-2xl text-gray-900">
                 {formatCompact(funding.cashOnHand)}
               </div>
@@ -96,7 +96,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
             </div>
           )}
           {voting.missedVotePct !== null && (
-            <div className="border-2 border-gray-200 p-3">
+            <div className="bg-gray-50 p-3">
               <div className="aicher-heading type-2xl text-gray-900">
                 {voting.missedVotePct.toFixed(1)}%
               </div>
@@ -154,7 +154,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
                     {s.sector}
                   </span>
                   <div
-                    className="flex-1 h-2 bg-gray-100 border-2 border-gray-200"
+                    className="flex-1 h-2 bg-gray-100 bg-gray-100"
                     role="meter"
                     aria-valuenow={Math.round(s.pct)}
                     aria-valuemin={0}
@@ -246,10 +246,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
               <h4 className="aicher-heading type-xs text-gray-500 mb-2">Committees</h4>
               <div className="flex flex-wrap gap-2">
                 {identity.committees.map(c => (
-                  <span
-                    key={c.name}
-                    className="type-xs border-2 border-gray-200 px-2 py-1 text-gray-700"
-                  >
+                  <span key={c.name} className="type-xs bg-gray-100 px-2 py-1 text-gray-700">
                     {c.name}
                     {c.role !== 'Member' && <span className="text-gray-500 ml-1">({c.role})</span>}
                   </span>

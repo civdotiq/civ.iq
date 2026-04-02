@@ -71,23 +71,23 @@ export function PACVoteTable({ insight, className = '' }: PACVoteTableProps) {
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {formatCurrency(insight.totalDisbursed)}
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">To legislators</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">{insight.recipientCount}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Recipients</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {formatPct(insight.aggregateYeaRate)}
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Yea rate</div>
           </div>
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className={`aicher-heading type-2xl ${getDiffColor(diff)}`}>
               {formatDiff(diff)}pp
             </div>

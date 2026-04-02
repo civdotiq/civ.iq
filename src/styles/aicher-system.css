@@ -108,6 +108,13 @@
   --aicher-blue-cool: #2d8fc9;
   --aicher-blue-cool-hover: #2680b8;
 
+  /* 5. Chromatic Greys - Aicher/ERCO tradition for categorical data visualization */
+  /* These neutral tones enable 4+ category charts without touching partisan red/green */
+  --data-vlau: #6b6b83; /* Violet-grey — secondary data vector */
+  --data-vlau-light: #8e8ea0; /* Vlau lightened for backgrounds */
+  --data-greige: #b8b5a9; /* Grey-beige — tertiary data vector */
+  --data-greige-light: #d4d2c9; /* Greige lightened for backgrounds */
+
   /* 5. Status Color Semantics - Separating action from information */
   --color-action: var(--aicher-blue); /* Buttons, links */
   --color-info: #4b5563; /* Neutral information */
@@ -142,6 +149,23 @@
   --aicher-blue-hover: #4da8d6;
   --aicher-blue-muted: #2a5a73;
   --aicher-blue-cool: #4da8d6;
+
+  /* Party colors desaturated for dark mode — prevents vibration against #1a1a1e */
+  --aicher-red: #d4654e; /* Terracotta — softer than #e11d07 on dark backgrounds */
+  --aicher-red-hover: #c45a44;
+  --aicher-red-muted: #7a3d33;
+  --aicher-green: #4a9e6b; /* Sage — softer than #0a9338 on dark backgrounds */
+  --aicher-green-hover: #3f8c5e;
+  --aicher-green-muted: #2d5e40;
+  --party-republican: var(--aicher-red);
+  --party-democrat: var(--aicher-green);
+
+  /* Chromatic greys adjusted for dark backgrounds */
+  --data-vlau: #8e8ea0;
+  --data-vlau-light: #6b6b83;
+  --data-greige: #d4d2c9;
+  --data-greige-light: #b8b5a9;
+
   color-scheme: dark;
 }
 

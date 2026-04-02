@@ -45,7 +45,7 @@ export function AnomalyFlagsDisplay({ anomalies }: AnomalyFlagsDisplayProps) {
   if (anomalyFlags.length === 0) return null;
 
   return (
-    <div className="border-2 border-gray-200 p-4">
+    <div className="bg-gray-50 p-4">
       <h4 className="aicher-heading type-sm text-gray-900 mb-3">
         How this lawmaker&apos;s funding stands out
       </h4>

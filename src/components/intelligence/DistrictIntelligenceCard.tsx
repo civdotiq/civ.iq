@@ -51,7 +51,7 @@ export function DistrictIntelligenceCard({ districtId }: DistrictIntelligenceCar
           <Link
             key={rep.bioguideId}
             href={`/representative/${rep.bioguideId}?tab=intelligence`}
-            className="block border-2 border-gray-200 p-4 hover:border-gray-400 transition-colors"
+            className="block bg-gray-50 p-4 hover:border-gray-400 transition-colors"
           >
             <div className="flex items-center justify-between gap-3">
               <div>

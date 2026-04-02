@@ -194,7 +194,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   // If all primary sources errored out, show error message
   if (allErrored && allDoneLoading) {
     return (
-      <div className="border-2 border-gray-200 p-6 text-center">
+      <div className="bg-gray-50 p-6 text-center">
         <p className="type-sm text-gray-500">
           Unable to load intelligence insights. Please try again later.
         </p>
@@ -205,7 +205,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   // If everything finished loading and nothing has data, show empty state
   if (!hasAnyInsight && allDoneLoading) {
     return (
-      <div className="border-2 border-gray-200 p-6 text-center">
+      <div className="bg-gray-50 p-6 text-center">
         <p className="aicher-heading type-lg text-gray-900 mb-2">No insights available</p>
         <p className="type-sm text-gray-500">
           Insufficient data to generate intelligence insights for this representative. This may be
@@ -249,7 +249,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       {/* Tier 2: Detailed analysis — collapsed by default */}
       {hasDetailedInsights && (
         <details className="group">
-          <summary className="cursor-pointer list-none py-3 border-2 border-gray-200 px-4 sm:px-6 flex items-center justify-between aicher-focus [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none py-3 bg-gray-50 px-4 sm:px-6 flex items-center justify-between aicher-focus [&::-webkit-details-marker]:hidden">
             <span className="aicher-heading type-sm text-[#3ea2d4]">
               Show detailed analysis
               {allDoneLoading && ` (${totalDetailedCount} sections available)`}
@@ -371,7 +371,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
 
       {/* Initial loading state when nothing has resolved */}
       {nothingYet && (
-        <div className="border-2 border-gray-200 p-6 text-center">
+        <div className="bg-gray-50 p-6 text-center">
           <p className="type-sm text-gray-500">Loading intelligence insights...</p>
         </div>
       )}
@@ -381,9 +381,7 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
 
 function InsightPlaceholder({ tall = false }: { tall?: boolean }) {
   return (
-    <div
-      className={`border-2 border-gray-200 p-6 flex items-center justify-center ${tall ? 'h-60' : 'h-44'}`}
-    >
+    <div className={`bg-gray-50 p-6 flex items-center justify-center ${tall ? 'h-60' : 'h-44'}`}>
       <LoadingState message="Loading insight..." />
     </div>
   );

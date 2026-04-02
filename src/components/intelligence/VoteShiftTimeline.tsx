@@ -33,7 +33,7 @@ interface ChartDataPoint {
 export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) {
   if (quarters.length === 0) {
     return (
-      <div className="bg-white border-2 border-gray-200 p-6">
+      <div className="bg-gray-50 p-6">
         <h3 className="aicher-heading type-lg text-gray-900 mb-4">
           Party-line voting rate over time
         </h3>

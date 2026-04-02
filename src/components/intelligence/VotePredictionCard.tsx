@@ -24,28 +24,28 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
   return (
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <SignalBadge signal={insight.signal ?? 'pattern'} />
-          <h3 className="aicher-heading type-lg text-gray-900 truncate">Voting pattern analysis</h3>
-        </div>
-        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
+      <div className="flex items-center gap-2 min-w-0 mb-2">
+        <SignalBadge signal={insight.signal ?? 'pattern'} />
+        <h3 className="aicher-heading type-lg text-gray-900 truncate">Voting pattern analysis</h3>
+      </div>
+      <div className="mb-4">
+        <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
       {/* Key stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-        <div className="border-2 border-gray-200 p-3">
+        <div className="bg-gray-50 p-3">
           <div className="aicher-heading type-2xl text-gray-900">{pctIndependent}%</div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Prediction divergence</div>
         </div>
-        <div className="border-2 border-gray-200 p-3">
+        <div className="bg-gray-50 p-3">
           <div className="aicher-heading type-2xl text-gray-900">
             {independenceScore.deviations}/{independenceScore.confidentPredictions}
           </div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Votes against prediction</div>
         </div>
         {independenceScore.peerPercentile > 0 && (
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {independenceScore.peerPercentile.toFixed(0)}th
             </div>
@@ -98,7 +98,7 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
           <h4 className="aicher-heading type-sm text-gray-900 mb-2">
             Notable deviations from donor prediction
           </h4>
-          <div className="border-2 border-gray-200 divide-y divide-gray-200">
+          <div className="bg-gray-50 divide-y divide-gray-200">
             {notableDeviations.map(deviation => (
               <div key={deviation.billId} className="p-3">
                 <div className="type-sm font-medium text-gray-900 line-clamp-2">

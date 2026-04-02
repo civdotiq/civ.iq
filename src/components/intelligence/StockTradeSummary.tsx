@@ -140,7 +140,7 @@ export function StockTradeSummary({ trades, totalFilings }: StockTradeSummaryPro
             {topTickers.map(({ ticker, count }) => (
               <span
                 key={ticker}
-                className="inline-flex items-center gap-1 border-2 border-gray-200 px-2 py-1 text-sm font-mono"
+                className="inline-flex items-center gap-1 bg-gray-100 px-2 py-1 text-sm font-mono"
               >
                 {ticker}
                 <span className="text-xs text-gray-400">{count}</span>
@@ -181,7 +181,7 @@ function StatCell({
   isAlert?: boolean;
 }) {
   return (
-    <div className="border-2 border-gray-200 p-3">
+    <div className="bg-gray-50 p-3">
       <div className={`text-2xl font-semibold ${isAlert ? 'text-[#e11d07]' : 'text-gray-900'}`}>
         {value}
       </div>

@@ -119,7 +119,7 @@ function PatternRow({ pattern }: { pattern: TemporalPattern }) {
   const largestAmount = amounts.length > 0 ? Math.max(...amounts) : null;
 
   return (
-    <div className="border-2 border-gray-200 p-3">
+    <div className="bg-gray-50 p-3">
       <div className="flex items-center justify-between mb-1">
         <span className="type-sm font-medium text-gray-900">{PATTERN_LABELS[pattern.type]}</span>
         <span className="type-xs font-medium" style={{ color: sigColor }}>

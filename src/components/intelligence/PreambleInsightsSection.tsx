@@ -132,7 +132,7 @@ export function PreambleInsightsSection({ documentNumber }: PreambleInsightsSect
 
 function KeyStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="border-2 border-gray-200 dark:border-gray-700 p-3">
+    <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
       <div className="aicher-heading type-2xl text-gray-900 dark:text-gray-100">{value}</div>
       <div className="type-xs text-gray-500 dark:text-gray-400 aicher-heading-wide">{label}</div>
     </div>
@@ -204,7 +204,7 @@ function IndustryImpactsList({ impacts }: { impacts: PreambleIndustryImpact[] })
       </h3>
       <div className="space-y-2">
         {impacts.map((impact, i) => (
-          <div key={i} className="border-2 border-gray-200 dark:border-gray-700 p-3">
+          <div key={i} className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
             <div className="flex items-center gap-2 mb-1">
               <span className="type-sm font-medium text-gray-900 dark:text-gray-100">
                 {impact.industry}

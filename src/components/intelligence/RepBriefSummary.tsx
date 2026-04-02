@@ -71,9 +71,9 @@ export function RepBriefSummary({
       {/* Brief content — loads progressively */}
       {isLoading && (
         <div className="space-y-2 mb-4">
-          <div className="h-3 bg-gray-100 border-2 border-gray-200 w-full animate-pulse" />
-          <div className="h-3 bg-gray-100 border-2 border-gray-200 w-4/5 animate-pulse" />
-          <div className="h-3 bg-gray-100 border-2 border-gray-200 w-3/5 animate-pulse" />
+          <div className="h-3 bg-gray-200 w-full animate-pulse" />
+          <div className="h-3 bg-gray-200 w-4/5 animate-pulse" />
+          <div className="h-3 bg-gray-200 w-3/5 animate-pulse" />
         </div>
       )}
 

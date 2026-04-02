@@ -212,7 +212,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
 
       {/* Loading state */}
       {loading && (
-        <div className="border-2 border-gray-200 p-4 mt-4">
+        <div className="bg-gray-50 p-4 mt-4">
           <p className="type-sm text-gray-600 animate-pulse">
             Looking up your congressional district...
           </p>

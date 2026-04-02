@@ -176,17 +176,17 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
       {/* Loading state */}
       {isLoading && (
         <div className="space-y-2">
-          <div className="h-8 bg-gray-200 border-2 border-gray-200 animate-pulse" />
-          <div className="h-6 bg-gray-100 border-2 border-gray-200 animate-pulse w-3/4" />
-          <div className="h-6 bg-gray-100 border-2 border-gray-200 animate-pulse w-2/3" />
-          <div className="h-6 bg-gray-100 border-2 border-gray-200 animate-pulse w-5/6" />
-          <div className="h-6 bg-gray-100 border-2 border-gray-200 animate-pulse w-1/2" />
+          <div className="h-8 bg-gray-200 animate-pulse" />
+          <div className="h-6 bg-gray-100 animate-pulse w-3/4" />
+          <div className="h-6 bg-gray-100 animate-pulse w-2/3" />
+          <div className="h-6 bg-gray-100 animate-pulse w-5/6" />
+          <div className="h-6 bg-gray-100 animate-pulse w-1/2" />
         </div>
       )}
 
       {/* Stats bar */}
       {!isLoading && data?.stats && (
-        <div className="border-2 border-gray-200 p-3 mb-4 flex flex-wrap gap-4">
+        <div className="bg-gray-50 p-3 mb-4 flex flex-wrap gap-4">
           <div>
             <span className="type-xs text-gray-500">Average sector vote rate</span>
             <div className="aicher-heading type-2xl text-gray-900">
@@ -216,7 +216,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
 
       {/* Table */}
       {!isLoading && data?.entries && data.entries.length > 0 && (
-        <div className="border-2 border-gray-200 overflow-x-auto">
+        <div className="bg-gray-50 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-gray-200 bg-gray-50">
@@ -276,7 +276,7 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
 
       {/* Empty state */}
       {!isLoading && data?.entries && data.entries.length === 0 && (
-        <div className="border-2 border-gray-200 p-6 text-center">
+        <div className="bg-gray-50 p-6 text-center">
           <p className="type-sm text-gray-400">
             No legislators meet the minimum data threshold for this sector and filter combination.
           </p>

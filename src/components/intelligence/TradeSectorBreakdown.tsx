@@ -37,7 +37,7 @@ export function TradeSectorBreakdown({ bioguideId, className = '' }: TradeSector
 
   if (isLoading) {
     return (
-      <div className={`border-2 border-gray-200 bg-white p-4 ${className}`}>
+      <div className={`bg-gray-50 p-4 ${className}`}>
         <div className="h-4 bg-gray-200 animate-pulse w-1/3 mb-4" />
         <div className="space-y-2">
           <div className="h-6 bg-gray-100 animate-pulse" />

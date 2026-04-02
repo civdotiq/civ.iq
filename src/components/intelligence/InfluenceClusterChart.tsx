@@ -144,7 +144,7 @@ export function InfluenceClusterChart({
     return (
       <div className={`bg-white border-2 border-gray-900 p-6 ${className}`}>
         <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/3 mb-4 animate-pulse" />
-        <div className="h-64 bg-gray-100 border-2 border-gray-200 animate-pulse" />
+        <div className="h-64 bg-gray-100 animate-pulse" />
       </div>
     );
   }
@@ -164,7 +164,7 @@ export function InfluenceClusterChart({
       </p>
 
       {/* Scatter plot */}
-      <div className="border-2 border-gray-200 relative">
+      <div className="bg-gray-50 relative">
         <svg
           ref={svgRef}
           width={dimensions.width}
@@ -250,7 +250,7 @@ export function InfluenceClusterChart({
           <h4 className="aicher-heading type-sm text-gray-900 mb-2">
             Cross-party clusters (shared funding, different parties)
           </h4>
-          <div className="border-2 border-gray-200 divide-y divide-gray-200">
+          <div className="bg-gray-50 divide-y divide-gray-200">
             {crossPartyHighlights.slice(0, 5).map(cluster => (
               <div key={cluster.clusterId} className="p-3 type-xs text-gray-600">
                 <span className="font-medium">

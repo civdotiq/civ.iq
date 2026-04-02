@@ -171,7 +171,7 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
 
       {/* Detailed breakdown — only when there's something worth showing */}
       {showDetails && (
-        <div className="border-2 border-gray-200 p-4 mb-4">
+        <div className="bg-gray-50 p-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {data.sponsorAnalysis && sponsorPct > 0 && (
               <div>
@@ -230,10 +230,7 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
               );
             })
           : data.affectedSectors.slice(0, 6).map(sector => (
-              <span
-                key={sector}
-                className="border-2 border-gray-200 px-2 py-0.5 type-xs text-gray-500"
-              >
+              <span key={sector} className="bg-gray-100 px-2 py-0.5 type-xs text-gray-500">
                 {displaySector(sector)}
               </span>
             ))}
@@ -258,7 +255,7 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
             This bill&apos;s provisions show semantic overlap with the following lobbying
             disclosures:
           </p>
-          <div className="border-2 border-gray-200 divide-y divide-gray-200">
+          <div className="bg-gray-50 divide-y divide-gray-200">
             {data.lobbyingSimilarity.matches
               .filter(m => m.similarity >= 0.55)
               .slice(0, 5)

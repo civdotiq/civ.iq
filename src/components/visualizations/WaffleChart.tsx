@@ -99,7 +99,6 @@ export default function WaffleChart({
       className="inline-block"
       role="img"
       aria-label={`${clampedPercentage.toFixed(1)}% ${label}`}
-      title={`${clampedPercentage.toFixed(1)}% ${label}`}
     >
       {/* Mobile-optimized grid */}
       <div className="grid grid-cols-10 sm:hidden" style={{ gap: `${mobileGap}px` }}>
@@ -126,6 +125,20 @@ export default function WaffleChart({
             }}
           />
         ))}
+      </div>
+      {/* Persistent legend — visible without hover/interaction */}
+      <div className="flex items-center gap-2 mt-1">
+        <div
+          className="shrink-0"
+          style={{
+            width: `${mobileSquareSize}px`,
+            height: `${mobileSquareSize}px`,
+            backgroundColor: color,
+          }}
+        />
+        <span className="type-xs text-gray-600">
+          {clampedPercentage.toFixed(1)}% {label}
+        </span>
       </div>
     </div>
   );

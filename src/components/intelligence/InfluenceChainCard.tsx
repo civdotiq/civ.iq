@@ -70,7 +70,7 @@ function ChainItem({ chain }: { chain: InfluenceChain }) {
     chain.billTitle.length > 80 ? chain.billTitle.slice(0, 80) + '...' : chain.billTitle;
 
   return (
-    <div className="border-2 border-gray-200 p-3 mb-3">
+    <div className="bg-gray-50 p-3 mb-3">
       {/* Chain header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <LobbyLink
@@ -127,28 +127,28 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
   return (
     <div className={`bg-white border-2 border-gray-900 p-4 sm:p-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <SignalBadge signal={insight.signal ?? 'pattern'} />
-          <h3 className="aicher-heading type-lg text-gray-900 truncate">Influence Chains</h3>
-        </div>
-        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
+      <div className="flex items-center gap-2 min-w-0 mb-2">
+        <SignalBadge signal={insight.signal ?? 'pattern'} />
+        <h3 className="aicher-heading type-lg text-gray-900 truncate">Influence Chains</h3>
+      </div>
+      <div className="mb-4">
+        <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
       {/* Key stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-        <div className="border-2 border-gray-200 p-3">
+        <div className="bg-gray-50 p-3">
           <div className="aicher-heading type-2xl text-gray-900">{insight.totalChainsDetected}</div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Chains detected</div>
         </div>
-        <div className="border-2 border-gray-200 p-3">
+        <div className="bg-gray-50 p-3">
           <div className="aicher-heading type-2xl text-gray-900">
             {(avgConfidence * 100).toFixed(0)}%
           </div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Avg chain confidence</div>
         </div>
         {insight.peerComparison.percentileRank > 0 && (
-          <div className="border-2 border-gray-200 p-3">
+          <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {insight.peerComparison.percentileRank.toFixed(0)}th
             </div>

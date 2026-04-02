@@ -64,7 +64,7 @@ function PercentageBar({ value, label }: { value: number | null; label: string }
 
 function RepCard({ rep }: { rep: RepMoneyMetrics }) {
   return (
-    <div className={`border-2 border-gray-200 border-l-4 ${partyBorderColor(rep.party)} p-4`}>
+    <div className={`bg-gray-50 dark:bg-[#2a2a2e] border-l-4 ${partyBorderColor(rep.party)} p-4`}>
       {/* Rep header */}
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="min-w-0">
@@ -80,7 +80,7 @@ function RepCard({ rep }: { rep: RepMoneyMetrics }) {
           </div>
         </div>
         {rep.influenceChainCount > 0 && (
-          <div className="border-2 border-gray-200 px-2 py-1 text-center flex-shrink-0">
+          <div className="bg-gray-50 dark:bg-[#2a2a2e] px-2 py-1 text-center flex-shrink-0">
             <div className="aicher-heading type-lg text-gray-900">{rep.influenceChainCount}</div>
             <div className="type-xs text-gray-500 aicher-heading-wide">Chains</div>
           </div>
@@ -110,7 +110,7 @@ function AggregateStat({
 }) {
   if (!entry) return null;
   return (
-    <div className="border-2 border-gray-200 p-3">
+    <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
       <div className="type-xs text-gray-500 aicher-heading-wide mb-1">{label}</div>
       <div className="type-sm font-medium text-gray-900 truncate" title={entry.name}>
         {entry.name}
@@ -140,14 +140,14 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
       className={`bg-white dark:bg-[#222226] border-2 border-gray-900 dark:border-[#444] p-4 sm:p-6 ${className}`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <SignalBadge signal={insight.signal ?? 'pattern'} />
-          <h3 className="aicher-heading type-lg text-gray-900 dark:text-gray-100">
-            Money Report Card
-          </h3>
-        </div>
-        <ConfidenceBadge confidence={insight.confidence} className="shrink-0" />
+      <div className="flex items-center gap-2 min-w-0 mb-2">
+        <SignalBadge signal={insight.signal ?? 'pattern'} />
+        <h3 className="aicher-heading type-lg text-gray-900 dark:text-gray-100">
+          Money Report Card
+        </h3>
+      </div>
+      <div className="mb-4">
+        <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
       {/* District context */}
@@ -176,7 +176,7 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
 
       {/* Average correlation */}
       {insight.aggregates.averageCorrelation !== null && (
-        <div className="border-2 border-gray-200 p-3 mb-4">
+        <div className="bg-gray-50 dark:bg-[#2a2a2e] p-3 mb-4">
           <span className="type-xs text-gray-500 aicher-heading-wide">
             Avg vote-finance correlation
           </span>
@@ -188,7 +188,7 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
 
       {/* Per-rep cards */}
       {insight.representatives.length === 0 ? (
-        <div className="border-2 border-gray-200 p-4">
+        <div className="bg-gray-50 dark:bg-[#2a2a2e] p-4">
           <p className="type-sm text-gray-500">
             No representatives found for this district. This may be a data gap.
           </p>

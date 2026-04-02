@@ -36,7 +36,7 @@ export function StockTradeRankBadge({ bioguideId }: StockTradeRankBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 border-2 border-gray-200 px-2 py-1 text-xs font-medium text-gray-600"
+      className="inline-flex items-center gap-1 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
       title={`Ranks #${entry.rank} of ${data.stats.totalMembers} members who disclosed trades (by trade count)`}
     >
       <span className="text-gray-900 font-semibold">#{entry.rank}</span>
