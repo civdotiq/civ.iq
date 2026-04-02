@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "CIV.IQ"
+message: "If you use CIV.IQ in your research, please cite it as below."
+type: software
+authors:
+  - family-names: Sandford
+    given-names: Mark
+    email: contact@civdotiq.org
+repository-code: "https://github.com/civdotiq/civ.iq"
+url: "https://civdotiq.org"
+abstract: >-
+  Nonpartisan civic intelligence platform connecting 19 government data
+  sources to provide transparent access to congressional voting records,
+  campaign finance, lobbying disclosures, federal spending, and
+  legislative analysis. Includes 12 statistical analyzers, ML-based
+  vote prediction, and entity resolution across government databases.
+keywords:
+  - civic technology
+  - government transparency
+  - campaign finance
+  - congressional voting
+  - lobbying
+  - open data
+  - civic intelligence
+license: MIT
+version: "2.0.0"
+date-released: "2025-09-02"

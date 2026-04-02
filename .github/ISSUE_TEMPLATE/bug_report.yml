@@ -1,0 +1,65 @@
+name: Bug Report
+description: Report a technical issue with CIV.IQ
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Please fill out the sections below so we can reproduce and fix the issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: "When I navigate to a representative's profile and click the Intelligence tab..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: "I expected to see the influence chain analysis load within a few seconds."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we trigger this bug?
+      placeholder: |
+        1. Go to /representative/B001230
+        2. Click the Intelligence tab
+        3. Wait for cards to load
+        4. See error in the InfluenceChainCard
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL where the bug occurred
+      placeholder: "https://civdotiq.org/representative/B001230"
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Mobile Safari (iOS)
+        - Chrome (Android)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or error messages
+      description: Paste screenshots or console errors if available.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help us diagnose the issue.

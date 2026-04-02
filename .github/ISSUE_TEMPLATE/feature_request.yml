@@ -1,0 +1,51 @@
+name: Feature Request
+description: Suggest an improvement or new capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement. Please describe the problem you're trying to solve and your proposed solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the civic use case. Who benefits and how?
+      placeholder: "As a journalist covering campaign finance, I need to compare lobbying spending across multiple committees simultaneously..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should this work? Be as specific as you can.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you've thought about.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Federal data (Congress, FEC, spending)
+        - State legislature data
+        - Local government data
+        - Intelligence / analysis layer
+        - UI / design
+        - API / developer tools
+        - Accessibility
+        - Performance
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, related issues, or data sources.

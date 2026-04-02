@@ -1,0 +1,59 @@
+name: Data Quality Issue
+description: Report inaccurate, outdated, or missing government data
+title: "[Data]: "
+labels: ["data-quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        CIV.IQ displays data from official government sources. If you've found data that appears wrong, outdated, or missing, please report it here. Include as much detail as possible so we can trace the issue to the correct data source.
+  - type: dropdown
+    id: data_source
+    attributes:
+      label: Data source
+      description: Which type of data is affected?
+      options:
+        - Representative profile (Congress.gov)
+        - Voting records (Senate/House XML)
+        - Campaign finance (FEC)
+        - Federal spending (USASpending)
+        - Lobbying disclosures (Senate LDA)
+        - Committee information (Congress.gov)
+        - District demographics (Census ACS)
+        - District boundaries (TIGER/Line)
+        - State legislature (OpenStates)
+        - Regulations (Federal Register)
+        - Executive orders
+        - Stock trades (Senate disclosures)
+        - Bill text or status (Congress.gov)
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's wrong?
+      description: Describe what data is incorrect and what the correct value should be.
+      placeholder: |
+        Representative Jane Smith's party affiliation shows as "Independent" on CIV.IQ,
+        but she is listed as a Democrat on congress.gov since January 2025.
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: CIV.IQ page URL
+      placeholder: "https://civdotiq.org/representative/S001234"
+    validations:
+      required: true
+  - type: input
+    id: evidence
+    attributes:
+      label: Link to authoritative source
+      description: URL to the official government source showing the correct data.
+      placeholder: "https://www.congress.gov/member/jane-smith/S001234"
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: When did you notice this? Does it affect multiple pages?

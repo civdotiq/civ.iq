@@ -14,24 +14,7 @@ Thank you for your interest in contributing to CIV.IQ! This guide will help you 
 
 ## Code of Conduct
 
-### Our Pledge
-
-We are committed to providing a welcoming and inclusive environment for all contributors, regardless of background, identity, or experience level.
-
-### Expected Behavior
-
-- Use welcoming and inclusive language
-- Respect differing viewpoints and experiences
-- Accept constructive criticism gracefully
-- Focus on what's best for the community
-- Show empathy toward other community members
-
-### Unacceptable Behavior
-
-- Harassment, discriminatory language, or personal attacks
-- Publishing others' private information
-- Trolling or inflammatory comments
-- Other unprofessional conduct
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold it.
 
 ## Getting Started
 

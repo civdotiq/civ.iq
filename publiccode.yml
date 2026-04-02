@@ -1,0 +1,84 @@
+publiccodeYmlVersion: "0.4"
+
+name: CIV.IQ
+applicationSuite: CIV.IQ
+url: https://github.com/civdotiq/civ.iq
+landingURL: https://civdotiq.org
+releaseDate: "2025-09-02"
+softwareVersion: "2.0.0"
+developmentStatus: stable
+softwareType: standalone/web
+
+description:
+  en:
+    localisedName: CIV.IQ
+    shortDescription: >-
+      Nonpartisan civic intelligence platform connecting 19 government data
+      sources to provide transparent access to congressional voting records,
+      campaign finance, lobbying, and federal spending.
+    longDescription: >-
+      CIV.IQ is civic infrastructure that connects real government data
+      sources into a unified, transparent interface for understanding how
+      government works. It serves 181 API endpoints backed by Congress.gov,
+      FEC, Census Bureau, USASpending.gov, Senate LDA, OpenStates, Federal
+      Register, BLS, SEC EDGAR, Wikidata, and more. The platform includes
+      an intelligence layer with 12 analyzers for detecting patterns in
+      voting behavior, campaign finance, lobbying-to-legislation pipelines,
+      and stock trading by members of Congress. All analysis carries
+      confidence scores, methodology documentation, and source citations.
+      No mock data, no partisan framing, no editorializing.
+    documentation: https://github.com/civdotiq/civ.iq/blob/main/docs/ARCHITECTURE.md
+    apiDocumentation: https://github.com/civdotiq/civ.iq/blob/main/docs/API_REFERENCE.md
+    features:
+      - Congressional voting records with roll call detail
+      - Campaign finance tracking via FEC filings
+      - Lobbying disclosure analysis via Senate LDA
+      - Federal spending by congressional district via USASpending
+      - Intelligence layer with 12 cross-domain analyzers
+      - Vote prediction using ML (XGBoost/ONNX)
+      - Bill-lobbying language similarity detection
+      - Stock trade-committee jurisdiction overlap analysis
+      - State legislature data via OpenStates
+      - District demographics via Census ACS
+      - MCP server with 16 civic data tools
+      - Nostr signed event publishing
+      - OpenAPI specification and TypeScript SDK
+      - Embeddable widgets and Atom feeds
+
+legal:
+  license: MIT-0
+  mainCopyrightOwner: Mark Sandford
+  repoOwner: civdotiq
+  authorsFile: NOTICE
+
+maintenance:
+  type: internal
+  contacts:
+    - name: Mark Sandford
+      email: contact@civdotiq.org
+      affiliation: CIV.IQ
+
+platforms:
+  - web
+
+categories:
+  - data-visualization
+  - digital-citizenship
+  - government
+
+usedBy:
+  - CIV.IQ (civdotiq.org)
+
+roadmap: https://github.com/civdotiq/civ.iq/blob/main/CHANGELOG.md
+
+dependsOn:
+  open:
+    - name: Node.js
+      versionMin: "20.0.0"
+    - name: Next.js
+      versionMin: "16.0.0"
+
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - en
