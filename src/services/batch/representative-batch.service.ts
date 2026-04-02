@@ -10,7 +10,7 @@ import {
   getBillsSummary,
 } from '@/services/congress/optimized-congress.service';
 import { createLegacyResponse } from '@/services/congress/bill-response-utils';
-import { fecAPI } from '@/lib/fec-api';
+import { fecApiService } from '@/lib/fec/fec-api-service';
 
 export interface BatchRequest {
   bioguideId: string;
@@ -353,24 +353,26 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
 
           let summaryData = null;
+          let matchedCycle: number | undefined;
           for (const cycle of FALLBACK_CYCLES) {
             logger.info(`Calling FEC API:`, {
               candidateId,
               cycle,
-              method: 'getCandidateFinancials',
+              method: 'getFinancialSummary',
             });
 
-            const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
-
-            const candidate =
-              Array.isArray(summaryDataArray) && summaryDataArray.length > 0
-                ? summaryDataArray[0]
-                : null;
-
-            if (candidate) {
-              logger.info(`FEC API found data in cycle`, { candidateId, cycle });
-              summaryData = candidate;
-              break;
+            try {
+              const candidate = await fecApiService.getFinancialSummary(candidateId, cycle);
+              if (candidate) {
+                logger.info(`FEC API found data in cycle`, { candidateId, cycle });
+                summaryData = candidate;
+                matchedCycle = cycle;
+                break;
+              }
+            } catch (err) {
+              logger.warn(`FEC API cycle ${cycle} failed for ${candidateId}`, {
+                error: err instanceof Error ? err.message : 'Unknown',
+              });
             }
           }
 
@@ -413,6 +415,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
             metadata: {
               candidateId,
+              matchedCycle,
               lastUpdated: new Date().toISOString(),
               bioguideId,
             },
@@ -594,7 +597,9 @@ export async function getRepresentativeSummary(bioguideId: string) {
       executeBatchRequest({
         bioguideId,
         endpoints: ['votes'],
-        options: { votes: { limit: 50 } }, // Fetch reasonable number to get accurate count (default limit in batch service)
+        // Most reps cast 200-400 votes per congress; we count (not render) them,
+        // so the extra payload is acceptable to get an accurate "Votes Cast" number
+        options: { votes: { limit: 500 } },
       }),
     ]);
 

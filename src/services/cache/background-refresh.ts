@@ -10,7 +10,8 @@ import {
   getComprehensiveBillsByMember,
   getBillsSummary,
 } from '@/services/congress/optimized-congress.service';
-import { fecAPI } from '@/lib/fec-api';
+import { fecApiService } from '@/lib/fec/fec-api-service';
+import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 
 /**
  * Safely extracts an error message from an unknown error value
@@ -133,16 +134,29 @@ async function refreshRepresentative(
     // 3. Cache finance data if requested
     if (options.includeFinance) {
       try {
-        // Only cache if we have FEC ID mapping
-        const financeKey = `finance:${bioguideId}`;
-        const financeData = await fecAPI.getCandidateFinancials(bioguideId);
-        if (financeData) {
-          await govCache.set(financeKey, financeData, {
-            dataType: 'finance',
-            source: 'background-refresh',
-          });
-          cached.finance = 1;
-          logger.debug(`Cached finance data for ${bioguideId}`);
+        // Resolve bioguideId → FEC candidateId before calling FEC API
+        const candidateId = getFECIdFromBioguide(bioguideId);
+        if (!candidateId) {
+          logger.debug(`No FEC mapping for ${bioguideId}, skipping finance cache`);
+        } else {
+          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
+          for (const cycle of FALLBACK_CYCLES) {
+            try {
+              const financeData = await fecApiService.getFinancialSummary(candidateId, cycle);
+              if (financeData) {
+                const financeKey = `finance:${bioguideId}`;
+                await govCache.set(financeKey, financeData, {
+                  dataType: 'finance',
+                  source: 'background-refresh',
+                });
+                cached.finance = 1;
+                logger.debug(`Cached finance data for ${bioguideId} (cycle ${cycle})`);
+                break;
+              }
+            } catch {
+              // Try next cycle
+            }
+          }
         }
       } catch (error) {
         logger.warn(`Failed to cache finance for ${bioguideId}:`, getErrorMessage(error));

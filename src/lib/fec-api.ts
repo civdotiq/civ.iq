@@ -194,6 +194,11 @@ class FECRateLimiter {
   }
 }
 
+/**
+ * @deprecated Use fecApiService from '@/lib/fec/fec-api-service' instead.
+ * This class returns raw arrays and lacks proper error handling.
+ * All callers have been migrated as of Wave 2 data integrity audit.
+ */
 class FECAPI {
   private config: FECConfig;
   private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
@@ -760,7 +765,9 @@ class FECAPI {
   }
 }
 
-// Default instance
+/**
+ * @deprecated Use fecApiService from '@/lib/fec/fec-api-service' instead.
+ */
 export const fecAPI = new FECAPI();
 
 // Export types
