@@ -598,9 +598,11 @@ export async function getRepresentativeSummary(bioguideId: string) {
       executeBatchRequest({
         bioguideId,
         endpoints: ['votes'],
-        // Most reps cast 200-400 votes per congress; we count (not render) them,
-        // so the extra payload is acceptable to get an accurate "Votes Cast" number
-        options: { votes: { limit: 500 } },
+        // Keep limit low for summary — fetching hundreds of votes just
+        // for a count causes multi-second hangs (each Senate vote is a
+        // separate XML fetch). The user sees the full count when they
+        // drill into the Voting tab.
+        options: { votes: { limit: 20 } },
       }),
     ]);
 
@@ -635,7 +637,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
       lastUpdated: new Date().toISOString(),
     };
 
-    govCache.set(cacheKey, result, { ttl: 600 * 1000, source: 'summary-service' }); // Cache for 10 minutes
+    govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'summary-service' }); // Cache for 30 minutes
     return result;
   } catch (error) {
     logger.error('Representative summary failed', error as Error, { bioguideId });
