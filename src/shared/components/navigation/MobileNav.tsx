@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useRef, useId } from 'react';
 import Link from 'next/link';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface NavigationItem {
   name: string;
@@ -35,63 +36,28 @@ export function MobileNav({
 }: MobileNavProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
-  const firstFocusableRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
 
   const toggleSection = (sectionName: string) => {
     setExpandedSection(prev => (prev === sectionName ? null : sectionName));
   };
 
-  // Close menu when route changes or escape key is pressed
-  // Also handle focus trapping within the mobile menu
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
+  useFocusTrap({ isActive: isOpen, onClose, containerRef: navRef });
 
+  // Close mobile menu when screen gets large enough for desktop nav
+  useEffect(() => {
     const handleResize = () => {
-      // Close mobile menu when screen gets large enough for desktop nav
       if (window.innerWidth >= 768 && isOpen) {
         onClose();
       }
     };
 
-    // Focus trap within mobile menu
-    const handleTab = (e: KeyboardEvent) => {
-      if (!isOpen || e.key !== 'Tab' || !navRef.current) return;
-
-      const focusableElements = navRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement?.focus();
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement?.focus();
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('keydown', handleTab);
       window.addEventListener('resize', handleResize);
-      // Prevent body scroll when menu is open
-      document.body.style.overflow = 'hidden';
-      // Focus first element when menu opens
-      setTimeout(() => firstFocusableRef.current?.focus(), 100);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('keydown', handleTab);
       window.removeEventListener('resize', handleResize);
-      document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
 
@@ -127,7 +93,6 @@ export function MobileNav({
                 <div key={section.name} role="listitem">
                   {/* Section header - accordion toggle */}
                   <button
-                    ref={sectionIndex === 0 ? firstFocusableRef : undefined}
                     onClick={() => toggleSection(section.name)}
                     className={`aicher-heading-wide w-full flex items-center justify-between py-3 px-4 transition-all duration-200 ${
                       sectionIsActive

@@ -5,7 +5,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { DistrictInfo } from '@/lib/multi-district/detection';
 
 interface AddressPromptProps {
@@ -30,6 +31,9 @@ export function AddressPrompt({
   const [showDistrictOptions, setShowDistrictOptions] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap({ isActive: isOpen, onClose, containerRef: dialogRef });
 
   if (!isOpen) return null;
 
@@ -142,6 +146,7 @@ export function AddressPrompt({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 overflow-y-auto"
       aria-labelledby="modal-title"
       role="dialog"

@@ -60,48 +60,57 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
       <h3 className="aicher-heading type-lg text-gray-900 mb-4">
         Party-line voting rate over time
       </h3>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${v}%`} />
-          <Tooltip
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(1)}%`,
-              name === 'partyLineRate' ? 'Quarterly rate' : 'Rolling average',
-            ]}
-            labelFormatter={(label: string) => label}
-          />
-          <Line
-            type="monotone"
-            dataKey="partyLineRate"
-            stroke="#3ea2d4"
-            strokeWidth={2}
-            dot={{ r: 3, fill: '#3ea2d4', stroke: '#3ea2d4' }}
-            name="partyLineRate"
-          />
-          <Line
-            type="monotone"
-            dataKey="rollingAverage"
-            stroke="#9ca3af"
-            strokeWidth={2}
-            strokeDasharray="6 3"
-            dot={false}
-            connectNulls={false}
-            name="rollingAverage"
-          />
-          {shiftPoints.map(point => (
-            <ReferenceDot
-              key={point.quarter}
-              x={point.quarter}
-              y={point.partyLineRate}
-              r={6}
-              fill="#e11d07"
-              stroke="#e11d07"
+      <div
+        role="img"
+        aria-label={`Party-line voting rate over ${quarters.length} quarters. ${shifts.length} significant shifts detected.`}
+      >
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fontSize: 11 }}
+              tickFormatter={(v: number) => `${v}%`}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                `${value.toFixed(1)}%`,
+                name === 'partyLineRate' ? 'Quarterly rate' : 'Rolling average',
+              ]}
+              labelFormatter={(label: string) => label}
+            />
+            <Line
+              type="monotone"
+              dataKey="partyLineRate"
+              stroke="#3ea2d4"
+              strokeWidth={2}
+              dot={{ r: 3, fill: '#3ea2d4', stroke: '#3ea2d4' }}
+              name="partyLineRate"
+            />
+            <Line
+              type="monotone"
+              dataKey="rollingAverage"
+              stroke="#9ca3af"
+              strokeWidth={2}
+              strokeDasharray="6 3"
+              dot={false}
+              connectNulls={false}
+              name="rollingAverage"
+            />
+            {shiftPoints.map(point => (
+              <ReferenceDot
+                key={point.quarter}
+                x={point.quarter}
+                y={point.partyLineRate}
+                r={6}
+                fill="#e11d07"
+                stroke="#e11d07"
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
       <div className="flex flex-wrap items-center gap-4 mt-3 type-xs text-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block w-4 h-0.5" style={{ backgroundColor: '#3ea2d4' }} />

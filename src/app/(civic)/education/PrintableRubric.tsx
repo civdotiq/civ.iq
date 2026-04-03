@@ -13,7 +13,9 @@
 
 'use client';
 
+import { useRef } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   type AssessmentRubric,
   type GradeLevel,
@@ -33,16 +35,27 @@ const GRADE_LABELS: Record<GradeLevel, string> = {
 };
 
 export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubricProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap({ isActive: true, onClose, containerRef: dialogRef });
+
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="print-rubric-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rubric-title"
+      className="print-rubric-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible"
+    >
       <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none border-2 border-black print:border-0 print:w-full">
         {/* Modal Header - Hidden when printing */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
-          <h2 className="text-lg font-semibold">Print Rubric</h2>
+          <h2 id="rubric-title" className="text-lg font-semibold">
+            Print Rubric
+          </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}

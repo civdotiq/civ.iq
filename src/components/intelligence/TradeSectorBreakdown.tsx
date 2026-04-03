@@ -55,7 +55,11 @@ export function TradeSectorBreakdown({ bioguideId, className = '' }: TradeSector
   const hasOverlap = sectors.some(s => s.overlapsCommittee);
 
   return (
-    <div className={`border-2 border-black bg-white p-4 ${className}`}>
+    <div
+      className={`border-2 border-black bg-white p-4 ${className}`}
+      role="img"
+      aria-label={`Stock trades by sector. ${sectors.length} sectors. ${hasOverlap ? 'Some sectors overlap with committee jurisdictions.' : 'No committee jurisdiction overlaps detected.'}`}
+    >
       <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
         Trades by sector
       </h4>

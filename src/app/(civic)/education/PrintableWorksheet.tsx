@@ -13,7 +13,9 @@
 
 'use client';
 
+import { useRef } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   type Worksheet,
   type WorksheetField,
@@ -33,6 +35,8 @@ const GRADE_LABELS: Record<GradeLevel, string> = {
 };
 
 export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap({ isActive: true, onClose, containerRef: dialogRef });
   const c3Standards = getC3StandardsByLesson(worksheet.lessonId);
 
   const handlePrint = () => {
@@ -43,11 +47,19 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
   const groupedFields = groupFieldsIntoSections(worksheet.fields);
 
   return (
-    <div className="print-worksheet-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="worksheet-title"
+      className="print-worksheet-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible"
+    >
       <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none border-2 border-black print:border-0 print:w-full">
         {/* Modal Header - Hidden when printing */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
-          <h2 className="text-lg font-semibold">Print Worksheet</h2>
+          <h2 id="worksheet-title" className="text-lg font-semibold">
+            Print Worksheet
+          </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}

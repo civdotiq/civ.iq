@@ -8,8 +8,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Info, AlertTriangle, MapPin, ExternalLink, X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface EdgeCaseTooltipProps {
   type: 'territory' | 'dc' | 'at-large' | 'multi-district' | 'low-confidence' | 'unmapped';
@@ -29,6 +30,15 @@ export default function EdgeCaseTooltip({
   className = '',
 }: EdgeCaseTooltipProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap({
+    isActive: showTooltip,
+    onClose: () => setShowTooltip(false),
+    containerRef: tooltipRef,
+    lockScroll: false,
+    autoFocus: false,
+  });
 
   // Configuration for different edge cases
   const edgeCaseConfig = {
@@ -157,7 +167,13 @@ export default function EdgeCaseTooltip({
 
       {/* Tooltip */}
       {showTooltip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 sm:absolute sm:inset-auto sm:bg-transparent sm:p-0">
+        <div
+          ref={tooltipRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={config.title}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 sm:absolute sm:inset-auto sm:bg-transparent sm:p-0"
+        >
           <div
             className={`relative w-full max-w-md bg-white border-2 border-black-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80 shadow-tooltip`}
           >

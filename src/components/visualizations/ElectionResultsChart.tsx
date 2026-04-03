@@ -102,6 +102,8 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
               height="200"
               viewBox="0 0 300 200"
               className="mx-auto min-w-[240px] sm:min-w-0"
+              role="img"
+              aria-label={`${data.chamber === 'house' ? 'House' : 'Senate'} composition: ${data.democrats} Democrats, ${data.republicans} Republicans, ${data.independents} Independents out of ${data.totalSeats} seats`}
             >
               {/* Semicircle segments */}
               {chartData.map(segment => (

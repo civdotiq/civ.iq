@@ -401,6 +401,9 @@ export function GraphCanvas({
         height={dimensions.height}
         className="w-full h-full"
         style={{ touchAction: 'none' }}
+        role="application"
+        aria-roledescription="interactive graph"
+        aria-label={`Civic data graph. ${filteredNodes.length} nodes, ${filteredEdges.length} edges. Click nodes to view details, drag to reposition, scroll to zoom.`}
       />
       {tooltipData && (
         <div

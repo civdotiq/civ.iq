@@ -14,7 +14,8 @@
 
 'use client';
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useRef } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export interface Contributor {
   name: string;
@@ -64,16 +65,9 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
   contributors,
   metadata,
 }) => {
-  // Handle escape key to close modal
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    },
-    [onClose]
-  );
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap({ isActive: isOpen, onClose, containerRef: dialogRef });
 
   // Handle click outside to close
   const handleBackdropClick = useCallback(
@@ -85,38 +79,17 @@ const ContributorsModalComponent: React.FC<ContributorsModalProps> = ({
     [onClose]
   );
 
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-    return undefined;
-  }, [isOpen]);
-
-  // Focus trap - focus modal when opened
-  useEffect(() => {
-    if (isOpen) {
-      const modal = document.getElementById('contributors-modal');
-      modal?.focus();
-    }
-    return undefined;
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="contributors-modal-title"
       aria-describedby="contributors-modal-description"
       className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-12"
       onClick={handleBackdropClick}
-      onKeyDown={handleKeyDown}
     >
       <div
         id="contributors-modal"

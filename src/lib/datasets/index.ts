@@ -17,6 +17,9 @@ import { generateRecentBills } from './generators/recent-bills';
 import { generateRecentVotes, generateVotePositions } from './generators/recent-votes';
 import { generateCampaignFinance } from './generators/campaign-finance';
 import { generateElectionResults2024 } from './generators/election-results-2024';
+import { generateSenateStockTrades } from './generators/senate-stock-trades';
+import { generateLobbyingFilings } from './generators/lobbying-filings';
+import { generateFederalRegisterRules } from './generators/federal-register-rules';
 
 export const DATASET_REGISTRY: DatasetGenerator[] = [
   {
@@ -178,6 +181,78 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Rep %',
     ],
     generate: generateElectionResults2024,
+  },
+  {
+    slug: 'senate-stock-trades',
+    name: 'Senate Stock Trades',
+    description:
+      'STOCK Act periodic transaction reports for U.S. Senators, including ticker, amount range, transaction type, and filing timeliness.',
+    source: 'Senate Stock Watcher / Senate eFD',
+    sourceUrl: 'https://efdsearch.senate.gov',
+    approximateRows: '~3,000',
+    freshness: 'Updated daily',
+    columnLabels: [
+      'Bioguide ID',
+      'Senator Name',
+      'Transaction Date',
+      'Ticker',
+      'Asset Description',
+      'Asset Type',
+      'Transaction Type',
+      'Amount Range',
+      'Owner',
+      'Filing Date',
+      'Days to Disclose',
+      'Late Filing',
+      'Source URL',
+    ],
+    generate: generateSenateStockTrades,
+  },
+  {
+    slug: 'lobbying-filings',
+    name: 'Lobbying Disclosure Filings',
+    description:
+      'Recent lobbying disclosure filings from the Senate LDA database, including registrants, clients, income, and issue areas.',
+    source: 'Senate LDA API',
+    sourceUrl: 'https://lda.senate.gov',
+    approximateRows: '~2,000',
+    freshness: 'Updated daily',
+    columnLabels: [
+      'Filing ID',
+      'Registrant',
+      'Client',
+      'Income',
+      'Expenses',
+      'Filing Period',
+      'Filing Year',
+      'Issue Codes',
+      'Lobbyist Names',
+      'Government Entities',
+    ],
+    generate: generateLobbyingFilings,
+  },
+  {
+    slug: 'federal-register-rules',
+    name: 'Federal Register Rules & Orders',
+    description:
+      'Recent proposed rules, final rules, and presidential documents from the Federal Register.',
+    source: 'Federal Register API',
+    sourceUrl: 'https://www.federalregister.gov',
+    approximateRows: '~100',
+    freshness: 'Updated hourly',
+    columnLabels: [
+      'Document Number',
+      'Title',
+      'Type',
+      'Agencies',
+      'Publication Date',
+      'Effective Date',
+      'Comment Close Date',
+      'Abstract',
+      'HTML URL',
+      'PDF URL',
+    ],
+    generate: generateFederalRegisterRules,
   },
 ];
 

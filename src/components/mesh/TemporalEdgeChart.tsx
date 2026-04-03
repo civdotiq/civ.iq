@@ -58,7 +58,11 @@ export default function TemporalEdgeChart({
   const gap = Math.max(2, Math.floor(barWidth / 3));
 
   return (
-    <div style={{ fontFamily: 'var(--font-braun-linear, sans-serif)' }}>
+    <div
+      style={{ fontFamily: 'var(--font-braun-linear, sans-serif)' }}
+      role="img"
+      aria-label={`${label || 'Temporal trend'} chart. ${buckets.length} periods. Trend: ${trend}.`}
+    >
       {label && (
         <div
           style={{

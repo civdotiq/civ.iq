@@ -174,6 +174,8 @@ export function InfluenceClusterChart({
           onTouchStart={handleTouchStart}
           onTouchEnd={() => setHoveredLegislator(null)}
           className="block touch-none"
+          role="img"
+          aria-label={`Funding influence cluster visualization. ${data.legislatorCount} legislators analyzed across ${data.clusterCount} clusters.`}
         >
           {data.legislators.map(leg => {
             const cx = scaleX(leg.x);

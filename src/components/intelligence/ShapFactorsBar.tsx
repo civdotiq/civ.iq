@@ -25,7 +25,11 @@ export function ShapFactorsBar({ factors, className = '' }: ShapFactorsBarProps)
   const maxImportance = Math.max(...factors.map(f => f.importance));
 
   return (
-    <div className={`mb-4 ${className}`}>
+    <div
+      className={`mb-4 ${className}`}
+      role="img"
+      aria-label={`Vote prediction factors. ${factors.length} factors analyzed.`}
+    >
       <h4 className="aicher-heading type-sm text-gray-900 mb-2">Key factors driving prediction</h4>
       <div className="bg-gray-50 p-3">
         <div className="space-y-2">
