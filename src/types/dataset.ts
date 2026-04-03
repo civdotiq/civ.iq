@@ -46,5 +46,35 @@ export interface DatasetGenerator {
   approximateRows: string;
   freshness: string;
   columnLabels: string[];
+  /** Column key used to identify rows for change detection (e.g. 'bioguideId', 'billNumber') */
+  keyColumn: string;
   generate: () => Promise<DatasetResult | null>;
+}
+
+/** A single change detected between two versions of a dataset */
+export interface DatasetDiffEntry {
+  /** Which dataset changed */
+  dataset: string;
+  /** Type of change */
+  type: 'added' | 'modified' | 'removed';
+  /** The key value identifying the changed row */
+  key: string;
+  /** ISO timestamp when the change was detected */
+  detectedAt: string;
+  /** For modified rows: which fields changed (field → [old, new]) */
+  changes?: Record<string, [unknown, unknown]>;
+  /** Summary of the change in human-readable form */
+  summary: string;
+}
+
+/** Stored diff result for a dataset regeneration */
+export interface DatasetDiffResult {
+  dataset: string;
+  generatedAt: string;
+  entries: DatasetDiffEntry[];
+  stats: {
+    added: number;
+    modified: number;
+    removed: number;
+  };
 }

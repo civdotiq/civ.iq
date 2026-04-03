@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Users, Info } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { getCommitteeName, COMMITTEE_INFO } from '@/lib/data/committee-names';
+import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 
 interface CommitteeEntry {
   name: string;
@@ -144,25 +145,34 @@ export function CommitteeMembershipsCard({
   const { parentCommittees, orphanSubcommittees } = hierarchicalCommittees;
   const hasCommittees = parentCommittees.length > 0 || orphanSubcommittees.length > 0;
 
+  // Map role labels to glossary terms for contextual definitions
+  const ROLE_GLOSSARY_TERMS: Record<string, string> = {
+    Chair: 'Committee Chair',
+    'Ranking Member': 'Ranking Member',
+  };
+
   // Helper to render role badges
   const renderRoles = (roles: string[]) => {
     if (roles.length === 0) return null;
     return (
       <div className="flex flex-wrap gap-2 mt-2">
-        {roles.map((role: string, roleIndex: number) => (
-          <span
-            key={roleIndex}
-            className={`aicher-heading text-xs px-3 py-1.5 border-2 ${
-              role === 'Chair'
-                ? 'bg-civiq-blue text-white border-civiq-blue'
-                : role === 'Ranking Member'
-                  ? 'bg-civiq-red text-white border-civiq-red'
-                  : 'bg-white text-gray-700 border-black'
-            }`}
-          >
-            {role}
-          </span>
-        ))}
+        {roles.map((role: string, roleIndex: number) => {
+          const glossaryTerm = ROLE_GLOSSARY_TERMS[role];
+          return (
+            <span
+              key={roleIndex}
+              className={`aicher-heading text-xs px-3 py-1.5 border-2 ${
+                role === 'Chair'
+                  ? 'bg-civiq-blue text-white border-civiq-blue'
+                  : role === 'Ranking Member'
+                    ? 'bg-civiq-red text-white border-civiq-red'
+                    : 'bg-white text-gray-700 border-black'
+              }`}
+            >
+              {glossaryTerm ? <GlossaryLink term={glossaryTerm}>{role}</GlossaryLink> : role}
+            </span>
+          );
+        })}
       </div>
     );
   };

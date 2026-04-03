@@ -19,6 +19,7 @@ import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { CommitteeFooter } from '@/components/seo/CommitteeFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -226,7 +227,9 @@ async function CommitteeContent({
                 <MapPin className="w-5 h-5 mr-2" />
                 <span className="font-medium">{committee.chamber}</span>
                 <span className="mx-2">•</span>
-                <span>{committee.type} Committee</span>
+                <GlossaryLink term={`${committee.type} Committee`}>
+                  {committee.type} Committee
+                </GlossaryLink>
               </div>
               <p className="text-gray-700 leading-relaxed">{committee.jurisdiction}</p>
             </div>
@@ -280,7 +283,7 @@ async function CommitteeContent({
             <div className="bg-white border-2 border-black p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                Chairperson
+                <GlossaryLink term="Committee Chair">Chairperson</GlossaryLink>
               </h2>
               <div className="flex items-center space-x-4">
                 <RepresentativePhoto
@@ -313,7 +316,7 @@ async function CommitteeContent({
             <div className="bg-white border-2 border-black p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                Ranking Member
+                <GlossaryLink term="Ranking Member">Ranking Member</GlossaryLink>
               </h2>
               <div className="flex items-center space-x-4">
                 <RepresentativePhoto
@@ -350,7 +353,8 @@ async function CommitteeContent({
         {committee.subcommittees.length > 0 && (
           <div className="bg-white border-2 border-black p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Subcommittees ({committee.subcommittees.length})
+              <GlossaryLink term="Subcommittee">Subcommittees</GlossaryLink> (
+              {committee.subcommittees.length})
             </h2>
 
             <div className="grid gap-4">

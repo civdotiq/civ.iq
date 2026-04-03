@@ -46,6 +46,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Term Start',
       'Term End',
     ],
+    keyColumn: 'bioguideId',
     generate: generateCongressMembers,
   },
   {
@@ -66,6 +67,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Committee Role',
       'Rank',
     ],
+    keyColumn: 'committeeId',
     generate: generateCommittees,
   },
   {
@@ -87,6 +89,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Latest Action Date',
       'Latest Action',
     ],
+    keyColumn: 'billNumber',
     generate: generateRecentBills,
   },
   {
@@ -111,6 +114,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Bill Number',
       'Bill Title',
     ],
+    keyColumn: 'voteId',
     generate: generateRecentVotes,
   },
   {
@@ -132,6 +136,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Position',
       'Vote Question',
     ],
+    keyColumn: 'voteId',
     generate: generateVotePositions,
   },
   {
@@ -157,6 +162,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Individual Contributions',
       'PAC Contributions',
     ],
+    keyColumn: 'bioguideId',
     generate: generateCampaignFinance,
   },
   {
@@ -180,6 +186,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Dem %',
       'Rep %',
     ],
+    keyColumn: 'districtId',
     generate: generateElectionResults2024,
   },
   {
@@ -206,6 +213,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Late Filing',
       'Source URL',
     ],
+    keyColumn: 'bioguideId',
     generate: generateSenateStockTrades,
   },
   {
@@ -229,6 +237,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Lobbyist Names',
       'Government Entities',
     ],
+    keyColumn: 'filingId',
     generate: generateLobbyingFilings,
   },
   {
@@ -252,6 +261,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'HTML URL',
       'PDF URL',
     ],
+    keyColumn: 'documentNumber',
     generate: generateFederalRegisterRules,
   },
 ];

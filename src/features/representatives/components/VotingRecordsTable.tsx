@@ -14,6 +14,7 @@ import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
 import logger from '@/lib/logging/simple-logger';
+import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 
 // Using simple Unicode arrows instead of heroicons (unused but available for future use)
 const _ChevronDownIcon = () => <span>▼</span>;
@@ -183,7 +184,9 @@ const VotesList = memo(
 
                         {vote.rollNumber && vote.rollNumber > 0 && (
                           <p className="leading-relaxed">
-                            <span className="font-medium text-gray-900">Roll Call:</span>{' '}
+                            <span className="font-medium text-gray-900">
+                              <GlossaryLink term="Roll Call Vote">Roll Call</GlossaryLink>:
+                            </span>{' '}
                             <span className="font-mono text-sm bg-gray-100 px-2 py-1">
                               {vote.chamber} Roll #{vote.rollNumber}
                             </span>

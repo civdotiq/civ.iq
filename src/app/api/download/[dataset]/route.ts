@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatasetBySlug, DATASET_REGISTRY } from '@/lib/datasets';
 import { formatDataset, getContentType } from '@/lib/datasets/format';
+import { regenerateWithDiff } from '@/lib/datasets/regenerate-with-diff';
 import type { FormatType } from '@/types/dataset';
 import logger from '@/lib/logging/simple-logger';
 
@@ -44,7 +45,7 @@ export async function GET(
   }
 
   try {
-    const result = await generator.generate();
+    const result = await regenerateWithDiff(generator);
 
     // Some datasets (campaign-finance) are pre-generated via cron.
     // Return 202 if the data isn't ready yet.
