@@ -164,18 +164,14 @@ export default function FederalPage() {
           15 sections &middot; 7 data sources
         </p>
 
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 items-start">
           {categories.map(cat => (
-            <div
-              key={cat.label}
-              className="border-l-[3px] border-black dark:border-gray-400 pl-5 py-1"
-            >
-              <h2 className="text-lg font-bold mb-1">{cat.title}</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">{cat.description}</p>
-              <ul className="space-y-2.5">
+            <div key={cat.label} className="border-l-[3px] border-black dark:border-gray-400 pl-5">
+              <h2 className="text-lg font-bold mb-3">{cat.title}</h2>
+              <ul className="space-y-3">
                 {cat.links.map(link => (
                   <li key={link.href}>
-                    <Link href={link.href} className="group block py-0.5 transition-colors">
+                    <Link href={link.href} className="group block transition-colors">
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-civiq-blue group-hover:underline">
                         {link.name}
                       </span>
