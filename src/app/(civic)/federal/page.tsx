@@ -96,32 +96,38 @@ export default function FederalPage() {
         </nav>
 
         <h1 className="text-3xl font-bold mb-2">Federal government</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
+        <p className="text-gray-600 dark:text-gray-400 mb-1">
           Data from official government sources covering the 119th Congress, federal agencies, and
-          elections. Browse by category or use the Federal dropdown in the navigation above.
+          elections.
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mb-8">
+          15 sections &middot; 7 data sources
         </p>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-5">
           {categories.map(cat => (
-            <div key={cat.label} className="border-2 border-black dark:border-gray-600 p-6">
-              <p className="aicher-heading-wide text-xs text-gray-500 dark:text-gray-400 mb-2 tracking-wider uppercase">
-                {cat.label}
-              </p>
-              <h2 className="text-xl font-bold mb-2">{cat.title}</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{cat.description}</p>
-              <ul className="space-y-1.5">
+            <div
+              key={cat.label}
+              className="border-l-[3px] border-black dark:border-gray-400 pl-5 py-1"
+            >
+              <h2 className="text-lg font-bold mb-1">{cat.title}</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">{cat.description}</p>
+              <ul className="space-y-0.5">
                 {cat.links.map(link => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-700 dark:text-gray-300 hover:text-civiq-blue transition-colors"
+                      className="group inline-flex items-center gap-1.5 py-1 text-sm text-gray-800 dark:text-gray-200 hover:text-civiq-blue transition-colors"
                     >
-                      {link.name} &rarr;
+                      <span className="group-hover:underline">{link.name}</span>
+                      <span className="text-gray-300 dark:text-gray-600 group-hover:text-civiq-blue transition-colors">
+                        &rarr;
+                      </span>
                     </Link>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <p className="mt-3 text-[10px] uppercase tracking-wider text-gray-300 dark:text-gray-600">
                 {cat.sources}
               </p>
             </div>
@@ -129,15 +135,10 @@ export default function FederalPage() {
         </div>
 
         {/* Data sources */}
-        <div className="mt-8 border-t-2 border-black dark:border-gray-600 pt-4">
-          <p className="text-xs aicher-heading-wide text-gray-500 dark:text-gray-400 tracking-wider mb-2 uppercase">
-            Data sources
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Congress.gov API, Federal Register API, FEC.gov API, USASpending.gov API, Census Bureau,
-            Senate Lobbying Disclosure Act filings, MIT Election Data and Science Lab (MEDSL).
-          </p>
-        </div>
+        <p className="mt-10 text-xs text-gray-400 dark:text-gray-500">
+          Sources: Congress.gov, Federal Register, FEC.gov, USASpending.gov, Census Bureau, Senate
+          LDA, MEDSL/Harvard Dataverse.
+        </p>
       </div>
     </>
   );
