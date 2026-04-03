@@ -14,8 +14,15 @@ interface NavigationItem {
   href: string;
 }
 
+interface NavItemGroup {
+  label: string;
+  items: NavigationItem[];
+}
+
 interface NavSection {
   name: string;
+  href?: string;
+  groups?: NavItemGroup[];
   items: NavigationItem[];
 }
 
@@ -128,25 +135,62 @@ export function MobileNav({
                       className="pl-4 border-l-2 border-gray-200 ml-4 mt-1 mb-2"
                       role="list"
                     >
-                      {section.items.map(item => {
-                        const isActive = currentPath === item.href;
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            role="listitem"
-                            aria-current={isActive ? 'page' : undefined}
-                            className={`block py-2 px-4 text-sm transition-all duration-200 ${
-                              isActive
-                                ? 'text-[#3ea2d4] font-medium'
-                                : 'text-gray-600 hover:text-[#3ea2d4]'
-                            }`}
-                            onClick={onClose}
-                          >
-                            {item.name}
-                          </Link>
-                        );
-                      })}
+                      {section.href && (
+                        <Link
+                          href={section.href}
+                          role="listitem"
+                          className="block py-2 px-4 text-sm font-medium text-[#3ea2d4] transition-all duration-200"
+                          onClick={onClose}
+                        >
+                          {section.name} overview
+                        </Link>
+                      )}
+                      {section.groups
+                        ? section.groups.map(group => (
+                            <div key={group.label}>
+                              <span className="block pt-3 pb-1 px-4 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                {group.label}
+                              </span>
+                              {group.items.map(item => {
+                                const isActive = currentPath === item.href;
+                                return (
+                                  <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    role="listitem"
+                                    aria-current={isActive ? 'page' : undefined}
+                                    className={`block py-2 px-4 text-sm transition-all duration-200 ${
+                                      isActive
+                                        ? 'text-[#3ea2d4] font-medium'
+                                        : 'text-gray-600 hover:text-[#3ea2d4]'
+                                    }`}
+                                    onClick={onClose}
+                                  >
+                                    {item.name}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          ))
+                        : section.items.map(item => {
+                            const isActive = currentPath === item.href;
+                            return (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                role="listitem"
+                                aria-current={isActive ? 'page' : undefined}
+                                className={`block py-2 px-4 text-sm transition-all duration-200 ${
+                                  isActive
+                                    ? 'text-[#3ea2d4] font-medium'
+                                    : 'text-gray-600 hover:text-[#3ea2d4]'
+                                }`}
+                                onClick={onClose}
+                              >
+                                {item.name}
+                              </Link>
+                            );
+                          })}
                     </div>
                   )}
                 </div>

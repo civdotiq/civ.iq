@@ -23,32 +23,64 @@ interface NavDropdownItem {
   href: string;
 }
 
-interface NavSection {
-  name: string;
+interface NavItemGroup {
+  label: string;
   items: NavDropdownItem[];
 }
 
-// Navigation structure organized by government level
-const navigationSections: NavSection[] = [
+interface NavSection {
+  name: string;
+  href?: string;
+  groups?: NavItemGroup[];
+  items: NavDropdownItem[];
+}
+
+// Federal navigation organized by category
+const federalGroups: NavItemGroup[] = [
   {
-    name: 'Federal',
+    label: 'People & Institutions',
     items: [
       { name: 'Representatives', href: '/representatives' },
       { name: 'Congress', href: '/congress' },
       { name: 'Districts', href: '/districts' },
       { name: 'Committees', href: '/committees' },
+    ],
+  },
+  {
+    label: 'Legislation & Policy',
+    items: [
       { name: 'Legislation', href: '/legislation' },
-      { name: 'Spending', href: '/spending' },
       { name: 'Regulations', href: '/regulations' },
       { name: 'Executive Orders', href: '/executive-orders' },
       { name: 'Comment Periods', href: '/comment-periods' },
+    ],
+  },
+  {
+    label: 'Money & Influence',
+    items: [
+      { name: 'Spending', href: '/spending' },
       { name: 'Influence', href: '/influence' },
       { name: 'Industries', href: '/industry' },
-      { name: 'Your Reps', href: '/your-reps' },
       { name: 'Money Report', href: '/your-reps/money-report' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { name: 'Your Reps', href: '/your-reps' },
       { name: 'Connections', href: '/investigate' },
       { name: 'Elections', href: '/elections/federal' },
     ],
+  },
+];
+
+// Navigation structure organized by government level
+const navigationSections: NavSection[] = [
+  {
+    name: 'Federal',
+    href: '/federal',
+    groups: federalGroups,
+    items: federalGroups.flatMap(g => g.items),
   },
   {
     name: 'State',
@@ -110,9 +142,23 @@ function NavDropdown({
     timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
   };
 
-  const handleClick = () => {
-    setIsOpen(!isOpen);
-  };
+  const triggerClasses = `aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
+    isActive
+      ? 'text-civiq-blue after:w-full'
+      : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
+  }`;
+
+  const chevron = (
+    <svg
+      className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
 
   return (
     <div
@@ -122,28 +168,30 @@ function NavDropdown({
       onMouseLeave={handleMouseLeave}
       onKeyDown={handleKeyDown}
     >
-      <button
-        onClick={handleClick}
-        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
-          isActive
-            ? 'text-civiq-blue after:w-full'
-            : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
-        }`}
-        aria-expanded={isOpen}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-      >
-        {section.name}
-        <svg
-          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
+      {/* Section trigger: Link when href exists, button otherwise */}
+      {section.href ? (
+        <Link
+          href={section.href}
+          className={triggerClasses}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-controls={menuId}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+          {section.name}
+          {chevron}
+        </Link>
+      ) : (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={triggerClasses}
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+        >
+          {section.name}
+          {chevron}
+        </button>
+      )}
 
       {/* Dropdown menu */}
       {isOpen && (
@@ -151,29 +199,83 @@ function NavDropdown({
           id={menuId}
           role="menu"
           aria-label={`${section.name} navigation`}
-          className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] z-50"
+          className={`absolute top-full left-0 mt-1 bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] z-50 ${
+            section.groups ? 'w-[400px]' : 'min-w-[180px]'
+          }`}
         >
-          <div className="py-2">
-            {section.items.map(item => {
-              const isCurrentPage = currentPath === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  role="menuitem"
-                  aria-current={isCurrentPage ? 'page' : undefined}
-                  className={`block px-4 py-2 text-sm transition-colors ${
-                    isCurrentPage
-                      ? 'bg-gray-100 dark:bg-[#2a2a2e] text-civiq-blue font-medium'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-civiq-blue'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              );
-            })}
-          </div>
+          {section.groups ? (
+            /* Grouped 2-column layout */
+            <>
+              <div className="grid grid-cols-2">
+                {section.groups.map((group, groupIdx) => (
+                  <div
+                    key={group.label}
+                    className={`py-3 ${
+                      groupIdx >= 2 ? 'border-t border-gray-200 dark:border-gray-700' : ''
+                    } ${groupIdx % 2 === 0 ? 'border-r border-gray-200 dark:border-gray-700' : ''}`}
+                  >
+                    <span className="block px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                      {group.label}
+                    </span>
+                    {group.items.map(item => {
+                      const isCurrentPage = currentPath === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          role="menuitem"
+                          aria-current={isCurrentPage ? 'page' : undefined}
+                          className={`block px-4 py-1.5 text-sm transition-colors ${
+                            isCurrentPage
+                              ? 'text-civiq-blue font-medium'
+                              : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
+                          }`}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              {section.href && (
+                <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2.5">
+                  <Link
+                    href={section.href}
+                    role="menuitem"
+                    className="text-sm text-civiq-blue hover:underline"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    View all federal pages &rarr;
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Flat list (State, Local) */
+            <div className="py-2">
+              {section.items.map(item => {
+                const isCurrentPage = currentPath === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    role="menuitem"
+                    aria-current={isCurrentPage ? 'page' : undefined}
+                    className={`block px-4 py-2 text-sm transition-colors ${
+                      isCurrentPage
+                        ? 'bg-gray-100 dark:bg-[#2a2a2e] text-civiq-blue font-medium'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-civiq-blue'
+                    }`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -205,7 +307,9 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
           <nav className="hidden md:flex items-center gap-4 lg:gap-6" aria-label="Main navigation">
             {/* Dropdown sections: Federal, State, Local */}
             {navigationSections.map(section => {
-              const isActive = section.items.some(item => pathname.startsWith(item.href));
+              const isActive =
+                section.items.some(item => pathname.startsWith(item.href)) ||
+                (section.href != null && pathname.startsWith(section.href));
               return (
                 <NavDropdown
                   key={section.name}
