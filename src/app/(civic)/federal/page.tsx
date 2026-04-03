@@ -29,10 +29,26 @@ const categories = [
     title: 'People & institutions',
     description: 'Members of Congress, committees, and the districts they represent.',
     links: [
-      { name: 'Representatives', href: '/representatives' },
-      { name: 'Congress', href: '/congress' },
-      { name: 'Districts', href: '/districts' },
-      { name: 'Committees', href: '/committees' },
+      {
+        name: 'Representatives',
+        href: '/representatives',
+        detail: 'Browse and compare all 535 members of the House and Senate',
+      },
+      {
+        name: 'Congress',
+        href: '/congress',
+        detail: 'Overview of the 119th Congress with party breakdown and demographics',
+      },
+      {
+        name: 'Districts',
+        href: '/districts',
+        detail: 'Congressional district profiles with demographics and spending data',
+      },
+      {
+        name: 'Committees',
+        href: '/committees',
+        detail: 'Standing, select, and joint committees with membership rosters',
+      },
     ],
     sources: 'Congress.gov, Census Bureau',
   },
@@ -42,10 +58,26 @@ const categories = [
     description:
       'Bills, regulations, executive orders, and open comment periods from the Federal Register.',
     links: [
-      { name: 'Legislation', href: '/legislation' },
-      { name: 'Regulations', href: '/regulations' },
-      { name: 'Executive Orders', href: '/executive-orders' },
-      { name: 'Comment Periods', href: '/comment-periods' },
+      {
+        name: 'Legislation',
+        href: '/legislation',
+        detail: 'Recent bills with sponsors, cosponsors, and legislative status',
+      },
+      {
+        name: 'Regulations',
+        href: '/regulations',
+        detail: 'Proposed and final rules from the Federal Register',
+      },
+      {
+        name: 'Executive Orders',
+        href: '/executive-orders',
+        detail: 'Presidential executive orders with full text and context',
+      },
+      {
+        name: 'Comment Periods',
+        href: '/comment-periods',
+        detail: 'Open public comment periods on proposed federal rules',
+      },
     ],
     sources: 'Congress.gov, Federal Register',
   },
@@ -55,10 +87,26 @@ const categories = [
     description:
       'Federal spending by district, campaign finance, lobbying, and industry influence patterns.',
     links: [
-      { name: 'Spending', href: '/spending' },
-      { name: 'Influence', href: '/influence' },
-      { name: 'Industries', href: '/industry' },
-      { name: 'Money Report', href: '/your-reps/money-report' },
+      {
+        name: 'Spending',
+        href: '/spending',
+        detail: 'Federal contracts and grants flowing to each congressional district',
+      },
+      {
+        name: 'Influence',
+        href: '/influence',
+        detail: 'Lobbying networks and influence paths between organizations and Congress',
+      },
+      {
+        name: 'Industries',
+        href: '/industry',
+        detail: 'Sector-level campaign contributions and lobbying expenditures',
+      },
+      {
+        name: 'Money Report',
+        href: '/your-reps/money-report',
+        detail: 'See who funds your representatives and how they vote',
+      },
     ],
     sources: 'FEC.gov, USASpending.gov, Senate LDA',
   },
@@ -68,9 +116,21 @@ const categories = [
     description:
       'Look up your own representatives, trace connections between people and money, and see election results.',
     links: [
-      { name: 'Your Reps', href: '/your-reps' },
-      { name: 'Connections', href: '/investigate' },
-      { name: 'Elections', href: '/elections/federal' },
+      {
+        name: 'Your Reps',
+        href: '/your-reps',
+        detail: 'Enter your address to find your House member and senators',
+      },
+      {
+        name: 'Connections',
+        href: '/investigate',
+        detail: 'Trace links between donors, lobbyists, committees, and votes',
+      },
+      {
+        name: 'Elections',
+        href: '/elections/federal',
+        detail: '2024 presidential, Senate, and House results by state and district',
+      },
     ],
     sources: 'Census Geocoder, MEDSL/Harvard Dataverse',
   },
@@ -112,16 +172,18 @@ export default function FederalPage() {
             >
               <h2 className="text-lg font-bold mb-1">{cat.title}</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">{cat.description}</p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-2.5">
                 {cat.links.map(link => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="group inline-flex items-center gap-1.5 py-1 text-sm text-gray-800 dark:text-gray-200 hover:text-civiq-blue transition-colors"
-                    >
-                      <span className="group-hover:underline">{link.name}</span>
-                      <span className="text-gray-300 dark:text-gray-600 group-hover:text-civiq-blue transition-colors">
+                    <Link href={link.href} className="group block py-0.5 transition-colors">
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-civiq-blue group-hover:underline">
+                        {link.name}
+                      </span>
+                      <span className="text-gray-300 dark:text-gray-600 group-hover:text-civiq-blue ml-1">
                         &rarr;
+                      </span>
+                      <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        {link.detail}
                       </span>
                     </Link>
                   </li>
