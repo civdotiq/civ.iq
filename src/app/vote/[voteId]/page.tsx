@@ -42,6 +42,7 @@ interface VoteDetail {
   title: string;
   question: string;
   description: string;
+  documentText?: string;
   result: string;
   yeas: number;
   nays: number;
@@ -54,6 +55,7 @@ interface VoteDetail {
     number: string;
     title: string;
     type: string;
+    url?: string;
     summary?: string;
   };
   amendment?: {
@@ -302,6 +304,17 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             </div>
           </div>
 
+          {/* Formal document text — the official procedural description of the measure */}
+          {voteDetail.documentText && !voteDetail.amendment?.purpose && (
+            <div className="bg-gray-50 border-2 border-black p-4 mb-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                About This Measure
+              </h3>
+              <p className="text-gray-800 leading-relaxed">{voteDetail.documentText}</p>
+            </div>
+          )}
+
           {/* Amendment Purpose — what this is actually about */}
           {voteDetail.amendment?.purpose && (
             <div className="bg-gray-50 border-2 border-black p-4 mb-4">
@@ -310,6 +323,12 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 What This Amendment Does
               </h3>
               <p className="text-gray-800 leading-relaxed">{voteDetail.amendment.purpose}</p>
+              {voteDetail.documentText &&
+                voteDetail.documentText !== voteDetail.amendment.purpose && (
+                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                    {voteDetail.documentText}
+                  </p>
+                )}
               {voteDetail.amendment.number && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <a
@@ -417,13 +436,26 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                   <p className="text-sm text-gray-700 leading-relaxed">{voteDetail.bill.summary}</p>
                 </div>
               )}
-              <Link
-                href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase().replace(/\./g, '') || (voteDetail.chamber === 'House' ? 'hr' : 's')}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
-                className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue transition-colors text-sm font-medium"
-              >
-                <FileText className="h-4 w-4" />
-                View Full Bill Details →
-              </Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase().replace(/\./g, '') || (voteDetail.chamber === 'House' ? 'hr' : 's')}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
+                  className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
+                >
+                  <FileText className="h-4 w-4" />
+                  View Full Bill Details →
+                </Link>
+                {voteDetail.bill.url && (
+                  <a
+                    href={voteDetail.bill.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 border-2 border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-civiq-blue hover:text-civiq-blue transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Congress.gov
+                  </a>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-2">
                 See sponsors, cosponsors, summary, and legislative timeline
               </p>

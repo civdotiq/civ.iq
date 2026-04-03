@@ -21,6 +21,8 @@ export interface UnifiedVoteDetail {
   title: string;
   question: string;
   description: string;
+  /** Formal procedural text describing the measure (from Senate XML vote_document_text) */
+  documentText?: string;
   result: string;
   chamber: 'House' | 'Senate';
   yeas: number;
@@ -441,6 +443,7 @@ async function parseSenateVote(voteId: string): Promise<UnifiedVoteDetail | null
       title: String(rcv.vote_title || rcv.question || 'Senate Vote'),
       question: String(rcv.question || rcv.vote_title || ''),
       description: String(rcv.vote_description || rcv.question || ''),
+      documentText: rcv.vote_document_text ? String(rcv.vote_document_text) : undefined,
       result: String(rcv.vote_result || 'Unknown'),
       chamber: 'Senate',
       yeas,
@@ -477,14 +480,78 @@ async function parseSenateVote(voteId: string): Promise<UnifiedVoteDetail | null
 }
 
 /**
+ * Enrich a vote's bill data with title and CRS summary from Congress.gov API.
+ * Non-fatal — returns the vote unchanged if enrichment fails.
+ */
+async function enrichBillData(vote: UnifiedVoteDetail): Promise<UnifiedVoteDetail> {
+  if (!vote.bill?.number) return vote;
+
+  try {
+    const apiKey = process.env.CONGRESS_API_KEY;
+    if (!apiKey) return vote;
+
+    // Parse bill type and number from the document name (e.g., "H.R. 1234" or "S. 567")
+    const match = vote.bill.number.match(
+      /^(H\.?\s*R\.?|S\.?|H\.?\s*Con\.?\s*Res\.?|S\.?\s*Con\.?\s*Res\.?|H\.?\s*J\.?\s*Res\.?|S\.?\s*J\.?\s*Res\.?|H\.?\s*Res\.?|S\.?\s*Res\.?)\s*(\d+)$/i
+    );
+    if (!match) return vote;
+
+    const typeSlug = match[1]!.replace(/[\s.]/g, '').toLowerCase();
+    const billNumber = match[2]!;
+    const apiUrl = `https://api.congress.gov/v3/bill/${vote.congress}/${typeSlug}/${billNumber}`;
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
+        'X-API-Key': apiKey,
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) return vote;
+
+    const data = await response.json();
+    const title = data.bill?.title || vote.bill.title;
+    const url = data.bill?.url || undefined;
+
+    let summary: string | undefined;
+    if (data.bill?.summaries && Array.isArray(data.bill.summaries)) {
+      const latest = data.bill.summaries[0];
+      if (latest?.text) {
+        summary = latest.text.replace(/<[^>]*>/g, '').trim();
+      }
+    }
+
+    return {
+      ...vote,
+      bill: {
+        ...vote.bill,
+        title: title || vote.bill.title,
+        url,
+        summary,
+      },
+    };
+  } catch {
+    return vote;
+  }
+}
+
+/**
  * Get vote details - main entry point
  * Used by both API routes and server components
  */
 export async function getVoteDetailsService(voteId: string): Promise<UnifiedVoteDetail | null> {
   const parsed = parseVoteId(voteId);
 
+  let vote: UnifiedVoteDetail | null;
   if (parsed.chamber === 'House') {
-    return parseHouseVote(voteId, parsed.congress, parsed.rollNumber);
+    vote = await parseHouseVote(voteId, parsed.congress, parsed.rollNumber);
+  } else {
+    vote = await parseSenateVote(parsed.numericId);
   }
-  return parseSenateVote(parsed.numericId);
+
+  if (!vote) return null;
+
+  // Enrich with bill title + CRS summary from Congress.gov
+  return enrichBillData(vote);
 }

@@ -290,8 +290,8 @@ const VotesList = memo(
                           </div>
                         )}
 
-                        <div className="border-t border-gray-200 pt-2 mt-2">
-                          <p className="text-xs text-gray-500">
+                        <div className="border-t border-gray-200 pt-3 mt-2 flex items-center justify-between">
+                          <p className="text-xs text-gray-500 flex-1">
                             <strong>What this means:</strong> This vote determines the official
                             position of Congress members on the proposed legislation.
                             {vote.result.toLowerCase().includes('passed') ||
@@ -299,6 +299,13 @@ const VotesList = memo(
                               ? ' The measure was approved and moves forward in the legislative process.'
                               : ' The measure did not receive sufficient support to advance.'}
                           </p>
+                          <Link
+                            href={`/vote/${vote.voteId}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
+                            className="ml-4 inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border-2 border-black text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            Full vote details →
+                          </Link>
                         </div>
                       </div>
                     </div>
