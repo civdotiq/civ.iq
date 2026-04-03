@@ -15,6 +15,7 @@ import {
 import { ElectionSummary } from '@/components/elections/ElectionSummary';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import type { RaceResultFull } from '@/types/elections';
+import { ELECTION_2024_METADATA } from '@/data/election-results-metadata';
 
 type StateTab = 'governor' | 'state-leg';
 type Chamber = '' | 'upper' | 'lower';
@@ -289,6 +290,25 @@ export default function StateElectionsPage() {
           </div>
         )}
 
+        {/* Missing state notice */}
+        {stateFilter &&
+          ELECTION_2024_METADATA.missingStates.includes(stateFilter) &&
+          (activeTab !== 'governor' || year === '2024') &&
+          !loading && (
+            <div className="border-2 border-gray-300 dark:border-gray-600 p-8 text-center mb-6">
+              <p className="text-gray-600 dark:text-gray-300 font-medium mb-2">
+                {US_STATES.find(s => s.code === stateFilter)?.name || stateFilter} is not yet
+                covered in this dataset.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                The MIT Election Data and Science Lab (MEDSL) 2024 dataset covers 46 of 51
+                jurisdictions. {US_STATES.find(s => s.code === stateFilter)?.name || stateFilter} is
+                among 5 states not yet included (AZ, CA, MS, NY, OR). Results will be added when the
+                source data is updated.
+              </p>
+            </div>
+          )}
+
         {/* Results */}
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-gray-500">
@@ -302,7 +322,12 @@ export default function StateElectionsPage() {
             <p className="text-amber-800 dark:text-amber-200">{error}</p>
           </div>
         ) : (
-          (activeTab !== 'state-leg' || stateFilter) && (
+          (activeTab !== 'state-leg' || stateFilter) &&
+          !(
+            stateFilter &&
+            ELECTION_2024_METADATA.missingStates.includes(stateFilter) &&
+            (activeTab !== 'governor' || year === '2024')
+          ) && (
             <>
               <ElectionSummary results={results} raceLabel={raceLabels[activeTab]} />
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">

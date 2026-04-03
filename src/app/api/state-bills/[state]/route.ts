@@ -157,6 +157,7 @@ async function fetchStateBills(
     const perPage = Math.min(options.perPage || 20, 20);
     url.searchParams.set('per_page', perPage.toString());
     url.searchParams.set('page', (options.page || 1).toString());
+    url.searchParams.set('include', 'sponsorships');
 
     if (options.chamber) {
       url.searchParams.set('chamber', options.chamber);
@@ -275,7 +276,7 @@ function transformBill(bill: unknown, stateAbbrev: string): StateBill {
     billNumber: (billData.identifier as string) || 'Unknown',
     title: (billData.title as string) || 'No title available',
     summary: (billData.abstract as string) || (billData.title as string) || 'No summary available',
-    chamber: fromOrganization?.chamber === 'upper' ? 'upper' : 'lower',
+    chamber: fromOrganization?.classification === 'upper' ? 'upper' : 'lower',
     status: mapStatus(
       (billData.classification as string[]) || [],
       billData.latest_action_description as string | undefined
