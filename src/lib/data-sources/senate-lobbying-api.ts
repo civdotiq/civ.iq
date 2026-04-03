@@ -240,7 +240,10 @@ export class SenateLobbyingAPI {
     orgName: string,
     options?: { maxPages?: number }
   ): Promise<RawLDAFiling[]> {
-    const maxPages = options?.maxPages ?? 3;
+    // Senate LDA API returns 25 results per page (ignoring page_size).
+    // Default to 10 pages (250 filings) to cover most organizations fully.
+    // Results are sorted oldest-first, so low page limits miss recent filings.
+    const maxPages = options?.maxPages ?? 10;
     const cacheKey = `lobbying-org:${orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
     try {

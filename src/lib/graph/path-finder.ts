@@ -13,7 +13,14 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { hydrateNeighborhood } from './hydrator';
-import type { GraphNode, GraphEdge, GraphPath, PathResult, GraphEdgeType } from '@/types/graph';
+import type {
+  GraphNeighborhood,
+  GraphNode,
+  GraphEdge,
+  GraphPath,
+  PathResult,
+  GraphEdgeType,
+} from '@/types/graph';
 
 const DEFAULT_MAX_DEPTH = 3;
 const ABSOLUTE_MAX_DEPTH = 4;
@@ -43,8 +50,9 @@ export async function findPaths(
   const paths: GraphPath[] = [];
   let shortestLength = Infinity;
 
-  // BFS queue
-  const queue: BFSState[] = [];
+  // In-memory neighborhood cache — avoids re-hydrating nodes within a single
+  // search (the source node is hydrated first and reused in the BFS loop).
+  const nbrCache = new Map<string, GraphNeighborhood | null>();
 
   // Fetch source neighborhood
   const sourceNbr = await hydrateNeighborhood(fromId);
@@ -52,22 +60,36 @@ export async function findPaths(
     logger.warn('[Graph:PathFinder] Source node not found', { fromId });
     return { paths: [], shortestLength: 0 };
   }
+  nbrCache.set(fromId, sourceNbr);
 
-  queue.push({
-    nodeId: fromId,
-    path: [{ node: sourceNbr.center, edge: null }],
-    visited: new Set([fromId]),
-  });
+  // BFS queue
+  const queue: BFSState[] = [
+    {
+      nodeId: fromId,
+      path: [{ node: sourceNbr.center, edge: null }],
+      visited: new Set([fromId]),
+    },
+  ];
 
   while (queue.length > 0 && paths.length < MAX_PATHS) {
     const current = queue.shift();
     if (!current) break;
 
+    const currentDepth = current.path.length - 1;
+
+    // Early termination: once we've found paths at depth D,
+    // skip nodes at depth >= D (they can only produce longer paths).
+    if (currentDepth >= shortestLength) continue;
+
     // Don't go deeper than maxDepth
     if (current.path.length > maxDepth + 1) continue;
 
-    // Hydrate current node's neighborhood
-    const nbr = await hydrateNeighborhood(current.nodeId);
+    // Hydrate current node's neighborhood (from cache or fresh)
+    let nbr = nbrCache.get(current.nodeId);
+    if (nbr === undefined) {
+      nbr = await hydrateNeighborhood(current.nodeId);
+      nbrCache.set(current.nodeId, nbr);
+    }
     if (!nbr) continue;
 
     // Check each edge for target or next hop
@@ -95,8 +117,9 @@ export async function findPaths(
         continue;
       }
 
-      // Continue searching if within depth limit
-      if (newPath.length <= maxDepth) {
+      // Only enqueue if within depth limit and could produce shorter paths
+      const nextDepth = newPath.length - 1;
+      if (newPath.length <= maxDepth && nextDepth < shortestLength) {
         const newVisited = new Set(current.visited);
         newVisited.add(nextNodeId);
         queue.push({

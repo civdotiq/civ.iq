@@ -127,7 +127,7 @@ export function InfluencePathSection() {
 
         if (!res.ok) {
           setError(
-            'No connection data found. The organization may not have lobbying filings or contributions on record.'
+            'Something went wrong tracing connections. The data sources may be temporarily unavailable — please try again.'
           );
           return;
         }
@@ -135,7 +135,9 @@ export function InfluencePathSection() {
         const data: InfluenceScore = await res.json();
         setResult(data);
       } catch {
-        setError('Could not trace connections. Please try again later.');
+        setError(
+          'Connection timed out. The data sources may be slow — please try again in a moment.'
+        );
       } finally {
         setLoading(false);
       }
