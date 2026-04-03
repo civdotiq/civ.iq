@@ -275,6 +275,18 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 Congress
               </p>
             </div>
+            {/* Amendment context link */}
+            {voteDetail.amendment?.number && (
+              <a
+                href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-civiq-blue hover:underline self-start"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                View on Congress.gov
+              </a>
+            )}
             <div className="sm:text-right">
               <div
                 className={`text-2xl font-bold ${
@@ -289,6 +301,35 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               <div className="text-sm text-gray-500">Roll Call #{voteDetail.rollNumber}</div>
             </div>
           </div>
+
+          {/* Amendment Purpose — what this is actually about */}
+          {voteDetail.amendment?.purpose && (
+            <div className="bg-gray-50 border-2 border-black p-4 mb-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                What This Amendment Does
+              </h3>
+              <p className="text-gray-800 leading-relaxed">{voteDetail.amendment.purpose}</p>
+              {voteDetail.amendment.number && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <a
+                    href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-civiq-blue text-white px-3 py-1.5 text-sm font-medium hover:bg-civiq-blue/90 transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Read Full Amendment Text
+                  </a>
+                  {voteDetail.bill?.number && (
+                    <span className="text-sm text-gray-500">
+                      Amends {voteDetail.bill.type || ''} {voteDetail.bill.number}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* What This Vote Means */}
           <div className="bg-civiq-blue/10 border-l-4 border-civiq-blue p-4 mb-4">
