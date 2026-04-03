@@ -1,0 +1,63 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf .)",
+      "Bash(git push --force origin main)",
+      "Bash(git push --force origin master)",
+      "Bash(git push -f origin main)",
+      "Bash(git push -f origin master)",
+      "Bash(git reset --hard)",
+      "Bash(git clean -fd)",
+      "Bash(git branch -D main)",
+      "Bash(git branch -D master)",
+      "Bash(git add .env*)",
+      "Bash(git add *credentials*)",
+      "Bash(git add *secret*)",
+      "Bash(npm publish)",
+      "Bash(npx npm publish)",
+      "Bash(docker rm -f)",
+      "Bash(docker system prune)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-dangerous.sh",
+            "timeout": 5,
+            "statusMessage": "Safety check..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh",
+            "timeout": 5,
+            "statusMessage": "Checking file protection..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit-format.sh",
+            "timeout": 15,
+            "statusMessage": "Formatting..."
+          }
+        ]
+      }
+    ]
+  }
+}
