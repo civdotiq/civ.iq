@@ -34,6 +34,8 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     columnLabels: [
       'Bioguide ID',
       'Full Name',
+      'First Name',
+      'Last Name',
       'Party Affiliation',
       'State',
       'District',
@@ -61,6 +63,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
       'Committee ID',
       'Committee Name',
       'Chamber',
+      'Member Bioguide ID',
       'Member Name',
       'Member Party',
       'Member State',

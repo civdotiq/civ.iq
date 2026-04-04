@@ -60,6 +60,17 @@ export async function GET(
       );
     }
 
+    if (result.data.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'Dataset has no records. The upstream data source may be temporarily unavailable.',
+          dataset: slug,
+          source: generator.source,
+        },
+        { status: 503 }
+      );
+    }
+
     const content = formatDataset(result, format);
     const date = new Date().toISOString().split('T')[0];
     const extension = format === 'csv' ? 'csv' : 'json';

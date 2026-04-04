@@ -250,16 +250,40 @@ const DATASET_KEYWORDS: Record<string, string[]> = {
     'presidential election',
     'vote totals',
   ],
+  'senate-stock-trades': [
+    'STOCK Act',
+    'senate stock trades',
+    'financial disclosure',
+    'periodic transaction reports',
+    'congressional trading',
+  ],
+  'lobbying-filings': [
+    'lobbying disclosure',
+    'LDA',
+    'lobbying filings',
+    'registered lobbyists',
+    'lobbying income',
+  ],
+  'federal-register-rules': [
+    'federal register',
+    'proposed rules',
+    'final rules',
+    'executive orders',
+    'federal regulations',
+  ],
 };
 
 const DATASET_SAME_AS: Record<string, string> = {
   'congress-members': 'https://api.congress.gov/v3/member',
   committees: 'https://api.congress.gov/v3/committee',
   'recent-bills': 'https://api.congress.gov/v3/bill',
-  'recent-votes': 'https://api.congress.gov/v3/summaries',
+  'recent-votes': 'https://api.congress.gov/v3/vote',
   'vote-positions': 'https://api.congress.gov/v3/member',
   'campaign-finance': 'https://api.open.fec.gov/v1/candidates',
   'election-results-2024': 'https://github.com/MEDSL/2024-elections-official',
+  'senate-stock-trades': 'https://efdsearch.senate.gov',
+  'lobbying-filings': 'https://lda.senate.gov/api',
+  'federal-register-rules': 'https://www.federalregister.gov/api/v1',
 };
 
 export default function OpenDataPage() {
@@ -303,7 +327,7 @@ export default function OpenDataPage() {
           ]}
           source={dataset.source}
           sourceUrl={dataset.sourceUrl}
-          temporalCoverage="2025-01/2027-01"
+          temporalCoverage={`2025-01/${new Date().toISOString().slice(0, 7)}`}
           keywords={DATASET_KEYWORDS[dataset.slug]}
           variableMeasured={dataset.columnLabels}
           includedInDataCatalog={{ name: 'CIV.IQ Bulk Datasets', url: `${BASE_URL}/api/download` }}
@@ -360,8 +384,8 @@ export default function OpenDataPage() {
         <section className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">Bulk Datasets</h2>
           <p className="text-gray-600 mb-grid-3">
-            Download complete datasets as CSV or JSON. Updated hourly from official government
-            sources. No account required.
+            Download complete datasets as CSV or JSON. Generated live from official government
+            sources with one-hour CDN caching. No account required.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-3 mb-grid-3">
