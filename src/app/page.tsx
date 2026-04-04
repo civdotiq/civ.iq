@@ -15,17 +15,15 @@ export default function HomePage() {
             <div className="flex flex-col items-center mb-grid-1 sm:mb-grid-3">
               <div className="mb-grid-1 sm:mb-grid-2">
                 <Image
-                  src="/images/civiq-logo.png"
+                  src="/images/civiq-logo-hero.webp"
                   alt="CIV.IQ Logo"
-                  width={120}
-                  height={120}
-                  className="border-2 border-black w-[80px] h-[80px] sm:w-[120px] sm:h-[120px]"
+                  width={200}
+                  height={200}
+                  className="w-[140px] h-[140px] sm:w-[200px] sm:h-[200px]"
                   priority
                 />
               </div>
-              <div className="text-2xl sm:text-4xl font-bold text-civiq-red aicher-heading">
-                CIV.IQ
-              </div>
+              <div className="text-3xl sm:text-5xl font-bold text-black aicher-heading">CIV.IQ</div>
             </div>
             <h1 className="text-xl sm:text-5xl lg:text-6xl mb-grid-1 sm:mb-grid-4 lg:mb-grid-6 leading-tight">
               <span className="accent-display text-black block">Know Your</span>

@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   publisher: 'CIV.IQ',
   icons: {
     icon: '/favicon.svg',
-    apple: '/images/civiq-logo.png',
+    apple: '/images/civiq-logo-hero.webp',
   },
   openGraph: {
     title: 'CIV.IQ: Who Represents You?',

@@ -50,11 +50,11 @@ export default function AboutPage() {
               className="flex flex-col items-center hover:opacity-80 transition-opacity"
             >
               <Image
-                src="/images/civiq-logo.png"
+                src="/images/civiq-logo-hero.webp"
                 alt="CIV.IQ"
-                width={64}
-                height={64}
-                className="border-2 border-black mb-grid-2"
+                width={148}
+                height={148}
+                className="mb-grid-2"
               />
             </Link>
           </div>

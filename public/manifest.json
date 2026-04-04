@@ -1,6 +1,6 @@
 {
-  "name": "Civic Intel Hub",
-  "short_name": "CivicHub",
+  "name": "CIV.IQ",
+  "short_name": "CIV.IQ",
   "description": "Your comprehensive source for federal representatives, voting records, and political intelligence",
   "start_url": "/",
   "display": "standalone",
@@ -12,21 +12,21 @@
   "categories": ["government", "news", "politics", "productivity"],
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg width='72' height='72' viewBox='0 0 72 72' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='72' height='72' fill='%23ffffff'/%3E%3Ccircle cx='25' cy='36' r='12' fill='%23e11d07' opacity='0.9'/%3E%3Crect x='36' y='29' width='12' height='8' fill='%230b983c' opacity='0.9'/%3E%3Crect x='32' y='47' width='16' height='3' fill='%233ea2d4' opacity='0.9'/%3E%3Ctext x='36' y='61' font-family='Arial, sans-serif' font-size='8' font-weight='bold' text-anchor='middle' fill='%23333333'%3ECIV.IQ%3C/text%3E%3C/svg%3E",
-      "sizes": "72x72",
+      "src": "/favicon.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg width='192' height='192' viewBox='0 0 192 192' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='192' height='192' fill='%23ffffff'/%3E%3Ccircle cx='67' cy='96' r='32' fill='%23e11d07' opacity='0.9'/%3E%3Crect x='96' y='77' width='32' height='21' fill='%230b983c' opacity='0.9'/%3E%3Crect x='86' y='125' width='43' height='8' fill='%233ea2d4' opacity='0.9'/%3E%3Ctext x='96' y='163' font-family='Arial, sans-serif' font-size='23' font-weight='bold' text-anchor='middle' fill='%23333333'%3ECIV.IQ%3C/text%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
+      "src": "/images/civiq-logo.png",
+      "sizes": "761x797",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg width='512' height='512' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='512' height='512' fill='%23ffffff'/%3E%3Ccircle cx='179' cy='256' r='86' fill='%23e11d07' opacity='0.9'/%3E%3Crect x='256' y='205' width='86' height='56' fill='%230b983c' opacity='0.9'/%3E%3Crect x='230' y='333' width='115' height='21' fill='%233ea2d4' opacity='0.9'/%3E%3Ctext x='256' y='435' font-family='Arial, sans-serif' font-size='61' font-weight='bold' text-anchor='middle' fill='%23333333'%3ECIV.IQ%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
+      "src": "/images/civiq-logo-hero.webp",
+      "sizes": "3044x3188",
+      "type": "image/webp",
       "purpose": "any maskable"
     }
   ],
@@ -52,8 +52,9 @@
       "url": "/representatives",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg width='96' height='96' viewBox='0 0 96 96' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='96' height='96' fill='%23ffffff'/%3E%3Ccircle cx='34' cy='48' r='16' fill='%23e11d07' opacity='0.9'/%3E%3Crect x='48' y='38' width='16' height='11' fill='%230b983c' opacity='0.9'/%3E%3Crect x='43' y='62' width='21' height='4' fill='%233ea2d4' opacity='0.9'/%3E%3Ctext x='48' y='81' font-family='Arial, sans-serif' font-size='11' font-weight='bold' text-anchor='middle' fill='%23333333'%3ECIV.IQ%3C/text%3E%3C/svg%3E",
-          "sizes": "96x96"
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -64,8 +65,9 @@
       "url": "/news",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg width='96' height='96' viewBox='0 0 96 96' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='96' height='96' fill='%23ffffff'/%3E%3Ccircle cx='34' cy='48' r='16' fill='%23e11d07' opacity='0.9'/%3E%3Crect x='48' y='38' width='16' height='11' fill='%230b983c' opacity='0.9'/%3E%3Crect x='43' y='62' width='21' height='4' fill='%233ea2d4' opacity='0.9'/%3E%3Ctext x='48' y='81' font-family='Arial, sans-serif' font-size='11' font-weight='bold' text-anchor='middle' fill='%23333333'%3ECIV.IQ%3C/text%3E%3C/svg%3E",
-          "sizes": "96x96"
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     }
