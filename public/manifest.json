@@ -12,22 +12,22 @@
   "categories": ["government", "news", "politics", "productivity"],
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/images/civiq-logo.png",
-      "sizes": "761x797",
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/images/civiq-logo-hero.webp",
-      "sizes": "3044x3188",
-      "type": "image/webp",
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "screenshots": [
