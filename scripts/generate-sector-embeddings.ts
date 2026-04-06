@@ -7,7 +7,7 @@
 /**
  * Generate pre-computed sector embeddings for bill classification.
  *
- * This script embeds the 13 IndustrySector descriptions using all-MiniLM-L6-v2
+ * This script embeds the 13 IndustrySector descriptions using bge-small-en-v1.5
  * and writes the resulting vectors to sector-embeddings.json. The JSON file is
  * checked into git and loaded at runtime by the embedding classifier.
  *
@@ -35,8 +35,8 @@ async function main() {
   const { pipeline, env } = await import('@huggingface/transformers');
   env.allowLocalModels = false;
 
-  console.log('Loading model Xenova/all-MiniLM-L6-v2 (quantized int8)...');
-  const extractor = (await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+  console.log('Loading model Xenova/bge-small-en-v1.5 (quantized int8)...');
+  const extractor = (await pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', {
     dtype: 'q8',
   })) as unknown as Pipeline;
 

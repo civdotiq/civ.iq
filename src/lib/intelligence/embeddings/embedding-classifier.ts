@@ -6,7 +6,7 @@
 /**
  * Bill Sector Classification via Semantic Embeddings
  *
- * Uses all-MiniLM-L6-v2 (via @huggingface/transformers) to embed bill text,
+ * Uses bge-small-en-v1.5 (via @huggingface/transformers) to embed bill text,
  * then classifies against pre-computed sector embeddings using cosine similarity.
  *
  * The model runs on the WASM backend (onnxruntime-web, bundled with
@@ -24,8 +24,8 @@ import logger from '@/lib/logging/simple-logger';
 import { classifySectors } from './cosine-similarity';
 import type { SectorClassification, SectorEmbeddingEntry } from './types';
 
-/** Model to use for embedding. Quantized int8 variant (~23MB). */
-const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+/** Model to use for embedding. Quantized int8 variant (~34MB). */
+const MODEL_ID = 'Xenova/bge-small-en-v1.5';
 
 /** Timeout for the entire classify operation (model load + embedding). */
 const CLASSIFY_TIMEOUT_MS = 10_000;

@@ -107,7 +107,7 @@ describe('embedding classifier', () => {
     expect(mockPipeline).toHaveBeenCalledTimes(1);
     expect(mockPipeline).toHaveBeenCalledWith(
       'feature-extraction',
-      'Xenova/all-MiniLM-L6-v2',
+      'Xenova/bge-small-en-v1.5',
       expect.objectContaining({ dtype: 'q8' })
     );
   });

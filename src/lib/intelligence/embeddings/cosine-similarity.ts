@@ -17,13 +17,14 @@ import type { SectorClassification, SectorEmbeddingEntry } from './types';
 /**
  * Default cosine similarity threshold for sector classification.
  *
- * Set to 0.28 based on empirical testing: bill titles are short text
- * compared against long sector descriptions, which produces systematically
- * lower cosine similarity than comparing two texts of similar length.
- * At 0.28, known-good bills (NDAA, CHIPS Act, Medicare) all classify
- * correctly while "Resolution honoring National Cheese Day" returns empty.
+ * Calibrated for bge-small-en-v1.5 which produces higher absolute
+ * similarities than the previous all-MiniLM-L6-v2 model. At 0.56,
+ * known-good bills (NDAA, CHIPS Act, Medicare, Farm Bill) all classify
+ * correctly while ceremonial resolutions return empty. The margin is
+ * tight (min good 0.562, max bad 0.560) — recalibrate if the model
+ * or sector descriptions change.
  */
-export const DEFAULT_THRESHOLD = 0.28;
+export const DEFAULT_THRESHOLD = 0.56;
 
 /** Default maximum sectors to return per bill. */
 export const DEFAULT_MAX_SECTORS = 3;
