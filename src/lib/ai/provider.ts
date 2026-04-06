@@ -25,7 +25,7 @@ interface GenerateAITextOptions {
 }
 
 function getModel(): LanguageModel {
-  const modelId = process.env.AI_MODEL || 'gemini-2.0-flash';
+  const modelId = process.env.AI_MODEL || 'gemini-2.5-flash-lite';
 
   // Future: Ollama support
   // if (process.env.OLLAMA_BASE_URL) {
@@ -60,7 +60,7 @@ export async function generateAIText(
 
   logger.info('AI text generated', {
     provider: process.env.GOOGLE_GENERATIVE_AI_API_KEY ? 'google' : 'unknown',
-    model: process.env.AI_MODEL || 'gemini-2.0-flash',
+    model: process.env.AI_MODEL || 'gemini-2.5-flash-lite',
     inputTokens: result.usage?.inputTokens,
     outputTokens: result.usage?.outputTokens,
     operation: 'ai_generate_text',
@@ -80,7 +80,7 @@ export function streamAIText(
 
   logger.info('AI text stream started', {
     provider: process.env.GOOGLE_GENERATIVE_AI_API_KEY ? 'google' : 'unknown',
-    model: process.env.AI_MODEL || 'gemini-2.0-flash',
+    model: process.env.AI_MODEL || 'gemini-2.5-flash-lite',
     operation: 'ai_stream_text',
   });
 
