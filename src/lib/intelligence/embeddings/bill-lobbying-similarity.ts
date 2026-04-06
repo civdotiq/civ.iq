@@ -9,7 +9,7 @@
  * Measures semantic similarity between bill text and lobbying filing text
  * to surface when legislative language mirrors what lobbyists asked for.
  *
- * Uses the same bge-small-en-v1.5 pipeline as bill sector classification —
+ * Uses the same all-MiniLM-L6-v2 pipeline as bill sector classification —
  * no new model loading. The embedText() function exposes raw embeddings
  * for arbitrary text comparison.
  */
@@ -20,12 +20,8 @@ import { embedText } from './embedding-classifier';
 import { cosineSimilarity } from './cosine-similarity';
 import type { LobbyingSimilarityMatch, BillLobbyingSimilarity } from '../types';
 
-/**
- * Threshold above which a match is considered "strong."
- * Calibrated for bge-small-en-v1.5: related bill-lobbying pairs
- * score ~0.70, unrelated ~0.45, so 0.60 provides clean separation.
- */
-const HIGH_SIMILARITY_THRESHOLD = 0.6;
+/** Threshold above which a match is considered "strong." */
+const HIGH_SIMILARITY_THRESHOLD = 0.55;
 
 /** Maximum matches to return per bill. */
 const MAX_MATCHES = 10;
@@ -102,7 +98,7 @@ async function computeSimilarityInternal(
     if (!issueText) continue;
 
     // Check embedding cache
-    const cacheKey = `v2-lobbying-embedding:${filing.id}`;
+    const cacheKey = `lobbying-embedding:${filing.id}`;
     let filingEmbedding: Float32Array | null = null;
 
     try {

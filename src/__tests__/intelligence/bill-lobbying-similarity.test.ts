@@ -152,7 +152,7 @@ describe('Bill-Lobbying Similarity', () => {
     }
   });
 
-  it('sets hasStrongMatches based on 0.60 threshold', async () => {
+  it('sets hasStrongMatches based on 0.55 threshold', async () => {
     // With our mock embeddings, similarity values are deterministic
     // and based on sin() functions. We need to verify the flag logic.
     const result = await computeBillLobbyingSimilarity(
@@ -162,8 +162,8 @@ describe('Bill-Lobbying Similarity', () => {
     );
 
     expect(result).not.toBeNull();
-    // hasStrongMatches should be true if ANY match >= 0.60, false otherwise
-    if (result!.matches.some(m => m.similarity >= 0.6)) {
+    // hasStrongMatches should be true if ANY match >= 0.55, false otherwise
+    if (result!.matches.some(m => m.similarity >= 0.55)) {
       expect(result!.hasStrongMatches).toBe(true);
     } else {
       expect(result!.hasStrongMatches).toBe(false);
@@ -206,10 +206,10 @@ describe('Bill-Lobbying Similarity', () => {
     // filing-1 and filing-2 have issues, filing-3 has empty issues
     const setCalls = mockRedisInstance.set.mock.calls.filter(
       (call: unknown[]) =>
-        typeof call[0] === 'string' && (call[0] as string).startsWith('v2-lobbying-embedding:')
+        typeof call[0] === 'string' && (call[0] as string).startsWith('lobbying-embedding:')
     );
     expect(setCalls.length).toBe(2); // filing-1 and filing-2
     // Verify the cache key format
-    expect(setCalls[0][0]).toContain('v2-lobbying-embedding:filing-1');
+    expect(setCalls[0][0]).toContain('lobbying-embedding:filing-1');
   });
 });

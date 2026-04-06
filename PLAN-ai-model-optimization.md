@@ -1,6 +1,6 @@
 # PLAN: AI Model Optimization (Post-Audit)
 
-**Status**: Ready to implement (sequential)
+**Status**: P2 done, P3 done (awaiting data), P4 reverted (gate not met)
 **Source**: AI_LAYER_AUDIT_APRIL2026.md + reviewer feedback
 **Approach**: Priority 2 first, then 3, then 4. Priority 5+ parked.
 
@@ -126,88 +126,38 @@ Also note which model is slowest — that tells you where optimization effort pa
 
 ---
 
-## Priority 4: Embedding Model Swap (bge-small-en-v1.5)
+## Priority 4: Embedding Model Swap — REVERTED (2026-04-06)
 
-### Why
+### Status: Reverted. Gate not met.
 
-`all-MiniLM-L6-v2` is a 2021 model. `bge-small-en-v1.5` (2023, BAAI) produces better semantic quality at the same size class (33M params, 384-dim, ~23MB q8). The MTEB benchmark improvements are meaningful for short-text classification (bill titles).
+bge-small-en-v1.5 was implemented prematurely and reverted for three reasons:
 
-### The Real Cost
+1. **Threshold margin was 0.002** — The calibration set (9 good, 4 bad) produced min-known-good=0.562 and max-known-bad=0.560 at `DEFAULT_THRESHOLD=0.56`. This 0.002 gap is far too thin for production, where bill titles are vastly more diverse than 13 samples.
 
-Swapping the model ID is trivial. The non-trivial work is:
+2. **Gate was skipped** — This plan explicitly states Priority 4 should only proceed "if Priority 3 shows model loading is a bottleneck." Priority 3 instrumentation was deployed but no measurement data has been collected yet.
 
-1. **Regenerate sector embeddings** — Run `npm run generate:embeddings` with the new model. The script (`scripts/generate-sector-embeddings.ts`) hardcodes `Xenova/all-MiniLM-L6-v2` on line 39 and must be updated too.
+3. **Model is larger, not smaller** — bge-small-en-v1.5 is ~34MB q8 vs ~23MB q8 for all-MiniLM-L6-v2. The swap made cold starts 11MB worse. Net savings dropped from 104MB (NER swap alone) to 93MB.
 
-2. **Recalibrate cosine similarity threshold** — The current `DEFAULT_THRESHOLD = 0.28` in `cosine-similarity.ts:26` was empirically tuned for all-MiniLM-L6-v2's similarity distribution. Different embedding models produce different similarity ranges. bge-small tends to produce higher absolute similarities, so the threshold likely needs to increase (maybe 0.35-0.45). This requires testing against the same calibration set mentioned in the code comments:
-   - Known-good: NDAA, CHIPS Act, Medicare → should classify correctly
-   - Known-bad: "Resolution honoring National Cheese Day" → should return empty
-   - Edge cases: bills touching multiple sectors
+### What was reverted
 
-3. **Verify bill-lobbying similarity** — `bill-lobbying-similarity.ts` uses `embedText()` from the same pipeline with a 0.55 "strong match" threshold (line 24). This threshold also needs recalibration against the new model's similarity distribution.
+- `embedding-classifier.ts` MODEL_ID → `Xenova/all-MiniLM-L6-v2`
+- `cosine-similarity.ts` DEFAULT_THRESHOLD → `0.28`
+- `bill-lobbying-similarity.ts` HIGH_SIMILARITY_THRESHOLD → `0.55`, cache prefix → `lobbying-embedding:`
+- `generate-sector-embeddings.ts` model → `Xenova/all-MiniLM-L6-v2`
+- `sector-embeddings.json` regenerated with all-MiniLM-L6-v2
+- All test assertions reverted to match
 
-### Exact Changes
+### What was kept
 
-#### Step 4a: Swap model ID (2 files)
+The calibration script (`scripts/calibrate-embedding-thresholds.ts`) was expanded and retained as reusable infrastructure: 30 known-good bills, 16 known-bad, 4 edge cases, 10 bill-lobbying pairs, model-agnostic `--model` flag, and a hard gate requiring gap >= 0.05.
 
-**`src/lib/intelligence/embeddings/embedding-classifier.ts` line 28**:
+### Gate criteria for re-opening Priority 4
 
-```typescript
-// FROM:
-const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
-// TO:
-const MODEL_ID = 'Xenova/bge-small-en-v1.5';
-```
+All three conditions must be met:
 
-**`scripts/generate-sector-embeddings.ts` lines 38-39**:
-
-```typescript
-// FROM:
-console.log('Loading model Xenova/all-MiniLM-L6-v2 (quantized int8)...');
-const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-// TO:
-console.log('Loading model Xenova/bge-small-en-v1.5 (quantized int8)...');
-const extractor = await pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', {
-```
-
-#### Step 4b: Regenerate sector embeddings
-
-```bash
-npm run generate:embeddings
-```
-
-This overwrites `src/lib/intelligence/embeddings/sector-embeddings.json` (1731 lines) with new 384-dim vectors from the new model. The script validates dimensions and normalization automatically.
-
-#### Step 4c: Recalibrate thresholds
-
-Write a calibration script that:
-
-1. Embeds the calibration bill titles with the new model
-2. Computes cosine similarity against new sector embeddings
-3. Finds the threshold that correctly separates known-good from known-bad
-4. Reports the new optimal threshold
-
-Then update:
-
-- `cosine-similarity.ts:26` — `DEFAULT_THRESHOLD` (currently 0.28)
-- `bill-lobbying-similarity.ts:24` — `HIGH_SIMILARITY_THRESHOLD` (currently 0.55)
-- `cosine-similarity.test.ts` — update threshold assertion if hardcoded
-
-#### Step 4d: Invalidate embedding caches
-
-All embedding caches need invalidation since old-model embeddings are incompatible with new-model sector embeddings:
-
-- Filing embeddings: `lobbying-embedding:{filing.id}` (30-day TTL)
-- Bill sector cache: `bill-sector:{hash}` if one exists
-- Option: prefix bump (e.g., `v2-lobbying-embedding:`) or flush via Redis CLI
-
-### Risk
-
-| Risk                                                    | Likelihood | Mitigation                                            |
-| ------------------------------------------------------- | ---------- | ----------------------------------------------------- |
-| Threshold miscalibration degrades sector classification | Medium     | Calibration script with known-good/bad test cases     |
-| bge-small not available as Xenova ONNX q8               | Low        | Check HF Hub first; `Xenova/bge-small-en-v1.5` exists |
-| Bill-lobbying matches shift significantly               | Medium     | Compare top-10 matches for sample bills before/after  |
-| Embedding dimension changes (not 384)                   | Very Low   | bge-small-en-v1.5 is 384-dim; script validates        |
+1. **Priority 3 data** — Embedding pipeline cold start p50 > 2s (measured from Vercel logs)
+2. **Calibration gate** — `npx tsx scripts/calibrate-embedding-thresholds.ts --model <candidate>` exits 0 (gap >= 0.05 for both sector and bill-lobbying thresholds)
+3. **A/B accuracy** — Run `scripts/validate-sector-classification.ts` with both models on the same 10 bills; candidate must match or exceed current accuracy
 
 ---
 
@@ -225,10 +175,10 @@ The following are explicitly deferred. Do not implement without a new decision:
 
 ---
 
-## Execution Order
+## Execution Status
 
-1. **Priority 2** (NER swap) — Do first. Standalone, no dependencies, biggest download savings.
-2. **Priority 3** (cold start measurement) — Do second. Results inform whether Priority 4 is urgent.
-3. **Priority 4** (embedding swap) — Do third, only if Priority 3 shows model loading is a bottleneck. Most effort due to threshold recalibration.
+1. **Priority 2** (NER swap) — DONE. Swapped to distilbert-NER, ~104MB cold start savings.
+2. **Priority 3** (cold start measurement) — DONE. Instrumentation deployed. Awaiting measurement data.
+3. **Priority 4** (embedding swap) — REVERTED. Implemented prematurely, threshold margin was 0.002, model was larger. Reverted to all-MiniLM-L6-v2. See gate criteria above for re-opening.
 
-Each priority is independently committable and deployable.
+Net cold start savings: ~104MB (NER swap only — clean, validated).

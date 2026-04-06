@@ -142,10 +142,10 @@ describe('cosine similarity', () => {
     });
 
     it('uses default threshold and maxSectors', () => {
-      expect(DEFAULT_THRESHOLD).toBe(0.56);
+      expect(DEFAULT_THRESHOLD).toBe(0.28);
       expect(DEFAULT_MAX_SECTORS).toBe(3);
 
-      // With default threshold of 0.56, only high-similarity sectors pass
+      // With default threshold of 0.28, sectors above 0.28 cosine similarity pass
       const billEmbedding = [0.9, 0.3, 0.1, 0.05];
       const results = classifySectors(billEmbedding, sectorEmbeddings);
 
