@@ -150,7 +150,7 @@ describe('civic NER', () => {
     await extractEntities('EPA issues rule', '2025-12345');
 
     expect(mockRedisSet).toHaveBeenCalledWith(
-      'ner:2025-12345',
+      'ner2:2025-12345',
       expect.any(Array),
       expect.any(Number)
     );
@@ -174,7 +174,7 @@ describe('civic NER', () => {
 
     expect(mockPipeline).toHaveBeenCalledWith(
       'token-classification',
-      'Xenova/bert-base-NER',
+      'onnx-community/distilbert-NER-ONNX',
       expect.objectContaining({ dtype: 'q8' })
     );
   });

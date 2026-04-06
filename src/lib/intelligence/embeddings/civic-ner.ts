@@ -4,13 +4,13 @@
  */
 
 /**
- * Civic NER (Named Entity Recognition) via BERT
+ * Civic NER (Named Entity Recognition) via DistilBERT
  *
- * Uses bert-base-NER (~170MB q8) for token-level entity extraction,
+ * Uses distilbert-NER (~66MB q8) for token-level entity extraction,
  * augmented with regex patterns for MONEY and DATE entities.
  *
  * Replaces cloud-LLM dependency for entity extraction with a local
- * 110M-parameter BERT model. The hybrid approach (ML for names + regex
+ * 65M-parameter DistilBERT model. The hybrid approach (ML for names + regex
  * for dollar/date) demonstrates thoughtful model selection.
  *
  * Same lazy-load pattern as embedding-classifier.ts.
@@ -20,7 +20,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import type { CivicEntity } from './types';
 
-const MODEL_ID = 'Xenova/bert-base-NER';
+const MODEL_ID = 'onnx-community/distilbert-NER-ONNX';
 const EXTRACT_TIMEOUT_MS = 10_000;
 const CACHE_TTL = 30 * 24 * 60 * 60; // 30 days
 
@@ -70,7 +70,7 @@ export async function extractEntities(
   // Check Redis cache
   if (documentNumber) {
     try {
-      const cached = await getRedisCache().get<CivicEntity[]>(`ner:${documentNumber}`);
+      const cached = await getRedisCache().get<CivicEntity[]>(`ner2:${documentNumber}`);
       if (cached) return cached;
     } catch {
       // Cache miss — continue
@@ -83,7 +83,7 @@ export async function extractEntities(
     // Cache on success
     if (documentNumber && results.length > 0) {
       try {
-        await getRedisCache().set(`ner:${documentNumber}`, results, CACHE_TTL);
+        await getRedisCache().set(`ner2:${documentNumber}`, results, CACHE_TTL);
       } catch {
         // Non-fatal
       }
