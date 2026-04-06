@@ -172,9 +172,11 @@ async function loadPipeline(): Promise<ZeroShotPipeline | null> {
     const { pipeline, env } = await import('@huggingface/transformers');
     env.allowLocalModels = false;
 
+    const t0 = performance.now();
     const classifier = await pipeline('zero-shot-classification', MODEL_ID, {
       dtype: 'q8',
     });
+    const loadMs = Math.round(performance.now() - t0);
 
     // The HuggingFace pipeline() returns a callable class instance whose
     // TypeScript signature is (...args: any[]) => any. We wrap it in a
@@ -182,7 +184,11 @@ async function loadPipeline(): Promise<ZeroShotPipeline | null> {
     const typedClassifier: ZeroShotPipeline = (text, labels, options) =>
       classifier(text, labels, options) as Promise<{ labels: string[]; scores: number[] }>;
     pipelineInstance = typedClassifier;
-    logger.info('[ZeroShotClassifier] Pipeline loaded', { model: MODEL_ID });
+    logger.info('[ZeroShotClassifier] Pipeline loaded', {
+      model: MODEL_ID,
+      loadTimeMs: loadMs,
+      operation: 'ml_pipeline_load',
+    });
     return pipelineInstance;
   } catch (error) {
     pipelineLoadFailed = true;

@@ -139,9 +139,11 @@ async function loadPipeline(): Promise<FeatureExtractionPipeline | null> {
     // Prefer WASM backend, disable local model search
     env.allowLocalModels = false;
 
+    const t0 = performance.now();
     const extractor = await pipeline('feature-extraction', MODEL_ID, {
       dtype: 'q8',
     });
+    const loadMs = Math.round(performance.now() - t0);
 
     // The HuggingFace pipeline() returns a callable class instance whose
     // TypeScript signature is (...args: any[]) => any. We wrap it in a
@@ -149,7 +151,11 @@ async function loadPipeline(): Promise<FeatureExtractionPipeline | null> {
     const typedExtractor: FeatureExtractionPipeline = (text, options) =>
       extractor(text, options) as Promise<Tensor>;
     pipelineInstance = typedExtractor;
-    logger.info('[EmbeddingClassifier] Pipeline loaded', { model: MODEL_ID });
+    logger.info('[EmbeddingClassifier] Pipeline loaded', {
+      model: MODEL_ID,
+      loadTimeMs: loadMs,
+      operation: 'ml_pipeline_load',
+    });
     return pipelineInstance;
   } catch (error) {
     pipelineLoadFailed = true;

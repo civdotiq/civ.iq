@@ -313,16 +313,22 @@ async function loadPipeline(): Promise<NERPipeline | null> {
     const { pipeline, env } = await import('@huggingface/transformers');
     env.allowLocalModels = false;
 
+    const t0 = performance.now();
     const ner = await pipeline('token-classification', MODEL_ID, {
       dtype: 'q8',
     });
+    const loadMs = Math.round(performance.now() - t0);
 
     // The HuggingFace pipeline() returns a callable class instance whose
     // TypeScript signature is (...args: any[]) => any. We wrap it in a
     // typed function to enforce our NERPipeline contract at the call boundary.
     const typedNer: NERPipeline = (text: string) => ner(text) as Promise<NERToken[]>;
     pipelineInstance = typedNer;
-    logger.info('[CivicNER] Pipeline loaded', { model: MODEL_ID });
+    logger.info('[CivicNER] Pipeline loaded', {
+      model: MODEL_ID,
+      loadTimeMs: loadMs,
+      operation: 'ml_pipeline_load',
+    });
     return pipelineInstance;
   } catch (error) {
     pipelineLoadFailed = true;
