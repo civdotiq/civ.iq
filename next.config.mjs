@@ -160,13 +160,20 @@ const nextConfig = {
       };
     }
 
+    // Force WASM backend for @huggingface/transformers on server.
+    // onnxruntime-node requires a native .so that doesn't exist on Vercel.
+    // Aliasing to false makes the library fall back to onnxruntime-web (WASM).
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'onnxruntime-node': false,
+      };
+    }
+
     return config;
   },
   // Enable compression for production
   compress: true,
-  // Production-ready features
-  // Prevent webpack from bundling native/WASM modules — resolved at runtime
-  serverExternalPackages: ['@huggingface/transformers'],
   experimental: {
     scrollRestoration: true,
     // Optimize package imports for better tree-shaking
