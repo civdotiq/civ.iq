@@ -5,13 +5,16 @@
 
 import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
+import Link from 'next/link';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getRepresentativeSummary } from '@/services/batch/representative-batch.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { getStateName } from '@/lib/data/us-states';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -122,6 +125,146 @@ async function getRepresentativeData(bioguideId: string): Promise<Representative
   }
 }
 
+/**
+ * Server-rendered key facts block for AI citation readiness.
+ * Plain semantic HTML — no client JS, no tabs, no interaction required.
+ * Crawlers and AI systems get party, state, committees, finance, and contact
+ * info without executing JavaScript.
+ */
+function CitableFacts({
+  representative,
+  summary,
+  bioguideId,
+}: {
+  representative: RepresentativeDetails;
+  summary: Awaited<ReturnType<typeof getRepresentativeSummary>> | null;
+  bioguideId: string;
+}) {
+  const stateName = getStateName(representative.state) || representative.state;
+  const chamberFull =
+    representative.chamber === 'Senate'
+      ? 'United States Senate'
+      : 'United States House of Representatives';
+  const districtLabel = representative.district
+    ? `${stateName}, District ${representative.district}`
+    : stateName;
+
+  // Compute years in office from terms
+  const firstTermYear = representative.terms?.[0]?.startYear;
+  const yearsInOffice = firstTermYear
+    ? new Date().getFullYear() - parseInt(firstTermYear, 10)
+    : null;
+  const termCount = representative.terms?.length ?? 0;
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+    if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
+  };
+
+  const totalRaised = summary?.totalRaised && summary.totalRaised > 0 ? summary.totalRaised : null;
+  const financeCycle = summary?.financeCycle;
+
+  return (
+    <section
+      aria-label={`Key facts about ${representative.name}`}
+      data-speakable="rep-facts"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-grid-2"
+    >
+      <dl className="border-2 border-black bg-white px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+        <div className="flex gap-2">
+          <dt className="text-gray-500 shrink-0">Party</dt>
+          <dd className="font-medium text-gray-900">{representative.party}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-gray-500 shrink-0">Represents</dt>
+          <dd className="font-medium text-gray-900">{districtLabel}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="text-gray-500 shrink-0">Chamber</dt>
+          <dd className="font-medium text-gray-900">{chamberFull}</dd>
+        </div>
+        {yearsInOffice !== null && (
+          <div className="flex gap-2">
+            <dt className="text-gray-500 shrink-0">In office</dt>
+            <dd className="font-medium text-gray-900">
+              Since {firstTermYear} ({termCount} {termCount === 1 ? 'term' : 'terms'})
+            </dd>
+          </div>
+        )}
+        {representative.committees && representative.committees.length > 0 && (
+          <div className="flex gap-2 sm:col-span-2">
+            <dt className="text-gray-500 shrink-0">Committees</dt>
+            <dd className="font-medium text-gray-900">
+              {representative.committees.map((c, i) => (
+                <span key={c.name}>
+                  {i > 0 && ', '}
+                  {c.id ? (
+                    <Link href={`/committee/${c.id}`} className="text-civiq-blue hover:underline">
+                      {c.name}
+                    </Link>
+                  ) : (
+                    c.name
+                  )}
+                  {c.role && c.role !== 'Member' && (
+                    <span className="text-gray-500"> ({c.role})</span>
+                  )}
+                </span>
+              ))}
+            </dd>
+          </div>
+        )}
+        {totalRaised && (
+          <div className="flex gap-2">
+            <dt className="text-gray-500 shrink-0">Total raised</dt>
+            <dd className="font-medium text-gray-900">
+              {formatCurrency(totalRaised)}
+              {financeCycle && <span className="text-gray-500"> ({financeCycle} cycle)</span>}
+            </dd>
+          </div>
+        )}
+        {representative.currentTerm?.phone && (
+          <div className="flex gap-2">
+            <dt className="text-gray-500 shrink-0">Phone</dt>
+            <dd className="font-medium text-gray-900">{representative.currentTerm.phone}</dd>
+          </div>
+        )}
+        {representative.website && (
+          <div className="flex gap-2">
+            <dt className="text-gray-500 shrink-0">Website</dt>
+            <dd className="font-medium text-gray-900">
+              <a
+                href={representative.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-civiq-blue hover:underline"
+              >
+                {representative.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </a>
+            </dd>
+          </div>
+        )}
+      </dl>
+      <p className="text-xs text-gray-400 mt-1">
+        Source:{' '}
+        <a href="https://www.congress.gov" className="hover:underline">
+          Congress.gov
+        </a>
+        {totalRaised ? (
+          <>
+            {' '}
+            and{' '}
+            <a href="https://www.fec.gov" className="hover:underline">
+              FEC.gov
+            </a>
+          </>
+        ) : null}
+      </p>
+    </section>
+  );
+}
+
 // Main Server Component - renders immediately with SSR data
 export default async function RepresentativeProfilePage({
   params,
@@ -141,8 +284,11 @@ export default async function RepresentativeProfilePage({
     notFound();
   }
 
-  // Server-side data fetching - this runs on the server and streams HTML
-  const representative = await getRepresentativeData(bioguideId);
+  // Server-side data fetching - representative data + summary stats in parallel
+  const [representative, summaryResult] = await Promise.all([
+    getRepresentativeData(bioguideId),
+    getRepresentativeSummary(bioguideId).catch(() => null),
+  ]);
 
   // Handle fetch errors gracefully - representative data is required
   if (!representative) {
@@ -225,7 +371,7 @@ export default async function RepresentativeProfilePage({
       />
       <SpeakableSchema
         url={`https://civdotiq.org/representative/${bioguideId}`}
-        cssSelectors={['[data-speakable="rep-summary"]']}
+        cssSelectors={['[data-speakable="rep-facts"]', '[data-speakable="rep-summary"]']}
       />
       <BreadcrumbSchema
         items={[
@@ -239,6 +385,13 @@ export default async function RepresentativeProfilePage({
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
+
+        {/* Server-rendered key facts for AI citation and crawlers */}
+        <CitableFacts
+          representative={representative}
+          summary={summaryResult}
+          bioguideId={bioguideId}
+        />
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
