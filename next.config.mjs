@@ -16,8 +16,15 @@ const nextConfig = {
   },
   // Prevent source code exposure in production
   productionBrowserSourceMaps: false,
-  // Next.js 16 uses Turbopack by default - silence webpack migration warning
-  turbopack: {},
+  // Next.js 16 uses Turbopack by default
+  turbopack: {
+    // Force WASM backend for @huggingface/transformers.
+    // onnxruntime-node requires a native .so that doesn't exist on Vercel.
+    // Aliasing to onnxruntime-web makes the library use WASM instead.
+    resolveAlias: {
+      'onnxruntime-node': 'onnxruntime-web',
+    },
+  },
   // Remove console logs in production for better performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
