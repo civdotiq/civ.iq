@@ -11,6 +11,8 @@ import Link from 'next/link';
  * we do and do not claim.
  *
  * Target reading level: Flesch-Kincaid grade 8 or below.
+ * Follows PlainLanguage.gov guidelines: short sentences,
+ * common words, active voice, no jargon without explanation.
  */
 
 interface CitationProps {
@@ -44,6 +46,7 @@ function Citation({ id, authors, year, title, journal, url }: CitationProps) {
 }
 
 const DATA_SOURCES = [
+  // ── Core: Congress & Elections ──
   {
     name: 'Congress.gov API',
     agency: 'Library of Congress',
@@ -63,11 +66,44 @@ const DATA_SOURCES = [
     url: 'https://lda.senate.gov/api/v1',
   },
   {
+    name: 'Census Geocoder',
+    agency: 'U.S. Census Bureau',
+    covers: 'Address-to-district lookup, demographics',
+    url: 'https://www.census.gov/data/developers.html',
+  },
+  // ── Regulations & Policy ──
+  {
     name: 'Federal Register API',
     agency: 'National Archives',
     covers: 'Rules, proposed rules, executive orders',
     url: 'https://www.federalregister.gov/developers/api/v1',
   },
+  {
+    name: 'Regulations.gov API',
+    agency: 'Office of Management and Budget',
+    covers: 'Regulatory documents, dockets, public comments',
+    url: 'https://api.regulations.gov',
+  },
+  // ── Financial Disclosure ──
+  {
+    name: 'Senate Stock Disclosures',
+    agency: 'U.S. Senate',
+    covers: 'Stock trades by senators (STOCK Act filings)',
+    url: 'https://efdsearch.senate.gov',
+  },
+  {
+    name: 'House Stock Disclosures',
+    agency: 'U.S. House Clerk',
+    covers: 'Stock trades by representatives (STOCK Act filings)',
+    url: 'https://disclosures-clerk.house.gov',
+  },
+  {
+    name: 'SEC EDGAR',
+    agency: 'Securities and Exchange Commission',
+    covers: 'Company filings, ticker resolution',
+    url: 'https://www.sec.gov/edgar',
+  },
+  // ── Spending & Economy ──
   {
     name: 'USASpending.gov API',
     agency: 'U.S. Treasury',
@@ -75,10 +111,10 @@ const DATA_SOURCES = [
     url: 'https://api.usaspending.gov',
   },
   {
-    name: 'Census Bureau ACS',
-    agency: 'U.S. Census Bureau',
-    covers: 'Demographics, geocoding for district lookup',
-    url: 'https://www.census.gov/data/developers.html',
+    name: 'Treasury Fiscal Data',
+    agency: 'U.S. Treasury',
+    covers: 'Federal debt, revenue, spending',
+    url: 'https://fiscaldata.treasury.gov',
   },
   {
     name: 'FRED API',
@@ -87,34 +123,106 @@ const DATA_SOURCES = [
     url: 'https://fred.stlouisfed.org/docs/api/',
   },
   {
-    name: 'SEC EDGAR',
-    agency: 'Securities and Exchange Commission',
-    covers: 'Company filings, ticker resolution',
-    url: 'https://www.sec.gov/edgar',
-  },
-  {
-    name: 'Senate/House Disclosures',
-    agency: 'U.S. Senate & House Clerk',
-    covers: 'Stock trades by members of Congress',
-    url: 'https://efdsearch.senate.gov',
-  },
-  {
-    name: 'Open States',
-    agency: 'Civic Eagle / Open States',
-    covers: 'State legislators, state bills, state votes',
-    url: 'https://openstates.org',
-  },
-  {
-    name: 'EPA ECHO',
-    agency: 'Environmental Protection Agency',
-    covers: 'Environmental enforcement actions',
-    url: 'https://echo.epa.gov',
-  },
-  {
     name: 'BLS API',
     agency: 'Bureau of Labor Statistics',
     covers: 'Employment and wage data',
     url: 'https://www.bls.gov/developers/',
+  },
+  // ── Environment, Energy & Safety ──
+  {
+    name: 'EPA ECHO',
+    agency: 'Environmental Protection Agency',
+    covers: 'Environmental enforcement actions, facility violations',
+    url: 'https://echo.epa.gov',
+  },
+  {
+    name: 'OSHA API',
+    agency: 'Department of Labor',
+    covers: 'Workplace safety inspections, violations',
+    url: 'https://enforcedata.dol.gov',
+  },
+  {
+    name: 'EIA API',
+    agency: 'Energy Information Administration',
+    covers: 'State energy production and consumption',
+    url: 'https://api.eia.gov',
+  },
+  {
+    name: 'NOAA Climate API',
+    agency: 'National Oceanic and Atmospheric Administration',
+    covers: 'Climate normals, severe weather events',
+    url: 'https://www.ncdc.noaa.gov/cdo-web/',
+  },
+  {
+    name: 'NHTSA API',
+    agency: 'National Highway Traffic Safety Administration',
+    covers: 'Vehicle recalls, safety complaints',
+    url: 'https://api.nhtsa.gov',
+  },
+  // ── Health, Education & Housing ──
+  {
+    name: 'NIH Reporter',
+    agency: 'National Institutes of Health',
+    covers: 'Research grants and funded projects',
+    url: 'https://reporter.nih.gov',
+  },
+  {
+    name: 'CMS Provider Data',
+    agency: 'Centers for Medicare & Medicaid Services',
+    covers: 'Hospital and nursing home quality data',
+    url: 'https://data.cms.gov',
+  },
+  {
+    name: 'College Scorecard',
+    agency: 'Department of Education',
+    covers: 'College costs, outcomes, demographics',
+    url: 'https://collegescorecard.ed.gov',
+  },
+  {
+    name: 'HUD API',
+    agency: 'Department of Housing and Urban Development',
+    covers: 'Fair market rents, income limits',
+    url: 'https://www.huduser.gov/hudapi/',
+  },
+  // ── Consumer & Financial Protection ──
+  {
+    name: 'CFPB Complaints',
+    agency: 'Consumer Financial Protection Bureau',
+    covers: 'Consumer financial complaints by company and product',
+    url: 'https://www.consumerfinance.gov/data-research/consumer-complaints/',
+  },
+  {
+    name: 'FDIC API',
+    agency: 'Federal Deposit Insurance Corporation',
+    covers: 'Bank institution data, bank failures',
+    url: 'https://api.fdic.gov',
+  },
+  // ── Justice & Crime ──
+  {
+    name: 'FBI Crime Data',
+    agency: 'Federal Bureau of Investigation',
+    covers: 'Uniform Crime Reporting statistics by state',
+    url: 'https://crime-data-explorer.fr.cloud.gov',
+  },
+  {
+    name: 'CourtListener API',
+    agency: 'Free Law Project',
+    covers: 'Federal court dockets, case information',
+    url: 'https://www.courtlistener.com',
+  },
+  // ── State Government ──
+  {
+    name: 'Open States API',
+    agency: 'Civic Eagle / Open States',
+    covers: 'State legislators, state bills, state votes',
+    url: 'https://openstates.org',
+  },
+  // ── Biographical Enrichment ──
+  {
+    name: 'Wikidata',
+    agency: 'Wikimedia Foundation',
+    covers: 'Biographical data, state executives, judiciary',
+    url: 'https://www.wikidata.org',
   },
 ] as const;
 
@@ -133,8 +241,8 @@ export default function MethodologyPage() {
 
         <h1 className="text-4xl font-bold mb-4">Methodology</h1>
         <p className="type-lg text-gray-600 mb-12 max-w-2xl">
-          How CIV.IQ handles campaign finance data, what the research says, and what we do and do
-          not claim.
+          How CIV.IQ handles campaign finance data, what the research says, where our data comes
+          from, and what we do not claim.
         </p>
 
         {/* ── Section 1: Campaign Finance Framing ──────────────── */}
@@ -145,15 +253,15 @@ export default function MethodologyPage() {
 
           <div className="space-y-4 type-base text-gray-700 leading-relaxed">
             <p>
-              CIV.IQ shows campaign donations alongside voting records. We do this for transparency.
-              We do not claim that donations caused any vote.
+              CIV.IQ shows campaign donations alongside voting records. We do this so you can see
+              the full picture. We do not claim that donations caused any vote.
             </p>
 
             <p>
-              Research shows that party membership and personal beliefs predict how a legislator
-              votes far better than campaign money. A 2003 study by Ansolabehere, de Figueiredo, and
-              Snyder found that contributions explain a &ldquo;minuscule fraction&rdquo; of voting
-              behavior after accounting for party and ideology.
+              Party membership and personal beliefs predict how a legislator votes far better than
+              campaign money. Ansolabehere, de Figueiredo, and Snyder (2003) found that
+              contributions explain a &ldquo;minuscule fraction&rdquo; of voting after you account
+              for party and ideology.
               <sup>
                 <a href="#ref-ansolabehere" className="text-[#3ea2d4]">
                   1
@@ -162,10 +270,10 @@ export default function MethodologyPage() {
             </p>
 
             <p>
-              The strongest research finding about campaign money is about <em>access</em>, not
-              votes. A 2016 study by Kalla and Broockman found that donors get three to four times
-              more meetings with elected officials than non-donors. Money opens doors. It does not
-              necessarily change minds.
+              The strongest finding about campaign money is about <em>access</em>, not votes. Kalla
+              and Broockman (2016) found that donors get three to four times more meetings with
+              elected officials than non-donors. Money opens doors. It does not necessarily change
+              minds.
               <sup>
                 <a href="#ref-kalla" className="text-[#3ea2d4]">
                   2
@@ -174,13 +282,14 @@ export default function MethodologyPage() {
             </p>
 
             <p>
-              A major challenge in this research is <strong>strategic giving</strong>. Donors tend
-              to give money to legislators who already agree with them. This creates a pattern that
-              looks like money changed a vote, when in fact the legislator was already going to vote
-              that way.
+              There is also a chicken-and-egg problem. Donors tend to give money to legislators who
+              already agree with them. This makes it look like money changed a vote, when the
+              legislator was already going to vote that way. Researchers call this{' '}
+              <strong>strategic giving</strong>, and it is the biggest challenge in studying
+              campaign finance.
             </p>
 
-            <div className="border-l-3 border-[#3ea2d4] pl-4 py-2 bg-gray-50">
+            <div className="border-l-[3px] border-[#3ea2d4] pl-4 py-2 bg-gray-50">
               <p className="font-medium text-gray-900">
                 CIV.IQ presents donations alongside votes for transparency. We do not claim that
                 donations caused votes.
@@ -192,12 +301,12 @@ export default function MethodologyPage() {
         {/* ── Section 2: Five Pathways ─────────────────────────── */}
         <section className="mb-12" aria-labelledby="pathways">
           <h2 id="pathways" className="text-2xl font-bold mb-4">
-            Five pathways of campaign finance activity
+            Five ways campaign money relates to legislation
           </h2>
 
           <p className="type-base text-gray-700 mb-6 leading-relaxed">
-            Researchers have identified five ways campaign money relates to what legislators do. We
-            rank them by how strong the evidence is, from strongest to weakest.
+            Researchers have found five ways campaign money connects to what legislators do. We rank
+            them by how strong the evidence is, from strongest to weakest.
           </p>
 
           <ol className="space-y-6">
@@ -211,14 +320,15 @@ export default function MethodologyPage() {
                 </span>
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
-                Donors get more meetings with legislators. Kalla and Broockman (2016) showed that
-                donors were three to four times more likely to get a meeting than non-donors.
+                Donors get more meetings with legislators. Kalla and Broockman (2016) ran a
+                controlled experiment and found donors were three to four times more likely to get a
+                meeting.
                 <sup>
                   <a href="#ref-kalla" className="text-[#3ea2d4]">
                     2
                   </a>
                 </sup>{' '}
-                This is the most well-supported finding in campaign finance research.
+                This is the best-supported finding in campaign finance research.
               </p>
             </li>
 
@@ -226,27 +336,26 @@ export default function MethodologyPage() {
             <li className="border-2 border-gray-200 p-4">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="type-sm font-bold text-gray-400 aicher-heading-wide">02</span>
-                <h3 className="text-lg font-bold">Committee gatekeeping</h3>
+                <h3 className="text-lg font-bold">Committee work</h3>
                 <span className="type-xs font-medium text-[#3ea2d4] aicher-heading-wide">
                   STRONG
                 </span>
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
-                Money correlates with how actively a member works in committee on bills that affect
+                Donations match up with how hard a member works on bills in committee that affect
                 donors. Hall and Wayman (1990) found this pattern.
                 <sup>
                   <a href="#ref-hall" className="text-[#3ea2d4]">
                     3
                   </a>
                 </sup>{' '}
-                Hojnacki and Kimball (2001) confirmed it.
+                Hojnacki and Kimball (2001) found the same thing.
                 <sup>
                   <a href="#ref-hojnacki" className="text-[#3ea2d4]">
                     4
                   </a>
                 </sup>{' '}
-                Money may affect how much effort a legislator puts into committee work, not how they
-                vote on the floor.
+                Money may affect effort in committee, not how someone votes on the floor.
               </p>
             </li>
 
@@ -260,21 +369,21 @@ export default function MethodologyPage() {
                 </span>
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
-                Lobbying organizations spend money to get certain issues onto the legislative
-                agenda. Furnas et al. (2023)
+                Lobbying groups spend money to get certain issues in front of Congress. Furnas et
+                al. (2023) studied how lobbying shapes which issues get attention.
                 <sup>
                   <a href="#ref-furnas" className="text-[#3ea2d4]">
                     5
                   </a>
                 </sup>{' '}
-                and McKay (2018)
+                McKay (2018) looked at how fundraising connects to legislative outcomes.
                 <sup>
                   <a href="#ref-mckay" className="text-[#3ea2d4]">
                     6
                   </a>
                 </sup>{' '}
-                studied this pathway. It is harder to measure than votes because &ldquo;what did not
-                happen&rdquo; is invisible.
+                This is harder to measure than votes because you cannot see what <em>did not</em>{' '}
+                make it onto the agenda.
               </p>
             </li>
 
@@ -288,11 +397,10 @@ export default function MethodologyPage() {
                 </span>
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
-                Donors give to legislators who already agree with them. This is the biggest
-                challenge in campaign finance research. When a legislator votes in line with a
-                donor&rsquo;s interests, it is usually impossible to tell whether the money changed
-                the vote or the donor simply picked a like-minded legislator. This is called the{' '}
-                <strong>endogeneity problem</strong>.
+                Donors give to legislators who already agree with them. When a legislator votes the
+                way a donor wants, you usually cannot tell if the money changed the vote or if the
+                donor simply picked someone who already agreed. This chicken-and-egg problem is the
+                biggest challenge in campaign finance research.
               </p>
             </li>
 
@@ -307,13 +415,14 @@ export default function MethodologyPage() {
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
                 The idea that a donation flips a specific vote has very little support. Most studies
-                find no significant effect after controlling for party and ideology.
+                find no real effect after accounting for party and ideology.
                 <sup>
                   <a href="#ref-ansolabehere" className="text-[#3ea2d4]">
                     1
                   </a>
                 </sup>{' '}
-                Narrow exceptions exist in specific industries, but the overall evidence is weak.
+                A few narrow exceptions exist in specific industries, but the overall evidence is
+                weak.
               </p>
             </li>
           </ol>
@@ -327,8 +436,9 @@ export default function MethodologyPage() {
 
           <div className="space-y-4 type-base text-gray-700 leading-relaxed">
             <p>
-              CIV.IQ uses only official government data sources. We never use mock or estimated
-              data. If a source is unavailable, we say so.
+              CIV.IQ pulls data from {DATA_SOURCES.length} official government and public data
+              sources. We never make up data or use estimates. When a source is unavailable, we tell
+              you and show the date of the last available data.
             </p>
           </div>
 
@@ -371,44 +481,47 @@ export default function MethodologyPage() {
           <div className="mt-8 space-y-4 type-base text-gray-700 leading-relaxed">
             <h3 className="text-lg font-bold">How we analyze data</h3>
 
-            <p>Our analysis follows a statistics-first approach.</p>
+            <p>We run the numbers first. AI writes the summary second.</p>
 
             <ul className="space-y-2 ml-4">
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
-                <span>Every analyzer computes numbers before any AI text is generated.</span>
+                <span>Every analysis starts with math, not AI. The numbers come first.</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  Every insight carries a <strong>confidence score</strong> from 0 to 1. Insights
-                  below 0.6 are not shown.
+                  Every insight has a <strong>confidence score</strong> from 0 to 1. We hide
+                  anything below 0.6.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  <strong>Minimum sample sizes</strong>: 10 votes per sector, 4 quarters for trend
-                  analysis, 3 trades for stock analysis.
+                  We require <strong>minimum sample sizes</strong> before showing results: at least
+                  10 votes per sector, 4 quarters for trends, and 3 trades for stock analysis.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  We compare every legislator to their <strong>peer group</strong> (same chamber,
-                  same party, or same committee) so that patterns are shown in context.
+                  We always compare a legislator to their <strong>peers</strong> &mdash; same
+                  chamber, same party, or same committee &mdash; so you see patterns in context, not
+                  in isolation.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
-                <span>AI-generated text is written at an 8th-grade reading level or below.</span>
+                <span>
+                  AI-generated summaries use plain language at an 8th-grade reading level or below.
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  We link records across data sources using <strong>entity resolution</strong>{' '}
-                  &mdash; matching names, IDs, and organizations across FEC, Congress.gov, Senate
-                  LDA, and SEC filings.
+                  We match records across sources &mdash; linking names, IDs, and organizations
+                  across FEC filings, Congress.gov, Senate lobbying filings, and SEC records &mdash;
+                  so you can see the connections between money, votes, and lobbying in one place.
                 </span>
               </li>
             </ul>
@@ -425,10 +538,10 @@ export default function MethodologyPage() {
             <div className="border-2 border-gray-200 p-4">
               <h3 className="font-bold mb-1">We do not claim donations caused votes.</h3>
               <p className="type-base text-gray-700 leading-relaxed">
-                We show donations and votes together so citizens can see the full picture. We use
-                words like &ldquo;received,&rdquo; &ldquo;associated with,&rdquo; and
-                &ldquo;correlated with.&rdquo; We never say &ldquo;influenced,&rdquo;
-                &ldquo;caused,&rdquo; or &ldquo;resulted in.&rdquo;
+                We show donations and votes together so you can see the full picture. We use words
+                like &ldquo;received,&rdquo; &ldquo;associated with,&rdquo; and &ldquo;correlated
+                with.&rdquo; We never say &ldquo;influenced,&rdquo; &ldquo;caused,&rdquo; or
+                &ldquo;resulted in.&rdquo;
               </p>
             </div>
 
@@ -441,10 +554,10 @@ export default function MethodologyPage() {
             </div>
 
             <div className="border-2 border-gray-200 p-4">
-              <h3 className="font-bold mb-1">We do not editorialize.</h3>
+              <h3 className="font-bold mb-1">We do not take sides.</h3>
               <p className="type-base text-gray-700 leading-relaxed">
                 CIV.IQ presents data without opinion. We do not rate legislators as good or bad. We
-                do not recommend how to vote. We show public records and let citizens draw their own
+                do not tell you how to vote. We show public records and let you draw your own
                 conclusions.
               </p>
             </div>
@@ -452,8 +565,8 @@ export default function MethodologyPage() {
             <div className="border-2 border-gray-200 p-4">
               <h3 className="font-bold mb-1">We do not cherry-pick.</h3>
               <p className="type-base text-gray-700 leading-relaxed">
-                We do not select timeframes or comparisons to make any legislator look better or
-                worse. Every comparison uses consistent rules across all members.
+                We do not select time periods or comparisons to make any legislator look better or
+                worse. Every comparison follows the same rules for all members.
               </p>
             </div>
           </div>
@@ -502,8 +615,9 @@ export default function MethodologyPage() {
               id="furnas"
               authors="Furnas, A. C., LaPira, T. M., Hertel-Fernandez, A., Drutman, L., & Kosar, K. R."
               year={2023}
-              title="The People&rsquo;s Lobby? Lobbying and Representation in the U.S. Congress"
-              journal="American Political Science Review, 117(4), 1424-1441"
+              title="More than Mere Access: An Experiment on Moneyed Interests, Information Provision, and Legislative Action in Congress"
+              journal="Political Research Quarterly, 76(1), 348-364"
+              url="https://doi.org/10.1177/10659129221098743"
             />
             <Citation
               id="mckay"
@@ -520,8 +634,7 @@ export default function MethodologyPage() {
         <div className="p-4 bg-gray-50 border-2 border-gray-200">
           <p className="type-sm text-gray-600">
             This page was last updated April 2026. CIV.IQ is open-source civic infrastructure. Our
-            analysis methods evolve as research advances. For questions about our methodology, see
-            our{' '}
+            methods improve as research advances. For questions about our methodology, see our{' '}
             <a
               href="https://github.com/civic-intel-hub/civic-intel-hub"
               className="text-[#3ea2d4] hover:underline"
