@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbSchema, GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Federal Spending',
@@ -15,5 +16,21 @@ export const metadata: Metadata = {
 };
 
 export default function SpendingLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Federal Spending', url: 'https://civdotiq.org/spending' },
+        ]}
+      />
+      <GovernmentServiceSchema
+        name="Federal Spending Explorer"
+        description="Explore federal contracts and grants by congressional district. All data from USASpending.gov."
+        url="https://civdotiq.org/spending"
+        serviceType="Government Data"
+      />
+      {children}
+    </>
+  );
 }

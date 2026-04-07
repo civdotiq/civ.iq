@@ -331,6 +331,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/investigate', priority: 0.5, freq: 'monthly' as const },
     { path: '/open', priority: 0.5, freq: 'monthly' as const },
     { path: '/developers', priority: 0.7, freq: 'monthly' as const },
+    { path: '/elections', priority: 0.65, freq: 'monthly' as const },
+    { path: '/elections/federal', priority: 0.6, freq: 'monthly' as const },
+    { path: '/elections/state', priority: 0.6, freq: 'monthly' as const },
+    { path: '/federal', priority: 0.7, freq: 'monthly' as const },
+    { path: '/enforcement', priority: 0.55, freq: 'weekly' as const },
+    { path: '/spending', priority: 0.6, freq: 'weekly' as const },
+    { path: '/about', priority: 0.4, freq: 'monthly' as const },
+    { path: '/privacy', priority: 0.2, freq: 'yearly' as const },
+    { path: '/terms', priority: 0.2, freq: 'yearly' as const },
+    { path: '/disclaimer', priority: 0.2, freq: 'yearly' as const },
+    { path: '/docs/api', priority: 0.6, freq: 'monthly' as const },
+    { path: '/migrate/google-civic', priority: 0.5, freq: 'monthly' as const },
   ];
 
   for (const page of staticPages) {
