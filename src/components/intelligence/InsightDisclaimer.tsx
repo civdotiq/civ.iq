@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 /**
  * InsightDisclaimer — collapsible disclaimer + methodology section.
@@ -49,6 +50,12 @@ export function InsightDisclaimer({
           </p>
         </div>
       )}
+
+      <p className="type-xs text-gray-400 mt-2">
+        <Link href="/methodology" className="text-[#3ea2d4] hover:underline">
+          Full methodology and academic citations
+        </Link>
+      </p>
     </div>
   );
 }
