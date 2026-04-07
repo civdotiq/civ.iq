@@ -43,7 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const limit = Math.min(Math.max(rawLimit, 1), 100);
 
     const response = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&sort=updateDate+desc`,
+      `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&sort=updateDate+desc&format=json`,
       {
         headers: {
           Accept: 'application/json',

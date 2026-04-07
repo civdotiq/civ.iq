@@ -263,7 +263,7 @@ async function fetchBillData(
   try {
     // Convert bill type to lowercase for API (e.g., HCONRES -> hconres)
     const typeSlug = billType.toLowerCase();
-    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}`;
+    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}?format=json`;
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -536,7 +536,7 @@ async function parseHouseVote(
     let sessionNumber = 1;
 
     for (const session of sessionsToTry) {
-      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}`;
+      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?format=json`;
 
       logger.info('Trying House vote fetch', {
         voteId,

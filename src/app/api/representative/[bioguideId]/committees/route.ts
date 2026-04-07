@@ -24,7 +24,7 @@ export async function GET(
       return new NextResponse('Congress.gov API key required', { status: 500 });
     }
 
-    const response = await fetch(`https://api.congress.gov/v3/member/${bioguideId}`, {
+    const response = await fetch(`https://api.congress.gov/v3/member/${bioguideId}?format=json`, {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',

@@ -26,7 +26,7 @@ export async function GET(
   }
 
   // Congress.gov API endpoint
-  const url = `https://api.congress.gov/v3/member/${upperBioguideId}`;
+  const url = `https://api.congress.gov/v3/member/${upperBioguideId}?format=json`;
 
   try {
     logger.debug('Simple API: Calling Congress.gov API');

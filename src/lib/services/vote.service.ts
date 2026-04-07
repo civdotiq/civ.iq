@@ -183,7 +183,7 @@ function parseVoteId(voteId: string): {
 async function fetchBillData(congress: string, billType: string, billNumber: string) {
   try {
     const typeSlug = billType.toLowerCase();
-    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}`;
+    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}?format=json`;
     const response = await fetch(apiUrl, {
       headers: {
         'User-Agent': 'CivIQ-Hub/2.0',
@@ -273,7 +273,7 @@ async function parseHouseVote(
     let apiUrl = '';
 
     for (const session of sessionsToTry) {
-      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}`;
+      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?format=json`;
       response = await fetch(apiUrl, {
         headers: {
           'User-Agent': 'CivIQ-Hub/2.0',
@@ -498,7 +498,7 @@ async function enrichBillData(vote: UnifiedVoteDetail): Promise<UnifiedVoteDetai
 
     const typeSlug = match[1]!.replace(/[\s.]/g, '').toLowerCase();
     const billNumber = match[2]!;
-    const apiUrl = `https://api.congress.gov/v3/bill/${vote.congress}/${typeSlug}/${billNumber}`;
+    const apiUrl = `https://api.congress.gov/v3/bill/${vote.congress}/${typeSlug}/${billNumber}?format=json`;
 
     const response = await fetch(apiUrl, {
       headers: {

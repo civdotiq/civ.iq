@@ -25,7 +25,7 @@ export async function GET(
     }
 
     const response = await fetch(
-      `https://api.congress.gov/v3/member?currentMember=true&limit=250`,
+      `https://api.congress.gov/v3/member?currentMember=true&limit=250&format=json`,
       {
         headers: {
           Accept: 'application/json',
