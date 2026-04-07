@@ -4,9 +4,24 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { GlossaryClient } from './GlossaryClient';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'Civic Glossary',
+  description:
+    'Definitions for civic and legislative terms. Understand congressional procedures, campaign finance, and government structure.',
+  openGraph: {
+    title: 'Civic Glossary | CIV.IQ',
+    description:
+      'Definitions for civic and legislative terms. Understand congressional procedures, campaign finance, and government structure.',
+    url: 'https://civdotiq.org/glossary',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
+};
 
 export default function GlossaryPage() {
   return (

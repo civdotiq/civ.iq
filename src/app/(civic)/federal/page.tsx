@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     'elections',
     'campaign finance',
   ],
+  openGraph: {
+    title: 'Federal Government | CIV.IQ',
+    description:
+      'Explore federal government data: representatives, legislation, spending, regulations, elections, and more. All sourced from official government APIs.',
+    url: 'https://civdotiq.org/federal',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
 };
 
 const categories = [

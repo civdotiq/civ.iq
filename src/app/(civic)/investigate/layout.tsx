@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: 'Investigate — CIV.IQ',
   description:
     'Explore connections between legislators, donors, committees, and government contracts. Follow the money and trace influence through real government data.',
+  openGraph: {
+    title: 'Investigate | CIV.IQ',
+    description:
+      'Explore connections between legislators, donors, committees, and government contracts. Follow the money and trace influence through real government data.',
+    url: 'https://civdotiq.org/investigate',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
 };
 
 export default function InvestigateLayout({ children }: { children: React.ReactNode }) {

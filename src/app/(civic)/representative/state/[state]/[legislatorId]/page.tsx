@@ -19,6 +19,8 @@ import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErro
 import Link from 'next/link';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
+import { BreadcrumbSchema, ProfilePageSchema } from '@/components/seo/JsonLd';
+import { getStateName } from '@/lib/data/us-states';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -108,8 +110,31 @@ export default async function StateLegislatorProfilePage({
     notFound();
   }
 
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+  const chamberName = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
+
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/states/${state}` },
+          { name: 'Legislature', url: `https://civdotiq.org/state-legislature/${state}` },
+          {
+            name: legislator.name,
+            url: `https://civdotiq.org/representative/state/${state}/${legislatorId}`,
+          },
+        ]}
+      />
+      <ProfilePageSchema
+        person={{
+          name: legislator.name,
+          jobTitle: chamberName,
+          affiliation: legislator.party,
+          worksFor: { name: `${stateName} State Legislature` },
+        }}
+        url={`https://civdotiq.org/representative/state/${state}/${legislatorId}`}
+      />
       <div>
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <nav className="text-sm text-gray-500 mb-6">
@@ -158,6 +183,13 @@ export async function generateMetadata({
       return {
         title: `${legislator.name} - ${chamberName} | ${state.toUpperCase()}`,
         description: `View detailed information about ${legislator.name}, ${chamberName} for ${state.toUpperCase()} District ${legislator.district}`,
+        openGraph: {
+          title: `${legislator.name} - ${chamberName} | CIV.IQ`,
+          description: `View detailed information about ${legislator.name}, ${chamberName} for ${state.toUpperCase()} District ${legislator.district}`,
+          url: `https://civdotiq.org/representative/state/${state.toLowerCase()}/${legislatorId}`,
+          siteName: 'CIV.IQ',
+          type: 'profile',
+        },
       };
     }
   } catch {

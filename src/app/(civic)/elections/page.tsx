@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     'house results',
     'governor results',
   ],
+  openGraph: {
+    title: 'Elections | CIV.IQ',
+    description:
+      'Browse 2024 election results for federal and state races. President, Senate, House, Governor, and State Legislature results from MEDSL/Harvard Dataverse.',
+    url: 'https://civdotiq.org/elections',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
 };
 
 export default function ElectionsPage() {

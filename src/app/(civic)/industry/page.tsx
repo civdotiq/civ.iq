@@ -11,6 +11,14 @@ export const metadata: Metadata = {
   title: 'Industries',
   description:
     'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',
+  openGraph: {
+    title: 'Industries | CIV.IQ',
+    description:
+      'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',
+    url: 'https://civdotiq.org/industry',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
 };
 
 const SECTORS = [

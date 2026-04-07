@@ -1,17 +1,38 @@
+import type { Metadata } from 'next';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
-export default async function IndustrySectorLayout({
-  children,
-  params,
-}: {
+interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ sector: string }>;
-}) {
-  const { sector } = await params;
-  const sectorName = sector
+}
+
+function formatSectorName(sector: string): string {
+  return sector
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
+  const { sector } = await params;
+  const sectorName = formatSectorName(sector);
+
+  return {
+    title: `${sectorName} — Industry Sector`,
+    description: `Federal legislation, congressional committees, lobbying organizations, and campaign finance activity connected to the ${sectorName.toLowerCase()} industry sector.`,
+    openGraph: {
+      title: `${sectorName} — Industry Sector | CIV.IQ`,
+      description: `Federal legislation, congressional committees, lobbying organizations, and campaign finance activity connected to the ${sectorName.toLowerCase()} industry sector.`,
+      url: `https://civdotiq.org/industry/${sector}`,
+      siteName: 'CIV.IQ',
+      type: 'website',
+    },
+  };
+}
+
+export default async function IndustrySectorLayout({ children, params }: LayoutProps) {
+  const { sector } = await params;
+  const sectorName = formatSectorName(sector);
 
   return (
     <>

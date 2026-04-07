@@ -206,7 +206,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   return (
     <div className="space-y-8">
       {/* Bill Header */}
-      <div className="bg-white border-2 border-black p-4 sm:p-8">
+      <div className="bg-white border-2 border-black p-4 sm:p-8" data-speakable="bill-summary">
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
             <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>

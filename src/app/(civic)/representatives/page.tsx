@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -12,6 +13,20 @@ import {
   getRepresentativesByZipService,
 } from '@/lib/services/representatives.service';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+
+export const metadata: Metadata = {
+  title: 'Representatives',
+  description:
+    'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',
+  openGraph: {
+    title: 'Representatives | CIV.IQ',
+    description:
+      'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',
+    url: 'https://civdotiq.org/representatives',
+    siteName: 'CIV.IQ',
+    type: 'website',
+  },
+};
 
 // Dynamic imports for better code splitting
 const RepresentativesClient = dynamic(
