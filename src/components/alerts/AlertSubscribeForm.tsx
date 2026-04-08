@@ -8,7 +8,12 @@
 import React, { useState } from 'react';
 
 interface AlertSubscribeFormProps {
-  entities: Array<{ type: 'representative'; id: string; name: string }>;
+  entities: Array<{
+    type: 'representative';
+    id: string;
+    name: string;
+    chamber?: 'House' | 'Senate';
+  }>;
   onSuccess?: () => void;
   onCancel?: () => void;
 }

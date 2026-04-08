@@ -12,6 +12,7 @@ export interface WatchedEntity {
   type: 'representative';
   id: string; // bioguideId
   name?: string; // display name, stored for email templates
+  chamber?: 'House' | 'Senate';
 }
 
 export interface Subscription {
@@ -25,6 +26,7 @@ export interface Subscription {
 }
 
 const KEY_PREFIX = 'alert:';
+const REGISTRY_KEY = `${KEY_PREFIX}registry`;
 const SUB_TTL = 365 * 24 * 60 * 60; // 1 year
 const PENDING_TTL = 48 * 60 * 60; // 48 hours for unverified
 
@@ -34,6 +36,10 @@ function subKey(emailHash: string): string {
 
 function entityKey(entity: WatchedEntity): string {
   return `${KEY_PREFIX}entity:${entity.type}:${entity.id}`;
+}
+
+function entityId(entity: WatchedEntity): string {
+  return `${entity.type}:${entity.id}`;
 }
 
 /**
@@ -64,9 +70,14 @@ export async function createSubscription(
   const ttl = subscription.verified ? SUB_TTL : PENDING_TTL;
   await cache.set(key, subscription, ttl);
 
-  // If already verified, update entity indexes immediately
+  // If already verified, update entity indexes + registry
   if (subscription.verified) {
+    if (existing?.entities) {
+      await removeEntityIndexes(emailHash, existing.entities);
+      await pruneRegistryEntities(existing.entities);
+    }
     await updateEntityIndexes(emailHash, entities);
+    await addRegistryEntities(entities);
   }
 
   logger.info('[Alerts] Subscription created/updated', {
@@ -93,6 +104,7 @@ export async function verifySubscription(emailHash: string): Promise<Subscriptio
 
   await cache.set(key, subscription, SUB_TTL);
   await updateEntityIndexes(emailHash, subscription.entities);
+  await addRegistryEntities(subscription.entities);
 
   logger.info('[Alerts] Subscription verified', { emailHash });
   return subscription;
@@ -119,14 +131,18 @@ export async function updateSubscription(
   const subscription = await cache.get<Subscription>(key);
   if (!subscription || !subscription.verified) return null;
 
-  // Remove old entity indexes before updating
-  await removeEntityIndexes(emailHash, subscription.entities);
+  const oldEntities = subscription.entities;
 
   if (updates.entities) subscription.entities = updates.entities;
   if (updates.alertTypes) subscription.alertTypes = updates.alertTypes;
 
   await cache.set(key, subscription, SUB_TTL);
+
+  // Update entity indexes: remove old, add new
+  await removeEntityIndexes(emailHash, oldEntities);
+  await pruneRegistryEntities(oldEntities);
   await updateEntityIndexes(emailHash, subscription.entities);
+  await addRegistryEntities(subscription.entities);
 
   logger.info('[Alerts] Subscription updated', { emailHash });
   return subscription;
@@ -142,9 +158,9 @@ export async function deleteSubscription(emailHash: string): Promise<boolean> {
   const subscription = await cache.get<Subscription>(key);
   if (!subscription) return false;
 
-  // Remove entity indexes
   await removeEntityIndexes(emailHash, subscription.entities);
   await cache.delete(key);
+  await pruneRegistryEntities(subscription.entities);
 
   logger.info('[Alerts] Subscription deleted', { emailHash });
   return true;
@@ -161,27 +177,16 @@ export async function getEntitySubscribers(entity: WatchedEntity): Promise<strin
 
 /**
  * Get all entities that have at least one subscriber.
- * Returns entity keys from Redis matching the alert:entity:* pattern.
+ * Reads from the explicit registry key — no KEYS/SCAN needed.
+ * Works with Upstash REST, ioredis, and in-memory fallback.
  */
 export async function getWatchedEntities(): Promise<WatchedEntity[]> {
   const cache = getRedisCache();
-  const keys = await cache.keys('alert:entity:*');
-
-  return keys
-    .map(key => {
-      // Key format: civiq:alert:entity:{type}:{id} or alert:entity:{type}:{id}
-      const cleanKey = key.replace(/^civiq:/, '');
-      const parts = cleanKey.split(':');
-      // alert:entity:representative:A000370
-      if (parts.length >= 4) {
-        return { type: parts[2] as 'representative', id: parts.slice(3).join(':') };
-      }
-      return null;
-    })
-    .filter((e): e is WatchedEntity => e !== null);
+  const registry = await cache.get<WatchedEntity[]>(REGISTRY_KEY);
+  return registry ?? [];
 }
 
-// --- Internal helpers ---
+// --- Entity index helpers ---
 
 async function updateEntityIndexes(emailHash: string, entities: WatchedEntity[]): Promise<void> {
   const cache = getRedisCache();
@@ -212,4 +217,59 @@ async function removeEntityIndexes(emailHash: string, entities: WatchedEntity[])
       await cache.set(key, Array.from(subscribers), SUB_TTL);
     }
   }
+}
+
+// --- Registry helpers ---
+
+/**
+ * Add entities to the registry (idempotent).
+ * Merges new entities, updates name/chamber on existing ones.
+ */
+async function addRegistryEntities(entities: WatchedEntity[]): Promise<void> {
+  const cache = getRedisCache();
+  const registry = (await cache.get<WatchedEntity[]>(REGISTRY_KEY)) ?? [];
+  const byId = new Map(registry.map(e => [entityId(e), e]));
+
+  for (const entity of entities) {
+    const id = entityId(entity);
+    const existing = byId.get(id);
+    if (existing) {
+      // Update metadata (name/chamber) if provided
+      if (entity.name) existing.name = entity.name;
+      if (entity.chamber) existing.chamber = entity.chamber;
+    } else {
+      byId.set(id, { ...entity });
+    }
+  }
+
+  await cache.set(REGISTRY_KEY, Array.from(byId.values()), SUB_TTL);
+}
+
+/**
+ * Remove entities from the registry IF they have no remaining subscribers.
+ * Checks the entity index key before removing.
+ */
+async function pruneRegistryEntities(entities: WatchedEntity[]): Promise<void> {
+  const cache = getRedisCache();
+  const registry = (await cache.get<WatchedEntity[]>(REGISTRY_KEY)) ?? [];
+
+  const toCheck = new Set(entities.map(entityId));
+  const kept: WatchedEntity[] = [];
+
+  for (const entry of registry) {
+    if (!toCheck.has(entityId(entry))) {
+      // Not a candidate for pruning — keep
+      kept.push(entry);
+      continue;
+    }
+
+    // Check if this entity still has subscribers
+    const subscribers = await cache.get<string[]>(entityKey(entry));
+    if (subscribers && subscribers.length > 0) {
+      kept.push(entry);
+    }
+    // else: no subscribers, drop from registry
+  }
+
+  await cache.set(REGISTRY_KEY, kept, SUB_TTL);
 }

@@ -265,6 +265,7 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
                   type: 'representative' as const,
                   id: rep.bioguideId,
                   name: rep.name,
+                  chamber: rep.chamber,
                 }))}
               />
             </div>

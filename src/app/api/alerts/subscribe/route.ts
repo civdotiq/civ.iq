@@ -18,10 +18,11 @@ import logger from '@/lib/logging/simple-logger';
 export const dynamic = 'force-dynamic';
 
 const VALID_ALERT_TYPES: AlertType[] = ['votes', 'finance', 'legislation'];
+const VALID_CHAMBERS = new Set(['House', 'Senate']);
 
 interface SubscribeRequestBody {
   email: string;
-  entities: Array<{ type: string; id: string; name?: string }>;
+  entities: Array<{ type: string; id: string; name?: string; chamber?: string }>;
   alertTypes: string[];
 }
 
@@ -33,6 +34,14 @@ function getClientIp(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Fail early if alert system is not configured
+  if (!process.env.RESEND_API_KEY || !process.env.ALERT_TOKEN_SECRET) {
+    return NextResponse.json(
+      { error: 'Alert system is not configured on this server.' },
+      { status: 503 }
+    );
+  }
+
   // Rate limit: 5 subscribe attempts per minute per IP
   const clientIp = getClientIp(request);
   const rateLimit = await checkRateLimitRedis(clientIp, '/api/alerts/subscribe', {
@@ -75,6 +84,7 @@ export async function POST(request: NextRequest) {
       type: 'representative' as const,
       id: e.id.toUpperCase(),
       name: e.name,
+      chamber: VALID_CHAMBERS.has(e.chamber ?? '') ? (e.chamber as 'House' | 'Senate') : undefined,
     }));
 
   if (entities.length === 0) {

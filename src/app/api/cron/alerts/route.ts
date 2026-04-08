@@ -8,12 +8,14 @@ import {
   getWatchedEntities,
   getEntitySubscribers,
   getSubscription,
+  type Subscription,
 } from '@/lib/alerts/subscription-store';
 import {
   detectChanges,
   type DetectedChange,
   type VoteChangeData,
   type LegislationChangeData,
+  type FinanceChangeData,
 } from '@/lib/alerts/change-detector';
 import { createToken } from '@/lib/alerts/token';
 import {
@@ -21,15 +23,20 @@ import {
   financeAlertEmail,
   legislationAlertEmail,
 } from '@/lib/alerts/email-templates';
-import { sendEmailBatch } from '@/lib/alerts/email-sender';
+import { sendEmailBatch, type SendEmailParams } from '@/lib/alerts/email-sender';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
 
+/** Cached subscriber data per entity to avoid redundant Redis reads */
+interface EntitySubscriberData {
+  subscribers: Array<{ hash: string; subscription: Subscription }>;
+  alertTypes: Set<string>;
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
-  // Verify cron secret
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -54,35 +61,39 @@ export async function POST(request: NextRequest) {
 
     logger.info('[Alerts Cron] Checking entities', { count: watchedEntities.length });
 
-    // 2. For each entity, collect all alert types subscribers want
-    const entityAlertTypes = new Map<string, Set<string>>();
+    // 2. For each entity, fetch subscribers and their subscriptions ONCE.
+    //    Cache results to avoid refetching in step 4.
+    const entityData = new Map<string, EntitySubscriberData>();
 
     for (const entity of watchedEntities) {
       const subscriberHashes = await getEntitySubscribers(entity);
-      const alertTypeSet = new Set<string>();
+      const data: EntitySubscriberData = { subscribers: [], alertTypes: new Set() };
 
       for (const hash of subscriberHashes) {
         const sub = await getSubscription(hash);
-        if (sub?.verified) {
-          for (const at of sub.alertTypes) {
-            alertTypeSet.add(at);
-          }
+        if (!sub?.verified) continue;
+
+        data.subscribers.push({ hash, subscription: sub });
+        for (const at of sub.alertTypes) {
+          data.alertTypes.add(at);
         }
       }
 
-      entityAlertTypes.set(`${entity.type}:${entity.id}`, alertTypeSet);
+      if (data.subscribers.length > 0) {
+        entityData.set(`${entity.type}:${entity.id}`, data);
+      }
     }
 
     // 3. Detect changes for each entity
     const allChanges: DetectedChange[] = [];
 
     for (const entity of watchedEntities) {
-      const alertTypes = entityAlertTypes.get(`${entity.type}:${entity.id}`);
-      if (!alertTypes || alertTypes.size === 0) continue;
+      const data = entityData.get(`${entity.type}:${entity.id}`);
+      if (!data || data.alertTypes.size === 0) continue;
 
       const changes = await detectChanges(
         entity,
-        Array.from(alertTypes) as Array<'votes' | 'finance' | 'legislation'>
+        Array.from(data.alertTypes) as Array<'votes' | 'finance' | 'legislation'>
       );
       allChanges.push(...changes);
     }
@@ -99,30 +110,30 @@ export async function POST(request: NextRequest) {
 
     logger.info('[Alerts Cron] Changes detected', { count: allChanges.length });
 
-    // 4. Build and send alert emails
-    const emailsToSend: Array<{ to: string; subject: string; text: string; html: string }> = [];
+    // 4. Build alert emails using cached subscriber data (no redundant fetches)
+    const emailsToSend: SendEmailParams[] = [];
 
     for (const change of allChanges) {
-      const subscriberHashes = await getEntitySubscribers(change.entity);
+      const data = entityData.get(`${change.entity.type}:${change.entity.id}`);
+      if (!data) continue;
 
-      for (const hash of subscriberHashes) {
-        const sub = await getSubscription(hash);
-        if (!sub?.verified) continue;
-        if (!sub.alertTypes.includes(change.alertType)) continue;
+      for (const { hash, subscription } of data.subscribers) {
+        if (!subscription.alertTypes.includes(change.alertType)) continue;
 
-        // Generate unsubscribe/manage tokens (long-lived, 30 days)
+        // Generate tokens for unsubscribe/manage (30-day TTL)
         const [unsubToken, manageToken] = await Promise.all([
           createToken(hash, 'unsub', 30 * 24 * 60 * 60),
           createToken(hash, 'manage', 30 * 24 * 60 * 60),
         ]);
 
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
-        const urls = {
-          unsubscribeUrl: `${siteUrl}/api/alerts/unsubscribe?token=${encodeURIComponent(unsubToken)}`,
-          manageUrl: `${siteUrl}/api/alerts/manage?token=${encodeURIComponent(manageToken)}`,
-        };
+        const unsubscribeUrl = `${siteUrl}/api/alerts/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
+        const manageUrl = `${siteUrl}/api/alerts/manage?token=${encodeURIComponent(manageToken)}`;
 
-        const emails = buildEmails(change, sub.email, urls);
+        const emails = buildEmails(change, subscription.email, {
+          unsubscribeUrl,
+          manageUrl,
+        });
         emailsToSend.push(...emails);
       }
     }
@@ -174,13 +185,13 @@ function buildEmails(
   change: DetectedChange,
   email: string,
   urls: { unsubscribeUrl: string; manageUrl: string }
-): Array<{ to: string; subject: string; text: string; html: string }> {
-  const results: Array<{ to: string; subject: string; text: string; html: string }> = [];
+): SendEmailParams[] {
+  const results: SendEmailParams[] = [];
   const repName = change.entity.name || change.entity.id;
 
   if (change.data.type === 'vote') {
     const voteData = change.data as VoteChangeData;
-    // Send one email per new vote (limit to 5 most recent to avoid flooding)
+    // Limit to 5 most recent votes to avoid flooding
     for (const vote of voteData.votes.slice(0, 5)) {
       const content = voteAlertEmail(
         {
@@ -193,7 +204,11 @@ function buildEmails(
         },
         urls
       );
-      results.push({ to: email, ...content });
+      results.push({
+        to: email,
+        ...content,
+        unsubscribeUrl: urls.unsubscribeUrl,
+      });
     }
   } else if (change.data.type === 'legislation') {
     const legData = change.data as LegislationChangeData;
@@ -209,8 +224,28 @@ function buildEmails(
         },
         urls
       );
-      results.push({ to: email, ...content });
+      results.push({
+        to: email,
+        ...content,
+        unsubscribeUrl: urls.unsubscribeUrl,
+      });
     }
+  } else if (change.data.type === 'finance') {
+    const finData = change.data as FinanceChangeData;
+    const content = financeAlertEmail(
+      {
+        representativeName: repName,
+        bioguideId: change.entity.id,
+        totalRaised: finData.totalRaised,
+        period: String(finData.cycle),
+      },
+      urls
+    );
+    results.push({
+      to: email,
+      ...content,
+      unsubscribeUrl: urls.unsubscribeUrl,
+    });
   }
 
   return results;

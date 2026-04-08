@@ -6,6 +6,8 @@
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
+import { fecApiService } from '@/lib/fec/fec-api-service';
+import { getFECIdFromBioguide } from '@/lib/data/legislator-mappings';
 import logger from '@/lib/logging/simple-logger';
 import type { AlertType, WatchedEntity } from './subscription-store';
 
@@ -22,16 +24,22 @@ interface BillsSnapshot {
   sponsoredCount: number;
 }
 
+interface FinanceSnapshot {
+  totalReceipts: number;
+  cycle: number;
+}
+
 interface EntityState {
   votes?: VoteSnapshot;
   bills?: BillsSnapshot;
+  finance?: FinanceSnapshot;
   updatedAt: string;
 }
 
 export interface DetectedChange {
   entity: WatchedEntity;
   alertType: AlertType;
-  data: VoteChangeData | LegislationChangeData;
+  data: VoteChangeData | LegislationChangeData | FinanceChangeData;
 }
 
 export interface VoteChangeData {
@@ -56,8 +64,21 @@ export interface LegislationChangeData {
   }>;
 }
 
+export interface FinanceChangeData {
+  type: 'finance';
+  totalRaised: string;
+  previousTotal: string;
+  cycle: number;
+}
+
 function stateKey(entity: WatchedEntity): string {
   return `${STATE_KEY_PREFIX}${entity.type}:${entity.id}`;
+}
+
+function formatCurrency(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
 }
 
 /**
@@ -75,42 +96,40 @@ export async function detectChanges(
   const changes: DetectedChange[] = [];
   const newState: EntityState = { updatedAt: new Date().toISOString() };
 
-  // Detect vote changes
   if (alertTypes.includes('votes')) {
     try {
       const voteChange = await detectVoteChanges(entity, previousState?.votes ?? null);
       newState.votes = voteChange.snapshot;
-      if (voteChange.change) {
-        changes.push(voteChange.change);
-      }
+      if (voteChange.change) changes.push(voteChange.change);
     } catch (error) {
-      logger.error('[Alerts] Vote detection failed', error as Error, {
-        entityId: entity.id,
-      });
-      // Preserve previous state on error
+      logger.error('[Alerts] Vote detection failed', error as Error, { entityId: entity.id });
       newState.votes = previousState?.votes;
     }
   }
 
-  // Detect legislation changes
   if (alertTypes.includes('legislation')) {
     try {
       const billChange = await detectBillChanges(entity, previousState?.bills ?? null);
       newState.bills = billChange.snapshot;
-      if (billChange.change) {
-        changes.push(billChange.change);
-      }
+      if (billChange.change) changes.push(billChange.change);
     } catch (error) {
-      logger.error('[Alerts] Bill detection failed', error as Error, {
-        entityId: entity.id,
-      });
+      logger.error('[Alerts] Bill detection failed', error as Error, { entityId: entity.id });
       newState.bills = previousState?.bills;
     }
   }
 
-  // Save updated state
-  await cache.set(key, newState, STATE_TTL);
+  if (alertTypes.includes('finance')) {
+    try {
+      const financeChange = await detectFinanceChanges(entity, previousState?.finance ?? null);
+      newState.finance = financeChange.snapshot;
+      if (financeChange.change) changes.push(financeChange.change);
+    } catch (error) {
+      logger.error('[Alerts] Finance detection failed', error as Error, { entityId: entity.id });
+      newState.finance = previousState?.finance;
+    }
+  }
 
+  await cache.set(key, newState, STATE_TTL);
   return changes;
 }
 
@@ -118,8 +137,6 @@ async function detectVoteChanges(
   entity: WatchedEntity,
   previous: VoteSnapshot | null
 ): Promise<{ snapshot: VoteSnapshot; change: DetectedChange | null }> {
-  // Determine chamber from bioguideId prefix convention
-  // Senators typically have different patterns — fetch both and use whichever returns data
   let votes: Array<{
     voteId: string;
     date: string;
@@ -128,14 +145,17 @@ async function detectVoteChanges(
     bill?: { congress: number; type: string; number: string; title: string };
   }> = [];
 
-  try {
+  // Use chamber from subscription data to call the right API directly
+  if (entity.chamber === 'Senate') {
+    votes = await batchVotingService.getSenateMemberVotes(entity.id, 119, undefined, 10);
+  } else if (entity.chamber === 'House') {
     votes = await batchVotingService.getHouseMemberVotes(entity.id, 119, undefined, 10);
-  } catch {
-    // Try Senate if House fails
+  } else {
+    // Fallback: try House first (more common), then Senate
     try {
-      votes = await batchVotingService.getSenateMemberVotes(entity.id, 119, undefined, 10);
+      votes = await batchVotingService.getHouseMemberVotes(entity.id, 119, undefined, 10);
     } catch {
-      // No votes available
+      votes = await batchVotingService.getSenateMemberVotes(entity.id, 119, undefined, 10);
     }
   }
 
@@ -144,16 +164,16 @@ async function detectVoteChanges(
     voteCount: votes.length,
   };
 
-  // First run — no previous state, just save baseline
+  // First run — save baseline, don't alert
   if (!previous) {
     return { snapshot, change: null };
   }
 
-  // Find new votes since last check
   if (!previous.latestVoteId || snapshot.latestVoteId === previous.latestVoteId) {
     return { snapshot, change: null };
   }
 
+  // Collect votes newer than the last-seen vote
   const newVotes = [];
   for (const vote of votes) {
     if (vote.voteId === previous.latestVoteId) break;
@@ -198,12 +218,10 @@ async function detectBillChanges(
     sponsoredCount: result.metadata?.sponsoredCount ?? bills.length,
   };
 
-  // First run — save baseline
   if (!previous) {
     return { snapshot, change: null };
   }
 
-  // No change
   if (!previous.latestBillId || snapshot.latestBillId === previous.latestBillId) {
     return { snapshot, change: null };
   }
@@ -229,6 +247,61 @@ async function detectBillChanges(
       entity,
       alertType: 'legislation',
       data: { type: 'legislation', bills: newBills },
+    },
+  };
+}
+
+async function detectFinanceChanges(
+  entity: WatchedEntity,
+  previous: FinanceSnapshot | null
+): Promise<{ snapshot: FinanceSnapshot; change: DetectedChange | null }> {
+  const fecId = await getFECIdFromBioguide(entity.id);
+  if (!fecId) {
+    // No FEC mapping — can't detect finance changes
+    return {
+      snapshot: previous ?? { totalReceipts: 0, cycle: 0 },
+      change: null,
+    };
+  }
+
+  // Try current cycle, fall back to previous
+  const currentYear = new Date().getFullYear();
+  const cycle = currentYear % 2 === 0 ? currentYear : currentYear - 1;
+
+  const summary = await fecApiService.getFinancialSummary(fecId, cycle);
+  if (!summary) {
+    return {
+      snapshot: previous ?? { totalReceipts: 0, cycle },
+      change: null,
+    };
+  }
+
+  const snapshot: FinanceSnapshot = {
+    totalReceipts: summary.receipts,
+    cycle: summary.cycle,
+  };
+
+  // First run — save baseline
+  if (!previous) {
+    return { snapshot, change: null };
+  }
+
+  // No change (or same cycle with same total)
+  if (previous.totalReceipts === snapshot.totalReceipts) {
+    return { snapshot, change: null };
+  }
+
+  return {
+    snapshot,
+    change: {
+      entity,
+      alertType: 'finance',
+      data: {
+        type: 'finance',
+        totalRaised: formatCurrency(snapshot.totalReceipts),
+        previousTotal: formatCurrency(previous.totalReceipts),
+        cycle: snapshot.cycle,
+      },
     },
   };
 }

@@ -192,6 +192,7 @@ export function HeroStatsHeader({
                 <AlertSubscribeButton
                   bioguideId={representative.bioguideId}
                   name={representative.name}
+                  chamber={representative.chamber}
                 />
               )}
             </div>

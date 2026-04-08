@@ -21,11 +21,13 @@ function getClient(): Resend {
   return resendClient;
 }
 
-interface SendEmailParams {
+export interface SendEmailParams {
   to: string;
   subject: string;
   text: string;
   html: string;
+  /** If provided, adds RFC 8058 List-Unsubscribe headers for one-click unsubscribe in Gmail/Yahoo */
+  unsubscribeUrl?: string;
 }
 
 /**
@@ -35,12 +37,20 @@ interface SendEmailParams {
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   try {
     const client = getClient();
+
+    const headers: Record<string, string> = {};
+    if (params.unsubscribeUrl) {
+      headers['List-Unsubscribe'] = `<${params.unsubscribeUrl}>`;
+      headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+    }
+
     const result = await client.emails.send({
       from: FROM_ADDRESS,
       to: params.to,
       subject: params.subject,
       text: params.text,
       html: params.html,
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
 
     if (result.error) {

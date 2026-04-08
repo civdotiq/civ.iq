@@ -8,10 +8,18 @@
  * Plain text + simple HTML for maximum deliverability.
  */
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
+function getSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
+}
+
 const FROM_NAME = 'CIV.IQ';
-// CAN-SPAM requires a physical mailing address
-const PHYSICAL_ADDRESS = 'CIV.IQ, PO Box 7775, Arlington, VA 22207';
+
+// CAN-SPAM requires a physical mailing address.
+// Set ALERT_PHYSICAL_ADDRESS in your environment.
+function getPhysicalAddress(): string {
+  return process.env.ALERT_PHYSICAL_ADDRESS || 'CIV.IQ';
+}
+
 const METHODOLOGY_DISCLAIMER =
   'CIV.IQ presents public government data. Correlation does not indicate causation.';
 
@@ -56,6 +64,7 @@ function footer({ unsubscribeUrl, manageUrl }: UnsubscribeFooterParams): {
   text: string;
   html: string;
 } {
+  const address = getPhysicalAddress();
   return {
     text: [
       '',
@@ -64,7 +73,7 @@ function footer({ unsubscribeUrl, manageUrl }: UnsubscribeFooterParams): {
       `Manage preferences: ${manageUrl}`,
       `Unsubscribe: ${unsubscribeUrl}`,
       '',
-      `${FROM_NAME} | ${PHYSICAL_ADDRESS}`,
+      `${FROM_NAME} | ${address}`,
     ].join('\n'),
     html: [
       '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />',
@@ -73,7 +82,7 @@ function footer({ unsubscribeUrl, manageUrl }: UnsubscribeFooterParams): {
       `<a href="${manageUrl}" style="color:#3ea2d4">Manage preferences</a> · `,
       `<a href="${unsubscribeUrl}" style="color:#3ea2d4">Unsubscribe</a>`,
       `</p>`,
-      `<p style="font-size:11px;color:#9ca3af">${FROM_NAME} | ${PHYSICAL_ADDRESS}</p>`,
+      `<p style="font-size:11px;color:#9ca3af">${FROM_NAME} | ${address}</p>`,
     ].join('\n'),
   };
 }
@@ -84,6 +93,7 @@ export function confirmationEmail({ verifyUrl, entityNames }: ConfirmationEmailP
   html: string;
 } {
   const entityList = entityNames.join(', ');
+  const address = getPhysicalAddress();
 
   return {
     subject: 'Confirm your CIV.IQ alert subscription',
@@ -95,20 +105,20 @@ export function confirmationEmail({ verifyUrl, entityNames }: ConfirmationEmailP
       '',
       'This link expires in 48 hours.',
       '',
-      `If you did not request this, ignore this email.`,
+      'If you did not request this, ignore this email.',
       '',
-      `${FROM_NAME} | ${PHYSICAL_ADDRESS}`,
+      `${FROM_NAME} | ${address}`,
     ].join('\n'),
     html: [
-      `<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">`,
-      `<h2 style="font-size:18px;font-weight:600;margin-bottom:16px">Confirm your alert subscription</h2>`,
+      '<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">',
+      '<h2 style="font-size:18px;font-weight:600;margin-bottom:16px">Confirm your alert subscription</h2>',
       `<p style="font-size:14px;line-height:1.6;color:#374151">You requested alerts from CIV.IQ for: <strong>${entityList}</strong>.</p>`,
-      `<p style="margin:24px 0">`,
+      '<p style="margin:24px 0">',
       `<a href="${verifyUrl}" style="display:inline-block;background:#000;color:#fff;padding:12px 24px;font-size:14px;font-weight:600;text-decoration:none;border:2px solid #000">Confirm subscription</a>`,
-      `</p>`,
-      `<p style="font-size:13px;color:#6b7280">This link expires in 48 hours. If you did not request this, ignore this email.</p>`,
-      `<p style="font-size:11px;color:#9ca3af;margin-top:24px">${FROM_NAME} | ${PHYSICAL_ADDRESS}</p>`,
-      `</div>`,
+      '</p>',
+      '<p style="font-size:13px;color:#6b7280">This link expires in 48 hours. If you did not request this, ignore this email.</p>',
+      `<p style="font-size:11px;color:#9ca3af;margin-top:24px">${FROM_NAME} | ${address}</p>`,
+      '</div>',
     ].join('\n'),
   };
 }
@@ -118,10 +128,10 @@ export function voteAlertEmail(
   urls: UnsubscribeFooterParams
 ): { subject: string; text: string; html: string } {
   const { representativeName, bioguideId, vote, billTitle, billId, date, context } = params;
-  const detailUrl = `${SITE_URL}/ask/how-did-vote/${bioguideId}`;
-  const profileUrl = `${SITE_URL}/representative/${bioguideId}`;
+  const siteUrl = getSiteUrl();
+  const detailUrl = `${siteUrl}/ask/how-did-vote/${bioguideId}`;
+  const profileUrl = `${siteUrl}/representative/${bioguideId}`;
   const footerContent = footer(urls);
-
   const contextLine = context ? ` ${context}` : '';
 
   return {
@@ -134,14 +144,14 @@ export function voteAlertEmail(
       footerContent.text,
     ].join('\n'),
     html: [
-      `<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">`,
+      '<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">',
       `<p style="font-size:14px;line-height:1.6"><strong>${representativeName}</strong> voted <strong>${vote}</strong> on <strong>${billTitle}</strong> (${billId}) on ${date}.${contextLine}</p>`,
-      `<p style="margin:16px 0">`,
+      '<p style="margin:16px 0">',
       `<a href="${detailUrl}" style="color:#3ea2d4;font-size:14px;font-weight:500">View details</a>`,
       ` · <a href="${profileUrl}" style="color:#3ea2d4;font-size:14px">Full profile</a>`,
-      `</p>`,
+      '</p>',
       footerContent.html,
-      `</div>`,
+      '</div>',
     ].join('\n'),
   };
 }
@@ -151,10 +161,10 @@ export function financeAlertEmail(
   urls: UnsubscribeFooterParams
 ): { subject: string; text: string; html: string } {
   const { representativeName, bioguideId, totalRaised, period, topContributor } = params;
-  const profileUrl = `${SITE_URL}/representative/${bioguideId}`;
-  const financeUrl = `${SITE_URL}/ask/campaign-contributions/${bioguideId}`;
+  const siteUrl = getSiteUrl();
+  const profileUrl = `${siteUrl}/representative/${bioguideId}`;
+  const financeUrl = `${siteUrl}/ask/campaign-contributions/${bioguideId}`;
   const footerContent = footer(urls);
-
   const topLine = topContributor ? ` Top contributor: ${topContributor}.` : '';
 
   return {
@@ -167,14 +177,14 @@ export function financeAlertEmail(
       footerContent.text,
     ].join('\n'),
     html: [
-      `<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">`,
+      '<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">',
       `<p style="font-size:14px;line-height:1.6">New FEC filing: <strong>${representativeName}</strong> raised <strong>${totalRaised}</strong> in the ${period} cycle.${topLine}</p>`,
-      `<p style="margin:16px 0">`,
+      '<p style="margin:16px 0">',
       `<a href="${financeUrl}" style="color:#3ea2d4;font-size:14px;font-weight:500">View finance details</a>`,
       ` · <a href="${profileUrl}" style="color:#3ea2d4;font-size:14px">Full profile</a>`,
-      `</p>`,
+      '</p>',
       footerContent.html,
-      `</div>`,
+      '</div>',
     ].join('\n'),
   };
 }
@@ -184,8 +194,9 @@ export function legislationAlertEmail(
   urls: UnsubscribeFooterParams
 ): { subject: string; text: string; html: string } {
   const { representativeName, bioguideId, action, billTitle, billId, date } = params;
-  const profileUrl = `${SITE_URL}/representative/${bioguideId}`;
-  const billUrl = `${SITE_URL}/bill/${billId}`;
+  const siteUrl = getSiteUrl();
+  const profileUrl = `${siteUrl}/representative/${bioguideId}`;
+  const billUrl = `${siteUrl}/bill/${billId}`;
   const footerContent = footer(urls);
 
   return {
@@ -198,14 +209,14 @@ export function legislationAlertEmail(
       footerContent.text,
     ].join('\n'),
     html: [
-      `<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">`,
+      '<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">',
       `<p style="font-size:14px;line-height:1.6"><strong>${representativeName}</strong> ${action} <strong>${billTitle}</strong> (${billId}) on ${date}.</p>`,
-      `<p style="margin:16px 0">`,
+      '<p style="margin:16px 0">',
       `<a href="${billUrl}" style="color:#3ea2d4;font-size:14px;font-weight:500">View bill</a>`,
       ` · <a href="${profileUrl}" style="color:#3ea2d4;font-size:14px">Full profile</a>`,
-      `</p>`,
+      '</p>',
       footerContent.html,
-      `</div>`,
+      '</div>',
     ].join('\n'),
   };
 }
