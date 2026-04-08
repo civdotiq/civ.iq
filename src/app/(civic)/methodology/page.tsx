@@ -45,192 +45,228 @@ function Citation({ id, authors, year, title, journal, url }: CitationProps) {
   );
 }
 
-const DATA_SOURCES = [
-  // ── Core: Congress & Elections ──
+interface DataSource {
+  name: string;
+  covers: string;
+  url: string;
+}
+
+interface DataSourceGroup {
+  label: string;
+  sources: DataSource[];
+}
+
+const CORE_SOURCES: DataSource[] = [
   {
     name: 'Congress.gov API',
-    agency: 'Library of Congress',
-    covers: 'Bills, members, committees, votes, hearings',
+    covers: 'Bills, members, committees, votes, hearings (Library of Congress)',
     url: 'https://api.congress.gov',
   },
   {
     name: 'FEC API',
-    agency: 'Federal Election Commission',
-    covers: 'Campaign contributions, expenditures, PAC filings',
+    covers: 'Campaign contributions, expenditures, PAC filings (Federal Election Commission)',
     url: 'https://api.open.fec.gov',
   },
   {
     name: 'Senate LDA',
-    agency: 'U.S. Senate',
-    covers: 'Lobbying disclosure filings',
+    covers: 'Lobbying disclosure filings (U.S. Senate)',
     url: 'https://lda.senate.gov/api/v1',
   },
   {
     name: 'Census Geocoder',
-    agency: 'U.S. Census Bureau',
-    covers: 'Address-to-district lookup, demographics',
+    covers: 'Address-to-district lookup, demographics (U.S. Census Bureau)',
     url: 'https://www.census.gov/data/developers.html',
   },
-  // ── Regulations & Policy ──
+];
+
+const SOURCE_GROUPS: DataSourceGroup[] = [
   {
-    name: 'Federal Register API',
-    agency: 'National Archives',
-    covers: 'Rules, proposed rules, executive orders',
-    url: 'https://www.federalregister.gov/developers/api/v1',
+    label: 'Regulations and policy',
+    sources: [
+      {
+        name: 'Federal Register API',
+        covers: 'Rules, proposed rules, executive orders',
+        url: 'https://www.federalregister.gov/developers/api/v1',
+      },
+      {
+        name: 'Regulations.gov API',
+        covers: 'Regulatory documents, dockets, public comments',
+        url: 'https://api.regulations.gov',
+      },
+    ],
   },
   {
-    name: 'Regulations.gov API',
-    agency: 'Office of Management and Budget',
-    covers: 'Regulatory documents, dockets, public comments',
-    url: 'https://api.regulations.gov',
-  },
-  // ── Financial Disclosure ──
-  {
-    name: 'Senate Stock Disclosures',
-    agency: 'U.S. Senate (via Senate Stock Watcher)',
-    covers: 'Stock trades by senators (STOCK Act filings)',
-    url: 'https://efdsearch.senate.gov',
-  },
-  {
-    name: 'House Stock Disclosures',
-    agency: 'U.S. House Clerk',
-    covers: 'Stock trades by representatives (STOCK Act filings)',
-    url: 'https://disclosures-clerk.house.gov',
-  },
-  {
-    name: 'SEC EDGAR',
-    agency: 'Securities and Exchange Commission',
-    covers: 'Company filings, ticker resolution',
-    url: 'https://www.sec.gov/edgar',
-  },
-  // ── Spending & Economy ──
-  {
-    name: 'USASpending.gov API',
-    agency: 'U.S. Treasury',
-    covers: 'Federal contracts and grants by district',
-    url: 'https://api.usaspending.gov',
+    label: 'Financial disclosure',
+    sources: [
+      {
+        name: 'Senate Stock Disclosures',
+        covers: 'Stock trades by senators, via Senate Stock Watcher',
+        url: 'https://efdsearch.senate.gov',
+      },
+      {
+        name: 'House Stock Disclosures',
+        covers: 'Stock trades by representatives (STOCK Act)',
+        url: 'https://disclosures-clerk.house.gov',
+      },
+      {
+        name: 'SEC EDGAR',
+        covers: 'Company filings, ticker resolution',
+        url: 'https://www.sec.gov/edgar',
+      },
+    ],
   },
   {
-    name: 'Treasury Fiscal Data',
-    agency: 'U.S. Treasury',
-    covers: 'Federal debt, revenue, spending',
-    url: 'https://fiscaldata.treasury.gov',
+    label: 'Spending and economy',
+    sources: [
+      {
+        name: 'USASpending.gov API',
+        covers: 'Federal contracts and grants by district',
+        url: 'https://api.usaspending.gov',
+      },
+      {
+        name: 'Treasury Fiscal Data',
+        covers: 'Federal debt, revenue, spending',
+        url: 'https://fiscaldata.treasury.gov',
+      },
+      {
+        name: 'FRED API',
+        covers: 'Economic indicators by state',
+        url: 'https://fred.stlouisfed.org/docs/api/',
+      },
+      {
+        name: 'BLS API',
+        covers: 'Employment and wage data',
+        url: 'https://www.bls.gov/developers/',
+      },
+    ],
   },
   {
-    name: 'FRED API',
-    agency: 'Federal Reserve Bank of St. Louis',
-    covers: 'Economic indicators by state',
-    url: 'https://fred.stlouisfed.org/docs/api/',
+    label: 'Environment, energy, and safety',
+    sources: [
+      {
+        name: 'EPA ECHO',
+        covers: 'Environmental enforcement actions, facility violations',
+        url: 'https://echo.epa.gov',
+      },
+      {
+        name: 'OSHA Enforcement',
+        covers: 'Workplace safety inspections, violations',
+        url: 'https://www.osha.gov/data',
+      },
+      {
+        name: 'EIA API',
+        covers: 'State energy production and consumption',
+        url: 'https://api.eia.gov',
+      },
+      {
+        name: 'NOAA Climate API',
+        covers: 'Climate normals, severe weather events',
+        url: 'https://www.ncdc.noaa.gov/cdo-web/',
+      },
+      {
+        name: 'NHTSA API',
+        covers: 'Vehicle recalls, safety complaints',
+        url: 'https://api.nhtsa.gov',
+      },
+      {
+        name: 'FEMA OpenAPI',
+        covers: 'Disaster declarations, assistance data',
+        url: 'https://www.fema.gov/about/openfema/api',
+      },
+    ],
   },
   {
-    name: 'BLS API',
-    agency: 'Bureau of Labor Statistics',
-    covers: 'Employment and wage data',
-    url: 'https://www.bls.gov/developers/',
-  },
-  // ── Environment, Energy & Safety ──
-  {
-    name: 'EPA ECHO',
-    agency: 'Environmental Protection Agency',
-    covers: 'Environmental enforcement actions, facility violations',
-    url: 'https://echo.epa.gov',
-  },
-  {
-    name: 'OSHA Enforcement',
-    agency: 'Department of Labor',
-    covers: 'Workplace safety inspections, violations',
-    url: 'https://www.osha.gov/data',
-  },
-  {
-    name: 'EIA API',
-    agency: 'Energy Information Administration',
-    covers: 'State energy production and consumption',
-    url: 'https://api.eia.gov',
-  },
-  {
-    name: 'NOAA Climate API',
-    agency: 'National Oceanic and Atmospheric Administration',
-    covers: 'Climate normals, severe weather events',
-    url: 'https://www.ncdc.noaa.gov/cdo-web/',
+    label: 'Health, education, and housing',
+    sources: [
+      {
+        name: 'NIH Reporter',
+        covers: 'Research grants and funded projects',
+        url: 'https://reporter.nih.gov',
+      },
+      {
+        name: 'CMS Provider Data',
+        covers: 'Hospital and nursing home quality data',
+        url: 'https://data.cms.gov',
+      },
+      {
+        name: 'College Scorecard',
+        covers: 'College costs, outcomes, demographics',
+        url: 'https://collegescorecard.ed.gov',
+      },
+      {
+        name: 'HUD API',
+        covers: 'Fair market rents, income limits',
+        url: 'https://www.huduser.gov/hudapi/',
+      },
+    ],
   },
   {
-    name: 'NHTSA API',
-    agency: 'National Highway Traffic Safety Administration',
-    covers: 'Vehicle recalls, safety complaints',
-    url: 'https://api.nhtsa.gov',
+    label: 'Consumer protection, justice, and crime',
+    sources: [
+      {
+        name: 'CFPB Complaints',
+        covers: 'Consumer financial complaints by company',
+        url: 'https://www.consumerfinance.gov/data-research/consumer-complaints/',
+      },
+      {
+        name: 'FDIC API',
+        covers: 'Bank institution data, bank failures',
+        url: 'https://api.fdic.gov',
+      },
+      {
+        name: 'FBI Crime Data',
+        covers: 'Uniform Crime Reporting statistics by state',
+        url: 'https://cde.ucr.cjis.gov',
+      },
+      {
+        name: 'CourtListener API',
+        covers: 'Federal court dockets, case information',
+        url: 'https://www.courtlistener.com',
+      },
+    ],
   },
   {
-    name: 'FEMA OpenAPI',
-    agency: 'Federal Emergency Management Agency',
-    covers: 'Disaster declarations, assistance data',
-    url: 'https://www.fema.gov/about/openfema/api',
+    label: 'State government and biographical',
+    sources: [
+      {
+        name: 'Open States API',
+        covers: 'State legislators, state bills, state votes',
+        url: 'https://openstates.org',
+      },
+      {
+        name: 'Wikidata',
+        covers: 'Biographical data, state executives, judiciary',
+        url: 'https://www.wikidata.org',
+      },
+    ],
   },
-  // ── Health, Education & Housing ──
-  {
-    name: 'NIH Reporter',
-    agency: 'National Institutes of Health',
-    covers: 'Research grants and funded projects',
-    url: 'https://reporter.nih.gov',
-  },
-  {
-    name: 'CMS Provider Data',
-    agency: 'Centers for Medicare & Medicaid Services',
-    covers: 'Hospital and nursing home quality data',
-    url: 'https://data.cms.gov',
-  },
-  {
-    name: 'College Scorecard',
-    agency: 'Department of Education',
-    covers: 'College costs, outcomes, demographics',
-    url: 'https://collegescorecard.ed.gov',
-  },
-  {
-    name: 'HUD API',
-    agency: 'Department of Housing and Urban Development',
-    covers: 'Fair market rents, income limits',
-    url: 'https://www.huduser.gov/hudapi/',
-  },
-  // ── Consumer & Financial Protection ──
-  {
-    name: 'CFPB Complaints',
-    agency: 'Consumer Financial Protection Bureau',
-    covers: 'Consumer financial complaints by company and product',
-    url: 'https://www.consumerfinance.gov/data-research/consumer-complaints/',
-  },
-  {
-    name: 'FDIC API',
-    agency: 'Federal Deposit Insurance Corporation',
-    covers: 'Bank institution data, bank failures',
-    url: 'https://api.fdic.gov',
-  },
-  // ── Justice & Crime ──
-  {
-    name: 'FBI Crime Data',
-    agency: 'Federal Bureau of Investigation',
-    covers: 'Uniform Crime Reporting statistics by state',
-    url: 'https://cde.ucr.cjis.gov',
-  },
-  {
-    name: 'CourtListener API',
-    agency: 'Free Law Project',
-    covers: 'Federal court dockets, case information',
-    url: 'https://www.courtlistener.com',
-  },
-  // ── State Government ──
-  {
-    name: 'Open States API',
-    agency: 'Civic Eagle / Open States',
-    covers: 'State legislators, state bills, state votes',
-    url: 'https://openstates.org',
-  },
-  // ── Biographical Enrichment ──
-  {
-    name: 'Wikidata',
-    agency: 'Wikimedia Foundation',
-    covers: 'Biographical data, state executives, judiciary',
-    url: 'https://www.wikidata.org',
-  },
-] as const;
+];
+
+const TOTAL_SOURCES =
+  CORE_SOURCES.length + SOURCE_GROUPS.reduce((sum, g) => sum + g.sources.length, 0);
+
+function SourceList({ sources }: { sources: DataSource[] }) {
+  return (
+    <ul className="space-y-1">
+      {sources.map(source => (
+        <li key={source.name} className="flex gap-2 type-sm">
+          <span className="text-gray-400 select-none">&mdash;</span>
+          <span>
+            <a
+              href={source.url}
+              className="text-[#3ea2d4] hover:underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {source.name}
+            </a>
+            <span className="text-gray-600"> &mdash; {source.covers}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function MethodologyPage() {
   return (
@@ -442,45 +478,34 @@ export default function MethodologyPage() {
 
           <div className="space-y-4 type-base text-gray-700 leading-relaxed">
             <p>
-              CIV.IQ pulls data from {DATA_SOURCES.length} official government and public data
-              sources. We never make up data or use estimates. When a source is unavailable, we tell
-              you and show the date of the last available data.
+              CIV.IQ pulls data from {TOTAL_SOURCES} official government and public data sources. We
+              never make up data or use estimates. When a source is unavailable, we tell you and
+              show the date of the last available data.
             </p>
           </div>
 
-          {/* Data source table */}
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-gray-900">
-                  <th className="text-left py-2 pr-4 type-sm font-bold aicher-heading-wide">
-                    SOURCE
-                  </th>
-                  <th className="text-left py-2 pr-4 type-sm font-bold aicher-heading-wide">
-                    AGENCY
-                  </th>
-                  <th className="text-left py-2 type-sm font-bold aicher-heading-wide">COVERS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DATA_SOURCES.map(source => (
-                  <tr key={source.name} className="border-b border-gray-200">
-                    <td className="py-2 pr-4 type-sm">
-                      <a
-                        href={source.url}
-                        className="text-[#3ea2d4] hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {source.name}
-                      </a>
-                    </td>
-                    <td className="py-2 pr-4 type-sm text-gray-600">{source.agency}</td>
-                    <td className="py-2 type-sm text-gray-600">{source.covers}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Core sources — always visible */}
+          <div className="mt-6">
+            <h3 className="type-sm font-bold aicher-heading-wide mb-3">CORE SOURCES</h3>
+            <SourceList sources={CORE_SOURCES} />
+          </div>
+
+          {/* Grouped sources — expandable */}
+          <div className="mt-6 space-y-2">
+            <h3 className="type-sm font-bold aicher-heading-wide mb-3">
+              {TOTAL_SOURCES - CORE_SOURCES.length} MORE SOURCES BY CATEGORY
+            </h3>
+            {SOURCE_GROUPS.map(group => (
+              <details key={group.label} className="border-b border-gray-200">
+                <summary className="py-2 type-sm font-medium cursor-pointer hover:text-[#3ea2d4] select-none">
+                  {group.label}
+                  <span className="text-gray-400 ml-2">({group.sources.length})</span>
+                </summary>
+                <div className="pb-3 pl-4">
+                  <SourceList sources={group.sources} />
+                </div>
+              </details>
+            ))}
           </div>
 
           {/* Analysis pipeline */}
