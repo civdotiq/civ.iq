@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { RepBriefSummary } from './RepBriefSummary';
+import { AlertSubscribeForm } from '@/components/alerts/AlertSubscribeForm';
 
 interface RepresentativeLookupFormProps {
   className?: string;
@@ -255,6 +256,19 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
               />
             ))}
           </div>
+
+          {/* Alert subscription for all found representatives */}
+          {result.representatives.length > 0 && (
+            <div className="mt-6">
+              <AlertSubscribeForm
+                entities={result.representatives.map(rep => ({
+                  type: 'representative' as const,
+                  id: rep.bioguideId,
+                  name: rep.name,
+                }))}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

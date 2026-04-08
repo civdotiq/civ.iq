@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Crown, Phone, ExternalLink } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { ShareIconButton } from '@/components/shared/social/ShareButton';
+import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
@@ -187,6 +188,12 @@ export function HeroStatsHeader({
                   section: 'overview',
                 }}
               />
+              {!representative.isHistorical && (
+                <AlertSubscribeButton
+                  bioguideId={representative.bioguideId}
+                  name={representative.name}
+                />
+              )}
             </div>
 
             <p
