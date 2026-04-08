@@ -87,7 +87,7 @@ const DATA_SOURCES = [
   // ── Financial Disclosure ──
   {
     name: 'Senate Stock Disclosures',
-    agency: 'U.S. Senate',
+    agency: 'U.S. Senate (via Senate Stock Watcher)',
     covers: 'Stock trades by senators (STOCK Act filings)',
     url: 'https://efdsearch.senate.gov',
   },
@@ -136,10 +136,10 @@ const DATA_SOURCES = [
     url: 'https://echo.epa.gov',
   },
   {
-    name: 'OSHA API',
+    name: 'OSHA Enforcement',
     agency: 'Department of Labor',
     covers: 'Workplace safety inspections, violations',
-    url: 'https://enforcedata.dol.gov',
+    url: 'https://www.osha.gov/data',
   },
   {
     name: 'EIA API',
@@ -158,6 +158,12 @@ const DATA_SOURCES = [
     agency: 'National Highway Traffic Safety Administration',
     covers: 'Vehicle recalls, safety complaints',
     url: 'https://api.nhtsa.gov',
+  },
+  {
+    name: 'FEMA OpenAPI',
+    agency: 'Federal Emergency Management Agency',
+    covers: 'Disaster declarations, assistance data',
+    url: 'https://www.fema.gov/about/openfema/api',
   },
   // ── Health, Education & Housing ──
   {
@@ -202,7 +208,7 @@ const DATA_SOURCES = [
     name: 'FBI Crime Data',
     agency: 'Federal Bureau of Investigation',
     covers: 'Uniform Crime Reporting statistics by state',
-    url: 'https://crime-data-explorer.fr.cloud.gov',
+    url: 'https://cde.ucr.cjis.gov',
   },
   {
     name: 'CourtListener API',
@@ -393,14 +399,14 @@ export default function MethodologyPage() {
                 <span className="type-sm font-bold text-gray-400 aicher-heading-wide">04</span>
                 <h3 className="text-lg font-bold">Strategic giving</h3>
                 <span className="type-xs font-medium text-amber-600 aicher-heading-wide">
-                  THE CONFOUND
+                  THE CATCH
                 </span>
               </div>
               <p className="type-base text-gray-700 leading-relaxed">
                 Donors give to legislators who already agree with them. When a legislator votes the
-                way a donor wants, you usually cannot tell if the money changed the vote or if the
-                donor simply picked someone who already agreed. This chicken-and-egg problem is the
-                biggest challenge in campaign finance research.
+                way a donor wants, you can&rsquo;t always tell why. Did the money change the vote?
+                Or did the donor just pick someone who already agreed? This chicken-and-egg problem
+                is the biggest challenge in campaign finance research.
               </p>
             </li>
 
@@ -481,13 +487,9 @@ export default function MethodologyPage() {
           <div className="mt-8 space-y-4 type-base text-gray-700 leading-relaxed">
             <h3 className="text-lg font-bold">How we analyze data</h3>
 
-            <p>We run the numbers first. AI writes the summary second.</p>
+            <p>Every analysis starts with math, not AI. The numbers come first.</p>
 
             <ul className="space-y-2 ml-4">
-              <li className="flex gap-2">
-                <span className="text-gray-400 select-none">&mdash;</span>
-                <span>Every analysis starts with math, not AI. The numbers come first.</span>
-              </li>
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
@@ -505,9 +507,8 @@ export default function MethodologyPage() {
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  We always compare a legislator to their <strong>peers</strong> &mdash; same
-                  chamber, same party, or same committee &mdash; so you see patterns in context, not
-                  in isolation.
+                  We always compare a legislator to their <strong>peers</strong> in the same
+                  chamber, party, or committee. This shows patterns in context, not in isolation.
                 </span>
               </li>
               <li className="flex gap-2">
@@ -519,9 +520,9 @@ export default function MethodologyPage() {
               <li className="flex gap-2">
                 <span className="text-gray-400 select-none">&mdash;</span>
                 <span>
-                  We match records across sources &mdash; linking names, IDs, and organizations
-                  across FEC filings, Congress.gov, Senate lobbying filings, and SEC records &mdash;
-                  so you can see the connections between money, votes, and lobbying in one place.
+                  We match records across sources by linking names, IDs, and organizations across
+                  FEC filings, Congress.gov, Senate lobbying filings, and SEC records. This lets you
+                  see the connections between money, votes, and lobbying in one place.
                 </span>
               </li>
             </ul>
@@ -540,8 +541,8 @@ export default function MethodologyPage() {
               <p className="type-base text-gray-700 leading-relaxed">
                 We show donations and votes together so you can see the full picture. We use words
                 like &ldquo;received,&rdquo; &ldquo;associated with,&rdquo; and &ldquo;correlated
-                with.&rdquo; We never say &ldquo;influenced,&rdquo; &ldquo;caused,&rdquo; or
-                &ldquo;resulted in.&rdquo;
+                with.&rdquo; We do not use &ldquo;influenced,&rdquo; &ldquo;caused,&rdquo; or
+                &ldquo;resulted in&rdquo; when describing money and votes.
               </p>
             </div>
 
