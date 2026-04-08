@@ -42,7 +42,10 @@
 
 ---
 
-## Phase 2: Methodology Page & Disclaimer Upgrade (1-2 days)
+## Phase 2: Methodology Page & Disclaimer Upgrade ~~(1-2 days)~~ COMPLETE
+
+**Completed:** 2026-04-07
+**Commits:** `2509cb9d` (initial page + disclaimer link + audit), `d017588e` (fix citation, complete sources, simplify), `fa996cfd` (fix URLs, remove jargon, verify FK), `e7ad7050` (collapse table into grouped sections)
 
 ### What exists
 
@@ -270,7 +273,10 @@ npm run validate:all
 
 ---
 
-## Phase 5: Email Alert System (3-4 weeks)
+## Phase 5: Email Alert System ~~(3-4 weeks)~~ COMPLETE
+
+**Completed:** 2026-04-08
+**Commit:** `46664aa1`
 
 ### What exists
 

@@ -5,7 +5,7 @@
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
@@ -25,7 +25,7 @@ export async function generateMetadata({
   if (!template) return { title: 'Question not found' };
 
   try {
-    const rep = await getEnhancedRepresentative(entityId.toUpperCase());
+    const rep = await getCachedRepresentative(entityId.toUpperCase());
     if (!rep) return { title: 'Representative not found' };
 
     const entity = { name: rep.name, party: rep.party, state: rep.state };
@@ -64,7 +64,7 @@ export default async function AskLayout({ children, params }: LayoutProps) {
 
   let repName = 'Representative';
   try {
-    const rep = await getEnhancedRepresentative(entityId.toUpperCase());
+    const rep = await getCachedRepresentative(entityId.toUpperCase());
     if (rep) repName = rep.name;
   } catch {
     // Breadcrumb falls back to generic label

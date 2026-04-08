@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
+import { getAllSlugs } from '@/lib/questions/question-registry';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -201,8 +202,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      // Question pages: 3 templates × all representatives
-      const questionSlugs = ['campaign-contributions', 'party-alignment', 'voting-record'];
+      // Question pages: all templates × all representatives
+      const questionSlugs = getAllSlugs();
       for (const rep of representatives) {
         if (rep.bioguideId) {
           for (const qSlug of questionSlugs) {

@@ -11,23 +11,24 @@
  */
 
 import { notFound } from 'next/navigation';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
 import { computeRelatedQuestions } from '@/lib/questions/related-questions';
-import { getServerBaseUrl } from '@/lib/server-url';
+import {
+  fetchCampaignContributionsData,
+  fetchPartyAlignmentData,
+  fetchVotingRecordData,
+  type CampaignContributionsData,
+  type PartyAlignmentTemplateData,
+  type VotingRecordTemplateData,
+} from '@/lib/questions/template-data-fetchers';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
 import { PartyAlignmentAnswer } from '@/components/questions/PartyAlignmentAnswer';
 import { VotingRecordAnswer } from '@/components/questions/VotingRecordAnswer';
-import type {
-  InsightResponse,
-  VoteFinanceInsight,
-  TemporalVoteInsight,
-} from '@/lib/intelligence/types';
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 interface PageProps {
@@ -35,29 +36,21 @@ interface PageProps {
 }
 
 /**
- * Fetch JSON from an internal API route, returning null on failure.
+ * Build the FAQ schema answer sentence from typed template data.
  */
-async function fetchApi<T>(path: string): Promise<T | null> {
-  try {
-    const base = getServerBaseUrl();
-    const res = await fetch(`${base}${path}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
+function buildFaqAnswer(
+  slug: string,
+  repName: string,
+  data: {
+    campaign?: CampaignContributionsData;
+    alignment?: PartyAlignmentTemplateData;
+    voting?: VotingRecordTemplateData;
   }
-}
-
-/**
- * Build the FAQ schema answer sentence from template data.
- */
-function buildFaqAnswer(slug: string, repName: string, data: Record<string, unknown>): string {
+): string {
   switch (slug) {
     case 'campaign-contributions': {
-      const finance = data.finance as { totalRaised?: number } | null;
-      const industries = data.industries as {
-        topIndustries?: Array<{ industry: string }>;
-      } | null;
+      const finance = data.campaign?.finance;
+      const industries = data.campaign?.industries;
       if (finance?.totalRaised) {
         const topIndustry = industries?.topIndustries?.[0]?.industry ?? 'various sectors';
         const amount =
@@ -69,17 +62,14 @@ function buildFaqAnswer(slug: string, repName: string, data: Record<string, unkn
       return `Campaign finance data for ${repName} is sourced from FEC filings.`;
     }
     case 'party-alignment': {
-      const alignment = data.partyAlignment as {
-        overall_alignment?: number;
-        total_votes_analyzed?: number;
-      } | null;
+      const alignment = data.alignment?.partyAlignment;
       if (alignment?.overall_alignment && alignment.total_votes_analyzed) {
         return `${repName} votes with their party ${alignment.overall_alignment.toFixed(1)}% of the time, based on ${alignment.total_votes_analyzed} votes analyzed.`;
       }
       return `Party alignment data for ${repName} is computed from congressional voting records.`;
     }
     case 'voting-record': {
-      const votes = data.votes as { totalResults?: number } | null;
+      const votes = data.voting?.votes;
       if (votes?.totalResults) {
         return `${repName} has cast ${votes.totalResults.toLocaleString()} recorded votes in the current Congress.`;
       }
@@ -96,8 +86,8 @@ export default async function QuestionPage({ params }: PageProps) {
   const template = getTemplate(slug);
   if (!template) notFound();
 
-  // Fetch representative profile (direct service call — no HTTP overhead)
-  const rep = await getEnhancedRepresentative(entityId.toUpperCase()).catch(() => null);
+  // Deduplicated via React cache() — shared with layout.tsx
+  const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
 
   const entity = { name: rep.name, party: rep.party, state: rep.state };
@@ -105,48 +95,26 @@ export default async function QuestionPage({ params }: PageProps) {
   const relatedQuestions = computeRelatedQuestions(slug, entityId, rep.name);
   const id = entityId.toUpperCase();
 
-  // Fetch template-specific data in parallel
-  const templateData: Record<string, unknown> = {};
+  // Fetch template-specific data via direct service calls (no self-fetch)
+  let campaign: CampaignContributionsData | undefined;
+  let alignment: PartyAlignmentTemplateData | undefined;
+  let voting: VotingRecordTemplateData | undefined;
 
   switch (slug) {
-    case 'campaign-contributions': {
-      const [finance, industries, voteFinance] = await Promise.all([
-        fetchApi<Record<string, unknown>>(`/api/representative/${id}/finance`),
-        fetchApi<Record<string, unknown>>(`/api/representative/${id}/finance/industries`),
-        fetchApi<InsightResponse<VoteFinanceInsight>>(
-          `/api/intelligence/representative/${id}/vote-finance`
-        ),
-      ]);
-      templateData.finance = finance;
-      templateData.industries = industries;
-      templateData.voteFinance = voteFinance;
+    case 'campaign-contributions':
+      campaign = await fetchCampaignContributionsData(id, rep.state);
       break;
-    }
-    case 'party-alignment': {
-      const [partyAlignment, temporal] = await Promise.all([
-        fetchApi<Record<string, unknown>>(`/api/representative/${id}/party-alignment`),
-        fetchApi<InsightResponse<TemporalVoteInsight>>(
-          `/api/intelligence/representative/${id}/temporal`
-        ),
-      ]);
-      templateData.partyAlignment = partyAlignment;
-      templateData.temporal = temporal;
+    case 'party-alignment':
+      alignment = await fetchPartyAlignmentData(id, rep.party, rep.chamber);
       break;
-    }
-    case 'voting-record': {
-      const [votes, bills] = await Promise.all([
-        fetchApi<Record<string, unknown>>(`/api/representative/${id}/votes`),
-        fetchApi<Record<string, unknown>>(`/api/representative/${id}/bills`),
-      ]);
-      templateData.votes = votes;
-      templateData.bills = bills;
+    case 'voting-record':
+      voting = await fetchVotingRecordData(id, rep.chamber);
       break;
-    }
     default:
       notFound();
   }
 
-  const faqAnswer = buildFaqAnswer(slug, rep.name, templateData);
+  const faqAnswer = buildFaqAnswer(slug, rep.name, { campaign, alignment, voting });
 
   return (
     <>
@@ -156,38 +124,22 @@ export default async function QuestionPage({ params }: PageProps) {
         category={template.category}
         relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
       >
-        {slug === 'campaign-contributions' && (
+        {slug === 'campaign-contributions' && campaign && (
           <CampaignContributionsAnswer
-            profile={entity}
-            finance={
-              templateData.finance as Parameters<typeof CampaignContributionsAnswer>[0]['finance']
-            }
-            industries={
-              templateData.industries as Parameters<
-                typeof CampaignContributionsAnswer
-              >[0]['industries']
-            }
-            voteFinanceInsight={
-              templateData.voteFinance as InsightResponse<VoteFinanceInsight> | null
-            }
+            finance={campaign.finance}
+            industries={campaign.industries}
+            voteFinanceInsight={campaign.voteFinance}
           />
         )}
-        {slug === 'party-alignment' && (
+        {slug === 'party-alignment' && alignment && (
           <PartyAlignmentAnswer
             profile={entity}
-            partyAlignment={
-              templateData.partyAlignment as Parameters<
-                typeof PartyAlignmentAnswer
-              >[0]['partyAlignment']
-            }
-            temporalInsight={templateData.temporal as InsightResponse<TemporalVoteInsight> | null}
+            partyAlignment={alignment.partyAlignment}
+            temporalInsight={alignment.temporal}
           />
         )}
-        {slug === 'voting-record' && (
-          <VotingRecordAnswer
-            votes={templateData.votes as Parameters<typeof VotingRecordAnswer>[0]['votes']}
-            bills={templateData.bills as Parameters<typeof VotingRecordAnswer>[0]['bills']}
-          />
+        {slug === 'voting-record' && voting && (
+          <VotingRecordAnswer votes={voting.votes} bills={voting.bills} />
         )}
       </QuestionLayout>
     </>

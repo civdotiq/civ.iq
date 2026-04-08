@@ -33,14 +33,7 @@ interface IndustryData {
   metadata?: { cycle?: number; lastUpdated?: string };
 }
 
-interface RepProfile {
-  name: string;
-  party: string;
-  state: string;
-}
-
 interface CampaignContributionsAnswerProps {
-  profile: RepProfile;
   finance: FinanceData | null;
   industries: IndustryData | null;
   voteFinanceInsight: InsightResponse<VoteFinanceInsight> | null;
