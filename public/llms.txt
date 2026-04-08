@@ -37,6 +37,17 @@ CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google 
 - `POST /api/intelligence/address/representatives` — find reps by full address
 - `GET /api/intelligence/vote-prediction/{bioguideId}` — ML vote prediction
 
+## Question Pages
+
+CIV.IQ provides question-driven entry pages at `/ask/{question-slug}/{bioguideId}`. Each page answers a specific civic question with real data pods and structured FAQ schema.
+
+Available question templates:
+- `/ask/campaign-contributions/{bioguideId}` — Where do campaign contributions come from? (FEC data, industry breakdown, vote-finance correlation)
+- `/ask/party-alignment/{bioguideId}` — How does this legislator vote compared to their party? (party-line rate, quarterly trends, notable shifts)
+- `/ask/voting-record/{bioguideId}` — How does this legislator vote? (recent votes, sponsored bills, voting statistics)
+
+Each page includes JSON-LD FAQPage schema, breadcrumb navigation, and related question links.
+
 ## MCP Server
 
 CIV.IQ exposes a Model Context Protocol server for AI assistant integration:

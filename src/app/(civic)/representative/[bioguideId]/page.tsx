@@ -14,6 +14,7 @@ import { BreadcrumbsWithContext } from '@/components/shared/navigation/Breadcrum
 import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { QuestionSuggestions } from '@/components/questions/QuestionSuggestions';
 import { getStateName } from '@/lib/data/us-states';
 
 export const dynamic = 'force-dynamic';
@@ -392,6 +393,11 @@ export default async function RepresentativeProfilePage({
           summary={summaryResult}
           bioguideId={bioguideId}
         />
+
+        {/* Question suggestions linking to /ask/ pages */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-grid-3">
+          <QuestionSuggestions bioguideId={bioguideId} name={representative.name} />
+        </div>
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>

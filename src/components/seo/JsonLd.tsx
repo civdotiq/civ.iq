@@ -306,6 +306,36 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
   );
 }
 
+interface FAQPageSchemaProps {
+  question: string;
+  answer: string;
+}
+
+/**
+ * FAQPage schema for question-template pages.
+ * Renders a single Q&A pair as structured data for rich results.
+ */
+export function FAQPageSchema({ question, answer }: FAQPageSchemaProps) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: answer,
+        },
+      },
+    ],
+  };
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
 interface LegislativeEventSchemaProps {
   name: string;
   description?: string;

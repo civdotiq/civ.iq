@@ -200,6 +200,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           });
         }
       }
+
+      // Question pages: 3 templates × all representatives
+      const questionSlugs = ['campaign-contributions', 'party-alignment', 'voting-record'];
+      for (const rep of representatives) {
+        if (rep.bioguideId) {
+          for (const qSlug of questionSlugs) {
+            entries.push({
+              url: `${BASE_URL}/ask/${qSlug}/${rep.bioguideId}`,
+              lastModified: now,
+              changeFrequency: 'weekly',
+              priority: 0.75,
+            });
+          }
+        }
+      }
     }
   } catch {
     // Silently fail - other entries will still be generated
