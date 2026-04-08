@@ -25,12 +25,18 @@ interface SourceDefinition {
   tier: SourceTier;
   /** URL to probe — should be a lightweight endpoint */
   probeUrl: string;
+  /** HTTP method for the probe (defaults to GET) */
+  probeMethod?: 'GET' | 'POST' | 'HEAD';
+  /** Body for POST probes */
+  probeBody?: string;
   /** Whether the probe needs an API key */
   requiresKey?: string;
   /** How to add the key */
   keyMethod?: 'query' | 'header';
   /** Query param or header name for the key */
   keyParam?: string;
+  /** Prefix for the header value (e.g., 'Bearer', 'Token'). Only used with keyMethod: 'header'. */
+  keyPrefix?: string;
   /** Expected HTTP status */
   expectedStatus?: number;
   /** Cache staleness threshold in hours — data older than this is "stale" */
@@ -114,6 +120,7 @@ const DATA_SOURCES: SourceDefinition[] = [
 
   // ── Standard: probed on wider rotation ─────────────────────────────
   {
+    // Verified: sec-edgar-service.ts uses efts.sec.gov/LATEST/search-index
     name: 'SEC EDGAR',
     tier: 'standard',
     probeUrl:
@@ -122,9 +129,10 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'sec:*',
   },
   {
+    // Verified: osha-service.ts uses /OSHA_inspection with limit/offset params
     name: 'OSHA',
     tier: 'standard',
-    probeUrl: 'https://apiprod.dol.gov/v4/osha/inspection?$top=1',
+    probeUrl: 'https://apiprod.dol.gov/v4/osha/OSHA_inspection?limit=1&offset=0',
     staleTtlHours: 336,
     cacheKeyPattern: 'osha:*',
   },
@@ -137,13 +145,19 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'cfpb:*',
   },
   {
+    // Verified: courtlistener-service.ts uses Token auth (not Bearer)
     name: 'CourtListener',
     tier: 'standard',
     probeUrl: 'https://www.courtlistener.com/api/rest/v4/courts/?page_size=1',
+    requiresKey: 'COURTLISTENER_API_TOKEN',
+    keyMethod: 'header',
+    keyParam: 'Authorization',
+    keyPrefix: 'Token',
     staleTtlHours: 336,
     cacheKeyPattern: 'courtlistener:*',
   },
   {
+    // Verified: noaa-service.ts uses 'token' header
     name: 'NOAA',
     tier: 'standard',
     probeUrl: 'https://www.ncdc.noaa.gov/cdo-web/api/v2/datasets?limit=1',
@@ -154,9 +168,10 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'noaa:*',
   },
   {
+    // Verified: eia-service.ts uses api_key query param on /seds/data/ path
     name: 'EIA',
     tier: 'standard',
-    probeUrl: 'https://api.eia.gov/v2/?api_key=',
+    probeUrl: 'https://api.eia.gov/v2/seds/data/',
     requiresKey: 'EIA_API_KEY',
     keyMethod: 'query',
     keyParam: 'api_key',
@@ -164,12 +179,14 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'eia:*',
   },
   {
+    // Verified: hud-service.ts uses Authorization: Bearer {token}
     name: 'HUD',
     tier: 'standard',
     probeUrl: 'https://www.huduser.gov/hudapi/public/fmr/listMetroAreas',
     requiresKey: 'HUD_API_KEY',
     keyMethod: 'header',
     keyParam: 'Authorization',
+    keyPrefix: 'Bearer',
     staleTtlHours: 720,
     cacheKeyPattern: 'hud:*',
   },
@@ -196,17 +213,21 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'treasury:*',
   },
   {
+    // Verified: nih-reporter-service.ts uses POST to /projects/search with JSON body
     name: 'NIH Reporter',
     tier: 'standard',
     probeUrl: 'https://api.reporter.nih.gov/v2/projects/search',
-    expectedStatus: 405, // POST-only endpoint, GET returns 405
+    probeMethod: 'POST',
+    probeBody: JSON.stringify({ criteria: { limit: 1, offset: 0 } }),
     staleTtlHours: 720,
     cacheKeyPattern: 'nih:*',
   },
   {
+    // Verified: cms-provider-service.ts uses DKAN distribution UUID ae3f2207-...
     name: 'CMS',
     tier: 'standard',
-    probeUrl: 'https://data.cms.gov/provider-data/api/1/datastore/query/mj5m-pzi6?limit=1',
+    probeUrl:
+      'https://data.cms.gov/provider-data/api/1/datastore/query/ae3f2207-fca8-50d5-9fd5-d6a7d3426ee3?limit=1',
     staleTtlHours: 720,
     cacheKeyPattern: 'cms:*',
   },
@@ -221,13 +242,15 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'scorecard:*',
   },
   {
+    // Verified: nhtsa-service.ts uses /recalls/recallsByVehicle
     name: 'NHTSA',
     tier: 'standard',
-    probeUrl: 'https://api.nhtsa.gov/products/vehicle/makes?issueType=r',
+    probeUrl: 'https://api.nhtsa.gov/recalls/recallsByVehicle?make=toyota&modelYear=2024',
     staleTtlHours: 720,
     cacheKeyPattern: 'nhtsa:*',
   },
   {
+    // Verified: uses data.gov rate limiter with API_KEY param
     name: 'FBI UCR',
     tier: 'standard',
     probeUrl: 'https://api.usa.gov/crime/fbi/cde/arrest/national/all?from=2020&to=2020',
@@ -238,9 +261,10 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'fbi:*',
   },
   {
+    // Verified: openstates-api.ts uses apikey query param
     name: 'Open States',
     tier: 'standard',
-    probeUrl: 'https://v3.openstates.org/jurisdictions?apikey=',
+    probeUrl: 'https://v3.openstates.org/jurisdictions',
     requiresKey: 'OPENSTATES_API_KEY',
     keyMethod: 'query',
     keyParam: 'apikey',
@@ -255,19 +279,22 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'usaspending:*',
   },
   {
+    // Verified: senate-disclosure-service.ts fetches this exact URL
     name: 'Senate Stock Watcher',
     tier: 'standard',
     probeUrl:
       'https://raw.githubusercontent.com/timothycarambat/senate-stock-watcher-data/master/aggregate/all_transactions_for_senators.json',
-    expectedStatus: 200,
+    probeMethod: 'HEAD', // Don't download the full JSON, just check it exists
     staleTtlHours: 168,
     cacheKeyPattern: 'senate-disclosures:*',
   },
   {
+    // Verified: house-disclosure-service.ts fetches ZIP at /public_disc/financial-pdfs/{year}FD.ZIP
+    // Use HEAD to check file exists without downloading the ZIP
     name: 'House Disclosures',
     tier: 'standard',
-    probeUrl: 'https://disclosures-clerk.house.gov/PublicDisclosure/FinancialDisclosure',
-    expectedStatus: 200,
+    probeUrl: `https://disclosures-clerk.house.gov/public_disc/financial-pdfs/${new Date().getFullYear()}FD.ZIP`,
+    probeMethod: 'HEAD',
     staleTtlHours: 168,
     cacheKeyPattern: 'house-disclosures:*',
   },
@@ -362,18 +389,26 @@ async function probeSource(source: SourceDefinition): Promise<SourceResult> {
         const separator = url.includes('?') ? '&' : '?';
         url = `${url}${separator}${source.keyParam}=${keyValue}`;
       } else {
-        const headerValue = source.keyParam === 'Authorization' ? `Bearer ${keyValue}` : keyValue;
+        // Use keyPrefix if specified (e.g., 'Bearer', 'Token'), otherwise raw value
+        const headerValue = source.keyPrefix ? `${source.keyPrefix} ${keyValue}` : keyValue;
         headers[source.keyParam] = headerValue;
       }
+    }
+
+    // POST probes need Content-Type
+    const method = source.probeMethod ?? 'GET';
+    if (method === 'POST' && source.probeBody) {
+      headers['Content-Type'] = 'application/json';
     }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 
     const response = await fetch(url, {
+      method,
       headers,
+      body: source.probeBody ?? undefined,
       signal: controller.signal,
-      // Avoid Next.js caching of fetch
       cache: 'no-store',
     });
 
@@ -382,13 +417,16 @@ async function probeSource(source: SourceDefinition): Promise<SourceResult> {
     const expectedStatus = source.expectedStatus ?? 200;
 
     if (response.status === expectedStatus) {
+      // Record successful probe in Redis
+      await recordSuccessfulProbe(source);
+
       return {
         name: source.name,
         tier: source.tier,
         status: elapsed > DEGRADED_THRESHOLD_MS ? 'degraded' : 'ok',
         responseTimeMs: elapsed,
         httpStatus: response.status,
-        lastSuccessfulFetch: await getLastSuccessfulFetch(source),
+        lastSuccessfulFetch: new Date().toISOString(),
         error: null,
       };
     }
@@ -419,21 +457,42 @@ async function probeSource(source: SourceDefinition): Promise<SourceResult> {
   }
 }
 
+/** Slug used as Redis key suffix for a source. */
+function sourceSlug(source: SourceDefinition): string {
+  return source.name.toLowerCase().replace(/\s+/g, '-');
+}
+
+/** 30 days in seconds — how long to keep the last-success timestamp. */
+const LAST_SUCCESS_TTL = 30 * 24 * 60 * 60;
+
 /**
- * Check Redis for the most recent cached entry matching this source's pattern.
- * Returns the timestamp of the cache entry if found.
+ * Record a successful probe in Redis so future calls (and calls that
+ * skip this source due to rotation) can report when data was last reachable.
+ */
+async function recordSuccessfulProbe(source: SourceDefinition): Promise<void> {
+  try {
+    const redis = getRedisCache();
+    const status = redis.getStatus();
+    if (!status.isConnected && !status.redisAvailable) return;
+
+    const metaKey = `health:last-success:${sourceSlug(source)}`;
+    await redis.set(metaKey, new Date().toISOString(), LAST_SUCCESS_TTL);
+  } catch {
+    // Non-critical — don't let metadata writes break the health check
+  }
+}
+
+/**
+ * Read the last successful probe timestamp from Redis.
+ * Returns null if Redis is unavailable or no probe has succeeded yet.
  */
 async function getLastSuccessfulFetch(source: SourceDefinition): Promise<string | null> {
-  if (!source.cacheKeyPattern) return null;
-
   try {
     const redis = getRedisCache();
     const status = redis.getStatus();
     if (!status.isConnected && !status.redisAvailable) return null;
 
-    // Check if any key matching the pattern exists
-    // We store a dedicated health metadata key per source
-    const metaKey = `health:last-success:${source.name.toLowerCase().replace(/\s+/g, '-')}`;
+    const metaKey = `health:last-success:${sourceSlug(source)}`;
     const timestamp = await redis.get<string>(metaKey);
     return timestamp ?? null;
   } catch {

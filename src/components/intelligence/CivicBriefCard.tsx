@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import type { CivicBriefInsight, BriefPattern } from '@/lib/intelligence/types';
 
@@ -259,14 +260,11 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
 
       {/* Sources + disclaimer — always visible but compact */}
       <div className="mt-4 pt-3 border-t-2 border-gray-100">
-        <p className="type-xs text-gray-400 mb-1">
-          Data through{' '}
-          {new Date(insight.dataAsOf).toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric',
-          })}{' '}
-          · Sources: Congress.gov, FEC.gov, Senate lobbying disclosures
-        </p>
+        <SourceCitation
+          sources={insight.sources ?? []}
+          dataAsOf={insight.dataAsOf}
+          className="mb-1"
+        />
         <InsightDisclaimer
           disclaimer={insight.disclaimer}
           methodology={insight.methodology}

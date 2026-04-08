@@ -480,8 +480,7 @@ export default function MethodologyPage() {
             <p>
               CIV.IQ pulls data from {TOTAL_SOURCES} official government and public data sources. We
               never make up data or use estimates. When a source is unavailable, we tell you and
-              show the date of the last available data. Every analysis displays a &ldquo;Data
-              through&rdquo; timestamp so you can see how fresh the underlying data is.
+              show the date of the last available data.
             </p>
           </div>
 
@@ -596,6 +595,35 @@ export default function MethodologyPage() {
                 worse. Every comparison follows the same rules for all members.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* ── Section 5: Data Freshness ─────────────────────── */}
+        <section className="mb-12" aria-labelledby="freshness">
+          <h2 id="freshness" className="text-2xl font-bold mb-4">
+            Data freshness and monitoring
+          </h2>
+
+          <div className="space-y-4 type-base text-gray-700 leading-relaxed">
+            <p>
+              CIV.IQ continuously monitors all {TOTAL_SOURCES} data sources for availability and
+              freshness. Every analysis displays a &ldquo;Data through&rdquo; timestamp showing when
+              the underlying data was last updated.
+            </p>
+
+            <p>
+              When a data source becomes unavailable, CIV.IQ continues to display the last available
+              data with its date. We never silently show stale data as if it were current. If a
+              source has been down long enough that its data is no longer meaningful, the affected
+              section shows a clear &ldquo;Data unavailable&rdquo; message instead.
+            </p>
+
+            <p>
+              Core data sources (Congress.gov, FEC, Senate lobbying filings, Census Geocoder) are
+              checked on every health probe. Supplementary sources are checked on a rotating
+              schedule to stay within rate limits. Source availability and response times are logged
+              for operational visibility.
+            </p>
           </div>
         </section>
 

@@ -6,9 +6,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import useSWR from 'swr';
 import { RepLink } from '@/components/shared/links/EntityLinks';
+import { SourceCitation } from './SourceCitation';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorLeaderboardResponse, SectorLeaderboardEntry } from '@/lib/intelligence/types';
 
@@ -283,18 +283,9 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
         </div>
       )}
 
-      {/* Disclaimer */}
-      <p className="type-xs text-gray-400 mt-3">
-        {data?.dataAsOf && (
-          <>
-            Data through{' '}
-            {new Date(data.dataAsOf).toLocaleDateString('en-US', {
-              month: 'short',
-              year: 'numeric',
-            })}
-            {' · '}
-          </>
-        )}
+      {/* Freshness + disclaimer */}
+      {data?.dataAsOf && <SourceCitation sources={[]} dataAsOf={data.dataAsOf} className="mt-3" />}
+      <p className="type-xs text-gray-400 mt-1">
         Sector vote rates reflect voting patterns on sector-relevant bills relative to campaign
         donations. Correlation does not indicate causation or improper behavior.
       </p>

@@ -17,6 +17,7 @@
 
 import { useState } from 'react';
 import { ConfidenceBadge } from './ConfidenceBadge';
+import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import type {
   TemporalProximityInsight,
@@ -67,13 +68,11 @@ export function TemporalProximityCard({ insight, className = '' }: TemporalProxi
         Do donations or lobbying happen close in time to related votes? This section checks for
         timing patterns in public records. Proximity does not mean one caused the other.
       </p>
-      <p className="type-xs text-gray-400 mb-4">
-        Data through{' '}
-        {new Date(insight.dataAsOf).toLocaleDateString('en-US', {
-          month: 'short',
-          year: 'numeric',
-        })}
-      </p>
+      <SourceCitation
+        sources={insight.sources ?? []}
+        dataAsOf={insight.dataAsOf}
+        className="mb-4"
+      />
 
       {/* Narrative */}
       <p className="type-sm text-gray-700 leading-relaxed mb-4">{insight.narrative}</p>
