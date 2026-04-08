@@ -8,36 +8,18 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Crown } from 'lucide-react';
+import { Crown, Phone, ExternalLink } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import {
-  LegislationIcon,
-  VoteIcon,
-  FinanceIcon,
-  CommitteeIcon,
-} from '@/components/icons/AicherIcons';
 import { ShareIconButton } from '@/components/shared/social/ShareButton';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
-  stats: {
-    billsSponsored?: number;
-    votesParticipated?: number;
-    totalRaised?: number;
-    committees?: number;
-    financeCycle?: number;
-  };
-  loading?: boolean;
-  onStatClick?: (tabId: string) => void;
   nextElection?: number | null;
   focusAreas?: string[];
 }
 
 export function HeroStatsHeader({
   representative,
-  stats,
-  loading = false,
-  onStatClick,
   nextElection,
   focusAreas,
 }: HeroStatsHeaderProps) {
@@ -142,16 +124,10 @@ export function HeroStatsHeader({
     return 'accent-bar-green';
   };
 
-  // Format currency values
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
-    return `$${amount.toLocaleString()}`;
-  };
+  // Resolve contact info — currentTerm takes precedence
+  const phone = representative.currentTerm?.phone || representative.phone;
+  const website = representative.currentTerm?.website || representative.website;
+  const hasContact = phone || website;
 
   return (
     <div className={`bg-white border-2 border-black relative ${getAccentBarClass()}`}>
@@ -209,11 +185,6 @@ export function HeroStatsHeader({
                     district: representative.district,
                   },
                   section: 'overview',
-                  stats: {
-                    billsSponsored: stats.billsSponsored,
-                    totalRaised: stats.totalRaised,
-                    committeeCount: stats.committees,
-                  },
                 }}
               />
             </div>
@@ -280,113 +251,32 @@ export function HeroStatsHeader({
                 ))}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Stats Section - Integrated into Hero */}
-        <div className="border-t-2 border-gray-200 pt-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Bills Sponsored */}
-            <button
-              onClick={() => onStatClick?.('legislation')}
-              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
-              type="button"
-              aria-label="View sponsored bills"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <LegislationIcon className="w-4 h-4 text-civiq-blue" />
-                <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                  Bills Sponsored
-                </span>
+            {/* Contact row */}
+            {hasContact && (
+              <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-gray-600">
+                {phone && (
+                  <a
+                    href={`tel:${phone}`}
+                    className="flex items-center gap-1.5 hover:text-civiq-blue transition-colors"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{phone}</span>
+                  </a>
+                )}
+                {website && (
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 hover:text-civiq-blue transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>{website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                  </a>
+                )}
               </div>
-              {loading ? (
-                <div className="h-8 bg-gray-200 animate-pulse"></div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {stats.billsSponsored !== undefined ? stats.billsSponsored : '—'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Current Congress</div>
-                </>
-              )}
-            </button>
-
-            {/* Votes Cast */}
-            <button
-              onClick={() => onStatClick?.('voting')}
-              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-green transition-colors cursor-pointer text-left"
-              type="button"
-              aria-label="View voting records"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <VoteIcon className="w-4 h-4 text-civiq-green" />
-                <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                  Votes Cast
-                </span>
-              </div>
-              {loading ? (
-                <div className="h-8 bg-gray-200 animate-pulse"></div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {stats.votesParticipated !== undefined ? stats.votesParticipated : '—'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">This term</div>
-                </>
-              )}
-            </button>
-
-            {/* Total Raised */}
-            <button
-              onClick={() => onStatClick?.('finance')}
-              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-red transition-colors cursor-pointer text-left"
-              type="button"
-              aria-label="View campaign finance data"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <FinanceIcon className="w-4 h-4 text-civiq-red" />
-                <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                  Total Raised
-                </span>
-              </div>
-              {loading ? (
-                <div className="h-8 bg-gray-200 animate-pulse"></div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {stats.totalRaised !== undefined ? formatCurrency(stats.totalRaised) : '—'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {stats.financeCycle ? `${stats.financeCycle} Cycle` : 'Current cycle'}
-                  </div>
-                </>
-              )}
-            </button>
-
-            {/* Committees */}
-            <button
-              onClick={() => onStatClick?.('overview')}
-              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
-              type="button"
-              aria-label="View committee memberships"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <CommitteeIcon className="w-4 h-4 text-civiq-blue" />
-                <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                  Committees
-                </span>
-              </div>
-              {loading ? (
-                <div className="h-8 bg-gray-200 animate-pulse"></div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-gray-900">
-                    {stats.committees !== undefined ? stats.committees : '—'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Current</div>
-                </>
-              )}
-            </button>
+            )}
           </div>
         </div>
       </div>

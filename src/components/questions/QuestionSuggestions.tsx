@@ -22,7 +22,7 @@ export function QuestionSuggestions({ bioguideId, name }: QuestionSuggestionsPro
   const templates = getAllTemplates();
 
   return (
-    <section aria-label="Questions about this representative" className="mt-grid-3">
+    <section aria-label="Questions about this representative" className="py-grid-3">
       <h2 className="type-sm font-semibold text-black mb-grid-2">Common questions</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {templates.map(template => {

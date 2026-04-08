@@ -276,29 +276,6 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           <div className="mb-rhythm-section" data-speakable="rep-summary">
             <HeroStatsHeader
               representative={representative}
-              stats={{
-                billsSponsored: summaryData?.success
-                  ? (summaryData.data?.billsSponsored ??
-                    batchData?.data?.bills?.totalSponsored ??
-                    batchData?.data?.bills?.currentCongress?.count)
-                  : undefined,
-                committees: representative.committees?.length ?? 0,
-                totalRaised: summaryData?.success
-                  ? summaryData.data?.totalRaised
-                  : batchData?.success
-                    ? batchData.data?.finance?.totalRaised
-                    : undefined,
-                votesParticipated: summaryData?.success
-                  ? summaryData.data?.votesParticipated
-                  : undefined,
-                financeCycle: summaryData?.success
-                  ? summaryData.data?.financeCycle
-                  : batchData?.success
-                    ? batchData.data?.finance?.metadata?.matchedCycle
-                    : undefined,
-              }}
-              loading={summaryLoading}
-              onStatClick={navigateToSection}
               nextElection={nextElection}
               focusAreas={focusAreas}
             />

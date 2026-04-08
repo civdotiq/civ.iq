@@ -135,11 +135,9 @@ async function getRepresentativeData(bioguideId: string): Promise<Representative
 function CitableFacts({
   representative,
   summary,
-  bioguideId,
 }: {
   representative: RepresentativeDetails;
   summary: Awaited<ReturnType<typeof getRepresentativeSummary>> | null;
-  bioguideId: string;
 }) {
   const stateName = getStateName(representative.state) || representative.state;
   const chamberFull =
@@ -171,9 +169,9 @@ function CitableFacts({
     <section
       aria-label={`Key facts about ${representative.name}`}
       data-speakable="rep-facts"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-grid-2"
+      className="sr-only"
     >
-      <dl className="border-2 border-black bg-white px-4 py-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+      <dl>
         <div className="flex gap-2">
           <dt className="text-gray-500 shrink-0">Party</dt>
           <dd className="font-medium text-gray-900">{representative.party}</dd>
@@ -387,23 +385,21 @@ export default async function RepresentativeProfilePage({
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
 
-        {/* Server-rendered key facts for AI citation and crawlers */}
-        <CitableFacts
-          representative={representative}
-          summary={summaryResult}
-          bioguideId={bioguideId}
-        />
-
-        {/* Question suggestions linking to /ask/ pages */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-grid-3">
-          <QuestionSuggestions bioguideId={bioguideId} name={representative.name} />
-        </div>
+        {/* Server-rendered key facts for AI citation and crawlers (visually hidden, in DOM for SEO) */}
+        <CitableFacts representative={representative} summary={summaryResult} />
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
             <SimpleRepresentativeProfile representative={representative} />
           </ChunkLoadErrorBoundary>
         </ErrorBoundary>
+
+        {/* Common questions — discovery section after main navigation grid */}
+        <div className="bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+            <QuestionSuggestions bioguideId={bioguideId} name={representative.name} />
+          </div>
+        </div>
 
         {/* Contextual Footer - SEO navigation without redundancy */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
