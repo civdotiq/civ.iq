@@ -81,6 +81,10 @@ export async function PUT(request: NextRequest) {
           type: 'representative' as const,
           id: (e.id as string).toUpperCase(),
           name: typeof e.name === 'string' ? e.name : undefined,
+          chamber:
+            e.chamber === 'House' || e.chamber === 'Senate'
+              ? (e.chamber as 'House' | 'Senate')
+              : undefined,
         }));
     }
 
