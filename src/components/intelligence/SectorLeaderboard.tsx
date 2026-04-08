@@ -285,6 +285,16 @@ export function SectorLeaderboard({ initialSector, className = '' }: SectorLeade
 
       {/* Disclaimer */}
       <p className="type-xs text-gray-400 mt-3">
+        {data?.dataAsOf && (
+          <>
+            Data through{' '}
+            {new Date(data.dataAsOf).toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric',
+            })}
+            {' · '}
+          </>
+        )}
         Sector vote rates reflect voting patterns on sector-relevant bills relative to campaign
         donations. Correlation does not indicate causation or improper behavior.
       </p>

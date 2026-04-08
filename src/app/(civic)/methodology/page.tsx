@@ -480,7 +480,8 @@ export default function MethodologyPage() {
             <p>
               CIV.IQ pulls data from {TOTAL_SOURCES} official government and public data sources. We
               never make up data or use estimates. When a source is unavailable, we tell you and
-              show the date of the last available data.
+              show the date of the last available data. Every analysis displays a &ldquo;Data
+              through&rdquo; timestamp so you can see how fresh the underlying data is.
             </p>
           </div>
 

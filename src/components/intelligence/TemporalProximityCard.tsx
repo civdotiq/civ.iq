@@ -63,9 +63,16 @@ export function TemporalProximityCard({ insight, className = '' }: TemporalProxi
         <ConfidenceBadge confidence={insight.confidence} />
       </div>
 
-      <p className="type-xs text-gray-500 mb-4">
+      <p className="type-xs text-gray-500 mb-1">
         Do donations or lobbying happen close in time to related votes? This section checks for
         timing patterns in public records. Proximity does not mean one caused the other.
+      </p>
+      <p className="type-xs text-gray-400 mb-4">
+        Data through{' '}
+        {new Date(insight.dataAsOf).toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        })}
       </p>
 
       {/* Narrative */}

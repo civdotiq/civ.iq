@@ -9,6 +9,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { SignalBadge } from './SignalBadge';
+import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
 import type { MoneyReportCardInsight, RepMoneyMetrics } from '@/lib/intelligence/types';
 
@@ -146,8 +147,9 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
           Money Report Card
         </h3>
       </div>
-      <div className="mb-4">
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <ConfidenceBadge confidence={insight.confidence} />
+        <SourceCitation sources={insight.sources ?? []} dataAsOf={insight.dataAsOf} />
       </div>
 
       {/* District context */}

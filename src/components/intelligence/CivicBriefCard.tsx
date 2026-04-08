@@ -260,7 +260,12 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
       {/* Sources + disclaimer — always visible but compact */}
       <div className="mt-4 pt-3 border-t-2 border-gray-100">
         <p className="type-xs text-gray-400 mb-1">
-          Sources: Congress.gov, FEC.gov, Senate lobbying disclosures
+          Data through{' '}
+          {new Date(insight.dataAsOf).toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric',
+          })}{' '}
+          · Sources: Congress.gov, FEC.gov, Senate lobbying disclosures
         </p>
         <InsightDisclaimer
           disclaimer={insight.disclaimer}

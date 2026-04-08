@@ -49,6 +49,8 @@ export function SourceCitation({ sources, dataAsOf, className = '' }: SourceCita
 
   return (
     <p className={`type-xs text-gray-400 ${className}`}>
+      <span className="text-gray-500">Data through {formatDate(dataAsOf)}</span>
+      {' · '}
       <span className="text-gray-500 aicher-heading-wide">Sources: {sources.length}</span>
       {' \u2014 '}
       {sources.map(s => formatSource(s)).join(', ')}
