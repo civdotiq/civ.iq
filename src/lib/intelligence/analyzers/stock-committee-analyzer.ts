@@ -161,7 +161,7 @@ async function computeAndCache(
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate)),
+    dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate))!,
     methodology:
       `Stock trades from STOCK Act disclosures ` +
       `(${data.chamber === 'Senate' ? 'Senate Stock Watcher' : 'House Clerk'}) ` +

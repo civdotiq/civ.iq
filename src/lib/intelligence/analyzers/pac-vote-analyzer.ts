@@ -200,7 +200,9 @@ async function computeAndCache(
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(freshestVoteDate),
+    dataAsOf: freshestDate(freshestVoteDate) ?? new Date().toISOString(),
+    // ^ freshestVoteDate can be undefined if votes lack date fields.
+    // Fallback to analysis time is imprecise but the votes were just fetched.
     methodology:
       'PAC recipients identified via FEC disbursement data. ' +
       'Relevant votes determined by bill industry classification (AI summary or policy-area-map fallback). ' +
@@ -396,7 +398,7 @@ async function processRecipientVotes(
       partyBaselineYeaRate,
       differenceFromBaseline: yeaRate - partyBaselineYeaRate,
     },
-    latestVoteDate: voteDates.length > 0 ? freshestDate(...voteDates) : undefined,
+    latestVoteDate: voteDates.length > 0 ? (freshestDate(...voteDates) ?? undefined) : undefined,
   };
 }
 

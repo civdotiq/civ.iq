@@ -170,7 +170,7 @@ async function computeAndCache(
     dataAsOf: freshestDate(
       ...stats.issueAlignments.flatMap(a => a.matchedBills.map(b => b.introducedDate)),
       ...data.matchedFilings.map(f => `${f.filingYear}-12-31`)
-    ),
+    )!,
     methodology:
       'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +
       'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +

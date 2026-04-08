@@ -56,6 +56,13 @@ export async function GET(
 
     const insight = await analyzeTemporalProximity(neighborhood, upperId);
 
+    if (!insight) {
+      return NextResponse.json(
+        { error: 'Insufficient temporal data for this legislator' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { ...insight, errors: [] as InsightError[], status: 'complete' as const },
       {

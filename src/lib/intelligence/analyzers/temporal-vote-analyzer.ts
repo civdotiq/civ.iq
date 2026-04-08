@@ -367,7 +367,7 @@ async function computeAndCache(
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(...data.votes.map(v => v.date)),
+    dataAsOf: freshestDate(...data.votes.map(v => v.date))!,
     methodology:
       'Party alignment computed by comparing each vote to the party majority position ' +
       'on that roll call (from House Clerk / Senate XML). Votes partitioned into calendar quarters. ' +

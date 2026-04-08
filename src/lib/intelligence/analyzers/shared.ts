@@ -53,12 +53,22 @@ export async function withTimeout<T>(
 
 /**
  * Returns the most recent ISO date string from a list of candidate timestamps.
- * Filters out undefined/null/empty values. Falls back to current time if none valid.
- * Use this for `dataAsOf` — it should reflect the freshest *source data*, not analysis time.
+ * Filters out undefined/null/empty values.
+ *
+ * Use this for `dataAsOf` — it MUST reflect the freshest *source data*, not
+ * analysis time. Returning "now" when no dates exist would tell citizens the
+ * data is fresh when it isn't.
+ *
+ * Returns null if no valid dates are provided. Callers must either:
+ * 1. Guarantee at least one valid date (most analyzers do via sample size guards), or
+ * 2. Handle null by not creating the insight (return null from the analyzer).
  */
-export function freshestDate(...dates: (string | undefined | null)[]): string {
+export function freshestDate(...dates: (string | undefined | null)[]): string | null {
   const valid = dates.filter((d): d is string => !!d && !isNaN(Date.parse(d)));
-  if (valid.length === 0) return new Date().toISOString();
+  if (valid.length === 0) {
+    logger.warn('[freshestDate] No valid dates provided — returning null instead of current time');
+    return null;
+  }
   valid.sort((a, b) => Date.parse(b) - Date.parse(a));
   return valid[0]!;
 }

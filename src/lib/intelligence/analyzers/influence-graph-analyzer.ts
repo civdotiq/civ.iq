@@ -182,7 +182,7 @@ async function computeAndCache(
       chainInsight.dataAsOf,
       ...graphChains.flatMap(c => (c.regulationNode ? [c.regulationNode.publicationDate] : [])),
       ...graphChains.flatMap(c => c.enforcementActions.map(a => a.date))
-    ),
+    )!,
     methodology:
       'Influence graph built from existing 4-node chains (lobbying → contribution → legislation → vote), ' +
       'extended with Federal Register regulations matched via committee-agency mapping, ' +

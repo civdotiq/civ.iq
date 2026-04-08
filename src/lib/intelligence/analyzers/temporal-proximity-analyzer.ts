@@ -68,10 +68,17 @@ const DISCLAIMER =
 export async function analyzeTemporalProximity(
   neighborhood: GraphNeighborhood,
   bioguideId: string
-): Promise<TemporalProximityInsight> {
+): Promise<TemporalProximityInsight | null> {
   const _trackStart = Date.now();
   const now = new Date().toISOString();
   const edgeDates = neighborhood.edges.map(e => e.temporal?.date).filter((d): d is string => !!d);
+
+  // No temporal data at all — cannot produce an honest dataAsOf timestamp
+  if (edgeDates.length === 0) {
+    logger.info('[TemporalProximity] No edges with dates, skipping', { bioguideId });
+    return null;
+  }
+
   const patterns: TemporalPattern[] = [];
 
   // Pattern 1: Contribution → Vote
@@ -134,7 +141,7 @@ export async function analyzeTemporalProximity(
     narrative,
     confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(...edgeDates),
+    dataAsOf: freshestDate(...edgeDates)!,
     methodology:
       'Temporal proximity analysis: edges with dates are compared within configurable windows. ' +
       'Proximity score = 1 - (daysBetween / windowDays). Significance based on instance count and proximity.',

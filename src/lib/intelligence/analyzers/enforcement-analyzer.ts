@@ -152,7 +152,7 @@ async function computeAndCache(
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(...actions.map(a => a.date)),
+    dataAsOf: freshestDate(...actions.map(a => a.date))!,
     methodology:
       'Enforcement actions aggregated from EPA ECHO, OSHA inspections (DOL API), and CFPB complaints. ' +
       'Organizations matched across agencies via entity resolution. ' +

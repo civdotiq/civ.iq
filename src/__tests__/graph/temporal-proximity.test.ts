@@ -73,7 +73,7 @@ function makeVoteEdge(repId: string, billId: string, date: string): GraphEdge {
 }
 
 describe('analyzeTemporalProximity', () => {
-  it('returns empty patterns when no temporal edges exist', async () => {
+  it('returns null when no temporal edges exist', async () => {
     const nbr: GraphNeighborhood = {
       center: makeNode('rep:A'),
       edges: [],
@@ -83,9 +83,7 @@ describe('analyzeTemporalProximity', () => {
     };
 
     const result = await analyzeTemporalProximity(nbr, 'A000001');
-    expect(result.patterns).toHaveLength(0);
-    expect(result.totalPatternsDetected).toBe(0);
-    expect(result.narrative).toContain('No notable timing patterns');
+    expect(result).toBeNull();
   });
 
   it('detects contribution → vote pattern within 90 days', async () => {
@@ -148,13 +146,14 @@ describe('analyzeTemporalProximity', () => {
     };
 
     const result = await analyzeTemporalProximity(nbr, 'A000001');
-    expect(result.narrative).not.toContain('caused');
-    expect(result.narrative).not.toContain('influenced');
-    expect(result.narrative).not.toContain('resulted in');
-    expect(result.disclaimer).toContain('does not imply causation');
+    expect(result).not.toBeNull();
+    expect(result!.narrative).not.toContain('caused');
+    expect(result!.narrative).not.toContain('influenced');
+    expect(result!.narrative).not.toContain('resulted in');
+    expect(result!.disclaimer).toContain('does not imply causation');
   });
 
-  it('includes InsightBase fields', async () => {
+  it('returns null when no edges have temporal data', async () => {
     const nbr: GraphNeighborhood = {
       center: makeNode('rep:A'),
       edges: [],
@@ -164,12 +163,29 @@ describe('analyzeTemporalProximity', () => {
     };
 
     const result = await analyzeTemporalProximity(nbr, 'A000001');
-    expect(result.confidence).toBeGreaterThanOrEqual(0);
-    expect(result.confidence).toBeLessThanOrEqual(1);
-    expect(result.methodology).toBeTruthy();
-    expect(result.disclaimer).toBeTruthy();
-    expect(result.dataAsOf).toBeTruthy();
-    expect(result.lastAnalyzedAt).toBeTruthy();
-    expect(result.source).toBe('statistical-fallback');
+    expect(result).toBeNull();
+  });
+
+  it('includes InsightBase fields when edges have dates', async () => {
+    const repId = 'rep:A';
+    const nbr: GraphNeighborhood = {
+      center: makeNode(repId),
+      edges: [
+        makeDonationEdge('org:X', repId, '2026-01-15', 5000),
+        makeVoteEdge(repId, 'bill:1', '2026-03-01'),
+      ],
+      connectedNodes: [],
+      completeness: 'complete',
+      failedSources: [],
+    };
+
+    const result = await analyzeTemporalProximity(nbr, 'A000001');
+    expect(result).not.toBeNull();
+    expect(result!.confidence).toBeGreaterThanOrEqual(0);
+    expect(result!.confidence).toBeLessThanOrEqual(1);
+    expect(result!.methodology).toBeTruthy();
+    expect(result!.disclaimer).toBeTruthy();
+    expect(result!.dataAsOf).toBeTruthy();
+    expect(result!.lastAnalyzedAt).toBeTruthy();
   });
 });

@@ -20,14 +20,16 @@ interface SourceCitationProps {
   className?: string;
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string): string | null {
   try {
-    return new Date(iso).toLocaleDateString('en-US', {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-US', {
       month: 'short',
       year: 'numeric',
     });
   } catch {
-    return iso;
+    return null;
   }
 }
 
@@ -41,16 +43,21 @@ function formatSource(source: InsightSource): string {
 }
 
 export function SourceCitation({ sources, dataAsOf, className = '' }: SourceCitationProps) {
+  const formattedDate = formatDate(dataAsOf);
+
   if (sources.length === 0) {
-    return (
-      <p className={`type-xs text-gray-400 ${className}`}>Data through {formatDate(dataAsOf)}</p>
-    );
+    if (!formattedDate) return null;
+    return <p className={`type-xs text-gray-400 ${className}`}>Data through {formattedDate}</p>;
   }
 
   return (
     <p className={`type-xs text-gray-400 ${className}`}>
-      <span className="text-gray-500">Data through {formatDate(dataAsOf)}</span>
-      {' · '}
+      {formattedDate && (
+        <>
+          <span className="text-gray-500">Data through {formattedDate}</span>
+          {' · '}
+        </>
+      )}
       <span className="text-gray-500 aicher-heading-wide">Sources: {sources.length}</span>
       {' \u2014 '}
       {sources.map(s => formatSource(s)).join(', ')}

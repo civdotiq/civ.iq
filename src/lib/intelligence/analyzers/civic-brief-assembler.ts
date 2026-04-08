@@ -194,7 +194,14 @@ async function computeAndCache(
     summary,
     confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(fjInsight?.dataAsOf, icInsight?.dataAsOf),
+    // Prefer precise dates from cached intelligence insights. On cold start
+    // (all null), fall back to fetch time — the brief fetches live from
+    // Congress.gov and FEC, so this is roughly accurate but not as precise
+    // as a specific vote or filing date. TODO: add date tracking to
+    // BriefVoting/BriefFunding for exact source data timestamps.
+    dataAsOf:
+      freshestDate(fjInsight?.dataAsOf, icInsight?.dataAsOf, temporalInsight?.dataAsOf) ??
+      new Date().toISOString(),
     methodology: METHODOLOGY,
     disclaimer: DISCLAIMER,
     signal: classifySignal({
