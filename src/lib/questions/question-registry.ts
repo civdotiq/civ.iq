@@ -14,13 +14,13 @@ export interface QuestionTemplate {
   /** URL path segment: /ask/{slug}/[entityId] */
   slug: string;
   /** Question category for navigation and breadcrumbs */
-  category: 'who' | 'how' | 'what' | 'where';
+  category: 'who' | 'how' | 'what' | 'where' | 'why';
   /** Question with {name} placeholder, e.g., "Where do {name}'s campaign contributions come from?" */
   questionPattern: string;
-  /** Meta description with {name}, {party}, {state} placeholders */
+  /** Meta description with placeholders like {name}, {party}, {state}, {chamber} */
   descriptionPattern: string;
   /** Entity type this template applies to */
-  entityType: 'representative';
+  entityType: 'representative' | 'committee' | 'topic';
   /** API route patterns (with [id] placeholder) */
   dataSources: string[];
   /** Slugs for related question links */
@@ -32,6 +32,7 @@ const CATEGORY_LABELS: Record<QuestionTemplate['category'], string> = {
   how: 'How',
   what: 'What',
   where: 'Where',
+  why: 'Why',
 };
 
 export function getCategoryLabel(category: QuestionTemplate['category']): string {
@@ -100,14 +101,13 @@ export function getAllSlugs(): string[] {
 
 /**
  * Fill placeholders in a pattern string.
- * Supports {name}, {party}, {state}.
+ * Accepts any Record<string, string> — e.g., { name, party, state } for
+ * representatives, { name, chamber } for committees, { name } for topics.
  */
-export function fillPattern(
-  pattern: string,
-  entity: { name: string; party: string; state: string }
-): string {
-  return pattern
-    .replace(/\{name\}/g, entity.name)
-    .replace(/\{party\}/g, entity.party)
-    .replace(/\{state\}/g, entity.state);
+export function fillPattern(pattern: string, vars: Record<string, string>): string {
+  let result = pattern;
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+  }
+  return result;
 }

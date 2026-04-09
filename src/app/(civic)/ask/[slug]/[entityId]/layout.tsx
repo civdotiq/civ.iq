@@ -24,6 +24,11 @@ export async function generateMetadata({
   const template = getTemplate(slug);
   if (!template) return { title: 'Question not found' };
 
+  // Non-representative templates get basic metadata (committee/topic: Phase 4D/4E)
+  if (template.entityType !== 'representative') {
+    return { title: template.questionPattern, description: template.descriptionPattern };
+  }
+
   try {
     const rep = await getCachedRepresentative(entityId.toUpperCase());
     if (!rep) return { title: 'Representative not found' };
@@ -61,6 +66,11 @@ export default async function AskLayout({ children, params }: LayoutProps) {
 
   const template = getTemplate(slug);
   if (!template) notFound();
+
+  // Non-representative templates skip rep-specific breadcrumbs (Phase 4D/4E)
+  if (template.entityType !== 'representative') {
+    return <>{children}</>;
+  }
 
   let repName = 'Representative';
   try {

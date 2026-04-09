@@ -86,6 +86,9 @@ export default async function QuestionPage({ params }: PageProps) {
   const template = getTemplate(slug);
   if (!template) notFound();
 
+  // Only representative templates are implemented (committee/topic: Phase 4D/4E)
+  if (template.entityType !== 'representative') notFound();
+
   // Deduplicated via React cache() — shared with layout.tsx
   const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
