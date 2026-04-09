@@ -20,16 +20,25 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
+import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getPartyAlignment, type PartyAlignment } from '@/lib/services/party-alignment.service';
 import { searchPolicyArea } from '@/lib/services/policy-area-search.service';
+import { getCommitteeDataService } from '@/lib/services/committee.service';
+import { fetchCommitteeActivity } from '@/lib/services/committee-activity.service';
 import type {
   InsightResponse,
   VoteFinanceInsight,
   TemporalVoteInsight,
+  LobbyingPipelineInsight,
 } from '@/lib/intelligence/types';
+import type { Committee } from '@/types/committee';
 import type { PolicyAreaResults } from '@/types/joins';
+import type {
+  CommitteeActivityMeeting,
+  CommitteeActivityBill,
+} from '@/lib/services/committee-activity.service';
 
 // FEC fallback cycles — most recent completed cycle first
 const FALLBACK_CYCLES = [2024, 2022, 2020] as const;
@@ -313,4 +322,54 @@ export interface TopicBillsData {
 export async function fetchTopicBillsData(policyArea: string): Promise<TopicBillsData> {
   const results = await searchPolicyArea(policyArea, 10).catch(() => null);
   return { results };
+}
+
+// ── Committee Members ─────────────────────────────────────────
+
+export interface CommitteeMembersData {
+  committee: Committee;
+}
+
+export async function fetchCommitteeMembersData(
+  committeeId: string
+): Promise<CommitteeMembersData | null> {
+  const committee = await getCommitteeDataService(committeeId).catch(() => null);
+  if (!committee) return null;
+  return { committee };
+}
+
+// ── Committee Activity ────────────────────────────────────────
+
+export interface CommitteeActivityData {
+  meetings: CommitteeActivityMeeting[];
+  bills: CommitteeActivityBill[];
+  jurisdiction: string;
+}
+
+export async function fetchCommitteeActivityData(
+  committeeId: string,
+  chamber: 'House' | 'Senate' | 'Joint'
+): Promise<CommitteeActivityData> {
+  const [activity, committee] = await Promise.all([
+    fetchCommitteeActivity(committeeId, chamber),
+    getCommitteeDataService(committeeId).catch(() => null),
+  ]);
+  return {
+    meetings: activity.meetings,
+    bills: activity.bills,
+    jurisdiction: committee?.jurisdiction ?? '',
+  };
+}
+
+// ── Committee Lobbying ────────────────────────────────────────
+
+export interface CommitteeLobbyingData {
+  lobbying: LobbyingPipelineInsight | null;
+}
+
+export async function fetchCommitteeLobbyingData(
+  committeeCode: string
+): Promise<CommitteeLobbyingData> {
+  const lobbying = await analyzeLobbyingPipeline(committeeCode).catch(() => null);
+  return { lobbying };
 }

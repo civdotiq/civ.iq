@@ -12,6 +12,7 @@
 
 import { notFound } from 'next/navigation';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
+import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
 import { computeRelatedQuestions } from '@/lib/questions/related-questions';
 import {
@@ -21,12 +22,17 @@ import {
   fetchBillsSponsoredData,
   fetchDonorVotingAlignmentData,
   fetchTopicBillsData,
+  fetchCommitteeActivityData,
+  fetchCommitteeLobbyingData,
   type CampaignContributionsData,
   type PartyAlignmentTemplateData,
   type VotingRecordTemplateData,
   type BillsSponsoredData,
   type DonorVotingAlignmentData,
   type TopicBillsData,
+  type CommitteeMembersData,
+  type CommitteeActivityData,
+  type CommitteeLobbyingData,
 } from '@/lib/questions/template-data-fetchers';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
@@ -40,6 +46,9 @@ import { ContactInfoAnswer } from '@/components/questions/ContactInfoAnswer';
 import { PartisanshipAnswer } from '@/components/questions/PartisanshipAnswer';
 import { DonorVotingAlignmentAnswer } from '@/components/questions/DonorVotingAlignmentAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
+import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
+import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
+import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
 
 export const revalidate = 3600;
 
@@ -60,6 +69,9 @@ function buildFaqAnswer(
     billsSponsored?: BillsSponsoredData;
     donorAlignment?: DonorVotingAlignmentData;
     topicBills?: TopicBillsData;
+    committeeMembers?: CommitteeMembersData;
+    committeeActivity?: CommitteeActivityData;
+    committeLobbying?: CommitteeLobbyingData;
   }
 ): string {
   switch (slug) {
@@ -124,6 +136,32 @@ function buildFaqAnswer(
       }
       return `Legislative data for ${repName} is sourced from Congress.gov and the Federal Register.`;
     }
+    case 'committee-members': {
+      const memberCount = data.committeeMembers?.committee?.members?.length ?? 0;
+      if (memberCount > 0) {
+        return `The ${repName} has ${memberCount} members in the 119th Congress.`;
+      }
+      return `Membership data for the ${repName} is sourced from Congress.gov.`;
+    }
+    case 'committee-activity': {
+      const meetingCount = data.committeeActivity?.meetings?.length ?? 0;
+      if (meetingCount > 0) {
+        return `The ${repName} has held ${meetingCount} recent hearings or meetings.`;
+      }
+      return `Activity data for the ${repName} is sourced from Congress.gov.`;
+    }
+    case 'committee-lobbying': {
+      const orgCount = data.committeLobbying?.lobbying?.organizationCount;
+      const totalSpending = data.committeLobbying?.lobbying?.totalSpending;
+      if (orgCount && totalSpending) {
+        const amount =
+          totalSpending >= 1_000_000
+            ? `$${(totalSpending / 1_000_000).toFixed(1)}M`
+            : `$${(totalSpending / 1_000).toFixed(0)}K`;
+        return `${orgCount} organizations spent ${amount} on lobbying that mentions the ${repName}.`;
+      }
+      return `Lobbying data for the ${repName} is sourced from Senate LDA disclosures.`;
+    }
     default:
       return `Data for ${repName} is sourced from official government records.`;
   }
@@ -162,6 +200,65 @@ export default async function QuestionPage({ params }: PageProps) {
                 Data for this policy area is currently unavailable. Try again later.
               </p>
             </div>
+          )}
+        </QuestionLayout>
+      </>
+    );
+  }
+
+  // ── Committee entity resolution ──────────────────────────────
+  if (template.entityType === 'committee') {
+    const committee = await getCachedCommittee(entityId);
+    if (!committee?.name) notFound();
+
+    const vars = { name: committee.name, chamber: committee.chamber };
+    const question = fillPattern(template.questionPattern, vars);
+    const relatedQuestions = computeRelatedQuestions(slug, entityId, committee.name);
+
+    let committeeMembers: CommitteeMembersData | undefined;
+    let committeeActivity: CommitteeActivityData | undefined;
+    let committeLobbying: CommitteeLobbyingData | undefined;
+
+    switch (slug) {
+      case 'committee-members':
+        committeeMembers = { committee };
+        break;
+      case 'committee-activity':
+        committeeActivity = await fetchCommitteeActivityData(entityId, committee.chamber);
+        break;
+      case 'committee-lobbying':
+        committeLobbying = await fetchCommitteeLobbyingData(entityId);
+        break;
+      default:
+        notFound();
+    }
+
+    const faqAnswer = buildFaqAnswer(slug, committee.name, {
+      committeeMembers,
+      committeeActivity,
+      committeLobbying,
+    });
+
+    return (
+      <>
+        <FAQPageSchema question={question} answer={faqAnswer} />
+        <QuestionLayout
+          question={question}
+          category={template.category}
+          relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
+        >
+          {slug === 'committee-members' && committeeMembers && (
+            <CommitteeMembersAnswer committee={committeeMembers.committee} />
+          )}
+          {slug === 'committee-activity' && committeeActivity && (
+            <CommitteeActivityAnswer
+              meetings={committeeActivity.meetings}
+              bills={committeeActivity.bills}
+              jurisdiction={committeeActivity.jurisdiction}
+            />
+          )}
+          {slug === 'committee-lobbying' && (
+            <CommitteeLobbyingAnswer lobbying={committeLobbying?.lobbying ?? null} />
           )}
         </QuestionLayout>
       </>

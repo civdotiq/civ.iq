@@ -128,6 +128,40 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     relatedSlugs: ['campaign-contributions', 'partisanship'],
   },
   {
+    slug: 'committee-members',
+    category: 'who',
+    questionPattern: 'Who sits on {name}?',
+    descriptionPattern:
+      'Members, leadership, and subcommittees of the {name} ({chamber}). Data from Congress.gov.',
+    entityType: 'committee',
+    dataSources: ['/api/committee/[id]'],
+    relatedSlugs: ['committee-activity', 'committee-lobbying'],
+  },
+  {
+    slug: 'committee-activity',
+    category: 'what',
+    questionPattern: 'What is {name} working on?',
+    descriptionPattern:
+      'Recent hearings, bills in committee, and jurisdiction of the {name} ({chamber}). Data from Congress.gov.',
+    entityType: 'committee',
+    dataSources: [
+      '/api/committee/[id]',
+      '/api/committee/[id]/bills',
+      '/api/committee/[id]/meetings',
+    ],
+    relatedSlugs: ['committee-members', 'committee-lobbying'],
+  },
+  {
+    slug: 'committee-lobbying',
+    category: 'where',
+    questionPattern: 'Who lobbies {name}?',
+    descriptionPattern:
+      'Organizations lobbying the {name} ({chamber}), spending by issue, and related legislation. Data from Senate LDA disclosures.',
+    entityType: 'committee',
+    dataSources: ['/api/intelligence/lobbying-pipeline/[id]'],
+    relatedSlugs: ['committee-members', 'committee-activity'],
+  },
+  {
     slug: 'topic-bills',
     category: 'what',
     questionPattern: 'What bills are about {name}?',

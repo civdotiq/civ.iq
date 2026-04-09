@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
+import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
@@ -35,6 +36,12 @@ export async function generateMetadata({
       if (!policyArea) return { title: 'Topic not found' };
       title = fillPattern(template.questionPattern, { name: policyArea });
       description = fillPattern(template.descriptionPattern, { name: policyArea });
+    } else if (template.entityType === 'committee') {
+      const committee = await getCachedCommittee(entityId);
+      if (!committee?.name) return { title: 'Committee not found' };
+      const vars = { name: committee.name, chamber: committee.chamber };
+      title = fillPattern(template.questionPattern, vars);
+      description = fillPattern(template.descriptionPattern, vars);
     } else {
       const rep = await getCachedRepresentative(entityId.toUpperCase());
       if (!rep) return { title: 'Representative not found' };
@@ -76,6 +83,14 @@ export default async function AskLayout({ children, params }: LayoutProps) {
 
   if (template.entityType === 'topic') {
     entityName = resolvePolicyAreaSlug(entityId) ?? 'Topic';
+  } else if (template.entityType === 'committee') {
+    entityName = 'Committee';
+    try {
+      const committee = await getCachedCommittee(entityId);
+      if (committee?.name) entityName = committee.name;
+    } catch {
+      // Breadcrumb falls back to generic label
+    }
   } else {
     entityName = 'Representative';
     try {

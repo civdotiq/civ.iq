@@ -232,6 +232,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // Committee question pages: committee templates × all committees
+  const committeeSlugs = getTemplatesByEntityType('committee').map(t => t.slug);
+  for (const code of Object.keys(committees)) {
+    for (const qSlug of committeeSlugs) {
+      entries.push({
+        url: `${BASE_URL}/ask/${qSlug}/${code}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      });
+    }
+  }
+
   // ===========================================
   // TIER 3: MEDIUM-HIGH PRIORITY (0.8) - Navigation & Hub Pages
   // ===========================================
