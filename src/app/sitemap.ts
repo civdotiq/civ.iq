@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
-import { getAllSlugs } from '@/lib/questions/question-registry';
+import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
+import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -202,11 +203,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      // Question pages: all templates × all representatives
-      const questionSlugs = getAllSlugs();
+      // Question pages: representative templates × all representatives
+      const repSlugs = getTemplatesByEntityType('representative').map(t => t.slug);
       for (const rep of representatives) {
         if (rep.bioguideId) {
-          for (const qSlug of questionSlugs) {
+          for (const qSlug of repSlugs) {
             entries.push({
               url: `${BASE_URL}/ask/${qSlug}/${rep.bioguideId}`,
               lastModified: now,
@@ -219,6 +220,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // Silently fail - other entries will still be generated
+  }
+
+  // Topic question pages: topic-bills × all policy areas
+  for (const area of getAllPolicyAreas()) {
+    entries.push({
+      url: `${BASE_URL}/ask/topic-bills/${slugifyPolicyArea(area)}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    });
   }
 
   // ===========================================

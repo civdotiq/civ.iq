@@ -127,6 +127,16 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     dataSources: ['/api/representative/[id]', '/api/intelligence/representative/[id]/vote-finance'],
     relatedSlugs: ['campaign-contributions', 'partisanship'],
   },
+  {
+    slug: 'topic-bills',
+    category: 'what',
+    questionPattern: 'What bills are about {name}?',
+    descriptionPattern:
+      'Recent legislation, federal regulations, related committees, and spending for {name}. Data from Congress.gov, Federal Register, and USAspending.gov.',
+    entityType: 'topic',
+    dataSources: ['/api/search/policy-area'],
+    relatedSlugs: [],
+  },
 ];
 
 const TEMPLATE_MAP = new Map(QUESTION_TEMPLATES.map(t => [t.slug, t]));
@@ -141,6 +151,23 @@ export function getAllTemplates(): QuestionTemplate[] {
 
 export function getAllSlugs(): string[] {
   return QUESTION_TEMPLATES.map(t => t.slug);
+}
+
+/**
+ * Slugify a policy area name for use as a topic entity ID.
+ * "Armed Forces and National Security" → "armed-forces-and-national-security"
+ */
+export function slugifyPolicyArea(policyArea: string): string {
+  return policyArea.toLowerCase().replace(/[,]/g, '').replace(/\s+/g, '-');
+}
+
+/**
+ * Get all templates for a specific entity type.
+ */
+export function getTemplatesByEntityType(
+  entityType: QuestionTemplate['entityType']
+): QuestionTemplate[] {
+  return QUESTION_TEMPLATES.filter(t => t.entityType === entityType);
 }
 
 /**

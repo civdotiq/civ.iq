@@ -20,12 +20,15 @@ import {
   fetchVotingRecordData,
   fetchBillsSponsoredData,
   fetchDonorVotingAlignmentData,
+  fetchTopicBillsData,
   type CampaignContributionsData,
   type PartyAlignmentTemplateData,
   type VotingRecordTemplateData,
   type BillsSponsoredData,
   type DonorVotingAlignmentData,
+  type TopicBillsData,
 } from '@/lib/questions/template-data-fetchers';
+import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
@@ -36,6 +39,7 @@ import { BillsSponsoredAnswer } from '@/components/questions/BillsSponsoredAnswe
 import { ContactInfoAnswer } from '@/components/questions/ContactInfoAnswer';
 import { PartisanshipAnswer } from '@/components/questions/PartisanshipAnswer';
 import { DonorVotingAlignmentAnswer } from '@/components/questions/DonorVotingAlignmentAnswer';
+import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 
 export const revalidate = 3600;
 
@@ -55,6 +59,7 @@ function buildFaqAnswer(
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
     donorAlignment?: DonorVotingAlignmentData;
+    topicBills?: TopicBillsData;
   }
 ): string {
   switch (slug) {
@@ -112,6 +117,13 @@ function buildFaqAnswer(
       }
       return `Donor-voting alignment analysis for ${repName} requires sufficient voting and contribution data.`;
     }
+    case 'topic-bills': {
+      const billCount = data.topicBills?.results?.bills?.length ?? 0;
+      if (billCount > 0) {
+        return `There are ${billCount} recent bills related to ${repName} in the current Congress.`;
+      }
+      return `Legislative data for ${repName} is sourced from Congress.gov and the Federal Register.`;
+    }
     default:
       return `Data for ${repName} is sourced from official government records.`;
   }
@@ -123,10 +135,42 @@ export default async function QuestionPage({ params }: PageProps) {
   const template = getTemplate(slug);
   if (!template) notFound();
 
-  // Only representative templates are implemented (committee/topic: Phase 4D/4E)
+  // ── Topic entity resolution ──────────────────────────────────
+  if (template.entityType === 'topic') {
+    const policyArea = resolvePolicyAreaSlug(entityId);
+    if (!policyArea) notFound();
+
+    const question = fillPattern(template.questionPattern, { name: policyArea });
+    const relatedQuestions = computeRelatedQuestions(slug, entityId, policyArea);
+    const topicBills = await fetchTopicBillsData(policyArea);
+
+    const faqAnswer = buildFaqAnswer(slug, policyArea, { topicBills });
+
+    return (
+      <>
+        <FAQPageSchema question={question} answer={faqAnswer} />
+        <QuestionLayout
+          question={question}
+          category={template.category}
+          relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
+        >
+          {topicBills.results ? (
+            <TopicBillsAnswer results={topicBills.results} />
+          ) : (
+            <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
+              <p className="type-sm text-gray-500">
+                Data for this policy area is currently unavailable. Try again later.
+              </p>
+            </div>
+          )}
+        </QuestionLayout>
+      </>
+    );
+  }
+
+  // ── Representative entity resolution ─────────────────────────
   if (template.entityType !== 'representative') notFound();
 
-  // Deduplicated via React cache() — shared with layout.tsx
   const rep = await getCachedRepresentative(entityId.toUpperCase());
   if (!rep) notFound();
 

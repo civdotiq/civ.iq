@@ -23,11 +23,13 @@ import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getPartyAlignment, type PartyAlignment } from '@/lib/services/party-alignment.service';
+import { searchPolicyArea } from '@/lib/services/policy-area-search.service';
 import type {
   InsightResponse,
   VoteFinanceInsight,
   TemporalVoteInsight,
 } from '@/lib/intelligence/types';
+import type { PolicyAreaResults } from '@/types/joins';
 
 // FEC fallback cycles — most recent completed cycle first
 const FALLBACK_CYCLES = [2024, 2022, 2020] as const;
@@ -300,4 +302,15 @@ export async function fetchDonorVotingAlignmentData(
 ): Promise<DonorVotingAlignmentData> {
   const result = await analyzeVoteFinance(bioguideId).catch(() => null);
   return { voteFinance: wrapInsight(result) };
+}
+
+// ── Topic Bills ───────────────────────────────────────────────
+
+export interface TopicBillsData {
+  results: PolicyAreaResults | null;
+}
+
+export async function fetchTopicBillsData(policyArea: string): Promise<TopicBillsData> {
+  const results = await searchPolicyArea(policyArea, 10).catch(() => null);
+  return { results };
 }

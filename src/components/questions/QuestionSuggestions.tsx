@@ -11,7 +11,7 @@
  */
 
 import Link from 'next/link';
-import { getAllTemplates } from '@/lib/questions/question-registry';
+import { getTemplatesByEntityType } from '@/lib/questions/question-registry';
 
 interface QuestionSuggestionsProps {
   bioguideId: string;
@@ -19,12 +19,17 @@ interface QuestionSuggestionsProps {
 }
 
 export function QuestionSuggestions({ bioguideId, name }: QuestionSuggestionsProps) {
-  const templates = getAllTemplates();
+  const templates = getTemplatesByEntityType('representative').slice(0, 4);
 
   return (
     <section aria-label="Questions about this representative" className="py-grid-3">
-      <h2 className="type-sm font-semibold text-black mb-grid-2">Common questions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="flex items-baseline justify-between mb-grid-2">
+        <h2 className="type-sm font-semibold text-black">Common questions</h2>
+        <Link href="/ask" className="type-xs text-[#3ea2d4] hover:underline">
+          See all questions
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {templates.map(template => {
           const question = template.questionPattern.replace(/\{name\}/g, name);
           return (

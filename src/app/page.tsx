@@ -3,6 +3,7 @@ import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import FeatureGrid from '@/components/landing/FeatureGrid';
 import QuickStartPaths from '@/components/landing/QuickStartPaths';
+import { AskQuestionSection } from '@/components/landing/AskQuestionSection';
 
 export default function HomePage() {
   return (
@@ -97,6 +98,9 @@ export default function HomePage() {
 
       {/* Quick Start Paths Section */}
       <QuickStartPaths />
+
+      {/* Ask a Question Section */}
+      <AskQuestionSection />
     </div>
   );
 }

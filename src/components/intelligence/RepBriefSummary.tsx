@@ -104,6 +104,28 @@ export function RepBriefSummary({
       >
         View full profile
       </Link>
+
+      {/* Question links */}
+      <div className="border-t border-gray-200 pt-3 mt-1 flex flex-wrap gap-x-4 gap-y-1">
+        <Link
+          href={`/ask/campaign-contributions/${bioguideId}`}
+          className="type-xs text-[#3ea2d4] hover:underline"
+        >
+          Campaign contributions
+        </Link>
+        <Link
+          href={`/ask/voting-record/${bioguideId}`}
+          className="type-xs text-[#3ea2d4] hover:underline"
+        >
+          Voting record
+        </Link>
+        <Link
+          href={`/ask/contact-info/${bioguideId}`}
+          className="type-xs text-[#3ea2d4] hover:underline"
+        >
+          Contact info
+        </Link>
+      </div>
     </div>
   );
 }

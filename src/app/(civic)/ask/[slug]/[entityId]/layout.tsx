@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
+import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface LayoutProps {
@@ -24,19 +25,23 @@ export async function generateMetadata({
   const template = getTemplate(slug);
   if (!template) return { title: 'Question not found' };
 
-  // Non-representative templates get basic metadata (committee/topic: Phase 4D/4E)
-  if (template.entityType !== 'representative') {
-    return { title: template.questionPattern, description: template.descriptionPattern };
-  }
-
   try {
-    const rep = await getCachedRepresentative(entityId.toUpperCase());
-    if (!rep) return { title: 'Representative not found' };
-
-    const entity = { name: rep.name, party: rep.party, state: rep.state };
-    const title = fillPattern(template.questionPattern, entity);
-    const description = fillPattern(template.descriptionPattern, entity);
+    let title: string;
+    let description: string;
     const url = `https://civdotiq.org/ask/${slug}/${entityId}`;
+
+    if (template.entityType === 'topic') {
+      const policyArea = resolvePolicyAreaSlug(entityId);
+      if (!policyArea) return { title: 'Topic not found' };
+      title = fillPattern(template.questionPattern, { name: policyArea });
+      description = fillPattern(template.descriptionPattern, { name: policyArea });
+    } else {
+      const rep = await getCachedRepresentative(entityId.toUpperCase());
+      if (!rep) return { title: 'Representative not found' };
+      const entity = { name: rep.name, party: rep.party, state: rep.state };
+      title = fillPattern(template.questionPattern, entity);
+      description = fillPattern(template.descriptionPattern, entity);
+    }
 
     return {
       title,
@@ -67,21 +72,22 @@ export default async function AskLayout({ children, params }: LayoutProps) {
   const template = getTemplate(slug);
   if (!template) notFound();
 
-  // Non-representative templates skip rep-specific breadcrumbs (Phase 4D/4E)
-  if (template.entityType !== 'representative') {
-    return <>{children}</>;
-  }
+  let entityName: string;
 
-  let repName = 'Representative';
-  try {
-    const rep = await getCachedRepresentative(entityId.toUpperCase());
-    if (rep) repName = rep.name;
-  } catch {
-    // Breadcrumb falls back to generic label
+  if (template.entityType === 'topic') {
+    entityName = resolvePolicyAreaSlug(entityId) ?? 'Topic';
+  } else {
+    entityName = 'Representative';
+    try {
+      const rep = await getCachedRepresentative(entityId.toUpperCase());
+      if (rep) entityName = rep.name;
+    } catch {
+      // Breadcrumb falls back to generic label
+    }
   }
 
   const categoryLabel = getCategoryLabel(template.category);
-  const questionTitle = template.questionPattern.replace(/\{name\}/g, repName);
+  const questionTitle = template.questionPattern.replace(/\{name\}/g, entityName);
 
   return (
     <>
