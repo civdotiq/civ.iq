@@ -53,7 +53,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       '/api/representative/[id]/finance/industries',
       '/api/intelligence/representative/[id]/vote-finance',
     ],
-    relatedSlugs: ['party-alignment', 'voting-record'],
+    relatedSlugs: ['donor-voting-alignment', 'voting-record'],
   },
   {
     slug: 'party-alignment',
@@ -67,7 +67,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       '/api/representative/[id]/party-alignment',
       '/api/intelligence/representative/[id]/temporal',
     ],
-    relatedSlugs: ['campaign-contributions', 'voting-record'],
+    relatedSlugs: ['partisanship', 'voting-record'],
   },
   {
     slug: 'voting-record',
@@ -81,7 +81,51 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       '/api/representative/[id]/votes',
       '/api/representative/[id]/bills',
     ],
-    relatedSlugs: ['party-alignment', 'campaign-contributions'],
+    relatedSlugs: ['bills-sponsored', 'party-alignment'],
+  },
+  {
+    slug: 'bills-sponsored',
+    category: 'what',
+    questionPattern: 'What bills has {name} sponsored?',
+    descriptionPattern:
+      "Browse {name}'s ({party}-{state}) sponsored and cosponsored legislation in the 119th Congress, including policy area breakdown.",
+    entityType: 'representative',
+    dataSources: ['/api/representative/[id]', '/api/representative/[id]/bills'],
+    relatedSlugs: ['voting-record', 'campaign-contributions'],
+  },
+  {
+    slug: 'contact-info',
+    category: 'who',
+    questionPattern: 'How do I contact {name}?',
+    descriptionPattern:
+      "Find {name}'s ({party}-{state}) office phone number, mailing address, contact form, website, and social media accounts.",
+    entityType: 'representative',
+    dataSources: ['/api/representative/[id]'],
+    relatedSlugs: ['voting-record', 'campaign-contributions'],
+  },
+  {
+    slug: 'partisanship',
+    category: 'why',
+    questionPattern: 'Is {name} more partisan than average?',
+    descriptionPattern:
+      "Compare {name}'s ({party}-{state}) partisan voting score to party, state, and chamber averages. Includes trend analysis and notable departures.",
+    entityType: 'representative',
+    dataSources: [
+      '/api/representative/[id]',
+      '/api/representative/[id]/party-alignment',
+      '/api/intelligence/representative/[id]/temporal',
+    ],
+    relatedSlugs: ['party-alignment', 'donor-voting-alignment'],
+  },
+  {
+    slug: 'donor-voting-alignment',
+    category: 'why',
+    questionPattern: "Does {name}'s voting align with their donors?",
+    descriptionPattern:
+      "Statistical analysis of whether {name}'s ({party}-{state}) voting patterns correlate with campaign donor sectors. Includes sector-by-sector breakdown.",
+    entityType: 'representative',
+    dataSources: ['/api/representative/[id]', '/api/intelligence/representative/[id]/vote-finance'],
+    relatedSlugs: ['campaign-contributions', 'partisanship'],
   },
 ];
 

@@ -37,6 +37,28 @@ const FINANCE_TTL = 30 * 60; // 30 min (FEC data)
 const ALIGNMENT_TTL = 30 * 60; // 30 min (party alignment)
 const VOTES_TTL = 15 * 60; // 15 min (votes)
 
+// ── Bills Sponsored ───────────────────────────────────────────
+
+export interface BillsSponsoredData {
+  bills: Array<{
+    id: string;
+    number: string;
+    title: string;
+    introducedDate: string;
+    status: string;
+    policyArea?: string;
+    relationship: 'sponsored' | 'cosponsored';
+  }>;
+  sponsoredCount: number;
+  cosponsoredCount: number;
+}
+
+// ── Donor-Voting Alignment ────────────────────────────────────
+
+export interface DonorVotingAlignmentData {
+  voteFinance: InsightResponse<VoteFinanceInsight> | null;
+}
+
 // ── Return Types ───────────────────────────────────────────────
 
 export interface CampaignContributionsData {
@@ -245,4 +267,37 @@ export async function fetchVotingRecordData(
   }
 
   return { votes, bills };
+}
+
+export async function fetchBillsSponsoredData(bioguideId: string): Promise<BillsSponsoredData> {
+  const response = await getComprehensiveBillsByMember({ bioguideId }).catch(() => null);
+
+  if (!response) {
+    return { bills: [], sponsoredCount: 0, cosponsoredCount: 0 };
+  }
+
+  return {
+    bills: response.bills.map(b => ({
+      id: b.id,
+      number: b.number,
+      title: b.title,
+      introducedDate: b.introducedDate,
+      status: b.status,
+      policyArea: b.policyArea,
+      relationship: (b.relationship ?? 'sponsored') as 'sponsored' | 'cosponsored',
+    })),
+    sponsoredCount:
+      response.metadata.sponsoredCount ??
+      response.bills.filter(b => b.relationship === 'sponsored').length,
+    cosponsoredCount:
+      response.metadata.cosponsoredCount ??
+      response.bills.filter(b => b.relationship === 'cosponsored').length,
+  };
+}
+
+export async function fetchDonorVotingAlignmentData(
+  bioguideId: string
+): Promise<DonorVotingAlignmentData> {
+  const result = await analyzeVoteFinance(bioguideId).catch(() => null);
+  return { voteFinance: wrapInsight(result) };
 }
