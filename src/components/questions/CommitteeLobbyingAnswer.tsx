@@ -15,6 +15,10 @@ import type { LobbyingPipelineInsight } from '@/lib/intelligence/types';
 
 interface CommitteeLobbyingAnswerProps {
   lobbying: LobbyingPipelineInsight | null;
+  committeeId: string;
+  committeeName: string;
+  chamber: 'House' | 'Senate' | 'Joint';
+  jurisdiction?: string;
 }
 
 function formatAmount(n: number): string {
@@ -190,28 +194,132 @@ function DisclaimerPod({ disclaimer }: { disclaimer: string }) {
   );
 }
 
-export function CommitteeLobbyingAnswer({ lobbying }: CommitteeLobbyingAnswerProps) {
-  if (!lobbying) {
-    return (
-      <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
-        <h2 className="type-sm font-semibold text-black mb-3">Lobbying activity</h2>
-        <p className="type-sm text-gray-500">
-          Lobbying analysis is not available for this committee. This may be because insufficient
-          lobbying filings reference this committee in current Senate LDA disclosures.
-        </p>
-        <p className="type-xs text-gray-400 mt-2">
-          Data from{' '}
-          <a
-            href="https://lda.senate.gov"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#3ea2d4] hover:underline"
-          >
-            Senate LDA disclosures
-          </a>
-          .
+function LobbyingUnavailablePod({
+  committeeName,
+  chamber,
+  jurisdiction,
+}: {
+  committeeName: string;
+  chamber: 'House' | 'Senate' | 'Joint';
+  jurisdiction?: string;
+}) {
+  return (
+    <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
+      <h2 className="type-sm font-semibold text-black mb-3">Lobbying analysis unavailable</h2>
+      <p className="type-sm text-gray-700 mb-3">
+        No statistically meaningful lobbying pattern was found for the {committeeName} ({chamber})
+        in current Senate LDA disclosures.
+      </p>
+      <div className="border-l-2 border-gray-300 pl-3 mb-3">
+        <p className="type-xs text-gray-600 mb-1 font-medium">Why?</p>
+        <p className="type-xs text-gray-600 leading-relaxed">
+          We only publish lobbying analysis when a committee is explicitly named in at least the
+          minimum threshold of recent LDA filings. Many committees fall below this threshold because
+          lobbying disclosures list jurisdictions broadly rather than by specific committee, or
+          because this committee sees less direct lobbying activity than peer committees.
         </p>
       </div>
+      {jurisdiction && (
+        <div className="border-l-2 border-gray-300 pl-3">
+          <p className="type-xs text-gray-600 mb-1 font-medium">Committee jurisdiction</p>
+          <p className="type-xs text-gray-700 leading-relaxed">{jurisdiction}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExploreRelatedPod({ committeeId }: { committeeId: string }) {
+  return (
+    <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
+      <h2 className="type-sm font-semibold text-black mb-3">Explore this committee</h2>
+      <ul className="space-y-2">
+        <li>
+          <Link
+            href={`/ask/committee-members/${committeeId}`}
+            className="type-sm text-[#3ea2d4] hover:underline"
+          >
+            Who sits on this committee?
+          </Link>
+          <p className="type-xs text-gray-500">Leadership, members, and subcommittees</p>
+        </li>
+        <li>
+          <Link
+            href={`/ask/committee-activity/${committeeId}`}
+            className="type-sm text-[#3ea2d4] hover:underline"
+          >
+            What is this committee working on?
+          </Link>
+          <p className="type-xs text-gray-500">Recent hearings and bills in committee</p>
+        </li>
+        <li>
+          <Link
+            href={`/committees/${committeeId}`}
+            className="type-sm text-[#3ea2d4] hover:underline"
+          >
+            Full committee profile
+          </Link>
+          <p className="type-xs text-gray-500">All committee data and activity</p>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function FallbackSourcesPod() {
+  return (
+    <div className="border-2 border-gray-300 bg-white p-4 sm:p-6 lg:col-span-2">
+      <p className="type-xs text-gray-500">
+        This analysis uses real lobbying disclosure data — no synthetic or placeholder values are
+        shown. When fewer than the minimum threshold of filings reference a committee, we show this
+        unavailable state rather than a misleading partial picture.
+      </p>
+      <p className="type-xs text-gray-500 mt-2">
+        Data sources:{' '}
+        <a
+          href="https://lda.senate.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Senate LDA disclosures
+        </a>{' '}
+        and{' '}
+        <a
+          href="https://www.congress.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#3ea2d4] hover:underline"
+        >
+          Congress.gov
+        </a>
+        .{' '}
+        <Link href="/methodology" className="text-[#3ea2d4] hover:underline">
+          Full methodology
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+export function CommitteeLobbyingAnswer({
+  lobbying,
+  committeeId,
+  committeeName,
+  chamber,
+  jurisdiction,
+}: CommitteeLobbyingAnswerProps) {
+  if (!lobbying) {
+    return (
+      <>
+        <LobbyingUnavailablePod
+          committeeName={committeeName}
+          chamber={chamber}
+          jurisdiction={jurisdiction}
+        />
+        <ExploreRelatedPod committeeId={committeeId} />
+        <FallbackSourcesPod />
+      </>
     );
   }
 

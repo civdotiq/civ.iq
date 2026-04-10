@@ -258,7 +258,13 @@ export default async function QuestionPage({ params }: PageProps) {
             />
           )}
           {slug === 'committee-lobbying' && (
-            <CommitteeLobbyingAnswer lobbying={committeLobbying?.lobbying ?? null} />
+            <CommitteeLobbyingAnswer
+              lobbying={committeLobbying?.lobbying ?? null}
+              committeeId={entityId}
+              committeeName={committee.name}
+              chamber={committee.chamber}
+              jurisdiction={committee.jurisdiction}
+            />
           )}
         </QuestionLayout>
       </>
