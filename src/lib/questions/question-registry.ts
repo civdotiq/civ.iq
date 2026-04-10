@@ -56,20 +56,6 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     relatedSlugs: ['donor-voting-alignment', 'voting-record'],
   },
   {
-    slug: 'party-alignment',
-    category: 'how',
-    questionPattern: 'How does {name} vote compared to their party?',
-    descriptionPattern:
-      'See how often {name} ({party}-{state}) votes with their party. Party-line rate, trends over time, and notable departures.',
-    entityType: 'representative',
-    dataSources: [
-      '/api/representative/[id]',
-      '/api/representative/[id]/party-alignment',
-      '/api/intelligence/representative/[id]/temporal',
-    ],
-    relatedSlugs: ['partisanship', 'voting-record'],
-  },
-  {
     slug: 'voting-record',
     category: 'how',
     questionPattern: 'How does {name} vote?',
@@ -81,7 +67,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       '/api/representative/[id]/votes',
       '/api/representative/[id]/bills',
     ],
-    relatedSlugs: ['bills-sponsored', 'party-alignment'],
+    relatedSlugs: ['bills-sponsored', 'campaign-contributions'],
   },
   {
     slug: 'bills-sponsored',
@@ -104,20 +90,6 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     relatedSlugs: ['voting-record', 'campaign-contributions'],
   },
   {
-    slug: 'partisanship',
-    category: 'why',
-    questionPattern: 'Is {name} more partisan than average?',
-    descriptionPattern:
-      "Compare {name}'s ({party}-{state}) partisan voting score to party, state, and chamber averages. Includes trend analysis and notable departures.",
-    entityType: 'representative',
-    dataSources: [
-      '/api/representative/[id]',
-      '/api/representative/[id]/party-alignment',
-      '/api/intelligence/representative/[id]/temporal',
-    ],
-    relatedSlugs: ['party-alignment', 'donor-voting-alignment'],
-  },
-  {
     slug: 'donor-voting-alignment',
     category: 'why',
     questionPattern: "Does {name}'s voting align with their donors?",
@@ -125,7 +97,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
       "Statistical analysis of whether {name}'s ({party}-{state}) voting patterns correlate with campaign donor sectors. Includes sector-by-sector breakdown.",
     entityType: 'representative',
     dataSources: ['/api/representative/[id]', '/api/intelligence/representative/[id]/vote-finance'],
-    relatedSlugs: ['campaign-contributions', 'partisanship'],
+    relatedSlugs: ['campaign-contributions', 'voting-record'],
   },
   {
     slug: 'committee-members',

@@ -17,7 +17,6 @@ import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
 import { computeRelatedQuestions } from '@/lib/questions/related-questions';
 import {
   fetchCampaignContributionsData,
-  fetchPartyAlignmentData,
   fetchVotingRecordData,
   fetchBillsSponsoredData,
   fetchDonorVotingAlignmentData,
@@ -25,7 +24,6 @@ import {
   fetchCommitteeActivityData,
   fetchCommitteeLobbyingData,
   type CampaignContributionsData,
-  type PartyAlignmentTemplateData,
   type VotingRecordTemplateData,
   type BillsSponsoredData,
   type DonorVotingAlignmentData,
@@ -39,11 +37,9 @@ import { FAQPageSchema } from '@/components/seo/JsonLd';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
 import { CampaignContributionsAnswer } from '@/components/questions/CampaignContributionsAnswer';
-import { PartyAlignmentAnswer } from '@/components/questions/PartyAlignmentAnswer';
 import { VotingRecordAnswer } from '@/components/questions/VotingRecordAnswer';
 import { BillsSponsoredAnswer } from '@/components/questions/BillsSponsoredAnswer';
 import { ContactInfoAnswer } from '@/components/questions/ContactInfoAnswer';
-import { PartisanshipAnswer } from '@/components/questions/PartisanshipAnswer';
 import { DonorVotingAlignmentAnswer } from '@/components/questions/DonorVotingAlignmentAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
@@ -64,7 +60,6 @@ function buildFaqAnswer(
   repName: string,
   data: {
     campaign?: CampaignContributionsData;
-    alignment?: PartyAlignmentTemplateData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
     donorAlignment?: DonorVotingAlignmentData;
@@ -88,13 +83,6 @@ function buildFaqAnswer(
       }
       return `Campaign finance data for ${repName} is sourced from FEC filings.`;
     }
-    case 'party-alignment': {
-      const alignment = data.alignment?.partyAlignment;
-      if (alignment?.overall_alignment && alignment.total_votes_analyzed) {
-        return `${repName} votes with their party ${alignment.overall_alignment.toFixed(1)}% of the time, based on ${alignment.total_votes_analyzed} votes analyzed.`;
-      }
-      return `Party alignment data for ${repName} is computed from congressional voting records.`;
-    }
     case 'voting-record': {
       const votes = data.voting?.votes;
       if (votes?.totalResults) {
@@ -111,16 +99,6 @@ function buildFaqAnswer(
     }
     case 'contact-info':
       return `Contact information for ${repName} is sourced from official congressional records.`;
-    case 'partisanship': {
-      const alignment = data.alignment?.partyAlignment;
-      if (alignment?.overall_alignment && alignment.comparison_to_peers) {
-        const diff =
-          alignment.overall_alignment - alignment.comparison_to_peers.party_avg_alignment;
-        const moreOrLess = diff > 0 ? 'more' : 'less';
-        return `${repName} votes with their party ${alignment.overall_alignment.toFixed(1)}% of the time, ${Math.abs(diff).toFixed(1)} points ${moreOrLess} partisan than the party average.`;
-      }
-      return `Partisanship analysis for ${repName} is computed from congressional voting records.`;
-    }
     case 'donor-voting-alignment': {
       const vf = data.donorAlignment?.voteFinance?.data;
       if (vf?.overallCorrelation !== null && vf?.overallCorrelation !== undefined) {
@@ -284,7 +262,6 @@ export default async function QuestionPage({ params }: PageProps) {
 
   // Fetch template-specific data via direct service calls (no self-fetch)
   let campaign: CampaignContributionsData | undefined;
-  let alignment: PartyAlignmentTemplateData | undefined;
   let voting: VotingRecordTemplateData | undefined;
   let billsSponsored: BillsSponsoredData | undefined;
   let donorAlignment: DonorVotingAlignmentData | undefined;
@@ -293,9 +270,6 @@ export default async function QuestionPage({ params }: PageProps) {
     case 'campaign-contributions':
       campaign = await fetchCampaignContributionsData(id, rep.state);
       break;
-    case 'party-alignment':
-      alignment = await fetchPartyAlignmentData(id, rep.party, rep.chamber);
-      break;
     case 'voting-record':
       voting = await fetchVotingRecordData(id, rep.chamber);
       break;
@@ -303,9 +277,6 @@ export default async function QuestionPage({ params }: PageProps) {
       billsSponsored = await fetchBillsSponsoredData(id);
       break;
     case 'contact-info':
-      break;
-    case 'partisanship':
-      alignment = await fetchPartyAlignmentData(id, rep.party, rep.chamber);
       break;
     case 'donor-voting-alignment':
       donorAlignment = await fetchDonorVotingAlignmentData(id);
@@ -316,7 +287,6 @@ export default async function QuestionPage({ params }: PageProps) {
 
   const faqAnswer = buildFaqAnswer(slug, rep.name, {
     campaign,
-    alignment,
     voting,
     billsSponsored,
     donorAlignment,
@@ -335,13 +305,6 @@ export default async function QuestionPage({ params }: PageProps) {
             finance={campaign.finance}
             industries={campaign.industries}
             voteFinanceInsight={campaign.voteFinance}
-          />
-        )}
-        {slug === 'party-alignment' && alignment && (
-          <PartyAlignmentAnswer
-            profile={entity}
-            partyAlignment={alignment.partyAlignment}
-            temporalInsight={alignment.temporal}
           />
         )}
         {slug === 'voting-record' && voting && (
@@ -365,13 +328,6 @@ export default async function QuestionPage({ params }: PageProps) {
             socialMedia={rep.socialMedia}
             committees={rep.committees}
             districtOffices={rep.contact?.districtOffices}
-          />
-        )}
-        {slug === 'partisanship' && alignment && (
-          <PartisanshipAnswer
-            profile={entity}
-            partyAlignment={alignment.partyAlignment}
-            temporalInsight={alignment.temporal}
           />
         )}
         {slug === 'donor-voting-alignment' && donorAlignment && (

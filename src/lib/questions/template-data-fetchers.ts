@@ -19,18 +19,15 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
 import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
-import { getPartyAlignment, type PartyAlignment } from '@/lib/services/party-alignment.service';
 import { searchPolicyArea } from '@/lib/services/policy-area-search.service';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { fetchCommitteeActivity } from '@/lib/services/committee-activity.service';
 import type {
   InsightResponse,
   VoteFinanceInsight,
-  TemporalVoteInsight,
   LobbyingPipelineInsight,
 } from '@/lib/intelligence/types';
 import type { Committee } from '@/types/committee';
@@ -45,7 +42,6 @@ const FALLBACK_CYCLES = [2024, 2022, 2020] as const;
 
 // Cache TTLs matching API route behavior
 const FINANCE_TTL = 30 * 60; // 30 min (FEC data)
-const ALIGNMENT_TTL = 30 * 60; // 30 min (party alignment)
 const VOTES_TTL = 15 * 60; // 15 min (votes)
 
 // ── Bills Sponsored ───────────────────────────────────────────
@@ -88,11 +84,6 @@ export interface CampaignContributionsData {
     metadata?: { cycle?: number; lastUpdated?: string };
   } | null;
   voteFinance: InsightResponse<VoteFinanceInsight> | null;
-}
-
-export interface PartyAlignmentTemplateData {
-  partyAlignment: PartyAlignment | null;
-  temporal: InsightResponse<TemporalVoteInsight> | null;
 }
 
 export interface VotingRecordTemplateData {
@@ -189,26 +180,6 @@ export async function fetchCampaignContributionsData(
     finance,
     industries,
     voteFinance: wrapInsight(voteFinanceResult),
-  };
-}
-
-export async function fetchPartyAlignmentData(
-  bioguideId: string,
-  party: string,
-  chamber: 'House' | 'Senate'
-): Promise<PartyAlignmentTemplateData> {
-  const [partyAlignment, temporalResult] = await Promise.all([
-    cachedFetch(
-      `question:party-alignment:${bioguideId}`,
-      () => getPartyAlignment(bioguideId, party, chamber),
-      ALIGNMENT_TTL
-    ).catch(() => null),
-    analyzeTemporalVotes(bioguideId).catch(() => null),
-  ]);
-
-  return {
-    partyAlignment,
-    temporal: wrapInsight(temporalResult),
   };
 }
 
