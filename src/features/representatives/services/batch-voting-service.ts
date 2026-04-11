@@ -251,7 +251,7 @@ class InMemoryCache {
 }
 
 // Standardized vote data structure
-interface StandardizedVote {
+export interface StandardizedVote {
   voteId: string;
   congress: number;
   session: number;
@@ -490,6 +490,60 @@ export class BatchVotingService {
   }
 
   /**
+   * Get raw roll-call data for recent House votes, including every member's
+   * party + position. Used for chamber-wide analysis (party-line alignment,
+   * peer averages). Reuses the shared cache, so cost is amortized across
+   * callers that have already loaded member-level views.
+   */
+  async getHouseChamberRollCalls(
+    congress = 119,
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
+    limit = 50,
+    bypassCache = false
+  ): Promise<StandardizedVote[]> {
+    try {
+      const voteList = await this.getHouseVoteList(congress, session, limit, bypassCache);
+      if (voteList.length === 0) {
+        logger.warn('No House votes found for chamber roll calls', { congress, session });
+        return [];
+      }
+      return await this.fetchHouseVotesRaw(voteList, bypassCache);
+    } catch (error) {
+      logger.error('Failed to get House chamber roll calls', error as Error, {
+        congress,
+        session,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Get raw roll-call data for recent Senate votes, including every member's
+   * party + position. Used for chamber-wide analysis (party-line alignment,
+   * peer averages). Reuses the shared cache.
+   */
+  async getSenateChamberRollCalls(
+    congress = 119,
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
+    limit = 50
+  ): Promise<StandardizedVote[]> {
+    try {
+      const recentVoteNumbers = this.generateRecentSenateVoteNumbers(limit * 2);
+      const rawVotes = await this.fetchSenateVotesRaw(recentVoteNumbers, congress, session);
+      // Sort by date descending and trim to limit
+      return rawVotes
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, limit);
+    } catch (error) {
+      logger.error('Failed to get Senate chamber roll calls', error as Error, {
+        congress,
+        session,
+      });
+      return [];
+    }
+  }
+
+  /**
    * Fetch recent vote metadata from clerk.house.gov (official House source)
    * This supplements Congress.gov API which can lag 7-14 days
    */
@@ -712,6 +766,22 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
+    const allVotes = await this.fetchHouseVotesRaw(voteList, bypassCache);
+    return this.extractMemberVotes(bioguideId, allVotes);
+  }
+
+  /**
+   * Fetch raw StandardizedVote objects for a list of House votes,
+   * using the shared cache and parallel XML parsing pipeline.
+   *
+   * Unlike batchProcessHouseVotes, this does not narrow to a single
+   * member — callers get the full memberVotes array so they can
+   * compute chamber-wide statistics (party-line alignment, etc.).
+   */
+  private async fetchHouseVotesRaw(
+    voteList: VoteListItem[],
+    bypassCache = false
+  ): Promise<StandardizedVote[]> {
     // Step 1: Check cache for all votes (unless bypassing cache)
     const cachedVotes: StandardizedVote[] = [];
     const uncachedVotes: VoteListItem[] = [];
@@ -750,10 +820,7 @@ export class BatchVotingService {
       }
     });
 
-    // Step 3: Combine cached and new votes, extract member positions
-    const allVotes = [...cachedVotes, ...successfulVotes];
-
-    return this.extractMemberVotes(bioguideId, allVotes);
+    return [...cachedVotes, ...successfulVotes];
   }
 
   /**
@@ -1083,7 +1150,23 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
-    // Enhanced caching strategy for Senate votes
+    const allVotes = await this.fetchSenateVotesRaw(voteNumbers, congress, session);
+    return this.extractMemberVotes(bioguideId, allVotes);
+  }
+
+  /**
+   * Fetch raw StandardizedVote objects for a list of Senate vote numbers,
+   * using the shared cache and parallel XML parsing pipeline.
+   *
+   * Unlike batchProcessSenateVotes, this does not narrow to a single
+   * member — callers get the full memberVotes array so they can
+   * compute chamber-wide statistics (party-line alignment, etc.).
+   */
+  private async fetchSenateVotesRaw(
+    voteNumbers: number[],
+    congress: number,
+    session: number
+  ): Promise<StandardizedVote[]> {
     const cachedVotes: StandardizedVote[] = [];
     const uncachedNumbers: number[] = [];
     let cacheHitCount = 0;
@@ -1140,9 +1223,7 @@ export class BatchVotingService {
       }
     });
 
-    // Combine and extract member votes
-    const allVotes = [...cachedVotes, ...successfulVotes];
-    return this.extractMemberVotes(bioguideId, allVotes);
+    return [...cachedVotes, ...successfulVotes];
   }
 
   /**
