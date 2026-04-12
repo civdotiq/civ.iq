@@ -348,30 +348,32 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             break;
           }
 
-          // Call FEC API with the mapped ID — try multiple cycles
+          // Call FEC API with the mapped ID — try all cycles concurrently, pick newest with data
           const candidateId = fecMapping.fecId;
-          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
+          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018] as const;
 
           let summaryData = null;
           let matchedCycle: number | undefined;
-          for (const cycle of FALLBACK_CYCLES) {
-            logger.info(`Calling FEC API:`, {
-              candidateId,
-              cycle,
-              method: 'getFinancialSummary',
-            });
 
-            try {
-              const candidate = await fecApiService.getFinancialSummary(candidateId, cycle);
-              if (candidate) {
-                logger.info(`FEC API found data in cycle`, { candidateId, cycle });
-                summaryData = candidate;
-                matchedCycle = cycle;
-                break;
-              }
-            } catch (err) {
-              logger.warn(`FEC API cycle ${cycle} failed for ${candidateId}`, {
-                error: err instanceof Error ? err.message : 'Unknown',
+          const cycleResults = await Promise.allSettled(
+            FALLBACK_CYCLES.map(cycle =>
+              fecApiService
+                .getFinancialSummary(candidateId, cycle)
+                .then(data => (data ? { data, cycle } : null))
+            )
+          );
+
+          // Pick the most recent cycle that returned data (array is already ordered newest-first)
+          for (const [i, cycleResult] of cycleResults.entries()) {
+            if (cycleResult.status === 'fulfilled' && cycleResult.value) {
+              summaryData = cycleResult.value.data;
+              matchedCycle = cycleResult.value.cycle;
+              logger.info(`FEC API found data in cycle`, { candidateId, cycle: matchedCycle });
+              break;
+            }
+            if (cycleResult.status === 'rejected') {
+              logger.warn(`FEC API cycle ${FALLBACK_CYCLES[i]} failed for ${candidateId}`, {
+                error: cycleResult.reason instanceof Error ? cycleResult.reason.message : 'Unknown',
               });
             }
           }

@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { getRepresentativeSummary } from '@/services/batch/representative-batch.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
@@ -17,9 +16,8 @@ import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { QuestionSuggestions } from '@/components/questions/QuestionSuggestions';
 import { getStateName } from '@/lib/data/us-states';
 
-export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600; // ISR: revalidate every hour
 
 // Dynamic import for the main profile component to reduce initial bundle size
 const SimpleRepresentativeProfile = dynamicImport(
@@ -137,7 +135,10 @@ function CitableFacts({
   summary,
 }: {
   representative: RepresentativeDetails;
-  summary: Awaited<ReturnType<typeof getRepresentativeSummary>> | null;
+  summary: {
+    totalRaised?: number;
+    financeCycle?: number;
+  } | null;
 }) {
   const stateName = getStateName(representative.state) || representative.state;
   const chamberFull =
@@ -283,11 +284,9 @@ export default async function RepresentativeProfilePage({
     notFound();
   }
 
-  // Server-side data fetching - representative data + summary stats in parallel
-  const [representative, summaryResult] = await Promise.all([
-    getRepresentativeData(bioguideId),
-    getRepresentativeSummary(bioguideId).catch(() => null),
-  ]);
+  // Server-side: fetch representative data only (summary loads client-side via SWR
+  // to avoid blocking render on slow vote/finance API calls)
+  const representative = await getRepresentativeData(bioguideId);
 
   // Handle fetch errors gracefully - representative data is required
   if (!representative) {
@@ -386,7 +385,7 @@ export default async function RepresentativeProfilePage({
         </div>
 
         {/* Server-rendered key facts for AI citation and crawlers (visually hidden, in DOM for SEO) */}
-        <CitableFacts representative={representative} summary={summaryResult} />
+        <CitableFacts representative={representative} summary={null} />
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
