@@ -130,9 +130,14 @@ const DATA_SOURCES: SourceDefinition[] = [
   },
   {
     // Verified: osha-service.ts uses /OSHA_inspection with limit/offset params
+    // Requires DOL_API_KEY Bearer token for auth
     name: 'OSHA',
     tier: 'standard',
     probeUrl: 'https://apiprod.dol.gov/v4/osha/OSHA_inspection?limit=1&offset=0',
+    requiresKey: 'DOL_API_KEY',
+    keyMethod: 'header',
+    keyParam: 'Authorization',
+    keyPrefix: 'Bearer',
     staleTtlHours: 336,
     cacheKeyPattern: 'osha:*',
   },
@@ -161,7 +166,7 @@ const DATA_SOURCES: SourceDefinition[] = [
     name: 'NOAA',
     tier: 'standard',
     probeUrl: 'https://www.ncdc.noaa.gov/cdo-web/api/v2/datasets?limit=1',
-    requiresKey: 'NOAA_API_KEY',
+    requiresKey: 'NOAA_TOKEN',
     keyMethod: 'header',
     keyParam: 'token',
     staleTtlHours: 720,
@@ -183,7 +188,7 @@ const DATA_SOURCES: SourceDefinition[] = [
     name: 'HUD',
     tier: 'standard',
     probeUrl: 'https://www.huduser.gov/hudapi/public/fmr/listMetroAreas',
-    requiresKey: 'HUD_API_KEY',
+    requiresKey: 'HUD_API_TOKEN',
     keyMethod: 'header',
     keyParam: 'Authorization',
     keyPrefix: 'Bearer',
@@ -601,7 +606,12 @@ export async function GET(_request: NextRequest) {
         census: !!process.env.CENSUS_API_KEY,
         openstates: !!process.env.OPENSTATES_API_KEY,
         fred: !!process.env.FRED_API_KEY,
-        regulationsGov: !!process.env.REGULATIONS_GOV_API_KEY,
+        dataGov: !!process.env.DATA_GOV_API_KEY,
+        noaa: !!process.env.NOAA_TOKEN,
+        hud: !!process.env.HUD_API_TOKEN,
+        dol: !!process.env.DOL_API_KEY,
+        courtlistener: !!process.env.COURTLISTENER_API_TOKEN,
+        eia: !!process.env.EIA_API_KEY,
       },
     };
 
