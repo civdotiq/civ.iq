@@ -24,5 +24,4 @@ export type {
   RepresentativesBatchRequest,
   VotingRecord,
   CampaignFinance,
-  PartyAlignment,
 } from './api/representatives.service';

@@ -360,12 +360,10 @@ function renderVoteCard(data: VoteCardData, photoBase64?: string): React.ReactEl
 }
 
 function renderAlignmentCard(data: AlignmentCardData, photoBase64?: string): React.ReactElement {
-  const trendLabel =
-    data.trend === 'increasing'
-      ? 'Trending Up'
-      : data.trend === 'decreasing'
-        ? 'Trending Down'
-        : 'Stable';
+  const peerDiff =
+    data.peerAveragePercent != null
+      ? Math.round(data.partyAlignmentPercent) - Math.round(data.peerAveragePercent)
+      : null;
 
   const stats = (
     <div style={{ display: 'flex', width: '100%', gap: 32 }}>
@@ -374,9 +372,14 @@ function renderAlignmentCard(data: AlignmentCardData, photoBase64?: string): Rea
         label="Party Alignment"
         color={getPartyColor(data.party)}
       />
-      <StatBlock value={formatNumber(data.bipartisanVotes)} label="Bipartisan Votes" />
+      <StatBlock value={formatNumber(data.votesAgainstParty)} label="Against Party" />
       <StatBlock value={formatNumber(data.totalVotes)} label="Total Votes" />
-      {data.trend && <StatBlock value={trendLabel} label="Trend" />}
+      {peerDiff != null && (
+        <StatBlock
+          value={`${peerDiff > 0 ? '+' : ''}${peerDiff}%`}
+          label={peerDiff >= 0 ? 'Above Avg' : 'Below Avg'}
+        />
+      )}
     </div>
   );
 

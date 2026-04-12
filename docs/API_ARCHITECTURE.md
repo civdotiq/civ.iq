@@ -77,33 +77,36 @@ interface BatchResponse {
 
 ### Supported Endpoints
 
-| Endpoint | Description | Cache Time | Example Data |
-|----------|-------------|------------|--------------|
-| `profile` | Basic representative info | 10 minutes | Name, party, contact info |
-| `votes` | Voting records | 5 minutes | Recent votes, attendance |
-| `bills` | Sponsored/co-sponsored bills | 10 minutes | Bill titles, status |
-| `finance` | Campaign finance data | 30 minutes | Contributions, expenditures |
-| `news` | Recent news mentions | 3 minutes | Articles, mentions |
-| `party-alignment` | Party voting analysis | 30 minutes | Alignment scores, comparisons |
-| `committees` | Committee assignments | 1 hour | Committee names, roles |
-| `leadership` | Leadership positions | 1 hour | Current and past positions |
+| Endpoint          | Description                  | Cache Time | Example Data                         |
+| ----------------- | ---------------------------- | ---------- | ------------------------------------ |
+| `profile`         | Basic representative info    | 10 minutes | Name, party, contact info            |
+| `votes`           | Voting records               | 5 minutes  | Recent votes, attendance             |
+| `bills`           | Sponsored/co-sponsored bills | 10 minutes | Bill titles, status                  |
+| `finance`         | Campaign finance data        | 30 minutes | Contributions, expenditures          |
+| `news`            | Recent news mentions         | 3 minutes  | Articles, mentions                   |
+| `party-alignment` | Real party-line analysis     | 6 hours    | Alignment rate, peer avg, confidence |
+| `committees`      | Committee assignments        | 1 hour     | Committee names, roles               |
+| `leadership`      | Leadership positions         | 1 hour     | Current and past positions           |
 
 ### Implementation
 
 ```typescript
 // Batch API route handler
-export async function POST(request: NextRequest, { params }: { params: Promise<{ bioguideId: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ bioguideId: string }> }
+) {
   const startTime = Date.now();
   const { bioguideId } = await params;
   const { endpoints } = await request.json();
-  
+
   // Validate endpoints
-  const validEndpoints = endpoints.filter(ep => 
+  const validEndpoints = endpoints.filter(ep =>
     ['profile', 'votes', 'bills', 'finance', 'news', 'party-alignment'].includes(ep)
   );
-  
+
   // Execute requests in parallel
-  const batchPromises = validEndpoints.map(async (endpoint) => {
+  const batchPromises = validEndpoints.map(async endpoint => {
     try {
       const data = await cachedFetch(
         `batch-${bioguideId}-${endpoint}`,
@@ -115,13 +118,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return { endpoint, error: error.message, success: false };
     }
   });
-  
+
   const results = await Promise.all(batchPromises);
-  
+
   // Process results
   const responseData = {};
   const errors = {};
-  
+
   results.forEach(result => {
     if (result.success) {
       responseData[result.endpoint] = result.data;
@@ -129,7 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       errors[result.endpoint] = result.error;
     }
   });
-  
+
   return NextResponse.json({
     success: Object.keys(responseData).length > 0,
     data: responseData,
@@ -140,8 +143,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       requestedEndpoints: validEndpoints,
       successfulEndpoints: Object.keys(responseData),
       failedEndpoints: Object.keys(errors),
-      totalTime: Date.now() - startTime
-    }
+      totalTime: Date.now() - startTime,
+    },
   });
 }
 ```
@@ -156,22 +159,22 @@ The platform uses Next.js 15's enhanced fetch caching with intelligent revalidat
 // Enhanced fetch with caching
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit & { 
+  options: RequestInit & {
     cacheTime?: number;
     tags?: string[];
     revalidate?: number | false;
   } = {}
 ): Promise<T> {
   const { cacheTime = 300, tags = [], revalidate, ...fetchOptions } = options;
-  
+
   const response = await fetch(endpoint, {
     ...fetchOptions,
     next: {
       revalidate: revalidate !== undefined ? revalidate : cacheTime,
-      tags: [...tags, `api-${endpoint.split('/').join('-')}`]
-    }
+      tags: [...tags, `api-${endpoint.split('/').join('-')}`],
+    },
   });
-  
+
   return response.json();
 }
 ```
@@ -183,20 +186,20 @@ Different endpoints have different cache times based on data freshness requireme
 ```typescript
 const cacheStrategies = {
   // Frequently changing data
-  news: 180,           // 3 minutes
-  votes: 300,          // 5 minutes
-  
+  news: 180, // 3 minutes
+  votes: 300, // 5 minutes
+
   // Moderately changing data
-  profile: 600,        // 10 minutes
-  bills: 600,          // 10 minutes
-  
+  profile: 600, // 10 minutes
+  bills: 600, // 10 minutes
+
   // Infrequently changing data
-  finance: 1800,       // 30 minutes
+  finance: 1800, // 30 minutes
   'party-alignment': 1800, // 30 minutes
-  
+
   // Rarely changing data
-  committees: 3600,    // 1 hour
-  leadership: 3600     // 1 hour
+  committees: 3600, // 1 hour
+  leadership: 3600, // 1 hour
 };
 ```
 
@@ -205,22 +208,19 @@ const cacheStrategies = {
 ```typescript
 // Cache tags for targeted invalidation
 const cacheTags = {
-  representative: (bioguideId: string) => [
-    `representative-${bioguideId}`,
-    'representative-data'
-  ],
-  
+  representative: (bioguideId: string) => [`representative-${bioguideId}`, 'representative-data'],
+
   votes: (bioguideId: string) => [
     `representative-${bioguideId}`,
     'representative-votes',
-    'voting-data'
+    'voting-data',
   ],
-  
+
   batch: (bioguideId: string) => [
     `representative-${bioguideId}`,
     'representative-batch',
-    'batch-data'
-  ]
+    'batch-data',
+  ],
 };
 ```
 
@@ -250,30 +250,29 @@ export const representativeApi = {
   /**
    * Get representative profile using batch API
    */
-  async getProfileBatch(bioguideId: string, options: {
-    includeVotes?: boolean;
-    includeBills?: boolean;
-    includeFinance?: boolean;
-    includeNews?: boolean;
-    includePartyAlignment?: boolean;
-  } = {}): Promise<BatchApiResponse> {
+  async getProfileBatch(
+    bioguideId: string,
+    options: {
+      includeVotes?: boolean;
+      includeBills?: boolean;
+      includeFinance?: boolean;
+      includeNews?: boolean;
+      includePartyAlignment?: boolean;
+    } = {}
+  ): Promise<BatchApiResponse> {
     const endpoints = ['profile'];
-    
+
     if (options.includeVotes) endpoints.push('votes');
     if (options.includeBills) endpoints.push('bills');
     if (options.includeFinance) endpoints.push('finance');
     if (options.includeNews) endpoints.push('news');
-    if (options.includePartyAlignment) endpoints.push('party-alignment');
 
-    return apiRequest<BatchApiResponse>(
-      `/api/representative/${bioguideId}/batch`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ endpoints }),
-        cacheTime: 300,
-        tags: [`representative-${bioguideId}`, 'representative-batch']
-      }
-    );
+    return apiRequest<BatchApiResponse>(`/api/representative/${bioguideId}/batch`, {
+      method: 'POST',
+      body: JSON.stringify({ endpoints }),
+      cacheTime: 300,
+      tags: [`representative-${bioguideId}`, 'representative-batch'],
+    });
   },
 
   /**
@@ -282,16 +281,16 @@ export const representativeApi = {
   async getVotes(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/votes`, {
       cacheTime: 300,
-      tags: [`representative-${bioguideId}`, 'representative-votes']
+      tags: [`representative-${bioguideId}`, 'representative-votes'],
     });
   },
 
   async getNews(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/news`, {
       cacheTime: 180,
-      tags: [`representative-${bioguideId}`, 'representative-news']
+      tags: [`representative-${bioguideId}`, 'representative-news'],
     });
-  }
+  },
 };
 ```
 
@@ -313,7 +312,7 @@ export class RepresentativeApiError extends Error {
 // Error handling in API requests
 try {
   const response = await fetch(url, options);
-  
+
   if (!response.ok) {
     throw new RepresentativeApiError(
       `API request failed: ${response.status} ${response.statusText}`,
@@ -322,19 +321,14 @@ try {
       new Error(await response.text())
     );
   }
-  
+
   return response.json();
 } catch (error) {
   if (error instanceof RepresentativeApiError) {
     throw error;
   }
-  
-  throw new RepresentativeApiError(
-    `Network error: ${error.message}`,
-    500,
-    endpoint,
-    error
-  );
+
+  throw new RepresentativeApiError(`Network error: ${error.message}`, 500, endpoint, error);
 }
 ```
 
@@ -354,7 +348,7 @@ const profile2 = await fetch('/api/representative/A000001'); // Deduped
 
 ```typescript
 // Batch API executes requests in parallel
-const batchPromises = endpoints.map(async (endpoint) => {
+const batchPromises = endpoints.map(async endpoint => {
   return fetchEndpointData(bioguideId, endpoint);
 });
 
@@ -367,11 +361,11 @@ const results = await Promise.all(batchPromises);
 // Pre-warm cache for likely requests
 export async function warmCache(bioguideId: string) {
   const commonEndpoints = ['profile', 'votes', 'bills'];
-  
+
   // Trigger cache warming in background
   commonEndpoints.forEach(endpoint => {
     fetch(`/api/representative/${bioguideId}/${endpoint}`, {
-      next: { revalidate: getCacheTime(endpoint) }
+      next: { revalidate: getCacheTime(endpoint) },
     });
   });
 }
@@ -395,21 +389,21 @@ export async function compressResponse(data: any) {
 // In Server Component
 export default async function RepresentativeProfilePage({ params }) {
   const { bioguideId } = await params;
-  
+
   // Fetch data on server with caching
   const response = await fetch(`/api/representative/${bioguideId}/batch`, {
     method: 'POST',
     body: JSON.stringify({
       endpoints: ['profile', 'votes', 'bills', 'finance', 'news']
     }),
-    next: { 
+    next: {
       revalidate: 300,
       tags: [`representative-${bioguideId}`, 'representative-batch']
     }
   });
-  
+
   const data = await response.json();
-  
+
   return (
     <div>
       <ProfileHeader representative={data.data.profile} />
@@ -430,7 +424,7 @@ import { representativeApi } from '@/lib/api/representatives';
 export function VotingRecordsTable({ bioguideId }) {
   const [votes, setVotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchVotes = async () => {
       try {
@@ -442,12 +436,12 @@ export function VotingRecordsTable({ bioguideId }) {
         setLoading(false);
       }
     };
-    
+
     fetchVotes();
   }, [bioguideId]);
-  
+
   if (loading) return <VotingTableSkeleton />;
-  
+
   return <VotingTable votes={votes} />;
 }
 ```
@@ -460,12 +454,12 @@ export function useRepresentativeProfile(bioguideId: string, options = {}) {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await representativeApi.getProfileBatch(bioguideId, options);
       setData(response.data);
     } catch (err) {
@@ -474,11 +468,11 @@ export function useRepresentativeProfile(bioguideId: string, options = {}) {
       setLoading(false);
     }
   }, [bioguideId, options]);
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-  
+
   return { data, loading, error, refetch: fetchData };
 }
 ```
@@ -491,11 +485,11 @@ export async function updateRepresentativeData(bioguideId: string, updates: any)
   try {
     // Update the data
     await updateDatabase(bioguideId, updates);
-    
+
     // Invalidate relevant caches
     revalidateTag(`representative-${bioguideId}`);
     revalidateTag('representative-batch');
-    
+
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -511,13 +505,13 @@ export async function updateRepresentativeData(bioguideId: string, updates: any)
 // Track API performance
 export function trackApiPerformance(endpoint: string, duration: number) {
   console.log(`[CIV.IQ-API] ${endpoint}: ${duration}ms`);
-  
+
   // Send to monitoring service
   if (process.env.NODE_ENV === 'production') {
     analytics.track('api_performance', {
       endpoint,
       duration,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 }
@@ -529,7 +523,7 @@ export function trackApiPerformance(endpoint: string, duration: number) {
 // Monitor cache hit rates
 export function trackCacheHit(endpoint: string, hit: boolean) {
   console.log(`[CIV.IQ-CACHE] ${endpoint}: ${hit ? 'HIT' : 'MISS'}`);
-  
+
   // Update cache metrics
   cacheMetrics.update(endpoint, hit);
 }
@@ -541,14 +535,14 @@ export function trackCacheHit(endpoint: string, hit: boolean) {
 // Comprehensive error tracking
 export function trackApiError(error: RepresentativeApiError) {
   console.error(`[CIV.IQ-ERROR] ${error.endpoint}: ${error.message}`);
-  
+
   // Send to error tracking service
   if (process.env.NODE_ENV === 'production') {
     Sentry.captureException(error, {
       tags: {
         endpoint: error.endpoint,
-        statusCode: error.statusCode
-      }
+        statusCode: error.statusCode,
+      },
     });
   }
 }

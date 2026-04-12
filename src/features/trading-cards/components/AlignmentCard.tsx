@@ -14,15 +14,13 @@ interface AlignmentCardProps {
 }
 
 export function AlignmentCard({ data }: AlignmentCardProps) {
-  const trendLabel =
-    data.trend === 'increasing'
-      ? 'Trending Up'
-      : data.trend === 'decreasing'
-        ? 'Trending Down'
-        : 'Stable';
-
-  const trendSymbol =
-    data.trend === 'increasing' ? '\u2191' : data.trend === 'decreasing' ? '\u2193' : '\u2192';
+  const peerComparison =
+    data.peerAveragePercent != null
+      ? {
+          diff: Math.round(data.partyAlignmentPercent) - Math.round(data.peerAveragePercent),
+          avg: Math.round(data.peerAveragePercent),
+        }
+      : null;
 
   return (
     <CardShell
@@ -54,9 +52,9 @@ export function AlignmentCard({ data }: AlignmentCardProps) {
         </div>
         <div>
           <div className="aicher-heading type-2xl text-gray-900">
-            {data.bipartisanVotes.toLocaleString()}
+            {data.votesAgainstParty.toLocaleString()}
           </div>
-          <div className="aicher-heading-wide type-xs text-gray-500">BIPARTISAN VOTES</div>
+          <div className="aicher-heading-wide type-xs text-gray-500">AGAINST PARTY</div>
         </div>
         <div>
           <div className="aicher-heading type-2xl text-gray-900">
@@ -66,14 +64,16 @@ export function AlignmentCard({ data }: AlignmentCardProps) {
         </div>
       </div>
 
-      {/* Trend */}
-      {data.trend && (
+      {/* Peer comparison */}
+      {peerComparison && (
         <div className="border-t-2 border-gray-200 pt-4 mt-4">
           <div className="type-sm text-gray-600">
-            Trend:{' '}
-            <span className="font-semibold text-gray-900">
-              {trendSymbol} {trendLabel}
-            </span>
+            {peerComparison.diff > 0
+              ? `${peerComparison.diff}% above party average`
+              : peerComparison.diff < 0
+                ? `${Math.abs(peerComparison.diff)}% below party average`
+                : 'At party average'}
+            <span className="text-gray-400 ml-1">({peerComparison.avg}% avg)</span>
           </div>
         </div>
       )}

@@ -118,7 +118,6 @@ export const representativeApi = {
       includeBills?: boolean;
       includeFinance?: boolean;
       includeNews?: boolean;
-      includePartyAlignment?: boolean;
       includeCommittees?: boolean;
       includeLeadership?: boolean;
       includeDistrict?: boolean;
@@ -131,7 +130,6 @@ export const representativeApi = {
     if (options.includeBills) endpoints.push('bills');
     if (options.includeFinance) endpoints.push('finance');
     if (options.includeNews) endpoints.push('news');
-    if (options.includePartyAlignment) endpoints.push('party-alignment');
     if (options.includeCommittees) endpoints.push('committees');
     if (options.includeLeadership) endpoints.push('leadership');
     if (options.includeDistrict) endpoints.push('district');
@@ -213,16 +211,6 @@ export const representativeApi = {
     return apiRequest(`/api/representative/${bioguideId}/news`, {
       cacheTime: 180, // 3 minutes - news updates frequently
       tags: [`representative-${bioguideId}`, 'representative-news'],
-    });
-  },
-
-  /**
-   * Get party alignment analysis
-   */
-  async getPartyAlignment(bioguideId: string): Promise<unknown> {
-    return apiRequest(`/api/representative/${bioguideId}/party-alignment`, {
-      cacheTime: 1800, // 30 minutes - alignment data changes slowly
-      tags: [`representative-${bioguideId}`, 'representative-party-alignment'],
     });
   },
 

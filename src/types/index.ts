@@ -24,7 +24,6 @@ export type {
   RepresentativeResponse,
   VotingRecord,
   CampaignFinance,
-  PartyAlignment,
 } from './models/Representative';
 
 export type {

@@ -218,14 +218,15 @@ export async function fetchAlignmentCardData(
     if (!res.ok) return null;
 
     const data = await res.json();
+    if (!data.total_votes_analyzed) return null;
 
     return {
       ...base,
       type: 'alignment',
       partyAlignmentPercent: data.overall_alignment ?? 0,
-      bipartisanVotes: data.bipartisan_votes ?? 0,
-      totalVotes: data.total_votes_analyzed ?? 0,
-      trend: data.alignment_trend,
+      votesAgainstParty: data.votes_against_party ?? 0,
+      totalVotes: data.total_votes_analyzed,
+      peerAveragePercent: data.peer_average_alignment,
     };
   } catch (error) {
     logger.error('Failed to fetch alignment card data', { bioguideId, error });

@@ -69,9 +69,3 @@ export const getRepresentativeFinance = (bioguideId: string) =>
  */
 export const getRepresentativeNews = (bioguideId: string, limit = 10) =>
   apiGet(`/representative/${bioguideId}/news?limit=${limit}`);
-
-/**
- * Get representative party alignment
- */
-export const getRepresentativePartyAlignment = (bioguideId: string) =>
-  apiGet(`/representative/${bioguideId}/party-alignment`);

@@ -4,7 +4,7 @@
 echo "🗑️  Removing deprecated individual API endpoints..."
 
 # List of endpoints to remove
-ENDPOINTS=("finance" "bills" "votes" "committees" "party-alignment" "news")
+ENDPOINTS=("finance" "bills" "votes" "committees" "news")
 
 # Remove each endpoint directory
 for endpoint in "${ENDPOINTS[@]}"; do

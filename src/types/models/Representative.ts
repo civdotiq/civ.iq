@@ -130,21 +130,6 @@ export interface CampaignFinance {
 }
 
 /**
- * Party alignment analysis for a representative
- */
-export interface PartyAlignment {
-  readonly partyLineVoting: number;
-  readonly bipartisanBills: number;
-  readonly totalVotes: number;
-  readonly alignmentTrend: 'increasing' | 'decreasing' | 'stable';
-  readonly congress?: number;
-  readonly comparedToPeers?: {
-    readonly percentile: number;
-    readonly averageAlignment: number;
-  };
-}
-
-/**
  * Bill information associated with a representative
  */
 export interface RepresentativeBill {

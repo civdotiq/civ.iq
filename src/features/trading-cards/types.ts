@@ -61,9 +61,9 @@ export interface VoteCardData extends CardBase {
 export interface AlignmentCardData extends CardBase {
   type: 'alignment';
   partyAlignmentPercent: number;
-  bipartisanVotes: number;
+  votesAgainstParty: number;
   totalVotes: number;
-  trend?: 'increasing' | 'decreasing' | 'stable';
+  peerAveragePercent?: number;
 }
 
 /** Legislation card: sponsored bills summary */

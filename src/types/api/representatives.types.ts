@@ -15,7 +15,6 @@ import type {
   RepresentativeResponse,
   VotingRecord,
   CampaignFinance,
-  PartyAlignment,
   RepresentativeBill,
 } from '../models/Representative';
 
@@ -103,17 +102,6 @@ export interface CampaignFinanceResponse extends ApiResponse<CampaignFinance> {
     readonly bioguideId: string;
     readonly cycle: string;
     readonly lastReportDate?: string;
-  };
-}
-
-/**
- * Party alignment API response
- */
-export interface PartyAlignmentResponse extends ApiResponse<PartyAlignment> {
-  readonly metadata: ApiResponse<PartyAlignment>['metadata'] & {
-    readonly bioguideId: string;
-    readonly congress?: number;
-    readonly comparisonPeriod?: string;
   };
 }
 

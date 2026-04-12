@@ -46,13 +46,6 @@ export interface CampaignFinance {
   }>;
 }
 
-export interface PartyAlignment {
-  partyLineVoting: number;
-  bipartisanBills: number;
-  totalVotes: number;
-  alignmentTrend: 'increasing' | 'decreasing' | 'stable';
-}
-
 class RepresentativesService extends BaseService {
   private static instance: RepresentativesService;
 
@@ -150,15 +143,6 @@ class RepresentativesService extends BaseService {
       {
         params: options as Record<string, string | number>,
       }
-    );
-  }
-
-  /**
-   * Get party alignment analysis for a representative
-   */
-  async getPartyAlignment(bioguideId: string): Promise<PartyAlignment> {
-    return this.get<PartyAlignment>(
-      `${apiConfig.endpoints.representative}/${bioguideId}/party-alignment`
     );
   }
 

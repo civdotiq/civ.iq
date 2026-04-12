@@ -44,9 +44,9 @@ export interface ShareData {
 
     // Voting stats
     partyAlignment?: number;
-    bipartisanVotes?: number;
+    votesAgainstParty?: number;
     totalVotes?: number;
-    alignmentTrend?: 'increasing' | 'decreasing' | 'stable';
+    peerAverageAlignment?: number;
 
     // Legislative stats
     billsSponsored?: number;
@@ -161,20 +161,21 @@ export function generateTweetText(data: ShareData): string {
         return `${repTitle} voting record\n\nReal government data via @civdotiq\n${url}`;
       }
 
-      const trendEmoji = {
-        increasing: '↑',
-        decreasing: '↓',
-        stable: '→',
-      }[stats.alignmentTrend || 'stable'];
-
       const parts = [`${repTitle} voting record:`, `• ${stats.partyAlignment}% party alignment`];
 
-      if (stats.bipartisanVotes) {
-        parts.push(`• ${stats.bipartisanVotes} bipartisan votes`);
+      if (stats.votesAgainstParty) {
+        parts.push(`• ${stats.votesAgainstParty} votes against party`);
       }
 
-      if (stats.alignmentTrend) {
-        parts.push(`• Trend: ${trendEmoji} ${stats.alignmentTrend}`);
+      if (stats.peerAverageAlignment != null) {
+        const diff = Math.round(stats.partyAlignment) - Math.round(stats.peerAverageAlignment);
+        if (diff > 0) {
+          parts.push(`• ${diff}% above party average`);
+        } else if (diff < 0) {
+          parts.push(`• ${Math.abs(diff)}% below party average`);
+        } else {
+          parts.push('• At party average');
+        }
       }
 
       parts.push('', 'Transparency via @civdotiq', url);

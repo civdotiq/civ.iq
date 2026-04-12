@@ -149,11 +149,7 @@ export const MapLoadingSpinner = () => (
  */
 export const CODE_SPLITTING_CONFIG = {
   // Components that should always be code split due to size
-  HEAVY_COMPONENTS: [
-    'CampaignFinanceVisualizer',
-    'InteractiveVotingAnalysis',
-    'RealDistrictMapContainer',
-  ],
+  HEAVY_COMPONENTS: ['CampaignFinanceVisualizer', 'RealDistrictMapContainer'],
 
   // Routes that should use code splitting
   SPLIT_ROUTES: ['/analytics', '/districts', '/representative/[bioguideId]'],

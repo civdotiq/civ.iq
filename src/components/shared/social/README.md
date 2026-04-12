@@ -121,9 +121,9 @@ interface ShareData {
 
     // Voting stats
     partyAlignment?: number;
-    bipartisanVotes?: number;
+    votesAgainstParty?: number;
     totalVotes?: number;
-    alignmentTrend?: 'increasing' | 'decreasing' | 'stable';
+    peerAverageAlignment?: number;
 
     // Legislative stats
     billsSponsored?: number;

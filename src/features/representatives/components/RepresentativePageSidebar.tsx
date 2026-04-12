@@ -27,7 +27,6 @@ interface RepresentativePageSidebarProps {
     bills?: unknown[];
     finance?: unknown;
     news?: unknown[];
-    partyAlignment?: unknown;
   };
 }
 

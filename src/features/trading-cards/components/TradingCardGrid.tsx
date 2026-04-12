@@ -34,9 +34,10 @@ interface SummaryResponse {
 
 interface AlignmentResponse {
   overall_alignment?: number;
-  bipartisan_votes?: number;
+  votes_against_party?: number;
   total_votes_analyzed?: number;
-  alignment_trend?: 'increasing' | 'decreasing' | 'stable';
+  peer_average_alignment?: number;
+  metadata?: { dataSource?: string; note?: string };
 }
 
 interface FinanceResponse {
@@ -172,18 +173,20 @@ export function TradingCardGrid({ representative }: TradingCardGridProps) {
     };
   }, [cardBase, financeData]);
 
-  // Build alignment card data
+  // Build alignment card data — or detect "unavailable" for empty state
   const alignmentCardData: AlignmentCardData | null = useMemo(() => {
-    if (!alignmentData?.overall_alignment) return null;
+    if (!alignmentData?.total_votes_analyzed) return null;
     return {
       ...cardBase,
       type: 'alignment' as const,
-      partyAlignmentPercent: alignmentData.overall_alignment,
-      bipartisanVotes: alignmentData.bipartisan_votes || 0,
-      totalVotes: alignmentData.total_votes_analyzed || 0,
-      trend: alignmentData.alignment_trend,
+      partyAlignmentPercent: alignmentData.overall_alignment ?? 0,
+      votesAgainstParty: alignmentData.votes_against_party ?? 0,
+      totalVotes: alignmentData.total_votes_analyzed,
+      peerAveragePercent: alignmentData.peer_average_alignment,
     };
   }, [cardBase, alignmentData]);
+
+  const alignmentUnavailable = alignmentData?.metadata?.dataSource === 'unavailable';
 
   // Build legislation card data
   const legislationCardData: LegislationCardData | null = useMemo(() => {
@@ -210,7 +213,18 @@ export function TradingCardGrid({ representative }: TradingCardGridProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProfileCard data={profileCardData} />
         {moneyCardData && <MoneyCard data={moneyCardData} />}
-        {alignmentCardData && <AlignmentCard data={alignmentCardData} />}
+        {alignmentCardData ? (
+          <AlignmentCard data={alignmentCardData} />
+        ) : alignmentUnavailable ? (
+          <div className="border-2 border-gray-300 bg-white p-6">
+            <div className="aicher-heading-wide type-xs text-gray-400 mb-2">PARTY ALIGNMENT</div>
+            <p className="type-sm text-gray-500">
+              Party alignment data is not available for this representative. This is typically
+              because they are Independent or there are not enough recorded votes to compute a
+              reliable alignment score.
+            </p>
+          </div>
+        ) : null}
         {legislationCardData && <LegislationCard data={legislationCardData} />}
       </div>
     </div>

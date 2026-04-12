@@ -420,36 +420,31 @@ Get recent news articles about a representative using GDELT.
 
 #### GET /api/representative/[bioguideId]/party-alignment
 
-Analyze how often a representative votes with their party.
+Analyze how often a representative votes with their party. Uses the real
+party-line analyzer which derives party majority from actual member votes per
+roll call and computes peer averages from same-chamber, same-party legislators.
+
+Returns `null`-equivalent (zeros + metadata note) for Independents or when
+insufficient qualifying roll calls exist.
 
 **Parameters:**
 
 - `bioguideId`: Congress bioguide identifier
-- `session` (optional): Congressional session number
 
 **Response:**
 
 ```json
 {
-  "alignment": {
-    "withParty": "number",
-    "againstParty": "number",
-    "percentage": "number"
-  },
-  "comparison": {
-    "partyAverage": "number",
-    "chamberAverage": "number",
-    "stateAverage": "number"
-  },
-  "notableVotes": [
-    {
-      "billNumber": "string",
-      "title": "string",
-      "memberVote": "string",
-      "partyMajority": "string",
-      "date": "string"
-    }
-  ]
+  "overall_alignment": "number (0-100)",
+  "votes_with_party": "number",
+  "votes_against_party": "number",
+  "total_votes_analyzed": "number",
+  "peer_average_alignment": "number (0-100)",
+  "peer_count": "number",
+  "confidence": "number (0-1)",
+  "data_as_of": "string (ISO date)",
+  "methodology": "string",
+  "disclaimer": "string"
 }
 ```
 

@@ -80,17 +80,6 @@ export function useRepresentativeNews(bioguideId: string | null) {
   );
 }
 
-export function useRepresentativePartyAlignment(bioguideId: string | null) {
-  return useSWR(
-    bioguideId ? `/api/representative/${bioguideId}/party-alignment` : null,
-    (url: string) => fetch(url).then(res => res.json()),
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 60 * 60 * 1000, // Refresh every hour
-    }
-  );
-}
-
 export function useRepresentativeProfile(bioguideId: string | null) {
   return useSWR(
     bioguideId ? `/api/representative/${bioguideId}` : null,
