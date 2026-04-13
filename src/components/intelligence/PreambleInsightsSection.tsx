@@ -8,6 +8,7 @@
 import useSWR from 'swr';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { InsightDisclaimer } from './InsightDisclaimer';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type {
   PreambleExtractionInsight,
   PreambleIndustryImpact,
@@ -207,7 +208,7 @@ function IndustryImpactsList({ impacts }: { impacts: PreambleIndustryImpact[] })
           <div key={i} className="bg-gray-50 dark:bg-[#2a2a2e] p-3">
             <div className="flex items-center gap-2 mb-1">
               <span className="type-sm font-medium text-gray-900 dark:text-gray-100">
-                {impact.industry}
+                {displaySector(impact.industry)}
               </span>
               <span className="border-2 border-gray-300 dark:border-gray-600 px-1.5 py-0 type-xs text-gray-500 dark:text-gray-400">
                 {IMPACT_TYPE_LABELS[impact.impactType]}

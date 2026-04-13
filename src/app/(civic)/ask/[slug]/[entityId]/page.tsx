@@ -33,6 +33,7 @@ import {
   type CommitteeLobbyingData,
 } from '@/lib/questions/template-data-fetchers';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
+import { displaySector } from '@/lib/mesh/sector-display';
 import { FAQPageSchema } from '@/components/seo/JsonLd';
 import { QuestionLayout } from '@/components/questions/QuestionLayout';
 import { RelatedQuestions } from '@/components/questions/RelatedQuestions';
@@ -74,12 +75,18 @@ function buildFaqAnswer(
       const finance = data.campaign?.finance;
       const industries = data.campaign?.industries;
       if (finance?.totalRaised) {
-        const topIndustry = industries?.topIndustries?.[0]?.industry ?? 'various sectors';
+        const topIndustry =
+          industries?.topIndustries?.find(
+            i =>
+              i.industry !== 'Unknown' &&
+              i.industry !== 'Other/Unknown' &&
+              i.industry !== 'Not Employed'
+          )?.industry ?? 'various sectors';
         const amount =
           finance.totalRaised >= 1_000_000
             ? `$${(finance.totalRaised / 1_000_000).toFixed(1)}M`
             : `$${(finance.totalRaised / 1_000).toFixed(0)}K`;
-        return `${repName} has raised ${amount} in the current cycle, with ${topIndustry} as the largest contributing sector.`;
+        return `${repName} has raised ${amount} in the current cycle, with ${displaySector(topIndustry)} as the largest contributing sector.`;
       }
       return `Campaign finance data for ${repName} is sourced from FEC filings.`;
     }

@@ -5,6 +5,7 @@
 
 'use client';
 
+import { displaySector } from '@/lib/mesh/sector-display';
 import type {
   StockCommitteeInsight,
   FlaggedTrade,
@@ -155,7 +156,9 @@ export function StockOverlapTable({ insight, className = '' }: StockOverlapTable
                       {trade.transactionType}
                     </td>
                     <td className="py-2 pr-4 text-gray-700 whitespace-nowrap">{trade.amount}</td>
-                    <td className="py-2 pr-4 text-gray-500 hidden md:table-cell">{trade.sector}</td>
+                    <td className="py-2 pr-4 text-gray-500 hidden md:table-cell">
+                      {displaySector(trade.sector)}
+                    </td>
                     <td className="py-2 pr-4 text-gray-500 hidden lg:table-cell">
                       {trade.committeeName}
                     </td>

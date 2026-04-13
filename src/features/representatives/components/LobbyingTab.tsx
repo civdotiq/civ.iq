@@ -11,6 +11,7 @@ import { MoneyFlowChain } from '@/components/intelligence/MoneyFlowChain';
 import { InsightDisclaimer } from '@/components/intelligence/InsightDisclaimer';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LobbyLink } from '@/components/shared/links/EntityLinks';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { InfluenceChainInsight } from '@/lib/intelligence/types';
 
 interface LobbyingTabProps {
@@ -251,7 +252,9 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                     {industryBreakdown.slice(0, 5).map(ind => (
                       <div key={ind.industry}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="type-xs text-gray-700">{ind.industry}</span>
+                          <span className="type-xs text-gray-700">
+                            {displaySector(ind.industry)}
+                          </span>
                           <span className="type-xs text-gray-500 aicher-heading-wide">
                             {ind.filingCount} {ind.filingCount === 1 ? 'filing' : 'filings'} (
                             {ind.percentage.toFixed(0)}%)

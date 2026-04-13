@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { displaySector } from '@/lib/mesh/sector-display';
 import {
   BarChart,
   Bar,
@@ -63,9 +64,9 @@ const INDUSTRY_DESCRIPTIONS: Record<string, string> = {
   Defense: 'Defense contractors, aerospace, military suppliers',
   Education: 'Educational institutions, training organizations',
   Labor: 'Labor unions, worker organizations',
-  'Lawyers/Lobbyists': 'Law firms, lobbying organizations, legal services',
-  'Miscellaneous Business': 'Various business sectors not otherwise categorized',
-  'Ideology/Single Issue': 'Advocacy groups, political organizations, single-issue groups',
+  'Lawyers & Lobbyists': 'Law firms, lobbying organizations, legal services',
+  'Misc Business': 'Various business sectors not otherwise categorized',
+  'Ideology/Single-Issue': 'Advocacy groups, nonprofits, education, and single-issue organizations',
 };
 
 interface TooltipProps {
@@ -90,7 +91,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
 
     return (
       <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
-        <p className="font-semibold text-gray-900 mb-1">{data.industry}</p>
+        <p className="font-semibold text-gray-900 mb-1">{displaySector(data.industry)}</p>
         <p className="text-xs text-gray-600 mb-2">{description}</p>
         <p className="text-lg font-bold text-civiq-blue">${data.amount.toLocaleString()}</p>
         <p className="text-sm text-gray-500">{data.percentage.toFixed(1)}% of total</p>
@@ -108,7 +109,7 @@ const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
 
     return (
       <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
-        <p className="font-semibold text-gray-900 mb-1">{data.industry}</p>
+        <p className="font-semibold text-gray-900 mb-1">{displaySector(data.industry)}</p>
         <p className="text-xs text-gray-600 mb-2">{description}</p>
         <p className="text-lg font-bold" style={{ color: data.color }}>
           ${data.amount.toLocaleString()}
@@ -138,8 +139,10 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
       ...item,
       color: INDUSTRY_COLORS[index % INDUSTRY_COLORS.length],
       // Truncate long industry names for chart display
-      displayName:
-        item.industry.length > 25 ? `${item.industry.substring(0, 25)}...` : item.industry,
+      displayName: (() => {
+        const name = displaySector(item.industry);
+        return name.length > 25 ? `${name.substring(0, 25)}...` : name;
+      })(),
     }));
 
   // Calculate summary statistics
@@ -315,7 +318,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
         <div className="bg-civiq-blue/10 p-4">
           <h4 className="font-medium text-civiq-blue mb-1">Top Industry</h4>
           <p className="text-sm text-civiq-blue mb-2">
-            {topIndustry ? topIndustry.industry : 'N/A'}
+            {topIndustry ? displaySector(topIndustry.industry) : 'N/A'}
           </p>
           <p className="text-lg font-bold text-civiq-blue">
             {topIndustry ? `${topIndustry.percentage.toFixed(1)}%` : '0%'}
@@ -352,7 +355,9 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
                   style={{ backgroundColor: industry.color }}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-gray-900 truncate">{industry.industry}</p>
+                  <p className="font-medium text-gray-900 truncate">
+                    {displaySector(industry.industry)}
+                  </p>
                   <p className="text-xs text-gray-500">
                     {INDUSTRY_DESCRIPTIONS[industry.industry] || 'Industry sector'}
                   </p>
@@ -392,7 +397,7 @@ export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
             <div className="flex items-start gap-2 p-2 bg-civiq-blue/10">
               <span className="text-civiq-blue text-xs mt-1"></span>
               <span className="text-sm text-civiq-blue">
-                {topIndustry.industry} is the dominant funding source at{' '}
+                {displaySector(topIndustry.industry)} is the dominant funding source at{' '}
                 {topIndustry.percentage.toFixed(0)}%
               </span>
             </div>

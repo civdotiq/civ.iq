@@ -23,6 +23,9 @@ interface TopIndustriesProps {
  * Top industries breakdown with sortable table
  * Shows which industries are contributing to the campaign
  */
+/** Categories that aren't real industries — exclude from display */
+const NON_INDUSTRY_SECTORS = new Set(['Other/Unknown', 'Unknown', 'Not Employed']);
+
 export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
   if (!industries || industries.length === 0) {
     return (
@@ -32,6 +35,12 @@ export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
       </div>
     );
   }
+
+  const classified = industries.filter(i => !NON_INDUSTRY_SECTORS.has(i.sector));
+  const unclassifiedTotal = industries
+    .filter(i => NON_INDUSTRY_SECTORS.has(i.sector))
+    .reduce((sum, i) => sum + i.amount, 0);
+  const unclassifiedPct = totalRaised > 0 ? Math.round((unclassifiedTotal / totalRaised) * 100) : 0;
 
   const columns = [
     {
@@ -69,7 +78,7 @@ export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
       </div>
 
       <SortableDataTable
-        data={industries}
+        data={classified}
         columns={columns}
         defaultSortKey="amount"
         showInitially={5}
@@ -78,10 +87,16 @@ export function TopIndustries({ industries, totalRaised }: TopIndustriesProps) {
       <div className="mt-4 bg-neutral-50 p-4">
         <div className="text-sm text-neutral-700">
           <strong>Total Analyzed:</strong> ${(totalRaised / 1000000).toFixed(2)}M from{' '}
-          {industries.length} industries
+          {classified.length} industries
         </div>
         <div className="mt-2 text-xs text-neutral-600">
           Industry classifications based on employer and occupation data from FEC filings
+          {unclassifiedPct > 0 && (
+            <>
+              . {unclassifiedPct}% of contributions lacked employer data and could not be
+              classified.
+            </>
+          )}
         </div>
       </div>
     </div>

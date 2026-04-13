@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
 import { categorizePACByName } from '@/lib/fec/industry-taxonomy';
+import { displaySector } from '@/lib/mesh/sector-display';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { CommitteeProfileClient } from './CommitteeProfileClient';
@@ -227,7 +228,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     }
 
     const classification = categorizePACByName(committeeInfo.name);
-    const sectorStr = classification?.sector ? ` in the ${classification.sector} sector` : '';
+    const sectorStr = classification?.sector
+      ? ` in the ${displaySector(classification.sector)} sector`
+      : '';
 
     const title = `${committeeInfo.name} — Campaign contributions`;
     const description = `See where ${committeeInfo.name}${sectorStr} sends money. View all Congressional recipients, amounts, and party breakdown for the ${cycle} cycle.`;

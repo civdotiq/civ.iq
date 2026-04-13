@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { CivicBriefInsight, BriefPattern } from '@/lib/intelligence/types';
 
 interface CivicBriefCardProps {
@@ -151,8 +152,11 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
             <div className="space-y-1">
               {funding.topSectors.map(s => (
                 <div key={s.sector} className="flex items-center gap-2">
-                  <span className="type-xs text-gray-600 w-36 sm:w-44 truncate" title={s.sector}>
-                    {s.sector}
+                  <span
+                    className="type-xs text-gray-600 w-36 sm:w-44 truncate"
+                    title={displaySector(s.sector)}
+                  >
+                    {displaySector(s.sector)}
                   </span>
                   <div
                     className="flex-1 h-2 bg-gray-100 bg-gray-100"
@@ -160,7 +164,7 @@ export function CivicBriefCard({ insight, className = '' }: CivicBriefCardProps)
                     aria-valuenow={Math.round(s.pct)}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`${s.sector}: ${s.pct.toFixed(0)}%`}
+                    aria-label={`${displaySector(s.sector)}: ${s.pct.toFixed(0)}%`}
                   >
                     <div
                       className={`h-full ${s.overlapsCommittee ? 'bg-[#d97706]' : 'bg-[#3ea2d4]'}`}

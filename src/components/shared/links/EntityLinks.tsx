@@ -7,6 +7,7 @@
  */
 
 import Link from 'next/link';
+import { displaySector } from '@/lib/mesh/sector-display';
 
 const linkClass = 'text-[#3ea2d4] hover:underline';
 
@@ -98,7 +99,7 @@ export function SectorLink({ sector, label, className }: SectorLinkProps) {
       href={`/industry/${encodeURIComponent(sector)}`}
       className={`${linkClass} ${className ?? ''}`}
     >
-      {sector}
+      {displaySector(sector)}
     </Link>
   );
 }

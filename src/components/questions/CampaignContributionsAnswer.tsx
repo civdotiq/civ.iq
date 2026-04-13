@@ -12,6 +12,7 @@
 
 import { InsightCard } from '@/components/intelligence/InsightCard';
 import Link from 'next/link';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { VoteFinanceInsight, InsightResponse } from '@/lib/intelligence/types';
 
 interface IndustryItem {
@@ -45,6 +46,9 @@ function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
+/** Categories that aren't real industries — exclude from top-industries display */
+const NON_INDUSTRY_CATEGORIES = new Set(['Other/Unknown', 'Unknown', 'Not Employed']);
+
 function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
   if (!industries?.topIndustries?.length) {
     return (
@@ -57,8 +61,28 @@ function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
     );
   }
 
-  const top5 = industries.topIndustries.slice(0, 5);
+  const classified = industries.topIndustries.filter(i => !NON_INDUSTRY_CATEGORIES.has(i.industry));
+  const unclassified = industries.topIndustries.filter(i =>
+    NON_INDUSTRY_CATEGORIES.has(i.industry)
+  );
+  const unclassifiedTotal = unclassified.reduce((sum, i) => sum + i.amount, 0);
+  const totalAmount = industries.topIndustries.reduce((sum, i) => sum + i.amount, 0);
+  const unclassifiedPct = totalAmount > 0 ? Math.round((unclassifiedTotal / totalAmount) * 100) : 0;
+
+  const top5 = classified.slice(0, 5);
   const maxAmount = top5[0]?.amount ?? 1;
+
+  if (!top5.length) {
+    return (
+      <div className="border-2 border-black bg-white p-4 sm:p-6">
+        <h2 className="type-sm font-semibold text-black mb-3">Top industries</h2>
+        <p className="type-sm text-gray-500">
+          Most contributions lack employer data in FEC filings, so industry breakdown is
+          unavailable.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6">
@@ -67,7 +91,9 @@ function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
         {top5.map(item => (
           <li key={item.industry}>
             <div className="flex justify-between items-baseline mb-1">
-              <span className="type-sm text-gray-900 truncate mr-2">{item.industry}</span>
+              <span className="type-sm text-gray-900 truncate mr-2">
+                {displaySector(item.industry)}
+              </span>
               <span className="type-sm font-medium text-gray-900 shrink-0">
                 {formatCurrency(item.amount)}
               </span>
@@ -81,6 +107,12 @@ function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
           </li>
         ))}
       </ul>
+      {unclassifiedPct > 0 && (
+        <p className="type-xs text-gray-500 mt-3">
+          {formatCurrency(unclassifiedTotal)} ({unclassifiedPct}%) of contributions lack employer
+          data in FEC filings and could not be classified by industry.
+        </p>
+      )}
     </div>
   );
 }

@@ -19,7 +19,7 @@ const SECTOR_DISPLAY_NAMES: Record<string, string> = {
   'Energy/Natural Resources': 'Energy & Natural Resources',
   'Finance/Insurance/Real Estate': 'Finance & Real Estate',
   Health: 'Healthcare',
-  'Lawyers/Lobbyists': 'Legal & Lobbying',
+  'Lawyers & Lobbyists': 'Legal & Lobbying',
   Transportation: 'Transportation',
   'Misc Business': 'General Business',
   Labor: 'Labor & Workers',

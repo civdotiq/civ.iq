@@ -6,6 +6,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { StockCommitteeInsight, SectorTradeCount } from '@/lib/intelligence/types';
 
 interface TradeSectorBreakdownProps {
@@ -104,8 +105,11 @@ function SectorBar({ sector, maxCount }: { sector: SectorTradeCount; maxCount: n
 
   return (
     <div className="flex items-center gap-2">
-      <div className="w-32 sm:w-44 shrink-0 text-xs text-gray-700 truncate" title={sector.sector}>
-        {sector.sector}
+      <div
+        className="w-32 sm:w-44 shrink-0 text-xs text-gray-700 truncate"
+        title={displaySector(sector.sector)}
+      >
+        {displaySector(sector.sector)}
       </div>
       <div className="flex-1 h-5 bg-gray-50 border border-gray-200 relative">
         <div

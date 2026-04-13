@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { VoteFinanceInsight, InsightResponse } from '@/lib/intelligence/types';
 
 interface DonorVotingAlignmentAnswerProps {
@@ -122,7 +123,9 @@ function SectorBreakdownPod({ insight }: { insight: VoteFinanceInsight | null })
         {sorted.map(sector => (
           <li key={sector.sector} className="py-2 first:pt-0 last:pb-0">
             <div className="flex justify-between items-baseline mb-1">
-              <span className="type-sm text-gray-900 truncate mr-2">{sector.sector}</span>
+              <span className="type-sm text-gray-900 truncate mr-2">
+                {displaySector(sector.sector)}
+              </span>
               <span className="type-sm font-medium text-gray-900 shrink-0">
                 {(sector.alignmentScore * 100).toFixed(1)}% aligned
               </span>

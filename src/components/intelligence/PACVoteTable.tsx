@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import { displaySector } from '@/lib/mesh/sector-display';
 import type { PACVoteInsight, PACRecipientVoteRecord } from '@/lib/intelligence/types';
 
 /**
@@ -95,7 +96,7 @@ export function PACVoteTable({ insight, className = '' }: PACVoteTableProps) {
           </div>
         </div>
 
-        <div className="type-xs text-gray-500">Sector: {insight.sector}</div>
+        <div className="type-xs text-gray-500">Sector: {displaySector(insight.sector)}</div>
       </div>
 
       {/* Recipient Table */}

@@ -5,6 +5,7 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import type { CivicAlignmentReport } from '@/types/ai';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
+import { displaySector } from '@/lib/mesh/sector-display';
 
 interface CivicAlignmentTabProps {
   bioguideId: string;
@@ -126,14 +127,16 @@ function DonorProfileSection({ donors }: { donors: CivicAlignmentReport['donorPr
       <div className="space-y-2">
         {topDonors.map((donor, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="w-32 text-sm text-gray-700 truncate">{donor.sector}</span>
+            <span className="w-32 text-sm text-gray-700 truncate">
+              {displaySector(donor.sector)}
+            </span>
             <div
               className="flex-1 bg-gray-200 h-5"
               role="progressbar"
               aria-valuenow={Math.round(donor.percentage)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`${donor.sector}: ${Math.round(donor.percentage)}% ($${donor.amount.toLocaleString()})`}
+              aria-label={`${displaySector(donor.sector)}: ${Math.round(donor.percentage)}% ($${donor.amount.toLocaleString()})`}
             >
               <div
                 className="bg-civiq-blue h-5"
