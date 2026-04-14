@@ -1,0 +1,49 @@
+name: Sync Congressional Vacancies
+
+on:
+  schedule:
+    # Every Monday at 12:00 UTC
+    - cron: '0 12 * * 1'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Run sync
+        run: npx tsx scripts/sync-vacancies.ts
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet src/lib/data/vacancies.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore(data): sync congressional vacancies from Wikipedia'
+          branch: auto/sync-vacancies
+          delete-branch: true
+          title: 'chore(data): sync congressional vacancies'
+          body: |
+            Automated weekly sync of `src/lib/data/vacancies.json` from Wikipedia's
+            [119th Congress "Changes in membership"](https://en.wikipedia.org/wiki/119th_United_States_Congress#Changes_in_membership).
+
+            Review the diff carefully — the parser is heuristic. Cross-check dates,
+            reasons, and successor info against the Wikipedia article before merging.
+          add-paths: src/lib/data/vacancies.json

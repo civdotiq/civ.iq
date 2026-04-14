@@ -58,6 +58,9 @@ export type RepresentativeRole =
 export interface EnhancedRepresentative extends BaseRepresentative {
   // Status information
   isHistorical?: boolean;
+  status?: 'active' | 'pending_resignation' | 'resigned' | 'expelled' | 'deceased' | 'retired';
+  statusDetail?: string;
+  statusEffectiveDate?: string | null;
 
   // Constitutional representation status
   // Article I grants voting power only to state representatives/senators

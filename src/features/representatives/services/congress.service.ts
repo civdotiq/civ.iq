@@ -21,6 +21,7 @@ import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
 import { filterCurrent119thCongress, is119thCongressTerm } from '@/lib/helpers/congress-validation';
+import { getMemberStatus } from '@/lib/data/congressional-vacancies';
 import { getFileCache } from '@/lib/cache/file-cache';
 import fs from 'fs';
 import path from 'path';
@@ -839,6 +840,29 @@ export async function getEnhancedRepresentative(
 
       // Status information
       isHistorical,
+      ...(() => {
+        const info = getMemberStatus({
+          bioguideId: legislator.id.bioguide,
+          name: `${legislator.name.first} ${legislator.name.last}`,
+          state: currentTerm.state,
+          chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
+          district: currentTerm.district?.toString(),
+          senateClass:
+            currentTerm.class === 1
+              ? '1'
+              : currentTerm.class === 2
+                ? '2'
+                : currentTerm.class === 3
+                  ? '3'
+                  : null,
+          isHistorical,
+        });
+        return {
+          status: info.status,
+          statusDetail: info.detail,
+          statusEffectiveDate: info.effectiveDate,
+        };
+      })(),
 
       fullName: {
         first: legislator.name.first,

@@ -15,6 +15,11 @@ import { ContextualFooter, type CommitteeLink } from '@/components/seo/Contextua
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { QuestionSuggestions } from '@/components/questions/QuestionSuggestions';
 import { getStateName } from '@/lib/data/us-states';
+import {
+  getVacancyInfo,
+  getSenateVacancy,
+  formatVacancyMessage,
+} from '@/lib/data/congressional-vacancies';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -102,6 +107,9 @@ interface RepresentativeDetails {
     instagram?: string;
     mastodon?: string;
   };
+  status?: 'active' | 'pending_resignation' | 'resigned' | 'expelled' | 'deceased' | 'retired';
+  statusDetail?: string;
+  statusEffectiveDate?: string | null;
 }
 
 // Server-side data fetching with direct service import (no HTTP networking)
@@ -265,6 +273,56 @@ function CitableFacts({
   );
 }
 
+function MemberStatusBanner({ representative }: { representative: RepresentativeDetails }) {
+  if (!representative.status || representative.status === 'active') return null;
+
+  const vacancy =
+    representative.chamber === 'Senate'
+      ? representative.currentTerm?.class
+        ? getSenateVacancy(
+            representative.state,
+            String(representative.currentTerm.class) as '1' | '2' | '3'
+          )
+        : undefined
+      : representative.district
+        ? getVacancyInfo(representative.state, representative.district)
+        : undefined;
+
+  const headlineMap: Record<NonNullable<RepresentativeDetails['status']>, string> = {
+    active: '',
+    pending_resignation: 'Announced intent to resign',
+    resigned: 'No longer serving — resigned',
+    expelled: 'No longer serving — expelled',
+    deceased: 'Deceased',
+    retired: 'No longer serving',
+  };
+
+  const isPending = representative.status === 'pending_resignation';
+  const borderColor = isPending ? 'border-civiq-amber' : 'border-gray-400';
+  const bgColor = isPending ? 'bg-amber-50' : 'bg-gray-50';
+  const textColor = isPending ? 'text-civiq-amber' : 'text-gray-900';
+
+  const headline = headlineMap[representative.status];
+  const effective = representative.statusEffectiveDate;
+  const message = vacancy ? formatVacancyMessage(vacancy) : representative.statusDetail;
+
+  return (
+    <div
+      role="status"
+      aria-label={`Status: ${headline}`}
+      className={`container mx-auto px-grid-2 md:px-grid-4 mb-grid-3`}
+    >
+      <div className={`border-2 ${borderColor} ${bgColor} p-grid-2 md:p-grid-3`}>
+        <div className={`text-sm font-semibold uppercase tracking-wide ${textColor}`}>
+          {headline}
+          {effective ? ` · ${effective}` : ''}
+        </div>
+        {message && <p className="mt-1 text-sm text-gray-700">{message}</p>}
+      </div>
+    </div>
+  );
+}
+
 // Main Server Component - renders immediately with SSR data
 export default async function RepresentativeProfilePage({
   params,
@@ -383,6 +441,8 @@ export default async function RepresentativeProfilePage({
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
+
+        <MemberStatusBanner representative={representative} />
 
         {/* Server-rendered key facts for AI citation and crawlers (visually hidden, in DOM for SEO) */}
         <CitableFacts representative={representative} summary={null} />

@@ -205,6 +205,9 @@ export interface UnifiedRepresentative {
 
   // === STATUS FLAGS (from type 1) ===
   isHistorical?: boolean;
+  status?: 'active' | 'pending_resignation' | 'resigned' | 'expelled' | 'deceased' | 'retired';
+  statusDetail?: string;
+  statusEffectiveDate?: string | null;
 
   // === METADATA (from types 1 & 3) ===
   metadata?: {

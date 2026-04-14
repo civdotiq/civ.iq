@@ -26,6 +26,7 @@ import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
+import { getVacancyInfo, formatVacancyMessage } from '@/lib/data/congressional-vacancies';
 
 const DistrictIntelligenceCard = dynamic(
   () => import('@/components/intelligence/DistrictIntelligenceCard'),
@@ -211,6 +212,27 @@ export default function DistrictPage() {
           <span className="mx-2">›</span>
           <span className="font-medium text-gray-900">{districtId}</span>
         </nav>
+
+        {(() => {
+          const [vState, vDistrict] = districtId.split('-');
+          if (!vState || !vDistrict) return null;
+          const vacancy = getVacancyInfo(vState, vDistrict.padStart(2, '0'));
+          if (!vacancy) return null;
+          const electionDate = vacancy.specialElection?.date;
+          return (
+            <div
+              role="status"
+              aria-label="Seat vacant"
+              className="border-2 border-civiq-amber bg-amber-50 p-grid-2 md:p-grid-3 mb-grid-3"
+            >
+              <div className="text-sm font-semibold uppercase tracking-wide text-civiq-amber">
+                Seat vacant
+                {electionDate ? ` · Special election ${electionDate}` : ''}
+              </div>
+              <p className="mt-1 text-sm text-gray-700">{formatVacancyMessage(vacancy)}</p>
+            </div>
+          );
+        })()}
 
         {/* Page Title */}
         <div className="mb-8 flex items-start justify-between gap-4">
