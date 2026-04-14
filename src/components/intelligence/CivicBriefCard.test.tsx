@@ -75,7 +75,9 @@ describe('CivicBriefCard', () => {
 
   it('renders sector bars when sectors are meaningful', () => {
     render(<CivicBriefCard insight={makeBrief()} />);
-    expect(screen.getByText('Health')).toBeInTheDocument();
+    // Sector names are run through displaySector(): Health → Healthcare.
+    // Tech is not in the display map, so it renders unchanged.
+    expect(screen.getByText('Healthcare')).toBeInTheDocument();
     expect(screen.getByText('Tech')).toBeInTheDocument();
     expect(screen.queryByText(/Detailed funding breakdown unavailable/)).not.toBeInTheDocument();
   });
@@ -120,7 +122,7 @@ describe('CivicBriefCard', () => {
 
     render(<CivicBriefCard insight={brief} />);
     expect(screen.getByText('Other')).toBeInTheDocument();
-    expect(screen.getByText('Defense')).toBeInTheDocument();
+    expect(screen.getByText('Defense & Military')).toBeInTheDocument();
     expect(screen.queryByText(/Detailed funding breakdown unavailable/)).not.toBeInTheDocument();
   });
 

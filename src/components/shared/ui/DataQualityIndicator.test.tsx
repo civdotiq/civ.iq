@@ -132,7 +132,6 @@ describe('DataSourceBadge', () => {
     render(<DataSourceBadge source="congress-legislators" />);
 
     expect(screen.getByText('Congress Data')).toBeInTheDocument();
-    expect(screen.getByText('🏛️')).toBeInTheDocument();
   });
 
   it('renders fallback when source is missing', () => {

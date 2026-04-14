@@ -120,9 +120,21 @@ describe('Temporal Mesh', () => {
       expect(trend).toBe('ended');
     });
 
-    it('returns "stable" for single bucket', () => {
+    it('returns "ended" for single bucket older than the last quarter', () => {
+      // Single bucket lives in 2023-Q1 but the window's dataAsOf is 2025-12-31,
+      // so lastSeen is well before the current quarter → correctly "ended".
       const buckets = makeBuckets([100]);
       const trend = computeTrend(buckets, '2023-01-01', '2025-12-31');
+      expect(trend).toBe('ended');
+    });
+
+    it('returns "stable" for single bucket spanning an old start to current lastSeen', () => {
+      // firstSeen old (not "new"), lastSeen is current (not "ended"),
+      // and buckets.length < 2 → falls through to "stable". Exercises the
+      // single-bucket stable branch that the "ended" case doesn't reach.
+      const now = new Date().toISOString().slice(0, 10);
+      const buckets = makeBuckets([100]);
+      const trend = computeTrend(buckets, '2023-01-01', now);
       expect(trend).toBe('stable');
     });
   });

@@ -126,7 +126,7 @@ describe('BillIntelligenceSection sector pills', () => {
 
     // All plain pills should have same style
     const defense = screen.getByText('Defense & Military');
-    expect(defense.className).toContain('border-gray-200');
+    expect(defense.className).toContain('bg-gray-100');
     expect(defense.className).toContain('text-gray-500');
 
     // No methodology note

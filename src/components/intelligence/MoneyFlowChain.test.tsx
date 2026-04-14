@@ -20,7 +20,12 @@ function makeChain(overrides: Partial<InfluenceChain> = {}): InfluenceChain {
     links: [
       { type: 'lobbying', label: 'Lobbied on energy policy', confidence: 0.9, data: {} },
       { type: 'contribution', label: '$50K contributed', confidence: 0.85, data: {} },
-      { type: 'committee', label: 'Energy and Commerce', confidence: 1.0, data: {} },
+      {
+        type: 'committee',
+        label: 'Energy and Commerce',
+        confidence: 1.0,
+        data: { committeeName: 'Energy and Commerce' },
+      },
       { type: 'bill_match', label: 'HR 1234', confidence: 0.8, data: {} },
       { type: 'vote', label: 'Voted Yea', confidence: 1.0, data: {} },
     ],

@@ -14,9 +14,11 @@ const customJestConfig = {
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
     '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/packages/**/__tests__/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/packages/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
+  // Workspace packages (packages/*) ship with their own vitest runners and are
+  // tested independently. Excluding them via testPathIgnorePatterns prevents
+  // Jest from trying to execute vitest-authored specs plus their compiled
+  // .js/.d.ts output in dist/.
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
@@ -47,7 +49,7 @@ const customJestConfig = {
     '<rootDir>/tests/utils/',
     '<rootDir>/tests/fixtures/',
     '<rootDir>/src/.*test-helpers.*',
-    '<rootDir>/packages/sdk/',
+    '<rootDir>/packages/',
   ],
   // Add explicit ignore for the duplicate package.json
   rootDir: '.',
@@ -56,5 +58,24 @@ const customJestConfig = {
   },
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig);
+// next/jest is async; wrap it so we can override transformIgnorePatterns after
+// its defaults are applied. next/jest prepends a broad node_modules ignore that
+// would otherwise mask our allowlist below.
+//
+// ESM-allowlist: nostr-tools (and its crypto deps @noble/*, @scure/*,
+// nostr-wasm) ship ESM-only, and nostr-tools' exports map resolves to source
+// .ts files under jest's customExportConditions. All must be transformed so
+// CJS test files can require them.
+//
+// If a new dep triggers `SyntaxError: Unexpected token 'export'` from a
+// /node_modules/<pkg>/ path, add <pkg> to BOTH allowlists below (plain and
+// .pnpm-scoped). Keep the lists in sync.
+module.exports = async () => {
+  const jestConfig = await createJestConfig(customJestConfig)();
+  jestConfig.transformIgnorePatterns = [
+    '/node_modules/(?!.pnpm)(?!(geist|nostr-tools|@noble|@scure|nostr-wasm)/)',
+    '/node_modules/.pnpm/(?!(geist|nostr-tools|@noble|@scure|nostr-wasm)@)',
+    '^.+\\.module\\.(css|sass|scss)$',
+  ];
+  return jestConfig;
+};
