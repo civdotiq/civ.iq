@@ -125,6 +125,18 @@ async function computeAndCache(
   // 5. Generate narrative
   const { narrative, source } = await generateNarrative(data, stats, peer);
 
+  // Guard: refuse to emit an insight without a real dataAsOf. freshestDate()
+  // returns null when contributions lack contribution_receipt_date — emitting
+  // null here would violate the InsightBase contract and surface as a broken
+  // timestamp in the UI.
+  const dataAsOf = freshestDate(data.freshestContributionDate);
+  if (!dataAsOf) {
+    logger.warn('[FinanceJurisdiction] No valid contribution dates, skipping insight', {
+      bioguideId,
+    });
+    return null;
+  }
+
   const sc = new SourceCollector();
   sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
   sc.add('Congress.gov committees', '119th Congress');
@@ -144,7 +156,7 @@ async function computeAndCache(
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
     confidenceMethod: 'computed',
-    dataAsOf: freshestDate(data.freshestContributionDate)!,
+    dataAsOf,
     methodology:
       'Overlap between campaign donor industry sectors and committee jurisdiction topics. ' +
       'Sectors mapped via Congress.gov policy areas. Contributions from FEC individual filings.',

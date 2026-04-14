@@ -77,12 +77,35 @@ function mockParams(obj: Record<string, string>) {
   return { params: Promise.resolve(obj) };
 }
 
+// Real FEC contributions always carry contribution_receipt_date; analyzers
+// depend on it to compute dataAsOf. Omitting the date here would cause the
+// finance-jurisdiction analyzer to refuse to emit an insight.
 const mockContributions = [
-  { contributor_employer: 'Acme Defense Corp', contribution_receipt_amount: 5000 },
-  { contributor_employer: 'Health Systems Inc', contribution_receipt_amount: 3000 },
-  { contributor_employer: 'Tech Solutions LLC', contribution_receipt_amount: 2000 },
-  { contributor_employer: 'Defense Dynamics', contribution_receipt_amount: 4000 },
-  { contributor_employer: 'Farm Aid Co', contribution_receipt_amount: 1000 },
+  {
+    contributor_employer: 'Acme Defense Corp',
+    contribution_receipt_amount: 5000,
+    contribution_receipt_date: '2024-06-01',
+  },
+  {
+    contributor_employer: 'Health Systems Inc',
+    contribution_receipt_amount: 3000,
+    contribution_receipt_date: '2024-06-15',
+  },
+  {
+    contributor_employer: 'Tech Solutions LLC',
+    contribution_receipt_amount: 2000,
+    contribution_receipt_date: '2024-07-01',
+  },
+  {
+    contributor_employer: 'Defense Dynamics',
+    contribution_receipt_amount: 4000,
+    contribution_receipt_date: '2024-07-15',
+  },
+  {
+    contributor_employer: 'Farm Aid Co',
+    contribution_receipt_amount: 1000,
+    contribution_receipt_date: '2024-08-01',
+  },
 ];
 
 const mockRep = {

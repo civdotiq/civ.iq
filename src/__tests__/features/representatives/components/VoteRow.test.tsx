@@ -144,7 +144,7 @@ describe('VoteRow', () => {
     );
 
     const badge = screen.getByText('Yea');
-    expect(badge).toHaveClass('bg-green-100', 'text-green-800');
+    expect(badge).toHaveClass('bg-civiq-green/10', 'text-civiq-green');
   });
 
   it('applies correct styling for Nay position', () => {
@@ -159,7 +159,7 @@ describe('VoteRow', () => {
     );
 
     const badge = screen.getByText('Nay');
-    expect(badge).toHaveClass('bg-red-100', 'text-red-800');
+    expect(badge).toHaveClass('bg-civiq-red/10', 'text-civiq-red');
   });
 
   it('applies correct styling for Present position', () => {
@@ -174,7 +174,7 @@ describe('VoteRow', () => {
     );
 
     const badge = screen.getByText('Present');
-    expect(badge).toHaveClass('bg-yellow-100', 'text-yellow-800');
+    expect(badge).toHaveClass('bg-gray-100', 'text-gray-600');
   });
 
   it('applies key vote highlighting', () => {
@@ -187,7 +187,12 @@ describe('VoteRow', () => {
     );
 
     const row = screen.getByRole('button');
-    expect(row).toHaveClass('bg-yellow-50');
+    expect(row).toHaveClass('bg-gray-100');
+    // Key-vote highlight must not be co-applied with the zebra stripe —
+    // guards against the Tailwind class-conflict bug where both bg-gray-100
+    // and bg-white landed on the same row, killing the highlight.
+    expect(row).not.toHaveClass('bg-white');
+    expect(row).not.toHaveClass('bg-white/50');
   });
 
   it('alternates row background color', () => {

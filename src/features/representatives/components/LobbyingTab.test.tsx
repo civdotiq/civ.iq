@@ -170,8 +170,9 @@ describe('LobbyingTab', () => {
       { data: undefined, error: undefined, isLoading: true },
       { data: undefined, error: undefined, isLoading: true }
     );
-    const { container } = render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Assert on the a11y role rather than English copy — resilient to message changes.
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('shows empty state when no lobbying data', () => {

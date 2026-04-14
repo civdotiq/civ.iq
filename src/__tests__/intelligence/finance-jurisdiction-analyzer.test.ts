@@ -102,7 +102,14 @@ const mockRep = {
   committees: [{ name: 'Energy and Commerce', role: 'Member' }],
 };
 
-const mockContributions = [{ contributor_name: 'Test Corp', amount: 5000, employer: 'Test Corp' }];
+const mockContributions = [
+  {
+    contributor_name: 'Test Corp',
+    amount: 5000,
+    employer: 'Test Corp',
+    contribution_receipt_date: '2024-06-15',
+  },
+];
 
 // ── Tests ─────────────────────────────────────────────────────────
 
@@ -236,5 +243,17 @@ describe('analyzeFinanceJurisdiction', () => {
     expect(result).not.toBeNull();
     expect(result!.source).toBe('statistical-fallback');
     expect(result!.confidence).toBeLessThanOrEqual(0.5);
+  });
+
+  it('returns null when contributions have no valid dates', async () => {
+    // Regression guard: FEC contributions without contribution_receipt_date
+    // previously produced an insight with dataAsOf: null, violating the
+    // InsightBase contract. Analyzer must now refuse to emit.
+    mockGetSampleContributions.mockResolvedValue([
+      { contributor_name: 'Test Corp', amount: 5000, employer: 'Test Corp' },
+    ]);
+
+    const result = await analyzeFinanceJurisdiction('P000197');
+    expect(result).toBeNull();
   });
 });

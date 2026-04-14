@@ -9,8 +9,13 @@ interface LoadingStateProps {
 
 export function LoadingState({ message = 'Loading data...', fullPage = false }: LoadingStateProps) {
   const content = (
-    <div className="flex flex-col items-center justify-center p-8">
-      <div className="relative w-16 h-16 mb-4">
+    <div
+      className="flex flex-col items-center justify-center p-8"
+      role="status"
+      aria-live="polite"
+      aria-label={message}
+    >
+      <div className="relative w-16 h-16 mb-4" aria-hidden="true">
         <div className="absolute top-0 left-0 w-full h-full border-4 border-gray-200"></div>
         <div className="absolute top-0 left-0 w-full h-full border-4 border-civiq-blue border-t-transparent animate-spin"></div>
       </div>

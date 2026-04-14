@@ -136,7 +136,7 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
         isClickable
           ? 'cursor-pointer hover:bg-civiq-blue/10 transition-colors focus:bg-civiq-blue/10 focus:outline-none'
           : ''
-      } ${vote.isKeyVote ? 'bg-gray-100' : ''} ${index % 2 === 0 ? 'bg-white' : 'bg-white/50'}`}
+      } ${vote.isKeyVote ? 'bg-gray-100' : index % 2 === 0 ? 'bg-white' : 'bg-white/50'}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
