@@ -6,11 +6,11 @@ import { BreadcrumbSchema, OrganizationSchema, AboutPageSchema } from '@/compone
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
   description:
-    'CIV.IQ organizes government data about elected officials from 18 official sources — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures, nonpartisan.',
+    'CIV.IQ organizes government data about elected officials from 18 official sources — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures (legislators, bills, votes), 10 pilot cities for local government. Nonpartisan.',
   openGraph: {
     title: 'About CIV.IQ',
     description:
-      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 18 government data sources.',
+      'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 10 pilot cities, 18 government data sources.',
     type: 'website',
   },
   alternates: {
@@ -27,10 +27,10 @@ export default function AboutPage() {
           { name: 'About', url: 'https://civdotiq.org/about' },
         ]}
       />
-      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures, 39,000+ ZIP codes, and machine-learning analysis of money-in-politics patterns." />
+      <OrganizationSchema description="CIV.IQ is a civic intelligence platform providing access to federal and state government data. 535 members of Congress, 50 state legislatures (legislators, bills, votes), 10 pilot cities for local government, and machine-learning analysis of federal money-in-politics patterns." />
       <AboutPageSchema
         name="About CIV.IQ"
-        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, and 18 official data sources."
+        description="CIV.IQ provides nonpartisan access to government data for 535 members of Congress, 50 state legislatures, 10 pilot cities, and 18 official data sources."
         url="https://civdotiq.org/about"
       />
       <div className="min-h-screen aicher-background">
@@ -89,7 +89,7 @@ export default function AboutPage() {
               <h2 className="text-lg font-semibold text-black mb-grid-2">State Legislatures</h2>
               <p className="text-gray-600 text-sm">
                 7,383 state legislators across all 50 states. Bills, votes, committees, governors,
-                and attorneys general.
+                and attorneys general. State campaign finance is not currently available.
               </p>
             </div>
 
@@ -127,6 +127,50 @@ export default function AboutPage() {
               at every level, how they vote, the money behind them, and how it all compares to their
               peers. Your address is the key.
             </p>
+          </div>
+
+          {/* Coverage Honesty */}
+          <div className="mb-grid-8">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
+              Coverage
+            </h2>
+            <div className="space-y-grid-3">
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Federal:</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  Complete across all wired domains — bills, votes, members, committees, FEC
+                  campaign finance, lobbying disclosures, federal contracts, and the Federal
+                  Register.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">State:</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  All 50 state legislatures via OpenStates (legislators, bills, committees, votes).
+                  State campaign finance is not currently available — FollowTheMoney.org is in
+                  maintenance mode during the OpenSecrets merger.
+                </span>
+              </div>
+              <div className="border-b border-gray-100 pb-grid-2">
+                <span className="font-medium text-black">Local:</span>{' '}
+                <span className="text-gray-600 text-sm">
+                  10 pilot cities via Legistar — Austin, Boston, Chicago, Denver, Detroit,
+                  Minneapolis, Oakland, Philadelphia, Portland, Seattle. Outside this list, local
+                  routes return &ldquo;data unavailable&rdquo; rather than empty arrays.
+                </span>
+              </div>
+              <div className="text-sm text-gray-500 mt-grid-2">
+                Full matrix:{' '}
+                <a
+                  href="https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-civiq-blue hover:underline"
+                >
+                  docs/COVERAGE.md
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Epistemic Limits */}

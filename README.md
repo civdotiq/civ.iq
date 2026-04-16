@@ -17,15 +17,17 @@
 
 ## What this is
 
-A civic intelligence platform. Enter an address or ZIP code to find representatives at every level of government — federal, state, and local — with voting records, campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns.
+A civic intelligence platform. Enter an address to find your federal and state representatives, with voting records, federal campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns. Local-government coverage is limited to a pilot list of 10 cities.
 
-All data comes from government APIs. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface says so. Nothing is fabricated.
+All data comes from government APIs. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface and the response payload say so explicitly. Nothing is fabricated.
+
+Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonical answer to "what does CIV.IQ actually cover?" — every other claim in this README defers to that page.
 
 ## What it does
 
 **Representatives**: Federal and state legislators with photos, contact info, committee assignments, and voting records.
 
-**Campaign Finance**: FEC contributions, PAC spending, expenditure tracking, and donor sector analysis.
+**Campaign Finance**: Federal only — FEC contributions, PAC spending, expenditure tracking, and donor sector analysis. State campaign finance is not currently available (FollowTheMoney.org is in maintenance mode during the OpenSecrets merger).
 
 **Intelligence Layer**: Statistical analyzers that cross-reference voting records with campaign finance, lobbying filings, stock trades, and committee jurisdictions to surface patterns of potential influence. Every insight carries a confidence score, methodology note, and correlation-not-causation disclaimer.
 
@@ -37,7 +39,9 @@ All data comes from government APIs. All analysis is statistical, with confidenc
 
 **Regulations & Comment Periods**: Federal Register integration for proposed rules, final rules, executive orders, and open public comment periods.
 
-**State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, votes, and calendars. Interactive district boundary maps for all 7,383 state legislative districts.
+**State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, votes, and calendars. Interactive district boundary maps for all 7,383 state legislative districts. State-level campaign finance, lobbying, and stock-trade data are **not** part of state coverage.
+
+**Local Government**: City council data for 10 pilot cities via Legistar (Austin, Boston, Chicago, Denver, Detroit, Minneapolis, Oakland, Philadelphia, Portland, Seattle). Outside this list, local-government routes return `dataQuality: 'unavailable'` rather than empty arrays. There is no national local-government API; coverage expands one city at a time.
 
 **District Intelligence**: Demographics, economic indicators (BLS employment data), federal spending (USASpending), infrastructure metrics, and bills ranked by relevance to each congressional district.
 

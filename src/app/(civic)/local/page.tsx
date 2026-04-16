@@ -38,19 +38,36 @@ export default function LocalPage() {
 
           {/* Roadmap Notice */}
           <div className="max-w-2xl mx-auto border-2 border-black p-8 mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Roadmap</h2>
+            <h2 className="text-2xl font-semibold mb-4">Pilot Cities (10)</h2>
+            <p className="text-gray-700 mb-4">
+              Today CIV.IQ supports city council data for ten cities through their open Legistar
+              APIs:
+            </p>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-gray-700 mb-4 list-disc list-inside">
+              <li>Austin, TX</li>
+              <li>Boston, MA</li>
+              <li>Chicago, IL</li>
+              <li>Denver, CO</li>
+              <li>Detroit, MI</li>
+              <li>Minneapolis, MN</li>
+              <li>Oakland, CA</li>
+              <li>Philadelphia, PA</li>
+              <li>Portland, OR</li>
+              <li>Seattle, WA</li>
+            </ul>
+            <p className="text-gray-700 mb-4">
+              Outside this list, local-government routes return &ldquo;data unavailable&rdquo;
+              rather than empty arrays — there is no national local-government API, and CIV.IQ does
+              not pretend to have data it doesn&apos;t have.
+            </p>
             <p className="text-gray-700 mb-4">
               There is no single API for local government data in the United States. Over 90,000
-              local jurisdictions each publish records in different formats, or not at all. This is
-              the hardest data integration problem in civic technology.
-            </p>
-            <p className="text-gray-700 mb-4">
-              CIV.IQ is building local coverage incrementally, starting with the largest
-              municipalities and expanding through open data portals, state-level aggregators, and
-              community contributions.
+              local jurisdictions each publish records in different formats, or not at all. CIV.IQ
+              is expanding coverage one city at a time, after verifying each Legistar endpoint.
             </p>
             <p className="text-gray-700">
-              Today, use our address search to find your federal and state representatives.
+              For everywhere else, use our address search to find your federal and state
+              representatives.
             </p>
             <Link
               href="/"

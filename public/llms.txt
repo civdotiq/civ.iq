@@ -8,14 +8,19 @@ CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google 
 
 - **Representatives**: Look up federal and state legislators by street address or state
 - **Voting Records**: House and Senate roll call votes with party alignment analysis
-- **Campaign Finance**: FEC contribution data with industry/geographic breakdowns
+- **Campaign Finance**: FEC contribution data with industry/geographic breakdowns. **Federal only** — state campaign finance is not currently available
 - **Legislation**: Bill search, details, sponsors, cosponsors, status tracking
-- **Lobbying**: Senate LDA filings with spending and issue tracking
+- **Lobbying**: Senate LDA filings with spending and issue tracking. **Federal only**
 - **Federal Spending**: USASpending contracts and grants by district
-- **Intelligence Analysis**: ML-driven vote prediction, influence chain analysis, finance-jurisdiction overlap detection
-- **Districts**: Demographics, economics, boundaries for all 435 congressional districts
+- **Intelligence Analysis**: ML-driven vote prediction, influence chain analysis, finance-jurisdiction overlap detection. **Federal data only** — state and local analyzer output is not produced because the underlying state-level cross-domain joins do not exist
+- **Districts**: Demographics, economics, boundaries for all 435 congressional districts and 7,383 state legislative districts
 - **Committees**: Membership, jurisdiction, activity tracking
 - **Federal Register**: Rules, notices, executive orders search
+- **Local government**: Limited to a pilot list of 10 cities (Austin, Boston, Chicago, Denver, Detroit, Minneapolis, Oakland, Philadelphia, Portland, Seattle) via Legistar. No nationwide local coverage
+
+## Coverage Honesty
+
+The canonical coverage matrix is published at `https://civdotiq.org/docs/COVERAGE.md` (also in repo at `docs/COVERAGE.md`). Every join-based API response carries a `dataQuality` field (`complete | partial | empty | unavailable`) so consumers can distinguish "no data exists" from "upstream source unavailable." Routes never return silent empty arrays in place of an error.
 
 ## API Access
 
