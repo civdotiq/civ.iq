@@ -119,25 +119,25 @@
     "lastUpdated": "2025-09-18"
   },
   "B001230": {
-    "fecId": "H8WI00018",
+    "fecId": "S2WI00219",
     "name": "BALDWIN, TAMMY",
     "state": "WI",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001236": {
-    "fecId": "H2AR03176",
+    "fecId": "S0AR00150",
     "name": "BOOZMAN, JOHN",
     "state": "AR",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001243": {
-    "fecId": "H2TN06030",
+    "fecId": "S8TN00337",
     "name": "BLACKBURN, MARSHA",
     "state": "TN",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001257": {
     "fecId": "H6FL09070",
@@ -264,11 +264,11 @@
     "lastUpdated": "2025-09-18"
   },
   "B001299": {
-    "fecId": "H6IN03229",
+    "fecId": "S4IN00196",
     "name": "BANKS, JIM",
     "state": "IN",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001300": {
     "fecId": "H6CA44103",
@@ -295,18 +295,18 @@
     "lastUpdated": "2025-09-18"
   },
   "B001303": {
-    "fecId": "H6DE00206",
+    "fecId": "S4DE00060",
     "name": "BLUNT ROCHESTER, LISA",
     "state": "DE",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001305": {
-    "fecId": "H6NC13129",
+    "fecId": "S2NC00505",
     "name": "BUDD, TED",
     "state": "NC",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001306": {
     "fecId": "H8OH12180",
@@ -376,8 +376,9 @@
     "fecId": "H2VT01076",
     "name": "BALINT, BECCA",
     "state": "VT",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001319": {
     "fecId": "S2AL00145",
@@ -406,8 +407,9 @@
     "fecId": "H2AK01083",
     "name": "BEGICH, NICHOLAS",
     "state": "AK",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "B001324": {
     "fecId": "H4MO01134",
@@ -487,11 +489,11 @@
     "lastUpdated": "2025-09-18"
   },
   "C001047": {
-    "fecId": "H0WV02138",
+    "fecId": "S4WV00159",
     "name": "CAPITO, SHELLEY",
     "state": "WV",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "C001051": {
     "fecId": "H2TX31044",
@@ -589,11 +591,11 @@
     "lastUpdated": "2025-09-18"
   },
   "C001075": {
-    "fecId": "H8LA00017",
+    "fecId": "S4LA00107",
     "name": "CASSIDY, BILL",
     "state": "LA",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "C001080": {
     "fecId": "H0CA32101",
@@ -627,18 +629,18 @@
     "lastUpdated": "2025-09-18"
   },
   "C001095": {
-    "fecId": "H2AR04083",
+    "fecId": "S4AR00103",
     "name": "COTTON, TOM",
     "state": "AR",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "C001096": {
-    "fecId": "H0ND01026",
+    "fecId": "S8ND00120",
     "name": "CRAMER, KEVIN",
     "state": "ND",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "C001098": {
     "fecId": "S2TX00312",
@@ -695,11 +697,11 @@
     "lastUpdated": "2025-09-18"
   },
   "C001114": {
-    "fecId": "H8UT03238",
+    "fecId": "S4UT00282",
     "name": "CURTIS, JOHN",
     "state": "UT",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "C001115": {
     "fecId": "H8TX27049",
@@ -941,18 +943,18 @@
     "lastUpdated": "2025-09-18"
   },
   "D000618": {
-    "fecId": "H2MT01060",
+    "fecId": "S2MT00096",
     "name": "DAINES, STEVE",
     "state": "MT",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "D000622": {
-    "fecId": "H6IL06141",
+    "fecId": "S6IL00292",
     "name": "DUCKWORTH, TAMMY",
     "state": "IL",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "D000623": {
     "fecId": "H0CA10073",
@@ -1283,8 +1285,9 @@
     "fecId": "H4ND00061",
     "name": "FEDORCHAK, JULIE",
     "state": "ND",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "F000483": {
     "fecId": "H4CA30149",
@@ -1301,6 +1304,14 @@
     "district": "06",
     "office": "H",
     "lastUpdated": "2025-09-18"
+  },
+  "F000485": {
+    "fecId": "H0GA14030",
+    "name": "FULLER, CLAY",
+    "state": "GA",
+    "district": "14",
+    "office": "H",
+    "lastUpdated": "2026-04-16"
   },
   "G000359": {
     "fecId": "S0SC00149",
@@ -1333,11 +1344,11 @@
     "lastUpdated": "2025-09-18"
   },
   "G000555": {
-    "fecId": "H6NY20167",
+    "fecId": "S0NY00410",
     "name": "GILLIBRAND, KIRSTEN",
     "state": "NY",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "G000558": {
     "fecId": "H8KY02031",
@@ -1372,11 +1383,11 @@
     "lastUpdated": "2025-09-18"
   },
   "G000574": {
-    "fecId": "H4AZ07043",
+    "fecId": "S4AZ00139",
     "name": "GALLEGO, RUBEN",
     "state": "AZ",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "G000576": {
     "fecId": "H4WI06048",
@@ -1455,14 +1466,6 @@
     "name": "GIMENEZ, CARLOS",
     "state": "FL",
     "district": "28",
-    "office": "H",
-    "lastUpdated": "2025-09-18"
-  },
-  "G000594": {
-    "fecId": "H0TX35015",
-    "name": "GONZALES, ERNEST",
-    "state": "TX",
-    "district": "23",
     "office": "H",
     "lastUpdated": "2025-09-18"
   },
@@ -1569,18 +1572,18 @@
     "lastUpdated": "2025-09-18"
   },
   "H001042": {
-    "fecId": "H6HI02251",
+    "fecId": "S2HI00106",
     "name": "HIRONO, MAZIE",
     "state": "HI",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "H001046": {
-    "fecId": "H8NM01224",
+    "fecId": "S2NM00088",
     "name": "HEINRICH, MARTIN",
     "state": "NM",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "H001047": {
     "fecId": "H8CT04172",
@@ -1750,8 +1753,9 @@
     "fecId": "H2WY00166",
     "name": "HAGEMAN, HARRIET",
     "state": "WY",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "H001098": {
     "fecId": "H4AZ08108",
@@ -1797,8 +1801,9 @@
     "fecId": "H4PR01010",
     "name": "HERNÁNDEZ RIVERA, PABLO JOSÉ",
     "state": "PR",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "H001104": {
     "fecId": "S6OH00304",
@@ -1882,8 +1887,9 @@
     "fecId": "H8SD01055",
     "name": "JOHNSON, DUSTY",
     "state": "SD",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "J000302": {
     "fecId": "H8PA13125",
@@ -2048,11 +2054,11 @@
     "lastUpdated": "2025-09-18"
   },
   "K000394": {
-    "fecId": "H8NJ03206",
+    "fecId": "S4NJ00466",
     "name": "KIM, ANDY",
     "state": "NJ",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "K000397": {
     "fecId": "H8CA39240",
@@ -2114,8 +2120,9 @@
     "fecId": "H4MP01022",
     "name": "KING-HINDS, KIMBERLYN",
     "state": "MP",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "K000405": {
     "fecId": "H4NC13116",
@@ -2182,25 +2189,25 @@
     "lastUpdated": "2025-09-18"
   },
   "L000570": {
-    "fecId": "H8NM03196",
+    "fecId": "S0NM00058",
     "name": "LUJÁN, BEN",
     "state": "NM",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "L000571": {
-    "fecId": "H8WY00148",
+    "fecId": "S0WY00137",
     "name": "LUMMIS, CYNTHIA",
     "state": "WY",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "L000575": {
-    "fecId": "H0OK05114",
+    "fecId": "S4OK00232",
     "name": "LANKFORD, JAMES",
     "state": "OK",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "L000577": {
     "fecId": "S0UT00165",
@@ -2338,11 +2345,11 @@
     "lastUpdated": "2025-09-18"
   },
   "M000133": {
-    "fecId": "H6MA07101",
+    "fecId": "S4MA00028",
     "name": "MARKEY, EDWARD",
     "state": "MA",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M000194": {
     "fecId": "H0SC01394",
@@ -2376,12 +2383,12 @@
     "lastUpdated": "2025-09-18"
   },
   "M000687": {
-    "fecId": "S6MD03185",
+    "fecId": "H6MD07020",
     "name": "MFUME, KWEISI",
     "state": "MD",
     "district": "07",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M000871": {
     "fecId": "H0KS01123",
@@ -2392,11 +2399,11 @@
     "lastUpdated": "2025-09-18"
   },
   "M000934": {
-    "fecId": "H6KS01096",
+    "fecId": "S0KS00091",
     "name": "MORAN, JERRY",
     "state": "KS",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001111": {
     "fecId": "S2WA00189",
@@ -2461,11 +2468,11 @@
     "lastUpdated": "2025-09-18"
   },
   "M001169": {
-    "fecId": "H6CT05124",
+    "fecId": "S2CT00132",
     "name": "MURPHY, CHRISTOPHER",
     "state": "CT",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001176": {
     "fecId": "S8OR00207",
@@ -2498,13 +2505,6 @@
     "office": "H",
     "lastUpdated": "2025-09-18"
   },
-  "M001190": {
-    "fecId": "H2OK02083",
-    "name": "MULLIN, MARKWAYNE",
-    "state": "OK",
-    "office": "S",
-    "lastUpdated": "2025-09-18"
-  },
   "M001194": {
     "fecId": "H4MI04126",
     "name": "MOOLENAAR, JOHN",
@@ -2522,11 +2522,11 @@
     "lastUpdated": "2025-09-18"
   },
   "M001198": {
-    "fecId": "H6KS01179",
+    "fecId": "S0KS00315",
     "name": "MARSHALL, ROGER",
     "state": "KS",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001199": {
     "fecId": "H6FL18097",
@@ -2644,8 +2644,9 @@
     "fecId": "H2GU01031",
     "name": "MOYLAN, JAMES (JIM)",
     "state": "GU",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001220": {
     "fecId": "H2KY03206",
@@ -2787,16 +2788,17 @@
     "fecId": "H4DE00045",
     "name": "MCBRIDE, SARAH",
     "state": "DE",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001239": {
-    "fecId": "H4VA05071",
+    "fecId": "H2VA07196",
     "name": "MCGUIRE, JOHN",
     "state": "VA",
     "district": "05",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "M001240": {
     "fecId": "H4NC06177",
@@ -2835,6 +2837,14 @@
     "office": "S",
     "lastUpdated": "2026-01-06"
   },
+  "M001245": {
+    "fecId": "H6TX18232",
+    "name": "MENEFEE, CHRISTIAN",
+    "state": "TX",
+    "district": "18",
+    "office": "H",
+    "lastUpdated": "2026-04-16"
+  },
   "N000002": {
     "fecId": "H2NY17071",
     "name": "NADLER, JERROLD",
@@ -2863,8 +2873,9 @@
     "fecId": "H0DC00058",
     "name": "NORTON, ELEANOR",
     "state": "DC",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "N000188": {
     "fecId": "H4NJ01084",
@@ -2939,11 +2950,11 @@
     "lastUpdated": "2025-09-18"
   },
   "O000174": {
-    "fecId": "H8GA06195",
+    "fecId": "S8GA00180",
     "name": "OSSOFF, JON",
     "state": "GA",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "O000175": {
     "fecId": "H2TN05446",
@@ -3001,11 +3012,11 @@
     "lastUpdated": "2025-09-18"
   },
   "P000595": {
-    "fecId": "H8MI09068",
+    "fecId": "S4MI00355",
     "name": "PETERS, GARY",
     "state": "MI",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "P000597": {
     "fecId": "H8ME01120",
@@ -3058,8 +3069,9 @@
     "fecId": "H2VI00082",
     "name": "PLASKETT, STACEY",
     "state": "VI",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "P000613": {
     "fecId": "H6CA20152",
@@ -3175,8 +3187,9 @@
     "fecId": "H4AS00036",
     "name": "RADEWAGEN, AUMUA AMATA",
     "state": "AS",
+    "district": "00",
     "office": "H",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "R000603": {
     "fecId": "H2NC07096",
@@ -3202,11 +3215,11 @@
     "lastUpdated": "2025-09-18"
   },
   "R000608": {
-    "fecId": "H6NV03139",
+    "fecId": "S8NV00156",
     "name": "ROSEN, JACKY",
     "state": "NV",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "R000609": {
     "fecId": "H6FL04105",
@@ -3288,11 +3301,11 @@
     "lastUpdated": "2025-09-18"
   },
   "S000033": {
-    "fecId": "H8VT01016",
+    "fecId": "S4VT00033",
     "name": "SANDERS, BERNARD",
     "state": "VT",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "S000148": {
     "fecId": "S8NY00082",
@@ -3374,11 +3387,11 @@
     "lastUpdated": "2025-09-18"
   },
   "S001150": {
-    "fecId": "H0CA27085",
+    "fecId": "S4CA00555",
     "name": "SCHIFF, ADAM",
     "state": "CA",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "S001156": {
     "fecId": "H2CA39078",
@@ -3436,11 +3449,11 @@
     "lastUpdated": "2025-09-18"
   },
   "S001184": {
-    "fecId": "H0SC01279",
+    "fecId": "S4SC00240",
     "name": "SCOTT, TIM",
     "state": "SC",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "S001185": {
     "fecId": "H0AL07086",
@@ -3471,14 +3484,6 @@
     "name": "SCHNEIDER, BRADLEY",
     "state": "IL",
     "district": "10",
-    "office": "H",
-    "lastUpdated": "2025-09-18"
-  },
-  "S001193": {
-    "fecId": "H2CA15094",
-    "name": "SWALWELL, ERIC",
-    "state": "CA",
-    "district": "14",
     "office": "H",
     "lastUpdated": "2025-09-18"
   },
@@ -3552,11 +3557,11 @@
     "lastUpdated": "2025-09-18"
   },
   "S001208": {
-    "fecId": "H8MI08102",
+    "fecId": "S4MI00470",
     "name": "SLOTKIN, ELISSA",
     "state": "MI",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "S001211": {
     "fecId": "H8AZ09040",
@@ -3897,11 +3902,11 @@
     "lastUpdated": "2025-09-18"
   },
   "V000128": {
-    "fecId": "H2MD08126",
+    "fecId": "S6MD03441",
     "name": "VAN HOLLEN, CHRIS",
     "state": "MD",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "V000129": {
     "fecId": "H2CA20094",
@@ -3984,11 +3989,11 @@
     "lastUpdated": "2025-09-18"
   },
   "W000437": {
-    "fecId": "H4MS01078",
+    "fecId": "S8MS00196",
     "name": "WICKER, ROGER",
     "state": "MS",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "W000779": {
     "fecId": "S6OR00110",
@@ -4037,11 +4042,11 @@
     "lastUpdated": "2025-09-18"
   },
   "W000800": {
-    "fecId": "H6VT00160",
+    "fecId": "S2VT00235",
     "name": "WELCH, PETER",
     "state": "VT",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "W000802": {
     "fecId": "S6RI00221",
@@ -4161,11 +4166,11 @@
     "lastUpdated": "2026-01-08"
   },
   "Y000064": {
-    "fecId": "H0IN09070",
+    "fecId": "S6IN00191",
     "name": "YOUNG, TODD",
     "state": "IN",
     "office": "S",
-    "lastUpdated": "2025-09-18"
+    "lastUpdated": "2026-04-16"
   },
   "Y000067": {
     "fecId": "H2IN02295",
