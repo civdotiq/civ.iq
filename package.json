@@ -29,6 +29,7 @@
     "test:unit:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:smoke": "RUN_SMOKE_TESTS=1 jest --testPathPatterns=smoke.integration --runInBand --testTimeout=60000",
+    "smoke:embedding": "tsx scripts/smoke-embedding-pipeline.ts",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -82,7 +83,7 @@
   "dependencies": {
     "@ai-sdk/google": "3.0.29",
     "@heroicons/react": "2.2.0",
-    "@huggingface/transformers": "3.8.1",
+    "@huggingface/transformers": "4.1.0",
     "@mapbox/mbtiles": "0.12.1",
     "@mapbox/vector-tile": "2.0.4",
     "@modelcontextprotocol/sdk": "1.26.0",

@@ -15,10 +15,11 @@
  *   npm run dev
  *   curl -s http://localhost:3000/api/debug/calibrate-lobbying | jq
  *
- * If this endpoint returns `embedding pipeline failed to load`, see
- * `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md` — the transformers WASM
- * loader is broken in current Node/Next combinations and the embedding
- * tier is disabled in production as a result.
+ * If this endpoint returns `embedding pipeline failed to load`, run
+ * `npm run smoke:embedding` to confirm whether the underlying
+ * `@huggingface/transformers` WASM pipeline still works in pure Node.
+ * (Historical note: 3.8.1 was silently broken on Node 25 — see
+ * `docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`; resolved by 4.1.0 upgrade.)
  */
 
 import { NextResponse } from 'next/server';

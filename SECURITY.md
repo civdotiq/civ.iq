@@ -108,13 +108,15 @@ Some `npm audit` findings remain open by deliberate decision. Each entry below i
 
 These were missed in the initial Phase 1 hardening pass (commits `7bdcae97`–`72e5e114`); recording the gap so future audits notice the pattern.
 
-### Transitive `tar` advisories via `@huggingface/transformers@3.8.1`
+### Transitive `tar` advisories via `@huggingface/transformers` — partially resolved
 
-**Status:** Accepted. Pin held at `@huggingface/transformers@3.8.1`.
+**Status (2026-04-16 update):** `@huggingface/transformers` upgraded `3.8.1 → 4.1.0` after the deferral was reversed. Closes the `@huggingface/transformers → onnxruntime-node → tar` chain. The two remaining tar chains (npm's own `cacache`; `sqlite3 → node-gyp → make-fetch-happen → cacache`) are still accepted under the same install-time-only reasoning below.
 
-**Advisories:** GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink, symlink, and drive-relative linkpath attacks. Reach CIV.IQ through three chains:
+**Why the deferral was reversed:** Phase 2 calibration work uncovered that the `3.8.1` runtime was silently broken on Node 25 — `embedText()` returned `null` in production while every mocked test passed (`docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md`). That made the upgrade an integrity fix, not just a security fix. SECURITY.md previously required a non-mocked pipeline smoke test before upgrading; that test now exists at `scripts/smoke-embedding-pipeline.ts` (`npm run smoke:embedding`, exit 0 on success). The 4.1.0 install was verified by: smoke script PASS (294 ms cold load, 1.0 unit-norm 384-dim embedding), 48 ML inference unit tests still pass, `npm run validate:all` green.
 
-- `@huggingface/transformers` → `onnxruntime-node` → `tar`
+**Advisories** (still applicable to remaining chains): GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink, symlink, and drive-relative linkpath attacks. After the upgrade these now reach CIV.IQ through two chains:
+
+- ~~`@huggingface/transformers` → `onnxruntime-node` → `tar`~~ — resolved by 4.1.0 upgrade
 - npm's `cacache` (HTTP cache) → `tar`
 - `sqlite3` → `node-gyp` → `make-fetch-happen` → `cacache` → `tar`
 
@@ -126,23 +128,24 @@ All three code paths invoke `tar` **only at install time** (`npm install` / `npm
 - `cacache` unpacks registry tarballs, but each is integrity-verified against the `sha512-...` hash recorded in `package-lock.json`. An attacker would need to both compromise the npm registry AND produce a tarball matching the hash AND exploit path traversal. The lockfile integrity defeats the substitution step.
 - `node-gyp` only runs if `sqlite3` builds from source (prebuilt binaries are the happy path). Node.js headers are fetched from `nodejs.org` with integrity checks.
 
-**Why `@huggingface/transformers@4.1.0` remains deferred:**
+**Why the `@huggingface/transformers@4.1.0` deferral was reversed (2026-04-16):**
 
-1. **Fresh release.** Published 2026-04-15 (`npm view` latest) with hours of soak time — zero downstream bug reports possible.
-2. **Major-version API risk unverified.** Our four `import('@huggingface/transformers')` call sites (`embedding-classifier.ts`, `zero-shot-classifier.ts`, `civic-ner.ts`, `vote-predictor.ts` via shared pipeline) all mock the module in Jest. All 52 tests pass today but would continue to pass against a broken 4.x runtime. Before upgrading, a non-mocked pipeline smoke test must exist.
-3. **Empirical install delta** (`npm install @huggingface/transformers@4.1.0 --dry-run --no-save`): 1 net-new package (`@huggingface/tokenizers@0.1.3`, native crate) plus version bumps — `onnxruntime-node 1.21.0 → 1.24.3`, `onnxruntime-web` pin to `1.26.0-dev.20260410`. The pre-release onnxruntime-web pin is not new; 3.8.1 already uses `1.22.0-dev.20250409`.
+The original deferral cited (1) fresh release, (2) major-version API risk with mocked-only tests, and (3) install delta. The reversal addresses each:
+
+1. **Fresh release** — still true, but the pin was producing a silently-broken runtime in production (zero embeddings returned). Sitting on a broken pin to wait out fresh-release risk is the wrong trade.
+2. **Mocked-only tests** — the gap is now closed by `scripts/smoke-embedding-pipeline.ts`. Run `npm run smoke:embedding` after any change to `@huggingface/transformers`, Node major version, or `embedding-classifier.ts`. Exit 0 = pipeline functional. Pre-upgrade verification: 4.1.0 PASS in pure Node 25.
+3. **Install delta** — observed: `npm install @huggingface/transformers@4.1.0` reported `added 1 package, changed 6 packages` and dropped `npm audit` from 9 vulns (7 high) to 7 vulns (5 high). No build or test regression.
 
 **Corrections to prior speculation** (recorded so the reasoning is auditable):
 
 - A previous version of this section claimed `sharp@^0.34.5` would be a new ~30 MB native dependency risking the Vercel 250 MB serverless limit. Empirically false: `sharp` is already present at `node_modules/@img/` (16 MB) — the 4.1.0 upgrade does not add it.
 - A previous version claimed HuggingFace model files are "integrity-verified." `transformers.js/src/utils/hub.js` contains no checksum or ETag verification on model downloads (grepped `sha|etag|integrity|checksum|hash` — zero matches). Model files come over plain HTTPS from huggingface.co; a CDN compromise affects 3.8.1 and 4.1.0 equally. This is orthogonal to the tar CVEs and not a reason to pick one version over the other.
 
-**Re-evaluation triggers:**
+**Re-evaluation triggers (for the remaining `cacache` / `sqlite3` chains):**
 
-1. `@huggingface/transformers@4.x` reaches `>= 4.2.0` with at least 4 weeks of community usage **and** a non-mocked pipeline smoke test exists in the test suite, OR
-2. A `3.x` patch release lands that upgrades transitive `tar` to `>= 7.5.11`, OR
-3. CIV.IQ introduces any code path that extracts attacker-controlled tarballs at runtime (none exist today), OR
-4. A critical runtime-exploitable CVE is disclosed in the WASM model-loading pipeline that only `4.x` fixes.
+1. A `cacache` patch release lands that upgrades transitive `tar` to `>= 7.5.11`, OR
+2. CIV.IQ introduces any code path that extracts attacker-controlled tarballs at runtime (none exist today), OR
+3. A critical runtime-exploitable CVE is disclosed that the install-time-only argument no longer covers.
 
 ## Security Checklist
 

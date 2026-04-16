@@ -1,64 +1,47 @@
-# Embedding Pipeline Silently Broken in Current Stack
+# Embedding Pipeline Silently Broken in `@huggingface/transformers@3.8.1` (RESOLVED 2026-04-16)
 
 **Discovered:** 2026-04-16 during Phase 2 threshold calibration
-**Severity:** High — silent degradation; no production error surfaces
-**Affects:** vote prediction, bill-lobbying similarity, sector classification, lobbying committee embedding fallback
+**Resolved:** 2026-04-16 by upgrading to `@huggingface/transformers@4.1.0`
+**Severity at time of discovery:** High — silent degradation; no production error surfaced
 
 ## Summary
 
-`embedText()` and `classifyBillSectors()` in `src/lib/intelligence/embeddings/embedding-classifier.ts` return `null` / `[]` in the current Node 25 + Next.js 16 + `@huggingface/transformers@3.8.1` stack. Callers all have graceful fallbacks to keyword matching, so nothing visibly errors — but every analyzer that claims to use embeddings is silently running on keywords alone.
-
-## Reproduction
-
-```bash
-npm run dev   # Turbopack — fails with ERR_UNSUPPORTED_ESM_URL_SCHEME
-npx next dev --webpack   # webpack — fails with ERR_MODULE_NOT_FOUND on ort-wasm-simd-threaded.mjs
-```
-
-Server log shows:
-
-```
-[EmbeddingClassifier] Pipeline load failed, disabling for this process
-```
-
-`pipelineLoadFailed` is then permanently set for the process — zero retries, zero visibility in production logs unless someone greps for that exact message.
+`embedText()` and `classifyBillSectors()` in `src/lib/intelligence/embeddings/embedding-classifier.ts` returned `null` / `[]` in the Node 25 + Next.js 16 + `@huggingface/transformers@3.8.1` stack. Callers all have graceful fallbacks to keyword matching, so nothing visibly errored — but every analyzer that claimed to use embeddings was silently running on keywords alone.
 
 ## Root cause
 
-Two compounding issues:
+Two compounding issues in `@huggingface/transformers@3.8.1`:
 
-1. **Node 25 ESM strict loader** rejects the HTTPS URL that `onnxruntime-web` uses to fetch its WASM binary at runtime: `Only URLs with a scheme in: file and data are supported by the default ESM loader. Received protocol 'https:'`.
-2. **Turbopack ≠ webpack package resolution.** `@huggingface/transformers@3.8.1` ships a `dist/ort-wasm-simd-threaded.jsep.mjs` variant, but `onnxruntime-web` at runtime dynamically imports `ort-wasm-simd-threaded.mjs` (without the `.jsep.` suffix). The non-jsep file only exists under `node_modules/onnxruntime-web/dist/`.
+1. **Node 25 ESM strict loader** rejected the HTTPS URL that `onnxruntime-web` used to fetch its WASM binary at runtime: `Only URLs with a scheme in: file and data are supported by the default ESM loader. Received protocol 'https:'`.
+2. **Turbopack ≠ webpack package resolution.** `onnxruntime-web` at runtime dynamically imported `ort-wasm-simd-threaded.mjs` (without the `.jsep.` suffix), but the file shipped under `transformers/dist/` only carried the `.jsep.` variant.
 
-## Workaround used to run 2026-04-16 calibration
+`pipelineLoadFailed` was then permanently set for the process — zero retries, zero visibility in production logs unless someone grepped for `[EmbeddingClassifier] Pipeline load failed`.
 
-1. Start dev with `npx next dev --webpack` (Turbopack cannot bundle the dynamic WASM imports).
-2. Symlink the non-jsep WASM files from `onnxruntime-web/dist/` into `transformers/dist/`:
-   ```bash
-   ln -sf /path/to/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs  \
-          /path/to/node_modules/@huggingface/transformers/dist/ort-wasm-simd-threaded.mjs
-   ln -sf /path/to/node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm \
-          /path/to/node_modules/@huggingface/transformers/dist/ort-wasm-simd-threaded.wasm
-   ```
-3. Override `env.backends.onnx.wasm.wasmPaths` to a `file://` URL pointing at `onnxruntime-web/dist/`.
+## Resolution
 
-See `src/app/api/debug/calibrate-lobbying/route.ts` for the override code.
+`@huggingface/transformers@4.1.0` rewrites the WASM loader and resolves both issues. Verified empirically:
 
-These symlinks were removed after calibration — they're not a permanent fix.
+```bash
+$ npm run smoke:embedding
+[smoke] pipeline loaded in 294ms
+[smoke] embedding shape OK (384 dims, unit norm = 1.0000)
+[smoke] PASS — embedding pipeline is functional
+```
 
-## Recommended fix
+The smoke script (`scripts/smoke-embedding-pipeline.ts`) loads the real pipeline in pure Node — no jest, no jsdom, no mocks. It must pass after any `@huggingface/transformers` change or Node major upgrade.
 
-**Reopen Phase 1** to upgrade `@huggingface/transformers` to `4.1.0+`. Phase 1 (2026-04-15) deferred this upgrade citing "fresh-release + unverified major-bump runtime risk." The calibration work exposes a concrete, shipped-to-production bug that 4.x likely resolves (the WASM loading code was rewritten upstream).
+## Why mocked tests didn't catch this
 
-Verification for a 4.x upgrade attempt:
+Every test under `src/__tests__/intelligence/` that touches embeddings mocks `@huggingface/transformers`. Mocks return whatever vector you tell them to — they don't exercise the real WASM loader. 52 ML tests passed against a runtime that produced zero embeddings in production.
 
-- `/api/debug/calibrate-lobbying` returns HTTP 200 with real similarity scores
-- `classifyBillSectors('National Defense Authorization Act')` returns non-empty results
-- The 52 ML inference tests still pass (vote predictor, cosine-similarity, etc.)
-- Turbopack dev (`npm run dev`) works without the `--webpack` flag
+The fix going forward is the smoke script above. Run it any time the embedding stack changes.
 
-If 4.x regresses ML inference tests, the alternative is a `patch-package` script that creates the symlinks at install time — ugly but would unblock the embedding feature without risking the full upgrade.
+## Phase 1 reopening
 
-## Until this is fixed
+The `@huggingface/transformers@4.1.0` upgrade was deferred in Phase 1 (2026-04-15) under the "fresh-release + unverified runtime risk" rationale. SECURITY.md required: "Before upgrading, a non-mocked pipeline smoke test must exist." That test now exists (`scripts/smoke-embedding-pipeline.ts`), and the upgrade verification is straightforward — see updated SECURITY.md and the lobbying matcher status row in `PLAN-backbone-gaps-2026-04.md`.
 
-All embedding-dependent features run on keyword/fallback paths only. The lobbying matcher's Tier 2 (embedding) never fires. Vote prediction uses fewer features than designed. Bill-lobbying similarity returns empty. This is the reality of the current deployment — not a hypothetical risk.
+## Workaround that was used to capture the calibration data on 2026-04-16
+
+(Historical — kept here so anyone reading prior commits understands what happened.)
+
+Before the upgrade landed, calibration data was captured by running `next dev --webpack` and symlinking the non-jsep WASM files into `node_modules/@huggingface/transformers/dist/`. The symlinks were removed after capture and never committed. With `@huggingface/transformers@4.1.0` the workaround is unnecessary; the calibration endpoint at `src/app/api/debug/calibrate-lobbying/route.ts` runs against the standard dev server.
