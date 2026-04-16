@@ -99,29 +99,43 @@ npm run security:emergency
 
 ## Known Accepted Vulnerabilities
 
-Some `npm audit` findings remain open by deliberate decision. Each is documented below with the specific mitigation reasoning.
+Some `npm audit` findings remain open by deliberate decision. Each entry below is backed by source-code inspection of the affected packages, not inference. Last reviewed: 2026-04-15.
 
-### `@huggingface/transformers@3.8.1` → transitive `tar` advisories
+### Transitive `tar` advisories via `@huggingface/transformers@3.8.1`
 
-**Status:** Accepted. Pin held at `3.8.1`.
+**Status:** Accepted. Pin held at `@huggingface/transformers@3.8.1`.
 
-**Advisories:** GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink / symlink / drive-relative linkpath. Reach us through `@huggingface/transformers` → `onnxruntime-node` → `tar`.
+**Advisories:** GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink, symlink, and drive-relative linkpath attacks. Reach CIV.IQ through three chains:
 
-**Why we do not upgrade to `4.1.0`:**
+- `@huggingface/transformers` → `onnxruntime-node` → `tar`
+- npm's `cacache` (HTTP cache) → `tar`
+- `sqlite3` → `node-gyp` → `make-fetch-happen` → `cacache` → `tar`
 
-- `4.1.0` was published 2026-04-15 (hours before this decision) with zero community soak time.
-- `4.x` introduces new hard dependencies: `sharp@^0.34.5` (~30 MB native binaries, pushes toward Vercel 250 MB serverless limit), `@huggingface/tokenizers` (native crate), and a pre-release `onnxruntime-web@1.26.0-dev.*` pin.
-- The major-version bump carries runtime breakage risk for our 4 dynamic `import('@huggingface/transformers')` sites (feature-extraction, zero-shot, NER, ONNX inference) that all test suites mock — meaning real breakage only surfaces at runtime against production models.
+**Why these CVEs do not apply to CIV.IQ at runtime:**
 
-**Why the `tar` CVEs do not apply to us:**
+All three code paths invoke `tar` **only at install time** (`npm install` / `npm ci`), never during serverless cold-start or request handling. A Vercel deployment builds once with `node_modules` frozen, then serves requests from the pre-built image — the `tar` chains have zero exposure to attacker-controlled input during the request path. Verified by reading:
 
-The `tar` advisories require extracting **attacker-controlled** archives. CIV.IQ's only `tar` code path is HuggingFace model download during CI / cold-start, which extracts tarballs served from `huggingface.co` over HTTPS — a trusted source with integrity-verified model files. We never extract user-supplied, third-party, or network-arbitrary tarballs.
+- `node_modules/onnxruntime-node/script/install.js` — `tar.t(...)` is invoked only when `IS_LINUX_X64 && BIN_FOLDER_EXISTS && !CUDA_DLL_EXISTS`, i.e., Linux x64 downloading CUDA binaries. CIV.IQ uses the WASM backend (`onnxruntime-web`), not CUDA — comment in `src/lib/intelligence/embeddings/embedding-classifier.ts:13` documents this deliberate choice. The CUDA tarball is fetched from `https://github.com/microsoft/onnxruntime/releases/...` without integrity verification (a real weakness), but the code path is never entered in our deployment.
+- `cacache` unpacks registry tarballs, but each is integrity-verified against the `sha512-...` hash recorded in `package-lock.json`. An attacker would need to both compromise the npm registry AND produce a tarball matching the hash AND exploit path traversal. The lockfile integrity defeats the substitution step.
+- `node-gyp` only runs if `sqlite3` builds from source (prebuilt binaries are the happy path). Node.js headers are fetched from `nodejs.org` with integrity checks.
+
+**Why `@huggingface/transformers@4.1.0` remains deferred:**
+
+1. **Fresh release.** Published 2026-04-15 (`npm view` latest) with hours of soak time — zero downstream bug reports possible.
+2. **Major-version API risk unverified.** Our four `import('@huggingface/transformers')` call sites (`embedding-classifier.ts`, `zero-shot-classifier.ts`, `civic-ner.ts`, `vote-predictor.ts` via shared pipeline) all mock the module in Jest. All 52 tests pass today but would continue to pass against a broken 4.x runtime. Before upgrading, a non-mocked pipeline smoke test must exist.
+3. **Empirical install delta** (`npm install @huggingface/transformers@4.1.0 --dry-run --no-save`): 1 net-new package (`@huggingface/tokenizers@0.1.3`, native crate) plus version bumps — `onnxruntime-node 1.21.0 → 1.24.3`, `onnxruntime-web` pin to `1.26.0-dev.20260410`. The pre-release onnxruntime-web pin is not new; 3.8.1 already uses `1.22.0-dev.20250409`.
+
+**Corrections to prior speculation** (recorded so the reasoning is auditable):
+
+- A previous version of this section claimed `sharp@^0.34.5` would be a new ~30 MB native dependency risking the Vercel 250 MB serverless limit. Empirically false: `sharp` is already present at `node_modules/@img/` (16 MB) — the 4.1.0 upgrade does not add it.
+- A previous version claimed HuggingFace model files are "integrity-verified." `transformers.js/src/utils/hub.js` contains no checksum or ETag verification on model downloads (grepped `sha|etag|integrity|checksum|hash` — zero matches). Model files come over plain HTTPS from huggingface.co; a CDN compromise affects 3.8.1 and 4.1.0 equally. This is orthogonal to the tar CVEs and not a reason to pick one version over the other.
 
 **Re-evaluation triggers:**
 
-1. `@huggingface/transformers@4.x` reaches `>= 4.2.0` with at least 4 weeks of community usage, OR
-2. A `3.x` patch release lands that upgrades the transitive `tar` to `>= 7.5.11`, OR
-3. CIV.IQ introduces any code path that extracts non-HuggingFace tarballs.
+1. `@huggingface/transformers@4.x` reaches `>= 4.2.0` with at least 4 weeks of community usage **and** a non-mocked pipeline smoke test exists in the test suite, OR
+2. A `3.x` patch release lands that upgrades transitive `tar` to `>= 7.5.11`, OR
+3. CIV.IQ introduces any code path that extracts attacker-controlled tarballs at runtime (none exist today), OR
+4. A critical runtime-exploitable CVE is disclosed in the WASM model-loading pipeline that only `4.x` fixes.
 
 ## Security Checklist
 
