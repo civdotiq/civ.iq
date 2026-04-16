@@ -97,6 +97,32 @@ npm run security:emergency
 - Secrets never committed to repository
 - Environment variables for configuration
 
+## Known Accepted Vulnerabilities
+
+Some `npm audit` findings remain open by deliberate decision. Each is documented below with the specific mitigation reasoning.
+
+### `@huggingface/transformers@3.8.1` → transitive `tar` advisories
+
+**Status:** Accepted. Pin held at `3.8.1`.
+
+**Advisories:** GHSA-83g3-92jg-28cx, GHSA-qffp-2rhf-9h96, GHSA-9ppj-qmqm-q256 — path traversal in `tar` extraction via hardlink / symlink / drive-relative linkpath. Reach us through `@huggingface/transformers` → `onnxruntime-node` → `tar`.
+
+**Why we do not upgrade to `4.1.0`:**
+
+- `4.1.0` was published 2026-04-15 (hours before this decision) with zero community soak time.
+- `4.x` introduces new hard dependencies: `sharp@^0.34.5` (~30 MB native binaries, pushes toward Vercel 250 MB serverless limit), `@huggingface/tokenizers` (native crate), and a pre-release `onnxruntime-web@1.26.0-dev.*` pin.
+- The major-version bump carries runtime breakage risk for our 4 dynamic `import('@huggingface/transformers')` sites (feature-extraction, zero-shot, NER, ONNX inference) that all test suites mock — meaning real breakage only surfaces at runtime against production models.
+
+**Why the `tar` CVEs do not apply to us:**
+
+The `tar` advisories require extracting **attacker-controlled** archives. CIV.IQ's only `tar` code path is HuggingFace model download during CI / cold-start, which extracts tarballs served from `huggingface.co` over HTTPS — a trusted source with integrity-verified model files. We never extract user-supplied, third-party, or network-arbitrary tarballs.
+
+**Re-evaluation triggers:**
+
+1. `@huggingface/transformers@4.x` reaches `>= 4.2.0` with at least 4 weeks of community usage, OR
+2. A `3.x` patch release lands that upgrades the transitive `tar` to `>= 7.5.11`, OR
+3. CIV.IQ introduces any code path that extracts non-HuggingFace tarballs.
+
 ## Security Checklist
 
 Before each release, we verify:
@@ -202,4 +228,4 @@ Following the Electronic Frontier Foundation's Security Self-Defense guidelines:
 
 ## Updates
 
-This security policy is reviewed quarterly and updated as needed. Last update: **March 15, 2026**.
+This security policy is reviewed quarterly and updated as needed. Last update: **April 15, 2026**.
