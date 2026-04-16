@@ -4,15 +4,24 @@
  */
 
 // Comprehensive ZIP to Congressional District mapping for 119th Congress (2023-2025)
-// Source: OpenSourceActivismTech/us-zipcodes-congress
-// Data URL: https://github.com/OpenSourceActivismTech/us-zipcodes-congress
-// Generated: 2025-08-19T02:03:06.207Z
-// Total ZIP codes: 33774
-// Multi-district ZIPs: 7299
 //
-// DATA REFLECTS POST-2023 REDISTRICTING (119th Congress boundaries)
-// Updated: July 30, 2024 (per source repository)
-// Data stored in zip-district-mapping-119th.json, loaded via JSON import
+// Source:        OpenSourceActivismTech/us-zipcodes-congress
+// Data URL:      https://github.com/OpenSourceActivismTech/us-zipcodes-congress
+// Generated:    2025-08-19T02:03:06.207Z (upstream data: July 30, 2024)
+// Reflects:     Post-2023 redistricting (119th Congress boundaries)
+//
+// Invariants (asserted by src/__tests__/data/zip-district-mapping.test.ts):
+//   - Total ZIP entries: 33,778
+//   - Multi-district ZIPs: 7,299
+//   - Single-district ZIPs: 26,479
+// If these numbers drift without explanation, the upstream has been regenerated
+// or the JSON has been tampered with — investigate before merging.
+//
+// Refresh policy:
+//   ZIP-to-district boundaries are structurally static between redistricting
+//   cycles. Next expected refresh: after the 2030 Census + 2031-2033
+//   state redistricting. Until then, this file should NOT change.
+// Data stored in zip-district-mapping-119th.json, loaded via JSON import.
 
 import jsonData from './zip-district-mapping-119th.json';
 
@@ -69,13 +78,15 @@ export function getAllDistrictsForZip(zipCode: string): ZipDistrictMapping[] {
   return Array.isArray(result) ? result : [result];
 }
 
-// Export statistics
+// Export statistics. These values are asserted in tests — if they drift, the
+// source JSON has been regenerated or tampered with.
 export const ZIP_MAPPING_STATS = {
-  totalZips: 33774,
+  totalZips: 33778,
   multiDistrictZips: 7299,
-  singleDistrictZips: 26475,
+  singleDistrictZips: 26479,
   lastUpdated: '2025-08-19T02:03:06.207Z',
   dataSource: 'OpenSourceActivismTech/us-zipcodes-congress',
   congressionalSession: '119th Congress (2023-2025)',
   redistrictingCycle: 'Post-2023 Redistricting',
+  nextExpectedRefresh: 'Post-2031 redistricting (after 2030 Census)',
 };
