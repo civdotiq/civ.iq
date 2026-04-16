@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { CITY_CONFIGS } from '@/lib/local-government/pilot-cities';
 import type {
   CityCouncilResponse,
   CouncilMember,
@@ -14,80 +15,6 @@ import type {
 } from '@/types/legistar';
 
 export const dynamic = 'force-dynamic';
-
-// Cities with open Legistar APIs (verified working without auth)
-const CITY_CONFIGS: Record<string, LegistarCityConfig> = {
-  chicago: {
-    id: 'chicago',
-    name: 'Chicago',
-    state: 'IL',
-    apiClient: 'chicago',
-    population: 2746388,
-  },
-  seattle: {
-    id: 'seattle',
-    name: 'Seattle',
-    state: 'WA',
-    apiClient: 'seattle',
-    population: 749256,
-  },
-  boston: {
-    id: 'boston',
-    name: 'Boston',
-    state: 'MA',
-    apiClient: 'boston',
-    population: 675647,
-  },
-  denver: {
-    id: 'denver',
-    name: 'Denver',
-    state: 'CO',
-    apiClient: 'denver',
-    population: 715522,
-  },
-  austin: {
-    id: 'austin',
-    name: 'Austin',
-    state: 'TX',
-    apiClient: 'austin',
-    population: 978908,
-  },
-  portland: {
-    id: 'portland',
-    name: 'Portland',
-    state: 'OR',
-    apiClient: 'portland',
-    population: 641162,
-  },
-  oakland: {
-    id: 'oakland',
-    name: 'Oakland',
-    state: 'CA',
-    apiClient: 'oakland',
-    population: 433031,
-  },
-  minneapolis: {
-    id: 'minneapolis',
-    name: 'Minneapolis',
-    state: 'MN',
-    apiClient: 'minneapolis',
-    population: 429954,
-  },
-  philadelphia: {
-    id: 'philadelphia',
-    name: 'Philadelphia',
-    state: 'PA',
-    apiClient: 'philacity',
-    population: 1603797,
-  },
-  detroit: {
-    id: 'detroit',
-    name: 'Detroit',
-    state: 'MI',
-    apiClient: 'detroitmi',
-    population: 639111,
-  },
-};
 
 /**
  * Extract district from body name or title

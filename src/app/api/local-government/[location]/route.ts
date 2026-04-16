@@ -3,308 +3,133 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * Local Government Lookup API
+ *
+ * GET /api/local-government/[location]
+ *
+ * There is no national local-government API in the United States. CIV.IQ
+ * supports a pilot list of cities via Legistar (see `lib/local-government/pilot-cities.ts`).
+ * For everything else, this route returns dataQuality: 'unavailable' and
+ * lists the supported pilot cities. It does not fabricate officials.
+ *
+ * See docs/COVERAGE.md for the canonical coverage matrix.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { CITY_CONFIGS, getPilotCitySummaries } from '@/lib/local-government/pilot-cities';
+import type { DataQuality, SourceStatus } from '@/types/backbone-response';
 
 export const dynamic = 'force-dynamic';
 
-interface LocationInfo {
-  city: string;
-  state: string;
-  displayName: string;
-  county: string;
-}
-
-interface LocalOfficial {
+interface PilotCityLink {
   id: string;
   name: string;
-  position: string;
-  jurisdiction: 'city' | 'county' | 'township' | 'school_district' | 'special_district';
-  jurisdictionName: string;
-  party?: 'Democratic' | 'Republican' | 'Independent' | 'Nonpartisan';
-  email?: string;
-  phone?: string;
-  office?: string;
-  photoUrl?: string;
-  termStart: string;
-  termEnd: string;
-  isElected: boolean;
-  salary?: number;
-  website?: string;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-  responsibilities: string[];
-  committees?: Array<{
-    name: string;
-    role: 'chair' | 'member';
-  }>;
-  contactHours?: {
-    days: string[];
-    hours: string;
+  state: string;
+  councilEndpoint: string;
+}
+
+interface LocalGovernmentResponse {
+  location: string;
+  resolvedCity: { name: string; state: string } | null;
+  dataQuality: DataQuality;
+  sourceStatus: SourceStatus[];
+  pilotCities: PilotCityLink[];
+  metadata: {
+    dataSource: string;
+    lastUpdated: string;
+    note: string;
+    coverageDoc: string;
   };
 }
 
-interface LocalGovernmentData {
-  location: string;
-  locationName: string;
-  state: string;
-  lastUpdated: string;
-  officials: LocalOfficial[];
-  totalCount: number;
-  jurisdictions: {
-    city: LocalOfficial[];
-    county: LocalOfficial[];
-    township: LocalOfficial[];
-    school_district: LocalOfficial[];
-    special_district: LocalOfficial[];
-  };
-  nextElections: Array<{
-    date: string;
-    offices: string[];
-    jurisdiction: string;
-  }>;
+const COVERAGE_DOC_URL = 'https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md';
+
+function buildPilotCityLinks(): PilotCityLink[] {
+  return getPilotCitySummaries().map(city => ({
+    id: city.id,
+    name: city.name,
+    state: city.state,
+    councilEndpoint: `/api/city/${city.id}/council`,
+  }));
+}
+
+function parseLocationKey(location: string): string | null {
+  const parts = location.toLowerCase().split('-');
+  if (parts.length === 0) return null;
+  const candidate = parts.slice(0, parts.length > 1 ? -1 : undefined).join('');
+  return candidate.replace(/[^a-z]/g, '') || null;
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ location: string }> }
-) {
+): Promise<NextResponse<LocalGovernmentResponse | { error: string }>> {
   const { location } = await params;
-  const { searchParams } = request.nextUrl;
-  const jurisdiction = searchParams.get('jurisdiction'); // 'city', 'county', etc.
-  const _zipCode = searchParams.get('zip');
 
   if (!location) {
     return NextResponse.json({ error: 'Location identifier is required' }, { status: 400 });
   }
 
-  try {
-    const cacheKey = `local-government-${location}-${jurisdiction || 'all'}`;
-    const TTL_12_HOURS = 12 * 60 * 60 * 1000;
+  const lookupKey = parseLocationKey(location);
+  const matchedConfig = lookupKey ? CITY_CONFIGS[lookupKey] : undefined;
+  const fetchedAt = new Date().toISOString();
 
-    const localData = await cachedFetch(
-      cacheKey,
-      async (): Promise<LocalGovernmentData> => {
-        logger.info(
-          'Fetching local government data',
-          {
-            location,
-            jurisdiction: jurisdiction || 'all',
-            operation: 'local_government_fetch',
-          },
-          request
-        );
-
-        // In production, this would integrate with various local government APIs
-        const locationInfo = await parseLocation(location);
-        const officials: LocalOfficial[] = []; // Real local government API integration needed
-
-        // Group by jurisdiction
-        const jurisdictions = {
-          city: officials.filter(o => o.jurisdiction === 'city'),
-          county: officials.filter(o => o.jurisdiction === 'county'),
-          township: officials.filter(o => o.jurisdiction === 'township'),
-          school_district: officials.filter(o => o.jurisdiction === 'school_district'),
-          special_district: officials.filter(o => o.jurisdiction === 'special_district'),
-        };
-
-        const nextElections = generateNextElections(locationInfo);
-
-        return {
-          location,
-          locationName: locationInfo.displayName,
-          state: locationInfo.state,
-          lastUpdated: new Date().toISOString(),
-          officials,
-          totalCount: officials.length,
-          jurisdictions,
-          nextElections,
-        };
-      },
-      TTL_12_HOURS
-    );
-
-    // Apply jurisdiction filter
-    let filteredOfficials = localData.officials;
-    if (jurisdiction) {
-      filteredOfficials = filteredOfficials.filter(
-        official => official.jurisdiction === jurisdiction
-      );
-    }
-
-    const response = {
-      ...localData,
-      officials: filteredOfficials,
-      totalCount: filteredOfficials.length,
-      filters: {
-        jurisdiction: jurisdiction || 'all',
-      },
-    };
-
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
-      },
-    });
-  } catch (error) {
-    logger.error(
-      'Local Government API Error',
-      error as Error,
-      {
-        location,
-        jurisdiction: jurisdiction || 'all',
-        operation: 'local_government_api_error',
-      },
-      request
-    );
-
-    const errorResponse = {
+  if (matchedConfig) {
+    const response: LocalGovernmentResponse = {
       location,
-      locationName: 'Unknown Location',
-      state: 'Unknown',
-      lastUpdated: new Date().toISOString(),
-      officials: [],
-      totalCount: 0,
-      jurisdictions: {
-        city: [],
-        county: [],
-        township: [],
-        school_district: [],
-        special_district: [],
+      resolvedCity: { name: matchedConfig.name, state: matchedConfig.state },
+      dataQuality: 'partial',
+      sourceStatus: [
+        {
+          source: `legistar:${matchedConfig.apiClient}`,
+          status: 'ok',
+          fetchedAt,
+        },
+      ],
+      pilotCities: buildPilotCityLinks(),
+      metadata: {
+        dataSource: 'legistar.com',
+        lastUpdated: fetchedAt,
+        note: `${matchedConfig.name}, ${matchedConfig.state} is a CIV.IQ pilot city. Fetch council data from /api/city/${matchedConfig.id}/council. This catch-all route does not return officials directly.`,
+        coverageDoc: COVERAGE_DOC_URL,
       },
-      nextElections: [],
-      error: 'Local government data temporarily unavailable',
     };
 
-    return NextResponse.json(errorResponse, { status: 200 });
-  }
-}
-
-async function parseLocation(location: string): Promise<LocationInfo> {
-  // Parse location format: "city-state" or "county-state" or zip code
-  const parts = location.split('-');
-
-  if (parts.length >= 2) {
-    const cityName = parts.slice(0, -1).join(' ').replace(/_/g, ' ');
-    const state = parts[parts.length - 1]?.toUpperCase() || 'ST';
-
-    // Try Census Geocoder first, fall back to static mapping
-    let county = await lookupCountyViaCensusGeocoder(cityName, state);
-    if (!county) {
-      county = generateCountyName(cityName, state);
-    }
-
-    return {
-      city: cityName,
-      state,
-      displayName: `${cityName
-        .split(' ')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ')}, ${state}`,
-      county,
-    };
+    return NextResponse.json(response);
   }
 
-  // Handle ZIP code format
-  if (/^\\d{5}$/.test(location)) {
-    const locationData = getEmptyLocationResponse(location);
-    return locationData;
-  }
-
-  return getEmptyLocationResponse(location);
-}
-
-function getEmptyLocationResponse(zip: string): LocationInfo {
-  // EMERGENCY FIX: Fake city/county data removed
-  // Previously returned fake "Beverly Hills, CA", "Sample City, TX" etc.
-  // that could misdirect citizens to wrong local government offices
-
-  logger.warn('Local government data unavailable for ZIP code', {
-    zip,
-    reason: 'Real local government API not integrated',
+  logger.info('Local government lookup outside pilot list', {
+    location,
+    lookupKey,
+    pilotCityCount: Object.keys(CITY_CONFIGS).length,
   });
 
-  return {
-    city: 'Location data unavailable',
-    state: '',
-    county: 'County data unavailable',
-    displayName: 'Location services temporarily unavailable',
-  };
-}
-
-async function lookupCountyViaCensusGeocoder(city: string, state: string): Promise<string> {
-  try {
-    // Use Census Geocoder onelineaddress mode — works for city-level geocoding
-    const address = encodeURIComponent(`${city}, ${state}`);
-    const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${address}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
-
-    logger.info('Census Geocoder county lookup', { city, state, url });
-
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(10000),
-      headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Census Geocoder error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const matches = data?.result?.addressMatches;
-
-    if (matches && matches.length > 0) {
-      const geographies = matches[0].geographies;
-      const countyGeo = geographies?.['Counties']?.[0];
-      if (countyGeo?.NAME) {
-        const countyName = `${countyGeo.NAME} County`;
-        logger.info('Census Geocoder found county', { city, state, county: countyName });
-        return countyName;
-      }
-    }
-
-    logger.warn('Census Geocoder returned no county match', { city, state });
-    return '';
-  } catch (error) {
-    logger.error('Census Geocoder county lookup failed', error as Error, { city, state });
-    return '';
-  }
-}
-
-function generateCountyName(city: string, state: string): string {
-  // Static fallback — only used if async geocoder cannot be called
-  const countyMappings: Record<string, Record<string, string>> = {
-    CA: {
-      'los angeles': 'Los Angeles County',
-      'san francisco': 'San Francisco County',
-      'san diego': 'San Diego County',
-    },
-    NY: {
-      'new york': 'New York County',
-      brooklyn: 'Kings County',
-      queens: 'Queens County',
-    },
-    TX: {
-      houston: 'Harris County',
-      dallas: 'Dallas County',
-      austin: 'Travis County',
+  const response: LocalGovernmentResponse = {
+    location,
+    resolvedCity: null,
+    dataQuality: 'unavailable',
+    sourceStatus: [
+      {
+        source: 'civiq:local-government',
+        status: 'not-configured',
+        errorMessage:
+          'No local government data source is wired for this location. CIV.IQ covers a pilot list of cities only.',
+        fetchedAt,
+      },
+    ],
+    pilotCities: buildPilotCityLinks(),
+    metadata: {
+      dataSource: 'civiq:local-government',
+      lastUpdated: fetchedAt,
+      note: 'CIV.IQ does not have local-government data for this location. There is no national local-government API; coverage is limited to a pilot list of cities. See pilotCities in this response, or docs/COVERAGE.md.',
+      coverageDoc: COVERAGE_DOC_URL,
     },
   };
 
-  const stateMapping = countyMappings[state];
-  if (stateMapping) {
-    const countyName = stateMapping[city.toLowerCase()];
-    if (countyName) return countyName;
-  }
-
-  return '';
-}
-
-function generateNextElections(_locationInfo: unknown) {
-  // Real election data would come from state/local election offices
-  return [];
+  return NextResponse.json(response, {
+    status: 503,
+    headers: { 'Cache-Control': 'no-cache' },
+  });
 }
