@@ -6,6 +6,7 @@
 import { cachedFetch } from '@/lib/cache';
 import { embedText } from '@/lib/intelligence/embeddings/embedding-classifier';
 import { cosineSimilarity } from '@/lib/intelligence/embeddings/cosine-similarity';
+import { getAllLDAIssueCodes, getLDAIssueLabel } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
 import logger from '@/lib/logging/simple-logger';
 
 export interface LobbyingFiling {
@@ -134,40 +135,46 @@ export interface CommitteeLobbyingData {
  * code descriptions from senate.gov/legislative/Public_Disc/LDA_Guides.
  */
 const COMMITTEE_KEYWORDS: Record<string, string[]> = {
-  // --- Both chambers ---
+  // --- Both chambers (short keys match subcommittee names too) ---
   'Agriculture': ['agriculture', 'farm', 'crop', 'livestock', 'food', 'rural', 'usda', 'nutrition', 'forestry'],
   'Appropriations': ['appropriation', 'funding', 'discretionary spending', 'omnibus'],
   'Armed Services': ['defense', 'military', 'armed forces', 'pentagon', 'dod', 'national security', 'weapons'],
   'Budget': ['budget', 'fiscal policy', 'deficit', 'reconciliation', 'cbo', 'debt ceiling'],
   'Judiciary': ['justice', 'court', 'legal', 'immigration', 'patent', 'antitrust', 'constitutional', 'crime', 'doj'],
   'Veterans': ['veteran', 'va hospital', 'gi bill', 'military service', 'disabled veteran'],
+  'Energy': ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities'],
+  'Commerce': ['commerce', 'trade', 'business', 'manufacturing', 'retail', 'consumer'],
+  'Environment': ['environment', 'climate', 'pollution', 'epa', 'clean air', 'clean water', 'superfund'],
+  'Labor': ['labor', 'employment', 'worker', 'union', 'workplace', 'osha', 'pension'],
+  'Education': ['education', 'student', 'school', 'higher education', 'workforce'],
+  'Healthcare': ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma'],
 
-  // --- Senate-specific ---
+  // --- Senate-specific (long keys for precise full-committee matching) ---
   'Banking': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage', 'housing', 'hud', 'urban'],
-  'Commerce, Science': ['commerce', 'trade', 'telecom', 'fcc', 'consumer protection', 'technology', 'internet', 'space', 'nasa', 'science', 'manufacturing'],
-  'Energy and Natural Resources': ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities', 'mining', 'public lands', 'forest', 'national park'],
-  'Environment and Public Works': ['environment', 'climate', 'pollution', 'epa', 'clean air', 'clean water', 'infrastructure', 'superfund', 'highway'],
-  'Finance': ['tax', 'revenue', 'irs', 'customs', 'tariff', 'social security', 'medicare', 'medicaid', 'trade agreement'],
+  'Commerce, Science': ['telecom', 'fcc', 'consumer protection', 'technology', 'internet', 'space', 'nasa', 'science'],
+  'Energy and Natural Resources': ['mining', 'public lands', 'forest', 'national park'],
+  'Environment and Public Works': ['infrastructure', 'highway'],
+  'Finance': ['tax', 'revenue', 'irs', 'customs', 'tariff', 'social security', 'trade agreement'],
   'Foreign Relations': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic', 'state department', 'usaid', 'sanctions'],
-  'Health, Education, Labor': ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma', 'education', 'student', 'labor', 'employment', 'worker', 'union', 'pension', 'osha', 'workplace'],
-  'Homeland Security': ['homeland security', 'dhs', 'fema', 'border', 'cybersecurity', 'tsa', 'immigration enforcement', 'customs enforcement'],
-  'Indian Affairs': ['tribal', 'native american', 'indian', 'indigenous', 'reservation', 'bureau of indian affairs'],
-  'Intelligence': ['intelligence', 'surveillance', 'cia', 'nsa', 'classified', 'counterterrorism', 'espionage', 'fisa'],
+  'Health, Education, Labor': [],
+  'Homeland Security': ['homeland security', 'dhs', 'fema', 'border', 'cybersecurity', 'tsa'],
+  'Indian Affairs': ['tribal', 'native american', 'indian', 'indigenous', 'reservation'],
+  'Intelligence': ['intelligence', 'surveillance', 'cia', 'nsa', 'classified', 'counterterrorism', 'fisa'],
   'Rules and Administration': ['election', 'campaign', 'senate rules', 'fec', 'ballot', 'voting'],
-  'Small Business': ['small business', 'sba', 'entrepreneur', 'startup', 'microloan'],
-  'Ethics': ['ethics', 'conflict of interest', 'financial disclosure', 'lobbying disclosure'],
+  'Small Business': ['small business', 'sba', 'entrepreneur', 'startup'],
+  'Ethics': ['ethics', 'conflict of interest', 'financial disclosure'],
 
-  // --- House-specific (keys match substring of full committee name) ---
-  'Education and the Workforce': ['education', 'student', 'school', 'higher education', 'workforce', 'job training'],
-  'Energy and Commerce': ['energy', 'commerce', 'telecom', 'fcc', 'drug', 'pharma', 'health', 'medical', 'consumer', 'internet', 'broadband'],
-  'Financial Services': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage', 'housing', 'hud', 'fintech', 'cryptocurrency'],
-  'Foreign Affairs': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic', 'usaid', 'sanctions'],
-  'Natural Resources': ['natural resources', 'public lands', 'ocean', 'fisheries', 'national park', 'mining', 'water rights', 'endangered species'],
-  'Oversight': ['oversight', 'accountability', 'government reform', 'inspector general', 'gao', 'waste fraud abuse'],
-  'Science, Space': ['science', 'space', 'nasa', 'nsf', 'research', 'technology', 'nist', 'stem'],
+  // --- House-specific ---
+  'Education and the Workforce': ['job training'],
+  'Energy and Commerce': ['broadband'],
+  'Financial Services': ['fintech', 'cryptocurrency'],
+  'Foreign Affairs': [],
+  'Natural Resources': ['natural resources', 'ocean', 'fisheries', 'water rights', 'endangered species'],
+  'Oversight': ['oversight', 'accountability', 'government reform', 'inspector general', 'gao'],
+  'Science, Space': ['nasa', 'nsf', 'research', 'nist', 'stem'],
   'Transportation': ['transportation', 'highway', 'aviation', 'railroad', 'shipping', 'faa', 'dot', 'pipeline', 'coast guard', 'maritime'],
-  'Ways and Means': ['tax', 'revenue', 'irs', 'social security', 'medicare', 'trade agreement', 'tariff', 'customs'],
-  'House Administration': ['house administration', 'election', 'campaign finance', 'fec', 'library of congress', 'smithsonian'],
+  'Ways and Means': [],
+  'House Administration': ['house administration', 'library of congress', 'smithsonian'],
 };
 
 export class SenateLobbyingAPI {
@@ -507,6 +514,12 @@ export class SenateLobbyingAPI {
     });
   }
 
+  /**
+   * Embed the committee name and compare against the ~79 LDA issue code
+   * labels (a fixed, small set) to find relevant issue codes. Then filter
+   * filings by those codes. This is O(issue_codes) ≈ 80 embeddings, not
+   * O(filings) which could be thousands.
+   */
   private async matchByEmbedding(
     committee: string,
     allFilings: LobbyingFiling[]
@@ -518,44 +531,46 @@ export class SenateLobbyingAPI {
     );
     if (!committeeEmbedding) return null;
 
-    const matched: LobbyingFiling[] = [];
-    let totalSimilarity = 0;
-    let comparedCount = 0;
+    // Compare against LDA issue code labels, not individual filings
+    const allCodes = getAllLDAIssueCodes();
+    const matchedCodes: Array<{ code: string; similarity: number }> = [];
 
-    for (const filing of allFilings) {
-      const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
-      const generalIssues = Array.isArray(filing.issues)
-        ? filing.issues.map((i) => i.description || '')
-        : [];
-      const issueText = [...specificIssues, ...generalIssues].join(' ').substring(0, 2000);
-      if (!issueText.trim()) continue;
+    for (const code of allCodes) {
+      const label = getLDAIssueLabel(code);
+      const labelEmbedding = await embedText(label);
+      if (!labelEmbedding) continue;
 
-      const issueEmbedding = await embedText(issueText);
-      if (!issueEmbedding) continue;
-
-      const similarity = cosineSimilarity(committeeEmbedding, issueEmbedding);
-      comparedCount++;
-
+      const similarity = cosineSimilarity(committeeEmbedding, labelEmbedding);
       if (similarity >= SIMILARITY_THRESHOLD) {
-        matched.push(filing);
-        totalSimilarity += similarity;
+        matchedCodes.push({ code, similarity });
       }
     }
 
+    if (matchedCodes.length === 0) return null;
+
+    // Filter filings by the matched issue codes
+    const codeSet = new Set(matchedCodes.map((m) => m.code));
+    const matched = allFilings.filter((filing) => {
+      if (!Array.isArray(filing.issues)) return false;
+      return filing.issues.some((issue) => codeSet.has(issue.code));
+    });
+
     if (matched.length === 0) return null;
 
-    const avgConfidence = totalSimilarity / matched.length;
-    logger.info('[SenateLDA] Embedding-matched committee filings', {
+    const avgSimilarity =
+      matchedCodes.reduce((sum, m) => sum + m.similarity, 0) / matchedCodes.length;
+
+    logger.info('[SenateLDA] Embedding-matched committee via LDA issue codes', {
       committee,
-      matched: matched.length,
-      compared: comparedCount,
-      avgSimilarity: avgConfidence.toFixed(3),
+      matchedCodes: matchedCodes.map((m) => m.code),
+      matchedFilings: matched.length,
+      avgSimilarity: avgSimilarity.toFixed(3),
     });
 
     return {
       filings: matched,
       method: 'embedding',
-      confidence: Math.min(avgConfidence, 0.85),
+      confidence: Math.min(avgSimilarity, 0.85),
     };
   }
 

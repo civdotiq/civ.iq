@@ -56,7 +56,7 @@ These power the money-votes-lobbying join. If any of these goes down, CIV.IQ's c
 | Cache TTL          | 7 days (quarterly filings), 24 hr (org search), 30 min (assembled route)                                                         |
 | Consumers          | 20 files: lobbying route, lobby org route, 4 analyzers, graph hydrators, MCP tools, dataset generators                           |
 | Cross-domain joins | LDA + Congress (issue codes to policy areas to bills), LDA + FEC (org names to PAC contributions), LDA + committee membership    |
-| Error handling     | `fetchFilingsByQuarter` re-throws (callers must catch); `fetchFilingsForOrganization` and `getCommitteeLobbyingData` return `[]` |
+| Error handling     | `fetchFilingsByQuarter` and `getCommitteeLobbyingData` re-throw (callers must catch); `fetchFilingsForOrganization` returns `[]` |
 
 **Why Tier 1:** Powers all lobbying data. The "lobbying" in money-votes-lobbying. Without it, influence chains, lobbying pipelines, and bill intelligence are all broken.
 
