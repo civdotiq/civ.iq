@@ -163,6 +163,14 @@ const COMMITTEE_KEYWORDS: Record<string, string[]> = {
   'Rules and Administration': ['election', 'campaign', 'senate rules', 'fec', 'ballot', 'voting'],
   'Small Business': ['small business', 'sba', 'entrepreneur', 'startup'],
   'Ethics': ['ethics', 'conflict of interest', 'financial disclosure'],
+  'Aging': ['aging', 'elderly', 'senior citizen', 'medicare', 'medicaid', 'social security', 'retirement', 'pension', 'long-term care'],
+
+  // --- Subcommittee-specific keys (calibration 2026-04-16: embedding tier
+  // misses these because the closest LDA labels score below the 0.40
+  // threshold). Adding narrow keys keeps coverage even when embeddings work,
+  // and is the only path that works when the pipeline is unavailable.
+  'Conservation': ['conservation', 'public lands', 'wildlife', 'wilderness', 'national park', 'natural resources'],
+  'Forestry': ['forest', 'forestry', 'timber', 'wildfire', 'logging'],
 
   // --- House-specific ---
   'Education and the Workforce': ['job training'],
@@ -176,6 +184,59 @@ const COMMITTEE_KEYWORDS: Record<string, string[]> = {
   'Ways and Means': [],
   'House Administration': ['house administration', 'library of congress', 'smithsonian'],
 };
+
+/**
+ * Module-level cache for LDA issue code label embeddings.
+ *
+ * The ~79 LDA issue codes are a fixed taxonomy — their label embeddings
+ * never change. Computing them once and reusing across all
+ * `matchByEmbedding` calls turns the per-committee cost from ~80
+ * embedText() calls down to 1.
+ */
+let ldaLabelEmbeddingsCache: Array<{ code: string; embedding: Float32Array }> | null = null;
+let ldaLabelEmbeddingsPromise: Promise<
+  Array<{ code: string; embedding: Float32Array }> | null
+> | null = null;
+
+async function getLDALabelEmbeddings(): Promise<Array<{
+  code: string;
+  embedding: Float32Array;
+}> | null> {
+  if (ldaLabelEmbeddingsCache) return ldaLabelEmbeddingsCache;
+  if (ldaLabelEmbeddingsPromise) return ldaLabelEmbeddingsPromise;
+
+  ldaLabelEmbeddingsPromise = (async () => {
+    const codes = getAllLDAIssueCodes();
+    const embeddings = await Promise.all(
+      codes.map(async (code) => {
+        const embedding = await embedText(getLDAIssueLabel(code));
+        return embedding ? { code, embedding } : null;
+      })
+    );
+    const populated = embeddings.filter(
+      (entry): entry is { code: string; embedding: Float32Array } => entry !== null
+    );
+
+    // If embedText produced zero embeddings, the pipeline is unavailable —
+    // don't cache the empty result, so a later call can retry if the
+    // pipeline recovers.
+    if (populated.length === 0) {
+      ldaLabelEmbeddingsPromise = null;
+      return null;
+    }
+
+    ldaLabelEmbeddingsCache = populated;
+    return populated;
+  })();
+
+  return ldaLabelEmbeddingsPromise;
+}
+
+/** For testing only — drops the cached label embeddings. */
+export function _resetLDALabelEmbeddingsCacheForTesting(): void {
+  ldaLabelEmbeddingsCache = null;
+  ldaLabelEmbeddingsPromise = null;
+}
 
 export class SenateLobbyingAPI {
   private baseUrl = 'https://lda.senate.gov/api/v1';
@@ -515,36 +576,44 @@ export class SenateLobbyingAPI {
   }
 
   /**
-   * Embed the committee name and compare against the ~79 LDA issue code
-   * labels (a fixed, small set) to find relevant issue codes. Then filter
-   * filings by those codes. This is O(issue_codes) ≈ 80 embeddings, not
-   * O(filings) which could be thousands.
+   * Embed the committee name and compare against pre-cached LDA issue code
+   * label embeddings (~79 codes, computed once per process). Then filter
+   * filings by the matched codes. Per-call cost is ~1 embedText() call
+   * (the committee name) plus ~79 cheap dot products.
+   *
+   * Calibrated 2026-04-16 against the all-MiniLM-L6-v2 model. Empirical
+   * findings (see docs/CALIBRATION-lobbying-2026-04-16.json):
+   *   - Real-signal band: 0.40–0.60 (e.g., TAX→Taxation 0.439, DIS→Disaster
+   *     Planning 0.601). Below 0.40 is mostly noise.
+   *   - Floor: ~0.30–0.36 noise from generic-sounding labels (Government
+   *     Issues, Indian/Native American Affairs, District of Columbia).
+   *     A loose threshold pulls these into every committee.
+   *   - Strategy: 0.40 threshold + top-3 cap. The cap prevents the noise
+   *     floor from polluting matches when the threshold is loose.
    */
   private async matchByEmbedding(
     committee: string,
     allFilings: LobbyingFiling[]
   ): Promise<{ filings: LobbyingFiling[]; method: MatchingMethod; confidence: number } | null> {
-    const SIMILARITY_THRESHOLD = 0.45;
+    const SIMILARITY_THRESHOLD = 0.4;
+    const MAX_MATCHED_CODES = 3;
 
     const committeeEmbedding = await embedText(
       `Congressional committee on ${committee} jurisdiction and policy`
     );
     if (!committeeEmbedding) return null;
 
-    // Compare against LDA issue code labels, not individual filings
-    const allCodes = getAllLDAIssueCodes();
-    const matchedCodes: Array<{ code: string; similarity: number }> = [];
+    const labelEmbeddings = await getLDALabelEmbeddings();
+    if (!labelEmbeddings) return null;
 
-    for (const code of allCodes) {
-      const label = getLDAIssueLabel(code);
-      const labelEmbedding = await embedText(label);
-      if (!labelEmbedding) continue;
-
-      const similarity = cosineSimilarity(committeeEmbedding, labelEmbedding);
-      if (similarity >= SIMILARITY_THRESHOLD) {
-        matchedCodes.push({ code, similarity });
-      }
-    }
+    const matchedCodes = labelEmbeddings
+      .map(({ code, embedding }) => ({
+        code,
+        similarity: cosineSimilarity(committeeEmbedding, embedding),
+      }))
+      .filter((m) => m.similarity >= SIMILARITY_THRESHOLD)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, MAX_MATCHED_CODES);
 
     if (matchedCodes.length === 0) return null;
 

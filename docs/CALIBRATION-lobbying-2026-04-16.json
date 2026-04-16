@@ -1,0 +1,350 @@
+{
+  "_meta": {
+    "capturedAt": "2026-04-16",
+    "endpoint": "/api/debug/calibrate-lobbying",
+    "model": "Xenova/all-MiniLM-L6-v2 (q8 quantized)",
+    "productionThreshold": 0.4,
+    "productionTopKCap": 3,
+    "note": "Production code uses 0.40 + top-3 cap. Per-committee similarity scores below are model output and do not change with the threshold; pass/fail counts are derived from those scores against the 0.40 threshold using the matchByEmbedding rule (returns matches if ANY LDA code scores >= threshold). Capture required the workaround documented in docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md; the symlinks were removed after capture and the embedding pipeline remains disabled in production."
+  },
+  "thresholdUnderTest": 0.4,
+  "summary": {
+    "minExpectedSimilarity": 0.172,
+    "maxUnrelatedSimilarity": 0.357,
+    "casesWithAtLeastOneExpectedAboveThreshold": 6,
+    "casesWithZeroExpectedAboveThreshold": 2,
+    "casesWithAllExpectedAboveThreshold": 5,
+    "totalCases": 8,
+    "verdict": "MIXED — 6/8 produce a partial-or-better embedding match at 0.40; 2 (Special Committee on Aging, Subcommittee on Conservation and Forestry) produce zero matches at this threshold. Lowering the threshold below 0.36 would pull in noise (max unrelated similarity is 0.357). Resolution: keyword entries added for both failing committees in src/lib/data-sources/senate-lobbying-api.ts (commit follows this file)."
+  },
+  "results": [
+    {
+      "committee": "Special Committee on Aging",
+      "expectedCodes": ["RET", "MMM"],
+      "top5": [
+        {
+          "code": "GOV",
+          "label": "Government Issues",
+          "similarity": 0.346,
+          "expected": false
+        },
+        {
+          "code": "CON",
+          "label": "Constitution",
+          "similarity": 0.321,
+          "expected": false
+        },
+        {
+          "code": "DOC",
+          "label": "District of Columbia",
+          "similarity": 0.317,
+          "expected": false
+        },
+        {
+          "code": "RET",
+          "label": "Retirement",
+          "similarity": 0.317,
+          "expected": true
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.314,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.308,
+      "bestUnrelatedSimilarity": 0.346,
+      "expectedHitsThreshold": false,
+      "atLeastOneExpectedAboveThreshold": false,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Space and Aeronautics",
+      "expectedCodes": ["AER", "SCI"],
+      "top5": [
+        {
+          "code": "AER",
+          "label": "Aerospace",
+          "similarity": 0.427,
+          "expected": true
+        },
+        {
+          "code": "AVI",
+          "label": "Aviation/Aircraft/Airlines",
+          "similarity": 0.321,
+          "expected": false
+        },
+        {
+          "code": "DOC",
+          "label": "District of Columbia",
+          "similarity": 0.315,
+          "expected": false
+        },
+        {
+          "code": "BUD",
+          "label": "Budget/Appropriations",
+          "similarity": 0.278,
+          "expected": false
+        },
+        {
+          "code": "GOV",
+          "label": "Government Issues",
+          "similarity": 0.229,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.172,
+      "bestUnrelatedSimilarity": 0.321,
+      "expectedHitsThreshold": false,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Joint Committee on Taxation",
+      "expectedCodes": ["TAX"],
+      "top5": [
+        {
+          "code": "TAX",
+          "label": "Taxation/Internal Revenue Code",
+          "similarity": 0.439,
+          "expected": true
+        },
+        {
+          "code": "BUD",
+          "label": "Budget/Appropriations",
+          "similarity": 0.319,
+          "expected": false
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.312,
+          "expected": false
+        },
+        {
+          "code": "MMM",
+          "label": "Medicare/Medicaid",
+          "similarity": 0.299,
+          "expected": false
+        },
+        {
+          "code": "DOC",
+          "label": "District of Columbia",
+          "similarity": 0.296,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.439,
+      "bestUnrelatedSimilarity": 0.319,
+      "expectedHitsThreshold": true,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Conservation and Forestry",
+      "expectedCodes": ["NAT", "AGR"],
+      "top5": [
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.326,
+          "expected": false
+        },
+        {
+          "code": "RES",
+          "label": "Real Estate/Land Use/Conservation",
+          "similarity": 0.319,
+          "expected": false
+        },
+        {
+          "code": "NAT",
+          "label": "Natural Resources",
+          "similarity": 0.317,
+          "expected": true
+        },
+        {
+          "code": "DOC",
+          "label": "District of Columbia",
+          "similarity": 0.297,
+          "expected": false
+        },
+        {
+          "code": "AGR",
+          "label": "Agriculture",
+          "similarity": 0.278,
+          "expected": true
+        }
+      ],
+      "worstExpectedSimilarity": 0.278,
+      "bestUnrelatedSimilarity": 0.326,
+      "expectedHitsThreshold": false,
+      "atLeastOneExpectedAboveThreshold": false,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Border Security",
+      "expectedCodes": ["HOM", "IMM"],
+      "top5": [
+        {
+          "code": "HOM",
+          "label": "Homeland Security",
+          "similarity": 0.456,
+          "expected": true
+        },
+        {
+          "code": "IMM",
+          "label": "Immigration",
+          "similarity": 0.425,
+          "expected": true
+        },
+        {
+          "code": "DOC",
+          "label": "District of Columbia",
+          "similarity": 0.303,
+          "expected": false
+        },
+        {
+          "code": "LAW",
+          "label": "Law Enforcement/Crime/Criminal Justice",
+          "similarity": 0.303,
+          "expected": false
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.278,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.425,
+      "bestUnrelatedSimilarity": 0.303,
+      "expectedHitsThreshold": true,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Trade",
+      "expectedCodes": ["TRD"],
+      "top5": [
+        {
+          "code": "TRD",
+          "label": "Trade (Domestic and Foreign)",
+          "similarity": 0.447,
+          "expected": true
+        },
+        {
+          "code": "FOO",
+          "label": "Food Industry (Safety, Labeling, etc.)",
+          "similarity": 0.357,
+          "expected": false
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.354,
+          "expected": false
+        },
+        {
+          "code": "CHM",
+          "label": "Chemicals/Chemical Industry",
+          "similarity": 0.336,
+          "expected": false
+        },
+        {
+          "code": "MAN",
+          "label": "Manufacturing",
+          "similarity": 0.327,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.447,
+      "bestUnrelatedSimilarity": 0.357,
+      "expectedHitsThreshold": true,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Disaster Management",
+      "expectedCodes": ["DIS", "HOM"],
+      "top5": [
+        {
+          "code": "DIS",
+          "label": "Disaster Planning/Emergencies",
+          "similarity": 0.601,
+          "expected": true
+        },
+        {
+          "code": "WAS",
+          "label": "Waste (Hazardous/Solid/Interstate/Nuclear)",
+          "similarity": 0.332,
+          "expected": false
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.286,
+          "expected": false
+        },
+        {
+          "code": "BUD",
+          "label": "Budget/Appropriations",
+          "similarity": 0.279,
+          "expected": false
+        },
+        {
+          "code": "HOM",
+          "label": "Homeland Security",
+          "similarity": 0.279,
+          "expected": true
+        }
+      ],
+      "worstExpectedSimilarity": 0.279,
+      "bestUnrelatedSimilarity": 0.332,
+      "expectedHitsThreshold": false,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    },
+    {
+      "committee": "Subcommittee on Tourism",
+      "expectedCodes": ["TOU"],
+      "top5": [
+        {
+          "code": "TOU",
+          "label": "Travel/Tourism",
+          "similarity": 0.489,
+          "expected": true
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.348,
+          "expected": false
+        },
+        {
+          "code": "BUD",
+          "label": "Budget/Appropriations",
+          "similarity": 0.285,
+          "expected": false
+        },
+        {
+          "code": "GOV",
+          "label": "Government Issues",
+          "similarity": 0.278,
+          "expected": false
+        },
+        {
+          "code": "MAR",
+          "label": "Marine/Maritime/Boating/Fisheries",
+          "similarity": 0.265,
+          "expected": false
+        }
+      ],
+      "worstExpectedSimilarity": 0.489,
+      "bestUnrelatedSimilarity": 0.348,
+      "expectedHitsThreshold": true,
+      "atLeastOneExpectedAboveThreshold": true,
+      "unexpectedAboveThreshold": []
+    }
+  ]
+}
