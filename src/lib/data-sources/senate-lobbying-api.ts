@@ -4,6 +4,8 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { embedText } from '@/lib/intelligence/embeddings/embedding-classifier';
+import { cosineSimilarity } from '@/lib/intelligence/embeddings/cosine-similarity';
 import logger from '@/lib/logging/simple-logger';
 
 export interface LobbyingFiling {
@@ -102,10 +104,14 @@ function transformRawFiling(raw: RawLDAFiling): LobbyingFiling {
   };
 }
 
+export type MatchingMethod = 'keyword' | 'embedding' | 'fallback';
+
 export interface CommitteeLobbyingData {
   committee: string;
   totalSpending: number;
   companyCount: number;
+  matchingMethod: MatchingMethod;
+  matchConfidence: number;
   filings: Array<{
     id: string;
     company: string;
@@ -116,6 +122,53 @@ export interface CommitteeLobbyingData {
     year: number;
   }>;
 }
+
+/**
+ * Keyword table covering all ~40 House + Senate standing committees.
+ *
+ * Keys are short substrings that match against full committee names via
+ * case-insensitive `.includes()`. Keywords are LDA issue terms that appear
+ * in filings related to each committee's jurisdiction.
+ *
+ * Source: committee jurisdiction statements from congress.gov + LDA issue
+ * code descriptions from senate.gov/legislative/Public_Disc/LDA_Guides.
+ */
+const COMMITTEE_KEYWORDS: Record<string, string[]> = {
+  // --- Both chambers ---
+  'Agriculture': ['agriculture', 'farm', 'crop', 'livestock', 'food', 'rural', 'usda', 'nutrition', 'forestry'],
+  'Appropriations': ['appropriation', 'funding', 'discretionary spending', 'omnibus'],
+  'Armed Services': ['defense', 'military', 'armed forces', 'pentagon', 'dod', 'national security', 'weapons'],
+  'Budget': ['budget', 'fiscal policy', 'deficit', 'reconciliation', 'cbo', 'debt ceiling'],
+  'Judiciary': ['justice', 'court', 'legal', 'immigration', 'patent', 'antitrust', 'constitutional', 'crime', 'doj'],
+  'Veterans': ['veteran', 'va hospital', 'gi bill', 'military service', 'disabled veteran'],
+
+  // --- Senate-specific ---
+  'Banking': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage', 'housing', 'hud', 'urban'],
+  'Commerce, Science': ['commerce', 'trade', 'telecom', 'fcc', 'consumer protection', 'technology', 'internet', 'space', 'nasa', 'science', 'manufacturing'],
+  'Energy and Natural Resources': ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities', 'mining', 'public lands', 'forest', 'national park'],
+  'Environment and Public Works': ['environment', 'climate', 'pollution', 'epa', 'clean air', 'clean water', 'infrastructure', 'superfund', 'highway'],
+  'Finance': ['tax', 'revenue', 'irs', 'customs', 'tariff', 'social security', 'medicare', 'medicaid', 'trade agreement'],
+  'Foreign Relations': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic', 'state department', 'usaid', 'sanctions'],
+  'Health, Education, Labor': ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma', 'education', 'student', 'labor', 'employment', 'worker', 'union', 'pension', 'osha', 'workplace'],
+  'Homeland Security': ['homeland security', 'dhs', 'fema', 'border', 'cybersecurity', 'tsa', 'immigration enforcement', 'customs enforcement'],
+  'Indian Affairs': ['tribal', 'native american', 'indian', 'indigenous', 'reservation', 'bureau of indian affairs'],
+  'Intelligence': ['intelligence', 'surveillance', 'cia', 'nsa', 'classified', 'counterterrorism', 'espionage', 'fisa'],
+  'Rules and Administration': ['election', 'campaign', 'senate rules', 'fec', 'ballot', 'voting'],
+  'Small Business': ['small business', 'sba', 'entrepreneur', 'startup', 'microloan'],
+  'Ethics': ['ethics', 'conflict of interest', 'financial disclosure', 'lobbying disclosure'],
+
+  // --- House-specific (keys match substring of full committee name) ---
+  'Education and the Workforce': ['education', 'student', 'school', 'higher education', 'workforce', 'job training'],
+  'Energy and Commerce': ['energy', 'commerce', 'telecom', 'fcc', 'drug', 'pharma', 'health', 'medical', 'consumer', 'internet', 'broadband'],
+  'Financial Services': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage', 'housing', 'hud', 'fintech', 'cryptocurrency'],
+  'Foreign Affairs': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic', 'usaid', 'sanctions'],
+  'Natural Resources': ['natural resources', 'public lands', 'ocean', 'fisheries', 'national park', 'mining', 'water rights', 'endangered species'],
+  'Oversight': ['oversight', 'accountability', 'government reform', 'inspector general', 'gao', 'waste fraud abuse'],
+  'Science, Space': ['science', 'space', 'nasa', 'nsf', 'research', 'technology', 'nist', 'stem'],
+  'Transportation': ['transportation', 'highway', 'aviation', 'railroad', 'shipping', 'faa', 'dot', 'pipeline', 'coast guard', 'maritime'],
+  'Ways and Means': ['tax', 'revenue', 'irs', 'social security', 'medicare', 'trade agreement', 'tariff', 'customs'],
+  'House Administration': ['house administration', 'election', 'campaign finance', 'fec', 'library of congress', 'smithsonian'],
+};
 
 export class SenateLobbyingAPI {
   private baseUrl = 'https://lda.senate.gov/api/v1';
@@ -347,87 +400,163 @@ export class SenateLobbyingAPI {
    * Get lobbying data relevant to specific congressional committees
    */
   async getCommitteeLobbyingData(committees: string[]): Promise<CommitteeLobbyingData[]> {
-    try {
-      const allFilings = await this.fetchRecentFilings();
-      
-      if (allFilings.length === 0) {
-        logger.warn('No lobbying filings available for committee analysis');
-        return [];
-      }
+    const allFilings = await this.fetchRecentFilings();
 
-      // Committee keywords mapping for matching issues to committees
-      const committeeKeywords: Record<string, string[]> = {
-        'Agriculture': ['agriculture', 'farm', 'crop', 'livestock', 'food', 'rural', 'usda'],
-        'Appropriations': ['budget', 'spending', 'appropriation', 'funding'],
-        'Armed Services': ['defense', 'military', 'armed forces', 'pentagon', 'homeland security'],
-        'Banking': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage'],
-        'Commerce': ['commerce', 'trade', 'business', 'manufacturing', 'retail'],
-        'Energy': ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities'],
-        'Environment': ['environment', 'climate', 'pollution', 'epa', 'clean air', 'water'],
-        'Finance': ['tax', 'revenue', 'irs', 'customs', 'trade', 'tariff'],
-        'Foreign Affairs': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic'],
-        'Healthcare': ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma'],
-        'Judiciary': ['justice', 'court', 'legal', 'immigration', 'patent', 'antitrust'],
-        'Labor': ['labor', 'employment', 'worker', 'union', 'workplace', 'osha'],
-        'Transportation': ['transportation', 'highway', 'aviation', 'railroad', 'shipping'],
-      };
-
-      const committeeData: CommitteeLobbyingData[] = [];
-
-      for (const committee of committees) {
-        // Match full committee names (e.g. "House Committee on Energy and Commerce")
-        // against the short keyword map keys (e.g. "Energy", "Commerce") via substring
-        const committeeLower = committee.toLowerCase();
-        const matchedKeywords = Object.entries(committeeKeywords)
-          .filter(([key]) => committeeLower.includes(key.toLowerCase()))
-          .flatMap(([, kws]) => kws);
-        const keywords = matchedKeywords.length > 0 ? matchedKeywords : [committeeLower];
-        const relevantFilings = allFilings.filter(filing => {
-          // Check if any specific issues or general issues match committee keywords
-          // Handle null/undefined specific_issues and issues arrays
-          const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
-          const generalIssues = Array.isArray(filing.issues) ? filing.issues.map(issue => issue.description || '') : [];
-          const allIssues = [...specificIssues, ...generalIssues].join(' ').toLowerCase();
-
-          return keywords.some(keyword => allIssues.includes(keyword));
-        });
-
-        if (relevantFilings.length > 0) {
-          const totalSpending = relevantFilings.reduce((sum, filing) => sum + (filing.income || 0), 0);
-          const uniqueCompanies = new Set(relevantFilings.map(filing => filing.client.name));
-
-          const filings = relevantFilings.map(filing => ({
-            id: filing.id,
-            company: filing.client.name,
-            registrantId: filing.registrant.id,
-            amount: filing.income || 0,
-            issues: Array.isArray(filing.issues) ? filing.issues.map(i => i.description) : [],
-            quarter: filing.filingPeriod,
-            year: filing.filingYear,
-          }));
-
-          committeeData.push({
-            committee,
-            totalSpending,
-            companyCount: uniqueCompanies.size,
-            filings: filings.sort((a, b) => b.amount - a.amount),
-          });
-        }
-      }
-
-      logger.info('Generated committee lobbying analysis', {
-        committeesAnalyzed: committees.length,
-        committeesWithData: committeeData.length,
-        totalFilingsProcessed: allFilings.length,
-      });
-
-      return committeeData.sort((a, b) => b.totalSpending - a.totalSpending);
-    } catch (error) {
-      logger.error('Failed to analyze committee lobbying data', error as Error, {
-        committees,
-      });
+    if (allFilings.length === 0) {
+      logger.warn('No lobbying filings available for committee analysis');
       return [];
     }
+
+    const committeeData: CommitteeLobbyingData[] = [];
+
+    for (const committee of committees) {
+      const { filings: relevantFilings, method, confidence } =
+        await this.matchFilingsToCommittee(committee, allFilings);
+
+      if (relevantFilings.length > 0) {
+        const totalSpending = relevantFilings.reduce(
+          (sum, filing) => sum + (filing.income || 0),
+          0
+        );
+        const uniqueCompanies = new Set(relevantFilings.map((filing) => filing.client.name));
+
+        const filings = relevantFilings.map((filing) => ({
+          id: filing.id,
+          company: filing.client.name,
+          registrantId: filing.registrant.id,
+          amount: filing.income || 0,
+          issues: Array.isArray(filing.issues) ? filing.issues.map((i) => i.description) : [],
+          quarter: filing.filingPeriod,
+          year: filing.filingYear,
+        }));
+
+        committeeData.push({
+          committee,
+          totalSpending,
+          companyCount: uniqueCompanies.size,
+          matchingMethod: method,
+          matchConfidence: confidence,
+          filings: filings.sort((a, b) => b.amount - a.amount),
+        });
+      }
+    }
+
+    logger.info('Generated committee lobbying analysis', {
+      committeesAnalyzed: committees.length,
+      committeesWithData: committeeData.length,
+      totalFilingsProcessed: allFilings.length,
+    });
+
+    return committeeData.sort((a, b) => b.totalSpending - a.totalSpending);
+  }
+
+  /**
+   * Match lobbying filings to a committee using a three-tier strategy:
+   * 1. Keyword match (fast, high confidence) — expanded to all ~40 standing committees
+   * 2. Embedding similarity (slower, medium confidence) — uses all-MiniLM-L6-v2
+   * 3. Fallback to committee name as keyword (low confidence, logged)
+   */
+  private async matchFilingsToCommittee(
+    committee: string,
+    allFilings: LobbyingFiling[]
+  ): Promise<{ filings: LobbyingFiling[]; method: MatchingMethod; confidence: number }> {
+    const committeeLower = committee.toLowerCase();
+
+    // Tier 1: Keyword match against the expanded table
+    const matchedKeywords = Object.entries(COMMITTEE_KEYWORDS)
+      .filter(([key]) => committeeLower.includes(key.toLowerCase()))
+      .flatMap(([, kws]) => kws);
+
+    if (matchedKeywords.length > 0) {
+      const filings = this.filterFilingsByKeywords(allFilings, matchedKeywords);
+      if (filings.length > 0) {
+        return { filings, method: 'keyword', confidence: 0.9 };
+      }
+    }
+
+    // Tier 2: Embedding similarity — embed the committee name and compare
+    // against each filing's concatenated issue text
+    const embeddingResult = await this.matchByEmbedding(committee, allFilings);
+    if (embeddingResult) {
+      return embeddingResult;
+    }
+
+    // Tier 3: Fallback — use the committee name itself as a keyword
+    logger.warn('[SenateLDA] Committee hit fallback matching path — keyword table gap', {
+      committee,
+    });
+    const fallbackFilings = this.filterFilingsByKeywords(allFilings, [committeeLower]);
+    return {
+      filings: fallbackFilings,
+      method: 'fallback',
+      confidence: 0.3,
+    };
+  }
+
+  private filterFilingsByKeywords(
+    filings: LobbyingFiling[],
+    keywords: string[]
+  ): LobbyingFiling[] {
+    return filings.filter((filing) => {
+      const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
+      const generalIssues = Array.isArray(filing.issues)
+        ? filing.issues.map((issue) => issue.description || '')
+        : [];
+      const allIssues = [...specificIssues, ...generalIssues].join(' ').toLowerCase();
+      return keywords.some((keyword) => allIssues.includes(keyword));
+    });
+  }
+
+  private async matchByEmbedding(
+    committee: string,
+    allFilings: LobbyingFiling[]
+  ): Promise<{ filings: LobbyingFiling[]; method: MatchingMethod; confidence: number } | null> {
+    const SIMILARITY_THRESHOLD = 0.45;
+
+    const committeeEmbedding = await embedText(
+      `Congressional committee on ${committee} jurisdiction and policy`
+    );
+    if (!committeeEmbedding) return null;
+
+    const matched: LobbyingFiling[] = [];
+    let totalSimilarity = 0;
+    let comparedCount = 0;
+
+    for (const filing of allFilings) {
+      const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
+      const generalIssues = Array.isArray(filing.issues)
+        ? filing.issues.map((i) => i.description || '')
+        : [];
+      const issueText = [...specificIssues, ...generalIssues].join(' ').substring(0, 2000);
+      if (!issueText.trim()) continue;
+
+      const issueEmbedding = await embedText(issueText);
+      if (!issueEmbedding) continue;
+
+      const similarity = cosineSimilarity(committeeEmbedding, issueEmbedding);
+      comparedCount++;
+
+      if (similarity >= SIMILARITY_THRESHOLD) {
+        matched.push(filing);
+        totalSimilarity += similarity;
+      }
+    }
+
+    if (matched.length === 0) return null;
+
+    const avgConfidence = totalSimilarity / matched.length;
+    logger.info('[SenateLDA] Embedding-matched committee filings', {
+      committee,
+      matched: matched.length,
+      compared: comparedCount,
+      avgSimilarity: avgConfidence.toFixed(3),
+    });
+
+    return {
+      filings: matched,
+      method: 'embedding',
+      confidence: Math.min(avgConfidence, 0.85),
+    };
   }
 
   /**
