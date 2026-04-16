@@ -3,16 +3,21 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-// Bioguide ID to FEC Candidate ID mapping
-// This mapping helps match Congressional representatives to their FEC campaign finance records
+// Bioguide ID to FEC Candidate ID mapping.
+// Maps Congressional representatives to their FEC campaign finance records.
 // Format: bioguideId -> { fecId, name, state, district?, office, lastUpdated }
 //
-// AUTO-GENERATED FROM congress-legislators data on 2025-09-18
-// Source: https://github.com/unitedstates/congress-legislators
-// To regenerate: npm run generate-fec-mappings
-// MANUALLY UPDATED: 2026-01-08 - Removed departed members (Greene, LaMalfa, Sherrill)
-//                               Added new members (Grijalva, Van Epps, Walkinshaw)
-// Data stored in bioguide-fec-mapping.json, loaded via JSON import
+// Kept current by the weekly `sync-bioguide-fec` GitHub Action, which pulls
+// legislators-current.yaml from unitedstates/congress-legislators and falls
+// back to Congress.gov + FEC candidate search for members not yet in the
+// YAML. Do not edit the JSON by hand — run `npm run sync:bioguide-fec` or
+// wait for the scheduled workflow.
+//
+// Sources:
+//   - https://github.com/unitedstates/congress-legislators
+//   - https://api.congress.gov/
+//   - https://api.open.fec.gov/
+// Data stored in bioguide-fec-mapping.json, loaded via JSON import.
 
 import jsonData from '../data/bioguide-fec-mapping.json';
 
