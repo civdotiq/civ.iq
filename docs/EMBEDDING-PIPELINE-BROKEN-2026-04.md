@@ -19,22 +19,20 @@ Two compounding issues in `@huggingface/transformers@3.8.1`:
 
 ## Resolution
 
-`@huggingface/transformers@4.1.0` rewrites the WASM loader and resolves both issues. Verified empirically:
+`@huggingface/transformers@4.1.0` rewrites the WASM loader and resolves both issues. Verified empirically by `npm run smoke:embedding`, which exercises all four ML runtime entry points CIV.IQ uses (feature-extraction, zero-shot-classification, token-classification, and onnxruntime-web for the vote predictor). All four pass.
 
-```bash
-$ npm run smoke:embedding
-[smoke] pipeline loaded in 294ms
-[smoke] embedding shape OK (384 dims, unit norm = 1.0000)
-[smoke] PASS — embedding pipeline is functional
-```
+Measured timings (2026-04-16):
 
-The smoke script (`scripts/smoke-embedding-pipeline.ts`) loads the real pipeline in pure Node — no jest, no jsdom, no mocks. It must pass after any `@huggingface/transformers` change or Node major upgrade.
+- Warm cache: **3.8 s total** — FE 234 ms · ZS 2096 ms · NER 1275 ms · ORT 184 ms
+- Cold cache: **9.9 s total** — FE 3051 ms · ZS 4456 ms · NER 2194 ms · ORT 181 ms (~150 MB of model weights pulled from huggingface.co)
+
+The smoke script (`scripts/smoke-embedding-pipeline.ts`) loads the real pipelines in pure Node — no jest, no jsdom, no mocks — and is wired into `validate:all` (critical task), so a regression here breaks CI rather than living silently in production.
 
 ## Why mocked tests didn't catch this
 
-Every test under `src/__tests__/intelligence/` that touches embeddings mocks `@huggingface/transformers`. Mocks return whatever vector you tell them to — they don't exercise the real WASM loader. 52 ML tests passed against a runtime that produced zero embeddings in production.
+Every test under `src/__tests__/intelligence/` that touches embeddings (and zero-shot, and NER) mocks `@huggingface/transformers`. Mocks return whatever you tell them to — they don't exercise the real WASM loader. The 86 jest tests across the seven ML test suites passed against a runtime that produced zero embeddings in production.
 
-The fix going forward is the smoke script above. Run it any time the embedding stack changes.
+The fix going forward is the smoke script above plus its inclusion in `validate:all`. The script covers every transformers consumer (FE, ZS, NER) and `onnxruntime-web` directly — same coverage shape as the four production call sites.
 
 ## Phase 1 reopening
 

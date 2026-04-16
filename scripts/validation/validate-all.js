@@ -44,6 +44,14 @@ const tasks = [
     critical: true,
   },
   {
+    // Loads the real @huggingface/transformers WASM pipeline in pure Node
+    // (no jest, no jsdom, no mocks). Catches regressions like the silent
+    // 3.8.1-on-Node-25 breakage that mocked unit tests cannot detect.
+    name: 'Embedding Pipeline Smoke',
+    command: 'npm run smoke:embedding',
+    critical: true,
+  },
+  {
     name: 'Security Audit',
     command: 'npm audit --audit-level=high',
     critical: false,

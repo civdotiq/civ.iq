@@ -1,21 +1,21 @@
 {
   "_meta": {
     "capturedAt": "2026-04-16",
+    "capturedUnder": "transformers@4.1.0 + Node 25",
     "endpoint": "/api/debug/calibrate-lobbying",
     "model": "Xenova/all-MiniLM-L6-v2 (q8 quantized)",
     "productionThreshold": 0.4,
     "productionTopKCap": 3,
-    "note": "Production code uses 0.40 + top-3 cap. Per-committee similarity scores below are model output and do not change with the threshold; pass/fail counts are derived from those scores against the 0.40 threshold using the matchByEmbedding rule (returns matches if ANY LDA code scores >= threshold). Capture required the workaround documented in docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md; the symlinks were removed after capture and the embedding pipeline remains disabled in production."
+    "note": "Re-captured after upgrade from 3.8.1 \u2192 4.1.0. Per-committee similarity scores shift by \u00b10.01-0.04 vs the prior capture but the 0.40 threshold + top-3 cap design remains valid: same 6/8 committees produce a partial-or-better embedding match; same 2 (Aging, Conservation/Forestry) fall through to keyword tier; max unrelated similarity essentially unchanged (0.357 \u2192 0.356)."
   },
   "thresholdUnderTest": 0.4,
   "summary": {
-    "minExpectedSimilarity": 0.172,
-    "maxUnrelatedSimilarity": 0.357,
+    "minExpectedSimilarity": 0.187,
+    "maxUnrelatedSimilarity": 0.356,
     "casesWithAtLeastOneExpectedAboveThreshold": 6,
     "casesWithZeroExpectedAboveThreshold": 2,
-    "casesWithAllExpectedAboveThreshold": 5,
     "totalCases": 8,
-    "verdict": "MIXED — 6/8 produce a partial-or-better embedding match at 0.40; 2 (Special Committee on Aging, Subcommittee on Conservation and Forestry) produce zero matches at this threshold. Lowering the threshold below 0.36 would pull in noise (max unrelated similarity is 0.357). Resolution: keyword entries added for both failing committees in src/lib/data-sources/senate-lobbying-api.ts (commit follows this file)."
+    "verdict": "MIXED \u2014 6/8 produce a partial-or-better embedding match at 0.40; 2 (Special Committee on Aging, Subcommittee on Conservation and Forestry) produce zero matches at this threshold. Resolution: keyword entries added for both failing committees. Max unrelated similarity 0.356 confirms 0.40 is a sane lower bound \u2014 noise floor is 0.36."
   },
   "results": [
     {
@@ -25,13 +25,19 @@
         {
           "code": "GOV",
           "label": "Government Issues",
-          "similarity": 0.346,
+          "similarity": 0.347,
           "expected": false
+        },
+        {
+          "code": "RET",
+          "label": "Retirement",
+          "similarity": 0.343,
+          "expected": true
         },
         {
           "code": "CON",
           "label": "Constitution",
-          "similarity": 0.321,
+          "similarity": 0.332,
           "expected": false
         },
         {
@@ -41,22 +47,15 @@
           "expected": false
         },
         {
-          "code": "RET",
-          "label": "Retirement",
-          "similarity": 0.317,
+          "code": "MMM",
+          "label": "Medicare/Medicaid",
+          "similarity": 0.311,
           "expected": true
-        },
-        {
-          "code": "IND",
-          "label": "Indian/Native American Affairs",
-          "similarity": 0.314,
-          "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.308,
-      "bestUnrelatedSimilarity": 0.346,
+      "worstExpectedSimilarity": 0.311,
+      "bestUnrelatedSimilarity": 0.347,
       "expectedHitsThreshold": false,
-      "atLeastOneExpectedAboveThreshold": false,
       "unexpectedAboveThreshold": []
     },
     {
@@ -66,38 +65,37 @@
         {
           "code": "AER",
           "label": "Aerospace",
-          "similarity": 0.427,
+          "similarity": 0.421,
           "expected": true
         },
         {
           "code": "AVI",
           "label": "Aviation/Aircraft/Airlines",
-          "similarity": 0.321,
+          "similarity": 0.338,
           "expected": false
         },
         {
           "code": "DOC",
           "label": "District of Columbia",
-          "similarity": 0.315,
+          "similarity": 0.321,
           "expected": false
         },
         {
           "code": "BUD",
           "label": "Budget/Appropriations",
-          "similarity": 0.278,
+          "similarity": 0.272,
           "expected": false
         },
         {
           "code": "GOV",
           "label": "Government Issues",
-          "similarity": 0.229,
+          "similarity": 0.23,
           "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.172,
-      "bestUnrelatedSimilarity": 0.321,
+      "worstExpectedSimilarity": 0.187,
+      "bestUnrelatedSimilarity": 0.338,
       "expectedHitsThreshold": false,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     },
     {
@@ -107,38 +105,37 @@
         {
           "code": "TAX",
           "label": "Taxation/Internal Revenue Code",
-          "similarity": 0.439,
+          "similarity": 0.453,
           "expected": true
         },
         {
           "code": "BUD",
           "label": "Budget/Appropriations",
-          "similarity": 0.319,
-          "expected": false
-        },
-        {
-          "code": "IND",
-          "label": "Indian/Native American Affairs",
-          "similarity": 0.312,
-          "expected": false
-        },
-        {
-          "code": "MMM",
-          "label": "Medicare/Medicaid",
-          "similarity": 0.299,
+          "similarity": 0.331,
           "expected": false
         },
         {
           "code": "DOC",
           "label": "District of Columbia",
-          "similarity": 0.296,
+          "similarity": 0.307,
+          "expected": false
+        },
+        {
+          "code": "CON",
+          "label": "Constitution",
+          "similarity": 0.295,
+          "expected": false
+        },
+        {
+          "code": "GOV",
+          "label": "Government Issues",
+          "similarity": 0.281,
           "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.439,
-      "bestUnrelatedSimilarity": 0.319,
+      "worstExpectedSimilarity": 0.453,
+      "bestUnrelatedSimilarity": 0.331,
       "expectedHitsThreshold": true,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     },
     {
@@ -146,40 +143,39 @@
       "expectedCodes": ["NAT", "AGR"],
       "top5": [
         {
-          "code": "IND",
-          "label": "Indian/Native American Affairs",
-          "similarity": 0.326,
+          "code": "RES",
+          "label": "Real Estate/Land Use/Conservation",
+          "similarity": 0.356,
           "expected": false
         },
         {
-          "code": "RES",
-          "label": "Real Estate/Land Use/Conservation",
-          "similarity": 0.319,
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.314,
           "expected": false
         },
         {
           "code": "NAT",
           "label": "Natural Resources",
-          "similarity": 0.317,
+          "similarity": 0.309,
           "expected": true
         },
         {
           "code": "DOC",
           "label": "District of Columbia",
-          "similarity": 0.297,
+          "similarity": 0.307,
           "expected": false
         },
         {
           "code": "AGR",
           "label": "Agriculture",
-          "similarity": 0.278,
+          "similarity": 0.279,
           "expected": true
         }
       ],
-      "worstExpectedSimilarity": 0.278,
-      "bestUnrelatedSimilarity": 0.326,
+      "worstExpectedSimilarity": 0.279,
+      "bestUnrelatedSimilarity": 0.356,
       "expectedHitsThreshold": false,
-      "atLeastOneExpectedAboveThreshold": false,
       "unexpectedAboveThreshold": []
     },
     {
@@ -189,38 +185,37 @@
         {
           "code": "HOM",
           "label": "Homeland Security",
-          "similarity": 0.456,
+          "similarity": 0.467,
           "expected": true
         },
         {
           "code": "IMM",
           "label": "Immigration",
-          "similarity": 0.425,
+          "similarity": 0.422,
           "expected": true
         },
         {
           "code": "DOC",
           "label": "District of Columbia",
-          "similarity": 0.303,
+          "similarity": 0.315,
           "expected": false
         },
         {
           "code": "LAW",
           "label": "Law Enforcement/Crime/Criminal Justice",
-          "similarity": 0.303,
+          "similarity": 0.309,
           "expected": false
         },
         {
           "code": "IND",
           "label": "Indian/Native American Affairs",
-          "similarity": 0.278,
+          "similarity": 0.272,
           "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.425,
-      "bestUnrelatedSimilarity": 0.303,
+      "worstExpectedSimilarity": 0.422,
+      "bestUnrelatedSimilarity": 0.315,
       "expectedHitsThreshold": true,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     },
     {
@@ -230,19 +225,13 @@
         {
           "code": "TRD",
           "label": "Trade (Domestic and Foreign)",
-          "similarity": 0.447,
+          "similarity": 0.44,
           "expected": true
         },
         {
           "code": "FOO",
           "label": "Food Industry (Safety, Labeling, etc.)",
-          "similarity": 0.357,
-          "expected": false
-        },
-        {
-          "code": "IND",
-          "label": "Indian/Native American Affairs",
-          "similarity": 0.354,
+          "similarity": 0.348,
           "expected": false
         },
         {
@@ -252,16 +241,21 @@
           "expected": false
         },
         {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.333,
+          "expected": false
+        },
+        {
           "code": "MAN",
           "label": "Manufacturing",
-          "similarity": 0.327,
+          "similarity": 0.308,
           "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.447,
-      "bestUnrelatedSimilarity": 0.357,
+      "worstExpectedSimilarity": 0.44,
+      "bestUnrelatedSimilarity": 0.348,
       "expectedHitsThreshold": true,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     },
     {
@@ -271,38 +265,37 @@
         {
           "code": "DIS",
           "label": "Disaster Planning/Emergencies",
-          "similarity": 0.601,
+          "similarity": 0.59,
           "expected": true
         },
         {
           "code": "WAS",
           "label": "Waste (Hazardous/Solid/Interstate/Nuclear)",
-          "similarity": 0.332,
-          "expected": false
-        },
-        {
-          "code": "IND",
-          "label": "Indian/Native American Affairs",
-          "similarity": 0.286,
-          "expected": false
-        },
-        {
-          "code": "BUD",
-          "label": "Budget/Appropriations",
-          "similarity": 0.279,
+          "similarity": 0.32,
           "expected": false
         },
         {
           "code": "HOM",
           "label": "Homeland Security",
-          "similarity": 0.279,
+          "similarity": 0.288,
           "expected": true
+        },
+        {
+          "code": "BUD",
+          "label": "Budget/Appropriations",
+          "similarity": 0.287,
+          "expected": false
+        },
+        {
+          "code": "IND",
+          "label": "Indian/Native American Affairs",
+          "similarity": 0.269,
+          "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.279,
-      "bestUnrelatedSimilarity": 0.332,
+      "worstExpectedSimilarity": 0.288,
+      "bestUnrelatedSimilarity": 0.32,
       "expectedHitsThreshold": false,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     },
     {
@@ -312,13 +305,13 @@
         {
           "code": "TOU",
           "label": "Travel/Tourism",
-          "similarity": 0.489,
+          "similarity": 0.526,
           "expected": true
         },
         {
           "code": "IND",
           "label": "Indian/Native American Affairs",
-          "similarity": 0.348,
+          "similarity": 0.308,
           "expected": false
         },
         {
@@ -330,20 +323,19 @@
         {
           "code": "GOV",
           "label": "Government Issues",
-          "similarity": 0.278,
+          "similarity": 0.272,
           "expected": false
         },
         {
           "code": "MAR",
           "label": "Marine/Maritime/Boating/Fisheries",
-          "similarity": 0.265,
+          "similarity": 0.266,
           "expected": false
         }
       ],
-      "worstExpectedSimilarity": 0.489,
-      "bestUnrelatedSimilarity": 0.348,
+      "worstExpectedSimilarity": 0.526,
+      "bestUnrelatedSimilarity": 0.308,
       "expectedHitsThreshold": true,
-      "atLeastOneExpectedAboveThreshold": true,
       "unexpectedAboveThreshold": []
     }
   ]
