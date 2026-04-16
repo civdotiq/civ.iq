@@ -101,6 +101,13 @@ npm run security:emergency
 
 Some `npm audit` findings remain open by deliberate decision. Each entry below is backed by source-code inspection of the affected packages, not inference. Last reviewed: 2026-04-15.
 
+### Resolved in this review
+
+- `mcp-handler` 1.0.7 → 1.1.0 (pulled `@modelcontextprotocol/sdk` 1.25.2 → 1.26.0). Closes GHSA-345p-7cg4-v4c7 — race-condition data leak across concurrent MCP client sessions. Runtime-exploitable via `/api/mcp`. Non-major, no API change at our `createMcpHandler` call site.
+- `fast-xml-parser` 5.4.2 → 5.6.0. Closes GHSA-8gc5-j5rx-235r and GHSA-jp2q-39xq-3w4g — entity-expansion limit bypass via JS falsy evaluation. Our four `XMLParser` call sites do not configure entity limits, so exposure was latent rather than exploitable, but the upgrade is patch-level safe.
+
+These were missed in the initial Phase 1 hardening pass (commits `7bdcae97`–`72e5e114`); recording the gap so future audits notice the pattern.
+
 ### Transitive `tar` advisories via `@huggingface/transformers@3.8.1`
 
 **Status:** Accepted. Pin held at `@huggingface/transformers@3.8.1`.
