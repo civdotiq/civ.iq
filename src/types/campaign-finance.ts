@@ -210,6 +210,20 @@ export interface FinanceResponse {
     requestedCycle?: number; // The cycle originally requested (usually current)
     cycleExplanation?: string; // Human-readable explanation (e.g., Senate 6-year terms)
     nextElectionYear?: number; // When this representative is next up for election
+    /**
+     * Donor-base coverage for this response. `fetched` is the number of
+     * contribution rows actually analyzed; `estimatedTotal` is FEC's own
+     * count for the underlying query; `coveragePercent` is `fetched /
+     * estimatedTotal`. When `cappedAt` is set, the client-provided limit
+     * stopped pagination before the cursor was exhausted.
+     */
+    contributionCoverage?: {
+      fetched: number;
+      estimatedTotal: number;
+      coveragePercent: number;
+      cappedAt: number | null;
+      cursorExhausted: boolean;
+    };
   };
 
   // NEW PHASE 1 FIELDS:

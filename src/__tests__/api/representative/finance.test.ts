@@ -31,6 +31,7 @@ jest.mock('@/lib/fec/fec-api-service', () => ({
   fecApiService: {
     getFinancialSummary: jest.fn(),
     getSampleContributions: jest.fn(),
+    getAllContributions: jest.fn(),
     getIndependentExpenditures: jest.fn(),
     getPACContributions: jest.fn(),
     getCommitteeInfo: jest.fn(),
@@ -127,6 +128,16 @@ describe('/api/representative/[bioguideId]/finance', () => {
     mockGovCache.get.mockResolvedValue(null);
     mockFecApiService.getFinancialSummary.mockResolvedValue(mockFinancialSummary);
     mockFecApiService.getSampleContributions.mockResolvedValue(mockContributions);
+    mockFecApiService.getAllContributions.mockResolvedValue({
+      contributions: mockContributions,
+      coverage: {
+        fetched: mockContributions.length,
+        estimatedTotal: mockContributions.length,
+        coveragePercent: 100,
+        cappedAt: null,
+        cursorExhausted: true,
+      },
+    });
     mockFecApiService.getIndependentExpenditures.mockResolvedValue([]);
     mockFecApiService.getPACContributions.mockResolvedValue([]);
     mockFecApiService.getCommitteeInfo.mockResolvedValue(null);

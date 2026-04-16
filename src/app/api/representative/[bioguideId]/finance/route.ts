@@ -459,17 +459,19 @@ export async function GET(
       return NextResponse.json(noDataResponse);
     }
 
-    // Fetch sample contributions for detailed analysis
-    logger.info('[Finance API] Fetching sample contributions for detailed analysis', {
+    // Fetch a paginated batch of contributions for detailed analysis. The
+    // 1000-row default balances coverage (~full donor base for mid-volume
+    // candidates, representative sample for leadership) against FEC's
+    // 1000 req/hr quota — about 10 pages at per_page=100.
+    logger.info('[Finance API] Fetching paginated contributions for detailed analysis', {
       bioguideId,
       fecId: fecMapping.fecId,
     });
 
-    const sampleContributions = await fecApiService.getSampleContributions(
-      fecMapping.fecId,
-      dataFromCycle,
-      200
-    );
+    const { contributions: sampleContributions, coverage: contributionCoverage } =
+      await fecApiService.getAllContributions(fecMapping.fecId, dataFromCycle, {
+        limit: 1000,
+      });
 
     // PHASE 2: Entity Resolution & Deduplication
     logger.info('[Finance API] Running entity resolution on contributions', {
@@ -864,7 +866,9 @@ export async function GET(
       lastUpdated: new Date().toISOString(),
       fecDataSources: {
         financialSummary: `FEC.gov candidate/${fecMapping.fecId}/totals (${dataFromCycle} cycle)`,
-        contributions: `FEC.gov Schedule A (${sampleContributions.length} contributions analyzed)`,
+        contributions:
+          `FEC.gov Schedule A (${sampleContributions.length} of ${contributionCoverage.estimatedTotal} ` +
+          `contributions analyzed — ${contributionCoverage.coveragePercent}% coverage)`,
         independentExpenditures: `FEC.gov Schedule E (${independentExpenditures.length} expenditures)`,
       },
       fecTransparencyLinks: {
@@ -885,6 +889,7 @@ export async function GET(
         requestedCycle,
         cycleExplanation,
         nextElectionYear: senateInfo?.nextElection,
+        contributionCoverage,
       },
 
       // Phase 1 fields - Now populated with real FEC data

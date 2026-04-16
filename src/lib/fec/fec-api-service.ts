@@ -72,6 +72,16 @@ export interface FECPaginatedResponse<T> {
   };
 }
 
+/**
+ * FEC pagination cursor — returned by schedule_a / schedule_b endpoints.
+ *
+ * FEC's `page=N` pagination is hard-capped at page 10,000 (~1M rows). Deeper
+ * results MUST be reached via `last_indexes`: for each follow-up request,
+ * pass every key/value from the previous response's `last_indexes` as query
+ * params alongside the same `sort` parameter.
+ */
+export type FECLastIndexes = Record<string, string | number>;
+
 export interface FECApiResponse<T> {
   api_version: string;
   pagination: {
@@ -79,6 +89,7 @@ export interface FECApiResponse<T> {
     per_page: number;
     count: number;
     page: number;
+    last_indexes?: FECLastIndexes | null;
   };
   results: T[];
 }
@@ -224,44 +235,74 @@ export class FECApiService {
   }
 
   /**
-   * Make authenticated request to FEC API
+   * Make authenticated request to FEC API.
+   *
+   * FEC enforces a 1000 req/hr quota and returns 429 when exhausted. On 429
+   * we back off (honouring Retry-After when present) and retry up to
+   * maxRetries times before surfacing the failure. 5xx errors get the same
+   * retry treatment because FEC occasionally times out under load.
    */
-  private async makeRequest<T>(endpoint: string): Promise<T> {
+  private async makeRequest<T>(endpoint: string, maxRetries: number = 3): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     logger.info(`[FEC API] Requesting: ${endpoint}`);
 
-    try {
-      const response = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'CivicIntelHub/1.0',
-          'X-API-Key': this.apiKey,
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      });
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'CivicIntelHub/1.0',
+            'X-API-Key': this.apiKey,
+          },
+          signal: AbortSignal.timeout(30000),
+        });
 
-      if (!response.ok) {
+        if (response.ok) {
+          return (await response.json()) as T;
+        }
+
+        const shouldRetry = response.status === 429 || response.status >= 500;
+        if (shouldRetry && attempt < maxRetries) {
+          const retryAfterHeader = response.headers.get('retry-after');
+          const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : NaN;
+          const backoffMs = Number.isFinite(retryAfterSec)
+            ? retryAfterSec * 1000
+            : Math.min(30000, 1000 * 2 ** attempt);
+          logger.warn(
+            `[FEC API] ${response.status} on ${endpoint} — retrying in ${backoffMs}ms (attempt ${attempt + 1}/${maxRetries})`
+          );
+          await new Promise(r => setTimeout(r, backoffMs));
+          continue;
+        }
+
         throw new FECApiError(
           `FEC API error: ${response.status} ${response.statusText}`,
           response.status,
           endpoint
         );
+      } catch (error) {
+        if (error instanceof FECApiError) {
+          throw error;
+        }
+        if (attempt < maxRetries) {
+          const backoffMs = Math.min(30000, 1000 * 2 ** attempt);
+          logger.warn(
+            `[FEC API] Network error on ${endpoint} — retrying in ${backoffMs}ms (attempt ${attempt + 1}/${maxRetries})`
+          );
+          await new Promise(r => setTimeout(r, backoffMs));
+          continue;
+        }
+        throw new FECApiError(
+          `Failed to fetch from FEC API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          0,
+          endpoint
+        );
       }
-
-      const data = await response.json();
-      return data as T;
-    } catch (error) {
-      if (error instanceof FECApiError) {
-        throw error;
-      }
-      throw new FECApiError(
-        `Failed to fetch from FEC API: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        0,
-        endpoint
-      );
     }
+
+    // Unreachable: loop either returns success or throws.
+    throw new FECApiError(`FEC API retries exhausted for ${endpoint}`, 0, endpoint);
   }
 
   /**
@@ -296,6 +337,212 @@ export class FECApiService {
       logger.error(`[FEC API] Failed to get financial summary for ${candidateId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Paginate all individual contributions (Schedule A) for a candidate using
+   * FEC's `last_indexes` cursor.
+   *
+   * FEC caps `page=N` pagination at page 10,000 — for high-volume candidates
+   * that translates to roughly the first 1M rows in the best case. Deep
+   * results MUST be reached via the cursor returned in
+   * `pagination.last_indexes`. This method pages until `limit` rows have been
+   * collected or the cursor runs out.
+   *
+   * Caching: closed cycles are immutable, so they are cached for 30 days;
+   * the current/in-progress cycle is cached for 1 hour. Cache keys include
+   * `limit` because callers with different budgets should not share a slice.
+   *
+   * Returns the collected rows plus coverage metadata (`fetched`,
+   * `estimatedTotal`, `coveragePercent`) so consumers can show citizens how
+   * much of the donor base their view represents.
+   */
+  async getAllContributions(
+    candidateId: string,
+    cycle: number,
+    opts: {
+      limit?: number;
+      perPage?: number;
+      sort?: string;
+      onPage?: (page: { fetched: number; estimatedTotal: number }) => void;
+    } = {}
+  ): Promise<{
+    contributions: FECContribution[];
+    coverage: {
+      fetched: number;
+      estimatedTotal: number;
+      coveragePercent: number;
+      cappedAt: number | null;
+      cursorExhausted: boolean;
+    };
+  }> {
+    const limit = opts.limit ?? 2000;
+    const perPage = Math.min(opts.perPage ?? 100, 100);
+    const sort = opts.sort ?? '-contribution_receipt_amount';
+
+    const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+    if (committeeIds.length === 0) {
+      logger.warn(`[FEC API] No committees found for ${candidateId}, cannot fetch contributions`);
+      return {
+        contributions: [],
+        coverage: {
+          fetched: 0,
+          estimatedTotal: 0,
+          coveragePercent: 0,
+          cappedAt: limit,
+          cursorExhausted: true,
+        },
+      };
+    }
+
+    const cacheKey = `fec:all-contributions:${candidateId}:${cycle}:${limit}:${sort}`;
+    const currentYear = new Date().getFullYear();
+    const isClosedCycle = cycle < currentYear;
+    const cacheTtlMs = isClosedCycle ? 30 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
+
+    try {
+      const cached = await govCache.get<{
+        contributions: FECContribution[];
+        coverage: {
+          fetched: number;
+          estimatedTotal: number;
+          coveragePercent: number;
+          cappedAt: number | null;
+          cursorExhausted: boolean;
+        };
+      }>(cacheKey);
+      if (cached) {
+        logger.info(
+          `[FEC API] Cache hit for getAllContributions ${candidateId}:${cycle} (fetched=${cached.coverage.fetched})`
+        );
+        return cached;
+      }
+    } catch {
+      // Cache miss — continue to API fetch
+    }
+
+    // Probe every committee up-front so `estimatedTotal` reflects the full
+    // universe even when the caller-provided limit stops pagination before we
+    // touch later committees. Each probe is `per_page=1`, so N probes cost N
+    // FEC requests regardless of payload depth. This is a cheap fix for the
+    // previous behaviour where `estimatedTotal` depended on how far
+    // pagination got and could be misleadingly low.
+    //
+    // Caveat: when a donor contributes to multiple committees linked to the
+    // same candidate (principal + leadership PAC + joint fundraiser), those
+    // rows appear in both committee counts, so this sum is an upper bound
+    // rather than an exact dedupe. The `coveragePercent` is still a useful
+    // magnitude estimate; consumers that need exact dedupe must fetch the
+    // full set and match on `transaction_id`.
+    const collected: FECContribution[] = [];
+    let estimatedTotal = 0;
+    let cursorExhausted = false;
+
+    for (const committeeId of committeeIds) {
+      const probeUrl =
+        `/schedules/schedule_a/?candidate_id=${candidateId}` +
+        `&committee_id=${committeeId}` +
+        `&two_year_transaction_period=${cycle}&per_page=1`;
+      try {
+        const probe = await this.makeRequest<FECApiResponse<FECContribution>>(probeUrl);
+        estimatedTotal += probe.pagination?.count ?? 0;
+      } catch (error) {
+        logger.warn(
+          `[FEC API] estimatedTotal probe failed for committee ${committeeId}: ${error instanceof Error ? error.message : String(error)}`
+        );
+        // Continue — a missing probe leaves the committee out of the
+        // denominator but pagination can still proceed.
+      }
+    }
+
+    for (const committeeId of committeeIds) {
+      if (collected.length >= limit) break;
+
+      const baseUrl =
+        `/schedules/schedule_a/?candidate_id=${candidateId}` +
+        `&committee_id=${committeeId}` +
+        `&two_year_transaction_period=${cycle}` +
+        `&per_page=${perPage}` +
+        `&sort=${encodeURIComponent(sort)}`;
+
+      let cursor: FECLastIndexes | null = null;
+      let pageNum = 0;
+      let committeeDone = false;
+
+      while (collected.length < limit && !committeeDone) {
+        const cursorParams = cursor
+          ? '&' +
+            Object.entries(cursor)
+              .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+              .join('&')
+          : '';
+        const url = `${baseUrl}${cursorParams}`;
+
+        let response: FECApiResponse<FECContribution>;
+        try {
+          response = await this.makeRequest<FECApiResponse<FECContribution>>(url);
+        } catch (error) {
+          logger.warn(
+            `[FEC API] getAllContributions committee ${committeeId} page ${pageNum} failed:`,
+            error instanceof Error ? error.message : String(error)
+          );
+          break;
+        }
+
+        const results = response.results ?? [];
+        if (results.length === 0) {
+          committeeDone = true;
+          cursorExhausted = true;
+          break;
+        }
+
+        collected.push(...results);
+
+        if (opts.onPage) {
+          opts.onPage({ fetched: collected.length, estimatedTotal });
+        }
+
+        const nextCursor = response.pagination?.last_indexes;
+        if (!nextCursor || Object.keys(nextCursor).length === 0) {
+          committeeDone = true;
+          cursorExhausted = true;
+          break;
+        }
+        cursor = nextCursor;
+        pageNum++;
+      }
+    }
+
+    const trimmed = collected.slice(0, limit);
+    const coveragePercent =
+      estimatedTotal > 0 ? Math.min(100, (trimmed.length / estimatedTotal) * 100) : 0;
+
+    const result = {
+      contributions: trimmed,
+      coverage: {
+        fetched: trimmed.length,
+        estimatedTotal,
+        coveragePercent: Math.round(coveragePercent * 10) / 10,
+        cappedAt: trimmed.length >= limit ? limit : null,
+        cursorExhausted,
+      },
+    };
+
+    try {
+      await govCache.set(cacheKey, result, {
+        ttl: cacheTtlMs,
+        source: isClosedCycle ? 'fec-all-contributions-closed' : 'fec-all-contributions-current',
+        dataType: 'finance',
+      });
+    } catch {
+      // Non-fatal — cache failure shouldn't drop the payload.
+    }
+
+    logger.info(
+      `[FEC API] getAllContributions ${candidateId}:${cycle} — fetched ${trimmed.length}/${estimatedTotal} (${coveragePercent.toFixed(1)}% coverage, cursorExhausted=${cursorExhausted})`
+    );
+
+    return result;
   }
 
   /**
