@@ -74,7 +74,7 @@ const stateLegislatorTabs = [
     id: 'finance',
     label: 'Finance',
     icon: <DollarSign className="w-4 h-4" />,
-    description: 'Campaign finance data',
+    description: 'Campaign finance data (currently unavailable)',
   },
   {
     id: 'network',
@@ -642,16 +642,34 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
       case 'finance':
         return (
-          <div className="border-2 border-gray-200 p-6 sm:p-8 text-center">
-            <DollarSign className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-            <p className="type-base text-gray-900 aicher-heading mb-2">
-              State campaign finance data coming soon
-            </p>
-            <p className="type-sm text-gray-500 max-w-md mx-auto">
-              We are working on integrating official state-level campaign finance disclosures.
-              Federal campaign finance data is available on federal representative profiles via
-              FEC.gov.
-            </p>
+          <div className="border-2 border-gray-200 p-6 sm:p-8">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertCircle className="w-5 h-5 text-civiq-amber shrink-0 mt-0.5" />
+              <div>
+                <p className="type-base text-gray-900 aicher-heading mb-2">
+                  State campaign finance — data unavailable
+                </p>
+                <p className="type-sm text-gray-700 mb-3">
+                  CIV.IQ does not currently publish state campaign finance data. The
+                  FollowTheMoney.org API — the only viable cross-state aggregator — is in
+                  maintenance mode during the OpenSecrets merger, and no replacement with comparable
+                  coverage exists.
+                </p>
+                <p className="type-sm text-gray-500 mb-3">
+                  Federal campaign finance data (FEC) is available on federal representative
+                  profiles. For the canonical coverage matrix, see{' '}
+                  <a
+                    href="https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    docs/COVERAGE.md
+                  </a>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
         );
 
