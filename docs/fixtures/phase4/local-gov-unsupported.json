@@ -1,0 +1,81 @@
+{
+  "location": "fakecity-zz",
+  "resolvedCity": null,
+  "dataQuality": "unavailable",
+  "sourceStatus": [
+    {
+      "source": "civiq:local-government",
+      "status": "not-configured",
+      "errorMessage": "No local government data source is wired for this location. CIV.IQ covers a pilot list of cities only.",
+      "fetchedAt": "2026-04-16T21:31:02.162Z"
+    }
+  ],
+  "pilotCities": [
+    {
+      "id": "austin",
+      "name": "Austin",
+      "state": "TX",
+      "councilEndpoint": "/api/city/austin/council"
+    },
+    {
+      "id": "boston",
+      "name": "Boston",
+      "state": "MA",
+      "councilEndpoint": "/api/city/boston/council"
+    },
+    {
+      "id": "chicago",
+      "name": "Chicago",
+      "state": "IL",
+      "councilEndpoint": "/api/city/chicago/council"
+    },
+    {
+      "id": "denver",
+      "name": "Denver",
+      "state": "CO",
+      "councilEndpoint": "/api/city/denver/council"
+    },
+    {
+      "id": "detroit",
+      "name": "Detroit",
+      "state": "MI",
+      "councilEndpoint": "/api/city/detroit/council"
+    },
+    {
+      "id": "minneapolis",
+      "name": "Minneapolis",
+      "state": "MN",
+      "councilEndpoint": "/api/city/minneapolis/council"
+    },
+    {
+      "id": "oakland",
+      "name": "Oakland",
+      "state": "CA",
+      "councilEndpoint": "/api/city/oakland/council"
+    },
+    {
+      "id": "philadelphia",
+      "name": "Philadelphia",
+      "state": "PA",
+      "councilEndpoint": "/api/city/philadelphia/council"
+    },
+    {
+      "id": "portland",
+      "name": "Portland",
+      "state": "OR",
+      "councilEndpoint": "/api/city/portland/council"
+    },
+    {
+      "id": "seattle",
+      "name": "Seattle",
+      "state": "WA",
+      "councilEndpoint": "/api/city/seattle/council"
+    }
+  ],
+  "metadata": {
+    "dataSource": "civiq:local-government",
+    "lastUpdated": "2026-04-16T21:31:02.162Z",
+    "note": "CIV.IQ does not have local-government data for this location. There is no national local-government API; coverage is limited to a pilot list of cities. See pilotCities in this response, or docs/COVERAGE.md.",
+    "coverageDoc": "https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+  }
+}

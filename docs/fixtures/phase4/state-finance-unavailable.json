@@ -1,0 +1,23 @@
+{
+  "legislator": null,
+  "finance": {
+    "legislatorId": "ocd-person/abc-123",
+    "state": "CA",
+    "lastUpdated": "2026-04-16T21:31:02.846Z",
+    "source": "unavailable"
+  },
+  "dataQuality": "unavailable",
+  "sourceStatus": [
+    {
+      "source": "followthemoney",
+      "status": "not-configured",
+      "errorMessage": "FOLLOWTHEMONEY_API_KEY not configured",
+      "fetchedAt": "2026-04-16T21:31:02.846Z"
+    }
+  ],
+  "metadata": {
+    "dataSource": "followthemoney",
+    "lastUpdated": "2026-04-16T21:31:02.846Z",
+    "note": "State campaign finance is not currently available. FollowTheMoney.org is in maintenance mode during the OpenSecrets merger; no replacement aggregator with cross-state coverage exists. See docs/COVERAGE.md for current status."
+  }
+}

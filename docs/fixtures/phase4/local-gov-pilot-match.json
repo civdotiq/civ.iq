@@ -1,0 +1,83 @@
+{
+  "location": "boston-ma",
+  "resolvedCity": {
+    "name": "Boston",
+    "state": "MA"
+  },
+  "dataQuality": "partial",
+  "sourceStatus": [
+    {
+      "source": "legistar:boston",
+      "status": "ok",
+      "fetchedAt": "2026-04-16T21:30:54.336Z"
+    }
+  ],
+  "pilotCities": [
+    {
+      "id": "austin",
+      "name": "Austin",
+      "state": "TX",
+      "councilEndpoint": "/api/city/austin/council"
+    },
+    {
+      "id": "boston",
+      "name": "Boston",
+      "state": "MA",
+      "councilEndpoint": "/api/city/boston/council"
+    },
+    {
+      "id": "chicago",
+      "name": "Chicago",
+      "state": "IL",
+      "councilEndpoint": "/api/city/chicago/council"
+    },
+    {
+      "id": "denver",
+      "name": "Denver",
+      "state": "CO",
+      "councilEndpoint": "/api/city/denver/council"
+    },
+    {
+      "id": "detroit",
+      "name": "Detroit",
+      "state": "MI",
+      "councilEndpoint": "/api/city/detroit/council"
+    },
+    {
+      "id": "minneapolis",
+      "name": "Minneapolis",
+      "state": "MN",
+      "councilEndpoint": "/api/city/minneapolis/council"
+    },
+    {
+      "id": "oakland",
+      "name": "Oakland",
+      "state": "CA",
+      "councilEndpoint": "/api/city/oakland/council"
+    },
+    {
+      "id": "philadelphia",
+      "name": "Philadelphia",
+      "state": "PA",
+      "councilEndpoint": "/api/city/philadelphia/council"
+    },
+    {
+      "id": "portland",
+      "name": "Portland",
+      "state": "OR",
+      "councilEndpoint": "/api/city/portland/council"
+    },
+    {
+      "id": "seattle",
+      "name": "Seattle",
+      "state": "WA",
+      "councilEndpoint": "/api/city/seattle/council"
+    }
+  ],
+  "metadata": {
+    "dataSource": "legistar.com",
+    "lastUpdated": "2026-04-16T21:30:54.336Z",
+    "note": "Boston, MA is a CIV.IQ pilot city. Fetch council data from /api/city/boston/council. This catch-all route does not return officials directly.",
+    "coverageDoc": "https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+  }
+}
