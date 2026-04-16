@@ -61,8 +61,10 @@ interface LobbyingResponse {
       industryBreakdown: IndustryBreakdown[];
     };
   };
+  dataQuality?: 'complete' | 'partial' | 'empty' | 'unavailable';
   metadata?: {
     coveragePeriod: string;
+    note?: string;
   };
 }
 
@@ -127,8 +129,10 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
   if (lobbyingError && chainError) {
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
-        <p className="type-sm text-gray-500">Lobbying data temporarily unavailable.</p>
-        <p className="type-xs text-gray-400 mt-2">Please try again later.</p>
+        <p className="type-sm text-gray-500">Lobbying data source temporarily unavailable.</p>
+        <p className="type-xs text-gray-400 mt-2">
+          The Senate LDA API may be experiencing issues. Please try again later.
+        </p>
       </div>
     );
   }
@@ -141,10 +145,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
   const hasChains = chainData?.chains && chainData.chains.length > 0;
 
   if (!hasLobbyingData && !hasChains) {
+    const note = lobbyingData?.metadata?.note;
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
         <p className="type-sm text-gray-500">
-          No lobbying data found for this representative&#39;s committees.
+          {note ?? 'No lobbying data found for this representative\u2019s committees.'}
         </p>
         <p className="type-xs text-gray-400 mt-2">
           Lobbying data requires committee membership to identify relevant corporate influence.

@@ -76,12 +76,13 @@ export interface DistrictSpendingResponse {
   summary: DistrictSpendingSummary | null;
   recentContracts: FederalAward[];
   recentGrants: FederalAward[];
+  dataQuality: import('./backbone-response').DataQuality;
+  sourceStatus: import('./backbone-response').SourceStatus[];
   metadata: {
     generatedAt: string;
     dataSource: string;
     fiscalYear: number;
     cacheHit?: boolean;
-    dataQuality?: 'complete' | 'partial';
     dataNote?: string;
   };
   error?: string;

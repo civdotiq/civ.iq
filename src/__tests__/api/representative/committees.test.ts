@@ -65,6 +65,10 @@ describe('/api/representative/[bioguideId]/committees', () => {
       expect(response.status).toBe(200);
       expect(data).toHaveProperty('committees');
       expect(Array.isArray(data.committees)).toBe(true);
+      expect(data.dataQuality).toBe('complete');
+      expect(data.sourceStatus).toEqual([
+        expect.objectContaining({ source: 'congress.gov', status: 'ok' }),
+      ]);
     });
 
     it('should return committee details', async () => {
@@ -123,6 +127,7 @@ describe('/api/representative/[bioguideId]/committees', () => {
 
       expect(response.status).toBe(200);
       expect(data.committees).toEqual([]);
+      expect(data.dataQuality).toBe('empty');
     });
 
     it('should handle missing committees field', async () => {
@@ -140,6 +145,7 @@ describe('/api/representative/[bioguideId]/committees', () => {
 
       expect(response.status).toBe(200);
       expect(data.committees).toEqual([]);
+      expect(data.dataQuality).toBe('empty');
     });
   });
 
@@ -153,6 +159,8 @@ describe('/api/representative/[bioguideId]/committees', () => {
 
       expect(data).toHaveProperty('committees');
       expect(Array.isArray(data.committees)).toBe(true);
+      expect(data).toHaveProperty('dataQuality');
+      expect(data).toHaveProperty('sourceStatus');
     });
   });
 });

@@ -97,7 +97,7 @@ export default function FederalSpendingProfile({ districtId }: FederalSpendingPr
         </Link>
       </div>
 
-      <SpendingSummaryCards summary={summary} dataQuality={data.metadata?.dataQuality} />
+      <SpendingSummaryCards summary={summary} dataQuality={data.dataQuality} />
 
       <SpendingBreakdownChart
         contractSpending={summary.contractSpending}

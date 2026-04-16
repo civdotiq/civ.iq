@@ -5,6 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  fetchWithSourceStatus,
+  computeDataQuality,
+  type SourceStatus,
+} from '@/types/backbone-response';
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
@@ -13,54 +18,84 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ): Promise<NextResponse> {
-  try {
-    const { bioguideId } = await params;
+  const { bioguideId } = await params;
 
-    if (!bioguideId) {
-      return NextResponse.json({ error: 'BioguideId required' }, { status: 400 });
-    }
+  if (!bioguideId) {
+    return NextResponse.json({ error: 'BioguideId required' }, { status: 400 });
+  }
 
-    if (!process.env.CONGRESS_API_KEY) {
-      return new NextResponse('Congress.gov API key required', { status: 500 });
-    }
-
-    const response = await fetch(`https://api.congress.gov/v3/member/${bioguideId}?format=json`, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-        'X-API-Key': process.env.CONGRESS_API_KEY || '',
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) {
+    const sourceStatus: SourceStatus = {
+      source: 'congress.gov',
+      status: 'not-configured',
+      errorMessage: 'CONGRESS_API_KEY not set',
+      fetchedAt: new Date().toISOString(),
+    };
+    return NextResponse.json(
+      {
+        committees: [],
+        dataQuality: 'unavailable' as const,
+        sourceStatus: [sourceStatus],
       },
-    });
+      { status: 503 }
+    );
+  }
 
-    if (!response.ok) {
-      logger.error('Congress.gov member API failed', new Error(`HTTP ${response.status}`), {
-        bioguideId,
-        status: response.status,
+  const { data: committees, sourceStatus } = await fetchWithSourceStatus(
+    'congress.gov',
+    async () => {
+      const response = await fetch(`https://api.congress.gov/v3/member/${bioguideId}?format=json`, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+          'X-API-Key': apiKey,
+        },
       });
-      return new NextResponse('Failed to fetch from Congress.gov', { status: 500 });
-    }
 
-    const data = await response.json();
-    const committees = data.member?.committees || [];
+      if (!response.ok) {
+        throw new Error(`Congress.gov returned HTTP ${response.status}`);
+      }
 
+      const data = await response.json();
+      return (data.member?.committees ?? []) as Array<Record<string, unknown>>;
+    },
+    [] as Array<Record<string, unknown>>
+  );
+
+  const dataQuality = computeDataQuality([sourceStatus], committees.length === 0);
+
+  if (sourceStatus.status !== 'ok') {
+    logger.error(
+      'Congress.gov member API failed',
+      new Error(sourceStatus.errorMessage ?? 'unknown'),
+      {
+        bioguideId,
+      }
+    );
+  } else {
     logger.info('Successfully fetched member committees from Congress.gov', {
       bioguideId,
       committeeCount: committees.length,
     });
-
-    return NextResponse.json(
-      { committees },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
-        },
-      }
-    );
-  } catch (error) {
-    logger.error('Representative committees API error', error as Error, {
-      bioguideId: (await params).bioguideId,
-    });
-
-    return new NextResponse('Congress.gov failed', { status: 500 });
   }
+
+  const statusCode = sourceStatus.status === 'ok' ? 200 : 503;
+
+  return NextResponse.json(
+    {
+      committees,
+      dataQuality,
+      sourceStatus: [sourceStatus],
+    },
+    {
+      status: statusCode,
+      headers: {
+        'Cache-Control':
+          sourceStatus.status === 'ok'
+            ? 'public, s-maxage=86400, stale-while-revalidate=172800'
+            : 'no-cache',
+      },
+    }
+  );
 }

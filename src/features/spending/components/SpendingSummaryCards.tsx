@@ -1,11 +1,12 @@
 'use client';
 
+import type { DataQuality } from '@/types/backbone-response';
 import type { DistrictSpendingSummary } from '@/types/spending';
 import { formatCompactCurrency, getFiscalYearLabel } from '../utils/format';
 
 interface SpendingSummaryCardsProps {
   summary: DistrictSpendingSummary;
-  dataQuality?: 'complete' | 'partial';
+  dataQuality?: DataQuality;
 }
 
 interface MetricCardProps {
@@ -30,6 +31,11 @@ export default function SpendingSummaryCards({ summary, dataQuality }: SpendingS
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
         Spending Overview &mdash; {getFiscalYearLabel(summary.fiscalYear)}
       </h3>
+      {dataQuality === 'unavailable' && (
+        <p className="text-xs text-gray-700 dark:text-gray-300 border-2 border-black dark:border-[#333333] px-3 py-2 mb-4">
+          Spending data is temporarily unavailable from USAspending.gov. Please try again later.
+        </p>
+      )}
       {dataQuality === 'partial' && (
         <p className="text-xs text-amber-700 dark:text-amber-400 border border-amber-300 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 mb-4">
           Aggregate spending data temporarily unavailable. Totals shown are based on top awards only

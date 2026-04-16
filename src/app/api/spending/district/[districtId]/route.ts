@@ -6,6 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { parseDistrictId, getDistrictSpending } from '@/lib/services/spending.service';
+import {
+  fetchWithSourceStatus,
+  computeDataQuality,
+  type SourceStatus,
+} from '@/types/backbone-response';
 import type { DistrictSpendingResponse } from '@/types/spending';
 
 export const dynamic = 'force-dynamic';
@@ -14,79 +19,48 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ districtId: string }> }
 ): Promise<NextResponse<DistrictSpendingResponse>> {
-  try {
-    const { districtId } = await params;
-    const parsed = parseDistrictId(districtId);
+  const { districtId } = await params;
+  const parsed = parseDistrictId(districtId);
+  const now = new Date().toISOString();
+  const fiscalYear = new Date().getFullYear();
 
-    if (!parsed) {
-      return NextResponse.json(
-        {
-          success: false,
-          summary: null,
-          recentContracts: [],
-          recentGrants: [],
-          metadata: {
-            generatedAt: new Date().toISOString(),
-            dataSource: 'usaspending.gov',
-            fiscalYear: new Date().getFullYear(),
-          },
-          error: 'Invalid district ID format. Use format: ST-DD (e.g., MI-05)',
-        },
-        { status: 400 }
-      );
-    }
-
-    const { state, district } = parsed;
-
-    logger.info('District spending API request', { districtId, state, district });
-
-    const result = await getDistrictSpending(state, district);
-    const fiscalYear = new Date().getFullYear();
-
-    const aggregateAvailable = result.aggregate !== null;
-
+  if (!parsed) {
+    const sourceStatus: SourceStatus = {
+      source: 'usaspending.gov',
+      status: 'ok',
+      fetchedAt: now,
+    };
     return NextResponse.json(
       {
-        success: true,
-        summary: {
-          districtId: districtId.toUpperCase(),
-          displayName: `${state}-${district}`,
-          state,
-          districtNumber: district,
-          fiscalYear,
-          totalSpending: result.aggregate?.total ?? result.contractTotal + result.grantTotal,
-          contractSpending: result.contractTotal,
-          grantSpending: result.grantTotal,
-          loanSpending: 0,
-          otherSpending: 0,
-          topRecipients: [],
-          topAgencies: [],
-          perCapita: result.aggregate?.perCapita ?? null,
-          population: result.aggregate?.population ?? null,
-        },
-        recentContracts: result.contracts,
-        recentGrants: result.grants,
+        success: false,
+        summary: null,
+        recentContracts: [],
+        recentGrants: [],
+        dataQuality: 'empty' as const,
+        sourceStatus: [sourceStatus],
         metadata: {
-          generatedAt: new Date().toISOString(),
+          generatedAt: now,
           dataSource: 'usaspending.gov',
           fiscalYear,
-          dataQuality: aggregateAvailable ? 'complete' : 'partial',
-          ...(!aggregateAvailable && {
-            dataNote:
-              'Aggregate spending API unavailable; totalSpending is sum of top-10 contracts and grants only',
-          }),
         },
+        error: 'Invalid district ID format. Use format: ST-DD (e.g., MI-05)',
       },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=43200',
-        },
-      }
+      { status: 400 }
     );
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  }
 
-    logger.error('District spending API error', error as Error);
+  const { state, district } = parsed;
+
+  logger.info('District spending API request', { districtId, state, district });
+
+  const { data: result, sourceStatus } = await fetchWithSourceStatus(
+    'usaspending.gov',
+    () => getDistrictSpending(state, district),
+    { contracts: [], grants: [], contractTotal: 0, grantTotal: 0, aggregate: null }
+  );
+
+  if (sourceStatus.status !== 'ok') {
+    logger.error('District spending API error', new Error(sourceStatus.errorMessage ?? 'unknown'));
 
     return NextResponse.json(
       {
@@ -94,14 +68,67 @@ export async function GET(
         summary: null,
         recentContracts: [],
         recentGrants: [],
+        dataQuality: computeDataQuality([sourceStatus], true),
+        sourceStatus: [sourceStatus],
         metadata: {
-          generatedAt: new Date().toISOString(),
+          generatedAt: now,
           dataSource: 'usaspending.gov',
-          fiscalYear: new Date().getFullYear(),
+          fiscalYear,
         },
-        error: errorMessage,
+        error: sourceStatus.errorMessage,
       },
-      { status: 500 }
+      { status: 503 }
     );
   }
+
+  const aggregateAvailable = result.aggregate !== null;
+  const hasData = result.contracts.length > 0 || result.grants.length > 0;
+  const dataQuality = aggregateAvailable
+    ? hasData
+      ? 'complete'
+      : 'empty'
+    : hasData
+      ? 'partial'
+      : 'empty';
+
+  return NextResponse.json(
+    {
+      success: true,
+      summary: {
+        districtId: districtId.toUpperCase(),
+        displayName: `${state}-${district}`,
+        state,
+        districtNumber: district,
+        fiscalYear,
+        totalSpending: result.aggregate?.total ?? result.contractTotal + result.grantTotal,
+        contractSpending: result.contractTotal,
+        grantSpending: result.grantTotal,
+        loanSpending: 0,
+        otherSpending: 0,
+        topRecipients: [],
+        topAgencies: [],
+        perCapita: result.aggregate?.perCapita ?? null,
+        population: result.aggregate?.population ?? null,
+      },
+      recentContracts: result.contracts,
+      recentGrants: result.grants,
+      dataQuality: dataQuality as 'complete' | 'partial' | 'empty',
+      sourceStatus: [sourceStatus],
+      metadata: {
+        generatedAt: now,
+        dataSource: 'usaspending.gov',
+        fiscalYear,
+        ...(!aggregateAvailable &&
+          hasData && {
+            dataNote:
+              'Aggregate spending API unavailable; totalSpending is sum of top-10 contracts and grants only',
+          }),
+      },
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=43200',
+      },
+    }
+  );
 }
