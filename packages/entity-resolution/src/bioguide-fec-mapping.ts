@@ -26,9 +26,11 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// Avoid naming this `__dirname` — Jest's CJS transform injects its own
+// `__dirname` when compiling this file for tests, which would collide.
+const packageDataDir = join(dirname(fileURLToPath(import.meta.url)), '../data');
 const jsonData = JSON.parse(
-  readFileSync(join(__dirname, '../data/bioguide-fec-mapping.json'), 'utf8')
+  readFileSync(join(packageDataDir, 'bioguide-fec-mapping.json'), 'utf8')
 ) as Record<string, unknown>;
 
 export interface FECMapping {
