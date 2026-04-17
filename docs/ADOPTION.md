@@ -1,6 +1,6 @@
 # ADOPTION — who is consuming the CIV.IQ backbone
 
-**Last reviewed:** 2026-04-16
+**Last reviewed:** 2026-04-17
 **Purpose:** a public, dated record of whether CIV.IQ is actually being used as infrastructure — not as a marketing claim.
 
 > A backbone is only a backbone if something leans on it. This page exists because calling yourself "the canonical civic data layer" without citing consumers is theater. If the numbers are small, we will say so. If they grow, we will say that too. Either way the numbers live in git.
@@ -31,15 +31,15 @@ The npm snapshot is the only signal that is in git. MCP and SDK traffic are in t
 
 ## npm downloads — published packages
 
-**Latest snapshot:** [`docs/adoption/npm-downloads.json`](./adoption/npm-downloads.json) — 2026-04-16
+**Latest snapshot:** [`docs/adoption/npm-downloads.json`](./adoption/npm-downloads.json) — 2026-04-17
 
-All three `@civiq` packages are live on npm (initial publish: 2026-03-25). Subsequent releases go through [`.github/workflows/publish-packages.yml`](../.github/workflows/publish-packages.yml), which publishes with npm provenance attestation on tags matching `@civiq/<package>@v<version>`.
+All three `@civiq` packages are live on npm (initial publish: 2026-03-25). Subsequent releases go through [`.github/workflows/publish-packages.yml`](../.github/workflows/publish-packages.yml), which publishes with npm provenance attestation on tags matching `<package>-v<version>` (e.g., `sdk-v0.1.1`). As of 2026-04-17, `0.1.1` is the first release published through that workflow; each tarball carries an SLSA v1 provenance attestation visible on its npm page.
 
 | Package                    | Published  | Latest version | last-week | last-month | Source                                                        |
 | -------------------------- | ---------- | -------------- | --------- | ---------- | ------------------------------------------------------------- |
-| `@civiq/civic-statistics`  | 2026-03-25 | 0.1.0          | 5         | 64         | [`packages/civic-statistics`](../packages/civic-statistics)   |
-| `@civiq/entity-resolution` | 2026-03-25 | 0.1.0          | 4         | 65         | [`packages/entity-resolution`](../packages/entity-resolution) |
-| `@civiq/sdk`               | 2026-03-25 | 0.1.0          | 4         | 66         | [`packages/sdk`](../packages/sdk)                             |
+| `@civiq/civic-statistics`  | 2026-03-25 | 0.1.1          | 4         | 64         | [`packages/civic-statistics`](../packages/civic-statistics)   |
+| `@civiq/entity-resolution` | 2026-03-25 | 0.1.1          | 3         | 65         | [`packages/entity-resolution`](../packages/entity-resolution) |
+| `@civiq/sdk`               | 2026-03-25 | 0.1.1          | 4         | 66         | [`packages/sdk`](../packages/sdk)                             |
 
 Numbers are low and that's honest — these packages are weeks old and barely promoted. The value of this table is that it exists, updates weekly, and does not silently bail on bad weeks.
 
@@ -83,7 +83,7 @@ Expected fields per event:
   "message": "adoption.sdk.request",
   "data": {
     "sdk": "@civiq/sdk",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "path": "/api/v1/representatives",
     "method": "GET"
   }
