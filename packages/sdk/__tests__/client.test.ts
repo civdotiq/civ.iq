@@ -62,6 +62,24 @@ describe('CivIQ client', () => {
       expect.objectContaining({ method: 'GET' })
     );
   });
+
+  it('sends a default @civiq/sdk User-Agent in Node-like runtimes', async () => {
+    const fetchFn = mockFetch({ data: [] });
+    const civiq = new CivIQ({ fetch: fetchFn });
+    await civiq.representatives.list();
+    const init = fetchFn.mock.calls[0]?.[1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers['User-Agent']).toMatch(/^@civiq\/sdk\/\d+\.\d+\.\d+/);
+  });
+
+  it('appends a caller-provided userAgent token after the SDK signature', async () => {
+    const fetchFn = mockFetch({ data: [] });
+    const civiq = new CivIQ({ fetch: fetchFn, userAgent: 'civic-dashboard/2.3.1' });
+    await civiq.representatives.list();
+    const init = fetchFn.mock.calls[0]?.[1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers['User-Agent']).toMatch(/^@civiq\/sdk\/\d+\.\d+\.\d+ civic-dashboard\/2\.3\.1$/);
+  });
 });
 
 describe('Representatives resource', () => {

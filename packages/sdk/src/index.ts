@@ -1,7 +1,7 @@
 export { CivIQ } from './client.js';
 export type { CivIQOptions } from './client.js';
 
-export { HttpClient } from './http.js';
+export { HttpClient, SDK_VERSION, SDK_USER_AGENT } from './http.js';
 export type { HttpClientOptions } from './http.js';
 
 export {
