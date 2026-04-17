@@ -33,13 +33,15 @@ The npm snapshot is the only signal that is in git. MCP and SDK traffic are in t
 
 **Latest snapshot:** [`docs/adoption/npm-downloads.json`](./adoption/npm-downloads.json) — 2026-04-17
 
-All three `@civiq` packages are live on npm (initial publish: 2026-03-25). Subsequent releases go through [`.github/workflows/publish-packages.yml`](../.github/workflows/publish-packages.yml), which publishes with npm provenance attestation on tags matching `<package>-v<version>` (e.g., `sdk-v0.1.1`). As of 2026-04-17, `0.1.1` is the first release published through that workflow; each tarball carries an SLSA v1 provenance attestation visible on its npm page.
+All three `@civiq` packages are live on npm (initial publish: 2026-03-25). Subsequent releases go through [`.github/workflows/publish-packages.yml`](../.github/workflows/publish-packages.yml), which publishes with npm provenance attestation on tags matching `<package>-v<version>`. Each tarball carries an SLSA v1 provenance attestation visible on its npm page. The workflow now also runs a **consumer-install smoke step** post-publish that installs the just-published tarball in a scratch dir and imports it via native Node ESM — catches missing `.js` extensions, missing JSON import attributes, or broken `exports` maps before anyone else hits them.
 
 | Package                    | Published  | Latest version | last-week | last-month | Source                                                        |
 | -------------------------- | ---------- | -------------- | --------- | ---------- | ------------------------------------------------------------- |
-| `@civiq/civic-statistics`  | 2026-03-25 | 0.1.1          | 4         | 64         | [`packages/civic-statistics`](../packages/civic-statistics)   |
-| `@civiq/entity-resolution` | 2026-03-25 | 0.1.1          | 3         | 65         | [`packages/entity-resolution`](../packages/entity-resolution) |
+| `@civiq/civic-statistics`  | 2026-03-25 | 0.1.2          | 4         | 64         | [`packages/civic-statistics`](../packages/civic-statistics)   |
+| `@civiq/entity-resolution` | 2026-03-25 | 0.1.2          | 3         | 65         | [`packages/entity-resolution`](../packages/entity-resolution) |
 | `@civiq/sdk`               | 2026-03-25 | 0.1.1          | 4         | 66         | [`packages/sdk`](../packages/sdk)                             |
+
+> 2026-04-17: `civic-statistics` and `entity-resolution` 0.1.0/0.1.1 were broken for native Node ESM consumers — relative imports omitted `.js` extensions, and entity-resolution's JSON data files lacked the required `with { type: "json" }` import attribute. Both released under `moduleResolution: "bundler"`, which bundler-based consumers (Vite/Webpack) handled silently, so the bug sat unnoticed until a consumer-install smoke caught it. 0.1.2 fixes both and the workflow now gates on the same smoke. `@civiq/sdk@0.1.1` is unaffected — it was already `.js`-extension-clean and ships no JSON.
 
 Numbers are low and that's honest — these packages are weeks old and barely promoted. The value of this table is that it exists, updates weekly, and does not silently bail on bad weeks.
 
@@ -83,7 +85,7 @@ Expected fields per event:
   "message": "adoption.sdk.request",
   "data": {
     "sdk": "@civiq/sdk",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "path": "/api/v1/representatives",
     "method": "GET"
   }

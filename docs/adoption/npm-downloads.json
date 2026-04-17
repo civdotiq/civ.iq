@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T18:42:38.051Z",
+  "generatedAt": "2026-04-17T19:38:26.038Z",
   "source": "https://api.npmjs.org/downloads/point/{period}/{package}",
   "packages": [
     {
@@ -9,8 +9,8 @@
         "last-week": 4,
         "last-month": 64
       },
-      "publishedVersion": "0.1.1",
-      "lastRefreshed": "2026-04-17T18:42:37.947Z"
+      "publishedVersion": "0.1.2",
+      "lastRefreshed": "2026-04-17T19:38:26.038Z"
     },
     {
       "package": "@civiq/entity-resolution",
@@ -19,8 +19,8 @@
         "last-week": 3,
         "last-month": 65
       },
-      "publishedVersion": "0.1.1",
-      "lastRefreshed": "2026-04-17T18:42:37.957Z"
+      "publishedVersion": "0.1.2",
+      "lastRefreshed": "2026-04-17T19:38:26.025Z"
     },
     {
       "package": "@civiq/sdk",
@@ -30,7 +30,7 @@
         "last-month": 66
       },
       "publishedVersion": "0.1.1",
-      "lastRefreshed": "2026-04-17T18:42:38.051Z"
+      "lastRefreshed": "2026-04-17T19:38:26.013Z"
     }
   ]
 }
