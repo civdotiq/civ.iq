@@ -3,8 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { setLogger, type Logger } from './logger';
-import { setCache, type CacheAdapter } from './cache';
+import { setLogger, type Logger } from './logger.js';
+import { setCache, type CacheAdapter } from './cache.js';
 
 /**
  * Configure the entity-resolution package with app-specific dependencies.

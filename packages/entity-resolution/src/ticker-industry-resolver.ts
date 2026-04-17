@@ -14,14 +14,22 @@
  * ETFs, mutual funds, and unresolvable tickers return null.
  */
 
-import { getLogger } from './logger';
-import { getCache } from './cache';
-import { sicToSector } from './sic-sector-map';
-import type { TickerResolution } from './types';
+import { getLogger } from './logger.js';
+import { getCache } from './cache.js';
+import { sicToSector } from './sic-sector-map.js';
+import type { TickerResolution } from './types.js';
 
 // Static ticker → CIK mapping from SEC EDGAR company_tickers.json
-// ~10K entries, ~155KB
-import tickerCikMap from '../data/sec-sic-data.json';
+// ~10K entries, ~155KB. Loaded via readFileSync to sidestep the Node
+// ESM import-attribute requirement on bare JSON imports.
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const tickerCikMap = JSON.parse(
+  readFileSync(join(__dirname, '../data/sec-sic-data.json'), 'utf8')
+) as Record<string, number>;
 
 /** SIC code cache TTL: 30 days (SIC codes rarely change) */
 const SIC_CACHE_TTL = 30 * 24 * 60 * 60;

@@ -17,9 +17,19 @@
 //   - https://github.com/unitedstates/congress-legislators
 //   - https://api.congress.gov/
 //   - https://api.open.fec.gov/
-// Data stored in bioguide-fec-mapping.json, loaded via JSON import.
+// Data stored in bioguide-fec-mapping.json, loaded at module init via
+// readFileSync to avoid Node ESM import-attribute requirements (`with
+// { type: 'json' }`) that would otherwise force consumers onto Node 22+
+// and break older bundlers.
 
-import jsonData from '../data/bioguide-fec-mapping.json';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const jsonData = JSON.parse(
+  readFileSync(join(__dirname, '../data/bioguide-fec-mapping.json'), 'utf8')
+) as Record<string, unknown>;
 
 export interface FECMapping {
   fecId: string;

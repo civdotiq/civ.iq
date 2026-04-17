@@ -2,6 +2,12 @@
 
 All notable changes to `@civiq/civic-statistics` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.1.2] — 2026-04-17
+
+### Fixed
+
+- Relative imports in the published build now include explicit `.js` extensions (e.g., `./civic-stats.js`). Previous releases (0.1.0, 0.1.1) emitted extensionless paths like `./civic-stats`, which bundlers (Vite, Webpack, esbuild) resolve but native Node ESM rejects with `ERR_MODULE_NOT_FOUND`. Anyone installing the package and running `node -e "import ..."` on 0.1.0/0.1.1 hit this; 0.1.2 resolves cleanly. Vitest's own resolution hid the bug during test runs.
+
 ## [0.1.1] — 2026-04-17
 
 ### Changed

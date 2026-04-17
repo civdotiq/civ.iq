@@ -24,8 +24,8 @@ import {
   quantileRank,
 } from 'simple-statistics';
 
-import type { PeerComparison, AnomalyResult } from './types';
-import { detectAnomalies } from './anomaly-detection';
+import type { PeerComparison, AnomalyResult } from './types.js';
+import { detectAnomalies } from './anomaly-detection.js';
 
 // ── Minimum Sample Sizes ─────────────────────────────────────────────
 

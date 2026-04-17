@@ -2,6 +2,17 @@
 
 All notable changes to `@civiq/entity-resolution` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.1.2] — 2026-04-17
+
+### Fixed
+
+- Relative imports in the published build now include explicit `.js` extensions. Previous releases (0.1.0, 0.1.1) emitted extensionless paths which bundlers resolved but native Node ESM rejected with `ERR_MODULE_NOT_FOUND`.
+- Bundled JSON data (`data/bioguide-fec-mapping.json`, `data/sec-sic-data.json`) is now loaded via `readFileSync` + `JSON.parse` at module init. Previous releases used `import jsonData from './data/x.json'`, which native Node ESM rejects with `ERR_IMPORT_ATTRIBUTE_MISSING` — it requires `with { type: "json" }` attributes that bare TypeScript JSON imports don't emit. `readFileSync` sidesteps both the import-attribute churn and stays compatible with Node 20+.
+
+### Verified
+
+- `npm install @civiq/entity-resolution@0.1.2 && node -e "import('@civiq/entity-resolution').then(m => console.log(m.getFECIdFromBioguide('P000197')))"` resolves and returns real data. A consumer-install smoke step added to the publish workflow catches this class of regression automatically going forward.
+
 ## [0.1.1] — 2026-04-17
 
 ### Changed

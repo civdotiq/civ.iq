@@ -120,6 +120,36 @@ jobs:
         working-directory: packages/${{ steps.target.outputs.package }}
         run: npm publish --dry-run --access public
 
+      # Install the just-published tarball in a scratch dir and import it
+      # from native Node ESM. Catches missing `.js` extensions, missing JSON
+      # import attributes, broken `exports` maps — anything that makes a
+      # package install cleanly but fail to run. Skipped for dry runs.
+      - name: Consumer install smoke
+        if: steps.target.outputs.dry_run != 'true'
+        env:
+          PKG: ${{ steps.target.outputs.package }}
+          VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          SMOKE_DIR="$(mktemp -d)"
+          cd "$SMOKE_DIR"
+          npm init -y > /dev/null
+          node -e "const p=require('./package.json'); p.type='module'; require('fs').writeFileSync('./package.json', JSON.stringify(p,null,2))"
+          # npm registry propagation can take a few seconds after publish
+          for i in 1 2 3 4 5; do
+            if npm install "@civiq/${PKG}@${VERSION}" 2>&1; then break; fi
+            echo "Install attempt $i failed; retrying in 10s..."
+            sleep 10
+          done
+          node --input-type=module -e "
+            const m = await import('@civiq/${PKG}');
+            const keys = Object.keys(m);
+            if (keys.length === 0) {
+              console.error('No exports from @civiq/${PKG}@${VERSION}');
+              process.exit(1);
+            }
+            console.log('@civiq/${PKG}@${VERSION} resolved in Node ESM — exports:', keys.slice(0, 5).join(', '), keys.length > 5 ? '...' : '');
+          "
+
       - name: Summary
         run: |
           echo "### Published @civiq/${{ steps.target.outputs.package }}@${{ steps.target.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"

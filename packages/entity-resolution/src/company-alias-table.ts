@@ -15,7 +15,7 @@
  * and strips corporate suffixes before matching.
  */
 
-import { IndustrySector } from './industry-taxonomy';
+import { IndustrySector } from './industry-taxonomy.js';
 
 export interface CompanyAlias {
   canonicalName: string;
