@@ -103,12 +103,8 @@ jobs:
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
-          # Belt-and-suspenders: npm view exits 0 and prints the version when
-          # published, exits non-zero (E404) and prints nothing on stdout when
-          # not published. We check both to avoid masking transient errors.
-          OUT=$(npm view "${NAME}@${VERSION}" version 2>/dev/null || true)
-          if [ -n "$OUT" ]; then
-            echo "::error::${NAME}@${VERSION} is already published (npm view returned: ${OUT}). Bump the version before retrying."
+          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "::error::${NAME}@${VERSION} is already published. Bump the version before retrying."
             exit 1
           fi
 

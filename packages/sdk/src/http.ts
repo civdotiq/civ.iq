@@ -6,9 +6,9 @@ import {
   UpstreamError,
 } from './errors.js';
 
-// Kept in sync with package.json; bump when the manifest version bumps so the
-// User-Agent signature reflects the installed SDK build. The publish workflow
-// refuses to publish when these drift.
+// Bump manually when packages/sdk/package.json bumps so the User-Agent
+// signature reflects the installed SDK build. There is no automated drift
+// check yet — the Phase 5.C release checklist includes it as a manual step.
 export const SDK_VERSION = '0.1.0';
 export const SDK_USER_AGENT = `@civiq/sdk/${SDK_VERSION}`;
 
