@@ -9,7 +9,7 @@ import {
 // Bump manually when packages/sdk/package.json bumps so the User-Agent
 // signature reflects the installed SDK build. There is no automated drift
 // check yet — the Phase 5.C release checklist includes it as a manual step.
-export const SDK_VERSION = '0.1.0';
+export const SDK_VERSION = '0.1.1';
 export const SDK_USER_AGENT = `@civiq/sdk/${SDK_VERSION}`;
 
 export interface HttpClientOptions {
@@ -19,7 +19,7 @@ export interface HttpClientOptions {
    * Extra token to append to the default User-Agent string (e.g., an app name
    * and version). Appears after the SDK signature so operators can still see
    * the SDK version even when callers pass their own identifier:
-   *   "@civiq/sdk/0.1.0 myapp/1.0"
+   *   "@civiq/sdk/0.1.1 myapp/1.0"
    * Has no effect in browsers — the fetch spec forbids setting User-Agent
    * from client-side code.
    */

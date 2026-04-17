@@ -126,7 +126,7 @@ const civiq = new CivIQ({ baseUrl: 'http://localhost:3000/api' });
 
 // Append your app identifier to the default User-Agent so operators can
 // see who's calling. The SDK signature is preserved either way:
-//   "@civiq/sdk/0.1.0 my-dashboard/2.3.1"
+//   "@civiq/sdk/0.1.1 my-dashboard/2.3.1"
 const civiq = new CivIQ({ userAgent: 'my-dashboard/2.3.1' });
 ```
 

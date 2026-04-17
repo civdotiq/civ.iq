@@ -2,6 +2,13 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-04-17
+
+### Changed
+
+- Publish metadata: correct repository URL (`git+https://github.com/civdotiq/civ.iq.git`) with `directory` key, added `homepage`, `bugs`, `engines.node>=20`, and `publishConfig` with provenance attestation.
+- Default `User-Agent: @civiq/sdk/<version>` in Node/Bun/Deno runtimes. Adds optional `userAgent` constructor option that appends a caller identifier after the SDK signature (e.g., `@civiq/sdk/0.1.1 myapp/1.0`). Browsers skip the header per the fetch spec.
+
 ## [0.1.0] — 2026-04-16
 
 Initial public release of the TypeScript client for the CIV.IQ civic data API.

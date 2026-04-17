@@ -1,6 +1,6 @@
 {
   "name": "@civiq/entity-resolution",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Entity resolution for civic data — committee/agency alias matching, industry taxonomy, ticker-to-sector resolution, FEC entity deduplication",
   "type": "module",
   "main": "./dist/index.js",

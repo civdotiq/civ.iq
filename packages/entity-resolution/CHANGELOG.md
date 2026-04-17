@@ -2,6 +2,17 @@
 
 All notable changes to `@civiq/entity-resolution` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-04-17
+
+### Changed
+
+- Publish metadata: correct repository URL (`git+https://github.com/civdotiq/civ.iq.git`) with `directory` key, added `homepage`, `bugs`, `engines.node>=20`, and `publishConfig` with provenance attestation.
+- Tarball no longer ships compiled test files (saves ~10 files, no API change).
+
+### Fixed
+
+- `tsconfig.json` excludes `src/__tests__` from compilation output.
+
 ## [0.1.0] — 2026-04-16
 
 Initial public release. Extracted from CIV.IQ so any civic-data project can reuse the same resolvers, alias tables, and taxonomy.

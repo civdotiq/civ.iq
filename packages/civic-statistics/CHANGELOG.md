@@ -2,6 +2,12 @@
 
 All notable changes to `@civiq/civic-statistics` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-04-17
+
+### Changed
+
+- Publish metadata: correct repository URL (`git+https://github.com/civdotiq/civ.iq.git`) with `directory` key, added `homepage`, `bugs`, `engines.node>=20`, and `publishConfig` with provenance attestation. No API changes.
+
 ## [0.1.0] — 2026-04-16
 
 Initial public release. Extracted from the CIV.IQ intelligence layer so any civic-data project can reuse the same statistical primitives.
