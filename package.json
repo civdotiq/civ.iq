@@ -19,6 +19,7 @@
     "build": "next build",
     "seed-data": "tsx scripts/seed-congress-data.ts",
     "sync:bioguide-fec": "tsx scripts/sync-bioguide-fec.ts",
+    "snapshot:adoption": "tsx scripts/snapshot-adoption.ts",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

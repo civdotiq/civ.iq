@@ -1,0 +1,132 @@
+name: Publish @civiq packages
+
+# Tag convention: `<pkg>-v<version>` (no slashes, no @ signs).
+# We deliberately avoid `@civiq/<pkg>@v*` because GitHub Actions' tag-glob
+# semantics around `/` in ref names are not explicitly documented, and git
+# refs with `/` are easier to mis-scope. Tag a release with:
+#   git tag civic-statistics-v0.1.1
+#   git tag entity-resolution-v0.1.1
+#   git tag sdk-v0.1.1
+# The tag-resolution step below parses `<pkg>-v<version>` back out.
+on:
+  push:
+    tags:
+      - 'civic-statistics-v*'
+      - 'entity-resolution-v*'
+      - 'sdk-v*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Which package to publish
+        required: true
+        type: choice
+        options:
+          - civic-statistics
+          - entity-resolution
+          - sdk
+      dry_run:
+        description: Dry run (pack only, do not publish)
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Resolve target package and version
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PKG="${{ inputs.package }}"
+            VERSION=$(node -p "require('./packages/${PKG}/package.json').version")
+            TAG_VERSION="${VERSION}"
+            DRY_RUN="${{ inputs.dry_run }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+            # Tag format: <pkg>-v<version>, e.g. sdk-v0.1.1
+            PKG="${TAG%-v*}"
+            TAG_VERSION="${TAG##*-v}"
+            VERSION=$(node -p "require('./packages/${PKG}/package.json').version")
+            DRY_RUN="false"
+            if [ "$TAG_VERSION" != "$VERSION" ]; then
+              echo "::error::Tag version ${TAG_VERSION} does not match package.json version ${VERSION} for ${PKG}"
+              exit 1
+            fi
+          fi
+          echo "package=${PKG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}" >> "$GITHUB_OUTPUT"
+          echo "Publishing @civiq/${PKG}@${VERSION} (dry_run=${DRY_RUN})"
+
+      - name: Install workspace deps
+        run: npm ci
+
+      - name: Lint (root)
+        run: npm run lint
+
+      - name: Typecheck (root)
+        run: npm run type-check
+
+      - name: Build package
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: |
+          npm run clean
+          npm run build
+
+      - name: Test package
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: npm run test
+
+      - name: Verify tarball contents
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: npm pack --dry-run
+
+      - name: Check version is not already published
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          # Belt-and-suspenders: npm view exits 0 and prints the version when
+          # published, exits non-zero (E404) and prints nothing on stdout when
+          # not published. We check both to avoid masking transient errors.
+          OUT=$(npm view "${NAME}@${VERSION}" version 2>/dev/null || true)
+          if [ -n "$OUT" ]; then
+            echo "::error::${NAME}@${VERSION} is already published (npm view returned: ${OUT}). Bump the version before retrying."
+            exit 1
+          fi
+
+      - name: Publish with provenance
+        if: steps.target.outputs.dry_run != 'true'
+        working-directory: packages/${{ steps.target.outputs.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: Dry-run publish
+        if: steps.target.outputs.dry_run == 'true'
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: npm publish --dry-run --access public
+
+      - name: Summary
+        run: |
+          echo "### Published @civiq/${{ steps.target.outputs.package }}@${{ steps.target.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- npm: https://www.npmjs.com/package/@civiq/${{ steps.target.outputs.package }}/v/${{ steps.target.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- dry run: ${{ steps.target.outputs.dry_run }}" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,53 @@
+name: Snapshot adoption metrics
+
+on:
+  schedule:
+    # Every Monday at 13:00 UTC — after the Sunday bioguide-FEC sync runs.
+    - cron: '0 13 * * 1'
+  workflow_dispatch: {}
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Fetch npm download counts
+        run: npx tsx scripts/snapshot-adoption.ts
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet docs/adoption/npm-downloads.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore(adoption): snapshot npm download counts'
+          branch: auto/snapshot-adoption
+          delete-branch: true
+          title: 'chore(adoption): snapshot npm download counts'
+          body: |
+            Automated weekly snapshot of npm downloads for the three
+            published `@civiq` packages.
+
+            Source: `https://api.npmjs.org/downloads/point/{period}/{package}`
+            File: `docs/adoption/npm-downloads.json`
+
+            This is the data that backs `docs/ADOPTION.md`. If counts drop to
+            zero or the published version rolls back, investigate before
+            merging.
+          add-paths: docs/adoption/npm-downloads.json

@@ -8,12 +8,13 @@ import type { NextRequest } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
+import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
   // eslint-disable-next-line no-console
   http: (message: string, data?: Record<string, unknown>) => console.log(`[HTTP] ${message}`, data),
-  // eslint-disable-next-line no-console
+
   warn: (message: string, data?: Record<string, unknown>) =>
     console.warn(`[WARN] ${message}`, data),
   error: (message: string, error?: Error, data?: Record<string, unknown>) =>
@@ -330,6 +331,15 @@ export async function middleware(request: NextRequest) {
     // Fire-and-forget request analytics (never blocks response)
     if (request.nextUrl.pathname.startsWith('/api/')) {
       incrementRequestCounter(request.nextUrl.pathname, request.method, response.status);
+    }
+
+    // Fire-and-forget adoption telemetry — only for public REST API and MCP
+    // endpoints, since those are the surfaces external consumers use.
+    if (
+      request.nextUrl.pathname.startsWith('/api/v1/') ||
+      request.nextUrl.pathname.startsWith('/api/mcp')
+    ) {
+      recordSdkRequest(clientInfo.userAgent, request.nextUrl.pathname, request.method);
     }
 
     return response;
