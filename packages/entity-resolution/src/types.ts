@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import type { IndustrySector } from './industry-taxonomy.js';
+import type { IndustrySector } from './industry-taxonomy';
 
 // ── Government Entity Resolution ─────────────────────────────────────
 

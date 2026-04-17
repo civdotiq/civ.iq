@@ -14,9 +14,9 @@
  * across EPA, OSHA, CFPB, SEC, FEC, and LDA data sources.
  */
 
-import { IndustrySector } from './industry-taxonomy.js';
-import { sicToSector } from './sic-sector-map.js';
-import { findCompanyByAlias, type CompanyAlias } from './company-alias-table.js';
+import { IndustrySector } from './industry-taxonomy';
+import { sicToSector } from './sic-sector-map';
+import { findCompanyByAlias, type CompanyAlias } from './company-alias-table';
 
 export interface ResolvedCompany {
   canonicalName: string;

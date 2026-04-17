@@ -25,7 +25,7 @@
  * 13-sector model used across CIV.IQ.
  */
 
-import { IndustrySector } from './industry-taxonomy.js';
+import { IndustrySector } from './industry-taxonomy';
 
 /**
  * A range entry: inclusive start and end SIC codes mapped to a sector.

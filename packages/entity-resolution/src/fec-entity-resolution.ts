@@ -14,7 +14,7 @@
  * Uses string similarity algorithms and business rule heuristics to match entities.
  */
 
-import { getLogger } from './logger.js';
+import { getLogger } from './logger';
 
 /**
  * Common abbreviations used in FEC/lobbying data.

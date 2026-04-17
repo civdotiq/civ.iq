@@ -20,7 +20,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node ../../scripts/rewrite-dist-js-extensions.mjs dist",
     "test": "vitest run",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build && npm run test"

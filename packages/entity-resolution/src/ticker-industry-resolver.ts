@@ -14,10 +14,10 @@
  * ETFs, mutual funds, and unresolvable tickers return null.
  */
 
-import { getLogger } from './logger.js';
-import { getCache } from './cache.js';
-import { sicToSector } from './sic-sector-map.js';
-import type { TickerResolution } from './types.js';
+import { getLogger } from './logger';
+import { getCache } from './cache';
+import { sicToSector } from './sic-sector-map';
+import type { TickerResolution } from './types';
 
 // Static ticker → CIK mapping from SEC EDGAR company_tickers.json
 // ~10K entries, ~155KB. Loaded via readFileSync to sidestep the Node

@@ -25,7 +25,7 @@
  * 13. Other/Unknown
  */
 
-import { getLogger } from './logger.js';
+import { getLogger } from './logger';
 
 /**
  * Industry sector enumeration

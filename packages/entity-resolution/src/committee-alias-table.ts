@@ -20,7 +20,7 @@
  * - "epa" → "environmental-protection-agency"
  */
 
-import { ALL_COMMITTEE_MAPPINGS, type AgencyInfo } from './committee-agency-map.js';
+import { ALL_COMMITTEE_MAPPINGS, type AgencyInfo } from './committee-agency-map';
 
 // ── Committee Aliases ────────────────────────────────────────────────
 
