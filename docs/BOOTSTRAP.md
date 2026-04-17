@@ -2,7 +2,7 @@
 
 **Audience:** anyone cloning this repo for the first time — a researcher, a potential contributor, a re-hoster, or a funder checking that the backbone is reproducible.
 **Goal:** you leave this page with a running dev server that serves real government data at `http://localhost:3000`.
-**Promise:** every step below has been verified in place against the current repo; a separate fresh-clone verification pass (Phase 5.B of the backbone-gaps plan) will pin measured wall-clock timings and add a "Verified: <date>" stamp above §1. If a step does not work exactly as written, that is a bug — please open an issue.
+**Verified:** 2026-04-17 on macOS Darwin 25.3.0 / Node 25.2.1 / npm 11.6.2 / residential broadband, following these steps from a fresh `git clone --local` into `/tmp`. All measured timings below come from that run. If a step does not work exactly as written, that is a bug — please open an issue.
 
 > CIV.IQ is infrastructure, not a SaaS. You run the whole stack locally with free API keys. There is no "cloud tier" that magically turns things on — the APIs listed below are the actual data sources, and when one is down, CIV.IQ says so instead of inventing data.
 
@@ -30,7 +30,7 @@ cd civ.iq
 npm ci
 ```
 
-**Expected runtime:** 2–4 minutes on a first-time install (warm npm cache ~60s).
+**Measured:** ~9 seconds with a warm npm cache (installs 1,440 packages). Cold cache on a fresh machine should land in the 2–4 minute range — if yours is materially slower, the culprit is usually a slow registry mirror.
 
 `npm ci` also installs the three workspace packages under `packages/*` (civic-statistics, entity-resolution, sdk). They are symlinked into `node_modules/@civiq/*` so the app imports the local copies, not the published ones.
 
@@ -89,55 +89,47 @@ cp .env.example .env.local
 
 ## 3. Bootstrap sequence
 
-Run these in order. Expected wall-clock times are measured on a 2023-era laptop on residential broadband; your mileage will vary.
+Run these in order. Measured wall-clock times come from the Verified-on run at the top of this doc; cold-cache or slow-connection environments will be proportionally slower.
 
-### 3.1 Verify API connectivity (30 seconds)
+### 3.1 Verify API connectivity
 
 ```bash
 npm run diagnose:apis
 ```
 
-This hits each configured API with a cheap probe and prints a green/red matrix. **Start here** — it catches typos and unsigned-up keys before you waste 20 minutes on a doomed seed run.
+**Measured:** ~10 seconds. This hits each of the four required APIs (Congress.gov, FEC, OpenStates, Census) with a cheap probe and prints a green/red matrix. **Start here** — it catches typos and unsigned-up keys before you waste time on a doomed seed run.
 
-Expected output: all four required APIs green. Optional APIs are yellow if unconfigured.
+Expected output: all four required APIs green. GDELT will usually rate-limit (429) on a warm rerun — GDELT is optional. FollowTheMoney is yellow when unconfigured (optional, and the upstream is in maintenance anyway — see `docs/COVERAGE.md`). Local-endpoint tests are skipped automatically if the dev server isn't running.
 
-### 3.2 Process the 119th-Congress ZIP→district mapping (1 minute)
-
-```bash
-npm run process-zip-districts
-```
-
-Writes `src/lib/data-sources/zip-district-mapping-119th.ts` — **check it in only if you changed the source data**. The file already ships in the repo; running this just confirms the generator is reproducible. Row counts are pinned by `src/__tests__/utils/zip-district-mapping.test.ts` (33,778 ZIPs, 7,299 multi-district, 26,479 single-district); the test fails if anything drifts silently.
-
-ZIP→district is structurally static until post-2031 redistricting — you do not need to re-run this regularly.
-
-### 3.3 Refresh the bioguide→FEC mapping (10 seconds, offline)
+### 3.2 Refresh the bioguide→FEC mapping
 
 ```bash
 npm run sync:bioguide-fec
 ```
 
-Pulls `legislators-current.yaml` from `unitedstates/congress-legislators` and writes `packages/entity-resolution/data/bioguide-fec-mapping.json`. This is the canonical representative-identity layer; CIV.IQ runs a GitHub Action that opens a PR with the latest diff every Sunday at 14 UTC, so in steady state you will not need to run this by hand.
+**Measured:** ~1 second (offline, reads a cached YAML pull). Pulls `legislators-current.yaml` from `unitedstates/congress-legislators` and writes `packages/entity-resolution/data/bioguide-fec-mapping.json`. This is the canonical representative-identity layer; CIV.IQ runs a GitHub Action that opens a PR with the latest diff every Sunday at 14 UTC, so in steady state you will not need to run this by hand. The script loads `.env.local` automatically — with `CONGRESS_API_KEY` set, it also cross-checks the current Congress.gov roster and flags members missing from the YAML.
 
 For an initial clone, run it once so you are sure the canonical file matches your local environment.
 
-### 3.4 Seed Congress.gov membership statistics (1–2 minutes)
+### 3.3 Seed Congress.gov membership statistics
 
 ```bash
 npm run seed-data
 ```
 
-Fetches `legislators-current.yaml` and writes `src/data/congress-statistics.json` — pre-calculated counts used by the hot-path stats endpoints. Respects Congress.gov rate limits.
+**Measured:** ~0.5 seconds. Fetches `legislators-current.yaml` and writes `public/data/congress-stats.json` — pre-calculated counts used by the hot-path stats endpoints. Respects Congress.gov rate limits.
 
-### 3.5 Start the dev server (5 seconds to ready)
+### 3.4 Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`. First render of any page will be slow (30–60 s) because Next.js compiles the route on demand.
+**Measured:** Next.js reports "Ready" in ~300 ms; total wall-clock from `npm run dev` to a `curl http://localhost:3000` returning 200 is ~8 seconds on first launch. Open `http://localhost:3000`. First render of any individual page will be slower (5–30 s) because Next.js compiles the route on demand via Turbopack.
 
-### 3.6 (optional) Warm the intelligence cache (~20 minutes)
+> **Note on the 119th-Congress ZIP→district mapping.** The mapping ships in the repo as `src/lib/data/zip-district-mapping-119th.ts` + `src/lib/data/zip-district-mapping-119th.json` (33,778 ZIPs; invariants pinned by `src/__tests__/utils/zip-district-mapping.test.ts`). The source CSV (`data-sources/us-zipcodes-congress/zccd_hud.csv`) is gitignored, and the original `process-zip-districts` generator has been retired — ZIP boundaries are structurally static until post-2031 redistricting, so there is nothing to regenerate on a fresh clone.
+
+### 3.5 (optional) Warm the intelligence cache (~20 minutes, not measured in this run)
 
 ```bash
 npm run warm:intelligence
@@ -153,13 +145,50 @@ Re-run after a cache flush or a deploy that changes analyzer logic.
 
 Once `npm run dev` is serving, run each of these and confirm the shape of the response.
 
-| Check                         | Command                                                                                                                            | Expect                                                              |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| All listed APIs are reachable | `npm run diagnose:apis`                                                                                                            | All required green.                                                 |
-| California House delegation   | `curl -s 'http://localhost:3000/api/representatives?state=CA&chamber=house' \| jq '.members \| length'`                            | `52`                                                                |
-| Address → district            | `curl -s 'http://localhost:3000/api/districts/geocode?address=1600+Pennsylvania+Ave+NW+Washington+DC+20500' \| jq '.districts[0]'` | `DC-AL` (non-voting delegate).                                      |
-| FEC pipeline                  | `curl -s 'http://localhost:3000/api/representative/P000197/finance' \| jq '.dataQuality,.contributionCoverage.coveragePercent'`    | `"complete"` or `"partial"` + a number.                             |
-| Empty/unavailable contract    | `curl -s 'http://localhost:3000/api/local-government/fakecity-zz' \| jq '.dataQuality'`                                            | `"unavailable"` (pilot list is 10 cities — see `docs/COVERAGE.md`). |
+### 4.1 All listed APIs are reachable
+
+```bash
+npm run diagnose:apis
+```
+
+All four required APIs (Congress.gov, FEC, OpenStates, Census) should be green. See §3.1 for the expected yellow/red items.
+
+### 4.2 California House delegation
+
+```bash
+curl -s 'http://localhost:3000/api/v1/representatives?state=CA&chamber=House' | jq '.data | length'
+```
+
+Expect `50`–`52` depending on current vacancies. On 2026-04-17 the count was `50`: districts 1 and 14 were unrepresented in `legislators-current.yaml`; the SDK surface returns whatever the upstream YAML has.
+
+> The bare `/api/representatives` endpoint is address- or district-scoped (`state+district` or `zip`) and will 400 if you only pass `state`. Use the versioned `/api/v1/representatives` for state-wide listings.
+
+### 4.3 Address → district (Census Geocoder)
+
+```bash
+curl -s -X POST 'http://localhost:3000/api/unified-geocode' \
+  -H 'Content-Type: application/json' \
+  -d '{"street":"1600 Pennsylvania Ave NW","city":"Washington","state":"DC","zip":"20500"}' \
+  | jq '.districts.federal.districtId'
+```
+
+Expect `"DC-98"` — DC's non-voting delegate seat is encoded as district `98` (the at-large convention used by the Census Bureau and the `zip-district-mapping-119th` loader). The `/api/unified-geocode` POST endpoint is the single source of truth for address → district resolution; it returns federal, state-senate, and state-house districts plus the matched representatives/legislators in one payload. **First-run note:** the Census Geocoder call takes 1–3 seconds.
+
+### 4.4 FEC pipeline
+
+```bash
+curl -s 'http://localhost:3000/api/representative/P000197/finance' | jq '.dataQuality'
+```
+
+Expect an object with `.industry`, `.geography`, and `.overallDataConfidence` keys (e.g. `"overallDataConfidence": "high"`). **Warning:** this endpoint pulls contribution data live from FEC the first time it is called for a member, which can take 3–4 minutes on an empty cache. Subsequent calls hit the Redis/in-memory cache and return in under a second. If you're short on time, skip this check and come back to it.
+
+### 4.5 Empty / unavailable contract
+
+```bash
+curl -s 'http://localhost:3000/api/local-government/fakecity-zz' | jq '.dataQuality'
+```
+
+Expect `"unavailable"` and HTTP 503. The pilot list is 10 cities — see `docs/COVERAGE.md`.
 
 **If any check returns silent `[]` with `dataQuality` missing, that is a regression of Phase 2 of the backbone-gaps plan — please open an issue.**
 

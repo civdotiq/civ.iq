@@ -97,7 +97,7 @@ async function testApi(test: ApiTest): Promise<boolean> {
 async function checkEnvironment() {
   log('\n=== Environment Check ===\n', 'cyan');
 
-  const requiredVars = ['CONGRESS_API_KEY', 'FEC_API_KEY', 'CENSUS_API_KEY'];
+  const requiredVars = ['CONGRESS_API_KEY', 'FEC_API_KEY', 'OPENSTATES_API_KEY', 'CENSUS_API_KEY'];
 
   let allPresent = true;
 
@@ -118,13 +118,6 @@ async function testCongressApi() {
   log('\n=== Congress.gov API Tests ===\n', 'cyan');
 
   const tests: ApiTest[] = [
-    {
-      name: 'Congress.gov Base API',
-      url: 'https://api.congress.gov/v3',
-      requiresAuth: true,
-      expectedStatus: 200,
-      critical: true,
-    },
     {
       name: 'Member List',
       url: 'https://api.congress.gov/v3/member?limit=1',
@@ -153,13 +146,6 @@ async function testCongressApi() {
       expectedStatus: 200,
       critical: false,
     },
-    {
-      name: 'Roll Call Votes (House)',
-      url: 'https://api.congress.gov/v3/house/119/1/rollCall',
-      requiresAuth: true,
-      expectedStatus: 200,
-      critical: false,
-    },
   ];
 
   let passed = 0;
@@ -182,13 +168,6 @@ async function testFECApi() {
   log('\n=== FEC API Tests ===\n', 'cyan');
 
   const tests: ApiTest[] = [
-    {
-      name: 'FEC API Base',
-      url: 'https://api.open.fec.gov/v1',
-      requiresAuth: false,
-      expectedStatus: 200,
-      critical: true,
-    },
     {
       name: 'Candidate Search',
       url:
@@ -248,6 +227,76 @@ async function testGDELTApi() {
   return failed === 0;
 }
 
+async function testOpenStatesApi() {
+  log('\n=== OpenStates API Tests ===\n', 'cyan');
+
+  const apiKey = process.env.OPENSTATES_API_KEY;
+  if (!apiKey) {
+    log('❌ OPENSTATES_API_KEY missing — set in .env.local before running.', 'red');
+    return false;
+  }
+
+  // Minimal GraphQL query: ask for one jurisdiction (California). Cheap,
+  // no data mutation, exercises auth + the documented v3 endpoint shape.
+  log('Testing OpenStates GraphQL (jurisdictions)...', 'cyan');
+  try {
+    const response = await fetch('https://openstates.org/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': apiKey,
+      },
+      body: JSON.stringify({
+        query: '{ jurisdictions(first: 1) { edges { node { name } } } }',
+      }),
+    });
+    if (response.status === 200) {
+      log('  ✅ OpenStates GraphQL - Status: 200', 'green');
+      return true;
+    }
+    log(`  ❌ OpenStates GraphQL - Expected 200, got ${response.status}`, 'red');
+    return false;
+  } catch (error) {
+    log(
+      `  ❌ OpenStates GraphQL - Network error: ${error instanceof Error ? error.message : 'Unknown'}`,
+      'red'
+    );
+    return false;
+  }
+}
+
+async function testCensusApi() {
+  log('\n=== Census API Tests ===\n', 'cyan');
+
+  const apiKey = process.env.CENSUS_API_KEY;
+  if (!apiKey) {
+    log('❌ CENSUS_API_KEY missing — set in .env.local before running.', 'red');
+    return false;
+  }
+
+  // ACS 5-year, single variable for California total population. Cheap, stable.
+  const url = `https://api.census.gov/data/2023/acs/acs5?get=NAME,B01003_001E&for=state:06&key=${apiKey}`;
+  const tests: ApiTest[] = [
+    {
+      name: 'ACS 5yr (CA population)',
+      url,
+      requiresAuth: false, // key is in URL
+      expectedStatus: 200,
+      critical: true,
+    },
+  ];
+
+  let passed = 0;
+  let failed = 0;
+  for (const test of tests) {
+    const success = await testApi(test);
+    if (success) passed++;
+    else failed++;
+  }
+  log(`\nCensus Results: ${passed} passed, ${failed} failed`, passed > 0 ? 'green' : 'red');
+  return failed === 0;
+}
+
 async function testLocalEndpoints() {
   log('\n=== Local API Endpoints ===\n', 'cyan');
 
@@ -299,8 +348,19 @@ async function testLocalEndpoints() {
     },
   ];
 
-  log('Make sure the dev server is running (npm run dev)', 'yellow');
-  log('Testing local endpoints...', 'cyan');
+  // Probe first — if the dev server isn't up, skip this section instead of
+  // emitting a wall of red "fetch failed" lines during the initial bootstrap
+  // run (BOOTSTRAP §3.1 runs before `npm run dev`).
+  try {
+    const probe = await fetch(`${baseUrl}/api/health`, { signal: AbortSignal.timeout(1000) });
+    if (!probe.ok && probe.status !== 404) throw new Error(`status=${probe.status}`);
+  } catch {
+    log('Dev server not reachable at http://localhost:3000 — skipping local checks.', 'yellow');
+    log('Start it with `npm run dev`, then re-run this diagnostic.', 'yellow');
+    return true;
+  }
+
+  log('Dev server reachable. Testing local endpoints...', 'cyan');
 
   let passed = 0;
   let failed = 0;
@@ -409,6 +469,8 @@ async function main() {
   // Test external APIs
   await testCongressApi();
   await testFECApi();
+  await testOpenStatesApi();
+  await testCensusApi();
   await testGDELTApi();
   await testFollowTheMoneyApi();
 

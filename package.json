@@ -42,7 +42,6 @@
     "validate-mappings": "tsx scripts/validate-mappings.ts",
     "lookup-zip": "tsx scripts/lookup-zip.ts",
     "complete-phase": "tsx scripts/complete-phase.ts",
-    "process-zip-districts": "tsx scripts/process-zip-districts.ts",
     "test-phase3-integration": "tsx scripts/test-phase3-integration.ts",
     "process-district-boundaries": "node scripts/process-district-boundaries.mjs",
     "process-real-census-districts": "node scripts/process-real-census-districts.mjs",

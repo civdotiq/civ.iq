@@ -37,7 +37,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 import yaml from 'js-yaml';
+
+dotenv.config({ path: '.env.local' });
 
 const LEGISLATORS_URL =
   'https://raw.githubusercontent.com/unitedstates/congress-legislators/main/legislators-current.yaml';
