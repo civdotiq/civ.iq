@@ -12,12 +12,18 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "METHODOLOGY.md"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "dependencies": {
     "simple-statistics": "^7.8.0"
@@ -27,15 +33,30 @@
   },
   "license": "MIT",
   "author": "Mark Sandford",
+  "homepage": "https://github.com/civdotiq/civ.iq/tree/main/packages/civic-statistics#readme",
+  "bugs": {
+    "url": "https://github.com/civdotiq/civ.iq/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/civiq/civic-statistics"
+    "url": "git+https://github.com/civdotiq/civ.iq.git",
+    "directory": "packages/civic-statistics"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [
     "civic",
     "statistics",
     "correlation",
     "government",
-    "civic-tech"
+    "civic-tech",
+    "civiq",
+    "peer-comparison",
+    "confidence-score"
   ]
 }

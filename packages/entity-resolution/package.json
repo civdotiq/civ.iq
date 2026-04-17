@@ -21,12 +21,18 @@
   },
   "files": [
     "dist",
-    "data"
+    "data",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "METHODOLOGY.md"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "dependencies": {
     "fuse.js": "^7.0.0"
@@ -36,9 +42,21 @@
   },
   "license": "MIT",
   "author": "Mark Sandford",
+  "homepage": "https://github.com/civdotiq/civ.iq/tree/main/packages/entity-resolution#readme",
+  "bugs": {
+    "url": "https://github.com/civdotiq/civ.iq/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/civiq/entity-resolution"
+    "url": "git+https://github.com/civdotiq/civ.iq.git",
+    "directory": "packages/entity-resolution"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [
     "entity-resolution",
@@ -46,6 +64,10 @@
     "government",
     "committee",
     "fec",
-    "civic-tech"
+    "civic-tech",
+    "civiq",
+    "industry-taxonomy",
+    "lobbying",
+    "opensecrets"
   ]
 }

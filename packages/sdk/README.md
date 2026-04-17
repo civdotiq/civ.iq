@@ -123,7 +123,14 @@ civiq.graph.entity(nodeId);
 ```typescript
 // Custom base URL (local development or self-hosted)
 const civiq = new CivIQ({ baseUrl: 'http://localhost:3000/api' });
+
+// Append your app identifier to the default User-Agent so operators can
+// see who's calling. The SDK signature is preserved either way:
+//   "@civiq/sdk/0.1.0 my-dashboard/2.3.1"
+const civiq = new CivIQ({ userAgent: 'my-dashboard/2.3.1' });
 ```
+
+The SDK sends `User-Agent: @civiq/sdk/<version>` by default in Node, Deno, and Bun — this is how CIV.IQ tracks SDK adoption. Browsers silently drop custom User-Agent values per the fetch spec, so this header is skipped when running in browser environments.
 
 ## Error handling
 
