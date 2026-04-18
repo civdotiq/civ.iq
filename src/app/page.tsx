@@ -28,7 +28,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-xl sm:text-5xl lg:text-6xl mb-grid-1 sm:mb-grid-4 lg:mb-grid-6 leading-tight">
               <span className="accent-display text-black block">Know Your</span>
-              <span className="accent-highlight text-2xl sm:text-5xl lg:text-6xl">
+              <span className="accent-display text-black block text-2xl sm:text-5xl lg:text-6xl">
                 Representatives
               </span>
             </h1>
