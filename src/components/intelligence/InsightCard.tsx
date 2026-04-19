@@ -213,27 +213,15 @@ export function voteFinanceKeyStats(insight: VoteFinanceInsight): KeyStat[] {
   ];
 
   if (insight.overallCorrelation !== null) {
-    // Delta vs peer correlation
-    let delta: KeyStat['delta'];
-    if (peer.peerCount > 0 && peer.peerAverage !== undefined) {
-      const diff = insight.overallCorrelation - peer.peerAverage;
-      if (Math.abs(diff) >= 0.01) {
-        delta = {
-          change: `${diff >= 0 ? '+' : ''}${diff.toFixed(3)}`,
-          period: 'vs peers',
-        };
-      }
-    }
     stats.push({
       label: 'Correlation',
       value: insight.overallCorrelation.toFixed(3),
-      delta,
     });
   }
 
-  if (peer.peerCount > 0) {
+  if (peer && peer.peerCount > 0) {
     stats.push({
-      label: 'Peer average',
+      label: 'Peer average yea-rate',
       value: `${(peer.peerAverage * 100).toFixed(1)}%`,
     });
   }

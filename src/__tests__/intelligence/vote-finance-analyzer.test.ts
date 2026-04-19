@@ -198,7 +198,7 @@ describe('analyzeVoteFinance', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:P000197'
+      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v2:P000197'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);

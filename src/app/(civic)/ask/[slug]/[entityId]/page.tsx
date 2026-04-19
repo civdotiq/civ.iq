@@ -11,6 +11,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
@@ -26,7 +27,6 @@ import {
   type CampaignContributionsData,
   type VotingRecordTemplateData,
   type BillsSponsoredData,
-  type DonorVotingAlignmentData,
   type TopicBillsData,
   type CommitteeMembersData,
   type CommitteeActivityData,
@@ -41,13 +41,21 @@ import { CampaignContributionsAnswer } from '@/components/questions/CampaignCont
 import { VotingRecordAnswer } from '@/components/questions/VotingRecordAnswer';
 import { BillsSponsoredAnswer } from '@/components/questions/BillsSponsoredAnswer';
 import { ContactInfoAnswer } from '@/components/questions/ContactInfoAnswer';
-import { DonorVotingAlignmentAnswer } from '@/components/questions/DonorVotingAlignmentAnswer';
+import {
+  DonorVotingAlignmentAnswer,
+  DonorVotingAlignmentSkeleton,
+} from '@/components/questions/DonorVotingAlignmentAnswer';
 import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
 
 export const revalidate = 3600;
+
+// donor-voting-alignment streams its pod via Suspense and can spend up to
+// ~120s on a cold analyzer compute. All other question templates finish in
+// seconds; this ceiling is only load-bearing for the cold path.
+export const maxDuration = 150;
 
 interface PageProps {
   params: Promise<{ slug: string; entityId: string }>;
@@ -63,7 +71,6 @@ function buildFaqAnswer(
     campaign?: CampaignContributionsData;
     voting?: VotingRecordTemplateData;
     billsSponsored?: BillsSponsoredData;
-    donorAlignment?: DonorVotingAlignmentData;
     topicBills?: TopicBillsData;
     committeeMembers?: CommitteeMembersData;
     committeeActivity?: CommitteeActivityData;
@@ -107,14 +114,8 @@ function buildFaqAnswer(
     }
     case 'contact-info':
       return `Contact information for ${repName} is sourced from official congressional records.`;
-    case 'donor-voting-alignment': {
-      const vf = data.donorAlignment?.voteFinance?.data;
-      if (vf?.overallCorrelation !== null && vf?.overallCorrelation !== undefined) {
-        const strength = Math.abs(vf.overallCorrelation) >= 0.4 ? 'notable' : 'modest';
-        return `Analysis shows a ${strength} correlation (${(vf.overallCorrelation * 100).toFixed(1)}%) between ${repName}'s donor sectors and voting patterns.`;
-      }
-      return `Donor-voting alignment analysis for ${repName} requires sufficient voting and contribution data.`;
-    }
+    case 'donor-voting-alignment':
+      return `${repName}'s yea-rate on bills touching top donor industries, based on FEC contributions and Congress.gov roll-call votes.`;
     case 'topic-bills': {
       const billCount = data.topicBills?.results?.bills?.length ?? 0;
       if (billCount > 0) {
@@ -268,11 +269,12 @@ export default async function QuestionPage({ params }: PageProps) {
   const relatedQuestions = computeRelatedQuestions(slug, entityId, rep.name);
   const id = entityId.toUpperCase();
 
-  // Fetch template-specific data via direct service calls (no self-fetch)
+  // Fetch template-specific data via direct service calls (no self-fetch).
+  // donor-voting-alignment is intentionally NOT awaited here — its analyzer
+  // can take 40–55 seconds cold, so the pod streams in via Suspense below.
   let campaign: CampaignContributionsData | undefined;
   let voting: VotingRecordTemplateData | undefined;
   let billsSponsored: BillsSponsoredData | undefined;
-  let donorAlignment: DonorVotingAlignmentData | undefined;
 
   switch (slug) {
     case 'campaign-contributions':
@@ -285,9 +287,7 @@ export default async function QuestionPage({ params }: PageProps) {
       billsSponsored = await fetchBillsSponsoredData(id);
       break;
     case 'contact-info':
-      break;
     case 'donor-voting-alignment':
-      donorAlignment = await fetchDonorVotingAlignmentData(id);
       break;
     default:
       notFound();
@@ -297,7 +297,6 @@ export default async function QuestionPage({ params }: PageProps) {
     campaign,
     voting,
     billsSponsored,
-    donorAlignment,
   });
 
   return (
@@ -338,10 +337,22 @@ export default async function QuestionPage({ params }: PageProps) {
             districtOffices={rep.contact?.districtOffices}
           />
         )}
-        {slug === 'donor-voting-alignment' && donorAlignment && (
-          <DonorVotingAlignmentAnswer voteFinance={donorAlignment.voteFinance} />
+        {slug === 'donor-voting-alignment' && (
+          <Suspense fallback={<DonorVotingAlignmentSkeleton />}>
+            <StreamedDonorVotingAlignment bioguideId={id} />
+          </Suspense>
         )}
       </QuestionLayout>
     </>
   );
+}
+
+/**
+ * Streams the donor-voting-alignment pods via Suspense so the page shell
+ * and skeleton render immediately — the underlying analyzer takes 40–55s
+ * on a cold cache for newly-visited representatives.
+ */
+async function StreamedDonorVotingAlignment({ bioguideId }: { bioguideId: string }) {
+  const data = await fetchDonorVotingAlignmentData(bioguideId);
+  return <DonorVotingAlignmentAnswer voteFinance={data.voteFinance} />;
 }

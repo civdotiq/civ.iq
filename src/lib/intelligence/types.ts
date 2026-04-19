@@ -149,8 +149,10 @@ export interface VoteFinanceInsight extends InsightBase {
   correlations: IndustryCorrelation[];
   /** Overall correlation coefficient across all sectors with sufficient data. */
   overallCorrelation: number | null;
-  /** How this legislator's alignment compares to peers. */
-  peerComparison: PeerComparison;
+  /** Weighted yea-rate across all sectors (0-1). Same units as peer comparison. */
+  overallAlignment: number;
+  /** How this legislator's alignment compares to peers. Null when peer cache is cold. */
+  peerComparison: PeerComparison | null;
   /** AI-generated or statistical plain-language summary. */
   narrative: string;
 }

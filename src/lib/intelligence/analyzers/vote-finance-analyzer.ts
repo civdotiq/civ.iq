@@ -36,12 +36,20 @@ import {
   getBillSectors,
   generateInsightNarrative,
   withTimeout,
-  ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
   withInsightTracking,
   classifySignal,
   SourceCollector,
 } from './shared';
+
+/**
+ * Vote-finance classifies hundreds of bills by sector and computes peer
+ * comparison — cold compute can run 40–60s. The shared 55s default was
+ * clipping legitimate cold runs, so the first visitor to a rep's page saw
+ * null even though the background write eventually populated the cache.
+ * 120s covers observed cold paths with headroom.
+ */
+const VOTE_FINANCE_TIMEOUT_MS = 120_000;
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -66,7 +74,7 @@ const DISCLAIMER =
  * On any failure, returns a statistical fallback without AI narrative.
  */
 export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanceInsight | null> {
-  const cacheKey = `insight:vote_finance:${bioguideId}`;
+  const cacheKey = `insight:vote_finance:v2:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -82,7 +90,7 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
 
   // 2-6. Fetch, compute, narrate, cache — all under timeout
   return withInsightTracking('vote-finance', () =>
-    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'VoteFinance')
+    withTimeout(computeAndCache(bioguideId, cacheKey), VOTE_FINANCE_TIMEOUT_MS, 'VoteFinance')
   );
 }
 
@@ -133,22 +141,19 @@ async function computeAndCache(
     bioguideId,
     correlations: stats.correlations,
     overallCorrelation: stats.overallCorrelation,
-    peerComparison: peer ?? {
-      value: stats.overallAlignment,
-      peerAverage: stats.overallAlignment,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    overallAlignment: stats.overallAlignment,
+    peerComparison: peer,
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
     confidenceMethod: 'computed',
     dataAsOf: freshestDate(...data.votes.map(v => v.date))!,
     methodology:
-      'Correlation between campaign donor sectors and voting alignment on sector-relevant bills. ' +
-      'Bills classified by AI-generated affectedIndustries or policy-area-map fallback. ' +
-      'Spearman rank correlation across sectors with 10+ votes.',
+      'For each bill we fetched, we identify the industry sectors it touches using its policy area ' +
+      'and the industries named in its summary. For each sector that donated to this representative, ' +
+      'we count how often they voted yea on bills touching that sector. Sectors with fewer than 10 ' +
+      'recorded votes are excluded. A yea vote is not the same as a vote "for" an industry — a single ' +
+      'bill can help or hurt a sector — so this is a raw yea-rate, not a support score.',
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       value: stats.overallAlignment,
