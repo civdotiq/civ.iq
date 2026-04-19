@@ -6,7 +6,8 @@
 /**
  * CampaignContributionsAnswer — pod renderer for the campaign-contributions question.
  *
- * Pods: Top industries, Funding summary, Vote-finance correlation, Sources.
+ * Pods: Funding summary (with source breakdown), Top industries, Vote-finance
+ * correlation (only when data exists), Sources.
  * Server component. All data passed as typed props from the page.
  */
 
@@ -26,11 +27,16 @@ interface FinanceData {
   totalRaised: number;
   totalSpent: number;
   cashOnHand: number;
-  industryBreakdown?: Array<{ sector: string; amount: number; percentage: number }>;
+  individualContributions: number;
+  pacContributions: number;
+  partyContributions: number;
+  candidateSelfFunding: number;
 }
 
 interface IndustryData {
   topIndustries: IndustryItem[];
+  analyzedTotal: number;
+  unattributedTotal: number;
   metadata?: { cycle?: number; lastUpdated?: string };
 }
 
@@ -46,8 +52,87 @@ function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-/** Categories that aren't real industries — exclude from top-industries display */
-const NON_INDUSTRY_CATEGORIES = new Set(['Other/Unknown', 'Unknown', 'Not Employed']);
+function FundingSummaryPod({ finance }: { finance: FinanceData | null }) {
+  if (!finance || finance.totalRaised === 0) {
+    return (
+      <div className="border-2 border-black bg-white p-4 sm:p-6">
+        <h2 className="type-sm font-semibold text-black mb-3">Funding summary</h2>
+        <p className="type-sm text-gray-500">
+          Campaign finance data is not yet available for this representative.
+        </p>
+      </div>
+    );
+  }
+
+  const { totalRaised, totalSpent, cashOnHand } = finance;
+  const sourceSum =
+    finance.individualContributions +
+    finance.pacContributions +
+    finance.partyContributions +
+    finance.candidateSelfFunding;
+  const otherReceipts = Math.max(0, totalRaised - sourceSum);
+
+  const sources: Array<{ label: string; amount: number; note?: string }> = [
+    { label: 'Individual donors', amount: finance.individualContributions },
+    { label: 'PACs', amount: finance.pacContributions },
+    { label: 'Political parties', amount: finance.partyContributions },
+    { label: 'Self-funding', amount: finance.candidateSelfFunding },
+  ];
+  if (otherReceipts > totalRaised * 0.01) {
+    sources.push({
+      label: 'Other receipts',
+      amount: otherReceipts,
+      note: 'Transfers from other committees, refunds, interest, and other non-contribution receipts.',
+    });
+  }
+
+  const pct = (amount: number): number =>
+    totalRaised > 0 ? Math.round((amount / totalRaised) * 100) : 0;
+
+  return (
+    <div className="border-2 border-black bg-white p-4 sm:p-6">
+      <h2 className="type-sm font-semibold text-black mb-3">Funding summary</h2>
+      <dl className="space-y-3">
+        <div>
+          <dt className="type-xs text-gray-500">Total raised</dt>
+          <dd className="type-xl font-semibold text-black">{formatCurrency(totalRaised)}</dd>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <dt className="type-xs text-gray-500">Total spent</dt>
+            <dd className="type-base font-medium text-gray-900">{formatCurrency(totalSpent)}</dd>
+          </div>
+          <div>
+            <dt className="type-xs text-gray-500">Cash on hand</dt>
+            <dd className="type-base font-medium text-gray-900">{formatCurrency(cashOnHand)}</dd>
+          </div>
+        </div>
+      </dl>
+      <div className="mt-5 pt-4 border-t border-gray-200">
+        <p className="type-xs text-gray-500 mb-3">Where the money came from</p>
+        <ul className="space-y-2">
+          {sources.map(s => (
+            <li key={s.label} className="flex justify-between items-baseline">
+              <span className="type-sm text-gray-700">{s.label}</span>
+              <span className="type-sm text-gray-900">
+                <span className="font-medium">{formatCurrency(s.amount)}</span>
+                <span className="text-gray-500 ml-2">({pct(s.amount)}%)</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        {sources.some(s => s.label === 'Other receipts' && pct(s.amount) >= 20) && (
+          <p className="type-xs text-gray-500 mt-3">
+            &ldquo;Other receipts&rdquo; in FEC candidate totals covers transfers from other
+            committees the candidate controls, offsets to operating expenditures, refunded
+            contributions, and interest — not itemized donor activity. FEC&apos;s itemized filings
+            hold the detail.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
   if (!industries?.topIndustries?.length) {
@@ -55,38 +140,25 @@ function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
       <div className="border-2 border-black bg-white p-4 sm:p-6">
         <h2 className="type-sm font-semibold text-black mb-3">Top industries</h2>
         <p className="type-sm text-gray-500">
-          Industry breakdown is not yet available for this representative.
+          Most itemized donors to this committee did not list an employer, so FEC data doesn&apos;t
+          support an industry breakdown for this cycle.
         </p>
       </div>
     );
   }
 
-  const classified = industries.topIndustries.filter(i => !NON_INDUSTRY_CATEGORIES.has(i.industry));
-  const unclassified = industries.topIndustries.filter(i =>
-    NON_INDUSTRY_CATEGORIES.has(i.industry)
-  );
-  const unclassifiedTotal = unclassified.reduce((sum, i) => sum + i.amount, 0);
-  const totalAmount = industries.topIndustries.reduce((sum, i) => sum + i.amount, 0);
-  const unclassifiedPct = totalAmount > 0 ? Math.round((unclassifiedTotal / totalAmount) * 100) : 0;
-
-  const top5 = classified.slice(0, 5);
+  const top5 = industries.topIndustries.slice(0, 5);
   const maxAmount = top5[0]?.amount ?? 1;
-
-  if (!top5.length) {
-    return (
-      <div className="border-2 border-black bg-white p-4 sm:p-6">
-        <h2 className="type-sm font-semibold text-black mb-3">Top industries</h2>
-        <p className="type-sm text-gray-500">
-          Most contributions lack employer data in FEC filings, so industry breakdown is
-          unavailable.
-        </p>
-      </div>
-    );
-  }
+  const classifiedTotal = industries.topIndustries.reduce((sum, i) => sum + i.amount, 0);
 
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6">
-      <h2 className="type-sm font-semibold text-black mb-3">Top industries</h2>
+      <h2 className="type-sm font-semibold text-black mb-1">Top industries</h2>
+      <p className="type-xs text-gray-500 mb-4">
+        Of {formatCurrency(classifiedTotal)} in itemized individual donations where the donor listed
+        an employer. This is only a slice of total fundraising — PACs, parties, small-dollar donors,
+        and self-funding are not included here.
+      </p>
       <ul className="space-y-3">
         {top5.map(item => (
           <li key={item.industry}>
@@ -107,53 +179,14 @@ function TopIndustriesPod({ industries }: { industries: IndustryData | null }) {
           </li>
         ))}
       </ul>
-      {unclassifiedPct > 0 && (
+      {industries.unattributedTotal > 0 && (
         <p className="type-xs text-gray-500 mt-3">
-          {formatCurrency(unclassifiedTotal)} ({unclassifiedPct}%) of contributions lack employer
-          data in FEC filings and could not be classified by industry.
+          An additional {formatCurrency(industries.unattributedTotal)} in itemized donations
+          couldn&apos;t be classified — either the donor left the employer field blank or listed
+          &ldquo;retired&rdquo;/&ldquo;self-employed,&rdquo; or the employer didn&apos;t match a
+          known industry.
         </p>
       )}
-    </div>
-  );
-}
-
-function FundingSummaryPod({ finance }: { finance: FinanceData | null }) {
-  if (!finance || finance.totalRaised === 0) {
-    return (
-      <div className="border-2 border-black bg-white p-4 sm:p-6">
-        <h2 className="type-sm font-semibold text-black mb-3">Funding summary</h2>
-        <p className="type-sm text-gray-500">
-          Campaign finance data is not yet available for this representative.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-2 border-black bg-white p-4 sm:p-6">
-      <h2 className="type-sm font-semibold text-black mb-3">Funding summary</h2>
-      <dl className="space-y-3">
-        <div>
-          <dt className="type-xs text-gray-500">Total raised</dt>
-          <dd className="type-xl font-semibold text-black">
-            {formatCurrency(finance.totalRaised)}
-          </dd>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <dt className="type-xs text-gray-500">Total spent</dt>
-            <dd className="type-base font-medium text-gray-900">
-              {formatCurrency(finance.totalSpent)}
-            </dd>
-          </div>
-          <div>
-            <dt className="type-xs text-gray-500">Cash on hand</dt>
-            <dd className="type-base font-medium text-gray-900">
-              {formatCurrency(finance.cashOnHand)}
-            </dd>
-          </div>
-        </div>
-      </dl>
     </div>
   );
 }
@@ -163,17 +196,7 @@ function VoteFinanceCorrelationPod({
 }: {
   insight: InsightResponse<VoteFinanceInsight> | null;
 }) {
-  if (!insight?.data) {
-    return (
-      <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
-        <h2 className="type-sm font-semibold text-black mb-3">Vote-finance correlation</h2>
-        <p className="type-sm text-gray-500">
-          Vote-finance analysis is not yet available for this representative. This analysis requires
-          sufficient voting and contribution data to detect patterns.
-        </p>
-      </div>
-    );
-  }
+  if (!insight?.data) return null;
 
   const data = insight.data;
   const keyStats = [
@@ -198,7 +221,8 @@ function SourcesPod() {
         <a href="https://www.fec.gov" className="text-[#3ea2d4] hover:underline">
           FEC.gov
         </a>
-        . Intelligence analysis powered by statistical methods.{' '}
+        . Totals reflect the current two-year cycle. Industry breakdown covers only itemized
+        individual donations where the donor listed an employer.{' '}
         <Link href="/methodology" className="text-[#3ea2d4] hover:underline">
           Full methodology
         </Link>
@@ -214,8 +238,8 @@ export function CampaignContributionsAnswer({
 }: CampaignContributionsAnswerProps) {
   return (
     <>
-      <TopIndustriesPod industries={industries} />
       <FundingSummaryPod finance={finance} />
+      <TopIndustriesPod industries={industries} />
       <VoteFinanceCorrelationPod insight={voteFinanceInsight} />
       <SourcesPod />
     </>

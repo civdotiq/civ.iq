@@ -73,14 +73,31 @@ export interface CampaignContributionsData {
     totalRaised: number;
     totalSpent: number;
     cashOnHand: number;
+    // Source breakdown of totalRaised, pulled directly from FEC's candidate totals.
+    // Sum may be less than totalRaised; the remainder is transfers, interest, and
+    // other receipts that don't fit the four named buckets.
+    individualContributions: number;
+    pacContributions: number;
+    partyContributions: number;
+    candidateSelfFunding: number;
   } | null;
   industries: {
+    // Top classified sectors only. The non-informative bucket (donors who left
+    // employer blank, wrote RETIRED/SELF-EMPLOYED, etc.) is separated out as
+    // `unattributedTotal` so it doesn't appear as a ranked "sector".
     topIndustries: Array<{
       industry: string;
       amount: number;
       percentage: number;
       contributionCount: number;
     }>;
+    // Sum of itemized-individual dollars that the aggregator was able to look at.
+    // This is the denominator the percentages are computed against — usually a
+    // small fraction of totalRaised because PACs, parties, conduits, and
+    // small-dollar unitemized donations don't carry employer strings.
+    analyzedTotal: number;
+    // Dollars within analyzedTotal where no employer info was provided.
+    unattributedTotal: number;
     metadata?: { cycle?: number; lastUpdated?: string };
   } | null;
   voteFinance: InsightResponse<VoteFinanceInsight> | null;
@@ -158,22 +175,53 @@ export async function fetchCampaignContributionsData(
         totalRaised: financialSummary.receipts,
         totalSpent: financialSummary.disbursements,
         cashOnHand: financialSummary.last_cash_on_hand_end_period,
+        individualContributions: financialSummary.individual_contributions ?? 0,
+        pacContributions: financialSummary.other_political_committee_contributions ?? 0,
+        partyContributions: financialSummary.political_party_committee_contributions ?? 0,
+        candidateSelfFunding: financialSummary.candidate_contribution ?? 0,
       }
     : null;
 
   const industries = processedFinance?.industryBreakdown?.length
-    ? {
-        topIndustries: processedFinance.industryBreakdown.map(item => ({
-          industry: item.industry,
-          amount: item.amount,
-          percentage: item.percentage,
-          contributionCount: item.count,
-        })),
-        metadata: {
-          cycle: processedFinance.cycle,
-          lastUpdated: processedFinance.lastUpdated,
-        },
-      }
+    ? (() => {
+        // Buckets that don't represent a real industry — either the donor left
+        // employer blank/"retired"/"self-employed" ("Unaffiliated / Non-employed")
+        // or the employer didn't match any taxonomy entry ("Other/Unknown",
+        // "Not Employed", etc.). We separate these out so the ranked list is
+        // actual sectors and the unclassified remainder is a single footnote.
+        const NON_INDUSTRY = new Set([
+          'Unaffiliated / Non-employed',
+          'Other/Unknown',
+          'Other',
+          'Unknown',
+          'Not Employed',
+        ]);
+        const classified = processedFinance.industryBreakdown.filter(
+          item => !NON_INDUSTRY.has(item.industry)
+        );
+        const unclassified = processedFinance.industryBreakdown.filter(item =>
+          NON_INDUSTRY.has(item.industry)
+        );
+        const unattributedTotal = unclassified.reduce((sum, item) => sum + item.amount, 0);
+        const analyzedTotal = processedFinance.industryBreakdown.reduce(
+          (sum, item) => sum + item.amount,
+          0
+        );
+        return {
+          topIndustries: classified.map(item => ({
+            industry: item.industry,
+            amount: item.amount,
+            percentage: item.percentage,
+            contributionCount: item.count,
+          })),
+          analyzedTotal,
+          unattributedTotal,
+          metadata: {
+            cycle: processedFinance.cycle,
+            lastUpdated: processedFinance.lastUpdated,
+          },
+        };
+      })()
     : null;
 
   return {

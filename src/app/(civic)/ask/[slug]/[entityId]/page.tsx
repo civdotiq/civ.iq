@@ -80,7 +80,8 @@ function buildFaqAnswer(
             i =>
               i.industry !== 'Unknown' &&
               i.industry !== 'Other/Unknown' &&
-              i.industry !== 'Not Employed'
+              i.industry !== 'Not Employed' &&
+              i.industry !== 'Unaffiliated / Non-employed'
           )?.industry ?? 'various sectors';
         const amount =
           finance.totalRaised >= 1_000_000
