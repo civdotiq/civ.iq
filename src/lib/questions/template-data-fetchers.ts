@@ -132,6 +132,10 @@ export interface VotingRecordTemplateData {
     }>;
     totalSponsored?: number;
     totalCosponsored?: number;
+    // True when the upstream fetcher hit its 500-bill page cap on
+    // cosponsorships. The UI should render "500+" to avoid stating the cap
+    // as the rep's actual cosponsorship count.
+    cosponsoredCapped?: boolean;
   } | null;
 }
 
@@ -288,11 +292,18 @@ export async function fetchVotingRecordData(
         introducedDate: b.introducedDate,
         latestAction: b.lastAction ? { text: b.lastAction } : undefined,
       }));
+    // The upstream service caps cosponsored fetches at 500 bills (2 pages) for
+    // performance. When that cap is hit, `cosponsoredCount` IS the cap, not
+    // the rep's true cosponsorship total — flag it so the UI can render "500+"
+    // instead of an exact number that misrepresents the record.
+    const fetchedCosponsored = billsResponse.metadata.fetchedCosponsored ?? cosponsored.length;
+    const COSPONSORED_PAGE_CAP = 500;
     bills = {
       sponsored,
       cosponsored,
       totalSponsored: billsResponse.metadata.sponsoredCount ?? sponsored.length,
-      totalCosponsored: cosponsored.length,
+      totalCosponsored: billsResponse.metadata.cosponsoredCount ?? cosponsored.length,
+      cosponsoredCapped: fetchedCosponsored >= COSPONSORED_PAGE_CAP,
     };
   }
 

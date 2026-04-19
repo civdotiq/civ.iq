@@ -23,7 +23,28 @@ interface Vote {
 
 interface VotesData {
   votes: Vote[];
+  // Count of votes in the fetched sample (currently capped at 20). Session-wide
+  // totals are NOT available here — label any derived stat as sample-scoped.
   totalResults: number;
+}
+
+// Bill type codes from Congress.gov -> citizen-friendly prefix.
+const BILL_TYPE_LABEL: Record<string, string> = {
+  hr: 'H.R.',
+  hres: 'H.Res.',
+  hjres: 'H.J.Res.',
+  hconres: 'H.Con.Res.',
+  s: 'S.',
+  sres: 'S.Res.',
+  sjres: 'S.J.Res.',
+  sconres: 'S.Con.Res.',
+};
+
+function formatBillLabel(bill: Vote['bill']): string | null {
+  if (!bill?.number) return null;
+  const typeKey = (bill.type ?? 'hr').toLowerCase();
+  const prefix = BILL_TYPE_LABEL[typeKey] ?? typeKey.toUpperCase();
+  return `${prefix} ${bill.number}`;
 }
 
 interface Bill {
@@ -41,6 +62,7 @@ interface BillsData {
   cosponsored?: Bill[];
   totalSponsored?: number;
   totalCosponsored?: number;
+  cosponsoredCapped?: boolean;
 }
 
 interface VotingRecordAnswerProps {
@@ -69,6 +91,16 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
 
   const recent = votes.votes.slice(0, 10);
 
+  // When a bill title appears more than once in the rendered list, the two
+  // votes are almost always distinct procedural steps (e.g., motion to recommit
+  // vs. passage) that end up with opposite positions on the same day. Append
+  // the vote's question to disambiguate; leave single-occurrence bills alone.
+  const titleCounts = new Map<string, number>();
+  for (const v of recent) {
+    const key = v.bill?.title ?? v.question ?? 'Untitled vote';
+    titleCounts.set(key, (titleCounts.get(key) ?? 0) + 1);
+  }
+
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
       <h2 className="type-sm font-semibold text-black mb-3">Recent votes</h2>
@@ -77,7 +109,12 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
           const billId = vote.bill?.number
             ? `${vote.bill.congress ?? 119}-${(vote.bill.type ?? 'hr').toLowerCase()}-${vote.bill.number}`
             : null;
-          const billTitle = vote.bill?.title ?? vote.question ?? 'Untitled vote';
+          const baseTitle = vote.bill?.title ?? vote.question ?? 'Untitled vote';
+          const duplicated = (titleCounts.get(baseTitle) ?? 0) > 1;
+          const billTitle =
+            duplicated && vote.bill?.title && vote.question
+              ? `${baseTitle} (${vote.question})`
+              : baseTitle;
 
           return (
             <li key={vote.voteId} className="py-2 first:pt-0 last:pb-0">
@@ -113,7 +150,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
       </ul>
       {votes.totalResults > 10 && (
         <p className="type-xs text-gray-500 mt-3">
-          Showing 10 of {votes.totalResults.toLocaleString()} total votes.
+          Showing 10 of the last {votes.totalResults.toLocaleString()} recorded votes.
         </p>
       )}
     </div>
@@ -146,7 +183,9 @@ function LegislationPod({ bills }: { bills: BillsData | null }) {
           </div>
           <div>
             <dt className="type-xs text-gray-500">Bills cosponsored</dt>
-            <dd className="type-lg font-semibold text-black">{totalCosponsored}</dd>
+            <dd className="type-lg font-semibold text-black">
+              {bills?.cosponsoredCapped ? `${totalCosponsored}+` : totalCosponsored}
+            </dd>
           </div>
         </div>
         {latestBill && (
@@ -183,17 +222,23 @@ function VotingStatsPod({ votes }: { votes: VotesData | null }) {
     );
   }
 
-  const total = votes.votes.length;
+  // These numbers describe the fetched sample, NOT the session. The upstream
+  // fetcher caps at ~20 most-recent votes, so any "missed rate" or "total"
+  // label without a sample-scope qualifier would misrepresent the record.
+  const sampleSize = votes.votes.length;
   const yea = votes.votes.filter(v => v.position === 'Yea').length;
   const nay = votes.votes.filter(v => v.position === 'Nay').length;
   const missed = votes.votes.filter(
     v => v.position === 'Not Voting' || v.position === 'Present'
   ).length;
-  const missedPct = total > 0 ? ((missed / total) * 100).toFixed(1) : '0';
+  const missedPct = sampleSize > 0 ? ((missed / sampleSize) * 100).toFixed(1) : '0';
 
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6">
       <h2 className="type-sm font-semibold text-black mb-3">Voting stats</h2>
+      <p className="type-xs text-gray-500 mb-3">
+        In the last {sampleSize} recorded {sampleSize === 1 ? 'vote' : 'votes'}.
+      </p>
       <dl className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div>
@@ -210,7 +255,7 @@ function VotingStatsPod({ votes }: { votes: VotesData | null }) {
           </div>
         </div>
         <div>
-          <dt className="type-xs text-gray-500">Missed vote rate</dt>
+          <dt className="type-xs text-gray-500">Missed in last {sampleSize}</dt>
           <dd className="type-base font-medium text-gray-900">{missedPct}%</dd>
         </div>
       </dl>
