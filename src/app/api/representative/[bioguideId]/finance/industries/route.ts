@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
+import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { govCache } from '@/services/cache';
 import {
   getFECMapping,
@@ -72,7 +72,7 @@ export async function GET(
       return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }
 
-    const financeData = await aggregateFinanceData(fecMapping.fecId, 2024, 'XX');
+    const financeData = await aggregateFinanceDataFromAggregates(fecMapping.fecId, 2024, 'XX');
     if (!financeData) {
       return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }

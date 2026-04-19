@@ -425,3 +425,284 @@ export async function aggregateFinanceData(
     throw error;
   }
 }
+
+const NON_INFORMATIVE_EMPLOYER_RX =
+  /^(|n\/a|na|none|not\s*employed|not\s*applicable|information\s*requested.*|info\s*requested|refused|self|self[-\s]?employed|retired|null|unknown|private|personal|individual|independent|homemaker)$/i;
+
+function isInformativeEmployer(employer: string): boolean {
+  return !NON_INFORMATIVE_EMPLOYER_RX.test(employer.trim());
+}
+
+/**
+ * Build industry breakdown from FEC's pre-aggregated by_employer + by_occupation
+ * endpoints.
+ *
+ * Attribution policy:
+ * 1. Rows with informative employers are categorized via the entity-resolution
+ *    taxonomy and attributed directly.
+ * 2. The non-informative-employer residual (blank / RETIRED / SELF-EMPLOYED /
+ *    N/A rows) is partially recovered by by_occupation: under the common
+ *    assumption that informative-employer donors also list informative
+ *    occupations, the "extra" informative-occupation signal beyond
+ *    informative-employer totals represents donors whose employer is blank but
+ *    whose occupation is meaningful (e.g., self-employed attorneys). This
+ *    extra is proportionally distributed across informative-occupation rows.
+ * 3. The remaining residual — contributions with no recoverable attribution —
+ *    is bucketed as "Unaffiliated / Non-employed".
+ *
+ * Caveats: the employer/occupation aggregates are independent one-dimensional
+ * partitions of the same underlying contributions; the cross-tab is not
+ * available. Step 2 is therefore an approximation, not an exact recovery.
+ */
+function processIndustryFromAggregates(
+  byEmployer: Array<{ employer: string; total: number; count: number }>,
+  byOccupation: Array<{ occupation: string; total: number; count: number }>,
+  totalAmount: number
+): { breakdown: ProcessedIndustryData[]; quality: DataQuality['industry'] } {
+  const industryTotals: Record<
+    string,
+    { amount: number; count: number; employers: Record<string, { amount: number; count: number }> }
+  > = {};
+
+  const addToIndustry = (key: string, subLabel: string, amount: number, count: number): void => {
+    if (amount <= 0) return;
+    const bucket =
+      industryTotals[key] ?? (industryTotals[key] = { amount: 0, count: 0, employers: {} });
+    bucket.amount += amount;
+    bucket.count += count;
+    const sub =
+      bucket.employers[subLabel] ?? (bucket.employers[subLabel] = { amount: 0, count: 0 });
+    sub.amount += amount;
+    sub.count += count;
+  };
+
+  let totalContributions = 0;
+  let informativeEmployerTotal = 0;
+  let informativeEmployerCount = 0;
+  let nonInformativeEmployerTotal = 0;
+  let nonInformativeEmployerCount = 0;
+
+  for (const row of byEmployer) {
+    const amount = row.total || 0;
+    const count = row.count || 0;
+    totalContributions += count;
+    if (amount <= 0) continue;
+
+    const employer = row.employer || '';
+    if (isInformativeEmployer(employer)) {
+      informativeEmployerTotal += amount;
+      informativeEmployerCount += count;
+      const result = categorizeContribution(employer, '');
+      const industryKey = result.sector === IndustrySector.OTHER ? result.category : result.sector;
+      addToIndustry(industryKey, employer, amount, count);
+    } else {
+      nonInformativeEmployerTotal += amount;
+      nonInformativeEmployerCount += count;
+    }
+  }
+
+  let informativeOccupationTotal = 0;
+  const informativeOccupationRows: Array<{
+    industryKey: string;
+    label: string;
+    total: number;
+    count: number;
+  }> = [];
+
+  for (const row of byOccupation) {
+    const amount = row.total || 0;
+    if (amount <= 0) continue;
+    const occupation = (row.occupation || '').trim();
+    if (!occupation) continue;
+    const result = categorizeContribution('', occupation);
+    if (result.sector === IndustrySector.OTHER) continue;
+    informativeOccupationTotal += amount;
+    informativeOccupationRows.push({
+      industryKey: result.sector,
+      label: `(via occupation: ${occupation})`,
+      total: amount,
+      count: row.count || 0,
+    });
+  }
+
+  const extraOccupationSignal = Math.max(
+    0,
+    Math.min(nonInformativeEmployerTotal, informativeOccupationTotal - informativeEmployerTotal)
+  );
+
+  let occupationAttributedCount = 0;
+  if (extraOccupationSignal > 0 && informativeOccupationTotal > 0) {
+    const scale = extraOccupationSignal / informativeOccupationTotal;
+    for (const row of informativeOccupationRows) {
+      const attributedAmount = row.total * scale;
+      const attributedCount = Math.round(row.count * scale);
+      if (attributedAmount <= 0) continue;
+      addToIndustry(row.industryKey, row.label, attributedAmount, attributedCount);
+      occupationAttributedCount += attributedCount;
+    }
+  }
+
+  const residualAmount = Math.max(0, nonInformativeEmployerTotal - extraOccupationSignal);
+  const residualCount = Math.max(0, nonInformativeEmployerCount - occupationAttributedCount);
+  if (residualAmount > 0) {
+    addToIndustry('Unaffiliated / Non-employed', 'Unknown Employer', residualAmount, residualCount);
+  }
+
+  const breakdown: ProcessedIndustryData[] = Object.entries(industryTotals)
+    .map(([industry, data]) => ({
+      industry,
+      amount: data.amount,
+      percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+      count: data.count,
+      topEmployers: Object.entries(data.employers)
+        .map(([name, emp]) => ({ name, amount: emp.amount, count: emp.count }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5),
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const attributedContributions = informativeEmployerCount + occupationAttributedCount;
+  const quality: DataQuality['industry'] = {
+    totalContributionsAnalyzed: totalContributions,
+    contributionsWithEmployer: attributedContributions,
+    completenessPercentage:
+      totalContributions > 0 ? (attributedContributions / totalContributions) * 100 : 0,
+  };
+
+  return { breakdown, quality };
+}
+
+/**
+ * Build geographic breakdown from FEC's pre-aggregated by_state endpoint.
+ */
+function processGeographyFromState(
+  byState: Array<{ state: string; stateFull: string; total: number; count: number }>,
+  totalAmount: number,
+  representativeState: string
+): { breakdown: ProcessedGeographicData[]; quality: DataQuality['geography'] } {
+  const homeState = representativeState.trim().toUpperCase();
+  let contributionsWithState = 0;
+  let totalContributions = 0;
+
+  const breakdown: ProcessedGeographicData[] = byState
+    .filter(row => (row.total || 0) > 0 && (row.state || '').trim() !== '')
+    .map(row => {
+      const stateCode = row.state.toUpperCase();
+      const count = row.count || 0;
+      totalContributions += count;
+      contributionsWithState += count;
+      return {
+        state: stateCode,
+        stateName: row.stateFull || getStateName(stateCode),
+        amount: row.total,
+        percentage: totalAmount > 0 ? (row.total / totalAmount) * 100 : 0,
+        count,
+        isHomeState: stateCode === homeState,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+
+  const quality: DataQuality['geography'] = {
+    totalContributionsAnalyzed: totalContributions,
+    contributionsWithState,
+    completenessPercentage: totalContributions > 0 ? 100 : 0,
+  };
+
+  return { breakdown, quality };
+}
+
+/**
+ * Aggregate-endpoint variant of aggregateFinanceData.
+ *
+ * Replaces O(2,400)-page Schedule A pagination with 5 FEC server-side aggregate
+ * calls regardless of candidate fundraising size. Uses the candidate's principal
+ * committee only (matches prior getSampleContributions semantics).
+ *
+ * Trade-offs vs raw Schedule A:
+ *   - Industry attribution uses by_employer directly; by_occupation is used to
+ *     partially recover the non-informative-employer residual via a proportional
+ *     "extra signal" approximation. This approximates but does not exactly
+ *     reproduce the per-contribution employer+occupation fallback available on
+ *     raw Schedule A.
+ *   - FEC aggregate totals differ from raw Schedule A sums by ~1-3% due to how
+ *     FEC handles memos and refunds on the aggregate endpoints.
+ */
+export async function aggregateFinanceDataFromAggregates(
+  candidateId: string,
+  cycle: number,
+  representativeState: string
+): Promise<ProcessedFinanceData | null> {
+  try {
+    // Resolve the principal committee FIRST and alone. The 3 aggregate methods
+    // each internally call findCandidateCommitteeIds; racing them on a cold
+    // cache fires 4+ concurrent identical committee lookups and triggers FEC's
+    // burst rate limit. Prefetching populates the in-memory committee cache
+    // so the subsequent parallel aggregate calls hit cache.
+    const [financialSummary, committeeId] = await Promise.all([
+      fecApiService.getFinancialSummary(candidateId, cycle),
+      fecApiService.getPrincipalCommitteeId(candidateId, cycle),
+    ]);
+
+    if (!financialSummary) {
+      return null;
+    }
+
+    const [byEmployer, byOccupation, byState] = await Promise.all([
+      fecApiService.getContributionsByEmployer(candidateId, cycle, 100),
+      fecApiService.getContributionsByOccupation(candidateId, cycle, 100),
+      fecApiService.getContributionsByState(candidateId, cycle),
+    ]);
+
+    const hasAggregates = byEmployer.length > 0 || byState.length > 0;
+    const totalEmployerAmount = byEmployer.reduce((sum, r) => sum + (r.total || 0), 0);
+    const totalStateAmount = byState.reduce((sum, r) => sum + (r.total || 0), 0);
+
+    const industryResults = processIndustryFromAggregates(
+      byEmployer,
+      byOccupation,
+      totalEmployerAmount
+    );
+    const geographyResults = processGeographyFromState(
+      byState,
+      totalStateAmount,
+      representativeState
+    );
+
+    const overallDataConfidence: DataQuality['overallDataConfidence'] = hasAggregates
+      ? 'high'
+      : 'low';
+
+    return {
+      totalRaised: financialSummary.total_receipts ?? financialSummary.receipts,
+      totalSpent: financialSummary.total_disbursements ?? financialSummary.disbursements,
+      cashOnHand:
+        financialSummary.cash_on_hand_end_period ?? financialSummary.last_cash_on_hand_end_period,
+      individualContributions: financialSummary.individual_contributions,
+      pacContributions: financialSummary.other_political_committee_contributions,
+      partyContributions: financialSummary.political_party_committee_contributions,
+      candidateContributions: financialSummary.candidate_contribution,
+      industryBreakdown: industryResults.breakdown,
+      geographicBreakdown: geographyResults.breakdown,
+      dataQuality: {
+        industry: industryResults.quality,
+        geography: geographyResults.quality,
+        overallDataConfidence,
+      },
+      candidateId,
+      cycle,
+      lastUpdated: new Date().toISOString(),
+      fecDataSources: {
+        financialSummary: `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/?cycle=${cycle}`,
+        contributions: committeeId
+          ? `https://api.open.fec.gov/v1/schedules/schedule_a/by_employer/?committee_id=${committeeId}&cycle=${cycle}`
+          : `https://api.open.fec.gov/v1/schedules/schedule_a/?candidate_id=${candidateId}&cycle=${cycle}`,
+      },
+    };
+  } catch (error) {
+    logger.error(
+      `[Finance Aggregator] Failed to aggregate from FEC aggregates for ${candidateId}:`,
+      error
+    );
+    throw error;
+  }
+}

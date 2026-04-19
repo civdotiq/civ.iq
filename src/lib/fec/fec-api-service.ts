@@ -1469,26 +1469,143 @@ export class FECApiService {
   /**
    * Get contribution totals grouped by size bucket
    * Returns: $200 and under, $200.01-$499.99, $500-$999.99, $1000-$1999.99, $2000+
+   * FEC aggregate endpoints filter by committee_id, not candidate_id, so we
+   * resolve the principal committee first. In-memory committee cache makes
+   * multiple aggregate calls for the same candidate share one lookup.
    */
   async getContributionsBySize(
     candidateId: string,
     cycle: number
   ): Promise<Array<{ size: number; total: number; count: number }>> {
     try {
-      logger.info(`[FEC API] Fetching contributions by size for ${candidateId} cycle ${cycle}`);
+      const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+      if (committeeIds.length === 0) return [];
+
+      const committeeId = committeeIds[0];
+      logger.info(
+        `[FEC API] Fetching contributions by size for ${candidateId} (committee ${committeeId}) cycle ${cycle}`
+      );
 
       const response = await this.makeRequest<
         FECApiResponse<{ size: number; total: number; count: number }>
-      >(`/schedules/schedule_a/by_size/?candidate_id=${candidateId}&cycle=${cycle}&per_page=20`);
+      >(`/schedules/schedule_a/by_size/?committee_id=${committeeId}&cycle=${cycle}&per_page=20`);
 
-      if (response.results && response.results.length > 0) {
-        logger.info(`[FEC API] Found ${response.results.length} size buckets for ${candidateId}`);
-        return response.results;
-      }
-
-      return [];
+      return response.results ?? [];
     } catch (error) {
       logger.error(`[FEC API] Failed to get contributions by size for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get contribution totals grouped by employer (top N by dollar amount).
+   * Single FEC request; replaces per-contribution pagination for industry analysis.
+   */
+  async getContributionsByEmployer(
+    candidateId: string,
+    cycle: number,
+    topN: number = 100
+  ): Promise<Array<{ employer: string; total: number; count: number }>> {
+    try {
+      const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+      if (committeeIds.length === 0) return [];
+
+      const committeeId = committeeIds[0];
+      logger.info(
+        `[FEC API] Fetching contributions by employer for ${candidateId} (committee ${committeeId}) cycle ${cycle}`
+      );
+
+      const response = await this.makeRequest<
+        FECApiResponse<{ employer: string | null; total: number | null; count: number | null }>
+      >(
+        `/schedules/schedule_a/by_employer/?committee_id=${committeeId}&cycle=${cycle}&per_page=${topN}&sort=-total`
+      );
+
+      return (response.results ?? []).map(r => ({
+        employer: r.employer ?? '',
+        total: r.total ?? 0,
+        count: r.count ?? 0,
+      }));
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get contributions by employer for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get contribution totals grouped by occupation (top N by dollar amount).
+   * Complements by_employer for rows where employer is blank or non-informative.
+   */
+  async getContributionsByOccupation(
+    candidateId: string,
+    cycle: number,
+    topN: number = 100
+  ): Promise<Array<{ occupation: string; total: number; count: number }>> {
+    try {
+      const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+      if (committeeIds.length === 0) return [];
+
+      const committeeId = committeeIds[0];
+      logger.info(
+        `[FEC API] Fetching contributions by occupation for ${candidateId} (committee ${committeeId}) cycle ${cycle}`
+      );
+
+      const response = await this.makeRequest<
+        FECApiResponse<{ occupation: string | null; total: number | null; count: number | null }>
+      >(
+        `/schedules/schedule_a/by_occupation/?committee_id=${committeeId}&cycle=${cycle}&per_page=${topN}&sort=-total`
+      );
+
+      return (response.results ?? []).map(r => ({
+        occupation: r.occupation ?? '',
+        total: r.total ?? 0,
+        count: r.count ?? 0,
+      }));
+    } catch (error) {
+      logger.error(
+        `[FEC API] Failed to get contributions by occupation for ${candidateId}:`,
+        error
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Get contribution totals grouped by contributor state.
+   * Single FEC request; replaces per-contribution pagination for geography analysis.
+   */
+  async getContributionsByState(
+    candidateId: string,
+    cycle: number
+  ): Promise<Array<{ state: string; stateFull: string; total: number; count: number }>> {
+    try {
+      const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+      if (committeeIds.length === 0) return [];
+
+      const committeeId = committeeIds[0];
+      logger.info(
+        `[FEC API] Fetching contributions by state for ${candidateId} (committee ${committeeId}) cycle ${cycle}`
+      );
+
+      const response = await this.makeRequest<
+        FECApiResponse<{
+          state: string | null;
+          state_full: string | null;
+          total: number | null;
+          count: number | null;
+        }>
+      >(
+        `/schedules/schedule_a/by_state/?committee_id=${committeeId}&cycle=${cycle}&per_page=100&sort=-total`
+      );
+
+      return (response.results ?? []).map(r => ({
+        state: (r.state ?? '').toUpperCase(),
+        stateFull: r.state_full ?? '',
+        total: r.total ?? 0,
+        count: r.count ?? 0,
+      }));
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get contributions by state for ${candidateId}:`, error);
       return [];
     }
   }

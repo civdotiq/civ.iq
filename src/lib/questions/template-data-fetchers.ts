@@ -17,7 +17,7 @@
 import { cachedFetch } from '@/lib/cache';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
-import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
+import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-pipeline-analyzer';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
@@ -146,7 +146,7 @@ export async function fetchCampaignContributionsData(
     fecId
       ? cachedFetch(
           `question:industries:${bioguideId}`,
-          () => aggregateFinanceData(fecId, 2024, state, true),
+          () => aggregateFinanceDataFromAggregates(fecId, 2024, state),
           FINANCE_TTL
         ).catch(() => null)
       : null,
