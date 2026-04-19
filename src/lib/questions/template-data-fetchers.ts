@@ -146,7 +146,7 @@ export async function fetchCampaignContributionsData(
     fecId
       ? cachedFetch(
           `question:industries:${bioguideId}`,
-          () => aggregateFinanceData(fecId, 2024, state),
+          () => aggregateFinanceData(fecId, 2024, state, true),
           FINANCE_TTL
         ).catch(() => null)
       : null,

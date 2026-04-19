@@ -26,11 +26,11 @@ const EXAMPLE_QUESTIONS = [
     question: 'How does Jim Jordan vote?',
   },
   {
-    slug: 'partisanship',
+    slug: 'donor-voting-alignment',
     entityId: 'M001153',
     name: 'Lisa Murkowski',
     category: 'WHY',
-    question: 'Is Lisa Murkowski more partisan than average?',
+    question: "Does Lisa Murkowski's voting align with her donors?",
   },
   {
     slug: 'topic-bills',
