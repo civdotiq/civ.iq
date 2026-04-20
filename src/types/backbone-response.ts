@@ -25,6 +25,14 @@ export interface BackboneResponse<T> {
   data: T;
   dataQuality: DataQuality;
   sourceStatus: SourceStatus[];
+  /**
+   * When set, explains a known accuracy limitation of this specific response —
+   * e.g. ZIP-based district lookup, where ZIP ↔ congressional district
+   * alignment is wrong 10–20% of the time. Consumers (UI, SDK, MCP tools)
+   * should surface this to end users when dataQuality is 'partial' due to
+   * input-quality degradation rather than upstream failure.
+   */
+  accuracyNote?: string;
 }
 
 /**
