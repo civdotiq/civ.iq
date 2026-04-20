@@ -192,6 +192,29 @@ Expect `"unavailable"` and HTTP 503. The pilot list is 10 cities — see `docs/C
 
 **If any check returns silent `[]` with `dataQuality` missing, that is a regression of Phase 2 of the backbone-gaps plan — please open an issue.**
 
+### 4.6 ZIP-input honesty contract
+
+ZIP codes do not align with congressional district boundaries — 10–20% of ZIPs span multiple districts. Every route that resolves districts from a ZIP must surface `accuracyNote` in the response so SDK and AI consumers see the imprecision programmatically. Address-based responses must not carry the note.
+
+```bash
+# ZIP input → dataQuality drops, accuracyNote set
+curl -s 'http://localhost:3000/api/representatives?zip=94110' \
+  | jq '{dataQuality: .metadata.dataQuality, accuracyNote: .accuracyNote}'
+# Expect: { "dataQuality": "medium", "accuracyNote": "ZIP-based district lookup is approximate…" }
+
+# Address (state+district) → authoritative, no note
+curl -s 'http://localhost:3000/api/representatives?state=CA&district=12' \
+  | jq '{dataQuality: .metadata.dataQuality, accuracyNote: .accuracyNote}'
+# Expect: { "dataQuality": "high", "accuracyNote": null }
+
+# Multi-district ZIP is the clearest case
+curl -s 'http://localhost:3000/api/representatives-multi-district?zip=90210' \
+  | jq '{isMultiDistrict, accuracyNote}'
+# Expect: { "isMultiDistrict": true, "accuracyNote": "ZIP-based district lookup is approximate…" }
+```
+
+If a ZIP-accepting route returns a success response with `accuracyNote` missing, that is a regression of the ZIP-honesty contract (see `.claude/rules/security.md`, memory `feedback_address-not-zip.md`) — please open an issue.
+
 ---
 
 ## 5. Running the quality gate

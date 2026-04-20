@@ -579,7 +579,7 @@
     "/intelligence/address/money-report": {
       "get": {
         "summary": "Money report by ZIP code",
-        "description": "Campaign finance report card for representatives serving a ZIP code.",
+        "description": "Campaign finance report card for representatives serving a ZIP code. ZIP-based responses include `accuracyNote` and `status: 'partial'` — ZIP ↔ congressional district alignment is 10–20% wrong. For authoritative results, use the address POST endpoint.",
         "operationId": "getMoneyReportByZip",
         "tags": ["Intelligence"],
         "parameters": [
@@ -594,7 +594,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Money report for address",
+            "description": "Money report for ZIP (approximate — see accuracyNote)",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MoneyReportResponse" }
@@ -644,7 +644,7 @@
     "/intelligence/address/representatives": {
       "post": {
         "summary": "Representatives by address",
-        "description": "Look up all federal representatives (House + Senate) for a street address.",
+        "description": "Look up all federal representatives (House + Senate) for a street address. Address-based responses do NOT include `accuracyNote` — the district is authoritative.",
         "operationId": "getRepresentativesByAddress",
         "tags": ["Intelligence"],
         "requestBody": {
@@ -682,7 +682,64 @@
                     },
                     "state": { "type": "string" },
                     "district": { "type": "string" },
-                    "multiDistrict": { "type": "boolean" }
+                    "multiDistrict": { "type": "boolean" },
+                    "accuracyNote": {
+                      "type": "string",
+                      "description": "Populated only on ZIP-based GET responses (not address POST). Communicates that ZIP ↔ district alignment is 10–20% wrong and address-based lookup is preferred for authoritative results."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["complete", "partial", "unavailable"],
+                      "description": "'partial' when accuracyNote is set (ZIP input); 'complete' for address input."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "get": {
+        "summary": "Representatives by ZIP code",
+        "description": "ZIP-code fallback for the address-based lookup. Responses include `accuracyNote` and `status: 'partial'` because ZIP ↔ district alignment is 10–20% wrong; prefer the address POST endpoint for authoritative results.",
+        "operationId": "getRepresentativesByZip",
+        "tags": ["Intelligence"],
+        "parameters": [
+          {
+            "name": "zip",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^\\d{5}$" },
+            "description": "5-digit ZIP code",
+            "example": "48226"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Representatives for ZIP (approximate — see accuracyNote)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "representatives": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RepresentativeSummary"
+                      }
+                    },
+                    "state": { "type": "string" },
+                    "district": { "type": "string" },
+                    "multiDistrict": { "type": "boolean" },
+                    "accuracyNote": {
+                      "type": "string",
+                      "description": "Present on ZIP-based responses. ZIP ↔ district alignment is 10–20% wrong; use address POST for authoritative results."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["partial", "unavailable"]
+                    }
                   }
                 }
               }
@@ -1902,7 +1959,16 @@
           "aggregates": { "type": "object" },
           "narrative": { "type": "string" },
           "confidence": { "type": "number" },
-          "dataAsOf": { "type": "string", "format": "date-time" }
+          "dataAsOf": { "type": "string", "format": "date-time" },
+          "accuracyNote": {
+            "type": "string",
+            "description": "Present on ZIP-based GET responses. ZIP ↔ district alignment is 10–20% wrong; use the address POST endpoint for authoritative results."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["complete", "partial", "unavailable"],
+            "description": "'partial' when accuracyNote is set (ZIP input); 'complete' for address input."
+          }
         }
       },
       "GeocodeResponse": {
@@ -1920,6 +1986,10 @@
           },
           "stateInfo": { "type": "object" },
           "geocoded": { "type": "object" },
+          "accuracyNote": {
+            "type": "string",
+            "description": "Present when the request carried a ZIP code (body.zipCode) rather than pure coordinates or address-only. Downstream consumers using the returned district inherit ZIP imprecision (10–20% misalignment)."
+          },
           "isMultiDistrict": { "type": "boolean" }
         }
       },
