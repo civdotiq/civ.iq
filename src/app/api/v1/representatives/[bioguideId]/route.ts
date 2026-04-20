@@ -19,10 +19,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ bioguideId: string }> }
 ): Promise<NextResponse> {
   try {
-    const { id: bioguideId } = await params;
+    const { bioguideId } = await params;
 
     if (!bioguideId || !/^[A-Z]\d{6}$/i.test(bioguideId)) {
       return NextResponse.json(v1Error(400, 'Invalid bioguide ID'), { status: 400 });

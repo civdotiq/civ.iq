@@ -38,6 +38,54 @@
         }
       }
     },
+    "/v1/analytics": {
+      "get": {
+        "summary": "Per-endpoint request counts",
+        "description": "Returns request counts per endpoint for a given date range. Authenticated with a bearer token (CACHE_WARM_SECRET). Intended for operational observability — not part of the citizen-facing read path.",
+        "operationId": "getAnalytics",
+        "tags": ["Analytics"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "description": "Range start (YYYY-MM-DD). Defaults to 7 days before today.",
+            "example": "2026-04-13"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "description": "Range end (YYYY-MM-DD). Defaults to today.",
+            "example": "2026-04-20"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request counts for the date range",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalyticsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
     "/v1/representatives": {
       "get": {
         "summary": "List representatives",
@@ -2007,6 +2055,46 @@
           },
           "stateBills": { "type": "array", "items": { "type": "object" } }
         }
+      },
+      "AnalyticsResponse": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "dateRange",
+              "totalRequests",
+              "endpointCount",
+              "endpoints"
+            ],
+            "properties": {
+              "dateRange": {
+                "type": "object",
+                "required": ["start", "end"],
+                "properties": {
+                  "start": { "type": "string", "format": "date" },
+                  "end": { "type": "string", "format": "date" }
+                }
+              },
+              "totalRequests": { "type": "integer", "minimum": 0 },
+              "endpointCount": { "type": "integer", "minimum": 0 },
+              "endpoints": {
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 0 },
+                "description": "Map of endpoint path → request count"
+              }
+            }
+          },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Operator bearer token (CACHE_WARM_SECRET). Required for internal observability endpoints under /v1."
       }
     },
     "responses": {
@@ -2020,6 +2108,14 @@
       },
       "NotFound": {
         "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid bearer token",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/V1Error" }
@@ -2101,6 +2197,13 @@
       "name": "Widgets",
       "description": "Embeddable HTML widgets for iframe embedding"
     },
-    { "name": "MCP", "description": "Model Context Protocol for AI assistants" }
+    {
+      "name": "MCP",
+      "description": "Model Context Protocol for AI assistants"
+    },
+    {
+      "name": "Analytics",
+      "description": "Operational observability endpoints (authenticated)"
+    }
   ]
 }

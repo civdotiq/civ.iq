@@ -85,7 +85,7 @@ describe('OpenAPI Specification', () => {
   });
 
   describe('paths', () => {
-    // V1 endpoints (original 12)
+    // V1 endpoints (original 12 + analytics)
     const V1_PATHS = [
       '/v1/',
       '/v1/representatives',
@@ -98,6 +98,7 @@ describe('OpenAPI Specification', () => {
       '/v1/committees',
       '/v1/committees/{committeeId}',
       '/v1/changelog',
+      '/v1/analytics',
       '/mcp',
     ];
 
@@ -165,8 +166,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 39 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(39);
+    it('should have 40 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(40);
     });
 
     it('should only use GET or POST methods', () => {

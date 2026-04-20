@@ -237,24 +237,27 @@ describe('V1 API Route Integration Tests', () => {
 
   // ─── 3. Representative Detail ────────────────────────────────
 
-  describe('GET /api/v1/representatives/[id]', () => {
-    let GET: (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => Promise<Response>;
+  describe('GET /api/v1/representatives/[bioguideId]', () => {
+    let GET: (
+      req: NextRequest,
+      ctx: { params: Promise<{ bioguideId: string }> }
+    ) => Promise<Response>;
 
     beforeAll(async () => {
-      const mod = await import('@/app/api/v1/representatives/[id]/route');
+      const mod = await import('@/app/api/v1/representatives/[bioguideId]/route');
       GET = mod.GET;
     });
 
     it('should return 200 for valid bioguide ID', async () => {
       const response = await GET(createRequest('/api/v1/representatives/P000197'), {
-        params: Promise.resolve({ id: 'P000197' }),
+        params: Promise.resolve({ bioguideId: 'P000197' }),
       });
       expect(response.status).toBe(200);
     });
 
     it('should return v1 envelope with data and meta', async () => {
       const response = await GET(createRequest('/api/v1/representatives/P000197'), {
-        params: Promise.resolve({ id: 'P000197' }),
+        params: Promise.resolve({ bioguideId: 'P000197' }),
       });
       const body = (await response.json()) as Record<string, unknown>;
       expect(body).toHaveProperty('data');
@@ -263,7 +266,7 @@ describe('V1 API Route Integration Tests', () => {
 
     it('should return 400 for invalid bioguide ID format', async () => {
       const response = await GET(createRequest('/api/v1/representatives/invalid'), {
-        params: Promise.resolve({ id: 'invalid' }),
+        params: Promise.resolve({ bioguideId: 'invalid' }),
       });
       expect(response.status).toBe(400);
       const body = (await response.json()) as { error: { code: number } };
@@ -272,7 +275,7 @@ describe('V1 API Route Integration Tests', () => {
 
     it('should return 404 for unknown representative', async () => {
       const response = await GET(createRequest('/api/v1/representatives/Z999999'), {
-        params: Promise.resolve({ id: 'Z999999' }),
+        params: Promise.resolve({ bioguideId: 'Z999999' }),
       });
       expect(response.status).toBe(404);
       const body = (await response.json()) as { error: { code: number } };
@@ -283,7 +286,7 @@ describe('V1 API Route Integration Tests', () => {
 
     it('should return error envelope shape on bad input', async () => {
       const response = await GET(createRequest('/api/v1/representatives/bad'), {
-        params: Promise.resolve({ id: 'bad' }),
+        params: Promise.resolve({ bioguideId: 'bad' }),
       });
       const body = (await response.json()) as Record<string, unknown>;
       expect(body).toHaveProperty('error');
@@ -578,7 +581,7 @@ describe('V1 API Route Integration Tests', () => {
     const V1_ROUTE_FILES = [
       'src/app/api/v1/route.ts',
       'src/app/api/v1/representatives/route.ts',
-      'src/app/api/v1/representatives/[id]/route.ts',
+      'src/app/api/v1/representatives/[bioguideId]/route.ts',
       'src/app/api/v1/bills/route.ts',
       'src/app/api/v1/bills/[billId]/route.ts',
       'src/app/api/v1/bills/[billId]/summary/route.ts',
@@ -602,7 +605,7 @@ describe('V1 API Route Integration Tests', () => {
       const routes = await Promise.all([
         import('@/app/api/v1/route'),
         import('@/app/api/v1/representatives/route'),
-        import('@/app/api/v1/representatives/[id]/route'),
+        import('@/app/api/v1/representatives/[bioguideId]/route'),
         import('@/app/api/v1/bills/[billId]/summary/route'),
         import('@/app/api/v1/committees/[committeeId]/route'),
         import('@/app/api/v1/districts/[districtId]/route'),
@@ -614,9 +617,9 @@ describe('V1 API Route Integration Tests', () => {
     });
 
     it('error responses should always include error and meta keys', async () => {
-      const mod = await import('@/app/api/v1/representatives/[id]/route');
+      const mod = await import('@/app/api/v1/representatives/[bioguideId]/route');
       const response = await mod.GET(createRequest('/api/v1/representatives/bad'), {
-        params: Promise.resolve({ id: 'bad' }),
+        params: Promise.resolve({ bioguideId: 'bad' }),
       });
 
       const body = (await response.json()) as Record<string, unknown>;
