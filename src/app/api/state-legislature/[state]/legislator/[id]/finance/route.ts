@@ -12,9 +12,22 @@
  * "this legislator has no recorded contributions" and "we cannot answer
  * the question right now." See docs/COVERAGE.md.
  *
- * Current reality (2026-04): FollowTheMoney.org is in maintenance mode
- * during the OpenSecrets merger. Without a usable API key, every request
- * returns dataQuality: 'unavailable' with a notes entry citing the merger.
+ * Two branches, by design:
+ *
+ *   ACTIVE (default today, 2026-04): FOLLOWTHEMONEY_API_KEY absent →
+ *   503 with dataQuality: 'unavailable' and an OpenSecrets-merger note.
+ *   This is the branch every request hits right now — FollowTheMoney.org
+ *   is in maintenance mode during the OpenSecrets merger and no usable
+ *   key exists. Pinned by src/__tests__/api/state-legislature/
+ *   legislator-finance.test.ts.
+ *
+ *   DORMANT (kept as documentation): FOLLOWTHEMONEY_API_KEY present →
+ *   fetchWithSourceStatus() → shaped BackboneResponse with industry
+ *   breakdown, totals, and election cycles. This is the shape the route
+ *   will return once FollowTheMoney's OpenSecrets-era API comes back.
+ *   Do NOT delete this branch as "dead code" — it is the contract future
+ *   clients will depend on, and preserving it here means the switch-on
+ *   is a config change, not a code change.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
