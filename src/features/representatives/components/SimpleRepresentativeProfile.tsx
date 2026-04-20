@@ -8,10 +8,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
+import type { DataQuality } from '@/types/backbone-response';
 import { HeroStatsHeader } from './HeroStatsHeader';
 import { RepresentativeDashboard, REPRESENTATIVE_SECTIONS } from './RepresentativeDashboard';
 import { useSectionNavigation } from '@/shared/components/dashboard';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
+
+interface CommitteesApiResponse {
+  committees?: unknown[];
+  dataQuality?: DataQuality;
+}
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
@@ -152,6 +158,28 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
     });
     const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['overview']));
 
+    // Fetch committee dataQuality signal so the Committee Memberships card can
+    // honestly distinguish "empty" from "Congress.gov temporarily unavailable".
+    // The rendered committee list itself still comes from representative.committees
+    // (YAML-backed, always available); this call only supplies the freshness
+    // signal that upstream Congress.gov is reachable.
+    const { data: committeesData } = useSWR<CommitteesApiResponse>(
+      `/api/representative/${representative.bioguideId}/committees`,
+      async (url: string) => {
+        const response = await fetch(url);
+        if (!response.ok && response.status !== 503) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      },
+      {
+        revalidateOnFocus: false,
+        dedupingInterval: 300000,
+        shouldRetryOnError: false,
+      }
+    );
+    const committeesDataQuality = committeesData?.dataQuality;
+
     // Fetch lightweight summary data for Key Stats
     const {
       data: summaryData,
@@ -291,6 +319,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               batchLoading={batchLoading}
               batchError={batchError}
               committeeCodes={committeeCodes}
+              committeesDataQuality={committeesDataQuality}
               activeSection={activeSection}
               onSectionSelect={navigateToSection}
               onBack={navigateBack}

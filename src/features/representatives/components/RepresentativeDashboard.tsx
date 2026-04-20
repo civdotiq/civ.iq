@@ -8,6 +8,7 @@
 import React, { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { EnhancedRepresentative } from '@/types/representative';
+import type { DataQuality } from '@/types/backbone-response';
 import { ContactInfoTab } from './ContactInfoTab';
 import { VoteResponse } from './VotingTab';
 import { BillsResponse } from './BillsTab';
@@ -94,6 +95,7 @@ interface RepresentativeDashboardProps {
   batchLoading: boolean;
   batchError: Error | undefined;
   committeeCodes: string[];
+  committeesDataQuality?: DataQuality;
   activeSection: string | null;
   onSectionSelect: (id: string) => void;
   onBack: () => void;
@@ -128,6 +130,7 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
   batchLoading,
   batchError,
   committeeCodes,
+  committeesDataQuality,
   activeSection,
   onSectionSelect,
   onBack,
@@ -238,7 +241,12 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
     return (sectionId: string) => {
       switch (sectionId) {
         case 'overview':
-          return <ContactInfoTab representative={representative} />;
+          return (
+            <ContactInfoTab
+              representative={representative}
+              committeesDataQuality={committeesDataQuality}
+            />
+          );
         case 'voting':
           return (
             <VotingTabComponent
@@ -294,7 +302,12 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
         case 'district':
           return <DistrictTab bioguideId={representative.bioguideId} />;
         default:
-          return <ContactInfoTab representative={representative} />;
+          return (
+            <ContactInfoTab
+              representative={representative}
+              committeesDataQuality={committeesDataQuality}
+            />
+          );
       }
     };
   }, [representative, batchData, batchLoading, batchError, summaryData, committeeCodes]);

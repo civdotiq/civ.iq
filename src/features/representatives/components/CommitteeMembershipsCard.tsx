@@ -9,6 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Users, Info } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import type { DataQuality } from '@/types/backbone-response';
 import { getCommitteeName, COMMITTEE_INFO } from '@/lib/data/committee-names';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 
@@ -29,6 +30,13 @@ interface CommitteeMembershipsCardProps {
   className?: string;
   /** Include back-navigation params in committee links */
   includeBackNavigation?: boolean;
+  /**
+   * Data quality signal from the upstream API. When 'unavailable', the card
+   * renders an honest "data source down" state instead of an empty list
+   * (which would imply the member has no committees). Optional for
+   * back-compat; undefined falls through to current rendering.
+   */
+  dataQuality?: DataQuality;
 }
 
 /**
@@ -56,6 +64,7 @@ export function CommitteeMembershipsCard({
   representative,
   className = '',
   includeBackNavigation = true,
+  dataQuality,
 }: CommitteeMembershipsCardProps) {
   // Memoize committees to prevent unnecessary re-renders
   const committees = React.useMemo(
@@ -144,6 +153,37 @@ export function CommitteeMembershipsCard({
 
   const { parentCommittees, orphanSubcommittees } = hierarchicalCommittees;
   const hasCommittees = parentCommittees.length > 0 || orphanSubcommittees.length > 0;
+
+  if (dataQuality === 'unavailable') {
+    return (
+      <div
+        role="status"
+        aria-label="Committee data source temporarily unavailable"
+        className={`bg-white border-2 border-black ${className}`}
+      >
+        <div className="p-grid-4 border-b-2 border-black">
+          <div className="flex items-center gap-3">
+            <Users className="w-6 h-6 text-amber-700" />
+            <h3 className="aicher-heading text-lg text-amber-700">Committee Memberships</h3>
+          </div>
+        </div>
+        <div className="p-grid-4">
+          <div className="flex items-start gap-2 border-l-2 border-amber-600 bg-amber-50 p-grid-3">
+            <Info className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" aria-hidden />
+            <div>
+              <p className="aicher-heading text-sm text-gray-900">
+                Committee data source temporarily unavailable
+              </p>
+              <p className="type-xs text-gray-700 mt-2 leading-relaxed">
+                We were unable to reach Congress.gov for committee assignments. This does not mean{' '}
+                {representative.name} has no committees — try again shortly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Map role labels to glossary terms for contextual definitions
   const ROLE_GLOSSARY_TERMS: Record<string, string> = {

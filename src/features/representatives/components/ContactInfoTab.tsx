@@ -8,6 +8,7 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import type { DataQuality } from '@/types/backbone-response';
 import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
 import { BiographyCard } from './BiographyCard';
@@ -15,9 +16,10 @@ import { OverviewSidebar } from './OverviewSidebar';
 
 interface ContactInfoTabProps {
   representative: EnhancedRepresentative;
+  committeesDataQuality?: DataQuality;
 }
 
-export function ContactInfoTab({ representative }: ContactInfoTabProps) {
+export function ContactInfoTab({ representative, committeesDataQuality }: ContactInfoTabProps) {
   return (
     <div className="flex flex-col gap-grid-5">
       {/* Two-column grid layout: 2/3 main content, 1/3 sidebar */}
@@ -37,7 +39,10 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
 
           {/* Committee Memberships */}
           <div>
-            <CommitteeMembershipsCard representative={representative} />
+            <CommitteeMembershipsCard
+              representative={representative}
+              dataQuality={committeesDataQuality}
+            />
           </div>
 
           {/* Federal Service History */}
