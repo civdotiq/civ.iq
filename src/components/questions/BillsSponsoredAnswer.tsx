@@ -15,6 +15,7 @@ import Link from 'next/link';
 interface BillItem {
   id: string;
   number: string;
+  type: string;
   title: string;
   introducedDate: string;
   status: string;
@@ -26,6 +27,62 @@ interface BillsSponsoredAnswerProps {
   bills: BillItem[];
   sponsoredCount: number;
   cosponsoredCount: number;
+}
+
+// Congress.gov bill type code -> citizen-friendly prefix.
+const BILL_TYPE_LABEL: Record<string, string> = {
+  hr: 'H.R.',
+  hres: 'H.Res.',
+  hjres: 'H.J.Res.',
+  hconres: 'H.Con.Res.',
+  s: 'S.',
+  sres: 'S.Res.',
+  sjres: 'S.J.Res.',
+  sconres: 'S.Con.Res.',
+};
+
+function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
+  const typeKey = (bill.type ?? '').toLowerCase();
+  const prefix = BILL_TYPE_LABEL[typeKey] ?? typeKey.toUpperCase();
+  // Prefix and number together — if type is unknown, fall back to the number
+  // alone rather than rendering a misleading "HR 1113" for a resolution.
+  return prefix ? `${prefix} ${bill.number}` : bill.number;
+}
+
+/**
+ * Map a raw Congress.gov `latestAction.text` string to a short, citizen-
+ * language status label. The raw strings are long procedural sentences
+ * ("Referred to the Committee on Homeland Security, and in addition to the
+ * Committee on Ways and Means, for a period to be subsequently determined
+ * by the Speaker…") that drown the scannable part of the status column.
+ *
+ * Matching is done against phrases that appear in the standard Congress.gov
+ * action vocabulary. Order matters — terminal actions (became law, vetoed)
+ * check before their preceding stages (passed chamber, sent to President).
+ */
+function simplifyBillStatus(raw: string | undefined): string {
+  if (!raw) return 'Status unknown';
+  const text = raw.toLowerCase();
+
+  if (text.includes('became public law') || text.includes('became law')) return 'Became law';
+  if (text.includes('vetoed')) return 'Vetoed';
+  if (text.includes('presented to president') || text.includes('presented to the president')) {
+    return 'Sent to President';
+  }
+  if (text.includes('passed senate') || text.includes('passed/agreed to in senate')) {
+    return 'Passed Senate';
+  }
+  if (text.includes('passed house') || text.includes('passed/agreed to in house')) {
+    return 'Passed House';
+  }
+  if (text.includes('failed of passage') || text.includes('motion to table agreed to')) {
+    return 'Failed';
+  }
+  if (text.includes('reported') && text.includes('committee')) return 'Reported from committee';
+  if (text.includes('referred to') || text.startsWith('referred ')) return 'In committee';
+  if (text.includes('introduced')) return 'Introduced';
+
+  return 'In progress';
 }
 
 function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
@@ -54,7 +111,7 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
                   href={`/bill/${bill.id}`}
                   className="type-sm text-[#3ea2d4] hover:underline line-clamp-1"
                 >
-                  {bill.number}: {bill.title}
+                  {formatBillLabel(bill)}: {bill.title}
                 </Link>
                 <p className="type-xs text-gray-500 mt-0.5">
                   {new Date(bill.introducedDate).toLocaleDateString('en-US', {
@@ -65,7 +122,9 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
                   {bill.policyArea && <span className="ml-2 text-gray-400">{bill.policyArea}</span>}
                 </p>
               </div>
-              <span className="type-xs text-gray-500 shrink-0">{bill.status}</span>
+              <span className="type-xs text-gray-500 shrink-0" title={bill.status}>
+                {simplifyBillStatus(bill.status)}
+              </span>
             </div>
           </li>
         ))}
@@ -107,20 +166,19 @@ function LegislationStatsPod({
           <dt className="type-xs text-gray-500">Bills cosponsored</dt>
           <dd className="type-lg font-semibold text-black">{cosponsoredCount}</dd>
         </div>
-        <div>
-          <dt className="type-xs text-gray-500">Total legislation</dt>
-          <dd className="type-base font-medium text-gray-900">
-            {sponsoredCount + cosponsoredCount}
-          </dd>
-        </div>
       </dl>
     </div>
   );
 }
 
 function PolicyAreasPod({ bills }: { bills: BillItem[] }) {
+  // Count policy areas across SPONSORED bills only. The page's question is
+  // "What bills has X sponsored?" — mixing in cosponsored policy counts
+  // conflates authorship with signatures (a member who sponsors zero bills
+  // can have hundreds of cosponsored policy-area tags).
   const areaCounts = new Map<string, number>();
   for (const bill of bills) {
+    if (bill.relationship !== 'sponsored') continue;
     if (bill.policyArea) {
       areaCounts.set(bill.policyArea, (areaCounts.get(bill.policyArea) ?? 0) + 1);
     }

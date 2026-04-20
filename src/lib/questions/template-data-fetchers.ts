@@ -50,6 +50,11 @@ export interface BillsSponsoredData {
   bills: Array<{
     id: string;
     number: string;
+    // Bill type code from Congress.gov (e.g., "HR", "S", "HRES", "SRES",
+    // "HJRES", "SJRES", "HCONRES", "SCONRES"). Required so the UI can
+    // render "H.R. 7927" instead of the bare "7927" that collides across
+    // chambers and bill/resolution types.
+    type: string;
     title: string;
     introducedDate: string;
     status: string;
@@ -321,6 +326,7 @@ export async function fetchBillsSponsoredData(bioguideId: string): Promise<Bills
     bills: response.bills.map(b => ({
       id: b.id,
       number: b.number,
+      type: b.type,
       title: b.title,
       introducedDate: b.introducedDate,
       status: b.status,
