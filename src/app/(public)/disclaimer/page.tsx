@@ -61,7 +61,7 @@ export default function DisclaimerPage() {
                 <p className="text-gray-700 leading-relaxed mb-grid-2">
                   CIV.IQ is a <strong>civic information utility</strong> &mdash; like a digital
                   phonebook for government. We provide easy access to public information about
-                  federal, state, and local representatives.
+                  federal and state representatives, plus 10 pilot cities for local government.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
                   <strong>What we are:</strong> An informational tool that presents publicly
