@@ -15,10 +15,13 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
+import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
 export const dynamic = 'force-dynamic';
 
 // API Response shape (for backwards compatibility with existing frontend)
+// TODO(zip-honesty): migrate to BackboneResponse<T> so accuracyNote and
+// dataQuality sit at the top level — tracked in follow-up issue.
 interface StateApiResponse {
   zipCode: string;
   state: string;
@@ -43,6 +46,7 @@ interface StateApiResponse {
       classification: string;
     }>;
   };
+  accuracyNote?: string;
 }
 
 // Helper function to get state from ZIP code using our ZIP-to-district mapping
@@ -228,6 +232,7 @@ export async function GET(request: NextRequest) {
                   { name: 'Senate', classification: 'upper' },
                 ],
               },
+          accuracyNote: ZIP_ACCURACY_NOTE,
         },
         { status: 200 } // Return 200 with error field so frontend can show appropriate message
       );
@@ -271,6 +276,10 @@ export async function GET(request: NextRequest) {
               { name: 'Senate', classification: 'upper' },
             ],
           },
+      // ZIP is always the lookup key for this route — surface the honesty signal.
+      // State legislative districts are even less aligned to ZIP than federal
+      // districts, which is why the handler returns the full state roster.
+      accuracyNote: ZIP_ACCURACY_NOTE,
     };
 
     logger.info('State representatives request successful', {

@@ -33,6 +33,7 @@ import type {
   DistrictAggregates,
   InsightError,
 } from '@/lib/intelligence/types';
+import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -388,8 +389,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
       'MoneyReportPipeline'
     );
 
+    // TODO(zip-honesty): migrate this route to BackboneResponse<T>. Until then,
+    // surface accuracyNote as a sibling field and mark status 'partial'.
     return NextResponse.json(
-      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        ...insight,
+        accuracyNote: ZIP_ACCURACY_NOTE,
+        errors: [] as InsightError[],
+        status: 'partial' as const,
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',

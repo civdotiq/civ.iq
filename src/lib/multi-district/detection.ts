@@ -20,6 +20,9 @@ export interface MultiDistrictResponse {
   primaryDistrict?: DistrictInfo;
   representatives?: unknown[];
   warnings?: string[];
+  // TODO(zip-honesty): this response shape pre-dates BackboneResponse.
+  // accuracyNote is surfaced here until the full migration follow-up lands.
+  accuracyNote?: string;
   metadata: {
     timestamp: string;
     dataSource: string;
@@ -31,6 +34,7 @@ export interface MultiDistrictResponse {
       representativesFound: boolean;
       dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
     };
+    accuracyNote?: string;
   };
   error?: {
     code: string;

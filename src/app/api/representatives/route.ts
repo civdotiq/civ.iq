@@ -9,6 +9,7 @@ import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
+import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -48,6 +49,9 @@ interface ApiResponse {
     message: string;
     details?: unknown;
   };
+  // TODO(zip-honesty): migrate this route to BackboneResponse<T> so accuracyNote
+  // and dataQuality sit at the top level. Tracked in GitHub follow-up issue.
+  accuracyNote?: string;
   metadata: {
     timestamp: string;
     zipCode: string;
@@ -57,6 +61,7 @@ interface ApiResponse {
     freshness?: string;
     validationScore?: number;
     validationStatus?: 'excellent' | 'good' | 'fair' | 'poor';
+    accuracyNote?: string;
   };
 }
 
@@ -585,25 +590,41 @@ export async function GET(request: NextRequest) {
       if (zipResult.success) {
         representatives = zipResult.representatives || [];
       } else {
-        // Return the error from ZIP lookup
-        return NextResponse.json(zipResult, {
-          status: zipResult.error?.code === 'INVALID_ZIP_CODE' ? 400 : 503,
-        });
+        // Return the error from ZIP lookup, annotated for ZIP honesty
+        const zipAccuracyNote = getZipAccuracyNote('zip');
+        return NextResponse.json(
+          {
+            ...zipResult,
+            accuracyNote: zipAccuracyNote,
+            metadata: { ...zipResult.metadata, accuracyNote: zipAccuracyNote },
+          },
+          {
+            status: zipResult.error?.code === 'INVALID_ZIP_CODE' ? 400 : 503,
+          }
+        );
       }
     }
+
+    const inputMode: InputMode = zipCode ? 'zip' : 'address';
+    const accuracyNote = getZipAccuracyNote(inputMode);
+    // When input was a ZIP, downgrade confidence signal: citizens and SDK
+    // consumers must see that the answer is approximate.
+    const isZipInput = inputMode === 'zip';
 
     const result: ApiResponse = {
       success: true,
       representatives,
+      ...(accuracyNote ? { accuracyNote } : {}),
       metadata: {
         timestamp: new Date().toISOString(),
         zipCode: zipCode || `${state}-${district}`,
-        dataQuality: 'high',
+        dataQuality: isZipInput ? 'medium' : 'high',
         dataSource: 'representatives-core-service',
         cacheable: true,
         freshness: `Retrieved in ${Date.now() - startTime}ms`,
-        validationScore: 95,
-        validationStatus: 'excellent',
+        validationScore: isZipInput ? 80 : 95,
+        validationStatus: isZipInput ? 'good' : 'excellent',
+        ...(accuracyNote ? { accuracyNote } : {}),
       },
     };
 

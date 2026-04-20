@@ -9,6 +9,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
+import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,12 @@ interface GeocodeResponse {
     district: string;
     name: string;
   }>;
+  // TODO(zip-honesty): migrate this route to BackboneResponse<T>. Populated
+  // only when the resolved district was inherited from ZIP input (either via
+  // `body.zipCode` on POST or because the address resolved to a ZIP-spanning
+  // block). Per .claude/rules/security.md, ZIP ↔ district alignment is
+  // 10–20% wrong — consumers should surface this to end users.
+  accuracyNote?: string;
   error?: {
     code: string;
     message: string;
@@ -343,6 +350,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Determine input mode for ZIP-honesty. POST supports three inputs:
+    //   • coordinates → 'lat-lon' (precise)
+    //   • address-only → 'address' (authoritative)
+    //   • address + zipCode → we treat the zipCode branch as ZIP-adjacent,
+    //     because the returned isMultiDistrict/allDistricts fields are
+    //     derived from ZIP → district mapping, which is 10–20% wrong.
+    const inputMode: InputMode =
+      body.mode === 'coordinates' ? 'lat-lon' : body.zipCode ? 'zip' : 'address';
+    const accuracyNote = getZipAccuracyNote(inputMode);
+
     const response: GeocodeResponse = {
       success: true,
       district: {
@@ -357,6 +374,7 @@ export async function POST(request: NextRequest) {
       geocoded,
       isMultiDistrict,
       ...(isMultiDistrict && { allDistricts }),
+      ...(accuracyNote ? { accuracyNote } : {}),
     };
 
     logger.info('Geocode API request successful', {

@@ -11,6 +11,7 @@ import {
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { MultiDistrictResponse, DistrictInfo } from '@/lib/multi-district/detection';
 import logger from '@/lib/logging/simple-logger';
+import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -201,6 +202,9 @@ export async function GET(request: NextRequest) {
       // (e.g., showing 4 representatives instead of 3 for Las Vegas ZIPs)
     }
 
+    // ZIP is always the input for this route — surface the honesty signal
+    // unconditionally. Multi-district ZIPs are the clearest case, but
+    // single-district ZIPs can also mis-align with districts after redistricting.
     const response: MultiDistrictResponse = {
       success: true,
       zipCode,
@@ -209,6 +213,7 @@ export async function GET(request: NextRequest) {
       primaryDistrict,
       representatives,
       warnings,
+      accuracyNote: ZIP_ACCURACY_NOTE,
       metadata: {
         timestamp: new Date().toISOString(),
         dataSource: 'zip-district-mapping + congress-legislators',
@@ -218,8 +223,12 @@ export async function GET(request: NextRequest) {
         coverage: {
           zipFound: true,
           representativesFound,
-          dataQuality: isMultiDistrict && !selectedDistrict ? 'fair' : 'excellent',
+          // Multi-district ZIPs without selection already drop to 'fair'.
+          // A single-district ZIP with a selection is still ZIP-approximate,
+          // so cap it at 'good' rather than 'excellent'.
+          dataQuality: isMultiDistrict && !selectedDistrict ? 'fair' : 'good',
         },
+        accuracyNote: ZIP_ACCURACY_NOTE,
       },
     };
 

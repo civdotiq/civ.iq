@@ -20,6 +20,7 @@ import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import type { InsightError } from '@/lib/intelligence/types';
+import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -40,6 +41,9 @@ interface RepresentativesResponse {
   state: string;
   district: string;
   multiDistrict: boolean;
+  // TODO(zip-honesty): migrate this route to BackboneResponse<T> in follow-up.
+  // accuracyNote is only populated on ZIP (GET) input; address POST leaves it unset.
+  accuracyNote?: string;
 }
 
 type RouteResponse = RepresentativesResponse | { error: string };
@@ -175,7 +179,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
     );
 
     return NextResponse.json(
-      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        ...result,
+        accuracyNote: ZIP_ACCURACY_NOTE,
+        errors: [] as InsightError[],
+        // ZIP input is approximate — the wider pipeline signals this as 'partial'.
+        status: 'partial' as const,
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',

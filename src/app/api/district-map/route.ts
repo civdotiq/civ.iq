@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,10 @@ interface MapData {
     minLng: number;
     maxLng: number;
   };
+  // TODO(zip-honesty): migrate to BackboneResponse<T>. Until then, this
+  // sibling field carries the ZIP honesty signal. ZIP is the only input for
+  // this route, so the note is always populated on success responses.
+  accuracyNote?: string;
 }
 
 // Helper function to get state FIPS code
@@ -594,6 +599,7 @@ export async function GET(request: NextRequest) {
       },
       boundaries,
       bbox,
+      accuracyNote: ZIP_ACCURACY_NOTE,
     };
 
     return NextResponse.json(mapData, {

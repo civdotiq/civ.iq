@@ -17,6 +17,7 @@ import {
   extractDistrictFromResult,
   parseAddressComponents,
 } from '@/lib/census-geocoder';
+import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
 
 interface SearchFilters {
   query?: string;
@@ -482,15 +483,31 @@ export async function GET(request: NextRequest) {
       5 * 60 * 1000 // 5 minutes cache
     );
 
+    // Detect whether the search term resolved through ZIP. A ZIP-only query
+    // (or a query that parses to a ZIP without street) triggers ZIP-based
+    // district resolution, which is approximate. Address queries with a
+    // street component are authoritative.
+    // TODO(zip-honesty): migrate this route to BackboneResponse<T>.
+    const inputMode: InputMode = (() => {
+      if (!filters.query) return 'address';
+      const components = parseAddressComponents(filters.query);
+      const hasZip = !!components.zip;
+      const hasStreet = /\d+\s+[A-Za-z]/.test(filters.query);
+      return hasZip && !hasStreet ? 'zip' : 'address';
+    })();
+    const accuracyNote = getZipAccuracyNote(inputMode);
+
     return NextResponse.json(
       {
         ...searchResults,
         searchTerm: filters.query || '',
         filters,
+        ...(accuracyNote ? { accuracyNote } : {}),
         metadata: {
           cacheHit: false, // Would need to track this in cachedFetch
           dataSource: 'congress-legislators',
           note: 'Voting scores, campaign finance, and bills sponsored are placeholder values pending integration',
+          ...(accuracyNote ? { accuracyNote } : {}),
         },
       },
       {
