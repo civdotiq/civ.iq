@@ -437,6 +437,15 @@
       }
     },
     "/mcp": {
+      "get": {
+        "summary": "MCP server (stream/discovery)",
+        "description": "Streamable HTTP transport endpoint for MCP. GET is used by clients that negotiate SSE or poll for server-sent events. See https://modelcontextprotocol.io",
+        "operationId": "mcpStream",
+        "tags": ["MCP"],
+        "responses": {
+          "200": { "description": "MCP protocol response" }
+        }
+      },
       "post": {
         "summary": "MCP server",
         "description": "Model Context Protocol endpoint for AI assistant integration. 16 tools, 3 resources, 3 prompts. See https://modelcontextprotocol.io",
@@ -444,6 +453,16 @@
         "tags": ["MCP"],
         "responses": {
           "200": { "description": "MCP protocol response" }
+        }
+      },
+      "delete": {
+        "summary": "MCP session termination",
+        "description": "Terminates an MCP session initiated via the streamable HTTP transport. Required by the MCP specification for clean shutdown.",
+        "operationId": "mcpSessionDelete",
+        "tags": ["MCP"],
+        "responses": {
+          "200": { "description": "Session terminated" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
     },
@@ -924,6 +943,42 @@
       }
     },
     "/geocode": {
+      "get": {
+        "summary": "Reverse-geocode coordinates to district",
+        "description": "Coordinate-based convenience endpoint. Resolves `lat`/`lng` query parameters to the congressional district via Census. For address resolution, use POST.",
+        "operationId": "geocodeCoordinates",
+        "tags": ["Districts"],
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number" },
+            "description": "Latitude (WGS84 decimal degrees)",
+            "example": 38.8977
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number" },
+            "description": "Longitude (WGS84 decimal degrees)",
+            "example": -77.0365
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "District resolved from coordinates",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GeocodeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
       "post": {
         "summary": "Geocode address",
         "description": "Resolve a street address to congressional district and representatives.",
@@ -1248,6 +1303,61 @@
       }
     },
     "/state-legislators-by-address": {
+      "get": {
+        "summary": "State legislators by address (query form)",
+        "description": "Query-parameter convenience for POST. Accepts street/city/state/zip as query params and proxies to the same handler.",
+        "operationId": "getStateLegislatorsByAddressQuery",
+        "tags": ["States"],
+        "parameters": [
+          {
+            "name": "street",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Street address line"
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Two-letter state abbreviation (e.g., CA, NY)"
+          },
+          {
+            "name": "zip",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional ZIP code to assist geocoding"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State legislators for address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "legislators": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "district": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
       "post": {
         "summary": "State legislators by address",
         "description": "Look up state legislators for a street address via OpenStates geocoding.",

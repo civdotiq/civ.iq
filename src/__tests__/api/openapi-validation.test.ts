@@ -170,12 +170,13 @@ describe('OpenAPI Specification', () => {
       expect(Object.keys(spec.paths).length).toBe(40);
     });
 
-    it('should only use GET or POST methods', () => {
-      const validMethods = ['get', 'post'];
+    const ALLOWED_METHODS = ['get', 'post', 'delete'];
+
+    it('should only use GET, POST, or DELETE methods', () => {
       for (const [, pathItem] of Object.entries(spec.paths)) {
         const methods = Object.keys(pathItem);
         for (const method of methods) {
-          expect(validMethods).toContain(method);
+          expect(ALLOWED_METHODS).toContain(method);
         }
       }
     });
@@ -190,7 +191,7 @@ describe('OpenAPI Specification', () => {
           // operationId should be unique — checked separately
           expect(op.description).toBeTruthy();
           // Verify we're not checking non-operation keys
-          expect(['get', 'post']).toContain(method);
+          expect(ALLOWED_METHODS).toContain(method);
           // Verify path is well-formed
           expect(pathKey).toMatch(/^\//);
         }

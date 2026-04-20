@@ -24,9 +24,9 @@ export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string[] }> }
+  { params }: { params: Promise<{ nodeId: string[] }> }
 ): Promise<NextResponse> {
-  const { id: segments } = await params;
+  const { nodeId: segments } = await params;
   const canonicalId = segments.join('/');
 
   if (!canonicalId || !canonicalId.includes(':')) {
