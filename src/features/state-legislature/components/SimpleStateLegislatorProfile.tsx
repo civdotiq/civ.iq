@@ -74,7 +74,7 @@ const stateLegislatorTabs = [
     id: 'finance',
     label: 'Finance',
     icon: <DollarSign className="w-4 h-4" />,
-    description: 'Campaign finance data (currently unavailable)',
+    description: 'Campaign finance data',
   },
   {
     id: 'network',
