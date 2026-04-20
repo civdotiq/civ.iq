@@ -180,8 +180,23 @@ function checkEnvironmentVariables() {
   return { success: missing.length === 0, missing };
 }
 
+// Clear stale Next.js build lock from aborted prior runs (Ctrl-C, OOM, timeout).
+// Without this preflight, `next build` refuses to start until the lock is
+// removed, causing intermittent CI failures unrelated to the code under test.
+function clearStaleBuildLock() {
+  const lockPath = path.join(process.cwd(), '.next', 'build-lock');
+  try {
+    fs.rmSync(lockPath, { force: true });
+  } catch {
+    // best-effort cleanup; a real permissions issue will resurface in the
+    // build step below where it belongs.
+  }
+}
+
 async function main() {
   log('\n🚀 CIV.IQ Validation Suite\n', 'bold');
+
+  clearStaleBuildLock();
 
   const results = {
     passed: [],
