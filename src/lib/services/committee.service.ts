@@ -147,14 +147,16 @@ async function fetchCommitteeFromCongressLegislators(
 
             if (representative) {
               const role = memberCommittee.title || 'Member';
-              const normalizedRole =
-                role.includes('Chair') && !role.includes('Ranking')
-                  ? ('Chair' as const)
-                  : role.includes('Ranking')
-                    ? ('Ranking Member' as const)
-                    : role.includes('Vice')
-                      ? ('Vice Chair' as const)
-                      : ('Member' as const);
+              const lower = role.toLowerCase();
+              // Order matters: "Vice Chair" contains "Chair", so Vice and
+              // Ranking must be matched before the bare Chair fallback.
+              const normalizedRole = lower.includes('ranking')
+                ? ('Ranking Member' as const)
+                : lower.includes('vice')
+                  ? ('Vice Chair' as const)
+                  : lower.includes('chair')
+                    ? ('Chair' as const)
+                    : ('Member' as const);
 
               // Use committee-specific party designation (majority/minority)
               const committeeParty = memberCommittee.party;
@@ -182,12 +184,13 @@ async function fetchCommitteeFromCongressLegislators(
 
               committeeMembers.push(member);
 
-              // Assign leadership roles based on title
+              // Assign leadership roles based on title. Must check Ranking
+              // and Vice before Chair — "Vice Chair" contains "chair".
               const title = (memberCommittee.title || '').toLowerCase();
-              if (title.includes('chair') && !title.includes('ranking')) {
-                leadership.chair = { ...member, role: 'Chair' };
-              } else if (title.includes('ranking')) {
+              if (title.includes('ranking')) {
                 leadership.rankingMember = { ...member, role: 'Ranking Member' };
+              } else if (title.includes('chair') && !title.includes('vice')) {
+                leadership.chair = { ...member, role: 'Chair' };
               }
             }
           }
@@ -207,11 +210,13 @@ async function fetchCommitteeFromCongressLegislators(
 
                 if (representative) {
                   const role = memberSubcommittee.title || 'Member';
-                  const normalizedRole =
-                    role.includes('Chair') && !role.includes('Ranking')
-                      ? ('Chair' as const)
-                      : role.includes('Ranking')
-                        ? ('Ranking Member' as const)
+                  const subLower = role.toLowerCase();
+                  const normalizedRole = subLower.includes('ranking')
+                    ? ('Ranking Member' as const)
+                    : subLower.includes('vice')
+                      ? ('Vice Chair' as const)
+                      : subLower.includes('chair')
+                        ? ('Chair' as const)
                         : ('Member' as const);
 
                   const subCommitteeParty = memberSubcommittee.party;

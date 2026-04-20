@@ -12,6 +12,7 @@
 
 import Link from 'next/link';
 import type { Committee, CommitteeMember } from '@/types/committee';
+import type { EnhancedRepresentative } from '@/types/representative';
 
 interface CommitteeMembersAnswerProps {
   committee: Committee;
@@ -21,6 +22,16 @@ function partyColor(party: string): string {
   if (party === 'Republican') return 'text-[#e11d07]';
   if (party === 'Democratic') return 'text-[#0a9338]';
   return 'text-gray-600';
+}
+
+function partyStateLabel(rep: EnhancedRepresentative): string {
+  const party = rep.party?.charAt(0) ?? '';
+  const district = rep.chamber === 'House' && rep.district ? `-${rep.district}` : '';
+  return `(${party}-${rep.state}${district})`;
+}
+
+function displayName(rep: EnhancedRepresentative): string {
+  return rep.fullName?.official ?? rep.name;
 }
 
 function LeadershipPod({ leadership }: { leadership: Committee['leadership'] }) {
@@ -45,11 +56,9 @@ function LeadershipPod({ leadership }: { leadership: Committee['leadership'] }) 
             href={`/representative/${rep.bioguideId}`}
             className="type-sm text-[#3ea2d4] hover:underline"
           >
-            {rep.name}
+            {displayName(rep)}
           </Link>
-          <span className={`type-xs ml-2 ${partyColor(rep.party)}`}>
-            ({rep.party?.charAt(0)}-{rep.state})
-          </span>
+          <span className={`type-xs ml-2 ${partyColor(rep.party)}`}>{partyStateLabel(rep)}</span>
         </div>
       </div>
     );
@@ -102,11 +111,9 @@ function MembersListPod({ members }: { members: CommitteeMember[] }) {
                   href={`/representative/${rep.bioguideId}`}
                   className="type-sm text-[#3ea2d4] hover:underline"
                 >
-                  {rep.name}
+                  {displayName(rep)}
                 </Link>
-                <span className={`type-xs ${partyColor(rep.party)}`}>
-                  ({rep.party?.charAt(0)}-{rep.state})
-                </span>
+                <span className={`type-xs ${partyColor(rep.party)}`}>{partyStateLabel(rep)}</span>
                 {member.role !== 'Member' && (
                   <span className="type-xs text-gray-400">{member.role}</span>
                 )}
@@ -143,7 +150,9 @@ function SubcommitteesPod({ subcommittees }: { subcommittees: Committee['subcomm
             >
               {sub.name}
             </Link>
-            {sub.chair && <p className="type-xs text-gray-500 mt-0.5">Chair: {sub.chair.name}</p>}
+            {sub.chair && (
+              <p className="type-xs text-gray-500 mt-0.5">Chair: {displayName(sub.chair)}</p>
+            )}
           </li>
         ))}
       </ul>
