@@ -154,7 +154,12 @@ export function CommitteeMembershipsCard({
   const { parentCommittees, orphanSubcommittees } = hierarchicalCommittees;
   const hasCommittees = parentCommittees.length > 0 || orphanSubcommittees.length > 0;
 
-  if (dataQuality === 'unavailable') {
+  // Full "unavailable" card is only correct when we have no committees to show.
+  // If representative.committees (YAML-backed, refreshed weekly) already carries
+  // data, hiding it on a Congress.gov outage would swap a silent-false-negative
+  // bug for a silent-false-negative bug of our own. YAML wins; the signal is
+  // only load-bearing when both sources agree we have nothing.
+  if (!hasCommittees && dataQuality === 'unavailable') {
     return (
       <div
         role="status"
