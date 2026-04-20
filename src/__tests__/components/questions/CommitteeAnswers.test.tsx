@@ -20,7 +20,11 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
-import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
+import {
+  CommitteeActivityAnswer,
+  formatSponsor,
+  splitMarkupTitle,
+} from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
 import type { Committee, CommitteeMember } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
@@ -272,6 +276,120 @@ describe('CommitteeActivityAnswer', () => {
     expect(screen.getByText(/No recent hearings or meetings found/)).toBeInTheDocument();
     expect(screen.getByText(/No bills currently available/)).toBeInTheDocument();
     expect(screen.getByText('Jurisdiction information is not available.')).toBeInTheDocument();
+  });
+
+  it('splits a multi-bill markup title into a bulleted list', () => {
+    const meetings: CommitteeActivityMeeting[] = [
+      {
+        eventId: '118999',
+        date: '2026-03-01T15:00:00Z',
+        title:
+          'H.R. 8352, the Criminal History Access Act; H.R. 8065, the Monitor Accountability Act of 2026; and Ratification of Subcommittee Assignments',
+        type: 'Markup',
+        chamber: 'house',
+      },
+    ];
+    render(<CommitteeActivityAnswer meetings={meetings} bills={[]} jurisdiction="" />);
+
+    // Each concatenated bill should surface as its own list item, not as
+    // one unbreakable string.
+    expect(screen.getByText(/H\.R\. 8352, the Criminal History Access Act/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/H\.R\. 8065, the Monitor Accountability Act of 2026/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Ratification of Subcommittee Assignments/)).toBeInTheDocument();
+  });
+
+  it('reformats raw Congress.gov sponsor strings into citizen-readable names', () => {
+    const bills: CommitteeActivityBill[] = [
+      {
+        billId: '119-hr-6398',
+        billNumber: 'HR 6398',
+        title: 'RED Tape Act',
+        sponsor: "Rep. Carter, Earl L. 'Buddy' [R-GA-1]",
+        introducedDate: '2025-12-03',
+        status: 'Passed House, in Senate',
+      },
+    ];
+    render(<CommitteeActivityAnswer meetings={[]} bills={bills} jurisdiction="" />);
+
+    expect(screen.getByText(/Buddy Carter \(R-GA-1\)/)).toBeInTheDocument();
+    expect(screen.queryByText(/Rep\. Carter, Earl/)).not.toBeInTheDocument();
+  });
+
+  it('renders the citizen-language status and keeps the raw latestAction in a tooltip', () => {
+    const bills: CommitteeActivityBill[] = [
+      {
+        billId: '119-hr-6398',
+        billNumber: 'HR 6398',
+        title: 'RED Tape Act',
+        sponsor: 'Sen. Smith, Jane [D-CA]',
+        introducedDate: '2025-12-03',
+        status: 'Passed House, in Senate',
+        latestActionText:
+          'Received in the Senate and Read twice and referred to the Committee on Environment and Public Works.',
+      },
+    ];
+    render(<CommitteeActivityAnswer meetings={[]} bills={bills} jurisdiction="" />);
+
+    const status = screen.getByText('Passed House, in Senate');
+    expect(status).toBeInTheDocument();
+    expect(status).toHaveAttribute(
+      'title',
+      'Received in the Senate and Read twice and referred to the Committee on Environment and Public Works.'
+    );
+  });
+
+  it('surfaces an "As of {date}" caveat when fetchedAt is provided', () => {
+    render(
+      <CommitteeActivityAnswer
+        meetings={makeMeetings()}
+        bills={[]}
+        jurisdiction=""
+        fetchedAt="2026-04-20T12:00:00Z"
+      />
+    );
+    expect(screen.getByText(/As of Apr 20, 2026/)).toBeInTheDocument();
+  });
+});
+
+describe('splitMarkupTitle', () => {
+  it('splits on semicolons and the trailing " and "', () => {
+    const parts = splitMarkupTitle(
+      'H.R. 1, the Alpha Act; H.R. 2, the Beta Act; and H.R. 3, the Gamma Act'
+    );
+    expect(parts).toEqual([
+      'H.R. 1, the Alpha Act',
+      'H.R. 2, the Beta Act',
+      'H.R. 3, the Gamma Act',
+    ]);
+  });
+
+  it('returns a single-entry array for titles without a separator', () => {
+    expect(splitMarkupTitle('Full Committee Markup')).toEqual(['Full Committee Markup']);
+  });
+
+  it('drops empty fragments', () => {
+    expect(splitMarkupTitle('; A; ; B; ').length).toBe(2);
+  });
+});
+
+describe('formatSponsor', () => {
+  it('prefers the nickname and drops middle initials', () => {
+    expect(formatSponsor("Rep. Carter, Earl L. 'Buddy' [R-GA-1]")).toBe('Buddy Carter (R-GA-1)');
+  });
+
+  it('falls back to first name when there is no nickname', () => {
+    expect(formatSponsor('Sen. Cramer, Kevin [R-ND]')).toBe('Kevin Cramer (R-ND)');
+  });
+
+  it('handles senator entries (no district)', () => {
+    expect(formatSponsor('Sen. Smith, Jane [D-CA]')).toBe('Jane Smith (D-CA)');
+  });
+
+  it('returns the raw string unchanged when it does not match the known pattern', () => {
+    expect(formatSponsor('Unknown')).toBe('Unknown');
+    expect(formatSponsor('')).toBe('Unknown');
   });
 });
 

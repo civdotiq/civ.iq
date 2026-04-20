@@ -242,6 +242,7 @@ export default async function QuestionPage({ params }: PageProps) {
               meetings={committeeActivity.meetings}
               bills={committeeActivity.bills}
               jurisdiction={committeeActivity.jurisdiction}
+              fetchedAt={committeeActivity.fetchedAt}
             />
           )}
           {slug === 'committee-lobbying' && (

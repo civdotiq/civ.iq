@@ -380,6 +380,7 @@ export interface CommitteeActivityData {
   meetings: CommitteeActivityMeeting[];
   bills: CommitteeActivityBill[];
   jurisdiction: string;
+  fetchedAt: string;
 }
 
 export async function fetchCommitteeActivityData(
@@ -394,6 +395,7 @@ export async function fetchCommitteeActivityData(
     meetings: activity.meetings,
     bills: activity.bills,
     jurisdiction: committee?.jurisdiction ?? '',
+    fetchedAt: activity.fetchedAt,
   };
 }
 

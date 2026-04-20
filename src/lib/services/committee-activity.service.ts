@@ -54,11 +54,19 @@ export interface CommitteeActivityBill {
   sponsor: string;
   introducedDate: string;
   status: string;
+  // The raw `latestAction.text` from Congress.gov, kept alongside the
+  // citizen-language `status` label so the UI can surface the full text
+  // on hover or in a tooltip without re-fetching the bill.
+  latestActionText?: string;
 }
 
 export interface CommitteeActivityResult {
   meetings: CommitteeActivityMeeting[];
   bills: CommitteeActivityBill[];
+  // ISO timestamp of when this data was fetched from Congress.gov, so the
+  // UI can render an "As of {date}" caveat. Bills listings skew sparse for
+  // smaller committees — the caveat is the honest way to explain why.
+  fetchedAt: string;
 }
 
 /**
@@ -188,7 +196,7 @@ export async function fetchCommitteeActivity(
     fetchCommitteeMeetingsSimple(committeeId, chamber).catch(() => []),
     fetchCommitteeBills(committeeId, chamber).catch(() => []),
   ]);
-  return { meetings, bills };
+  return { meetings, bills, fetchedAt: new Date().toISOString() };
 }
 
 // ── Meetings (Simple — used by question page) ─────────────────────
@@ -263,16 +271,23 @@ export async function fetchCommitteeMeetings(
         );
 
         const upperCommitteeId = committeeId.toUpperCase();
+        // For parent committees (codes ending in "00" like "HSIF00"), the
+        // chamber-wide meeting list returns subcommittee meetings under
+        // codes like "HSIF03" or "HSIF14". Matching the 4-letter base
+        // prefix catches those; without it the pod looked empty for major
+        // committees because nearly all their hearings happen in
+        // subcommittees.
+        const matchPrefix = upperCommitteeId.endsWith('00')
+          ? upperCommitteeId.slice(0, 4)
+          : upperCommitteeId;
         const matched: CommitteeMeetingDetailed[] = [];
 
         for (const detail of detailResults) {
           if (!detail) continue;
           if (matched.length >= limit) break;
 
-          const matchesCommittee = detail.committees?.some(
-            c =>
-              c.systemCode.toUpperCase() === upperCommitteeId ||
-              c.systemCode.toUpperCase().startsWith(upperCommitteeId)
+          const matchesCommittee = detail.committees?.some(c =>
+            c.systemCode.toUpperCase().startsWith(matchPrefix)
           );
           if (!matchesCommittee) continue;
 
@@ -456,16 +471,18 @@ export async function fetchCommitteeBills(
                 title: 'Title unavailable',
                 sponsor: 'Unknown',
                 introducedDate: '',
-                status: stub.relationshipType || 'In Committee',
+                status: mapRelationshipType(stub.relationshipType),
               };
             }
+            const actionText = detail.latestAction?.text ?? '';
             return {
               billId: `${detail.congress}-${detail.type.toLowerCase()}-${detail.number}`,
               billNumber: `${detail.type.toUpperCase()} ${detail.number}`,
               title: detail.title,
               sponsor: detail.sponsors?.[0]?.fullName ?? 'Unknown',
               introducedDate: detail.introducedDate ?? '',
-              status: getStatusFromAction(detail.latestAction?.text ?? ''),
+              status: getStatusFromAction(actionText),
+              latestActionText: actionText || undefined,
             };
           })
           .filter((b): b is CommitteeActivityBill => b !== null);
@@ -509,12 +526,55 @@ async function fetchBillDetail(
   }
 }
 
-function getStatusFromAction(actionText: string): string {
+/**
+ * Collapse a Congress.gov `latestAction.text` into a citizen-language
+ * status label. Order matters — chamber-transit signals ("received in the
+ * Senate", "became public law") must beat the generic "referred" / "passed"
+ * substrings, because many actions carry both. Example: "Received in the
+ * Senate and Read twice and referred to the Committee on Environment and
+ * Public Works" describes a bill that already passed the House; without
+ * the chamber-transit check the older substring matcher labeled it as
+ * "In Committee" on the House committee's page even though the bill had
+ * cleared the House weeks earlier.
+ *
+ * Exported for unit testing and for callers that want to translate an
+ * arbitrary latestAction string the same way the committee-activity pod
+ * does.
+ */
+export function getStatusFromAction(actionText: string): string {
   const lower = actionText.toLowerCase();
+  if (lower.includes('became public law') || lower.includes('became law')) return 'Now law';
+  if (lower.includes('signed by president')) return 'Signed by president';
+  if (lower.includes('vetoed')) return 'Vetoed';
+  if (lower.includes('received in the senate')) return 'Passed House, in Senate';
+  if (lower.includes('received in the house')) return 'Passed Senate, in House';
+  if (lower.includes('passed senate') || lower.includes('passed/agreed to in senate'))
+    return 'Passed Senate';
+  if (lower.includes('passed house') || lower.includes('passed/agreed to in house'))
+    return 'Passed House';
   if (lower.includes('passed')) return 'Passed';
-  if (lower.includes('reported')) return 'Reported';
-  if (lower.includes('referred')) return 'In Committee';
+  if (lower.includes('ordered to be reported') || lower.includes('reported by'))
+    return 'Voted out of committee';
+  if (lower.includes('reported')) return 'Voted out of committee';
+  if (lower.includes('placed on the union calendar') || lower.includes('placed on senate calendar'))
+    return 'On calendar';
+  if (lower.includes('referred')) return 'Awaiting committee review';
   if (lower.includes('introduced')) return 'Introduced';
-  if (lower.includes('amended')) return 'Amended';
-  return 'Active';
+  return 'Under review';
+}
+
+/**
+ * Citizen-language translation for the committee-bills endpoint's
+ * `relationshipType` field. Only used when the bill-detail fetch fails
+ * and we must fall back to list data. Congress.gov returns values like
+ * "Referred To" and "Reported By"; "Unknown" falls through to a neutral
+ * "Under review" so we never expose the raw API label to citizens.
+ */
+function mapRelationshipType(type: string | undefined): string {
+  const t = (type ?? '').toLowerCase();
+  if (t.includes('reported')) return 'Voted out of committee';
+  if (t.includes('markup')) return 'In committee markup';
+  if (t.includes('discharged')) return 'Discharged from committee';
+  if (t.includes('referred')) return 'Awaiting committee review';
+  return 'Under review';
 }

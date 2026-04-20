@@ -20,9 +20,91 @@ interface CommitteeActivityAnswerProps {
   meetings: CommitteeActivityMeeting[];
   bills: CommitteeActivityBill[];
   jurisdiction: string;
+  // ISO timestamp of when the data was fetched. Displayed as an
+  // "As of {date}" caveat so citizens know coverage is bounded and can
+  // judge whether sparse results reflect a quiet week or a lagging fetch.
+  fetchedAt?: string;
 }
 
-function RecentHearingsPod({ meetings }: { meetings: CommitteeActivityMeeting[] }) {
+// Markup meeting titles from Congress.gov often concatenate several bills
+// with "; " (occasionally " and "), e.g. "H.R. 8352, the Criminal History
+// Access Act; H.R. ____, the Monitor Accountability Act of 2026; and
+// Ratification of Subcommittee Assignments". A single clamped line hides
+// most of the subject; splitting on the separator makes the markup's
+// actual scope legible.
+export function splitMarkupTitle(title: string): string[] {
+  if (!title) return [];
+  return title
+    .split(';')
+    .flatMap(part => part.split(/\s+and\s+/i))
+    .map(part => part.trim().replace(/[,;]\s*$/, ''))
+    .filter(Boolean);
+}
+
+// Congress.gov returns sponsor names in the bracketed form
+// "Rep. Carter, Earl L. 'Buddy' [R-GA-1]". That shape is optimized for
+// government databases, not citizens reading a committee page. Reformat
+// to "Buddy Carter (R-GA-1)" — nickname preferred over legal first name,
+// middle initial dropped. Unparseable strings fall through unchanged so
+// we never display empty-looking output.
+export function formatSponsor(raw: string): string {
+  if (!raw) return 'Unknown';
+  const match = raw.match(/^(?:Rep\.|Sen\.|Del\.|Res\. Comm\.)\s+(.+?)\s+\[([^\]]+)\]\s*$/);
+  if (!match) return raw;
+  const nameBlock = match[1] ?? '';
+  const bracket = match[2] ?? '';
+  const [lastName, givenRaw = ''] = nameBlock.split(',').map(s => s.trim());
+  if (!lastName) return raw;
+  const nickMatch = givenRaw.match(
+    /['"\u2018\u2019\u201C\u201D]([^'"\u2018\u2019\u201C\u201D]+)['"\u2018\u2019\u201C\u201D]/
+  );
+  const nickname = nickMatch?.[1];
+  const withoutNick = givenRaw
+    .replace(
+      /['"\u2018\u2019\u201C\u201D][^'"\u2018\u2019\u201C\u201D]+['"\u2018\u2019\u201C\u201D]/g,
+      ''
+    )
+    .trim();
+  const firstName = withoutNick.split(/\s+/)[0]?.replace(/\.$/, '') ?? '';
+  const displayFirst = nickname || firstName;
+  if (!displayFirst) return raw;
+  return `${displayFirst} ${lastName} (${bracket})`;
+}
+
+function formatFetchedAt(iso: string | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function MeetingTitle({ meeting }: { meeting: CommitteeActivityMeeting }) {
+  const isMarkup = meeting.type?.toLowerCase() === 'markup';
+  if (isMarkup) {
+    const parts = splitMarkupTitle(meeting.title);
+    if (parts.length > 1) {
+      return (
+        <ul className="list-disc pl-4 space-y-0.5 mt-0.5">
+          {parts.map((p, i) => (
+            <li key={i} className="type-sm text-black">
+              {p}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  }
+  return <p className="type-sm text-black line-clamp-2">{meeting.title}</p>;
+}
+
+function RecentHearingsPod({
+  meetings,
+  fetchedAt,
+}: {
+  meetings: CommitteeActivityMeeting[];
+  fetchedAt?: string;
+}) {
+  const asOf = formatFetchedAt(fetchedAt);
   if (!meetings.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
@@ -31,6 +113,7 @@ function RecentHearingsPod({ meetings }: { meetings: CommitteeActivityMeeting[] 
           No recent hearings or meetings found for this committee. Data may be temporarily
           unavailable from Congress.gov.
         </p>
+        {asOf && <p className="type-xs text-gray-500 mt-3">As of {asOf}.</p>}
       </div>
     );
   }
@@ -43,7 +126,7 @@ function RecentHearingsPod({ meetings }: { meetings: CommitteeActivityMeeting[] 
           <li key={meeting.eventId} className="py-2 first:pt-0 last:pb-0">
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0 flex-1">
-                <p className="type-sm text-black line-clamp-2">{meeting.title}</p>
+                <MeetingTitle meeting={meeting} />
                 <p className="type-xs text-gray-500 mt-0.5">
                   {meeting.date
                     ? new Date(meeting.date).toLocaleDateString('en-US', {
@@ -59,6 +142,12 @@ function RecentHearingsPod({ meetings }: { meetings: CommitteeActivityMeeting[] 
           </li>
         ))}
       </ul>
+      {asOf && (
+        <p className="type-xs text-gray-500 mt-3">
+          As of {asOf}. Sparse coverage can reflect a quiet recess period or a filter gap; the full
+          schedule lives on Congress.gov.
+        </p>
+      )}
     </div>
   );
 }
@@ -91,7 +180,7 @@ function BillsInCommitteePod({ bills }: { bills: CommitteeActivityBill[] }) {
                   {bill.billNumber}: {bill.title}
                 </Link>
                 <p className="type-xs text-gray-500 mt-0.5">
-                  {bill.sponsor}
+                  {formatSponsor(bill.sponsor)}
                   {bill.introducedDate && (
                     <>
                       {' · '}
@@ -104,11 +193,21 @@ function BillsInCommitteePod({ bills }: { bills: CommitteeActivityBill[] }) {
                   )}
                 </p>
               </div>
-              <span className="type-xs text-gray-500 shrink-0">{bill.status}</span>
+              <span
+                className="type-xs text-gray-500 shrink-0"
+                title={bill.latestActionText || undefined}
+              >
+                {bill.status}
+              </span>
             </div>
           </li>
         ))}
       </ul>
+      <p className="type-xs text-gray-500 mt-3">
+        Status reflects the bill&rsquo;s latest action on Congress.gov, which may be past this
+        committee (e.g. a bill &ldquo;Passed House, in Senate&rdquo; has cleared this committee and
+        chamber).
+      </p>
     </div>
   );
 }
@@ -157,10 +256,11 @@ export function CommitteeActivityAnswer({
   meetings,
   bills,
   jurisdiction,
+  fetchedAt,
 }: CommitteeActivityAnswerProps) {
   return (
     <>
-      <RecentHearingsPod meetings={meetings} />
+      <RecentHearingsPod meetings={meetings} fetchedAt={fetchedAt} />
       <BillsInCommitteePod bills={bills} />
       <JurisdictionPod jurisdiction={jurisdiction} />
       <SourcesPod />
