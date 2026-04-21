@@ -68,7 +68,27 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
     chamber: 'house',
     type: 'standing',
   },
+  // HSBA is the Congress.gov / THOMAS systemCode for Financial Services
+  // (legacy "Banking" code); HSBU is Budget; HSSM is Small Business. An
+  // earlier version of this entry had HSBA labelled as Small Business and
+  // caused the Financial Services committee page to render the Small
+  // Business description.
   HSBA: {
+    name: 'House Committee on Financial Services',
+    description:
+      'Oversees the financial services industry, including banking, insurance, securities, and housing, and the federal regulators of those industries.',
+    jurisdiction: [
+      'Banks and banking',
+      'Securities and exchanges',
+      'Insurance',
+      'Public and private housing',
+      'International finance',
+      'Money, credit, and monetary policy',
+    ],
+    chamber: 'house',
+    type: 'standing',
+  },
+  HSSM: {
     name: 'House Committee on Small Business',
     description: 'Promotes and protects the interests of small business owners and entrepreneurs.',
     jurisdiction: [
@@ -280,19 +300,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
     chamber: 'house',
     type: 'standing',
   },
-  HSFS: {
-    name: 'House Committee on Financial Services',
-    description: 'Regulates financial institutions, housing policy, and insurance.',
-    jurisdiction: [
-      'Financial institutions',
-      'Housing policy',
-      'Insurance regulation',
-      'Securities markets',
-      'Consumer financial protection',
-    ],
-    chamber: 'house',
-    type: 'standing',
-  },
+  // HSFS removed — Financial Services is HSBA (see comment on HSBA above).
   HSHL: {
     name: 'House Committee on Homeland Security',
     description: 'Oversees domestic security, border protection, and emergency preparedness.',
@@ -659,8 +667,8 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   HSAG: 'House Committee on Agriculture',
   HSAP: 'House Committee on Appropriations',
   HSAS: 'House Committee on Armed Services',
-  HSBA: 'House Committee on Small Business',
-  HSBU: 'House Committee on Budget',
+  HSBA: 'House Committee on Financial Services',
+  HSBU: 'House Committee on the Budget',
   HSED: 'House Committee on Education and Labor',
   HSFA: 'House Committee on Foreign Affairs',
   HSGO: 'House Committee on Oversight and Reform',
@@ -677,8 +685,6 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   HSSM: 'House Committee on Small Business',
   HSWM: 'House Committee on Ways and Means',
   HSVY: "House Committee on Veterans' Affairs",
-  HSFS: 'House Committee on Financial Services',
-  HSHL: 'House Committee on Homeland Security',
   HSHM: 'House Committee on Homeland Security',
 
   // Senate Committees

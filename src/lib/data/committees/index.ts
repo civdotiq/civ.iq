@@ -22,11 +22,17 @@ export interface CommitteeRegistry {
 }
 
 // House Committees
+// House committee systemCodes match Congress.gov / THOMAS (119th Congress),
+// cross-validated against src/data/committees-with-subcommittees.json.
+// HSBA = Financial Services (legacy "Banking" code); HSBU = Budget; HSPW =
+// Transportation and Infrastructure. Prior iterations of this map carried
+// HSBA: 'Budget' and a bogus HSSF: 'Financial Services' — both corrected.
 export const HOUSE_COMMITTEES = {
   HSAG: 'Agriculture',
   HSAP: 'Appropriations',
   HSAS: 'Armed Services',
-  HSBA: 'Budget',
+  HSBA: 'Financial Services',
+  HSBU: 'Budget',
   HSED: 'Education and the Workforce',
   HSIF: 'Energy and Commerce',
   HSFA: 'Foreign Affairs',
@@ -35,15 +41,13 @@ export const HOUSE_COMMITTEES = {
   HSHA: 'House Administration',
   HSHM: 'Homeland Security',
   HSJU: 'Judiciary',
+  HSPW: 'Transportation and Infrastructure',
   HSRU: 'Rules',
   HSSM: 'Small Business',
   HSSO: 'Ethics',
-  HSTG: 'Transportation and Infrastructure',
+  HSSY: 'Science, Space, and Technology',
   HSVR: "Veterans' Affairs",
   HSWM: 'Ways and Means',
-  HSPW: 'Permanent Select Committee on Intelligence',
-  HSSY: 'Science, Space, and Technology',
-  HSSF: 'Financial Services',
 } as const;
 
 // Senate Committees
@@ -98,6 +102,10 @@ export const committeeRegistry: CommitteeRegistry = {
     HSBA: async () => {
       const { houseFinancialServicesCommittee } = await import('./house/financial-services');
       return houseFinancialServicesCommittee;
+    },
+    HSBU: async () => {
+      const { houseBudgetCommittee } = await import('./house/budget');
+      return houseBudgetCommittee;
     },
     HSED: async () => {
       const { houseEducationWorkforceCommittee } = await import('./house/education-workforce');
