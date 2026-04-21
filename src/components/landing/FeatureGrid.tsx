@@ -28,14 +28,6 @@ const features: Feature[] = [
     stat: '535 Members',
   },
   {
-    icon: LocationIcon,
-    iconColor: 'civiq-green',
-    title: 'State Legislatures',
-    description: 'Track state legislators and bills across all 50 states',
-    href: '/states',
-    stat: 'All 50 States',
-  },
-  {
     icon: DistrictIcon,
     iconColor: 'civiq-red',
     title: 'District Maps',
@@ -93,7 +85,7 @@ export default function FeatureGrid() {
           What You Can Do
         </h2>
         <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-          Explore federal and state government data from official sources
+          Explore federal government data from official sources
         </p>
       </div>
 

@@ -71,15 +71,6 @@ export default function HomePage() {
               >
                 Census Bureau
               </a>
-              . State legislature data from{' '}
-              <a
-                href="https://openstates.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-civiq-blue hover:underline"
-              >
-                Open States
-              </a>
               .
             </p>
             <p className="text-xs text-gray-400 mt-grid-1">
