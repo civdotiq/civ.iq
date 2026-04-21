@@ -83,6 +83,15 @@ const navigationSections: NavSection[] = [
     items: federalGroups.flatMap(g => g.items),
   },
   {
+    name: 'State',
+    items: [
+      { name: 'Legislatures', href: '/states' },
+      { name: 'Elections', href: '/elections/state' },
+      { name: 'Districts', href: '/state-districts' },
+      { name: 'Bills', href: '/state-bills' },
+    ],
+  },
+  {
     name: 'Local',
     items: [{ name: 'Officials', href: '/local' }],
   },

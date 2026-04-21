@@ -66,7 +66,8 @@ export default function LocalPage() {
               is expanding coverage one city at a time, after verifying each Legistar endpoint.
             </p>
             <p className="text-gray-700">
-              For everywhere else, use our address search to find your federal representatives.
+              For everywhere else, use our address search to find your federal and state
+              representatives.
             </p>
             <Link
               href="/"
