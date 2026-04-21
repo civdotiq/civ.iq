@@ -48,7 +48,30 @@ export default function TemporalEdgeChart({
   formatValue = DEFAULT_FORMAT,
 }: TemporalEdgeChartProps) {
   if (buckets.length === 0) {
-    return null;
+    return (
+      <div
+        className="border-2 border-gray-300 p-3"
+        style={{ fontFamily: 'var(--font-braun-linear, sans-serif)' }}
+        role="img"
+        aria-label={`${label || 'Temporal trend'} chart — no data available.`}
+      >
+        {label && (
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 500,
+              marginBottom: '4px',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {label}
+          </div>
+        )}
+        <p style={{ fontSize: '11px', color: '#6b7280' }}>
+          No quarterly activity recorded yet for this relationship.
+        </p>
+      </div>
+    );
   }
 
   const sorted = [...buckets].sort((a, b) => a.period.localeCompare(b.period));

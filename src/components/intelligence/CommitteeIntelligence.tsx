@@ -36,7 +36,21 @@ export function CommitteeIntelligence({ committeeId }: CommitteeIntelligenceProp
   }
 
   if (!data?.committeeCode) {
-    return null;
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-gray-900">Intelligence</h2>
+        <div className="bg-white border-2 border-black p-6">
+          <p className="aicher-heading type-lg text-gray-900 mb-2">
+            No lobbying intelligence yet for this committee
+          </p>
+          <p className="type-sm text-gray-500">
+            We haven&apos;t matched lobbying filings or campaign-finance activity to this
+            committee&apos;s recent legislation. This usually means the bills in scope are too early
+            in the process or too narrow to show a pattern.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

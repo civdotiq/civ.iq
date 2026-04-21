@@ -67,7 +67,18 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
   }
 
   if (error || !profile) {
-    return null;
+    return (
+      <div className="bg-white border-2 border-black p-6">
+        <p className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">
+          District profile not available
+        </p>
+        <p className="text-sm text-gray-500">
+          We don&apos;t have an economic and representation profile for this district yet. These
+          profiles are computed on demand from federal spending, employment, and voting data — check
+          back soon.
+        </p>
+      </div>
+    );
   }
 
   return (
