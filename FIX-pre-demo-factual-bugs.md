@@ -72,11 +72,11 @@ After the fix, Claude should:
 
 ### Acceptance
 
-- [ ] `/committee/HSBA` renders the correct House Financial Services Committee jurisdiction text
-- [ ] `/committee/HSBU` (House Budget) still renders its own correct description
-- [ ] No other committee mis-matches found (or all additional ones fixed and listed)
-- [ ] `npm run validate:all` passes
-- [ ] AUDIT-federal-demo-readiness.md updated with Fix A outcome block
+- [x] `/committee/HSBA` renders the correct House Financial Services Committee jurisdiction text
+- [x] `/committee/HSBU` (House Budget) still renders its own correct description
+- [x] No other committee mis-matches found (or all additional ones fixed and listed)
+- [x] `npm run validate:all` passes
+- [x] AUDIT-federal-demo-readiness.md updated with Fix A outcome block
 
 ---
 

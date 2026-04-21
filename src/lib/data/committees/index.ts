@@ -96,8 +96,8 @@ export const committeeRegistry: CommitteeRegistry = {
       return houseArmedServicesCommittee;
     },
     HSBA: async () => {
-      const { houseBudgetCommittee } = await import('./house/budget');
-      return houseBudgetCommittee;
+      const { houseFinancialServicesCommittee } = await import('./house/financial-services');
+      return houseFinancialServicesCommittee;
     },
     HSED: async () => {
       const { houseEducationWorkforceCommittee } = await import('./house/education-workforce');
