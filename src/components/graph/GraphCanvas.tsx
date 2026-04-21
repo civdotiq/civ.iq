@@ -161,13 +161,27 @@ export function GraphCanvas({
 
     const { width, height } = dimensions;
 
-    // Build simulation data
-    const simNodes: SimNode[] = filteredNodes.map(n => ({
-      id: n.id,
-      graphNode: n,
-      x: width / 2 + (Math.random() - 0.5) * 200,
-      y: height / 2 + (Math.random() - 0.5) * 200,
-    }));
+    // Build simulation data. Seed initial positions deterministically from the
+    // node id so re-renders with the same data reproduce the same layout
+    // (prevents jitter when filters toggle during a live demo).
+    const hashId = (id: string): number => {
+      let h = 2166136261;
+      for (let i = 0; i < id.length; i++) {
+        h ^= id.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0) / 4294967295;
+    };
+    const simNodes: SimNode[] = filteredNodes.map((n, i) => {
+      const angle = hashId(n.id) * Math.PI * 2;
+      const radius = 100 + ((i * 37) % 100);
+      return {
+        id: n.id,
+        graphNode: n,
+        x: width / 2 + Math.cos(angle) * radius,
+        y: height / 2 + Math.sin(angle) * radius,
+      };
+    });
 
     const nodeById = new Map(simNodes.map(n => [n.id, n]));
 
