@@ -157,12 +157,21 @@ function CitableFacts({
     ? `${stateName}, District ${representative.district}`
     : stateName;
 
-  // Compute years in office from terms
-  const firstTermYear = representative.terms?.[0]?.startYear;
-  const yearsInOffice = firstTermYear
-    ? new Date().getFullYear() - parseInt(firstTermYear, 10)
-    : null;
-  const termCount = representative.terms?.length ?? 0;
+  // Compute tenure. Terms are sorted most-recent-first by getEnhancedRepresentative,
+  // so the earliest term sits at the end of the array.
+  const terms = representative.terms ?? [];
+  const termCount = terms.length;
+  const firstElectedYear = terms[terms.length - 1]?.startYear;
+  const currentTermStartYear =
+    terms[0]?.startYear ?? representative.currentTerm?.start?.split('-')[0];
+  const currentTermEndYear = terms[0]?.endYear ?? representative.currentTerm?.end?.split('-')[0];
+  const hasTenure = Boolean(firstElectedYear);
+  const isFreshman = termCount <= 1 || firstElectedYear === currentTermStartYear;
+  const tenureText = !hasTenure
+    ? null
+    : isFreshman
+      ? `In Congress since ${currentTermStartYear} (${termCount} ${termCount === 1 ? 'term' : 'terms'})`
+      : `Elected ${firstElectedYear} · current term ${currentTermStartYear}–${currentTermEndYear} · ${termCount} terms total`;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -193,12 +202,10 @@ function CitableFacts({
           <dt className="text-gray-500 shrink-0">Chamber</dt>
           <dd className="font-medium text-gray-900">{chamberFull}</dd>
         </div>
-        {yearsInOffice !== null && (
+        {tenureText && (
           <div className="flex gap-2">
             <dt className="text-gray-500 shrink-0">In office</dt>
-            <dd className="font-medium text-gray-900">
-              Since {firstTermYear} ({termCount} {termCount === 1 ? 'term' : 'terms'})
-            </dd>
+            <dd className="font-medium text-gray-900">{tenureText}</dd>
           </div>
         )}
         {representative.committees && representative.committees.length > 0 && (
