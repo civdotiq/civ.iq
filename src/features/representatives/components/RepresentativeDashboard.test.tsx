@@ -187,4 +187,33 @@ describe('RepresentativeDashboard', () => {
     const emDashes = screen.getAllByText('\u2014');
     expect(emDashes.length).toBeGreaterThan(0);
   });
+
+  it('hides the Intelligence card for a low-activity rep with no committees and few votes', () => {
+    const lowActivityRep = {
+      ...makeRepresentative(),
+      committees: [],
+    } as unknown as EnhancedRepresentative;
+    const thinSummary = {
+      success: true,
+      data: {
+        billsSponsored: 0,
+        billsCosponsored: 0,
+        totalRaised: 0,
+        totalSpent: 0,
+        cashOnHand: 0,
+        votesParticipated: 4,
+      },
+    };
+    render(
+      <RepresentativeDashboard
+        {...defaultProps}
+        representative={lowActivityRep}
+        summaryData={thinSummary}
+      />
+    );
+    expect(screen.queryByText('Intelligence')).not.toBeInTheDocument();
+    // Other sections still render
+    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Voting Records')).toBeInTheDocument();
+  });
 });

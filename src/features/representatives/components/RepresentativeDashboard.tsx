@@ -25,6 +25,7 @@ import {
   DistrictIcon,
 } from '@/components/icons/AicherIcons';
 import { SectionDashboard, SectionCardConfig } from '@/shared/components/dashboard';
+import { hasIntelligenceData } from '@/lib/intelligence/has-intelligence-data';
 
 // Dynamically import heavy section content to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -151,6 +152,19 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
     return undefined;
   }, [representative.currentTerm]);
 
+  // Preflight whether the Intelligence tab would have any non-null analyzer
+  // output. Uses the same sample-size floors the analyzers apply internally
+  // (see `.claude/rules/intelligence-layer.md`) so a freshman with no
+  // committees and no vote history doesn't land on a half-empty tab.
+  const intelligenceAvailable = useMemo(
+    () =>
+      hasIntelligenceData({
+        committeeCount: representative.committees?.length ?? 0,
+        votesParticipated: summary?.votesParticipated,
+      }),
+    [representative.committees, summary?.votesParticipated]
+  );
+
   // Build section configs with live data
   const sections: SectionCardConfig[] = useMemo(
     () => [
@@ -209,14 +223,18 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
         icon: <LobbyingIcon className="w-5 h-5" />,
         stats: [],
       },
-      {
-        id: 'intelligence',
-        title: 'Intelligence',
-        description:
-          'AI-powered analysis of voting patterns, campaign finance correlations, and committee activity',
-        icon: <IntelligenceIcon className="w-5 h-5" />,
-        stats: [],
-      },
+      ...(intelligenceAvailable
+        ? [
+            {
+              id: 'intelligence',
+              title: 'Intelligence',
+              description:
+                'AI-powered analysis of voting patterns, campaign finance correlations, and committee activity',
+              icon: <IntelligenceIcon className="w-5 h-5" />,
+              stats: [],
+            },
+          ]
+        : []),
       {
         id: 'news',
         title: 'Recent News',
@@ -233,7 +251,7 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
         stats: [],
       },
     ],
-    [representative.committees, termRange, summary, summaryLoading]
+    [representative.committees, termRange, summary, summaryLoading, intelligenceAvailable]
   );
 
   // Render the full content for a given section
