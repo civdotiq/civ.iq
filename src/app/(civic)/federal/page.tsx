@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Federal Government | CIV.IQ',
+  title: 'Federal Government',
   description:
     'Explore federal government data: representatives, legislation, spending, regulations, elections, and more. All sourced from official government APIs.',
   keywords: [

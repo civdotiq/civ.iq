@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Elections | CIV.IQ',
+  title: 'Elections',
   description:
     'Browse 2024 election results for federal and state races. President, Senate, House, Governor, and State Legislature results from MEDSL/Harvard Dataverse.',
   keywords: [

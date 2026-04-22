@@ -166,11 +166,11 @@ After the fix, Claude should:
 
 ### Acceptance
 
-- [ ] `/federal`, `/elections`, `/investigate` each show exactly one `| CIV.IQ` in `<title>`
-- [ ] 5 spot-checked pages still show exactly one `| CIV.IQ` each
-- [ ] Root cause fixed at the source, not patched downstream
-- [ ] `npm run validate:all` passes
-- [ ] AUDIT doc inventory rows + Additional notes updated, Fix C outcome block added
+- [x] `/federal`, `/elections`, `/investigate` each show exactly one `| CIV.IQ` in `<title>`
+- [x] 5 spot-checked pages still show exactly one `| CIV.IQ` each
+- [x] Root cause fixed at the source, not patched downstream
+- [x] `npm run validate:all` passes
+- [x] AUDIT doc inventory rows + Additional notes updated, Fix C outcome block added
 
 ---
 
