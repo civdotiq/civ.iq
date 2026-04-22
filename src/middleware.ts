@@ -9,6 +9,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
@@ -207,6 +208,20 @@ export async function middleware(request: NextRequest) {
         ip: clientInfo.ip,
         timestamp: new Date().toISOString(),
       });
+    }
+
+    // Canonical-slug redirect for /districts/[id] (Phase 7d).
+    // Redirect variants (NY-8, ny-08, NY8) to canonical NY-08 before any rendering
+    // starts, so we always emit a proper HTTP 308 with Location header.
+    const districtMatch = request.nextUrl.pathname.match(/^\/districts\/([^/]+)(\/.*)?$/);
+    if (districtMatch?.[1]) {
+      const parsed = canonicalizeDistrictId(districtMatch[1]);
+      if (parsed && parsed.canonical !== districtMatch[1]) {
+        const suffix = districtMatch[2] ?? '';
+        const redirectUrl = new URL(`/districts/${parsed.canonical}${suffix}`, request.nextUrl);
+        redirectUrl.search = request.nextUrl.search;
+        return NextResponse.redirect(redirectUrl, 308);
+      }
     }
 
     // Validate request

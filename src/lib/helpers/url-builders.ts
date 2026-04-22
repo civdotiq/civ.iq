@@ -20,6 +20,51 @@
 // ============================================================================
 
 /**
+ * Canonical district-ID slug produced by buildDistrictUrl.
+ * Format: `${STATE_UPPER}-${NN|AL|STATE}` where numeric districts are zero-padded to 2 digits.
+ */
+export interface ParsedDistrictId {
+  state: string;
+  district: string;
+  canonical: string;
+}
+
+/**
+ * Normalize any accepted district-ID variant to the canonical form.
+ *
+ * Accepts:
+ * - Hyphenated: `NY-8`, `NY-08`, `ny-8`, `ny-08`, `AK-AL`, `AK-al`, `NY-STATE`
+ * - Non-hyphenated: `NY8`, `NY08`, `ny8`, `AKAL`
+ *
+ * Returns the parsed parts and the canonical slug (`NY-08`, `AK-AL`, `NY-STATE`),
+ * or `null` if the input does not match any accepted shape.
+ *
+ * @example
+ * canonicalizeDistrictId("NY-8")    // { state: "NY", district: "08", canonical: "NY-08" }
+ * canonicalizeDistrictId("ny-08")   // { state: "NY", district: "08", canonical: "NY-08" }
+ * canonicalizeDistrictId("NY8")     // { state: "NY", district: "08", canonical: "NY-08" }
+ * canonicalizeDistrictId("AK-AL")   // { state: "AK", district: "AL", canonical: "AK-AL" }
+ * canonicalizeDistrictId("XX-99")   // null
+ */
+export function canonicalizeDistrictId(districtId: string): ParsedDistrictId | null {
+  const hyphenated = districtId.match(/^([A-Za-z]{2})-(\d{1,2}|AL|STATE)$/i);
+  const nonHyphenated = !hyphenated ? districtId.match(/^([A-Za-z]{2})(\d{1,2}|AL)$/i) : null;
+  const match = hyphenated ?? nonHyphenated;
+  if (!match?.[1] || !match[2]) return null;
+
+  const state = match[1].toUpperCase();
+  const rawDistrict = match[2].toUpperCase();
+  const district =
+    rawDistrict === '0' || rawDistrict === '00'
+      ? 'AL'
+      : /^\d+$/.test(rawDistrict)
+        ? rawDistrict.padStart(2, '0')
+        : rawDistrict;
+
+  return { state, district, canonical: `${state}-${district}` };
+}
+
+/**
  * Build a federal congressional district URL
  *
  * @param state - 2-letter state code (e.g., "MI", "CA")
