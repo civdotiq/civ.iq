@@ -258,7 +258,7 @@ const PACTypeBadge: React.FC<{ type: string }> = ({ type }) => {
 
 export function CampaignFinanceVisualizer({
   financeData: initialFinanceData,
-  representative: _representative,
+  representative,
   bioguideId: _bioguideId,
 }: CampaignFinanceVisualizerProps) {
   const [activeTab, setActiveTab] = useState<
@@ -454,10 +454,10 @@ export function CampaignFinanceVisualizer({
 
   // Screen reader announcement for data load
   useEffect(() => {
-    if (financeData && _representative) {
-      setAnnouncement(`Campaign finance data loaded for ${_representative.name}`);
+    if (financeData && representative) {
+      setAnnouncement(`Campaign finance data loaded for ${representative.name}`);
     }
-  }, [financeData, _representative]);
+  }, [financeData, representative]);
 
   // Screen reader announcement for tab changes
   useEffect(() => {
@@ -563,6 +563,18 @@ export function CampaignFinanceVisualizer({
         {announcement}
       </div>
 
+      {/* Plain-language intro for non-expert readers */}
+      <div className="bg-white border-2 border-black p-4 sm:p-6">
+        <p className="text-sm sm:text-base text-gray-900">
+          This shows contributions to {representative.name}&apos;s campaign, reported to the Federal
+          Election Commission.
+        </p>
+        <p className="mt-2 text-sm sm:text-base text-gray-900">
+          It is a record of who is funding their campaigning — not a measure of influence on their
+          votes.
+        </p>
+      </div>
+
       {/* Election Cycle Selector */}
       {cyclesData?.cycles?.length > 1 && (
         <div className="flex items-center gap-3">
@@ -654,7 +666,7 @@ export function CampaignFinanceVisualizer({
               {fundingNarrative && (
                 <FundingNarrative
                   narrative={fundingNarrative}
-                  representativeName={_representative?.name}
+                  representativeName={representative?.name}
                 />
               )}
 
@@ -693,9 +705,9 @@ export function CampaignFinanceVisualizer({
 
               {/* Hero Summary - Enhanced Overview */}
               <HeroSummary
-                representativeName={_representative?.name || 'Representative'}
+                representativeName={representative?.name || 'Representative'}
                 party={
-                  (_representative?.party || 'Independent') as
+                  (representative?.party || 'Independent') as
                     | 'Democrat'
                     | 'Republican'
                     | 'Independent'
@@ -717,7 +729,7 @@ export function CampaignFinanceVisualizer({
                 partyContributions={partyContributions}
                 candidateContributions={candidateContributions}
                 party={
-                  (_representative?.party || 'Independent') as
+                  (representative?.party || 'Independent') as
                     | 'Democrat'
                     | 'Republican'
                     | 'Independent'

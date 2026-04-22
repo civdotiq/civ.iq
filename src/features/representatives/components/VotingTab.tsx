@@ -61,6 +61,7 @@ interface BatchApiResponse {
 
 interface VotingTabProps {
   bioguideId: string;
+  memberName?: string;
   sharedData?: VoteResponse;
   sharedLoading?: boolean;
   sharedError?: Error | null;
@@ -106,7 +107,7 @@ const voteExportColumns: ExportColumn<Vote>[] = [
 ];
 
 const VotingTabComponent = React.memo(
-  ({ bioguideId, sharedData, sharedLoading, sharedError }: VotingTabProps) => {
+  ({ bioguideId, memberName, sharedData, sharedLoading, sharedError }: VotingTabProps) => {
     const router = useRouter();
 
     // Filter states
@@ -353,8 +354,23 @@ const VotingTabComponent = React.memo(
       );
     }
 
+    const displayName = memberName || data?.member?.name;
+
     return (
       <div data-testid="voting-record">
+        {/* Plain-language intro for non-expert readers */}
+        <div className="bg-white border-2 border-black p-4 sm:p-6 mb-grid-3">
+          <p className="text-sm sm:text-base text-gray-900">
+            {displayName
+              ? `Recent roll-call votes cast by ${displayName}, sourced from Congress.gov.`
+              : 'Recent roll-call votes sourced from Congress.gov.'}
+          </p>
+          <p className="mt-2 text-sm sm:text-base text-gray-900">
+            A yea or nay on a bill is one data point — click any row to see the full bill and vote
+            context.
+          </p>
+        </div>
+
         <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
           Roll call votes only. Voice votes and committee votes are not shown here. This also skips
           the talks that shape what reaches the floor.

@@ -41,6 +41,16 @@ export default function HomePage() {
           {/* Search Bar */}
           <SearchForm />
 
+          {/* Primary CTA — one-click path to address lookup */}
+          <div className="mb-grid-2 sm:mb-grid-4 text-center">
+            <Link
+              href="/your-reps"
+              className="inline-flex items-center justify-center px-grid-3 py-grid-2 text-sm sm:text-base font-semibold text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white transition-colors min-h-[44px] w-full sm:w-auto"
+            >
+              Find my representatives
+            </Link>
+          </div>
+
           {/* Data Sources */}
           <div className="mt-grid-2 sm:mt-grid-4 text-center">
             <p className="text-xs sm:text-sm text-gray-500 px-grid-2">

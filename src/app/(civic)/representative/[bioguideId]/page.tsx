@@ -401,6 +401,11 @@ export default async function RepresentativeProfilePage({
       role: committee.role,
     }));
 
+  // Server render time — honest ceiling on data age for this page.
+  // The route sets `revalidate = 3600`, so the rendered HTML never reflects
+  // data older than an hour at delivery time.
+  const renderedAt = new Date();
+
   return (
     <>
       {/* Structured Data for SEO */}
@@ -440,6 +445,21 @@ export default async function RepresentativeProfilePage({
       <div className="density-default">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
+          <p className="text-xs text-gray-500 mb-grid-3">
+            Data loaded{' '}
+            <time dateTime={renderedAt.toISOString()}>
+              {renderedAt.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </time>
+            . Refreshes hourly from Congress.gov and FEC.gov.{' '}
+            <Link href="/methodology" className="text-civiq-blue hover:underline">
+              See methodology
+            </Link>
+            .
+          </p>
         </div>
 
         <MemberStatusBanner representative={representative} />

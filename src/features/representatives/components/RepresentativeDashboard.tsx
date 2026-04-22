@@ -251,6 +251,7 @@ export const RepresentativeDashboard: React.FC<RepresentativeDashboardProps> = (
           return (
             <VotingTabComponent
               bioguideId={representative.bioguideId}
+              memberName={representative.name}
               sharedData={batchData?.data?.votes}
               sharedLoading={batchLoading}
               sharedError={batchError}
