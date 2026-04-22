@@ -121,11 +121,11 @@ After the fix, Claude should:
 
 ### Acceptance
 
-- [ ] `/congress/house` no longer 404s (redirect or real page)
-- [ ] `/congress/senate` no longer 404s (redirect or real page)
-- [ ] `/congress` itself is unchanged and still works
-- [ ] `npm run validate:all` passes
-- [ ] AUDIT doc inventory rows updated + Fix B outcome block added
+- [x] `/congress/house` no longer 404s (redirect or real page)
+- [x] `/congress/senate` no longer 404s (redirect or real page)
+- [x] `/congress` itself is unchanged and still works
+- [x] `npm run validate:all` passes
+- [x] AUDIT doc inventory rows updated + Fix B outcome block added
 
 ---
 
