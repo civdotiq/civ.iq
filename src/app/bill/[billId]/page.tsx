@@ -9,7 +9,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import type { Bill } from '@/types/bill';
 import { getBillDisplayStatus } from '@/types/bill';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
-import { parseBillSlug } from '@/lib/data/bill-slug';
+import { parseBillSlug } from '@/lib/data/route-slugs';
 import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';

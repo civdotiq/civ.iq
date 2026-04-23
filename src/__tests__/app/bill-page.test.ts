@@ -74,6 +74,11 @@ describe('/bill/[billId] slug validation', () => {
     expect(permanentRedirect).toHaveBeenCalledWith('/bill/119-hr-7682');
   });
 
+  it('uppercase canonical is recoverable and 308-redirects to lowercase canonical', async () => {
+    await expect(invoke('119-HR-7682')).rejects.toThrow(/NEXT_REDIRECT:permanent/);
+    expect(permanentRedirect).toHaveBeenCalledWith('/bill/119-hr-7682');
+  });
+
   it('malformed slug calls notFound', async () => {
     await expect(invoke('not-a-bill')).rejects.toThrow('NEXT_NOT_FOUND');
     expect(notFound).toHaveBeenCalled();

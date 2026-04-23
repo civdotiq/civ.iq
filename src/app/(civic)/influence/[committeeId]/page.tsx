@@ -21,9 +21,7 @@ import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PACPageSchema } from './PACPageSchema';
-
-// FEC committee IDs are a `C` followed by exactly 8 digits (e.g. `C00401224`).
-const FEC_COMMITTEE_ID_PATTERN = /^C\d{8}$/;
+import { isValidFecCommitteeId } from '@/lib/data/route-slugs';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -148,7 +146,7 @@ async function fetchParentOrgSummary(pacName: string): Promise<string | null> {
   }
 }
 
-function CommitteeNotFoundEmptyState({
+export function CommitteeNotFoundEmptyState({
   committeeId,
   cycle,
 }: {
@@ -221,7 +219,7 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   const resolvedSearchParams = await searchParams;
   const cycle = parseInt(resolvedSearchParams.cycle ?? '2026', 10);
 
-  if (!FEC_COMMITTEE_ID_PATTERN.test(committeeId)) {
+  if (!isValidFecCommitteeId(committeeId)) {
     notFound();
   }
 
@@ -280,7 +278,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const resolvedSearchParams = await searchParams;
     const cycle = resolvedSearchParams.cycle ?? '2026';
 
-    if (!FEC_COMMITTEE_ID_PATTERN.test(committeeId)) {
+    if (!isValidFecCommitteeId(committeeId)) {
       return {};
     }
 

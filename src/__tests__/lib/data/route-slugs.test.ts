@@ -3,21 +3,25 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { parseBillSlug } from '@/lib/data/bill-slug';
+import {
+  parseBillSlug,
+  isValidFederalRegisterDocumentNumber,
+  isValidFecCommitteeId,
+} from '@/lib/data/route-slugs';
 import { CURRENT_CONGRESS } from '@/lib/data/congressional-constants';
 
 describe('parseBillSlug', () => {
   describe('canonical shape', () => {
-    it('accepts `<congress>-<type>-<number>`', () => {
+    it('accepts `<congress>-<type>-<number>` (lowercase)', () => {
       expect(parseBillSlug('119-hr-7682')).toEqual({
         kind: 'canonical',
         canonical: '119-hr-7682',
       });
     });
 
-    it('lowercases the type segment', () => {
+    it('treats uppercase canonical shape as recoverable, not canonical', () => {
       expect(parseBillSlug('119-HR-7682')).toEqual({
-        kind: 'canonical',
+        kind: 'recoverable',
         canonical: '119-hr-7682',
       });
     });
@@ -71,5 +75,38 @@ describe('parseBillSlug', () => {
     ])('rejects %s', (_label, slug) => {
       expect(parseBillSlug(slug)).toEqual({ kind: 'invalid' });
     });
+  });
+});
+
+describe('isValidFederalRegisterDocumentNumber', () => {
+  it.each(['2024-12345', '2026-123456', '1995-00001'])('accepts %s', id => {
+    expect(isValidFederalRegisterDocumentNumber(id)).toBe(true);
+  });
+
+  it.each([
+    ['empty', ''],
+    ['year-only', '2024'],
+    ['short year', '24-12345'],
+    ['short suffix', '2024-123'],
+    ['long suffix', '2024-1234567'],
+    ['letters', 'abc-12345'],
+  ])('rejects %s', (_label, id) => {
+    expect(isValidFederalRegisterDocumentNumber(id)).toBe(false);
+  });
+});
+
+describe('isValidFecCommitteeId', () => {
+  it('accepts C followed by exactly 8 digits', () => {
+    expect(isValidFecCommitteeId('C00401224')).toBe(true);
+  });
+
+  it.each([
+    ['too short', 'C1234'],
+    ['too long', 'C123456789'],
+    ['lowercase c', 'c00401224'],
+    ['congressional systemCode', 'HSBA'],
+    ['empty', ''],
+  ])('rejects %s', (_label, id) => {
+    expect(isValidFecCommitteeId(id)).toBe(false);
   });
 });
