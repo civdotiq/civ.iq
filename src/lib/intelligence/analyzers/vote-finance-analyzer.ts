@@ -40,6 +40,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  createPhaseTimer,
 } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
@@ -146,8 +147,10 @@ export async function analyzeVoteFinanceWithReason(
 }
 
 async function computeAndCache(bioguideId: string, cacheKey: string): Promise<VoteFinanceOutcome> {
+  const timer = createPhaseTimer(`[VoteFinance] ${bioguideId}`);
+
   // 2. Fetch data
-  const fetched = await fetchData(bioguideId);
+  const fetched = await fetchData(bioguideId, timer);
   if ('unavailableReason' in fetched) {
     return { insight: null, unavailableReason: fetched.unavailableReason };
   }
@@ -155,6 +158,7 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
 
   // 3. Compute statistics
   const stats = computeStatistics(data);
+  timer.mark('computeStatistics', { sectors: stats?.correlations.length ?? 0 });
   if (!stats) {
     const reason = 'Fewer than 10 sector-classified votes in the 119th Congress';
     logger.info('[VoteFinance] Insufficient data for analysis', { bioguideId, reason });
@@ -163,6 +167,7 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
 
   // 4. Peer comparison
   const peer = await computePeerComparison(bioguideId, stats, data);
+  timer.mark('computePeerComparison', { peerCount: peer?.peerCount ?? 0 });
 
   // 4b. Recompute confidence with actual peer count
   if (peer) {
@@ -182,6 +187,7 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
 
   // 5. Generate insight
   const { narrative, source } = await generateNarrative(data, stats, peer);
+  timer.mark('generateNarrative', { narrativeSource: source });
 
   const sc = new SourceCollector();
   sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
@@ -220,6 +226,7 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
   // 6. Cache
   await cacheInsight(cacheKey, insight);
   await cacheAlignmentScore(bioguideId, stats.overallAlignment, data);
+  timer.mark('cacheInsight');
 
   return { insight };
 }
@@ -246,7 +253,9 @@ interface FetchedData {
 
 type FetchResult = FetchedData | { unavailableReason: string };
 
-async function fetchData(bioguideId: string): Promise<FetchResult> {
+type PhaseTimer = ReturnType<typeof createPhaseTimer>;
+
+async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchResult> {
   // Get representative data
   const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) {
@@ -254,6 +263,7 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
     logger.info('[VoteFinance] Representative not found', { bioguideId, unavailableReason });
     return { unavailableReason };
   }
+  timer?.mark('fetchRep');
 
   // Get FEC candidate ID
   const fecId = getFECIdFromBioguide(bioguideId);
@@ -264,10 +274,27 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
   }
 
   // Fetch votes and contributions in parallel
+  const votesStart = performance.now();
+  const contribStart = performance.now();
   const [rawVotes, contributions] = await Promise.all([
-    fetchVotes(bioguideId, rep.chamber),
-    fetchContributions(fecId),
+    fetchVotes(bioguideId, rep.chamber).then(v => {
+      logger.info('[VoteFinance] [timing]', {
+        phase: 'fetchVotes',
+        phaseMs: Math.round(performance.now() - votesStart),
+        voteCount: v.length,
+      });
+      return v;
+    }),
+    fetchContributions(fecId).then(c => {
+      logger.info('[VoteFinance] [timing]', {
+        phase: 'fetchContributions',
+        phaseMs: Math.round(performance.now() - contribStart),
+        contributionCount: c.length,
+      });
+      return c;
+    }),
   ]);
+  timer?.mark('fetchUpstream', { votes: rawVotes.length, contributions: contributions.length });
 
   if (!rawVotes.length || !contributions.length) {
     const unavailableReason = !rawVotes.length
@@ -284,6 +311,10 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
 
   // Classify votes by industry
   const votes = await classifyVoteIndustries(rawVotes);
+  timer?.mark('classifyVoteIndustries', {
+    classifiedCount: votes.length,
+    rawCount: rawVotes.length,
+  });
 
   // Aggregate contributions by sector
   const sectorAggregation = aggregateByIndustrySector(contributions);

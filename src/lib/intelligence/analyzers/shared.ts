@@ -32,6 +32,32 @@ import { trackInsightRun, type AnalyzerName } from '@/lib/analytics/insight-trac
 export const ANALYZER_TIMEOUT_MS = 55_000;
 
 /**
+ * Phase timer for analyzer instrumentation.
+ *
+ * Emits a structured log line on every `mark()` so phase-level durations
+ * survive even when the outer `withTimeout` race fires — the analyzer keeps
+ * running in the background after a timeout is declared, so per-phase logs
+ * are the only way to see *which* phase burned the budget in production.
+ *
+ * Introduced for MR7 (`PROMPT-MR7-analyzer-timeout-rootcause.md`) to root-cause
+ * uniform 55000ms timeouts on vote-finance + vote-prediction. Remove when the
+ * root cause is fixed and steady-state production timings are known.
+ */
+export function createPhaseTimer(label: string) {
+  const start = performance.now();
+  let lastMark = start;
+  return {
+    mark(phase: string, meta?: Record<string, unknown>) {
+      const now = performance.now();
+      const phaseMs = Math.round(now - lastMark);
+      const cumulativeMs = Math.round(now - start);
+      logger.info(`${label} [timing]`, { phase, phaseMs, cumulativeMs, ...meta });
+      lastMark = now;
+    },
+  };
+}
+
+/**
  * Race a promise against a timeout. Individual service calls already have
  * their own timeouts (10-30s), but this catches accumulated latency when
  * multiple sequential calls add up.

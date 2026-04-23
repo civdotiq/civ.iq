@@ -32,6 +32,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  createPhaseTimer,
 } from './shared';
 import {
   predictVote,
@@ -144,8 +145,10 @@ async function computeAndCache(
   cacheKey: string,
   metadata: NonNullable<ReturnType<typeof getModelMetadata>>
 ): Promise<VotePredictionOutcome> {
+  const timer = createPhaseTimer(`[VotePrediction] ${bioguideId}`);
+
   // 2. Fetch data
-  const fetched = await fetchData(bioguideId);
+  const fetched = await fetchData(bioguideId, timer);
   if ('unavailableReason' in fetched) {
     return { insight: null, unavailableReason: fetched.unavailableReason };
   }
@@ -153,6 +156,11 @@ async function computeAndCache(
 
   // 3. Run predictions for each vote
   const predictions = await computePredictions(data, metadata);
+  timer.mark('computePredictions', {
+    confidentPredictions: predictions.confidentPredictions,
+    deviations: predictions.deviations,
+    totalVotes: data.totalVotes,
+  });
   if (predictions.confidentPredictions < MIN_CONFIDENT_PREDICTIONS) {
     const unavailableReason = `Model requires ${MIN_CONFIDENT_PREDICTIONS} confident predictions; only ${predictions.confidentPredictions} available`;
     logger.info('[VotePrediction] Insufficient confident predictions', {
@@ -166,6 +174,7 @@ async function computeAndCache(
 
   // 4. Peer comparison
   const peer = await computePeerComparison(bioguideId, predictions.independenceScore, data.chamber);
+  timer.mark('computePeerComparison', { peerCount: peer?.peerCount ?? 0 });
 
   // 5. Compute confidence
   const conf = confidenceScore({
@@ -177,6 +186,7 @@ async function computeAndCache(
 
   // 6. Generate narrative
   const { narrative, source } = await generateNarrative(data, predictions, peer, metadata);
+  timer.mark('generateNarrative', { narrativeSource: source });
 
   const sc = new SourceCollector();
   sc.add('Congress.gov roll calls', '119th Congress', data.votes.length);
@@ -240,6 +250,7 @@ async function computeAndCache(
   } catch {
     // Non-fatal
   }
+  timer.mark('cacheInsight');
 
   return { insight };
 }
@@ -270,13 +281,16 @@ interface FetchedData {
 
 type FetchResult = FetchedData | { unavailableReason: string };
 
-async function fetchData(bioguideId: string): Promise<FetchResult> {
+type PhaseTimer = ReturnType<typeof createPhaseTimer>;
+
+async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchResult> {
   const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) {
     const unavailableReason = 'Representative not found in current dataset';
     logger.info('[VotePrediction] Representative not found', { bioguideId, unavailableReason });
     return { unavailableReason };
   }
+  timer?.mark('fetchRep');
 
   const fecId = getFECIdFromBioguide(bioguideId);
   if (!fecId) {
@@ -287,10 +301,30 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
 
   const cycle = getCurrentElectionCycle();
 
+  const votesStart = performance.now();
+  const contribStart = performance.now();
   const [rawVotes, contributions] = await Promise.all([
-    fetchVotes(bioguideId, rep.chamber),
-    fecApiService.getSampleContributions(fecId, cycle, 500).catch(() => []),
+    fetchVotes(bioguideId, rep.chamber).then(v => {
+      logger.info('[VotePrediction] [timing]', {
+        phase: 'fetchVotes',
+        phaseMs: Math.round(performance.now() - votesStart),
+        voteCount: v.length,
+      });
+      return v;
+    }),
+    fecApiService
+      .getSampleContributions(fecId, cycle, 500)
+      .catch(() => [])
+      .then(c => {
+        logger.info('[VotePrediction] [timing]', {
+          phase: 'fetchContributions',
+          phaseMs: Math.round(performance.now() - contribStart),
+          contributionCount: c.length,
+        });
+        return c;
+      }),
   ]);
+  timer?.mark('fetchUpstream', { votes: rawVotes.length, contributions: contributions.length });
 
   if (!rawVotes.length || !contributions.length) {
     const unavailableReason = !rawVotes.length
@@ -324,6 +358,7 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
   const votes: FetchedData['votes'] = [];
   let votesWithSectors = 0;
 
+  const classifyStart = performance.now();
   for (const v of rawVotes) {
     const position = v.position.toLowerCase();
     if (position !== 'yea' && position !== 'yes' && position !== 'nay' && position !== 'no') {
@@ -353,6 +388,13 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
       sponsorSameParty: false,
     });
   }
+  timer?.mark('classifyVotesSerial', {
+    classifiedCount: votes.length,
+    votesWithSectors,
+    rawCount: rawVotes.length,
+    avgMsPerVote:
+      votes.length > 0 ? Math.round((performance.now() - classifyStart) / votes.length) : 0,
+  });
 
   return {
     name: rep.name,

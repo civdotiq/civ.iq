@@ -486,6 +486,7 @@ async function getOrCreateSession(): Promise<OnnxInferenceSession | null> {
 }
 
 async function loadSession(): Promise<OnnxInferenceSession | null> {
+  const loadStart = performance.now();
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const ort = require('onnxruntime-web') as {
@@ -496,11 +497,20 @@ async function loadSession(): Promise<OnnxInferenceSession | null> {
     const path = await import('path');
 
     const modelPath = path.resolve(process.cwd(), MODEL_PATH);
+    const readStart = performance.now();
     const modelBuffer = fs.readFileSync(modelPath);
+    const readMs = Math.round(performance.now() - readStart);
 
+    const createStart = performance.now();
     const session = await ort.InferenceSession.create(modelBuffer.buffer);
+    const createMs = Math.round(performance.now() - createStart);
     sessionInstance = session;
-    logger.info('[VotePredictor] ONNX session loaded');
+    logger.info('[VotePredictor] ONNX session loaded', {
+      totalMs: Math.round(performance.now() - loadStart),
+      modelReadMs: readMs,
+      sessionCreateMs: createMs,
+      modelBytes: modelBuffer.byteLength,
+    });
     return sessionInstance;
   } catch (error) {
     sessionLoadFailed = true;
