@@ -7,6 +7,7 @@ import {
   parseBillSlug,
   isValidFederalRegisterDocumentNumber,
   isValidFecCommitteeId,
+  isCongressionalSystemCode,
 } from '@/lib/data/route-slugs';
 import { CURRENT_CONGRESS } from '@/lib/data/congressional-constants';
 
@@ -108,5 +109,31 @@ describe('isValidFecCommitteeId', () => {
     ['empty', ''],
   ])('rejects %s', (_label, id) => {
     expect(isValidFecCommitteeId(id)).toBe(false);
+  });
+});
+
+describe('isCongressionalSystemCode', () => {
+  it.each([
+    ['House 4-letter', 'HSBA'],
+    ['Senate 4-letter', 'SSJU'],
+    ['Joint 4-letter', 'JSEC'],
+    ['House subcommittee', 'HSBA16'],
+    ['Senate subcommittee', 'SSJU05'],
+  ])('accepts %s (%s)', (_label, code) => {
+    expect(isCongressionalSystemCode(code)).toBe(true);
+  });
+
+  it.each([
+    ['FEC committee id', 'C00401224'],
+    ['lowercase', 'hsba'],
+    ['3 letters', 'HSB'],
+    ['5 letters no digits', 'HSBAX'],
+    ['wrong first letter', 'ASBA'],
+    ['only digits', '1234'],
+    ['single-digit subcommittee', 'HSBA1'],
+    ['3-digit subcommittee', 'HSBA123'],
+    ['empty', ''],
+  ])('rejects %s (%s)', (_label, code) => {
+    expect(isCongressionalSystemCode(code)).toBe(false);
   });
 });

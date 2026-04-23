@@ -102,3 +102,17 @@ const FEC_COMMITTEE_ID = /^C\d{8}$/;
 export function isValidFecCommitteeId(committeeId: string): boolean {
   return FEC_COMMITTEE_ID.test(committeeId);
 }
+
+// ── Congressional committee systemCodes ─────────────────────────────────
+
+/**
+ * Congressional committee systemCodes (Congress.gov / THOMAS): 4 uppercase
+ * letters starting with H (House), S (Senate), or J (Joint), optionally
+ * followed by a 2-digit subcommittee suffix. Examples: `HSBA`, `SSJU`,
+ * `JSEC`, `SSJU05`. Disjoint from FEC IDs, which start with `C`.
+ */
+const CONGRESSIONAL_SYSTEM_CODE = /^[HSJ][A-Z]{3}(?:\d{2})?$/;
+
+export function isCongressionalSystemCode(slug: string): boolean {
+  return CONGRESSIONAL_SYSTEM_CODE.test(slug);
+}

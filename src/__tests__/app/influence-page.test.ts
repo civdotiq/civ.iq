@@ -3,18 +3,25 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  *
  * Shape validation for /influence/[committeeId]:
- *   `C\d{8}` with FEC data       → render (no notFound)
- *   `C\d{8}` without FEC data    → empty-state (no notFound)
- *   anything else (e.g. `HSBA`)  → 404
+ *   `C\d{8}` with FEC data                   → render (no notFound)
+ *   `C\d{8}` without FEC data                → empty-state (no notFound)
+ *   congressional systemCode (e.g. `HSBA`)   → 308 redirect to /committee/{code}
+ *   garbage (wrong shape entirely)           → 404
  */
 
 class NextNotFoundError extends Error {
   digest = 'NEXT_NOT_FOUND';
 }
+class NextRedirectError extends Error {
+  digest = 'NEXT_REDIRECT';
+}
 
 jest.mock('next/navigation', () => ({
   notFound: jest.fn(() => {
     throw new NextNotFoundError('NEXT_NOT_FOUND');
+  }),
+  permanentRedirect: jest.fn((_url: string) => {
+    throw new NextRedirectError('NEXT_REDIRECT');
   }),
 }));
 
@@ -48,7 +55,7 @@ jest.mock('@/lib/mesh/sector-display', () => ({
 }));
 
 import CommitteeProfilePage from '@/app/(civic)/influence/[committeeId]/page';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 async function invoke(committeeId: string) {
   return CommitteeProfilePage({
@@ -62,14 +69,37 @@ describe('/influence/[committeeId] shape validation', () => {
     jest.clearAllMocks();
   });
 
-  it('malformed id (congressional systemCode like HSBA) calls notFound', async () => {
-    await expect(invoke('HSBA')).rejects.toThrow('NEXT_NOT_FOUND');
-    expect(notFound).toHaveBeenCalled();
+  it('congressional systemCode (HSBA) redirects to /committee/HSBA', async () => {
+    await expect(invoke('HSBA')).rejects.toThrow('NEXT_REDIRECT');
+    expect(permanentRedirect).toHaveBeenCalledWith('/committee/HSBA');
+    expect(notFound).not.toHaveBeenCalled();
   });
 
-  it('malformed id (too short) calls notFound', async () => {
+  it('lowercase congressional systemCode redirects with canonical uppercase target', async () => {
+    await expect(invoke('hsba')).rejects.toThrow('NEXT_REDIRECT');
+    expect(permanentRedirect).toHaveBeenCalledWith('/committee/HSBA');
+  });
+
+  it('senate systemCode (SSJU) redirects to /committee/SSJU', async () => {
+    await expect(invoke('SSJU')).rejects.toThrow('NEXT_REDIRECT');
+    expect(permanentRedirect).toHaveBeenCalledWith('/committee/SSJU');
+  });
+
+  it('subcommittee systemCode (SSJU05) redirects to /committee/SSJU05', async () => {
+    await expect(invoke('SSJU05')).rejects.toThrow('NEXT_REDIRECT');
+    expect(permanentRedirect).toHaveBeenCalledWith('/committee/SSJU05');
+  });
+
+  it('malformed id (too short FEC shape) calls notFound', async () => {
     await expect(invoke('C1234')).rejects.toThrow('NEXT_NOT_FOUND');
     expect(notFound).toHaveBeenCalled();
+    expect(permanentRedirect).not.toHaveBeenCalled();
+  });
+
+  it('garbage id (neither FEC nor systemCode) calls notFound', async () => {
+    await expect(invoke('not-a-real-id')).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(notFound).toHaveBeenCalled();
+    expect(permanentRedirect).not.toHaveBeenCalled();
   });
 
   it('valid shape with no FEC data renders empty state without calling notFound', async () => {

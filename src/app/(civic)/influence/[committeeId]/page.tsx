@@ -8,7 +8,7 @@
  * resolved recipients, sector classification, and lobbying connections.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -21,7 +21,7 @@ import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PACPageSchema } from './PACPageSchema';
-import { isValidFecCommitteeId } from '@/lib/data/route-slugs';
+import { isCongressionalSystemCode, isValidFecCommitteeId } from '@/lib/data/route-slugs';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -220,6 +220,9 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   const cycle = parseInt(resolvedSearchParams.cycle ?? '2026', 10);
 
   if (!isValidFecCommitteeId(committeeId)) {
+    if (isCongressionalSystemCode(committeeId.toUpperCase())) {
+      permanentRedirect(`/committee/${committeeId.toUpperCase()}`);
+    }
     notFound();
   }
 
@@ -279,6 +282,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const cycle = resolvedSearchParams.cycle ?? '2026';
 
     if (!isValidFecCommitteeId(committeeId)) {
+      if (isCongressionalSystemCode(committeeId.toUpperCase())) {
+        return {
+          title: 'Committee',
+          description: 'Redirecting to the congressional committee page.',
+          robots: { index: false, follow: true },
+        };
+      }
       return {};
     }
 
