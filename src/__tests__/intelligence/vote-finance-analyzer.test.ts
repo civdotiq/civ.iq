@@ -88,6 +88,16 @@ jest.mock('@/lib/connections/committee-agency-map', () => ({
   ALL_COMMITTEE_MAPPINGS: [],
 }));
 
+// Force both ML tiers to miss so getBillSectors reaches the keyword inference
+// path, which uses the mocked policy-area-map above. Keeps the tests
+// deterministic without loading ONNX / transformer models.
+jest.mock('@/lib/intelligence/embeddings', () => ({
+  classifyBillSectors: jest.fn().mockResolvedValue([]),
+  classifyBillSectorsZeroShot: jest.fn().mockResolvedValue([]),
+  embedText: jest.fn().mockResolvedValue([]),
+  classifyZeroShot: jest.fn().mockResolvedValue([]),
+}));
+
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 
 // ── Test Data ─────────────────────────────────────────────────────
@@ -116,6 +126,12 @@ function makeVotes(count: number) {
 describe('analyzeVoteFinance', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restore happy-path AI provider mock in case a prior test overrode it.
+    const provider = jest.requireMock('@/lib/ai/provider') as {
+      generateAIText: jest.Mock;
+    };
+    provider.generateAIText.mockReset();
+    provider.generateAIText.mockResolvedValue('AI narrative.');
     mockRedisGet.mockResolvedValue(null);
     mockRedisSet.mockResolvedValue(undefined);
     mockRedisKeys.mockResolvedValue([]);
@@ -140,9 +156,9 @@ describe('analyzeVoteFinance', () => {
   it('fetches both sessions of 119th Congress', async () => {
     await analyzeVoteFinance('P000197');
 
-    // Should call getHouseMemberVotes with sessions 1 and 2
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 200);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 200);
+    // Should call getHouseMemberVotes with sessions 1 and 2, trimmed cap (MR2)
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 120);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 120);
   });
 
   it('classifies votes by sector', async () => {
@@ -198,7 +214,7 @@ describe('analyzeVoteFinance', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v2:P000197'
+      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v3:P000197'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
@@ -212,5 +228,102 @@ describe('analyzeVoteFinance', () => {
 
     expect(mockGetSenateMemberVotes).toHaveBeenCalled();
     expect(mockGetHouseMemberVotes).not.toHaveBeenCalled();
+  });
+
+  it('writes per-bill sector cache on first classify (MR2)', async () => {
+    // BillSummaryCache misses force getBillSectors to fall through to the
+    // embedding/keyword tiers, whose resolved result must land in Redis
+    // under `insight:bill_sectors:v1:{billId}`.
+    mockGetSummary.mockResolvedValue(null);
+    mockGetHouseMemberVotes.mockResolvedValue(makeVotes(3));
+    mockGetSenateMemberVotes.mockResolvedValue([]);
+
+    await analyzeVoteFinance('P000197');
+
+    const sectorCacheWrite = mockRedisSet.mock.calls.find((call: unknown[]) =>
+      (call[0] as string).startsWith('insight:bill_sectors:v1:')
+    );
+    expect(sectorCacheWrite).toBeDefined();
+    // 30-day TTL
+    expect(sectorCacheWrite![2]).toBe(30 * 24 * 60 * 60);
+  });
+
+  it('prefers cached bill-sector result over recomputing (MR2)', async () => {
+    mockGetSummary.mockResolvedValue(null);
+    mockGetHouseMemberVotes.mockResolvedValue(makeVotes(2));
+    mockGetSenateMemberVotes.mockResolvedValue([]);
+    // First call: insight cache miss; bill-sector cache returns a
+    // pre-populated classification, so BillSummaryCache.getSummary must
+    // NOT be consulted.
+    mockRedisGet.mockImplementation(async (key: string) => {
+      if (key.startsWith('insight:bill_sectors:v1:')) return ['HEALTH'];
+      return null;
+    });
+
+    await analyzeVoteFinance('P000197');
+
+    expect(mockGetSummary).not.toHaveBeenCalled();
+  });
+
+  it('falls back to statistical narrative when LLM exceeds 7s budget (MR2)', async () => {
+    // Force AI provider to hang well past the narrative timeout.
+    const provider = jest.requireMock('@/lib/ai/provider') as {
+      generateAIText: jest.Mock;
+    };
+    const originalImpl = provider.generateAIText.getMockImplementation();
+    provider.generateAIText.mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve('slow text'), 30_000))
+    );
+
+    try {
+      const result = await analyzeVoteFinance('P000197');
+
+      expect(result).not.toBeNull();
+      expect(result!.source).toBe('statistical-fallback');
+      expect(result!.narrative).toBeTruthy();
+      // Confidence is halved for statistical fallbacks
+      expect(result!.confidence).toBeLessThanOrEqual(0.5);
+    } finally {
+      // Restore so later tests don't inherit the slow implementation.
+      if (originalImpl) {
+        provider.generateAIText.mockImplementation(originalImpl);
+      } else {
+        provider.generateAIText.mockResolvedValue('AI narrative.');
+      }
+    }
+  }, 15_000);
+
+  it('cold compute completes well under Vercel 60s budget on mocked inputs (MR2)', async () => {
+    // Regression benchmark: with all I/O mocked, the analyzer's own logic
+    // (classification pool, peer fetch, narrative) must finish in a few
+    // seconds. CI uses a 20s ceiling; real prod budget is 55s.
+    mockGetHouseMemberVotes.mockResolvedValue(makeVotes(60));
+    mockGetSenateMemberVotes.mockResolvedValue(makeVotes(60));
+    mockGetSummary.mockResolvedValue({ affectedIndustries: ['HEALTH'] });
+
+    const start = Date.now();
+    const result = await analyzeVoteFinance('P000197');
+    const elapsedMs = Date.now() - start;
+
+    expect(result).not.toBeNull();
+    expect(elapsedMs).toBeLessThan(20_000);
+  }, 30_000);
+
+  it('produces correlations and alignment that are numerically stable (MR2 regression guard)', async () => {
+    // Deterministic vote pattern → fixed overallAlignment and per-sector
+    // alignmentScore. Snapshots the expected values so future structural
+    // changes cannot drift correlations silently.
+    mockGetHouseMemberVotes.mockResolvedValue(makeVotes(30));
+    mockGetSenateMemberVotes.mockResolvedValue([]);
+    mockGetSummary.mockResolvedValue({ affectedIndustries: ['HEALTH'] });
+
+    const result = await analyzeVoteFinance('P000197');
+    expect(result).not.toBeNull();
+
+    // 30 votes, every 3rd is Nay → 20 yea, 10 nay → 0.6667 yea rate
+    const health = result!.correlations.find(c => c.sector === 'HEALTH');
+    expect(health).toBeDefined();
+    expect(health!.alignmentScore).toBeCloseTo(20 / 30, 2);
+    expect(result!.overallAlignment).toBeCloseTo(20 / 30, 2);
   });
 });

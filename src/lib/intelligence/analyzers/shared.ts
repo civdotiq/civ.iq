@@ -11,6 +11,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
@@ -196,13 +197,52 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
 // ── Bill Sector Classification ──────────────────────────────────────
 
 /**
+ * Redis cache for bill-sector classification results.
+ *
+ * Classification runs embeddings + zero-shot NLI — hundreds of ms per call
+ * on a cold path. Reps overlap heavily on which bills they vote on, so
+ * keying by billId alone makes the cache shared across every analyzer
+ * (vote-finance, vote-prediction, influence-chain, influence-graph). Bills
+ * are immutable once introduced, so a 30-day TTL is safe; bump the key
+ * version if the classifier itself changes in a breaking way.
+ */
+const BILL_SECTORS_CACHE_TTL_S = 30 * 24 * 60 * 60;
+const BILL_SECTORS_CACHE_PREFIX = 'insight:bill_sectors:v1:';
+
+/**
  * Get industry sectors for a bill. Four-tier fallback:
  * 1. Cached AI summary (fastest, most accurate)
  * 2. Semantic embedding classification (cosine similarity, handles novel titles)
  * 3. Zero-shot NLI classification (NLI model, understands natural language)
  * 4. Keyword-based inference (static, always works)
+ *
+ * The resolved result is memoized in Redis under `insight:bill_sectors:v1:{billId}`
+ * so the expensive classifier pipeline runs at most once per bill.
  */
 export async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
+  const cacheKey = `${BILL_SECTORS_CACHE_PREFIX}${billId}`;
+
+  try {
+    const cached = await getRedisCache().get<IndustrySector[]>(cacheKey);
+    if (cached && Array.isArray(cached)) {
+      return cached;
+    }
+  } catch {
+    // Cache miss or error — fall through and compute
+  }
+
+  const sectors = await computeBillSectors(billId, billTitle);
+
+  try {
+    await getRedisCache().set(cacheKey, sectors, BILL_SECTORS_CACHE_TTL_S);
+  } catch {
+    // Non-fatal — classification still returns correctly
+  }
+
+  return sectors;
+}
+
+async function computeBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
   // Step 1: Cached AI summary
   try {
     const summary = await BillSummaryCache.getSummary(billId);

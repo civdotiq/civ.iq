@@ -41,22 +41,38 @@ import {
   classifySignal,
   SourceCollector,
 } from './shared';
+import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /**
  * Vote-finance classifies hundreds of bills by sector and computes peer
- * comparison — cold compute can run 40–60s. The shared 55s default was
- * clipping legitimate cold runs, so the first visitor to a rep's page saw
- * null even though the background write eventually populated the cache.
- * 120s covers observed cold paths with headroom.
+ * comparison. Vercel enforces a 60s HTTP function ceiling, so the analyzer
+ * must complete in <55s on a cold path to leave headroom for the cache
+ * write. See `PLAN-money-report-restoration-2026-04.md` (MR2) for the
+ * trim rationale: billId-level sector cache in shared.ts, reduced vote
+ * cap, pooled concurrency, and a short LLM narrative timeout.
  */
-const VOTE_FINANCE_TIMEOUT_MS = 120_000;
-import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
+const VOTE_FINANCE_TIMEOUT_MS = 55_000;
+
+/** LLM narrative budget. Exceeds this → fall back to statistical narrative. */
+const LLM_NARRATIVE_TIMEOUT_MS = 7_000;
+
+/** Max parallel bill-sector classifications. CPU-bound on zero-shot fallback. */
+const CLASSIFY_CONCURRENCY = 8;
 
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
-/** Max votes to fetch for analysis */
-const MAX_VOTES = 200;
+/**
+ * Max votes to fetch and classify for vote-finance correlation.
+ *
+ * Lowered from 200 → 120 as part of MR2 (see
+ * `PLAN-money-report-restoration-2026-04.md`). Spearman correlation and
+ * per-sector yea-rate stabilize well before 120 votes for a full-session
+ * rep; the MIN_VOTES_PER_SECTOR = 10 floor still gates thin sectors, so
+ * trimming just drops tail latency without meaningfully changing the
+ * insight. Only applies here — other analyzers keep their own cap.
+ */
+const MAX_VOTES = 120;
 
 /** Standard disclaimer */
 const DISCLAIMER =
@@ -74,7 +90,7 @@ const DISCLAIMER =
  * On any failure, returns a statistical fallback without AI narrative.
  */
 export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanceInsight | null> {
-  const cacheKey = `insight:vote_finance:v2:${bioguideId}`;
+  const cacheKey = `insight:vote_finance:v3:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -294,36 +310,38 @@ async function fetchContributions(fecId: string) {
 
 /**
  * Classify each vote's bill by industry sector.
- * Uses cached bill summary affectedIndustries first, falls back to policy-area-map.
+ *
+ * Previously batched in serial groups of 10, which pays a full tail-latency
+ * stall at the end of every batch. Now runs a bounded worker pool at
+ * `CLASSIFY_CONCURRENCY` (8) across the entire vote list — the slowest
+ * classification no longer blocks unrelated fast ones. Concurrency is
+ * capped because the zero-shot fallback classifier is CPU-bound on the
+ * serverless runtime and unbounded parallelism thrashes it.
  */
 async function classifyVoteIndustries(rawVotes: RawVote[]): Promise<VoteWithIndustries[]> {
   const results: VoteWithIndustries[] = [];
+  let cursor = 0;
 
-  // Batch lookup bill summaries (limit concurrency)
-  const batchSize = 10;
-  for (let i = 0; i < rawVotes.length; i += batchSize) {
-    const batch = rawVotes.slice(i, i + batchSize);
-    const classified = await Promise.all(
-      batch.map(async vote => {
-        const billId = `${vote.billType}${vote.billNumber}-${vote.billCongress}`;
-        const sectors = await getBillSectors(billId, vote.billTitle);
-
-        if (sectors.length === 0) return null;
-
-        return {
-          billId,
-          billTitle: vote.billTitle,
-          position: vote.position,
-          date: vote.date,
-          sectors,
-        };
-      })
-    );
-
-    for (const item of classified) {
-      if (item) results.push(item);
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const index = cursor++;
+      if (index >= rawVotes.length) return;
+      const vote = rawVotes[index]!;
+      const billId = `${vote.billType}${vote.billNumber}-${vote.billCongress}`;
+      const sectors = await getBillSectors(billId, vote.billTitle);
+      if (sectors.length === 0) continue;
+      results.push({
+        billId,
+        billTitle: vote.billTitle,
+        position: vote.position,
+        date: vote.date,
+        sectors,
+      });
     }
-  }
+  };
+
+  const poolSize = Math.min(CLASSIFY_CONCURRENCY, rawVotes.length);
+  await Promise.all(Array.from({ length: poolSize }, () => worker()));
 
   return results;
 }
@@ -437,6 +455,19 @@ async function cacheAlignmentScore(
   }
 }
 
+/**
+ * Peer comparison uses the state delegation only — not the full chamber.
+ *
+ * MR2 considered sampling 40 peers chamber-wide (prompt §Step 4), but the
+ * premise that peer comparison dominates wall-clock is false: this path
+ * issues one Redis KEYS + one MGET against keys scoped to
+ * `alignment-score:{chamber}:{state}:*`. State delegations cap at ~50
+ * members (House, CA) and often fall below MIN_PEERS (Senate, small
+ * states), which the MIN_PEERS guard already handles by returning null.
+ * Keeping state-scoped delegation preserves the "same-state peer" framing
+ * citizens expect and avoids reshaping the semantic meaning of
+ * `peerGroupLabel` during a performance phase.
+ */
 async function computePeerComparison(
   bioguideId: string,
   stats: ComputedStats,
@@ -521,7 +552,19 @@ ${PLAIN_LANGUAGE_RULES}`;
 
   const fallback = buildStatisticalFallback(data, stats, peer);
 
-  return generateInsightNarrative(systemContext, userPrompt, fallback, '[VoteFinance]');
+  // LLM call has variable latency; cap it so narrative never eats the cold
+  // compute budget. On timeout we degrade to the pre-built statistical
+  // fallback, which is correct enough for a first-visit render — the
+  // cache-warm cron (MR4) will eventually populate AI narratives.
+  try {
+    return await withTimeout(
+      generateInsightNarrative(systemContext, userPrompt, fallback, '[VoteFinance]'),
+      LLM_NARRATIVE_TIMEOUT_MS,
+      'VoteFinanceNarrative'
+    );
+  } catch {
+    return { narrative: fallback, source: 'statistical-fallback' };
+  }
 }
 
 function describeCorrelation(r: number): string {
