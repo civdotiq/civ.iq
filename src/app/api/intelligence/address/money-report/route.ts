@@ -39,8 +39,11 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
-const ANALYZER_TIMEOUT_MS = 30_000;
-const OVERALL_TIMEOUT_MS = 90_000;
+// Plan reference: PLAN-money-report-restoration-2026-04.md (MR3)
+// Budget: vote-finance cold (post-MR2) ≤50s; other analyzers ≤30s. Overall
+// request must fit the Vercel Pro 120s cap with coordination + narrative headroom.
+const ANALYZER_TIMEOUT_MS = 55_000; // matches shared analyzer default; vote-finance is the bottleneck
+const OVERALL_TIMEOUT_MS = 110_000; // 10s headroom under the 120s Vercel cap
 
 const DISCLAIMER =
   'This report card uses public data from FEC, Congress.gov, and Senate lobbying disclosures. ' +
@@ -64,11 +67,50 @@ interface ResolvedDistrict {
 
 type MoneyReportResponse = MoneyReportCardInsight | { error: string };
 
+interface RepAnalysis {
+  metrics: RepMoneyMetrics;
+  errors: InsightError[];
+}
+
+interface MoneyReportBuild {
+  insight: MoneyReportCardInsight;
+  errors: InsightError[];
+}
+
 // ── Shared Pipeline ──────────────────────────────────────────────────
 
 /**
+ * Classify a PromiseSettledResult rejection reason. Errors raised by
+ * `withTimeout` always contain the substring "timed out"; anything else is
+ * treated as a generic upstream error.
+ */
+function errorForRejection(
+  result: PromiseSettledResult<unknown>,
+  metric: string,
+  source: string,
+  bioguideId: string
+): InsightError | null {
+  if (result.status !== 'rejected') return null;
+  const message =
+    result.reason instanceof Error ? result.reason.message : String(result.reason ?? 'unknown');
+  const isTimeout = /timed out/i.test(message);
+  return {
+    source,
+    type: isTimeout ? 'upstream_timeout' : 'upstream_error',
+    message,
+    timestamp: new Date().toISOString(),
+    metric,
+    bioguideId,
+  };
+}
+
+/**
  * Run all four analyzers for a single representative in parallel.
- * Each analyzer is individually timeout-wrapped; failures yield null metrics.
+ * Each analyzer is individually timeout-wrapped; failures yield null metrics
+ * AND a structured per-metric `InsightError` entry so downstream callers can
+ * surface honest "unavailable" states (per `PLAN-money-report-restoration-2026-04.md` MR3).
+ * Must remain `Promise.allSettled` — `Promise.all` would reject the whole rep
+ * on a single analyzer timeout.
  */
 async function analyzeRepresentative(
   bioguideId: string,
@@ -76,7 +118,7 @@ async function analyzeRepresentative(
   party: string,
   chamber: 'House' | 'Senate',
   state: string
-): Promise<RepMoneyMetrics> {
+): Promise<RepAnalysis> {
   const [vfResult, fjResult, vpResult, icResult] = await Promise.allSettled([
     withTimeout(analyzeVoteFinance(bioguideId), ANALYZER_TIMEOUT_MS, `VoteFinance:${bioguideId}`),
     withTimeout(
@@ -96,7 +138,22 @@ async function analyzeRepresentative(
     ),
   ]);
 
-  return {
+  const errors: InsightError[] = [];
+  const vfError = errorForRejection(vfResult, 'voteFinanceCorrelation', 'vote-finance', bioguideId);
+  if (vfError) errors.push(vfError);
+  const fjError = errorForRejection(
+    fjResult,
+    'financeJurisdictionOverlap',
+    'finance-jurisdiction',
+    bioguideId
+  );
+  if (fjError) errors.push(fjError);
+  const vpError = errorForRejection(vpResult, 'independenceScore', 'vote-prediction', bioguideId);
+  if (vpError) errors.push(vpError);
+  const icError = errorForRejection(icResult, 'influenceChainCount', 'influence-chain', bioguideId);
+  if (icError) errors.push(icError);
+
+  const metrics: RepMoneyMetrics = {
     bioguideId,
     name,
     party,
@@ -111,6 +168,8 @@ async function analyzeRepresentative(
     influenceChainCount:
       icResult.status === 'fulfilled' ? (icResult.value?.chains?.length ?? 0) : 0,
   };
+
+  return { metrics, errors };
 }
 
 /**
@@ -163,7 +222,7 @@ function computeAggregates(reps: RepMoneyMetrics[]): DistrictAggregates {
 /**
  * Build the full money report card for a resolved district.
  */
-async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReportCardInsight> {
+async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReportBuild> {
   const { state, district, multiDistrict } = resolved;
   const cacheKey = `insight:money_report:${state}:${district}`;
   const cache = getRedisCache();
@@ -172,7 +231,7 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
   const cached = await cache.get<MoneyReportCardInsight>(cacheKey);
   if (cached) {
     logger.info('[MoneyReport] Cache hit', { state, district });
-    return cached;
+    return { insight: cached, errors: [] };
   }
 
   // Find all reps for this district
@@ -192,7 +251,7 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
   }
 
   // Run analyzers for all reps in parallel
-  const representatives = await Promise.all(
+  const analyses = await Promise.all(
     districtReps.map(rep =>
       analyzeRepresentative(
         rep.bioguideId,
@@ -203,6 +262,9 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
       )
     )
   );
+
+  const representatives = analyses.map(a => a.metrics);
+  const errors = analyses.flatMap(a => a.errors);
 
   const aggregates = computeAggregates(representatives);
 
@@ -280,7 +342,7 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
     logger.warn('[MoneyReport] Cache write failed', { error: (err as Error).message });
   });
 
-  return insight;
+  return { insight, errors };
 }
 
 // ── POST: Address Resolution ─────────────────────────────────────────
@@ -326,14 +388,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<MoneyRepo
       multiDistrict: false,
     };
 
-    const insight = await withTimeout(
+    const { insight, errors } = await withTimeout(
       buildMoneyReport(resolved),
       OVERALL_TIMEOUT_MS,
       'MoneyReportPipeline'
     );
 
     return NextResponse.json(
-      { ...insight, errors: [] as InsightError[], status: 'complete' as const },
+      { ...insight, errors, status: 'complete' as const },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
@@ -383,7 +445,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
       multiDistrict,
     };
 
-    const insight = await withTimeout(
+    const { insight, errors } = await withTimeout(
       buildMoneyReport(resolved),
       OVERALL_TIMEOUT_MS,
       'MoneyReportPipeline'
@@ -395,7 +457,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
       {
         ...insight,
         accuracyNote: ZIP_ACCURACY_NOTE,
-        errors: [] as InsightError[],
+        errors,
         status: 'partial' as const,
       },
       {

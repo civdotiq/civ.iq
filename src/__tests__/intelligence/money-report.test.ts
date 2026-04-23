@@ -257,6 +257,64 @@ describe('POST /api/intelligence/address/money-report', () => {
       expect(rep.influenceChainCount).toBe(3);
     }
   });
+
+  it('surfaces a per-metric timeout error when withTimeout fires', async () => {
+    // Mirrors the message shape that shared.withTimeout() emits on expiry.
+    mockAnalyzeVoteFinance.mockRejectedValue(
+      new Error('[VoteFinance:B001234] Analyzer timed out after 55000ms')
+    );
+
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(data.errors)).toBe(true);
+    expect(data.errors.length).toBe(3); // one per rep
+    const sample = data.errors[0];
+    expect(sample.metric).toBe('voteFinanceCorrelation');
+    expect(sample.source).toBe('vote-finance');
+    expect(sample.type).toBe('upstream_timeout');
+    expect(typeof sample.bioguideId).toBe('string');
+    expect(typeof sample.message).toBe('string');
+    expect(typeof sample.timestamp).toBe('string');
+    // Non-rejected analyzers must not contribute errors.
+    expect(data.errors.some((e: { metric: string }) => e.metric === 'independenceScore')).toBe(
+      false
+    );
+  });
+
+  it('reflects mixed fulfilled/rejected analyzers in metrics and errors', async () => {
+    // Only analyze a single rep to keep assertions precise.
+    mockGetAllRepresentatives.mockResolvedValue([
+      {
+        bioguideId: 'B001234',
+        name: 'Rep Smith',
+        party: 'D',
+        state: 'IL',
+        district: '13',
+        chamber: 'House',
+      },
+    ]);
+    mockAnalyzeVoteFinance.mockRejectedValue(new Error('upstream 503'));
+    // Other analyzers stay fulfilled per setDefaultMocks().
+
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.representatives).toHaveLength(1);
+    const [rep] = data.representatives;
+    expect(rep.voteFinanceCorrelation).toBeNull();
+    expect(rep.financeJurisdictionOverlap).toBe(0.6);
+    expect(rep.independenceScore).toBe(0.3);
+    expect(rep.influenceChainCount).toBe(3);
+    expect(data.errors).toHaveLength(1);
+    expect(data.errors[0].metric).toBe('voteFinanceCorrelation');
+    expect(data.errors[0].type).toBe('upstream_error');
+    expect(data.errors[0].bioguideId).toBe('B001234');
+  });
 });
 
 describe('GET /api/intelligence/address/money-report', () => {

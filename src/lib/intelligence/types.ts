@@ -30,6 +30,10 @@ export interface InsightError {
   message: string;
   /** ISO timestamp when the error occurred. */
   timestamp: string;
+  /** Per-metric attribution when an orchestrator aggregates multiple analyzers (e.g., money-report). */
+  metric?: string;
+  /** Subject identifier when the error is scoped to a single entity (e.g., a representative). */
+  bioguideId?: string;
 }
 
 /** Wrapper for insight API responses with error reporting. */
