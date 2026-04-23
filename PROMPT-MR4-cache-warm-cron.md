@@ -130,7 +130,7 @@ Run this ~30 times back-to-back to cover the full chamber. Log the last response
 
 ## Closeout (fill in before ending the session)
 
-- [ ] Commit SHA: _pending — not yet committed, awaiting user approval._
+- [x] Commit SHA: `58ee7f61`
 - [x] Slice size + schedule chosen + rationale: **SLICE_SIZE=20 per invocation, `*/30 * * * *` schedule (approach (a) from the prompt). Overridable via `WARM_INTEL_SLICE_SIZE` env var for ops + tests. Reps are processed in inner batches of 5 (`REP_CONCURRENCY=5`) so 4 concurrent analyzers × 5 reps ≤ 20 in-flight analyzer calls. Worst-case per-invocation wall time = 4 batches × 55s per-analyzer timeout = ~220s, leaving ~80s headroom under the 300s cron cap. 535 / 20 ≈ 27 invocations per cycle → ~13.5h full chamber cycle.**
 - [ ] Per-slice timing measured against prod: _requires deploy — run `curl -w "%{time_total}\n" …` after deploy._
 - [ ] Manual warm-up run log excerpt: _requires deploy — run ~30 curls back-to-back, grep `[WARM-INTEL]`, paste the last summary showing `nextCursor: 0`._
