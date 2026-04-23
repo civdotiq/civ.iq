@@ -38,19 +38,43 @@ export const ANALYZER_TIMEOUT_MS = 55_000;
  * survive even when the outer `withTimeout` race fires — the analyzer keeps
  * running in the background after a timeout is declared, so per-phase logs
  * are the only way to see *which* phase burned the budget in production.
+ * Also writes into a module-scoped last-phases buffer so a diagnostic HTTP
+ * endpoint can surface timings without requiring Vercel log access.
  *
  * Introduced for MR7 (`PROMPT-MR7-analyzer-timeout-rootcause.md`) to root-cause
  * uniform 55000ms timeouts on vote-finance + vote-prediction. Remove when the
  * root cause is fixed and steady-state production timings are known.
  */
+export interface PhaseEvent {
+  phase: string;
+  phaseMs: number;
+  cumulativeMs: number;
+  meta?: Record<string, unknown>;
+}
+
+// Last-N phase events per analyzer label. Overwrites on each new analyzer run
+// so the diagnostic endpoint always reports the most recent invocation. Not
+// thread-safe across parallel runs in the same process, but good enough for
+// single-invocation diagnostic calls.
+const lastPhases: Map<string, PhaseEvent[]> = new Map();
+
+export function getLastPhases(label: string): PhaseEvent[] | undefined {
+  return lastPhases.get(label);
+}
+
 export function createPhaseTimer(label: string) {
   const start = performance.now();
   let lastMark = start;
+  const events: PhaseEvent[] = [];
+  lastPhases.set(label, events);
   return {
     mark(phase: string, meta?: Record<string, unknown>) {
       const now = performance.now();
       const phaseMs = Math.round(now - lastMark);
       const cumulativeMs = Math.round(now - start);
+      const event: PhaseEvent = { phase, phaseMs, cumulativeMs };
+      if (meta) event.meta = meta;
+      events.push(event);
       logger.info(`${label} [timing]`, { phase, phaseMs, cumulativeMs, ...meta });
       lastMark = now;
     },
