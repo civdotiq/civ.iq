@@ -305,20 +305,14 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
   const contribStart = performance.now();
   const [rawVotes, contributions] = await Promise.all([
     fetchVotes(bioguideId, rep.chamber).then(v => {
-      logger.info('[VotePrediction] [timing]', {
-        phase: 'fetchVotes',
-        phaseMs: Math.round(performance.now() - votesStart),
-        voteCount: v.length,
-      });
+      timer?.record('fetchVotes', performance.now() - votesStart, { voteCount: v.length });
       return v;
     }),
     fecApiService
       .getSampleContributions(fecId, cycle, 500)
       .catch(() => [])
       .then(c => {
-        logger.info('[VotePrediction] [timing]', {
-          phase: 'fetchContributions',
-          phaseMs: Math.round(performance.now() - contribStart),
+        timer?.record('fetchContributions', performance.now() - contribStart, {
           contributionCount: c.length,
         });
         return c;

@@ -78,6 +78,23 @@ export function createPhaseTimer(label: string) {
       logger.info(`${label} [timing]`, { phase, phaseMs, cumulativeMs, ...meta });
       lastMark = now;
     },
+    /**
+     * Record a concurrent sibling completion. Unlike `mark`, does not move
+     * `lastMark`, so the subsequent sequential `mark` still measures the
+     * correct delta. Use from `.then()` callbacks inside a `Promise.all`.
+     */
+    record(phase: string, phaseMs: number, meta?: Record<string, unknown>) {
+      const cumulativeMs = Math.round(performance.now() - start);
+      const event: PhaseEvent = { phase, phaseMs: Math.round(phaseMs), cumulativeMs };
+      if (meta) event.meta = meta;
+      events.push(event);
+      logger.info(`${label} [timing]`, {
+        phase,
+        phaseMs: Math.round(phaseMs),
+        cumulativeMs,
+        ...meta,
+      });
+    },
   };
 }
 

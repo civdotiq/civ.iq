@@ -278,17 +278,11 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
   const contribStart = performance.now();
   const [rawVotes, contributions] = await Promise.all([
     fetchVotes(bioguideId, rep.chamber).then(v => {
-      logger.info('[VoteFinance] [timing]', {
-        phase: 'fetchVotes',
-        phaseMs: Math.round(performance.now() - votesStart),
-        voteCount: v.length,
-      });
+      timer?.record('fetchVotes', performance.now() - votesStart, { voteCount: v.length });
       return v;
     }),
     fetchContributions(fecId).then(c => {
-      logger.info('[VoteFinance] [timing]', {
-        phase: 'fetchContributions',
-        phaseMs: Math.round(performance.now() - contribStart),
+      timer?.record('fetchContributions', performance.now() - contribStart, {
         contributionCount: c.length,
       });
       return c;
