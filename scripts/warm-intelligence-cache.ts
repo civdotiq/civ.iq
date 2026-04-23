@@ -17,6 +17,8 @@ dotenv.config({ path: '.env.local' });
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
+import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
+import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { getRedisCache } from '@/lib/cache/redis-client';
 
 // ── Configuration ────────────────────────────────────────────────────
@@ -72,39 +74,40 @@ async function warmIntelligenceCache() {
         const bioguideId = rep.bioguideId;
         const idx = i + batchIdx + 1;
 
-        // In incremental mode, skip if both cache keys already exist
+        // In incremental mode, skip if all four cache keys already exist
         if (isIncremental) {
-          const fjCached = await redis.get(`insight:finance_jurisdiction:${bioguideId}`);
-          const vfCached = await redis.get(`insight:vote_finance:${bioguideId}`);
-          if (fjCached !== null && vfCached !== null) {
+          const cached = await Promise.all([
+            redis.get(`insight:finance_jurisdiction:${bioguideId}`),
+            redis.get(`insight:vote_finance:${bioguideId}`),
+            redis.get(`insight:vote_prediction:${bioguideId}`),
+            redis.get(`insight:influence_chain:${bioguideId}`),
+          ]);
+          if (cached.every(c => c !== null)) {
             skipped++;
             return;
           }
         }
 
-        let fjStatus = 'ok';
-        let vfStatus = 'ok';
+        const analyzerRuns: { label: string; run: () => Promise<unknown> }[] = [
+          { label: 'fj', run: () => analyzeFinanceJurisdiction(bioguideId) },
+          { label: 'vf', run: () => analyzeVoteFinance(bioguideId) },
+          { label: 'vp', run: () => analyzeVotePrediction(bioguideId) },
+          { label: 'ic', run: () => analyzeInfluenceChains(bioguideId) },
+        ];
 
-        try {
-          await analyzeFinanceJurisdiction(bioguideId);
-        } catch {
-          fjStatus = 'ERR';
+        const results = await Promise.allSettled(analyzerRuns.map(a => a.run()));
+        const statusParts = results.map((r, i) => {
+          const label = analyzerRuns[i]!.label;
+          if (r.status === 'fulfilled') return `${label}: ok`;
           errors++;
-        }
-
-        try {
-          await analyzeVoteFinance(bioguideId);
-        } catch {
-          vfStatus = 'ERR';
-          errors++;
-        }
-
-        if (fjStatus === 'ok' || vfStatus === 'ok') {
+          return `${label}: ERR`;
+        });
+        if (results.some(r => r.status === 'fulfilled')) {
           warmed++;
         }
         const elapsed = ((Date.now() - memberStart) / 1000).toFixed(1);
         log(
-          `[${idx}/${allReps.length}] Warmed ${bioguideId} (${rep.name}) — fj: ${fjStatus}, vf: ${vfStatus}, ${elapsed}s`
+          `[${idx}/${allReps.length}] Warmed ${bioguideId} (${rep.name}) — ${statusParts.join(', ')}, ${elapsed}s`
         );
       })
     );
