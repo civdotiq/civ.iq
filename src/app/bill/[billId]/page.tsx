@@ -5,9 +5,11 @@
 
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Bill } from '@/types/bill';
 import { getBillDisplayStatus } from '@/types/bill';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { parseBillSlug } from '@/lib/data/bill-slug';
 import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
@@ -30,9 +32,15 @@ async function getBillData(billId: string): Promise<Bill | null> {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: BillPageProps): Promise<Metadata> {
   const { billId } = await params;
-  const bill = await getBillData(billId);
+  const parsed = parseBillSlug(billId);
+  if (parsed.kind !== 'canonical') {
+    // Recoverable and invalid cases never render metadata; the page handler
+    // redirects or 404s before the shell is emitted.
+    return {};
+  }
+  const bill = await getBillData(parsed.canonical);
 
-  const title = bill ? `${bill.number}: ${bill.title}` : `Bill ${billId}`;
+  const title = bill ? `${bill.number}: ${bill.title}` : `Bill ${parsed.canonical}`;
   const description = bill
     ? `Learn about ${bill.number} - ${bill.title}. Current status: ${getBillDisplayStatus(bill.status.current)}. Sponsored by ${bill.sponsor.representative.name}.`
     : `Information about bill ${billId}`;
@@ -150,9 +158,19 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
   const { billId } = await params;
   const { from: fromBioguideId, name: fromRepName } = await searchParams;
 
+  const parsed = parseBillSlug(billId);
+  if (parsed.kind === 'invalid') notFound();
+  if (parsed.kind === 'recoverable') {
+    permanentRedirect(`/bill/${parsed.canonical}`);
+  }
+
   return (
     <Suspense fallback={<BillLoading />}>
-      <BillContent billId={billId} fromBioguideId={fromBioguideId} fromRepName={fromRepName} />
+      <BillContent
+        billId={parsed.canonical}
+        fromBioguideId={fromBioguideId}
+        fromRepName={fromRepName}
+      />
     </Suspense>
   );
 }

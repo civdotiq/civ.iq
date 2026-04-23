@@ -9,6 +9,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
@@ -20,6 +21,9 @@ import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { PACPageSchema } from './PACPageSchema';
+
+// FEC committee IDs are a `C` followed by exactly 8 digits (e.g. `C00401224`).
+const FEC_COMMITTEE_ID_PATTERN = /^C\d{8}$/;
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -144,6 +148,58 @@ async function fetchParentOrgSummary(pacName: string): Promise<string | null> {
   }
 }
 
+function CommitteeNotFoundEmptyState({
+  committeeId,
+  cycle,
+}: {
+  committeeId: string;
+  cycle: number;
+}) {
+  return (
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
+      <main className="container mx-auto px-4 py-8">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Influence', href: '/influence' },
+            { label: committeeId, href: `/influence/${committeeId}` },
+          ]}
+          className="mb-6"
+        />
+        <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6 max-w-2xl">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            No FEC data for committee {committeeId}
+          </h1>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            The Federal Election Commission has no recorded filings for this committee in the{' '}
+            {cycle} cycle.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Committee IDs look like <code>C00401224</code>. Double-check the ID, or try a different
+            election cycle.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/influence"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-civiq-blue"
+            >
+              Search committees
+            </Link>
+            <a
+              href={`https://www.fec.gov/data/committee/${committeeId}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black dark:border-[#333333] text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#2a2a2e]"
+            >
+              Look up on FEC.gov
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function getPACTypeExplanation(designation: string | undefined): string | null {
   if (!designation) return null;
   switch (designation) {
@@ -165,12 +221,14 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   const resolvedSearchParams = await searchParams;
   const cycle = parseInt(resolvedSearchParams.cycle ?? '2026', 10);
 
-  if (!committeeId || !/^C\d+$/.test(committeeId)) {
+  if (!FEC_COMMITTEE_ID_PATTERN.test(committeeId)) {
     notFound();
   }
 
   const profile = await getCommitteeProfile(committeeId, cycle);
-  if (!profile) notFound();
+  if (!profile) {
+    return <CommitteeNotFoundEmptyState committeeId={committeeId} cycle={cycle} />;
+  }
 
   // Sector classification + Wikipedia summary for parent org (parallel)
   const classification = categorizePACByName(profile.committee.name);
@@ -222,9 +280,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const resolvedSearchParams = await searchParams;
     const cycle = resolvedSearchParams.cycle ?? '2026';
 
+    if (!FEC_COMMITTEE_ID_PATTERN.test(committeeId)) {
+      return {};
+    }
+
     const committeeInfo = await fecApiService.getCommitteeInfo(committeeId);
     if (!committeeInfo) {
-      return { title: `Committee ${committeeId}` };
+      return {
+        title: `No FEC data for ${committeeId}`,
+        description: `The Federal Election Commission has no recorded filings for committee ${committeeId}.`,
+      };
     }
 
     const classification = categorizePACByName(committeeInfo.name);

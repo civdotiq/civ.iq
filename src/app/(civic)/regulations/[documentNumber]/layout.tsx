@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface LayoutProps {
@@ -6,8 +7,14 @@ interface LayoutProps {
   params: Promise<{ documentNumber: string }>;
 }
 
+// Federal Register document numbers are `YYYY-NNNNN` (5 or 6 trailing digits).
+const DOCUMENT_NUMBER_PATTERN = /^\d{4}-\d{5,6}$/;
+
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
   const { documentNumber } = await params;
+  if (!DOCUMENT_NUMBER_PATTERN.test(documentNumber)) {
+    return {};
+  }
 
   return {
     title: `Regulation ${documentNumber}`,
@@ -24,6 +31,9 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 
 export default async function RegulationDetailLayout({ children, params }: LayoutProps) {
   const { documentNumber } = await params;
+  if (!DOCUMENT_NUMBER_PATTERN.test(documentNumber)) {
+    notFound();
+  }
 
   return (
     <>

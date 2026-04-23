@@ -54,10 +54,18 @@ interface RegulationHearingsResponse {
   };
 }
 
+class FetchError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Failed to fetch: ${res.status}`);
+    throw new FetchError(res.status, `Failed to fetch: ${res.status}`);
   }
   return res.json();
 };
@@ -151,16 +159,20 @@ export default function RegulationDetailPage() {
           </div>
         )}
 
-        {/* Error */}
+        {/* Error / Not found */}
         {docError && !docLoading && (
           <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
             <div className="text-center py-6">
               <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" aria-hidden="true" />
               <p className="text-gray-600 dark:text-gray-400 font-medium">
-                Failed to load regulation details
+                {(docError as FetchError).status === 404
+                  ? 'We could not find this Federal Register document'
+                  : 'Federal Register data is temporarily unavailable'}
               </p>
               <p className="text-sm text-gray-500 mt-1 mb-4">
-                Federal Register Document: {documentNumber}
+                {(docError as FetchError).status === 404
+                  ? `Document number ${documentNumber} is not in the Federal Register.`
+                  : `Document number ${documentNumber}. Try again in a few minutes.`}
               </p>
               <Link
                 href="/regulations"
