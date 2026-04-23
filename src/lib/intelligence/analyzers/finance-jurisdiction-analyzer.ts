@@ -41,6 +41,16 @@ import {
 } from './shared';
 import type { FinanceJurisdictionInsight, PeerComparison } from '../types';
 
+/**
+ * Outcome shape that carries a human-readable `unavailableReason` when the
+ * analyzer returns null. Used by the money-report orchestrator (MR5) to
+ * surface honest per-metric states in the UI.
+ */
+export interface FinanceJurisdictionOutcome {
+  insight: FinanceJurisdictionInsight | null;
+  unavailableReason?: string;
+}
+
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
@@ -62,6 +72,18 @@ const DISCLAIMER =
 export async function analyzeFinanceJurisdiction(
   bioguideId: string
 ): Promise<FinanceJurisdictionInsight | null> {
+  const { insight } = await analyzeFinanceJurisdictionWithReason(bioguideId);
+  return insight;
+}
+
+/**
+ * Richer entry point that surfaces an `unavailableReason` when the analyzer
+ * returns null. Used by the money-report orchestrator so the UI can render
+ * "insufficient-data" with a specific explanation instead of a silent dash.
+ */
+export async function analyzeFinanceJurisdictionWithReason(
+  bioguideId: string
+): Promise<FinanceJurisdictionOutcome> {
   const cacheKey = `insight:finance_jurisdiction:${bioguideId}`;
 
   // 1. Check cache
@@ -70,27 +92,40 @@ export async function analyzeFinanceJurisdiction(
     if (cached) {
       logger.info('[FinanceJurisdiction] Cache hit', { bioguideId });
       trackInsightCacheHit('finance-jurisdiction');
-      return cached;
+      return { insight: cached };
     }
   } catch {
     // Cache miss or error — continue to computation
   }
 
-  // 2-6. Fetch, compute, narrate, cache — all under timeout
-  return withInsightTracking('finance-jurisdiction', () =>
-    withTimeout(computeAndCache(bioguideId, cacheKey), ANALYZER_TIMEOUT_MS, 'FinanceJurisdiction')
+  // 2-6. Fetch, compute, narrate, cache — all under timeout. Use
+  // `withInsightTracking` on the insight only (null ↔ insufficient-data) and
+  // surface `unavailableReason` via the returned outcome.
+  let reason: string | undefined;
+  const insight = await withInsightTracking('finance-jurisdiction', () =>
+    withTimeout(
+      (async () => {
+        const outcome = await computeAndCache(bioguideId, cacheKey);
+        reason = outcome.unavailableReason;
+        return outcome.insight;
+      })(),
+      ANALYZER_TIMEOUT_MS,
+      'FinanceJurisdiction'
+    )
   );
+  return insight ? { insight } : { insight: null, unavailableReason: reason };
 }
 
 async function computeAndCache(
   bioguideId: string,
   cacheKey: string
-): Promise<FinanceJurisdictionInsight | null> {
+): Promise<FinanceJurisdictionOutcome> {
   // 2. Fetch data
-  const data = await fetchData(bioguideId);
-  if (!data) {
-    return null;
+  const fetched = await fetchData(bioguideId);
+  if ('unavailableReason' in fetched) {
+    return { insight: null, unavailableReason: fetched.unavailableReason };
   }
+  const data = fetched;
 
   // 3. Compute statistics
   const stats = computeStatistics(data);
@@ -131,10 +166,12 @@ async function computeAndCache(
   // timestamp in the UI.
   const dataAsOf = freshestDate(data.freshestContributionDate);
   if (!dataAsOf) {
+    const unavailableReason = 'No valid contribution dates in FEC data';
     logger.warn('[FinanceJurisdiction] No valid contribution dates, skipping insight', {
       bioguideId,
+      unavailableReason,
     });
-    return null;
+    return { insight: null, unavailableReason };
   }
 
   const sc = new SourceCollector();
@@ -182,7 +219,7 @@ async function computeAndCache(
     data.sectorDonations
   );
 
-  return insight;
+  return { insight };
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -203,19 +240,31 @@ interface FetchedData {
   freshestContributionDate?: string;
 }
 
-async function fetchData(bioguideId: string): Promise<FetchedData | null> {
+type FetchResult = FetchedData | { unavailableReason: string };
+
+async function fetchData(bioguideId: string): Promise<FetchResult> {
   // Get representative data
   const rep = await getEnhancedRepresentative(bioguideId);
-  if (!rep?.committees?.length) {
-    logger.info('[FinanceJurisdiction] No committee data', { bioguideId });
-    return null;
+  if (!rep) {
+    const unavailableReason = 'Representative not found in current dataset';
+    logger.info('[FinanceJurisdiction] Representative not found', {
+      bioguideId,
+      unavailableReason,
+    });
+    return { unavailableReason };
+  }
+  if (!rep.committees?.length) {
+    const unavailableReason = 'No committee assignments recorded';
+    logger.info('[FinanceJurisdiction] No committee data', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   // Get FEC candidate ID
   const fecId = getFECIdFromBioguide(bioguideId);
   if (!fecId) {
-    logger.info('[FinanceJurisdiction] No FEC mapping', { bioguideId });
-    return null;
+    const unavailableReason = 'No FEC candidate mapping for this representative';
+    logger.info('[FinanceJurisdiction] No FEC mapping', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   // Fetch contributions (sample for speed — full fetch is expensive)
@@ -227,13 +276,15 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
       500
     );
   } catch {
-    logger.warn('[FinanceJurisdiction] FEC fetch failed', { bioguideId, fecId });
-    return null;
+    const unavailableReason = 'FEC contribution fetch failed';
+    logger.warn('[FinanceJurisdiction] FEC fetch failed', { bioguideId, fecId, unavailableReason });
+    return { unavailableReason };
   }
 
   if (!contributions.length) {
-    logger.info('[FinanceJurisdiction] No contributions found', { bioguideId });
-    return null;
+    const unavailableReason = 'No FEC contributions for this cycle';
+    logger.info('[FinanceJurisdiction] No contributions found', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   // Track freshest contribution date before aggregation loses individual dates

@@ -682,16 +682,35 @@ export interface InfluenceGraphInsight extends InsightBase {
 
 // ── Money Report Card ───────────────────────────────────────────────
 
+/**
+ * Per-metric status for the Money Report Card. Replaces silent nulls so
+ * the UI can distinguish "we have the number" from "we don't yet" from
+ * "this rep genuinely doesn't have enough data" from "analyzer errored".
+ *
+ * See `PROMPT-MR5-honest-empty-states.md` and `.claude/rules/design-system.md`.
+ */
+export type MetricStatus =
+  | { state: 'ready'; value: number }
+  | { state: 'computing' }
+  | { state: 'insufficient-data'; reason: string }
+  | { state: 'unavailable'; reason: string };
+
 export interface RepMoneyMetrics {
   bioguideId: string;
   name: string;
   party: string;
   chamber: 'House' | 'Senate';
   state: string;
+  voteFinance: MetricStatus;
+  financeJurisdiction: MetricStatus;
+  independence: MetricStatus;
+  influenceChainCount: number;
+  // TODO(mr6): remove legacy fields once mesh/scorecard consumers migrate.
+  // Derived from the MetricStatus fields above: value when state === 'ready',
+  // else null. Kept for one release to avoid breaking downstream consumers.
   voteFinanceCorrelation: number | null;
   financeJurisdictionOverlap: number | null;
   independenceScore: number | null;
-  influenceChainCount: number;
 }
 
 export interface DistrictAggregates {

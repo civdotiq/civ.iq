@@ -7,7 +7,37 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MoneyReportCard } from './MoneyReportCard';
-import type { MoneyReportCardInsight } from '@/lib/intelligence/types';
+import type {
+  MoneyReportCardInsight,
+  RepMoneyMetrics,
+  MetricStatus,
+} from '@/lib/intelligence/types';
+
+function ready(value: number): MetricStatus {
+  return { state: 'ready', value };
+}
+
+function makeRep(
+  overrides: Partial<RepMoneyMetrics> & Pick<RepMoneyMetrics, 'bioguideId' | 'name'>
+): RepMoneyMetrics {
+  const voteFinance = overrides.voteFinance ?? ready(0);
+  const financeJurisdiction = overrides.financeJurisdiction ?? ready(0);
+  const independence = overrides.independence ?? ready(0);
+  return {
+    party: 'D',
+    chamber: 'House',
+    state: 'IL',
+    influenceChainCount: 0,
+    ...overrides,
+    voteFinance,
+    financeJurisdiction,
+    independence,
+    voteFinanceCorrelation: voteFinance.state === 'ready' ? voteFinance.value : null,
+    financeJurisdictionOverlap:
+      financeJurisdiction.state === 'ready' ? financeJurisdiction.value : null,
+    independenceScore: independence.state === 'ready' ? independence.value : null,
+  };
+}
 
 function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyReportCardInsight {
   return {
@@ -22,39 +52,33 @@ function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyRepo
     multiDistrict: false,
     narrative: 'Your representatives show moderate correlation between donors and votes.',
     representatives: [
-      {
+      makeRep({
         bioguideId: 'D000001',
         name: 'Dick Durbin',
-        party: 'D',
         chamber: 'Senate',
-        state: 'IL',
-        voteFinanceCorrelation: 0.35,
-        financeJurisdictionOverlap: 0.42,
-        independenceScore: 0.65,
+        voteFinance: ready(0.35),
+        financeJurisdiction: ready(0.42),
+        independence: ready(0.65),
         influenceChainCount: 12,
-      },
-      {
+      }),
+      makeRep({
         bioguideId: 'D000002',
         name: 'Tammy Duckworth',
-        party: 'D',
         chamber: 'Senate',
-        state: 'IL',
-        voteFinanceCorrelation: 0.28,
-        financeJurisdictionOverlap: 0.38,
-        independenceScore: 0.72,
+        voteFinance: ready(0.28),
+        financeJurisdiction: ready(0.38),
+        independence: ready(0.72),
         influenceChainCount: 8,
-      },
-      {
+      }),
+      makeRep({
         bioguideId: 'D000003',
         name: 'Nikki Budzinski',
-        party: 'D',
         chamber: 'House',
-        state: 'IL',
-        voteFinanceCorrelation: 0.45,
-        financeJurisdictionOverlap: 0.55,
-        independenceScore: 0.58,
+        voteFinance: ready(0.45),
+        financeJurisdiction: ready(0.55),
+        independence: ready(0.58),
         influenceChainCount: 5,
-      },
+      }),
     ],
     aggregates: {
       averageCorrelation: 0.36,
@@ -115,27 +139,85 @@ describe('MoneyReportCard', () => {
     expect(screen.getAllByText('Votes independently of party + donors')).toHaveLength(3);
   });
 
-  it('handles null metrics gracefully', () => {
+  it('renders insufficient-data state with tooltip when analyzer surfaces a reason', () => {
     const insight = makeInsight({
       representatives: [
-        {
+        makeRep({
           bioguideId: 'N000001',
           name: 'New Rep',
           party: 'R',
-          chamber: 'House',
-          state: 'IL',
-          voteFinanceCorrelation: null,
-          financeJurisdictionOverlap: null,
-          independenceScore: null,
-          influenceChainCount: 0,
-        },
+          voteFinance: {
+            state: 'insufficient-data',
+            reason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+          },
+          financeJurisdiction: {
+            state: 'insufficient-data',
+            reason: 'No FEC contributions for this cycle',
+          },
+          independence: {
+            state: 'insufficient-data',
+            reason: 'Model requires 20 confident predictions; only 3 available',
+          },
+        }),
       ],
     });
     render(<MoneyReportCard insight={insight} />);
     expect(screen.getByRole('link', { name: 'New Rep' })).toBeInTheDocument();
-    // Null metrics render as em-dash
-    const dashes = screen.getAllByText('\u2014');
-    expect(dashes.length).toBeGreaterThanOrEqual(3);
+    const empties = screen.getAllByText('Not enough data yet');
+    expect(empties.length).toBe(3);
+    expect(empties[0]).toHaveAttribute(
+      'title',
+      'Fewer than 10 sector-classified votes in the 119th Congress'
+    );
+  });
+
+  it('renders unavailable state in amber with tooltip', () => {
+    const insight = makeInsight({
+      representatives: [
+        makeRep({
+          bioguideId: 'U000001',
+          name: 'Timeout Rep',
+          voteFinance: { state: 'unavailable', reason: 'timeout' },
+          financeJurisdiction: { state: 'unavailable', reason: 'analyzer-error' },
+          independence: { state: 'unavailable', reason: 'timeout' },
+        }),
+      ],
+    });
+    render(<MoneyReportCard insight={insight} />);
+    const labels = screen.getAllByText('Unavailable');
+    expect(labels.length).toBe(3);
+    expect(labels[0]).toHaveClass('text-amber-600');
+    expect(labels[0]).toHaveAttribute('title', 'timeout');
+  });
+
+  it('renders computing state without showing a value', () => {
+    const insight = makeInsight({
+      representatives: [
+        makeRep({
+          bioguideId: 'C000001',
+          name: 'Warming Rep',
+          voteFinance: { state: 'computing' },
+          financeJurisdiction: { state: 'computing' },
+          independence: { state: 'computing' },
+        }),
+      ],
+    });
+    render(<MoneyReportCard insight={insight} />);
+    const labels = screen.getAllByText('Warming analysis…');
+    expect(labels.length).toBe(3);
+  });
+
+  it('keeps legacy numeric fields in sync with ready MetricStatus', () => {
+    const rep = makeRep({
+      bioguideId: 'L000001',
+      name: 'Legacy Rep',
+      voteFinance: ready(0.35),
+      financeJurisdiction: ready(0.42),
+      independence: ready(0.65),
+    });
+    expect(rep.voteFinanceCorrelation).toBe(0.35);
+    expect(rep.financeJurisdictionOverlap).toBe(0.42);
+    expect(rep.independenceScore).toBe(0.65);
   });
 
   it('shows empty state when no reps', () => {
@@ -182,17 +264,17 @@ describe('MoneyReportCard', () => {
     const insight = makeInsight();
     // Has 3 reps — exactly at the limit, no toggle needed
     // Add a 4th rep to trigger the toggle
-    insight.representatives.push({
-      bioguideId: 'D000004',
-      name: 'Fourth Rep',
-      party: 'R',
-      chamber: 'House',
-      state: 'IL',
-      voteFinanceCorrelation: 0.5,
-      financeJurisdictionOverlap: 0.5,
-      independenceScore: 0.5,
-      influenceChainCount: 3,
-    });
+    insight.representatives.push(
+      makeRep({
+        bioguideId: 'D000004',
+        name: 'Fourth Rep',
+        party: 'R',
+        voteFinance: ready(0.5),
+        financeJurisdiction: ready(0.5),
+        independence: ready(0.5),
+        influenceChainCount: 3,
+      })
+    );
     render(<MoneyReportCard insight={insight} />);
 
     // Should show toggle button

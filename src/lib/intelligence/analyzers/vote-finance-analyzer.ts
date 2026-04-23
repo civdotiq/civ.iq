@@ -44,6 +44,17 @@ import {
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
 /**
+ * Outcome shape that carries a human-readable `unavailableReason` when the
+ * analyzer returns null. Used by the money-report orchestrator (MR5) to
+ * surface honest per-metric states in the UI. Existing callers continue to
+ * use `analyzeVoteFinance` which returns `T | null` directly.
+ */
+export interface VoteFinanceOutcome {
+  insight: VoteFinanceInsight | null;
+  unavailableReason?: string;
+}
+
+/**
  * Vote-finance classifies hundreds of bills by sector and computes peer
  * comparison. Vercel enforces a 60s HTTP function ceiling, so the analyzer
  * must complete in <55s on a cold path to leave headroom for the cache
@@ -90,6 +101,18 @@ const DISCLAIMER =
  * On any failure, returns a statistical fallback without AI narrative.
  */
 export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanceInsight | null> {
+  const { insight } = await analyzeVoteFinanceWithReason(bioguideId);
+  return insight;
+}
+
+/**
+ * Richer entry point that surfaces an `unavailableReason` when the analyzer
+ * returns null. Used by the money-report orchestrator so the UI can render
+ * "insufficient-data" with a specific explanation instead of a silent dash.
+ */
+export async function analyzeVoteFinanceWithReason(
+  bioguideId: string
+): Promise<VoteFinanceOutcome> {
   const cacheKey = `insight:vote_finance:v3:${bioguideId}`;
 
   // 1. Check cache
@@ -98,33 +121,44 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
     if (cached) {
       logger.info('[VoteFinance] Cache hit', { bioguideId });
       trackInsightCacheHit('vote-finance');
-      return cached;
+      return { insight: cached };
     }
   } catch {
     // Cache miss or error — continue
   }
 
-  // 2-6. Fetch, compute, narrate, cache — all under timeout
-  return withInsightTracking('vote-finance', () =>
-    withTimeout(computeAndCache(bioguideId, cacheKey), VOTE_FINANCE_TIMEOUT_MS, 'VoteFinance')
+  // 2-6. Fetch, compute, narrate, cache — all under timeout. Use
+  // `withInsightTracking` on the insight only (null ↔ insufficient-data) and
+  // surface `unavailableReason` via the returned outcome.
+  let reason: string | undefined;
+  const insight = await withInsightTracking('vote-finance', () =>
+    withTimeout(
+      (async () => {
+        const outcome = await computeAndCache(bioguideId, cacheKey);
+        reason = outcome.unavailableReason;
+        return outcome.insight;
+      })(),
+      VOTE_FINANCE_TIMEOUT_MS,
+      'VoteFinance'
+    )
   );
+  return insight ? { insight } : { insight: null, unavailableReason: reason };
 }
 
-async function computeAndCache(
-  bioguideId: string,
-  cacheKey: string
-): Promise<VoteFinanceInsight | null> {
+async function computeAndCache(bioguideId: string, cacheKey: string): Promise<VoteFinanceOutcome> {
   // 2. Fetch data
-  const data = await fetchData(bioguideId);
-  if (!data) {
-    return null;
+  const fetched = await fetchData(bioguideId);
+  if ('unavailableReason' in fetched) {
+    return { insight: null, unavailableReason: fetched.unavailableReason };
   }
+  const data = fetched;
 
   // 3. Compute statistics
   const stats = computeStatistics(data);
   if (!stats) {
-    logger.info('[VoteFinance] Insufficient data for analysis', { bioguideId });
-    return null;
+    const reason = 'Fewer than 10 sector-classified votes in the 119th Congress';
+    logger.info('[VoteFinance] Insufficient data for analysis', { bioguideId, reason });
+    return { insight: null, unavailableReason: reason };
   }
 
   // 4. Peer comparison
@@ -187,7 +221,7 @@ async function computeAndCache(
   await cacheInsight(cacheKey, insight);
   await cacheAlignmentScore(bioguideId, stats.overallAlignment, data);
 
-  return insight;
+  return { insight };
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -210,19 +244,23 @@ interface FetchedData {
   totalDonations: number;
 }
 
-async function fetchData(bioguideId: string): Promise<FetchedData | null> {
+type FetchResult = FetchedData | { unavailableReason: string };
+
+async function fetchData(bioguideId: string): Promise<FetchResult> {
   // Get representative data
   const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) {
-    logger.info('[VoteFinance] Representative not found', { bioguideId });
-    return null;
+    const unavailableReason = 'Representative not found in current dataset';
+    logger.info('[VoteFinance] Representative not found', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   // Get FEC candidate ID
   const fecId = getFECIdFromBioguide(bioguideId);
   if (!fecId) {
-    logger.info('[VoteFinance] No FEC mapping', { bioguideId });
-    return null;
+    const unavailableReason = 'No FEC candidate mapping for this representative';
+    logger.info('[VoteFinance] No FEC mapping', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   // Fetch votes and contributions in parallel
@@ -232,12 +270,16 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   ]);
 
   if (!rawVotes.length || !contributions.length) {
+    const unavailableReason = !rawVotes.length
+      ? 'No voting record available for the 119th Congress'
+      : 'No FEC contribution data for this cycle';
     logger.info('[VoteFinance] Insufficient vote or finance data', {
       bioguideId,
       votes: rawVotes.length,
       contributions: contributions.length,
+      unavailableReason,
     });
-    return null;
+    return { unavailableReason };
   }
 
   // Classify votes by industry

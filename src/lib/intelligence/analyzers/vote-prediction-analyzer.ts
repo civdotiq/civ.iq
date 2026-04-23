@@ -41,6 +41,16 @@ import {
 } from '../ml/vote-predictor';
 import type { VotePredictionInsight, PeerComparison as PeerComparisonType } from '../types';
 
+/**
+ * Outcome shape that carries a human-readable `unavailableReason` when the
+ * analyzer returns null. Used by the money-report orchestrator (MR5) to
+ * surface honest per-metric states in the UI.
+ */
+export interface VotePredictionOutcome {
+  insight: VotePredictionInsight | null;
+  unavailableReason?: string;
+}
+
 /** Redis cache TTL: 7 days */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
@@ -67,11 +77,24 @@ const DISCLAIMER =
 export async function analyzeVotePrediction(
   bioguideId: string
 ): Promise<VotePredictionInsight | null> {
+  const { insight } = await analyzeVotePredictionWithReason(bioguideId);
+  return insight;
+}
+
+/**
+ * Richer entry point that surfaces an `unavailableReason` when the analyzer
+ * returns null. Used by the money-report orchestrator so the UI can render
+ * "insufficient-data" with a specific explanation instead of a silent dash.
+ */
+export async function analyzeVotePredictionWithReason(
+  bioguideId: string
+): Promise<VotePredictionOutcome> {
   // Check if model is available
   const metadata = getModelMetadata();
   if (!metadata) {
-    logger.info('[VotePrediction] Model not available — skipping');
-    return null;
+    const unavailableReason = 'ONNX model unavailable in this deployment';
+    logger.info('[VotePrediction] Model not available — skipping', { unavailableReason });
+    return { insight: null, unavailableReason };
   }
 
   const cacheKey = `insight:vote_prediction:${bioguideId}`;
@@ -82,29 +105,37 @@ export async function analyzeVotePrediction(
     if (cached) {
       logger.info('[VotePrediction] Cache hit', { bioguideId });
       trackInsightCacheHit('vote-prediction');
-      return cached;
+      return { insight: cached };
     }
   } catch {
     // Cache miss — continue
   }
 
   // 2-6. Compute under timeout. Swallow throws (timeout, upstream API failure,
-  // ONNX runtime crash) into `null` so the route returns 404 "unavailable"
-  // rather than 500. withInsightTracking records the outcome either way.
+  // ONNX runtime crash) into an unavailable outcome so the route returns
+  // "unavailable" rather than 500. withInsightTracking records the outcome
+  // either way. `reason` is captured via closure so the wrapper can surface
+  // the analyzer's per-reason detail without leaking it through tracking.
+  let reason: string | undefined;
   try {
-    return await withInsightTracking('vote-prediction', () =>
+    const insight = await withInsightTracking('vote-prediction', () =>
       withTimeout(
-        computeAndCache(bioguideId, cacheKey, metadata),
+        (async () => {
+          const outcome = await computeAndCache(bioguideId, cacheKey, metadata);
+          reason = outcome.unavailableReason;
+          return outcome.insight;
+        })(),
         ANALYZER_TIMEOUT_MS,
         'VotePrediction'
       )
     );
+    return insight ? { insight } : { insight: null, unavailableReason: reason };
   } catch (error) {
     logger.warn('[VotePrediction] Analyzer failed — returning null', {
       bioguideId,
       error: (error as Error).message,
     });
-    return null;
+    return { insight: null, unavailableReason: 'Vote prediction analyzer error' };
   }
 }
 
@@ -112,20 +143,25 @@ async function computeAndCache(
   bioguideId: string,
   cacheKey: string,
   metadata: NonNullable<ReturnType<typeof getModelMetadata>>
-): Promise<VotePredictionInsight | null> {
+): Promise<VotePredictionOutcome> {
   // 2. Fetch data
-  const data = await fetchData(bioguideId);
-  if (!data) return null;
+  const fetched = await fetchData(bioguideId);
+  if ('unavailableReason' in fetched) {
+    return { insight: null, unavailableReason: fetched.unavailableReason };
+  }
+  const data = fetched;
 
   // 3. Run predictions for each vote
   const predictions = await computePredictions(data, metadata);
   if (predictions.confidentPredictions < MIN_CONFIDENT_PREDICTIONS) {
+    const unavailableReason = `Model requires ${MIN_CONFIDENT_PREDICTIONS} confident predictions; only ${predictions.confidentPredictions} available`;
     logger.info('[VotePrediction] Insufficient confident predictions', {
       bioguideId,
       confidentPredictions: predictions.confidentPredictions,
       minimum: MIN_CONFIDENT_PREDICTIONS,
+      unavailableReason,
     });
-    return null;
+    return { insight: null, unavailableReason };
   }
 
   // 4. Peer comparison
@@ -205,7 +241,7 @@ async function computeAndCache(
     // Non-fatal
   }
 
-  return insight;
+  return { insight };
 }
 
 // ── Data Fetching ────────────────────────────────────────────────────
@@ -232,17 +268,21 @@ interface FetchedData {
   votesWithSectors: number;
 }
 
-async function fetchData(bioguideId: string): Promise<FetchedData | null> {
+type FetchResult = FetchedData | { unavailableReason: string };
+
+async function fetchData(bioguideId: string): Promise<FetchResult> {
   const rep = await getEnhancedRepresentative(bioguideId);
   if (!rep) {
-    logger.info('[VotePrediction] Representative not found', { bioguideId });
-    return null;
+    const unavailableReason = 'Representative not found in current dataset';
+    logger.info('[VotePrediction] Representative not found', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   const fecId = getFECIdFromBioguide(bioguideId);
   if (!fecId) {
-    logger.info('[VotePrediction] No FEC mapping', { bioguideId });
-    return null;
+    const unavailableReason = 'No FEC candidate mapping for this representative';
+    logger.info('[VotePrediction] No FEC mapping', { bioguideId, unavailableReason });
+    return { unavailableReason };
   }
 
   const cycle = getCurrentElectionCycle();
@@ -253,12 +293,16 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   ]);
 
   if (!rawVotes.length || !contributions.length) {
+    const unavailableReason = !rawVotes.length
+      ? 'No voting record available for the 119th Congress'
+      : 'No FEC contribution data for this cycle';
     logger.info('[VotePrediction] Insufficient data', {
       bioguideId,
       votes: rawVotes.length,
       contributions: contributions.length,
+      unavailableReason,
     });
-    return null;
+    return { unavailableReason };
   }
 
   // Build donor profile

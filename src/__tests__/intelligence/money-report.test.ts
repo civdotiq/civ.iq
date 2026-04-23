@@ -53,16 +53,20 @@ jest.mock('@/services/core/representatives-core.service', () => ({
 const mockAnalyzeVoteFinance = jest.fn();
 jest.mock('@/lib/intelligence/analyzers/vote-finance-analyzer', () => ({
   analyzeVoteFinance: (...args: unknown[]) => mockAnalyzeVoteFinance(...args),
+  analyzeVoteFinanceWithReason: (...args: unknown[]) => mockAnalyzeVoteFinance(...args),
 }));
 
 const mockAnalyzeFinanceJurisdiction = jest.fn();
 jest.mock('@/lib/intelligence/analyzers/finance-jurisdiction-analyzer', () => ({
   analyzeFinanceJurisdiction: (...args: unknown[]) => mockAnalyzeFinanceJurisdiction(...args),
+  analyzeFinanceJurisdictionWithReason: (...args: unknown[]) =>
+    mockAnalyzeFinanceJurisdiction(...args),
 }));
 
 const mockAnalyzeVotePrediction = jest.fn();
 jest.mock('@/lib/intelligence/analyzers/vote-prediction-analyzer', () => ({
   analyzeVotePrediction: (...args: unknown[]) => mockAnalyzeVotePrediction(...args),
+  analyzeVotePredictionWithReason: (...args: unknown[]) => mockAnalyzeVotePrediction(...args),
 }));
 
 const mockAnalyzeInfluenceChains = jest.fn();
@@ -143,9 +147,11 @@ function setDefaultMocks(): void {
 
   mockGetAllRepresentatives.mockResolvedValue(DEFAULT_REPS);
 
-  mockAnalyzeVoteFinance.mockResolvedValue({ overallCorrelation: 0.45 });
-  mockAnalyzeFinanceJurisdiction.mockResolvedValue({ overlapScore: 0.6 });
-  mockAnalyzeVotePrediction.mockResolvedValue({ independenceScore: { score: 0.3 } });
+  mockAnalyzeVoteFinance.mockResolvedValue({ insight: { overallCorrelation: 0.45 } });
+  mockAnalyzeFinanceJurisdiction.mockResolvedValue({ insight: { overlapScore: 0.6 } });
+  mockAnalyzeVotePrediction.mockResolvedValue({
+    insight: { independenceScore: { score: 0.3 } },
+  });
   mockAnalyzeInfluenceChains.mockResolvedValue({ chains: [1, 2, 3] });
 
   mockGenerateInsightNarrative.mockResolvedValue({
@@ -249,12 +255,62 @@ describe('POST /api/intelligence/address/money-report', () => {
     // voteFinanceCorrelation should be null for all reps since the analyzer rejected
     for (const rep of data.representatives) {
       expect(rep.voteFinanceCorrelation).toBeNull();
+      expect(rep.voteFinance.state).toBe('unavailable');
     }
     // Other analyzers should still have produced values
     for (const rep of data.representatives) {
       expect(rep.financeJurisdictionOverlap).toBe(0.6);
+      expect(rep.financeJurisdiction).toEqual({ state: 'ready', value: 0.6 });
       expect(rep.independenceScore).toBe(0.3);
+      expect(rep.independence).toEqual({ state: 'ready', value: 0.3 });
       expect(rep.influenceChainCount).toBe(3);
+    }
+  });
+
+  it('maps fulfilled-with-null + reason to insufficient-data MetricStatus', async () => {
+    mockAnalyzeVoteFinance.mockResolvedValue({
+      insight: null,
+      unavailableReason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+    });
+
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    for (const rep of data.representatives) {
+      expect(rep.voteFinance).toEqual({
+        state: 'insufficient-data',
+        reason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+      });
+      expect(rep.voteFinanceCorrelation).toBeNull();
+    }
+  });
+
+  it('maps withTimeout rejection to unavailable MetricStatus with timeout reason', async () => {
+    mockAnalyzeVoteFinance.mockRejectedValue(
+      new Error('[VoteFinance:B001234] Analyzer timed out after 55000ms')
+    );
+
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    for (const rep of data.representatives) {
+      expect(rep.voteFinance).toEqual({ state: 'unavailable', reason: 'timeout' });
+    }
+  });
+
+  it('maps fulfilled-with-value to ready MetricStatus with value', async () => {
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    for (const rep of data.representatives) {
+      expect(rep.voteFinance).toEqual({ state: 'ready', value: 0.45 });
+      expect(rep.voteFinanceCorrelation).toBe(0.45);
     }
   });
 

@@ -21,9 +21,9 @@ import { getRedisCache } from '@/lib/cache/redis-client';
 import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
 import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
-import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
+import { analyzeVoteFinanceWithReason } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
+import { analyzeFinanceJurisdictionWithReason } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
+import { analyzeVotePredictionWithReason } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { confidenceScore, mean } from '@/lib/intelligence/statistics/civic-stats';
 import { generateInsightNarrative, withTimeout } from '@/lib/intelligence/analyzers/shared';
@@ -32,6 +32,7 @@ import type {
   RepMoneyMetrics,
   DistrictAggregates,
   InsightError,
+  MetricStatus,
 } from '@/lib/intelligence/types';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 
@@ -120,14 +121,18 @@ async function analyzeRepresentative(
   state: string
 ): Promise<RepAnalysis> {
   const [vfResult, fjResult, vpResult, icResult] = await Promise.allSettled([
-    withTimeout(analyzeVoteFinance(bioguideId), ANALYZER_TIMEOUT_MS, `VoteFinance:${bioguideId}`),
     withTimeout(
-      analyzeFinanceJurisdiction(bioguideId),
+      analyzeVoteFinanceWithReason(bioguideId),
+      ANALYZER_TIMEOUT_MS,
+      `VoteFinance:${bioguideId}`
+    ),
+    withTimeout(
+      analyzeFinanceJurisdictionWithReason(bioguideId),
       ANALYZER_TIMEOUT_MS,
       `FinanceJurisdiction:${bioguideId}`
     ),
     withTimeout(
-      analyzeVotePrediction(bioguideId),
+      analyzeVotePredictionWithReason(bioguideId),
       ANALYZER_TIMEOUT_MS,
       `VotePrediction:${bioguideId}`
     ),
@@ -153,23 +158,74 @@ async function analyzeRepresentative(
   const icError = errorForRejection(icResult, 'influenceChainCount', 'influence-chain', bioguideId);
   if (icError) errors.push(icError);
 
+  const voteFinance = toMetricStatus(
+    vfResult,
+    outcome => outcome.insight?.overallCorrelation ?? null
+  );
+  const financeJurisdiction = toMetricStatus(
+    fjResult,
+    outcome => outcome.insight?.overlapScore ?? null
+  );
+  const independence = toMetricStatus(
+    vpResult,
+    outcome => outcome.insight?.independenceScore?.score ?? null
+  );
+
   const metrics: RepMoneyMetrics = {
     bioguideId,
     name,
     party,
     chamber,
     state,
-    voteFinanceCorrelation:
-      vfResult.status === 'fulfilled' ? (vfResult.value?.overallCorrelation ?? null) : null,
-    financeJurisdictionOverlap:
-      fjResult.status === 'fulfilled' ? (fjResult.value?.overlapScore ?? null) : null,
-    independenceScore:
-      vpResult.status === 'fulfilled' ? (vpResult.value?.independenceScore?.score ?? null) : null,
+    voteFinance,
+    financeJurisdiction,
+    independence,
     influenceChainCount:
       icResult.status === 'fulfilled' ? (icResult.value?.chains?.length ?? 0) : 0,
+    // Legacy fields derived from MetricStatus for downstream consumers (mesh,
+    // scorecard). Removed in MR6 once those consumers read MetricStatus directly.
+    voteFinanceCorrelation: voteFinance.state === 'ready' ? voteFinance.value : null,
+    financeJurisdictionOverlap:
+      financeJurisdiction.state === 'ready' ? financeJurisdiction.value : null,
+    independenceScore: independence.state === 'ready' ? independence.value : null,
   };
 
   return { metrics, errors };
+}
+
+/**
+ * Collapse a settled analyzer outcome into a honest per-metric UI state.
+ *
+ *  - rejected → `unavailable` (orchestrator-level timeout or analyzer error)
+ *  - fulfilled + numeric value → `ready`
+ *  - fulfilled + null + unavailableReason → `insufficient-data` (analyzer
+ *    ran but the rep genuinely lacks enough data for a number)
+ *  - fulfilled + null without reason → `unavailable` (defensive default)
+ *
+ * `computing` is emitted by the warm-cron path; from the request hot path we
+ * never speculatively mark a metric as computing without a cache-side flag.
+ */
+function toMetricStatus<T>(
+  result: PromiseSettledResult<{ insight: T | null; unavailableReason?: string }>,
+  extract: (outcome: { insight: T | null; unavailableReason?: string }) => number | null
+): MetricStatus {
+  if (result.status === 'rejected') {
+    const message =
+      result.reason instanceof Error ? result.reason.message : String(result.reason ?? 'unknown');
+    const isTimeout = /timed out/i.test(message);
+    return { state: 'unavailable', reason: isTimeout ? 'timeout' : 'analyzer-error' };
+  }
+
+  const value = extract(result.value);
+  if (value !== null) {
+    return { state: 'ready', value };
+  }
+
+  if (result.value.unavailableReason) {
+    return { state: 'insufficient-data', reason: result.value.unavailableReason };
+  }
+
+  return { state: 'unavailable', reason: 'analyzer-error' };
 }
 
 /**

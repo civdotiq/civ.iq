@@ -11,7 +11,11 @@ import { ConfidenceBadge } from './ConfidenceBadge';
 import { SignalBadge } from './SignalBadge';
 import { SourceCitation } from './SourceCitation';
 import { InsightDisclaimer } from './InsightDisclaimer';
-import type { MoneyReportCardInsight, RepMoneyMetrics } from '@/lib/intelligence/types';
+import type {
+  MoneyReportCardInsight,
+  RepMoneyMetrics,
+  MetricStatus,
+} from '@/lib/intelligence/types';
 
 interface MoneyReportCardProps {
   insight: MoneyReportCardInsight;
@@ -35,30 +39,58 @@ function partyBorderColor(party: string): string {
   return 'border-gray-400';
 }
 
-function PercentageBar({ value, label }: { value: number | null; label: string }) {
-  if (value === null) {
+function PercentageBar({ status, label }: { status: MetricStatus; label: string }) {
+  if (status.state === 'ready') {
+    const widthPct = Math.min(Math.max(status.value * 100, 0), 100);
     return (
       <div className="mb-2">
         <div className="flex justify-between mb-1">
           <span className="type-xs text-gray-600">{label}</span>
-          <span className="type-xs text-gray-400">{'\u2014'}</span>
+          <span className="type-xs text-gray-900 font-medium">{pct(status.value)}</span>
+        </div>
+        <div className="h-2 bg-gray-100 border border-gray-200">
+          <div className="h-full bg-gray-700" style={{ width: `${widthPct}%` }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (status.state === 'computing') {
+    return (
+      <div className="mb-2">
+        <div className="flex justify-between mb-1">
+          <span className="type-xs text-gray-600">{label}</span>
+          <span className="type-xs text-gray-500">Warming analysis…</span>
+        </div>
+        <div className="h-2 bg-gray-100 border border-gray-200" aria-busy="true" />
+      </div>
+    );
+  }
+
+  if (status.state === 'insufficient-data') {
+    return (
+      <div className="mb-2">
+        <div className="flex justify-between mb-1">
+          <span className="type-xs text-gray-600">{label}</span>
+          <span className="type-xs text-gray-500" title={status.reason}>
+            Not enough data yet
+          </span>
         </div>
         <div className="h-2 bg-gray-100 border border-gray-200" />
       </div>
     );
   }
 
-  const widthPct = Math.min(Math.max(value * 100, 0), 100);
-
+  // unavailable
   return (
     <div className="mb-2">
       <div className="flex justify-between mb-1">
         <span className="type-xs text-gray-600">{label}</span>
-        <span className="type-xs text-gray-900 font-medium">{pct(value)}</span>
+        <span className="type-xs text-amber-600" title={status.reason}>
+          Unavailable
+        </span>
       </div>
-      <div className="h-2 bg-gray-100 border border-gray-200">
-        <div className="h-full bg-gray-700" style={{ width: `${widthPct}%` }} />
-      </div>
+      <div className="h-2 bg-gray-100 border border-gray-200" />
     </div>
   );
 }
@@ -89,15 +121,12 @@ function RepCard({ rep }: { rep: RepMoneyMetrics }) {
       </div>
 
       {/* Metrics */}
+      <PercentageBar status={rep.voteFinance} label="Votes align with top donor industries" />
       <PercentageBar
-        value={rep.voteFinanceCorrelation}
-        label="Votes align with top donor industries"
-      />
-      <PercentageBar
-        value={rep.financeJurisdictionOverlap}
+        status={rep.financeJurisdiction}
         label="Campaign money from industries they oversee"
       />
-      <PercentageBar value={rep.independenceScore} label="Votes independently of party + donors" />
+      <PercentageBar status={rep.independence} label="Votes independently of party + donors" />
     </div>
   );
 }
