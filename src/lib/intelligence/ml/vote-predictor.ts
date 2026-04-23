@@ -17,8 +17,8 @@
  * independence.
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join, resolve } from 'path';
 import logger from '@/lib/logging/simple-logger';
 import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
@@ -139,6 +139,23 @@ interface OnnxTensor {
 const MODEL_PATH = 'models/vote-prediction.onnx';
 const METADATA_PATH = 'models/vote-prediction-metadata.json';
 const INFERENCE_TIMEOUT_MS = 5000;
+
+// Boot-time sanity check — logs once per cold start so deploy logs reveal
+// whether the model files reached the serverless bundle. Silent failure
+// (e.g., a tracer regression) would otherwise surface only as 404s.
+(() => {
+  try {
+    const modelPresent = existsSync(resolve(process.cwd(), MODEL_PATH));
+    const metadataPresent = existsSync(resolve(process.cwd(), METADATA_PATH));
+    logger.info('[VotePredictor] Model presence at boot', {
+      modelPresent,
+      metadataPresent,
+      cwd: process.cwd(),
+    });
+  } catch {
+    // Boot diagnostic must never throw.
+  }
+})();
 
 // ── All 13 IndustrySector values in fixed order for feature vectors ──
 

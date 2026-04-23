@@ -88,14 +88,24 @@ export async function analyzeVotePrediction(
     // Cache miss — continue
   }
 
-  // 2-6. Compute under timeout
-  return withInsightTracking('vote-prediction', () =>
-    withTimeout(
-      computeAndCache(bioguideId, cacheKey, metadata),
-      ANALYZER_TIMEOUT_MS,
-      'VotePrediction'
-    )
-  );
+  // 2-6. Compute under timeout. Swallow throws (timeout, upstream API failure,
+  // ONNX runtime crash) into `null` so the route returns 404 "unavailable"
+  // rather than 500. withInsightTracking records the outcome either way.
+  try {
+    return await withInsightTracking('vote-prediction', () =>
+      withTimeout(
+        computeAndCache(bioguideId, cacheKey, metadata),
+        ANALYZER_TIMEOUT_MS,
+        'VotePrediction'
+      )
+    );
+  } catch (error) {
+    logger.warn('[VotePrediction] Analyzer failed — returning null', {
+      bioguideId,
+      error: (error as Error).message,
+    });
+    return null;
+  }
 }
 
 async function computeAndCache(

@@ -18,6 +18,16 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Next.js 16 uses Turbopack by default
   turbopack: {},
+  // Force-ship the ONNX model + metadata AND the onnxruntime-web WASM runtime
+  // with intelligence routes. Without this, `require('onnxruntime-web')` inside
+  // vote-predictor.ts is a runtime lookup the tracer may miss, causing a
+  // MODULE_NOT_FOUND on Vercel's read-only fs → 500 on /vote-prediction.
+  outputFileTracingIncludes: {
+    '/api/intelligence/**': [
+      './models/**/*',
+      './node_modules/onnxruntime-web/**/*',
+    ],
+  },
   // Remove console logs in production for better performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
