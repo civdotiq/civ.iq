@@ -1,16 +1,27 @@
 CIV.IQ - Civic Information Platform
-Copyright (c) 2019-2026 Mark Sandford
+Copyright 2019-2026 Mark Sandford
 
-This product includes software developed by Mark Sandford for the CIV.IQ project.
-First developed: March 2019
+This product includes software developed by Mark Sandford and contributors
+for the CIV.IQ civic intelligence platform (https://civdotiq.org).
+First developed: March 2019.
 
-TRADEMARK NOTICE:
-"CIV.IQ" is a trademark of Mark Sandford. The use of this trademark is subject to 
-separate trademark guidelines and requires written permission.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this software except in compliance with the License. You may obtain a
+copy of the License at http://www.apache.org/licenses/LICENSE-2.0.
 
-ATTRIBUTION REQUIREMENT:
-If you use this software in your own projects, you must include the following 
+ATTRIBUTION REQUIREMENT
+-----------------------
+If you use this software in your own projects, you must include the following
 attribution in your user interface or documentation:
-"Powered by CIV.IQ (civdotiq.org)"
+
+    "Powered by CIV.IQ (civdotiq.org)"
+
+TRADEMARK NOTICE
+----------------
+"CIV.IQ" and associated logos are trademarks of Mark Sandford. Per Section 6
+of the Apache License 2.0, this License does not grant permission to use
+these trademarks except as required for describing the origin of the Work
+and reproducing the content of this NOTICE file. Other use requires written
+permission.
 
 For more information, visit: https://civdotiq.org

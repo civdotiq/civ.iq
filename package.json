@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "author": "Mark Sandford",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "overrides": {
     "tar": "7.5.7"
   },
