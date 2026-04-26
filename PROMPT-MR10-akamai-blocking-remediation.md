@@ -19,9 +19,13 @@ Two upstream issues, one big and one small, both surfaced during the MR7 investi
 
 Both URLs return **HTTP 200** from a residential connection (verified 2026-04-23 from `mbs@civ.iq` working tree). Both return **403 Forbidden** or hang past 55 s when called from Vercel's serverless IPs. The `User-Agent` / `Referer` browser-spoof headers our `HttpClient` already adds (see `batch-voting-service.ts:33-55`) do not bypass this — Akamai is filtering on the cloud-IP range itself or on TLS fingerprints, not on the request headers.
 
-This is **not our bug**. Another developer filed it as [LibraryOfCongress/api.congress.gov#441](https://github.com/LibraryOfCongress/api.congress.gov/issues/441) on 2026-04-18 (label: `investigating`, no fix yet). A related earlier issue, [#437](https://github.com/LibraryOfCongress/api.congress.gov/issues/437), is the same pattern for `congress.gov/rss/` blocked by Cloudflare. [#431](https://github.com/LibraryOfCongress/api.congress.gov/issues/431) tracks general origin-server instability with a tentative 2026-04-27 fix target.
+This is **not our bug**. Another developer filed it as [LibraryOfCongress/api.congress.gov#441](https://github.com/LibraryOfCongress/api.congress.gov/issues/441) on 2026-04-18. **Status as of 2026-04-25: CLOSED by the LoC team on 2026-04-24** — final reply was "this is coming from Senate.gov, contact the Senate webmaster." The Library of Congress is not going to fix this. Anyone who needs Senate roll-call data programmatically from cloud infrastructure has to route around it themselves.
+
+A related earlier issue, [#437](https://github.com/LibraryOfCongress/api.congress.gov/issues/437), is the same pattern for `congress.gov/rss/` blocked by Cloudflare. [#431](https://github.com/LibraryOfCongress/api.congress.gov/issues/431) tracks general origin-server instability with a tentative 2026-04-27 fix target.
 
 There's also no JSON alternative for Senate votes — issue [#436](https://github.com/LibraryOfCongress/api.congress.gov/issues/436) was a recent request for one and was closed without action. The only official source for Senate roll-call data IS the Akamai-blocked XML.
+
+**Implication for our remediation**: Option C (wait for the LoC) is dead. The choice is now A (mirror it ourselves) or B (third-party feed) or D (ship House-only honestly).
 
 ### 2. Health probe falsely flags Congress.gov as down (the small, misleading signal)
 
@@ -60,13 +64,9 @@ GovTrack and Voteview historically maintain their own scraped Senate vote datase
 - **Cons**: Adds an external dependency we don't control. GovTrack's API status is uncertain (last project memory check was months ago). Need to verify license/usage terms.
 - **Effort**: 0.5–1 day if their API is healthy and matches our shape.
 
-### C. Wait for the Library of Congress to fix it
+### C. ~~Wait for the Library of Congress to fix it~~ (DEAD as of 2026-04-24)
 
-Subscribe to issue #441 and pause vote-prediction / vote-finance shipping until the LoC team negotiates with Akamai or builds the requested `/votes/` JSON endpoint. The MR6 sign-off and money-report accept gate stay open in the meantime.
-
-- **Pros**: No work on our side.
-- **Cons**: Could be months. Blocks money-report. The "investigating" label on #441 has no committed timeline.
-- **Effort**: 0.
+Issue #441 was closed by the LoC team telling reporters to contact the Senate webmaster directly. There is no fix coming from upstream. **Do not pick this option.**
 
 ### D. Hybrid — ship what works, gate what doesn't
 
