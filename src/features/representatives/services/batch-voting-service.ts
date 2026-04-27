@@ -351,6 +351,24 @@ class CircuitBreaker {
   }
 }
 
+/**
+ * Detect Vercel runtimes where senate.gov XML is Akamai-blocked (MR10).
+ *
+ * Defense-in-depth: even if a caller forgets to branch on chamber, the
+ * Senate XML fetch path returns immediately on Vercel rather than
+ * spinning hundreds of 15s timeouts against a CDN that will never serve
+ * us. Local dev (no `VERCEL` env) keeps working for verification.
+ *
+ * Override with `DISABLE_SENATE_XML=1` for local repro of the Vercel
+ * behavior, or `ALLOW_SENATE_XML=1` to opt back in if the upstream block
+ * lifts before code can be redeployed.
+ */
+function isSenateXmlDisabled(): boolean {
+  if (process.env.ALLOW_SENATE_XML === '1') return false;
+  if (process.env.DISABLE_SENATE_XML === '1') return true;
+  return Boolean(process.env.VERCEL);
+}
+
 export class BatchVotingService {
   private static instance: BatchVotingService;
   private cache = new InMemoryCache();
@@ -459,6 +477,15 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
+    if (isSenateXmlDisabled()) {
+      logger.info('Senate XML fetching disabled — Akamai blocks Vercel cloud IPs (MR10)', {
+        bioguideId,
+        congress,
+        session,
+      });
+      return [];
+    }
+
     const startTime = Date.now();
 
     try {
@@ -527,6 +554,14 @@ export class BatchVotingService {
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 50
   ): Promise<StandardizedVote[]> {
+    if (isSenateXmlDisabled()) {
+      logger.info('Senate XML fetching disabled — Akamai blocks Vercel cloud IPs (MR10)', {
+        congress,
+        session,
+      });
+      return [];
+    }
+
     try {
       const recentVoteNumbers = this.generateRecentSenateVoteNumbers(limit * 2);
       const rawVotes = await this.fetchSenateVotesRaw(recentVoteNumbers, congress, session);

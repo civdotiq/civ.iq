@@ -41,6 +41,7 @@ import {
   classifySignal,
   SourceCollector,
   createPhaseTimer,
+  SENATE_UPSTREAM_BLOCKED_REASON,
 } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
@@ -264,6 +265,14 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
     return { unavailableReason };
   }
   timer?.mark('fetchRep');
+
+  // Senate roll-call XML is blocked by Akamai for Vercel cloud IPs (MR10).
+  // Bail out before issuing the slow XML fetches so Senate reps return
+  // `unavailable` immediately rather than burning the full 55s budget.
+  if (rep.chamber === 'Senate') {
+    logger.info('[VoteFinance] Senate blocked by upstream CDN', { bioguideId });
+    return { unavailableReason: SENATE_UPSTREAM_BLOCKED_REASON };
+  }
 
   // Get FEC candidate ID
   const fecId = getFECIdFromBioguide(bioguideId);

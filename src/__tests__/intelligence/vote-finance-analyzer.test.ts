@@ -220,13 +220,21 @@ describe('analyzeVoteFinance', () => {
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
   });
 
-  it('uses Senate vote service for senators', async () => {
+  it('bails out for senators with upstream-block reason and skips vote fetches (MR10)', async () => {
+    // Senate roll-call XML is Akamai-blocked for Vercel cloud IPs. The
+    // analyzer must fail fast instead of spinning hundreds of timeouts.
     mockGetEnhancedRepresentative.mockResolvedValue({ ...mockRep, chamber: 'Senate' });
-    mockGetSenateMemberVotes.mockResolvedValue(makeVotes(15));
 
-    await analyzeVoteFinance('P000197');
+    const { analyzeVoteFinanceWithReason } = await import(
+      '@/lib/intelligence/analyzers/vote-finance-analyzer'
+    );
+    const outcome = await analyzeVoteFinanceWithReason('P000197');
 
-    expect(mockGetSenateMemberVotes).toHaveBeenCalled();
+    expect(outcome.insight).toBeNull();
+    expect(outcome.unavailableReason).toBe(
+      'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.'
+    );
+    expect(mockGetSenateMemberVotes).not.toHaveBeenCalled();
     expect(mockGetHouseMemberVotes).not.toHaveBeenCalled();
   });
 

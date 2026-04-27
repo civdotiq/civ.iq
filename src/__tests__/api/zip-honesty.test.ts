@@ -211,6 +211,8 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   generateInsightNarrative: jest.fn(() =>
     Promise.resolve({ narrative: 'test narrative', source: 'statistical' })
   ),
+  SENATE_UPSTREAM_BLOCKED_REASON:
+    'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.',
 }));
 
 jest.mock('@/lib/intelligence/analyzers/vote-finance-analyzer', () => ({

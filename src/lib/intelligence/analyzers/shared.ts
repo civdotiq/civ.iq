@@ -26,6 +26,22 @@ import { classifyBillSectors } from '@/lib/intelligence/embeddings';
 import { classifyBillSectorsZeroShot } from '@/lib/intelligence/embeddings';
 import { trackInsightRun, type AnalyzerName } from '@/lib/analytics/insight-tracker';
 
+// ── Upstream Availability Sentinels ─────────────────────────────────
+
+/**
+ * Sentinel reason for analyzers that depend on Senate roll-call XML.
+ *
+ * Senate.gov serves roll calls behind an Akamai CDN that blocks Vercel's
+ * cloud-IP ranges; the Library of Congress closed the upstream issue
+ * (#441, 2026-04-24) deferring to the Senate webmaster, so there is no
+ * fix coming from upstream. Until a self-hosted mirror lands (Option A
+ * in PROMPT-MR10), Senate analyzers bail out early and the orchestrator
+ * matches on this exact string to render an honest `unavailable` state
+ * rather than `insufficient-data`.
+ */
+export const SENATE_UPSTREAM_BLOCKED_REASON =
+  'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.';
+
 // ── Timeout Wrapper ─────────────────────────────────────────────────
 
 /** Default analyzer timeout: 55 seconds (leaves 5s headroom for Vercel function overhead) */

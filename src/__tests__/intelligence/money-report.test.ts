@@ -80,6 +80,8 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   generateInsightNarrative: (...args: unknown[]) => mockGenerateInsightNarrative(...args),
   withTimeout: (...args: unknown[]) => mockWithTimeout(...args),
   classifySignal: jest.fn(() => 'pattern' as const),
+  SENATE_UPSTREAM_BLOCKED_REASON:
+    'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.',
   SourceCollector: jest.fn().mockImplementation(() => ({
     add: jest.fn(),
     toSources: jest.fn(() => []),
@@ -284,6 +286,23 @@ describe('POST /api/intelligence/address/money-report', () => {
         reason: 'Fewer than 10 sector-classified votes in the 119th Congress',
       });
       expect(rep.voteFinanceCorrelation).toBeNull();
+    }
+  });
+
+  it('maps Senate upstream-blocked sentinel to unavailable MetricStatus (MR10)', async () => {
+    const reason =
+      'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.';
+    mockAnalyzeVoteFinance.mockResolvedValue({ insight: null, unavailableReason: reason });
+    mockAnalyzeVotePrediction.mockResolvedValue({ insight: null, unavailableReason: reason });
+
+    const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    for (const rep of data.representatives) {
+      expect(rep.voteFinance).toEqual({ state: 'unavailable', reason });
+      expect(rep.independence).toEqual({ state: 'unavailable', reason });
     }
   });
 

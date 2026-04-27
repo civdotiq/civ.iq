@@ -26,7 +26,11 @@ import { analyzeFinanceJurisdictionWithReason } from '@/lib/intelligence/analyze
 import { analyzeVotePredictionWithReason } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { confidenceScore, mean } from '@/lib/intelligence/statistics/civic-stats';
-import { generateInsightNarrative, withTimeout } from '@/lib/intelligence/analyzers/shared';
+import {
+  generateInsightNarrative,
+  withTimeout,
+  SENATE_UPSTREAM_BLOCKED_REASON,
+} from '@/lib/intelligence/analyzers/shared';
 import type {
   MoneyReportCardInsight,
   RepMoneyMetrics,
@@ -222,6 +226,13 @@ function toMetricStatus<T>(
   }
 
   if (result.value.unavailableReason) {
+    // Senate-blocked reps are honestly `unavailable` (we can't fetch the data),
+    // not `insufficient-data` (which implies the rep just hasn't accumulated
+    // enough records). Match on the exact sentinel from shared.ts so the UI
+    // shows the amber "Unavailable" state with the upstream-block reason.
+    if (result.value.unavailableReason === SENATE_UPSTREAM_BLOCKED_REASON) {
+      return { state: 'unavailable', reason: result.value.unavailableReason };
+    }
     return { state: 'insufficient-data', reason: result.value.unavailableReason };
   }
 
