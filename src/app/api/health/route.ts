@@ -50,7 +50,9 @@ const DATA_SOURCES: SourceDefinition[] = [
   {
     name: 'Congress.gov',
     tier: 'critical',
-    probeUrl: 'https://api.congress.gov/v3',
+    // /v3 returns a 301 redirect that drops the api_key, so the followed
+    // request 403s. Probe a concrete endpoint that returns 200 directly.
+    probeUrl: 'https://api.congress.gov/v3/bill?format=json&limit=1',
     requiresKey: 'CONGRESS_API_KEY',
     keyMethod: 'query',
     keyParam: 'api_key',
@@ -60,14 +62,24 @@ const DATA_SOURCES: SourceDefinition[] = [
   {
     name: 'FEC',
     tier: 'critical',
-    probeUrl: 'https://api.open.fec.gov/v1/',
+    // FEC requires api_key on every request — without it the API returns 403.
+    // /legal/citations is a lightweight reference endpoint that costs less
+    // against our 1000/hr quota than candidate/contribution searches.
+    probeUrl: 'https://api.open.fec.gov/v1/legal/citations/?per_page=1',
+    requiresKey: 'FEC_API_KEY',
+    keyMethod: 'query',
+    keyParam: 'api_key',
     staleTtlHours: 48,
     cacheKeyPattern: 'fec:*',
   },
   {
     name: 'Senate LDA',
     tier: 'critical',
-    probeUrl: 'https://lda.senate.gov/api/v1/filings/?filing_period=2025&page_size=1',
+    // Senate LDA is unauthenticated but rejects the previous probe URL
+    // (filing_period=2025 is invalid; the API expects filing_year). Match
+    // the production query shape used by SenateLobbyingAPI.fetchFilingsByQuarter.
+    probeUrl:
+      'https://lda.senate.gov/api/v1/filings/?filing_year=2025&filing_period=first_quarter&page_size=1',
     staleTtlHours: 168, // weekly filings
     cacheKeyPattern: 'lobbying:*',
   },
@@ -433,6 +445,21 @@ async function probeSource(source: SourceDefinition): Promise<SourceResult> {
         httpStatus: response.status,
         lastSuccessfulFetch: new Date().toISOString(),
         error: null,
+      };
+    }
+
+    // 429 = our key is rate-limited, NOT that the upstream is down. Surface
+    // as `degraded` so the dashboard reports the real condition (quota
+    // pressure on our side) instead of a false "source down" alarm.
+    if (response.status === 429) {
+      return {
+        name: source.name,
+        tier: source.tier,
+        status: 'degraded',
+        responseTimeMs: elapsed,
+        httpStatus: response.status,
+        lastSuccessfulFetch: await getLastSuccessfulFetch(source),
+        error: 'Rate limited (429) — our key, not upstream',
       };
     }
 
