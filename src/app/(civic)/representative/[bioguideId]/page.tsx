@@ -20,6 +20,8 @@ import {
   getSenateVacancy,
   formatVacancyMessage,
 } from '@/lib/data/congressional-vacancies';
+import { ProfileHybrid } from '@/components/officials/ProfileHybrid';
+import { CqPage } from '@/components/cq';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -333,8 +335,10 @@ function MemberStatusBanner({ representative }: { representative: Representative
 // Main Server Component - renders immediately with SSR data
 export default async function RepresentativeProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ bioguideId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }) {
   let bioguideId: string;
 
@@ -348,6 +352,11 @@ export default async function RepresentativeProfilePage({
   } catch {
     notFound();
   }
+
+  const { v } = await searchParams;
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
 
   // Server-side: fetch representative data only (summary loads client-side via SWR
   // to avoid blocking render on slow vote/finance API calls)
@@ -370,6 +379,25 @@ export default async function RepresentativeProfilePage({
   // Set display name if needed
   if (!representative.name && representative.firstName && representative.lastName) {
     representative.name = `${representative.firstName} ${representative.lastName}`;
+  }
+
+  if (useRedesign) {
+    const crumbs = [
+      'CIV.IQ',
+      'Public Record',
+      representative.chamber,
+      representative.state,
+      representative.name,
+    ];
+    return (
+      <CqPage currentNav="find" crumbs={crumbs}>
+        <ErrorBoundary>
+          <ChunkLoadErrorBoundary>
+            <ProfileHybrid representative={representative} />
+          </ChunkLoadErrorBoundary>
+        </ErrorBoundary>
+      </CqPage>
+    );
   }
 
   // Debug logging removed - was causing RSC serialization issues
