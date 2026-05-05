@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .row { display: flex; gap: 24px; align-items: flex-end; }
+  .item { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .box { width: 80px; height: 56px; background: #fff; border: 2px solid var(--ink); }
+  .box.r3 { border-radius: 3px; }
+  .box.r0 { border-radius: 0; }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--fg3); text-transform: uppercase; }
+  .val { font-family: var(--font-mono); font-size: 11px; color: var(--fg2); }
+  .shadowbox { width: 80px; height: 56px; background: #fff; border-radius: 3px; }
+  .sh-tooltip { box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .sh-elevated { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="item">
+    <div class="box r0"></div>
+    <div class="lbl">Layout</div>
+    <div class="val">0px</div>
+  </div>
+  <div class="item">
+    <div class="box r3"></div>
+    <div class="lbl">Interactive</div>
+    <div class="val">3px</div>
+  </div>
+  <div style="width:1px; height:90px; background:var(--line); margin: 0 12px;"></div>
+  <div class="item">
+    <div class="shadowbox sh-tooltip"></div>
+    <div class="lbl">Tooltip</div>
+    <div class="val">0 2 6 / .15</div>
+  </div>
+  <div class="item">
+    <div class="shadowbox sh-elevated"></div>
+    <div class="lbl">Elevated</div>
+    <div class="val">0 4 12 / .12</div>
+  </div>
+  <div class="item">
+    <div style="width:80px; height:56px; background:#fff; border-top: 1px solid var(--line);"></div>
+    <div class="lbl">Hairline</div>
+    <div class="val">1px #E5E7EB</div>
+  </div>
+  <div class="item">
+    <div style="width:80px; height:56px; background:#fff; border: 2px solid #000;"></div>
+    <div class="lbl">Structural</div>
+    <div class="val">2px #000</div>
+  </div>
+</div>
+<div style="margin-top:16px; font-size:11px; color:var(--fg3); letter-spacing:0.04em;">
+  Layout is square. Only interactive elements get 3px radii. Shadows signal elevation, never decorate.
+</div>
+</body>
+</html>

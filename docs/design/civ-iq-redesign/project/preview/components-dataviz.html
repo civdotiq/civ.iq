@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 120px 1fr 60px; gap: 12px; align-items: center; }
+  .bar-row .lbl { font-size: 12px; font-weight: 500; }
+  .track { height: 16px; background: #f3f4f6; position: relative; }
+  .fill { height: 100%; }
+  .val { font-family: var(--font-mono); font-size: 11px; text-align: right; color: var(--fg2); }
+  .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--fg3); text-transform: uppercase; margin-bottom: 14px; display: block; }
+</style>
+</head>
+<body>
+<span class="eyebrow">Voting alignment · 118th Congress</span>
+<div class="bar-chart">
+  <div class="bar-row">
+    <span class="lbl">Party line</span>
+    <div class="track"><div class="fill" style="width:87%; background:#0a9338"></div></div>
+    <span class="val">87%</span>
+  </div>
+  <div class="bar-row">
+    <span class="lbl">Bipartisan</span>
+    <div class="track"><div class="fill" style="width:11%; background:#6b7280"></div></div>
+    <span class="val">11%</span>
+  </div>
+  <div class="bar-row">
+    <span class="lbl">Crossed floor</span>
+    <div class="track"><div class="fill" style="width:2%; background:#e11d07"></div></div>
+    <span class="val">2%</span>
+  </div>
+</div>
+<div style="margin-top:16px; font-size:11px; color:var(--fg3); letter-spacing:0.04em;">
+  Data viz uses party colors only when party is the dimension. Otherwise: neutral greys + single-blue accent.
+</div>
+</body>
+</html>

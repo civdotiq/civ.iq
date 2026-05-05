@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Search Variants (Templates 25–29)</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  body { font-family: var(--font-primary); color: #111827; }
+  * { box-sizing: border-box; }
+  input::placeholder { color: #9ca3af; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+<script type="text/babel" src="SearchVariants.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas
+      title="CIV.IQ — Canvas 5 · Search Variants (Templates 25–29)"
+      subtitle="Five new row variants for the listing routes that the original Search page didn't cover. Same chassis, same FacetGroup sidebar, same row pattern — only the row vocabulary changes per route. ~12 listing routes unblocked."
+    >
+      <DCSection id="search-variants" title="Listing routes — five row variants on the same chassis">
+        <DCArtboard
+          id="districts"
+          label="25 · DistrictResultRow — drives /districts and /state-districts"
+          width={1280}
+          height={1750}
+        >
+          <DistrictListingPage/>
+        </DCArtboard>
+
+        <DCArtboard
+          id="states"
+          label="26 · StateResultRow — drives /states"
+          width={1280}
+          height={1750}
+        >
+          <StateListingPage/>
+        </DCArtboard>
+
+        <DCArtboard
+          id="sectors"
+          label="27 · SectorResultRow — drives /industry"
+          width={1280}
+          height={1900}
+        >
+          <SectorListingPage/>
+        </DCArtboard>
+
+        <DCArtboard
+          id="regulations"
+          label="28 · RegulationResultRow — drives /regulations"
+          width={1280}
+          height={1750}
+        >
+          <RegulationListingPage/>
+        </DCArtboard>
+
+        <DCArtboard
+          id="topics"
+          label="29 · TopicResultRow — drives /topics (index above the 13 IssueTopicPage children)"
+          width={1280}
+          height={2000}
+        >
+          <TopicListingPage/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

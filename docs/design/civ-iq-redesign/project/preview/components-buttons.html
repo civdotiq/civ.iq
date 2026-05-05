@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn { font-family: var(--font-primary); font-weight: 700; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; padding: 12px 20px; border-radius: 3px; cursor: pointer; border: 2px solid; transition: all 150ms cubic-bezier(0.25,0.1,0.25,1); }
+  .btn.primary { background: #3ea2d4; color: #fff; border-color: #3ea2d4; }
+  .btn.secondary { background: #fff; color: #000; border-color: #000; }
+  .btn.ghost { background: transparent; color: var(--fg1); border-color: transparent; }
+  .btn.danger { background: #e11d07; color: #fff; border-color: #e11d07; }
+  .btn.sm { padding: 8px 14px; font-size: 11px; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--fg3); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="stack">
+  <div>
+    <div class="lbl">Primary · Secondary · Ghost · Danger</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn primary">Look up address</button>
+      <button class="btn secondary">Cancel</button>
+      <button class="btn ghost">Skip</button>
+      <button class="btn danger">Report error</button>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Small · In-row actions</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn primary sm">View all</button>
+      <button class="btn secondary sm">Download CSV</button>
+      <button class="btn secondary sm">Cite source</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

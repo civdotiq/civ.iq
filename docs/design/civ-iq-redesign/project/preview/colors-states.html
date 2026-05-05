@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .swatch { height: 72px; flex-direction: column; align-items: flex-start; justify-content: flex-end; }
+  .swatch .name { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .swatch .hex { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0; font-weight: 400; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="swatch" style="background:#a31605"><div class="name">Red Active</div><div class="hex">#A31605</div></div>
+  <div class="swatch" style="background:#c41a06"><div class="name">Red Hover</div><div class="hex">#C41A06</div></div>
+  <div class="swatch light" style="background:#f5948a"><div class="name">Red Muted</div><div class="hex">#F5948A</div></div>
+  <div class="swatch" style="background:#e11d07"><div class="name">Red</div><div class="hex">#E11D07</div></div>
+
+  <div class="swatch" style="background:#066a28"><div class="name">Green Active</div><div class="hex">#066A28</div></div>
+  <div class="swatch" style="background:#088030"><div class="name">Green Hover</div><div class="hex">#088030</div></div>
+  <div class="swatch light" style="background:#86d4a5"><div class="name">Green Muted</div><div class="hex">#86D4A5</div></div>
+  <div class="swatch" style="background:#0a9338"><div class="name">Green</div><div class="hex">#0A9338</div></div>
+
+  <div class="swatch" style="background:#2a7aa3"><div class="name">Blue Active</div><div class="hex">#2A7AA3</div></div>
+  <div class="swatch" style="background:#3293c2"><div class="name">Blue Hover</div><div class="hex">#3293C2</div></div>
+  <div class="swatch light" style="background:#a8d4e8"><div class="name">Blue Muted</div><div class="hex">#A8D4E8</div></div>
+  <div class="swatch" style="background:#3ea2d4"><div class="name">Blue</div><div class="hex">#3EA2D4</div></div>
+</div>
+</body>
+</html>

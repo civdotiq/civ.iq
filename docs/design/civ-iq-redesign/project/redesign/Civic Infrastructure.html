@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Civic Infrastructure</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  body { font-family: var(--font-primary); color: #111827; }
+  * { box-sizing: border-box; }
+  input::placeholder { color: #9ca3af; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+
+<script type="text/babel" src="LocalCouncil.jsx"></script>
+<script type="text/babel" src="DistrictPage.jsx"></script>
+<script type="text/babel" src="Election.jsx"></script>
+<script type="text/babel" src="Compare.jsx"></script>
+<script type="text/babel" src="IssueTopic.jsx"></script>
+<script type="text/babel" src="PACProfile.jsx"></script>
+<script type="text/babel" src="SpendingContract.jsx"></script>
+<script type="text/babel" src="VotingRecord.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas
+      title="CIV.IQ — Civic Infrastructure"
+      subtitle="Eight more page types the system needs to feel complete: local government, geography, elections, head-to-head comparison, topic aggregation, money entities, federal spending, and the long-form voting record. Same chassis — black masthead, 2px frames, source rails, plain readings — applied at every scale of civic life."
+    >
+      <DCSection id="local" title="Local government + geography">
+        <DCArtboard id="council" label="01 · Local council — NYC City Council" width={1280} height={2200}>
+          <LocalCouncilPage/>
+        </DCArtboard>
+
+        <DCArtboard id="district" label="02 · District — NY-08, Brooklyn-Queens" width={1280} height={2300}>
+          <DistrictPage/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="elections" title="Elections + comparison">
+        <DCArtboard id="election" label="03 · Election — Brown vs Moreno, OH Senate 2024" width={1280} height={2100}>
+          <ElectionPage/>
+        </DCArtboard>
+
+        <DCArtboard id="compare" label="04 · Compare — Jeffries vs Johnson" width={1280} height={2100}>
+          <ComparePage/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="topics-money" title="Topics + money entities">
+        <DCArtboard id="topic" label="05 · Issue / topic — Housing" width={1280} height={2200}>
+          <IssueTopicPage/>
+        </DCArtboard>
+
+        <DCArtboard id="pac" label="06 · PAC profile — Senate Majority PAC" width={1280} height={2100}>
+          <PACProfilePage/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="spending-record" title="Federal spending + voting record">
+        <DCArtboard id="contract" label="07 · Federal contract — NASA × SpaceX, Crew-9/10" width={1280} height={2000}>
+          <SpendingContractPage/>
+        </DCArtboard>
+
+        <DCArtboard id="voting" label="08 · Voting record — Hakeem Jeffries, full history" width={1280} height={2300}>
+          <VotingRecordPage/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Screen Render Harness</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../fonts.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg1); }
+  body { font-family: var(--font-primary); color: var(--fg1); }
+  * { box-sizing: border-box; }
+  input::placeholder { color: var(--fg4); }
+  /* Force a fixed render width so screenshots are deterministic */
+  #root { width: var(--screen-w, 1280px); margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Stub the design-canvas wrappers so prototype JSX runs as standalone screens -->
+<script type="text/babel">
+  window.DesignCanvas = ({children}) => <>{children}</>;
+  window.DCSection = ({children}) => <>{children}</>;
+  window.DCArtboard = ({children}) => <>{children}</>;
+</script>
+
+<script type="text/babel" src="../reference-jsx/primitives.jsx"></script>
+<script type="text/babel" src="../reference-jsx/data.jsx"></script>
+<script type="text/babel" src="../reference-jsx/chrome.jsx"></script>
+<script type="text/babel" src="../reference-jsx/ProfileRefined.jsx"></script>
+<script type="text/babel" src="../reference-jsx/ProfileDossier.jsx"></script>
+<script type="text/babel" src="../reference-jsx/ProfileMoneyFirst.jsx"></script>
+<script type="text/babel" src="../reference-jsx/ProfileHybrid.jsx"></script>
+<script type="text/babel" src="../reference-jsx/BillDetail.jsx"></script>
+<script type="text/babel" src="../reference-jsx/SearchResults.jsx"></script>
+<script type="text/babel" src="../reference-jsx/CommitteeDetail.jsx"></script>
+<script type="text/babel" src="../reference-jsx/StateOverview.jsx"></script>
+<script type="text/babel" src="../reference-jsx/SystemPages.jsx"></script>
+<script type="text/babel" src="../reference-jsx/Landing.jsx"></script>
+<script type="text/babel" src="../reference-jsx/StateLegislator.jsx"></script>
+<script type="text/babel" src="../reference-jsx/RollLobby.jsx"></script>
+<script type="text/babel" src="../reference-jsx/FECIndustry.jsx"></script>
+<script type="text/babel" src="../reference-jsx/Compare.jsx"></script>
+<script type="text/babel" src="../reference-jsx/DistrictPage.jsx"></script>
+<script type="text/babel" src="../reference-jsx/Election.jsx"></script>
+<script type="text/babel" src="../reference-jsx/IssueTopic.jsx"></script>
+<script type="text/babel" src="../reference-jsx/LocalCouncil.jsx"></script>
+<script type="text/babel" src="../reference-jsx/PACProfile.jsx"></script>
+<script type="text/babel" src="../reference-jsx/SpendingContract.jsx"></script>
+<script type="text/babel" src="../reference-jsx/VotingRecord.jsx"></script>
+
+<script type="text/babel">
+  // Pick which screen to render via ?screen=key in the URL
+  const SCREENS = {
+    'profile-refined':   { w: 1080, el: <ProfileRefined official={OFFICIAL_JEFFRIES}/> },
+    'profile-dossier':   { w: 1080, el: <ProfileDossier official={OFFICIAL_MURKOWSKI}/> },
+    'profile-money':     { w: 1080, el: <ProfileMoneyFirst official={OFFICIAL_JOHNSON}/> },
+    'profile-hybrid':    { w: 1080, el: <ProfileHybrid official={OFFICIAL_JEFFRIES}/> },
+    'search-results':    { w: 1280, el: <SearchResults query="infrastructure"/> },
+    'bill-detail':       { w: 1280, el: <BillDetail bill={BILL_HR3684}/> },
+    'committee-detail':  { w: 1280, el: <CommitteeDetail c={CMTE_BUDGET}/> },
+    'state-overview':    { w: 1280, el: <StateOverview s={STATE_NY}/> },
+    'methodology':       { w: 1280, el: <MethodologyPage/> },
+    'about':             { w: 1280, el: <AboutPage/> },
+    'not-found':         { w: 1280, el: <NotFoundPage/> },
+    'landing':           { w: 1280, el: <LandingPage/> },
+    'address-result':    { w: 1280, el: <AddressResultPage/> },
+    'state-legislator':  { w: 1280, el: <StateLegislatorProfile/> },
+    'state-legislature': { w: 1280, el: <StateLegislaturePage/> },
+    'roll-call':         { w: 1280, el: <RollCallDetail/> },
+    'lobby-filing':      { w: 1280, el: <LobbyFilingDetail/> },
+    'fec-filing':        { w: 1280, el: <FECFilingDetail/> },
+    'industry-sector':   { w: 1280, el: <IndustrySectorPage/> },
+    'compare':           { w: 1280, el: <ComparePage/> },
+    'district':          { w: 1280, el: <DistrictPage/> },
+    'election':          { w: 1280, el: <ElectionPage/> },
+    'issue-topic':       { w: 1280, el: <IssueTopicPage/> },
+    'local-council':     { w: 1280, el: <LocalCouncilPage/> },
+    'pac-profile':       { w: 1280, el: <PACProfilePage/> },
+    'spending-contract': { w: 1280, el: <SpendingContractPage/> },
+    'voting-record':     { w: 1280, el: <VotingRecordPage/> },
+  };
+  const key = new URLSearchParams(location.search).get('screen') || 'profile-hybrid';
+  const cfg = SCREENS[key];
+  if (cfg) {
+    document.documentElement.style.setProperty('--screen-w', cfg.w + 'px');
+    ReactDOM.createRoot(document.getElementById('root')).render(cfg.el);
+  } else {
+    document.getElementById('root').innerHTML = '<pre>Unknown screen: ' + key + '\nKnown: ' + Object.keys(SCREENS).join(', ') + '</pre>';
+  }
+</script>
+</body>
+</html>

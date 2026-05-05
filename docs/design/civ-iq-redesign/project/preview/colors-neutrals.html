@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .swatch { height: 64px; flex-direction: column; align-items: flex-start; justify-content: flex-end; }
+  .swatch .name { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .swatch .hex { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0; font-weight: 400; }
+  .swatch.light { color: #000; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="swatch" style="background:#111827"><div class="name">fg1 · Ink</div><div class="hex">#111827</div></div>
+  <div class="swatch" style="background:#4b5563"><div class="name">fg2</div><div class="hex">#4B5563</div></div>
+  <div class="swatch" style="background:#6b7280"><div class="name">fg3 · Label</div><div class="hex">#6B7280</div></div>
+  <div class="swatch light" style="background:#9ca3af"><div class="name">fg4 · Hint</div><div class="hex">#9CA3AF</div></div>
+
+  <div class="swatch light" style="background:#ffffff; border-color:#000"><div class="name">bg1 · Paper</div><div class="hex">#FFFFFF</div></div>
+  <div class="swatch light" style="background:#f9fafb"><div class="name">bg2 · Ground</div><div class="hex">#F9FAFB</div></div>
+  <div class="swatch light" style="background:#f3f4f6"><div class="name">bg3 · Fill</div><div class="hex">#F3F4F6</div></div>
+  <div class="swatch light" style="background:#e5e7eb"><div class="name">Line</div><div class="hex">#E5E7EB</div></div>
+</div>
+</body>
+</html>

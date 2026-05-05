@@ -1,0 +1,250 @@
+/* ═══════════════════════════════════════════════════════════
+   CIV.IQ — Colors + Type
+   Otl Aicher / Ulm School / 1972 Munich Olympics lineage
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Braun Linear (Dieter Rams) ──────────────────────────── */
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('fonts/BraunLinear-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('fonts/BraunLinear-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('fonts/BraunLinear-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('fonts/BraunLinear-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('fonts/BraunLinear-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── Grid ─────────────────────────────────────────────── */
+  --grid: 8px; /* every spacing value is a multiple */
+
+  /* ── Type families ────────────────────────────────────── */
+  --font-primary: 'Braun Linear', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  --font-display: var(--font-primary);
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ── Type scale (Ulm systematic) ──────────────────────── */
+  --type-xs: 0.75rem; /* 12px — labels, meta */
+  --type-sm: 0.875rem; /* 14px — small body */
+  --type-base: 1rem; /* 16px — body */
+  --type-lg: 1.125rem; /* 18px — subheadings */
+  --type-xl: 1.5rem; /* 24px — section headers */
+  --type-2xl: 2rem; /* 32px — major headers */
+  --type-3xl: 3rem; /* 48px — display (stats) */
+  --type-4xl: 4rem; /* 64px — hero names */
+
+  /* ── Tracking — size-dependent optical adjustments ────── */
+  --tracking-display: -0.02em; /* 48px+ tighten */
+  --tracking-heading: 0.02em; /* 24–32px slight */
+  --tracking-body: 0.025em; /* 14–18px */
+  --tracking-label: 0.08em; /* 12px and under — open up */
+
+  /* ── Brand colors — the 1972 Munich primaries ─────────── */
+  --civiq-red: #e11d07; /* logo circle — urgency, party-R, emphasis */
+  --civiq-green: #0a9338; /* logo stem   — party-D */
+  --civiq-blue: #3ea2d4; /* logo dots   — action, info, primary CTA */
+
+  /* Hover / active variants */
+  --civiq-red-hover: #c41a06;
+  --civiq-red-active: #a31605;
+  --civiq-red-muted: #f5948a;
+  --civiq-green-hover: #088030;
+  --civiq-green-active: #066a28;
+  --civiq-green-muted: #86d4a5;
+  --civiq-blue-hover: #3293c2;
+  --civiq-blue-active: #2a7aa3;
+  --civiq-blue-muted: #a8d4e8;
+  --civiq-blue-cool: #2d8fc9; /* data-viz variant */
+
+  /* ── Neutrals (ink/paper) ─────────────────────────────── */
+  --fg1: #111827; /* primary ink */
+  --fg2: #4b5563; /* secondary ink */
+  --fg3: #6b7280; /* tertiary ink, labels */
+  --fg4: #9ca3af; /* disabled / hint */
+  --bg1: #ffffff; /* paper */
+  --bg2: #f9fafb; /* ground */
+  --bg3: #f3f4f6; /* subtle fill */
+  --line: #e5e7eb; /* hairlines */
+  --ink: #000000; /* structural borders */
+
+  /* ── Semantic status (separated from party) ───────────── */
+  --color-action: var(--civiq-blue);
+  --color-info: #4b5563;
+  --color-success: var(--civiq-blue); /* blue — green reserved for party */
+  --color-error: #b45309; /* amber — red reserved for party */
+  --color-warning: #d97706;
+  --color-success-bg: #eff6ff;
+  --color-error-bg: #fffbeb;
+
+  /* ── Party tokens (ONLY for party identification) ─────── */
+  --party-democrat: var(--civiq-green);
+  --party-republican: var(--civiq-red);
+  --party-independent: #6b7280;
+
+  /* ── Chromatic greys (Aicher/ERCO data-viz tradition) ── */
+  --data-vlau: #6b6b83; /* violet-grey */
+  --data-vlau-light: #8e8ea0;
+  --data-greige: #b8b5a9; /* grey-beige */
+  --data-greige-light: #d4d2c9;
+
+  /* ── Borders (semantic weight hierarchy) ──────────────── */
+  --border-structural: 2px; /* cards, containers */
+  --border-divider: 1px; /* row separators */
+  --border-emphasis: 3px; /* selected, active */
+  --border-color: var(--ink);
+
+  /* ── Radius — layout is square; interactive is soft ───── */
+  --radius-layout: 0px;
+  --radius-interactive: 3px;
+
+  /* ── Shadows — elevation only, never decoration ───────── */
+  --shadow-tooltip: 0 2px 6px rgba(0, 0, 0, 0.15);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.12);
+
+  /* ── Motion (mechanical, Aicher-style) ────────────────── */
+  --timing-aicher: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-default: 150ms;
+  --duration-mobile: 100ms;
+}
+
+/* ── Dark mode (class-based on <html>) ───────────────────── */
+.dark {
+  --fg1: #e5e5e5;
+  --fg2: #b0b0b0;
+  --fg3: #a0a0a0;
+  --fg4: #888888;
+  --bg1: #222226;
+  --bg2: #1a1a1e;
+  --bg3: #2a2a2e;
+  --line: #333333;
+  --ink: #333333;
+  --border-color: #333333;
+  --border-structural: 1px;
+  --border-emphasis: 2px;
+  /* Party colors desaturated — prevents vibration on dark */
+  --civiq-red: #d4654e; /* terracotta */
+  --civiq-green: #4a9e6b; /* sage */
+  --civiq-blue: #5bb8e6;
+  color-scheme: dark;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE + SEMANTIC TYPE
+   ═══════════════════════════════════════════════════════════ */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: var(--type-base);
+  line-height: 1.5;
+  color: var(--fg1);
+  background: var(--bg1);
+}
+
+/* Display — hero names ("HAKEEM JEFFRIES", "KNOW YOUR") */
+h1,
+.h1,
+.aicher-display {
+  font-family: var(--font-display);
+  font-size: var(--type-4xl);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+}
+
+/* Title — section banners */
+h2,
+.h2,
+.aicher-title {
+  font-size: var(--type-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+}
+
+/* Heading */
+h3,
+.h3,
+.aicher-heading {
+  font-size: var(--type-xl);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-heading);
+}
+
+/* Wide heading — card titles, nav */
+h4,
+.h4,
+.aicher-heading-wide {
+  font-size: var(--type-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+}
+
+/* Label — uppercase, tracked — the signature Aicher microtype */
+.aicher-label,
+.label,
+.eyebrow {
+  font-size: var(--type-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+
+/* Body */
+p,
+.body {
+  font-size: var(--type-base);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-body);
+  color: var(--fg2);
+}
+
+/* Stat numeric — 1972 pictogram-adjacent, never italic */
+.stat-number {
+  font-size: var(--type-3xl);
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mono — tokens, raw IDs, code */
+code,
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}

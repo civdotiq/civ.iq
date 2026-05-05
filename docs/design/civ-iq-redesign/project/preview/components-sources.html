@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .src {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 12px; border: 1px solid var(--line); background: #fff; min-width: 160px;
+  }
+  .src .name { font-size: 12px; font-weight: 700; color: var(--fg1); }
+  .src .url { font-family: var(--font-mono); font-size: 10px; color: var(--fg3); }
+  .src .meta { font-size: 10px; color: var(--fg3); letter-spacing: 0.04em; margin-top: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--civiq-blue); display: inline-block; margin-right: 6px; }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--fg3); text-transform: uppercase; margin-bottom: 10px; display: block; }
+</style>
+</head>
+<body>
+<span class="lbl">Source attribution tags · visible on every fact</span>
+<div class="row">
+  <div class="src">
+    <span class="name"><span class="dot"></span>Congress.gov</span>
+    <span class="url">/member/J000294</span>
+    <span class="meta">UPDATED 2 DAYS AGO</span>
+  </div>
+  <div class="src">
+    <span class="name"><span class="dot"></span>FEC.gov</span>
+    <span class="url">C00399001 · 2024 cycle</span>
+    <span class="meta">UPDATED YESTERDAY</span>
+  </div>
+  <div class="src">
+    <span class="name"><span class="dot"></span>USASpending</span>
+    <span class="url">/recipient/2024</span>
+    <span class="meta">UPDATED WEEKLY</span>
+  </div>
+  <div class="src">
+    <span class="name"><span class="dot"></span>Senate LDA</span>
+    <span class="url">lda.senate.gov</span>
+    <span class="meta">QUARTERLY</span>
+  </div>
+</div>
+<div style="margin-top:14px; font-size:11px; color:var(--fg3); letter-spacing:0.04em;">
+  Every claim in CIV.IQ links back to a primary source. Never an interpretation — only the record.
+</div>
+</body>
+</html>

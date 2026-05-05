@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+  .chip.d { background: #0a9338; color: #fff; border-color: #0a9338; }
+  .chip.r { background: #e11d07; color: #fff; border-color: #e11d07; }
+  .chip.i { background: #6b7280; color: #fff; border-color: #6b7280; }
+  .chip.out-d { background: #fff; color: #0a9338; border-color: #0a9338; }
+  .chip.out-r { background: #fff; color: #e11d07; border-color: #e11d07; }
+  .chip.status {
+    background: #fffbeb; color: #b45309; border-color: #b45309;
+  }
+  .chip.sm { font-size: 10px; padding: 2px 6px; letter-spacing: 0.06em; }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--fg3); text-transform: uppercase; margin-bottom: 8px; display: block; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+</style>
+</head>
+<body>
+<div class="stack">
+  <div>
+    <span class="lbl">Party · Solid</span>
+    <div class="row">
+      <span class="chip d">D · NY-08</span>
+      <span class="chip r">R · FL-19</span>
+      <span class="chip i">I · VT</span>
+    </div>
+  </div>
+  <div>
+    <span class="lbl">Party · Outlined</span>
+    <div class="row">
+      <span class="chip out-d">Voted Yes</span>
+      <span class="chip out-r">Voted No</span>
+      <span class="chip i" style="background:#fff;color:#6b7280">Abstained</span>
+    </div>
+  </div>
+  <div>
+    <span class="lbl">Status · Data quality</span>
+    <div class="row">
+      <span class="chip status">Missing disclosure</span>
+      <span class="chip status" style="background:#eff6ff;color:#2a7aa3;border-color:#3ea2d4">Unverified match</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

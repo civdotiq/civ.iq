@@ -1,0 +1,50 @@
+/* ═══════════════════════════════════════════════════════════
+   CIV.IQ — Braun Linear @font-face declarations
+   ───────────────────────────────────────────────────────────
+   Load this ONLY if you don't already have Braun Linear wired
+   into your asset pipeline. Adjust the url() paths to match
+   wherever you place the .woff2 files in your repo.
+
+   The font is shipped with the public civdotiq/civ.iq repo
+   under MIT — verify license obligations before redistributing.
+
+   Five weights are referenced across the design system, but the
+   redesign primarily uses 400, 500, 600, 700. Thin (100) and
+   Light (300) are optional.
+   ═══════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('./fonts/BraunLinear-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('./fonts/BraunLinear-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('./fonts/BraunLinear-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('./fonts/BraunLinear-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('./fonts/BraunLinear-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

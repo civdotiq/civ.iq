@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .logo-row { display: flex; align-items: center; gap: 32px; }
+  .logo-box {
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; border: 2px solid var(--ink);
+    width: 140px; height: 140px;
+  }
+  .logo-box img { max-width: 72%; max-height: 72%; }
+  .logo-box.dark { background: var(--fg1); }
+  .logo-meta { display: flex; flex-direction: column; gap: 6px; }
+  .logo-meta .lockup { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-meta .lockup .dot { color: var(--civiq-blue); }
+  .logo-meta .tag { color: var(--fg3); }
+  .logo-meta .grid-note { font-size: 11px; color: var(--fg3); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="card-root">
+  <div class="logo-row">
+    <div class="logo-box"><img src="../assets/civiq-logo.png" alt="CIV.IQ logo"></div>
+    <div class="logo-box dark"><img src="../assets/civiq-logo.png" alt="CIV.IQ logo inverted" style="filter: none"></div>
+    <div class="logo-meta">
+      <span class="tag">Wordmark</span>
+      <div class="lockup">CIV<span class="dot">.</span>IQ</div>
+      <span class="grid-note">Red circle · Green stem · 4 blue dots</span>
+      <span class="grid-note">Clear space = height of stem · Min size 24px</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

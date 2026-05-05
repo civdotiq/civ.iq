@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ · Project Brief</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; color: #111827; }
+  body { font-family: var(--font-primary); }
+  * { box-sizing: border-box; }
+
+  .page {
+    width: 816px;        /* US Letter @ 96dpi */
+    min-height: 1056px;
+    margin: 32px auto;
+    background: #fff;
+    padding: 48px 56px 40px;
+    border: 2px solid #000;
+    position: relative;
+  }
+
+  /* ── Masthead ──────────────────────────────────────────── */
+  .masthead {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #000;
+  }
+  .masthead img { width: 48px; height: auto; display: block; }
+  .masthead .wordmark {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+  }
+  .masthead .wordmark .dot { color: var(--civiq-blue); }
+  .masthead .sub {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg3); margin-top: 4px;
+  }
+  .masthead .meta {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg3);
+    text-align: right;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────── */
+  .hero { margin: 24px 0 20px; }
+  .hero .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--fg3); margin-bottom: 10px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 700; line-height: 0.98;
+    letter-spacing: -0.03em; margin: 0 0 12px; text-transform: uppercase;
+  }
+  .hero h1 .b { color: var(--civiq-blue); }
+  .hero .deck {
+    font-size: 13.5px; line-height: 1.55; color: var(--fg2);
+    max-width: 620px; margin: 0;
+  }
+
+  /* ── Stat band ─────────────────────────────────────────── */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 2px solid #000; border-bottom: 2px solid #000;
+    margin: 18px 0 22px;
+  }
+  .stats .cell { padding: 12px 14px; }
+  .stats .cell + .cell { border-left: 1px solid var(--line); }
+  .stats .lbl {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--fg3); text-transform: uppercase;
+  }
+  .stats .val {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums;
+  }
+  .stats .cell:nth-child(1) .val { color: var(--civiq-blue); }
+  .stats .cell:nth-child(2) .val { color: var(--civiq-green); }
+  .stats .cell:nth-child(3) .val { color: var(--civiq-red); }
+
+  /* ── Body columns ──────────────────────────────────────── */
+  .body { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 22px; }
+  section h2 {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; margin: 0 0 10px;
+    padding-bottom: 5px; border-bottom: 2px solid #000;
+  }
+  section p {
+    font-size: 12px; line-height: 1.55; color: var(--fg2); margin: 0 0 8px;
+  }
+  section p strong { color: #111827; font-weight: 700; }
+
+  .list { list-style: none; padding: 0; margin: 0; }
+  .list li {
+    display: grid; grid-template-columns: 22px 1fr; gap: 8px;
+    padding: 6px 0; border-bottom: 1px solid var(--line);
+    font-size: 12px; line-height: 1.5; color: var(--fg2);
+  }
+  .list li:last-child { border-bottom: 0; }
+  .list .num {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--civiq-blue); font-family: var(--font-mono);
+    padding-top: 2px;
+  }
+  .list strong { color: #111827; font-weight: 700; }
+
+  /* ── Funding table ─────────────────────────────────────── */
+  .ask { margin-top: 4px; }
+  .ask-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .ask h2 { border: 0; padding: 0; margin: 0; }
+  .ask .hint {
+    font-size: 10px; letter-spacing: 0.06em; color: var(--fg3);
+    text-transform: uppercase; font-weight: 600;
+  }
+  .tiers {
+    border: 2px solid #000;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+  }
+  .tiers .row {
+    display: contents;
+  }
+  .tiers .amt, .tiers .out {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px; line-height: 1.45;
+  }
+  .tiers .row:last-child .amt,
+  .tiers .row:last-child .out { border-bottom: 0; }
+  .tiers .amt {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #111827;
+    background: #f9fafb;
+    border-right: 1px solid #000;
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: center;
+  }
+  .tiers .out { color: var(--fg2); }
+  .tiers .out strong { color: #111827; font-weight: 700; }
+  .tiers .row.hi .amt { color: var(--civiq-blue); background: #eff6ff; }
+
+  /* ── Footer ────────────────────────────────────────────── */
+  .foot {
+    margin-top: 20px; padding-top: 12px; border-top: 2px solid #000;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg3);
+  }
+  .foot .byline { color: #111827; }
+  .foot .links { display: flex; gap: 18px; font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--fg2); }
+
+  /* ── Print ─────────────────────────────────────────────── */
+  @media print {
+    @page { size: letter; margin: 0; }
+    body { background: #fff; }
+    .page { margin: 0; border: 0; padding: 40px 48px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <img src="assets/civiq-logo.png" alt="CIV.IQ">
+    <div>
+      <div class="wordmark">CIV<span class="dot">.</span>IQ</div>
+      <div class="sub">Civic Data Infrastructure · Free · Open Source (MIT)</div>
+    </div>
+    <div class="meta">
+      <span>Project Brief</span>
+      <span>April 2026</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">The Pitch</div>
+    <h1>
+      Public record,<br>
+      made <span class="b">legible</span>.
+    </h1>
+    <p class="deck">
+      Information about elected officials — how they vote, who funds them, what bills they sponsor,
+      which lobbyists meet with them — is already public. It's just scattered across dozens of
+      government websites, each in its own format. A citizen who wants a clear picture of their
+      representative has to become a researcher. CIV.IQ fixes that: enter a home address, and it
+      pulls records from every major federal source, matches the same people across them, and
+      presents one clear civic record in plain language. <strong>No editorializing. No ads. No signups.</strong>
+    </p>
+  </section>
+
+  <div class="stats">
+    <div class="cell"><div class="lbl">Government data feeds</div><div class="val">181</div></div>
+    <div class="cell"><div class="lbl">Members of Congress</div><div class="val">535</div></div>
+    <div class="cell"><div class="lbl">Reading level</div><div class="val">8th grade</div></div>
+    <div class="cell"><div class="lbl">Platform cost / month</div><div class="val">$150</div></div>
+  </div>
+
+  <div class="body">
+
+    <section>
+      <h2>What's there today</h2>
+      <ol class="list">
+        <li><span class="num">01</span><span>
+          <strong>181 government data feeds connected</strong> — representatives, bills, votes,
+          campaign finance, lobbying, federal contracts, regulations.
+        </span></li>
+        <li><span class="num">02</span><span>
+          <strong>Plain-language summaries.</strong> A dozen tools read raw records and write
+          short explanations, each with a confidence score and a link back to the source.
+        </span></li>
+        <li><span class="num">03</span><span>
+          <strong>Cross-source matching.</strong> "Sanders, B." and "Bernard Sanders" stitched
+          into one record. The matching logic is published as an open-source package.
+        </span></li>
+        <li><span class="num">04</span><span>
+          <strong>Careful use of ML.</strong> A vote-prediction model trained on real roll calls,
+          similarity between lobbying filings and bills, clustering of reps who vote together.
+        </span></li>
+        <li><span class="num">05</span><span>
+          <strong>Built for reuse.</strong> Newsrooms, researchers, and AI assistants can plug
+          into the data directly. Civic infrastructure, not a walled product.
+        </span></li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Why this way</h2>
+      <p>
+        Most civic tech is either expensive enterprise software — <strong>Quorum, FiscalNote</strong>
+        — built for lobbyists, not citizens; or single-issue dashboards that go dark when the grant
+        ends. CIV.IQ is built as <strong>infrastructure</strong>: a canonical, open layer others
+        can build on.
+      </p>
+      <p>
+        The analogy: <strong>Wikipedia for civic data.</strong> One good, public, permanent record.
+        Intentionally non-commercial. No subscriptions. No paywall. No ads.
+      </p>
+
+      <h2 style="margin-top: 18px">Who's building it</h2>
+      <p>
+        <strong>Mark Sandford.</strong> Twenty years thinking about civic data infrastructure;
+        CIV.IQ is the expression of that vision — writing the code, designing the product,
+        doing the research. Platform costs (≈$150/mo for AI + hosting) have been covered out
+        of pocket.
+      </p>
+      <p>
+        The federal layer is solid. The two biggest remaining gaps:
+        <strong>state-level coverage</strong> (all 50 state legislatures to federal parity) and
+        <strong>Spanish-language access</strong> (42M+ Spanish speakers currently outside the
+        plain-language layer).
+      </p>
+    </section>
+
+  </div>
+
+  <div class="ask">
+    <div class="ask-header">
+      <h2>The Ask · Funding ladder</h2>
+      <span class="hint">Intros to civic-tech &amp; public-interest-AI funders welcome</span>
+    </div>
+    <div class="tiers">
+      <div class="row">
+        <div class="amt">$1,800</div>
+        <div class="out">A <strong>full year</strong> of current platform operating costs.</div>
+      </div>
+      <div class="row">
+        <div class="amt">$5,000</div>
+        <div class="out"><strong>Spanish-language translation</strong> across the platform.</div>
+      </div>
+      <div class="row">
+        <div class="amt">$25,000</div>
+        <div class="out">Bringing a <strong>~15-state region</strong> to federal parity.</div>
+      </div>
+      <div class="row hi">
+        <div class="amt">$85,000</div>
+        <div class="out"><strong>Full 50-state coverage + Spanish + a year of runway.</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span class="byline">Independent · Nonpartisan · Authoritative government data only</span>
+    <div class="links">
+      <span>civdotiq.org</span>
+      <span>github.com/civdotiq/civ.iq</span>
+      <span>mark.b.sandford@gmail.com</span>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

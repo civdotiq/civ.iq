@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Federal Profile Redesigns</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  body { font-family: var(--font-primary); color: #111827; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="ProfileRefined.jsx"></script>
+<script type="text/babel" src="ProfileDossier.jsx"></script>
+<script type="text/babel" src="ProfileMoneyFirst.jsx"></script>
+<script type="text/babel" src="ProfileHybrid.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas
+      title="CIV.IQ — Federal Official Profile · Three Redesigns"
+      subtitle="Otl Aicher / Ulm system. Same data, three lenses. Strict 8px grid, 2px black borders, square corners, no gradients, no shadows on cards."
+    >
+      <DCSection id="profiles" title="Profile Redesigns">
+
+        <DCArtboard id="refined" label="01 · Refined Classic — Hakeem Jeffries (D, NY-08, House)" width={1080} height={1700}>
+          <ProfileRefined official={OFFICIAL_JEFFRIES}/>
+        </DCArtboard>
+
+        <DCArtboard id="dossier" label="02 · Dossier — Lisa Murkowski (R, AK, Senate)" width={1080} height={1820}>
+          <ProfileDossier official={OFFICIAL_MURKOWSKI}/>
+        </DCArtboard>
+
+        <DCArtboard id="money" label="03 · Money-First — Mike Johnson (R, LA-04, Speaker)" width={1080} height={1820}>
+          <ProfileMoneyFirst official={OFFICIAL_JOHNSON}/>
+        </DCArtboard>
+
+        <DCArtboard id="hybrid" label="04 · Hybrid (1+2) — Tabbed chassis, Dossier density — Jeffries" width={1080} height={1750}>
+          <ProfileHybrid official={OFFICIAL_JEFFRIES}/>
+        </DCArtboard>
+
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

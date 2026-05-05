@@ -1,0 +1,348 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ · Data Source Matrix</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; color: #111827; }
+  body { font-family: var(--font-primary); }
+  * { box-sizing: border-box; }
+
+  .page {
+    width: 1632px;       /* Tabloid landscape @ 96dpi (17x11in) */
+    height: 1056px;
+    margin: 32px auto;
+    background: #fff;
+    padding: 28px 44px 24px;
+    border: 2px solid #000;
+    display: flex; flex-direction: column; gap: 12px;
+    overflow: hidden;
+  }
+
+  /* ── Masthead ──────────────────────────────────────────── */
+  .masthead {
+    display: grid;
+    grid-template-columns: 40px auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+  }
+  .masthead img { width: 40px; height: auto; display: block; }
+  .masthead .wordmark {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+  }
+  .masthead .wordmark .dot { color: var(--civiq-blue); }
+  .masthead .title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #111827;
+    border-left: 1px solid var(--line); padding-left: 14px;
+    line-height: 1.3;
+  }
+  .masthead .title .sub { color: var(--fg3); font-weight: 500; letter-spacing: 0.08em; }
+  .masthead .meta {
+    display: flex; flex-direction: column; gap: 3px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg3);
+    text-align: right;
+  }
+
+  /* ── TL;DR summary band ────────────────────────────────── */
+  .summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 2px solid #000; border-bottom: 2px solid #000;
+  }
+  .summary .cell { padding: 10px 14px; }
+  .summary .cell + .cell { border-left: 1px solid var(--line); }
+  .summary .lbl {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--fg3); text-transform: uppercase; display: block;
+  }
+  .summary .val {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.1; margin-top: 3px; font-variant-numeric: tabular-nums;
+  }
+  .summary .note { font-size: 10.5px; color: var(--fg2); margin-top: 3px; line-height: 1.35; }
+  .summary .cell.complete .val  { color: var(--civiq-green); }
+  .summary .cell.partial .val   { color: var(--civiq-blue); }
+  .summary .cell.pilot .val     { color: #d97706; }
+  .summary .cell.unavail .val   { color: var(--civiq-red); }
+
+  /* ── Main layout ───────────────────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+  }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── Section header ─────────────────────────────────────── */
+  .sec {
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 10px; align-items: baseline;
+    padding-bottom: 5px; border-bottom: 2px solid #000;
+  }
+  .sec .tier {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: #fff; padding: 2px 8px;
+    font-family: var(--font-mono);
+  }
+  .tier.tg { background: var(--civiq-green); }
+  .tier.tb { background: var(--civiq-blue); }
+  .tier.to { background: #d97706; }
+  .sec .name {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .sec .count {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--fg3); letter-spacing: 0.04em;
+  }
+
+  /* ── Row ────────────────────────────────────────────────── */
+  .rows { display: flex; flex-direction: column; }
+  .r {
+    display: grid;
+    grid-template-columns: 1fr 110px 70px;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .r:last-child { border-bottom: 0; }
+  .r .what {
+    font-size: 11.5px; font-weight: 600; color: #111827;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .r .what .src {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 400;
+    color: var(--fg3); letter-spacing: 0.02em;
+  }
+  .r .cadence {
+    font-family: var(--font-mono); font-size: 10px; color: var(--fg2);
+    letter-spacing: 0.04em;
+  }
+  .r .status {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; text-align: right; font-family: var(--font-mono);
+  }
+  .status.complete { color: var(--civiq-green); }
+  .status.partial  { color: #d97706; }
+  .status.unavail  { color: var(--civiq-red); }
+
+  /* ── Note block ────────────────────────────────────────── */
+  .note-block {
+    background: #f9fafb;
+    border-left: 3px solid var(--civiq-blue);
+    padding: 8px 12px;
+    font-size: 10.5px; line-height: 1.5; color: var(--fg2);
+  }
+  .note-block strong { color: #111827; font-weight: 700; }
+
+  /* ── Intelligence analyzer strip ───────────────────────── */
+  .analyzers {
+    border: 2px solid #000;
+    display: grid;
+    grid-template-columns: 1fr 50px 50px 50px;
+    overflow: hidden;
+  }
+  .analyzers .head {
+    background: #111827; color: #fff;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 8px 10px; text-align: center;
+  }
+  .analyzers .head.name { text-align: left; padding-left: 12px; }
+  .analyzers .cell {
+    padding: 3px 10px; font-size: 10.5px; border-top: 1px solid var(--line);
+    font-family: var(--font-primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .analyzers .cell.name { justify-content: flex-start; padding-left: 12px; font-weight: 500; color: #111827; }
+  .analyzers .cell.yes { color: var(--civiq-green); font-weight: 700; }
+  .analyzers .cell.no  { color: var(--fg4); }
+  .analyzers .row-wrap { display: contents; }
+
+  /* ── Footer ────────────────────────────────────────────── */
+  .foot {
+    padding-top: 10px; border-top: 2px solid #000;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg3);
+  }
+  .foot .links { display: flex; gap: 16px; font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--fg2); }
+
+  /* ── Legend dots ───────────────────────────────────────── */
+  .legend { display: flex; gap: 12px; font-size: 9.5px; letter-spacing: 0.06em; font-weight: 600; color: var(--fg3); text-transform: uppercase; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 8px; height: 8px; display: inline-block; }
+
+  /* ── Print ─────────────────────────────────────────────── */
+  @media print {
+    @page { size: tabloid landscape; margin: 0; }
+    body { background: #fff; }
+    .page { margin: 0; border: 0; padding: 32px 44px; width: 17in; height: 11in; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <img src="assets/civiq-logo.png" alt="CIV.IQ">
+    <div class="wordmark">CIV<span class="dot">.</span>IQ</div>
+    <div class="title">
+      Data Source Matrix<br>
+      <span class="sub">Every feed. Every cadence. What's in, what's partial, what's honest about being out.</span>
+    </div>
+    <div class="meta">
+      <span>Canonical · 2026-04-16</span>
+      <span>docs/COVERAGE.md</span>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="cell complete">
+      <span class="lbl">Federal</span>
+      <div class="val">Complete</div>
+      <div class="note">535 members · All bills · All roll calls · FEC · LDA · USASpending · Federal Register</div>
+    </div>
+    <div class="cell partial">
+      <span class="lbl">State legislatures</span>
+      <div class="val">Complete*</div>
+      <div class="note">All 50 states via OpenStates. *State campaign finance is <strong>unavailable</strong>.</div>
+    </div>
+    <div class="cell pilot">
+      <span class="lbl">Local</span>
+      <div class="val">10 cities</div>
+      <div class="note">Pilot list via Legistar. Outside the list, routes return <code style="font-family:var(--font-mono)">unavailable</code>.</div>
+    </div>
+    <div class="cell unavail">
+      <span class="lbl">What we don't pretend to have</span>
+      <div class="val">Explicit</div>
+      <div class="note">Every unwired join returns <code style="font-family:var(--font-mono)">dataQuality: 'unavailable'</code> — never a silent empty array.</div>
+    </div>
+  </div>
+
+  <!-- ───────────── Three-column layout ───────────── -->
+  <div class="grid">
+
+    <!-- FEDERAL ─────────────────────────────────────────── -->
+    <div class="col">
+      <div class="sec">
+        <span class="tier tg">Federal</span>
+        <span class="name">Complete across all wired domains</span>
+        <span class="count">15 feeds</span>
+      </div>
+      <div class="rows">
+
+        <div class="r"><div class="what">Members of Congress<span class="src">Congress.gov v3</span></div><span class="cadence">Weekly</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">House roll call votes<span class="src">House Clerk XML</span></div><span class="cadence">Per session</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Senate roll call votes<span class="src">Senate.gov XML</span></div><span class="cadence">Per session</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Bills — text, sponsors, status<span class="src">Congress.gov v3</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Committee assignments<span class="src">Congress.gov v3</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Hearing transcripts<span class="src">GovInfo.gov</span></div><span class="cadence">Per hearing</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Campaign finance<span class="src">FEC.gov</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Lobbying disclosures<span class="src">Senate LDA</span></div><span class="cadence">Quarterly</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Contracts & grants<span class="src">USASpending.gov v2</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Rules & executive orders<span class="src">Federal Register</span></div><span class="cadence">Daily</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">STOCK Act trades<span class="src">SEC EDGAR</span></div><span class="cadence">Per filing</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Public comments on rules<span class="src">Regulations.gov</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">District boundaries<span class="src">Census TIGER/Line</span></div><span class="cadence">Post-redistrict</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Demographics<span class="src">Census ACS</span></div><span class="cadence">Annual</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Employment & wages<span class="src">Bureau of Labor Statistics</span></div><span class="cadence">Monthly</span><span class="status complete">Complete</span></div>
+
+      </div>
+    </div>
+
+    <!-- STATE ───────────────────────────────────────────── -->
+    <div class="col">
+      <div class="sec">
+        <span class="tier tb">State</span>
+        <span class="name">Legislatures complete · Finance unavailable</span>
+        <span class="count">7 feeds</span>
+      </div>
+      <div class="rows">
+        <div class="r"><div class="what">State legislators<span class="src">OpenStates GraphQL</span></div><span class="cadence">Weekly</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">State bills<span class="src">OpenStates GraphQL</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">State committees<span class="src">OpenStates GraphQL</span></div><span class="cadence">Continuous</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">State roll call votes<span class="src">OpenStates GraphQL</span></div><span class="cadence">Per session</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Legislative districts<span class="src">Census TIGER/Line</span></div><span class="cadence">Annual</span><span class="status complete">Complete</span></div>
+        <div class="r"><div class="what">Governors & AGs<span class="src">Wikidata SPARQL</span></div><span class="cadence">Community</span><span class="status partial">Partial</span></div>
+        <div class="r"><div class="what">State judiciary (top court)<span class="src">Wikidata SPARQL</span></div><span class="cadence">Community</span><span class="status partial">Partial</span></div>
+      </div>
+
+      <div class="note-block" style="margin-top:2px">
+        <strong>State campaign finance — UNAVAILABLE.</strong>
+        FollowTheMoney.org is in maintenance mode after the OpenSecrets merger; no usable API key.
+        Routes return <code style="font-family:var(--font-mono)">dataQuality: 'unavailable'</code> with a source-status note. Tracked here; will re-wire when a replacement exists.
+      </div>
+
+      <div class="sec" style="margin-top:8px">
+        <span class="tier tg">Intel</span>
+        <span class="name">12 ML analyzers · Federal-only</span>
+        <span class="count">F · S · L</span>
+      </div>
+      <div class="analyzers">
+        <div class="head name">Analyzer</div>
+        <div class="head">FED</div>
+        <div class="head">STA</div>
+        <div class="head">LOC</div>
+
+        <div class="row-wrap"><div class="cell name">Finance-Jurisdiction Overlap</div><div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Vote-Finance Correlation</div>   <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Temporal Vote Shifts</div>        <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Lobbying Pipeline</div>           <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">PAC-to-Vote Tracing</div>         <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Stock-Committee Overlap</div>     <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Influence Chain</div>             <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Sector Leaderboard</div>          <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Vote Prediction · XGBoost</div>   <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Bill Intelligence</div>           <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Bill-Lobbying Similarity</div>    <div class="cell yes">●</div><div class="cell no">—</div><div class="cell no">—</div></div>
+        <div class="row-wrap"><div class="cell name">Federal Register Analysis</div>   <div class="cell yes">●</div><div class="cell no">n/a</div><div class="cell no">n/a</div></div>
+      </div>
+    </div>
+
+    <!-- LOCAL + INTELLIGENCE ────────────────────────────── -->
+    <div class="col">
+      <div class="sec">
+        <span class="tier to">Local</span>
+        <span class="name">Pilot list · Legistar</span>
+        <span class="count">10 cities</span>
+      </div>
+      <div class="rows">
+        <div class="r"><div class="what">Austin · <span style="color:var(--fg3)">TX</span><span class="src">Legistar · austin</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Boston · <span style="color:var(--fg3)">MA</span><span class="src">Legistar · boston</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Chicago · <span style="color:var(--fg3)">IL</span><span class="src">Legistar · chicago</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Denver · <span style="color:var(--fg3)">CO</span><span class="src">Legistar · denver</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Detroit · <span style="color:var(--fg3)">MI</span><span class="src">Legistar · detroitmi</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Minneapolis · <span style="color:var(--fg3)">MN</span><span class="src">Legistar · minneapolis</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Oakland · <span style="color:var(--fg3)">CA</span><span class="src">Legistar · oakland</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Philadelphia · <span style="color:var(--fg3)">PA</span><span class="src">Legistar · philacity</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Portland · <span style="color:var(--fg3)">OR</span><span class="src">Legistar · portland</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+        <div class="r"><div class="what">Seattle · <span style="color:var(--fg3)">WA</span><span class="src">Legistar · seattle</span></div><span class="cadence">Per meeting</span><span class="status complete">Live</span></div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <footer class="foot">
+    <div class="legend">
+      <span><i style="background:var(--civiq-green)"></i>Complete</span>
+      <span><i style="background:#d97706"></i>Partial</span>
+      <span><i style="background:var(--civiq-red)"></i>Unavailable</span>
+      <span>— · Every join carries a <code style="font-family:var(--font-mono)">dataQuality</code> field</span>
+    </div>
+    <div class="links">
+      <span>civdotiq.org/docs/COVERAGE.md</span>
+      <span>github.com/civdotiq/civ.iq</span>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

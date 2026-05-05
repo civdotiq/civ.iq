@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Coverage extension</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  body { font-family: var(--font-primary); color: #111827; }
+  * { box-sizing: border-box; }
+  input::placeholder { color: #9ca3af; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+
+<!-- Existing system files (re-used so the canvas builds even if a referenced var is shared) -->
+<script type="text/babel" src="ProfileHybrid.jsx"></script>
+
+<!-- New extension files -->
+<script type="text/babel" src="Landing.jsx"></script>
+<script type="text/babel" src="StateLegislator.jsx"></script>
+<script type="text/babel" src="RollLobby.jsx"></script>
+<script type="text/babel" src="FECIndustry.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas
+      title="CIV.IQ — Coverage extension"
+      subtitle="Eight more pages built on the same Aicher / Ulm chassis as the approved profile redesign. Each one is a real page type a voter or reporter clicks through — entry points, state government, primary documents, sector roll-ups. Black masthead crumbs, 2px borders, source rails, plain-language readings throughout."
+    >
+      <DCSection id="entry" title="Entry — the front door + address triage">
+        <DCArtboard id="landing" label="01 · Landing — front page of a wire bulletin" width={1280} height={1900}>
+          <LandingPage/>
+        </DCArtboard>
+
+        <DCArtboard id="address" label="02 · Address result — “you live at X → here are your reps”" width={1280} height={1850}>
+          <AddressResultPage/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="state-gov" title="State government — analog to the federal stack">
+        <DCArtboard id="state-leg" label="03 · State legislator profile — Sen. Andrew Gounardes (NY-SD-26)" width={1280} height={2050}>
+          <StateLegislatorProfile/>
+        </DCArtboard>
+
+        <DCArtboard id="state-chamber" label="04 · State legislature — NY chamber rosters + session calendar" width={1280} height={2100}>
+          <StateLegislaturePage/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="primary-docs" title="Primary documents — votes + filings as first-class pages">
+        <DCArtboard id="rollcall" label="05 · Roll call — H.R. 3684 final passage, every member's vote" width={1280} height={1950}>
+          <RollCallDetail/>
+        </DCArtboard>
+
+        <DCArtboard id="lobby" label="06 · Lobbying filing — Akin Gump for BlackRock, Q4 2024" width={1280} height={2050}>
+          <LobbyFilingDetail/>
+        </DCArtboard>
+
+        <DCArtboard id="fec" label="07 · FEC filing — Friends of Andy Kim, Q1 2026 quarterly" width={1280} height={2050}>
+          <FECFilingDetail/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="cross-cutting" title="Cross-cutting — money as a first-class entity">
+        <DCArtboard id="industry" label="08 · Industry / sector — real estate as an entity" width={1280} height={2050}>
+          <IndustrySectorPage/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

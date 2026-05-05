@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_preview.css">
+<style>
+  body { padding: 24px; }
+  .row-split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .col h4 { margin: 0 0 8px 0; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--fg3); text-transform: uppercase; }
+  .semrow { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); margin-bottom: 6px; background:#fff;}
+  .dot { width: 14px; height: 14px; border-radius: 999px; flex-shrink: 0; }
+  .sem-name { font-size: 12px; font-weight: 600; }
+  .sem-hex  { font-family: var(--font-mono); font-size: 11px; color: var(--fg3); margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="row-split">
+  <div class="col">
+    <h4>Semantic Status</h4>
+    <div class="semrow"><span class="dot" style="background:#3ea2d4"></span><span class="sem-name">Action / Success</span><span class="sem-hex">#3EA2D4</span></div>
+    <div class="semrow"><span class="dot" style="background:#4b5563"></span><span class="sem-name">Info</span><span class="sem-hex">#4B5563</span></div>
+    <div class="semrow"><span class="dot" style="background:#b45309"></span><span class="sem-name">Error</span><span class="sem-hex">#B45309</span></div>
+    <div class="semrow"><span class="dot" style="background:#d97706"></span><span class="sem-name">Warning</span><span class="sem-hex">#D97706</span></div>
+  </div>
+  <div class="col">
+    <h4>Party Identification (ONLY)</h4>
+    <div class="semrow"><span class="dot" style="background:#0a9338"></span><span class="sem-name">Democrat</span><span class="sem-hex">#0A9338</span></div>
+    <div class="semrow"><span class="dot" style="background:#e11d07"></span><span class="sem-name">Republican</span><span class="sem-hex">#E11D07</span></div>
+    <div class="semrow"><span class="dot" style="background:#6b7280"></span><span class="sem-name">Independent</span><span class="sem-hex">#6B7280</span></div>
+    <div style="font-size:10px; color:var(--fg3); letter-spacing:0.04em; margin-top:10px; line-height:1.5;">
+      Red/green reserved for party. Status uses amber + blue to avoid conflation.
+    </div>
+  </div>
+</div>
+</body>
+</html>

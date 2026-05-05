@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CIV.IQ — Connected System</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  body { font-family: var(--font-primary); color: #111827; }
+  * { box-sizing: border-box; }
+  input::placeholder { color: #9ca3af; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+<script type="text/babel" src="ProfileHybrid.jsx"></script>
+<script type="text/babel" src="BillDetail.jsx"></script>
+<script type="text/babel" src="SearchResults.jsx"></script>
+<script type="text/babel" src="CommitteeDetail.jsx"></script>
+<script type="text/babel" src="StateOverview.jsx"></script>
+<script type="text/babel" src="SystemPages.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas
+      title="CIV.IQ — Connected System"
+      subtitle="The profile redesign extended into a full product. Same Aicher/Ulm chassis applied across every page type a voter or reporter actually clicks through. Black masthead crumbs, 2px borders, source rails, plain-language readings."
+    >
+      <DCSection id="entry" title="Entry points">
+        <DCArtboard id="search" label="01 · Search results — query for an address that doesn't parse" width={1280} height={2000}>
+          <SearchResults query="infrastructure"/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="profile-bill" title="Profile → Bill (the link)">
+        <DCArtboard id="profile" label="02 · Profile — Hakeem Jeffries (the hybrid we approved)" width={1080} height={1750}>
+          <ProfileHybrid official={OFFICIAL_JEFFRIES}/>
+        </DCArtboard>
+
+        <DCArtboard id="bill" label="03 · Bill detail — H.R. 3684, Infrastructure Investment & Jobs Act" width={1280} height={2200}>
+          <BillDetail bill={BILL_HR3684}/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="lateral" title="Lateral pages — committee, state, methodology, about, error">
+        <DCArtboard id="committee" label="04 · Committee detail — House Budget" width={1280} height={1900}>
+          <CommitteeDetail c={CMTE_BUDGET}/>
+        </DCArtboard>
+
+        <DCArtboard id="state" label="05 · State overview — New York" width={1280} height={2000}>
+          <StateOverview s={STATE_NY}/>
+        </DCArtboard>
+
+        <DCArtboard id="method" label="06 · Methodology — public dossier" width={1280} height={1700}>
+          <MethodologyPage/>
+        </DCArtboard>
+
+        <DCArtboard id="about" label="07 · About — masthead, people, funding" width={1280} height={1700}>
+          <AboutPage/>
+        </DCArtboard>
+
+        <DCArtboard id="404" label="08 · Not found — file-stamp error" width={1280} height={1100}>
+          <NotFoundPage/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

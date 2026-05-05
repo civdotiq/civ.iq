@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GAP — Redesign Coverage vs. Live Routes (2026-05)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#f7f6f2;color:var(--fg1);font-family:var(--font-primary);font-feature-settings:"ss01","cv11";-webkit-font-smoothing:antialiased}
+  .page{max-width:1080px;margin:0 auto;padding:64px 56px 120px;background:#fff;border-left:2px solid var(--fg1);border-right:2px solid var(--fg1);min-height:100vh}
+  .stamp{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--fg1);padding-bottom:16px;margin-bottom:32px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg2)}
+  .stamp .doc-id{color:var(--fg1);font-weight:600}
+  h1{font-size:48px;line-height:1.05;letter-spacing:-.02em;font-weight:500;margin:0 0 8px}
+  h1 .sub{display:block;font-size:14px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);margin-top:18px;font-family:var(--font-mono)}
+  h2{font-size:24px;font-weight:600;letter-spacing:-.005em;margin:56px 0 16px;padding-top:20px;border-top:1px solid var(--fg1)}
+  h2 .num{font-family:var(--font-mono);font-size:13px;color:var(--fg3);margin-right:14px;font-weight:400;letter-spacing:.06em}
+  h3{font-size:15px;font-weight:600;letter-spacing:.02em;margin:32px 0 10px;text-transform:uppercase}
+  h3 .num{font-family:var(--font-mono);color:var(--fg3);margin-right:10px;font-weight:400}
+  p,li{font-size:15px;line-height:1.55;color:var(--fg1)}
+  p{margin:0 0 14px;max-width:78ch;text-wrap:pretty}
+  ul,ol{padding-left:22px;margin:0 0 16px;max-width:78ch}
+  li{margin-bottom:6px}
+  code{font-family:var(--font-mono);font-size:.86em;background:#f1efe9;padding:1px 5px;border-radius:2px;color:var(--fg1)}
+  strong{font-weight:600}
+  em{font-style:italic;color:var(--fg2)}
+  hr{border:none;border-top:1px solid #e5e3dc;margin:40px 0}
+  table{width:100%;border-collapse:collapse;margin:8px 0 24px;font-size:13.5px}
+  thead th{text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:11px;color:var(--fg2);padding:10px 12px;border-bottom:2px solid var(--fg1);background:#fafaf6;font-family:var(--font-mono)}
+  tbody td{padding:9px 12px;border-bottom:1px solid #ececea;vertical-align:top;line-height:1.4}
+  tbody tr:hover{background:#fafaf6}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+  .lede{font-size:18px;line-height:1.5;color:var(--fg1);max-width:72ch;border-left:2px solid var(--civiq-blue);padding-left:18px;margin:24px 0 32px}
+  .star{color:var(--civiq-red);font-weight:700}
+  .callout{background:#fafaf6;border:1px solid #e5e3dc;border-left:3px solid var(--civiq-red);padding:18px 22px;margin:20px 0;font-size:14.5px}
+  .callout-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--civiq-red);font-weight:600;margin-bottom:6px}
+  .scorecard tbody td:first-child{font-weight:600}
+  .scorecard tbody tr:last-child{border-top:2px solid var(--fg1);font-weight:600;background:#fafaf6}
+  .scorecard tbody tr:last-child td{padding-top:14px;padding-bottom:14px}
+  .pill{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:2px;background:var(--fg1);color:#fff;margin-left:8px;vertical-align:1px}
+  .pill.warn{background:var(--civiq-red)}
+  .pill.ok{background:var(--civiq-green)}
+  .footer{margin-top:80px;padding-top:18px;border-top:2px solid var(--fg1);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg2);display:flex;justify-content:space-between}
+  .toc{background:#fafaf6;border:1px solid #e5e3dc;padding:18px 22px;margin:24px 0 36px;font-family:var(--font-mono);font-size:12px}
+  .toc-title{letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-bottom:10px;font-size:10px}
+  .toc ol{list-style:none;padding:0;margin:0;column-count:2;column-gap:32px}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--fg1);text-decoration:none}
+  .toc a:hover{color:var(--civiq-blue);text-decoration:underline}
+</style>
+</head>
+<body>
+  <main class="page">
+
+    <div class="stamp">
+      <div>
+        <div class="doc-id">DOC · GAP-REDESIGN-COVERAGE-2026-05</div>
+        <div>Internal · Engineering &amp; Design</div>
+      </div>
+      <div style="text-align:right">
+        <div>Revision 01 · 2026-05-01</div>
+        <div>~80 routes · 16 templates</div>
+      </div>
+    </div>
+
+    <h1>
+      Redesign Coverage <br>vs. Live Routes
+      <span class="sub">A coverage map between handoff templates and shipped routes</span>
+    </h1>
+
+    <p class="lede">
+      The handoff is a <strong>reference spec, not code to import</strong>. It ships <strong>16 page templates</strong> plus a shared chassis (<code>tokens.css</code>, <code>chrome.jsx</code>, <code>primitives.jsx</code>). The live site has <strong>~80 page routes</strong>. ~16/80 have a direct template; the remaining ~64 need to be built by applying the chassis to an existing template as the inheritance source.
+    </p>
+
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <ol>
+        <li><a href="#s1">1 · Templates shipped</a></li>
+        <li><a href="#s2">2 · Direct mapping (~16)</a></li>
+        <li><a href="#s3">3 · Inheritance plan (~55)</a></li>
+        <li><a href="#s4">4 · Phased rollout</a></li>
+        <li><a href="#s5">5 · Not covered · needs new design</a></li>
+        <li><a href="#s6">6 · Coverage scorecard</a></li>
+      </ol>
+    </div>
+
+    <h2 id="s1"><span class="num">§1</span>Templates shipped in the handoff</h2>
+    <p>From <code>redesign/</code> + <code>ui_kits/web/</code>:</p>
+
+    <table>
+      <thead><tr><th class="num">#</th><th>Template</th><th>File</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Landing</td><td><code>Landing.jsx → LandingPage</code></td><td>Hero + wire-bulletin</td></tr>
+        <tr><td class="num">2</td><td>Address result</td><td><code>Landing.jsx → AddressResultPage</code></td><td>Triage UI for "you live at X"</td></tr>
+        <tr><td class="num">3</td><td>Search results</td><td><code>SearchResults.jsx</code></td><td>Faceted sidebar + 3 row variants</td></tr>
+        <tr><td class="num">4</td><td>Federal profile (Hybrid) <span class="star">★</span></td><td><code>ProfileHybrid.jsx</code></td><td>Tabbed chassis, 5 panels · approved</td></tr>
+        <tr><td class="num">4a</td><td>Profile (alt — Refined)</td><td><code>ProfileRefined.jsx</code></td><td>Reference only</td></tr>
+        <tr><td class="num">4b</td><td>Profile (alt — Dossier)</td><td><code>ProfileDossier.jsx</code></td><td>Reference only</td></tr>
+        <tr><td class="num">4c</td><td>Profile (alt — MoneyFirst)</td><td><code>ProfileMoneyFirst.jsx</code></td><td>Reference only</td></tr>
+        <tr><td class="num">5</td><td>Bill detail</td><td><code>BillDetail.jsx</code></td><td>Vertical 5-panel + timeline</td></tr>
+        <tr><td class="num">6</td><td>Committee detail</td><td><code>CommitteeDetail.jsx</code></td><td>Dense 8-col member grid</td></tr>
+        <tr><td class="num">7</td><td>Roll call detail</td><td><code>RollLobby.jsx → RollCallDetail</code></td><td>Per-member vote grid</td></tr>
+        <tr><td class="num">8</td><td>Lobby filing</td><td><code>RollLobby.jsx → LobbyFilingDetail</code></td><td>Money-flow SVG diagram</td></tr>
+        <tr><td class="num">9</td><td>FEC filing</td><td><code>FECIndustry.jsx → FECFilingDetail</code></td><td>Money-flow SVG diagram</td></tr>
+        <tr><td class="num">10</td><td>Industry / sector</td><td><code>FECIndustry.jsx → IndustrySectorPage</code></td><td>Ranked tables + bars</td></tr>
+        <tr><td class="num">11</td><td>State legislator profile</td><td><code>StateLegislator.jsx → StateLegislatorProfile</code></td><td>Mirrors federal hybrid</td></tr>
+        <tr><td class="num">12</td><td>State legislature page</td><td><code>StateLegislator.jsx → StateLegislaturePage</code></td><td>Chamber rosters + calendar</td></tr>
+        <tr><td class="num">13</td><td>State overview</td><td><code>StateOverview.jsx</code></td><td>State landing</td></tr>
+        <tr><td class="num">14</td><td>Methodology</td><td><code>SystemPages.jsx → MethodologyPage</code></td><td>Static</td></tr>
+        <tr><td class="num">15</td><td>About</td><td><code>SystemPages.jsx → AboutPage</code></td><td>Static</td></tr>
+        <tr><td class="num">16</td><td>404</td><td><code>SystemPages.jsx → NotFoundPage</code></td><td>File-stamp aesthetic</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="callout-title">Verification flag · doc may undercount</div>
+      An audit of <code>redesign/</code> turned up 8 additional page-level templates not in this list: <code>Compare.jsx</code>, <code>DistrictPage.jsx</code>, <code>Election.jsx</code>, <code>IssueTopic.jsx</code>, <code>LocalCouncil.jsx</code>, <code>PACProfile.jsx</code>, <code>SpendingContract.jsx</code>, <code>VotingRecord.jsx</code>. See <code>GAP-redesign-coverage-2026-05.verification-notes.md</code>.
+    </div>
+
+    <h2 id="s2"><span class="num">§2</span>Direct mapping — covered routes (~16)</h2>
+    <table>
+      <thead><tr><th>Live route</th><th>Redesign template</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><code>/</code></td><td>Landing</td><td>Covered</td></tr>
+        <tr><td><code>/your-reps</code>, <code>/your-reps/money-report</code></td><td>Address result</td><td>Covered (split)</td></tr>
+        <tr><td><code>/(public)/search</code>, <code>/(public)/results</code></td><td>Search results</td><td>Covered</td></tr>
+        <tr><td><code>/representative/[bioguideId]</code></td><td>Federal profile (Hybrid) <span class="star">★</span></td><td><strong>Build first</strong></td></tr>
+        <tr><td><code>/bill/[billId]</code></td><td>Bill detail</td><td>Covered</td></tr>
+        <tr><td><code>/committee/[committeeId]</code></td><td>Committee detail</td><td>Covered</td></tr>
+        <tr><td><code>/vote/[voteId]</code></td><td>Roll call detail</td><td>Covered</td></tr>
+        <tr><td><code>/lobby/[registrantId]</code></td><td>Lobby filing</td><td>Close — registrant, not per-filing</td></tr>
+        <tr><td><em>(no route)</em></td><td>FEC filing</td><td><span class="pill warn">Missing route</span></td></tr>
+        <tr><td><code>/industry/[sector]</code></td><td>Industry / sector</td><td>Covered</td></tr>
+        <tr><td><code>/representative/state/[state]/[id]</code></td><td>State legislator profile</td><td>Covered</td></tr>
+        <tr><td><code>/state-legislature/[state]/legislator/[id]</code></td><td>State legislator profile</td><td>Duplicate</td></tr>
+        <tr><td><code>/state-legislature/[state]</code></td><td>State legislature page</td><td>Covered</td></tr>
+        <tr><td><code>/states/[state]</code></td><td>State overview</td><td>Covered</td></tr>
+        <tr><td><code>/methodology</code></td><td>Methodology</td><td>Covered</td></tr>
+        <tr><td><code>/(public)/about</code></td><td>About</td><td>Covered</td></tr>
+        <tr><td><code>not-found.tsx</code></td><td>404</td><td>Covered</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="callout-title">Open questions surfaced by mapping</div>
+      <ul style="margin:6px 0 0">
+        <li>FEC: add <code>/finance/filings/[id]</code> or treat the profile "Money" panel as the entry point.</li>
+        <li>Two routes serve the state-legislator profile. Pick canonical and 301 the other.</li>
+        <li><code>/lobby/[registrantId]</code> is a registrant page; redesign is per-filing. Rescope, or add a child <code>/filings/[id]</code>.</li>
+      </ul>
+    </div>
+
+    <h2 id="s3"><span class="num">§3</span>Un-templated routes — inheritance plan (~55)</h2>
+    <p>No direct mock; not blocked. Each can be built by applying the chassis (tokens, <code>Cq*</code> primitives, <code>CqHeader</code>, source rails, 2px borders, plain-language readings) to one of the 16 templates as the inheritance source.</p>
+
+    <h3><span class="num">3a</span>Index / listing → SearchResults</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Inherit from</th><th>Row variant</th><th>Delta</th></tr></thead>
+      <tbody>
+        <tr><td><code>/representatives</code></td><td>SearchResults</td><td><code>ResultRow</code></td><td>Chamber/state/party</td></tr>
+        <tr><td><code>/committees</code></td><td>SearchResults</td><td><code>CommitteeResultRow</code></td><td>Chamber/jurisdiction</td></tr>
+        <tr><td><code>/legislation</code></td><td>SearchResults</td><td><code>BillResultRow</code></td><td>Congress/status/topic</td></tr>
+        <tr><td><code>/state-bills</code></td><td>SearchResults</td><td><code>BillResultRow</code></td><td>State filter</td></tr>
+        <tr><td><code>/state-bills/[state]</code></td><td>SearchResults</td><td><code>BillResultRow</code></td><td>Pre-filtered state</td></tr>
+        <tr><td><code>/districts</code></td><td>SearchResults</td><td>new <code>DistrictResultRow</code></td><td>Map + state filter</td></tr>
+        <tr><td><code>/state-districts</code></td><td>SearchResults</td><td>new <code>DistrictResultRow</code></td><td>State + chamber</td></tr>
+        <tr><td><code>/states</code></td><td>SearchResults</td><td>new <code>StateResultRow</code></td><td>50-row index</td></tr>
+        <tr><td><code>/industry</code></td><td>SearchResults</td><td>new <code>SectorResultRow</code></td><td>NAICS facets</td></tr>
+        <tr><td><code>/elections</code></td><td>SearchResults</td><td>new <code>ElectionResultRow</code></td><td>Year + state</td></tr>
+        <tr><td><code>/regulations</code></td><td>SearchResults</td><td>new <code>RegulationResultRow</code></td><td>Agency + window</td></tr>
+        <tr><td><code>/state-legislature/[state]/committees</code></td><td>SearchResults</td><td><code>CommitteeResultRow</code></td><td>State-scoped</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="num">3b</span>Detail pages mirroring an existing template</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Inherit from</th><th>Delta</th></tr></thead>
+      <tbody>
+        <tr><td><code>/state-bills/[state]/[billId]</code></td><td>BillDetail</td><td>State-source rail; no Congress.gov</td></tr>
+        <tr><td><code>/state-legislature/[state]/committee/[id]</code></td><td>CommitteeDetail</td><td>State-source rail</td></tr>
+        <tr><td><code>/state-legislature/[state]/vote/[id]</code></td><td>RollCallDetail</td><td>State chamber size</td></tr>
+        <tr><td><code>/regulations/[documentNumber]</code></td><td>BillDetail</td><td>Comment timeline replaces vote panel</td></tr>
+        <tr><td><code>/districts/[districtId]</code></td><td>StateOverview</td><td>District roll-up; demographics + reps</td></tr>
+        <tr><td><code>/state-districts/[state]/[chamber]/[district]</code></td><td>StateOverview</td><td>State-district roll-up</td></tr>
+        <tr><td><code>/delegation/[stateCode]</code></td><td>StateOverview</td><td>Delegation roster panel</td></tr>
+        <tr><td><code>/influence/[committeeId]</code></td><td>CommitteeDetail</td><td>Add money-flow diagram (reuse Lobby)</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="num">3c</span>Hub / overview → StateOverview</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Inherit from</th><th>Delta</th></tr></thead>
+      <tbody>
+        <tr><td><code>/federal</code></td><td>StateOverview</td><td>Federal scope, swap header</td></tr>
+        <tr><td><code>/congress</code></td><td>StateOverview</td><td>Both-chambers panel grid</td></tr>
+        <tr><td><code>/congress/house</code></td><td>StateOverview</td><td>House-only</td></tr>
+        <tr><td><code>/congress/senate</code></td><td>StateOverview</td><td>Senate-only</td></tr>
+        <tr><td><code>/local</code></td><td>StateOverview</td><td>Local scope · honest empty states</td></tr>
+        <tr><td><code>/spending</code></td><td>StateOverview / IndustrySectorPage</td><td>Ranked contracts/grants</td></tr>
+        <tr><td><code>/influence</code></td><td>StateOverview</td><td>Money-flow index</td></tr>
+        <tr><td><code>/comment-periods</code></td><td>StateOverview</td><td>Open windows panel</td></tr>
+        <tr><td><code>/executive-orders</code></td><td>StateOverview</td><td>Recent orders panel</td></tr>
+        <tr><td><code>/enforcement</code></td><td>StateOverview</td><td>DOJ/SEC actions panel</td></tr>
+        <tr><td><code>/elections/federal</code></td><td>StateOverview</td><td>Federal cycle scope</td></tr>
+        <tr><td><code>/elections/state</code></td><td>StateOverview</td><td>State cycle scope</td></tr>
+        <tr><td><code>/alerts/status</code></td><td>StateOverview</td><td>Operational status panels</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="num">3d</span>Topic hubs — one shared template (12 + 1)</h3>
+    <p><code>/topics</code>, <code>/topics/agriculture</code>, <code>defense</code>, <code>economy</code>, <code>education</code>, <code>environment</code>, <code>finance</code>, <code>foreign-policy</code>, <code>healthcare</code>, <code>immigration</code>, <code>infrastructure</code>, <code>justice</code>, <code>technology</code>.</p>
+    <p>Build <strong>one topic-hub template</strong> taking <code>{ topic }</code> as input. Renders: topic header + plain-language reading · recent legislation panel · active hearings/regulations · top spenders this cycle · source rail. Inheritance: <strong>IndustrySectorPage chassis + BillDetail's plain-language reading pattern.</strong></p>
+
+    <h3><span class="num">3e</span>AI / interactive flows — bespoke</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>/ask</code></td><td>Q&amp;A entry — prompt input + suggested questions</td></tr>
+        <tr><td><code>/ask/[slug]/[entityId]</code></td><td>Q&amp;A result with citations</td></tr>
+        <tr><td><code>/investigate</code></td><td>Open-ended investigation surface</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Recommendation:</strong> flag for follow-up design pass. Don't ship in PR 1–10; keep existing UI until a dedicated mock lands.</p>
+
+    <h3><span class="num">3f</span>Education / glossary</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Inherit from</th><th>Delta</th></tr></thead>
+      <tbody>
+        <tr><td><code>/education</code></td><td>SearchResults</td><td>Lesson rows</td></tr>
+        <tr><td><code>/education/[lessonId]</code></td><td>Methodology</td><td>Long-form static</td></tr>
+        <tr><td><code>/glossary</code></td><td>SearchResults</td><td>Term rows, A–Z facets</td></tr>
+        <tr><td><code>/glossary/[term]</code></td><td>Methodology</td><td>Single-term page</td></tr>
+        <tr><td><code>/transparency/reading-levels</code></td><td>Methodology</td><td>Static report</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="num">3g</span>Public / legal / utility — Methodology</h3>
+    <p><code>/(public)/data-sources</code>, <code>/developers</code>, <code>/disclaimer</code>, <code>/embed-docs</code>, <code>/migrate/google-civic</code>, <code>/open</code>, <code>/privacy</code>, <code>/terms</code> all inherit from Methodology. <code>/admin/api-health</code> is exempt.</p>
+
+    <h3><span class="num">3h</span>Embeds — tokens only</h3>
+    <table>
+      <thead><tr><th>Route</th><th>Treatment</th></tr></thead>
+      <tbody>
+        <tr><td><code>/embed/bill/[billId]</code></td><td>Tokens + 2px borders; skip masthead/footer</td></tr>
+        <tr><td><code>/embed/district/[districtId]</code></td><td>Same</td></tr>
+        <tr><td><code>/embed/reps/[districtId]</code></td><td>Same</td></tr>
+        <tr><td><code>/districts/[districtId]/print</code></td><td>Print stylesheet only — already has <code>civic-pack-print.css</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="s4"><span class="num">§4</span>Phased rollout plan</h2>
+    <p>Mirrors handoff's "small PRs" guidance. One page-type per PR.</p>
+
+    <h3>Phase 0 — chassis (no UI shipped)</h3>
+    <ul>
+      <li>PR 0a: Merge <code>handoff/tokens.css</code> into <code>src/styles/aicher-system.css</code> (already exists — diff &amp; merge, don't replace).</li>
+      <li>PR 0b: Reimplement <code>Cq*</code> primitives + <code>CqHeader</code> / <code>CqFooter</code> / <code>CqBreadcrumb</code> as real React components. Storybook entries.</li>
+    </ul>
+
+    <h3>Phase 1 — the 16 templated routes (~10 PRs)</h3>
+    <ol>
+      <li><code>/representative/[bioguideId]</code> (Hybrid) <span class="star">★</span> — start here</li>
+      <li><code>/bill/[billId]</code></li>
+      <li><code>/(public)/search</code> + <code>/(public)/results</code></li>
+      <li><code>/committee/[committeeId]</code></li>
+      <li><code>/states/[state]</code></li>
+      <li><code>/methodology</code> + <code>/(public)/about</code> + <code>not-found.tsx</code></li>
+      <li><code>/representative/state/...</code> + <code>/state-legislature/[state]/legislator/[id]</code></li>
+      <li><code>/state-legislature/[state]</code></li>
+      <li><code>/vote/[voteId]</code></li>
+      <li><code>/lobby/[registrantId]</code> + decide on FEC filing route</li>
+      <li><code>/industry/[sector]</code></li>
+      <li><code>/</code> + <code>/your-reps</code> + <code>/your-reps/money-report</code></li>
+    </ol>
+
+    <h3>Phase 2 — listings (~3 PRs)</h3>
+    <ul>
+      <li>All §3a SearchResults-derived listings</li>
+      <li>All §3b detail pages</li>
+      <li>All §3c hub/overview pages</li>
+    </ul>
+
+    <h3>Phase 3 — topic hubs (1 PR, 13 routes)</h3>
+    <p>All §3d topic pages share one template.</p>
+
+    <h3>Phase 4 — long tail</h3>
+    <ul>
+      <li>§3f education/glossary</li>
+      <li>§3g legal/utility (Methodology-derived)</li>
+      <li>§3h embeds (tokens only)</li>
+    </ul>
+
+    <h3>Phase 5 — bespoke</h3>
+    <p>§3e AI/interactive flows — separate design engagement.</p>
+
+    <h2 id="s5"><span class="num">§5</span>What is NOT covered · likely needs new design</h2>
+    <ol>
+      <li><strong>AI features</strong> — <code>/ask</code>, <code>/ask/[slug]/[entityId]</code>, <code>/investigate</code> (no template, no analog).</li>
+      <li><strong>Topic hub template</strong> — 13 routes share a pattern but no mock exists. <em>(Verification note: <code>IssueTopic.jsx</code> in <code>redesign/</code> may already cover this — see verification notes file.)</em></li>
+      <li><strong>Index/listing variants</strong> — DistrictResultRow, StateResultRow, SectorResultRow, ElectionResultRow, RegulationResultRow are not in the handoff. They follow SearchResults' row-variant convention but each needs its own metadata grid.</li>
+      <li><strong>Embed pages</strong> — handoff doesn't address embedded contexts (no masthead/footer).</li>
+      <li><strong>Print pages</strong> — <code>/districts/[districtId]/print</code> already has its own stylesheet; out of scope.</li>
+      <li><strong>Admin</strong> — <code>/admin/api-health</code> internal; out of scope.</li>
+      <li><strong>District / state-district detail roll-ups</strong> — mirror StateOverview but have a smaller-scope header pattern that should be designed once and shared.</li>
+    </ol>
+
+    <h2 id="s6"><span class="num">§6</span>Coverage scorecard</h2>
+    <table class="scorecard">
+      <thead><tr><th>Category</th><th class="num">Routes</th><th class="num">Direct</th><th class="num">Inheritable</th><th class="num">Bespoke</th></tr></thead>
+      <tbody>
+        <tr><td>Federal core</td><td class="num">8</td><td class="num">8</td><td class="num">0</td><td class="num">0</td></tr>
+        <tr><td>State core</td><td class="num">8</td><td class="num">5</td><td class="num">3</td><td class="num">0</td></tr>
+        <tr><td>Index / listing</td><td class="num">12</td><td class="num">0</td><td class="num">12</td><td class="num">0</td></tr>
+        <tr><td>Detail (state-mirrors)</td><td class="num">8</td><td class="num">0</td><td class="num">8</td><td class="num">0</td></tr>
+        <tr><td>Hub / overview</td><td class="num">13</td><td class="num">0</td><td class="num">13</td><td class="num">0</td></tr>
+        <tr><td>Topic hubs</td><td class="num">13</td><td class="num">0</td><td class="num">13 (shared)</td><td class="num">0</td></tr>
+        <tr><td>AI / interactive</td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">3</td></tr>
+        <tr><td>Education / glossary</td><td class="num">5</td><td class="num">0</td><td class="num">5</td><td class="num">0</td></tr>
+        <tr><td>Legal / utility</td><td class="num">8</td><td class="num">1</td><td class="num">7</td><td class="num">0</td></tr>
+        <tr><td>Embeds / print</td><td class="num">4</td><td class="num">0</td><td class="num">4 (tokens)</td><td class="num">0</td></tr>
+        <tr><td>Admin</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0 (exempt)</td></tr>
+        <tr><td>Total</td><td class="num">~80</td><td class="num">~14</td><td class="num">~62</td><td class="num">~3</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Reading:</strong> 14 routes have an exact mock, 62 can be built by applying the chassis to an existing template, 3 (AI flows) need new design. There is no route blocked on a missing template that doesn't fall into the inheritance plan above.</p>
+
+    <div class="footer">
+      <div>CIV.IQ · Internal Document</div>
+      <div>End of file</div>
+    </div>
+
+  </main>
+</body>
+</html>
