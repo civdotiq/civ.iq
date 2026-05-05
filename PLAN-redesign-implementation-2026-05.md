@@ -44,8 +44,8 @@ Updated **2026-05-05**.
 | 1     | Tokens (additive `--civiq-*` layer)                                    | ✅ done   | _stage_    |
 | 2     | `Cq*` primitives (15 components)                                       | ✅ done   | _stage_    |
 | 3     | ProfileHybrid ⭐                                                       | ✅ done   | `10d86e1f` |
-| **4** | **BillDetail** (next up)                                               | ☐ next    | —          |
-| 5     | SearchResults                                                          | ☐ pending | —          |
+| 4     | BillDetail                                                             | ✅ done   | _pending_  |
+| **5** | **SearchResults** (next up)                                            | ☐ next    | —          |
 | 6     | CommitteeDetail                                                        | ☐ pending | —          |
 | 7     | StateOverview                                                          | ☐ pending | —          |
 | 8     | SystemPages (Methodology / About / 404)                                | ☐ pending | —          |

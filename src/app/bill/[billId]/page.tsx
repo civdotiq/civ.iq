@@ -14,10 +14,12 @@ import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LegislationSchema, BreadcrumbSchema, SpeakableSchema } from '@/components/seo/JsonLd';
+import { CqPage } from '@/components/cq';
+import { BillDetail } from '@/components/bills/BillDetail';
 
 interface BillPageProps {
   params: Promise<{ billId: string }>;
-  searchParams: Promise<{ from?: string; name?: string }>;
+  searchParams: Promise<{ from?: string; name?: string; v?: string }>;
 }
 
 async function getBillData(billId: string): Promise<Bill | null> {
@@ -156,12 +158,27 @@ async function BillContent({
 // Main bill page component
 export default async function BillPage({ params, searchParams }: BillPageProps) {
   const { billId } = await params;
-  const { from: fromBioguideId, name: fromRepName } = await searchParams;
+  const { from: fromBioguideId, name: fromRepName, v } = await searchParams;
 
   const parsed = parseBillSlug(billId);
   if (parsed.kind === 'invalid') notFound();
   if (parsed.kind === 'recoverable') {
     permanentRedirect(`/bill/${parsed.canonical}`);
+  }
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    const bill = await getBillData(parsed.canonical);
+    if (!bill) notFound();
+    const crumbs = ['CIV.IQ', 'Public Record', 'Bills', `${bill.congress} Congress`, bill.number];
+    return (
+      <CqPage currentNav="bills" crumbs={crumbs}>
+        <BillDetail bill={bill} />
+      </CqPage>
+    );
   }
 
   return (
