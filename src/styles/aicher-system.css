@@ -134,6 +134,44 @@
   --radius-layout: 0px;
   --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.12);
   --shadow-tooltip: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /* REDESIGN TOKEN LAYER — additive (PR 1, 2026-05)             */
+  /* ───────────────────────────────────────────────────────────  */
+  /* New `--civiq-*` aliases for the redesign primitives (Cq*).  */
+  /* Map onto existing `--aicher-*` values — no behavioral        */
+  /* change to existing components. Source of truth is            */
+  /* docs/design/civ-iq-redesign/tokens.css.                      */
+  /* ═══════════════════════════════════════════════════════════ */
+
+  /* Brand primaries — alias the existing aicher tokens */
+  --civiq-red: var(--aicher-red);
+  --civiq-red-hover: var(--aicher-red-hover);
+  --civiq-red-active: var(--aicher-red-active);
+  --civiq-red-muted: var(--aicher-red-muted);
+  --civiq-green: var(--aicher-green);
+  --civiq-green-hover: var(--aicher-green-hover);
+  --civiq-green-active: var(--aicher-green-active);
+  --civiq-green-muted: var(--aicher-green-muted);
+  --civiq-blue: var(--aicher-blue);
+  --civiq-blue-hover: var(--aicher-blue-hover);
+  --civiq-blue-active: var(--aicher-blue-active);
+  --civiq-blue-muted: var(--aicher-blue-muted);
+  --civiq-blue-cool: var(--aicher-blue-cool);
+
+  /* Ink/paper neutrals — used by the Cq* primitives */
+  --fg1: #111827; /* primary ink */
+  --fg2: #4b5563; /* secondary ink */
+  --fg3: #6b7280; /* tertiary ink, labels */
+  --fg4: #9ca3af; /* disabled / hint */
+  --bg1: #ffffff; /* paper */
+  --bg2: #f9fafb; /* ground */
+  --bg3: #f3f4f6; /* subtle fill */
+  --line: #e5e7eb; /* hairlines */
+  --ink: #000000; /* structural borders */
+
+  /* Mono family for source tags, stamps, tabular captions */
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
@@ -165,6 +203,20 @@
   --data-vlau-light: #6b6b83;
   --data-greige: #d4d2c9;
   --data-greige-light: #b8b5a9;
+
+  /* ── Redesign token layer (additive, PR 1) ─────────────── */
+  /* Civiq-* aliases re-resolve through aicher-* dark values  */
+  /* automatically via var() chain — no override needed.      */
+  /* Neutrals shift to dark ink/paper.                        */
+  --fg1: #e5e5e5;
+  --fg2: #b0b0b0;
+  --fg3: #a0a0a0;
+  --fg4: #888888;
+  --bg1: #222226;
+  --bg2: #1a1a1e;
+  --bg3: #2a2a2e;
+  --line: #333333;
+  --ink: #333333;
 
   color-scheme: dark;
 }
