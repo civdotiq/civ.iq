@@ -15,11 +15,17 @@ import RepresentativePhoto from '@/features/representatives/components/Represent
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
+import {
+  fetchCommitteeActivity,
+  type CommitteeActivityResult,
+} from '@/lib/services/committee-activity.service';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { CommitteeFooter } from '@/components/seo/CommitteeFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
+import { CqPage } from '@/components/cq';
+import { CommitteeDetail } from '@/components/committees/CommitteeDetail';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -106,7 +112,7 @@ const CommitteeHearings = dynamic(
 
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;
-  searchParams: Promise<{ from?: string; name?: string; refresh?: string }>;
+  searchParams: Promise<{ from?: string; name?: string; refresh?: string; v?: string }>;
 }
 
 // Fetch committee data directly from service (no HTTP roundtrip)
@@ -468,7 +474,19 @@ async function CommitteeContent({
 // Main committee page component
 export default async function CommitteePage({ params, searchParams }: CommitteePageProps) {
   const { committeeId } = await params;
-  const { from: fromBioguideId, name: fromRepName, refresh } = await searchParams;
+  const { from: fromBioguideId, name: fromRepName, refresh, v } = await searchParams;
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return (
+      <Suspense fallback={<CommitteeLoading />}>
+        <RedesignedCommitteeContent committeeId={committeeId} refresh={refresh === 'true'} />
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={<CommitteeLoading />}>
@@ -479,5 +497,52 @@ export default async function CommitteePage({ params, searchParams }: CommitteeP
         refresh={refresh === 'true'}
       />
     </Suspense>
+  );
+}
+
+async function RedesignedCommitteeContent({
+  committeeId,
+  refresh,
+}: {
+  committeeId: string;
+  refresh: boolean;
+}) {
+  const committee = await getCommitteeData(committeeId, refresh);
+
+  if (!committee) {
+    return (
+      <CqPage
+        currentNav="find"
+        crumbs={['CIV.IQ', 'Public Record', 'Committees', committeeId.toUpperCase()]}
+      >
+        <div style={{ padding: '32px 36px 56px', maxWidth: 1280, margin: '0 auto' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>Committee not found</h1>
+          <p style={{ fontSize: 14, color: 'var(--fg2)' }}>
+            We could not load committee &quot;{committeeId}&quot;. The committee may not exist or
+            data may be temporarily unavailable.
+          </p>
+        </div>
+      </CqPage>
+    );
+  }
+
+  let activity: CommitteeActivityResult = {
+    bills: [],
+    meetings: [],
+    fetchedAt: new Date().toISOString(),
+  };
+  try {
+    activity = await fetchCommitteeActivity(committeeId, committee.chamber);
+  } catch {
+    // Service failure → fall back to empty arrays. Panels render the
+    // "Data unavailable" empty state honestly rather than blank cards.
+  }
+
+  const crumbs = ['CIV.IQ', 'Public Record', committee.chamber, 'Committees', committee.name];
+
+  return (
+    <CqPage currentNav="find" crumbs={crumbs}>
+      <CommitteeDetail committee={committee} activity={activity} committeeId={committeeId} />
+    </CqPage>
   );
 }
