@@ -53,7 +53,7 @@ Updated **2026-05-07** (PR 13 landed).
 | 10  | RollCallDetail                                                         | ✅ done   | `ba8dbc74` |
 | 11  | Filings (LobbyFilingDetail + FECFilingDetail)                          | ✅ done   | `9b80c022` |
 | 12  | IndustrySectorPage                                                     | ✅ done   | `7605ed1e` |
-| 13  | VotingRecord                                                           | ✅ done   | _stage_    |
+| 13  | VotingRecord                                                           | ✅ done   | `f064a19e` |
 | 14  | DistrictPage                                                           | ☐ pending | —          |
 | 15  | Compare                                                                | ☐ pending | —          |
 | 16  | IssueTopic                                                             | ☐ pending | —          |
