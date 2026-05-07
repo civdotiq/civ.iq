@@ -14,7 +14,6 @@ import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LegislationSchema, BreadcrumbSchema, SpeakableSchema } from '@/components/seo/JsonLd';
-import { CqPage } from '@/components/cq';
 import { BillDetail } from '@/components/bills/BillDetail';
 
 interface BillPageProps {
@@ -173,12 +172,7 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
   if (useRedesign) {
     const bill = await getBillData(parsed.canonical);
     if (!bill) notFound();
-    const crumbs = ['CIV.IQ', 'Public Record', 'Bills', `${bill.congress} Congress`, bill.number];
-    return (
-      <CqPage currentNav="bills" crumbs={crumbs}>
-        <BillDetail bill={bill} />
-      </CqPage>
-    );
+    return <BillDetail bill={bill} />;
   }
 
   return (

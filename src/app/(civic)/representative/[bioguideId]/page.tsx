@@ -21,7 +21,6 @@ import {
   formatVacancyMessage,
 } from '@/lib/data/congressional-vacancies';
 import { ProfileHybrid } from '@/components/officials/ProfileHybrid';
-import { CqPage } from '@/components/cq';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -382,21 +381,12 @@ export default async function RepresentativeProfilePage({
   }
 
   if (useRedesign) {
-    const crumbs = [
-      'CIV.IQ',
-      'Public Record',
-      representative.chamber,
-      representative.state,
-      representative.name,
-    ];
     return (
-      <CqPage currentNav="find" crumbs={crumbs}>
-        <ErrorBoundary>
-          <ChunkLoadErrorBoundary>
-            <ProfileHybrid representative={representative} />
-          </ChunkLoadErrorBoundary>
-        </ErrorBoundary>
-      </CqPage>
+      <ErrorBoundary>
+        <ChunkLoadErrorBoundary>
+          <ProfileHybrid representative={representative} />
+        </ChunkLoadErrorBoundary>
+      </ErrorBoundary>
     );
   }
 

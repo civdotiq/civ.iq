@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CqChip, CqDisclaimer, CqLabel, CqPage, CqPlainReading } from '@/components/cq';
+import { CqChip, CqDisclaimer, CqLabel, CqPlainReading } from '@/components/cq';
 import { getSearchData } from './data';
 import { FacetRail } from './FacetRail';
 import { SectionHead } from './SectionHead';
@@ -28,7 +28,7 @@ function normalizeType(type: string | undefined): FacetKey {
 
 function NoQueryState() {
   return (
-    <CqPage currentNav="find" crumbs={['Search']}>
+    <div style={{ padding: '32px 36px 56px', maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ paddingBottom: 20, borderBottom: '2px solid var(--ink)', marginBottom: 24 }}>
         <CqLabel>Search</CqLabel>
         <h1
@@ -60,7 +60,7 @@ function NoQueryState() {
       <CqPlainReading label="Tip.">
         Try “infrastructure”, “Jeffries”, “Murkowski”, or “Energy and Commerce”.
       </CqPlainReading>
-    </CqPage>
+    </div>
   );
 }
 
@@ -84,23 +84,7 @@ export async function SearchResults({ query, type }: SearchResultsProps) {
   const remainingBills = topBill ? data.bills.slice(1) : data.bills;
 
   return (
-    <CqPage
-      currentNav="find"
-      crumbs={['Search', `"${trimmed}"`, `${data.totals.all} results`]}
-      crumbRight={
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            color: 'var(--fg3)',
-            letterSpacing: '0.04em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Indexed {TODAY_LABEL} · 3 sources
-        </span>
-      }
-    >
+    <div style={{ padding: '32px 36px 56px', maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ paddingBottom: 20, borderBottom: '2px solid var(--ink)', marginBottom: 24 }}>
         <CqLabel>You searched for</CqLabel>
         <h1
@@ -297,6 +281,6 @@ export async function SearchResults({ query, type }: SearchResultsProps) {
           </div>
         </div>
       </div>
-    </CqPage>
+    </div>
   );
 }
