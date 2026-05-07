@@ -350,6 +350,46 @@ export class SenateLobbyingAPI {
   }
 
   /**
+   * Fetch a single Senate LDA filing by its UUID.
+   *
+   * Returns the raw filing payload (with nested `lobbying_activities`,
+   * `government_entities`, and `lobbyists`) or `null` if the filing is not
+   * found / the API is unavailable.
+   */
+  async fetchFilingByUuid(uuid: string): Promise<RawLDAFiling | null> {
+    if (!uuid) return null;
+    const cacheKey = `lobbying-filing:${uuid}`;
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const url = `${this.baseUrl}/filings/${encodeURIComponent(uuid)}/`;
+          const response = await fetch(url, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+            },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (response.status === 404) {
+            return null;
+          }
+          if (!response.ok) {
+            throw new Error(`Senate LDA API returned ${response.status}: ${response.statusText}`);
+          }
+          const data = (await response.json()) as RawLDAFiling | null;
+          if (!data || !data.filing_uuid) return null;
+          return data;
+        },
+        7 * 24 * 60 * 60 // 7 days; filings are immutable once filed
+      );
+    } catch (error) {
+      logger.error('Failed to fetch Senate LDA filing by UUID', error as Error, { uuid });
+      return null;
+    }
+  }
+
+  /**
    * Fetch lobbying filings for a specific organization by name.
    *
    * Uses the Senate LDA API's `registrant_name` and `client_name` filters

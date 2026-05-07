@@ -36,34 +36,34 @@ Replace `<N>` with the next pending PR number from the status table.
 
 ## Status
 
-Updated **2026-05-07** (PR 10 landed).
+Updated **2026-05-07** (PR 11 landed).
 
-| PR     | Title                                                                  | Status    | Commit     |
-| ------ | ---------------------------------------------------------------------- | --------- | ---------- |
-| 0      | IA renames (`/representative` → `/officials`, `/investigate` → `/ask`) | ☐ pending | —          |
-| 1      | Tokens (additive `--civiq-*` layer)                                    | ✅ done   | _stage_    |
-| 2      | `Cq*` primitives (15 components)                                       | ✅ done   | _stage_    |
-| 3      | ProfileHybrid ⭐                                                       | ✅ done   | `10d86e1f` |
-| 4      | BillDetail                                                             | ✅ done   | `80858cb7` |
-| 5      | SearchResults                                                          | ✅ done   | `9de89a2c` |
-| 6      | CommitteeDetail                                                        | ✅ done   | `f90e3add` |
-| 7      | StateOverview                                                          | ✅ done   | `e499ebeb` |
-| 8      | SystemPages (Methodology / About / 404)                                | ✅ done   | `faef7f5f` |
-| 9      | StateLegislator + StateLegislaturePage                                 | ✅ done   | `0120e476` |
-| 10     | RollCallDetail                                                         | ✅ done   | `ba8dbc74` |
-| **11** | **Filings (LobbyFilingDetail + FECFilingDetail)** (next up)            | ☐ next    | —          |
-| 12     | IndustrySectorPage                                                     | ☐ pending | —          |
-| 13     | VotingRecord                                                           | ☐ pending | —          |
-| 14     | DistrictPage                                                           | ☐ pending | —          |
-| 15     | Compare                                                                | ☐ pending | —          |
-| 16     | IssueTopic                                                             | ☐ pending | —          |
-| 17     | PACProfile                                                             | ☐ pending | —          |
-| 18     | SpendingContract                                                       | ☐ pending | —          |
-| 19     | Election                                                               | ☐ pending | —          |
-| 20     | LocalCouncil                                                           | ☐ pending | —          |
-| 21     | Search Variants (5 row templates)                                      | ☐ pending | —          |
-| 22     | EmbedMode (3 widths + print)                                           | ☐ pending | —          |
-| 23     | AI Surface (AskEntry + AskResult)                                      | ☐ pending | —          |
+| PR  | Title                                                                  | Status    | Commit     |
+| --- | ---------------------------------------------------------------------- | --------- | ---------- |
+| 0   | IA renames (`/representative` → `/officials`, `/investigate` → `/ask`) | ☐ pending | —          |
+| 1   | Tokens (additive `--civiq-*` layer)                                    | ✅ done   | _stage_    |
+| 2   | `Cq*` primitives (15 components)                                       | ✅ done   | _stage_    |
+| 3   | ProfileHybrid ⭐                                                       | ✅ done   | `10d86e1f` |
+| 4   | BillDetail                                                             | ✅ done   | `80858cb7` |
+| 5   | SearchResults                                                          | ✅ done   | `9de89a2c` |
+| 6   | CommitteeDetail                                                        | ✅ done   | `f90e3add` |
+| 7   | StateOverview                                                          | ✅ done   | `e499ebeb` |
+| 8   | SystemPages (Methodology / About / 404)                                | ✅ done   | `faef7f5f` |
+| 9   | StateLegislator + StateLegislaturePage                                 | ✅ done   | `0120e476` |
+| 10  | RollCallDetail                                                         | ✅ done   | `ba8dbc74` |
+| 11  | Filings (LobbyFilingDetail + FECFilingDetail)                          | ✅ done   | _stage_    |
+| 12  | IndustrySectorPage                                                     | ☐ pending | —          |
+| 13  | VotingRecord                                                           | ☐ pending | —          |
+| 14  | DistrictPage                                                           | ☐ pending | —          |
+| 15  | Compare                                                                | ☐ pending | —          |
+| 16  | IssueTopic                                                             | ☐ pending | —          |
+| 17  | PACProfile                                                             | ☐ pending | —          |
+| 18  | SpendingContract                                                       | ☐ pending | —          |
+| 19  | Election                                                               | ☐ pending | —          |
+| 20  | LocalCouncil                                                           | ☐ pending | —          |
+| 21  | Search Variants (5 row templates)                                      | ☐ pending | —          |
+| 22  | EmbedMode (3 widths + print)                                           | ☐ pending | —          |
+| 23  | AI Surface (AskEntry + AskResult)                                      | ☐ pending | —          |
 
 **Update protocol.** When a PR completes: edit the row to `✅ done`, paste the
 short commit hash into the Commit column, update the "Updated" date at the top

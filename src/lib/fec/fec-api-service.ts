@@ -125,6 +125,47 @@ export interface FECCommitteeTotals {
   coverage_end_date: string;
 }
 
+// Single committee filing (returned by /filings/?file_number=N)
+// Field set is a subset of the FEC openFEC `EFilings`/`Filings` schemas — only
+// what the redesigned FECFilingDetail page renders.
+export interface FECFilingRecord {
+  file_number: number;
+  committee_id: string;
+  committee_name?: string | null;
+  committee_type?: string | null;
+  committee_type_full?: string | null;
+  candidate_id?: string | null;
+  candidate_name?: string | null;
+  candidate_office?: string | null;
+  candidate_office_state?: string | null;
+  candidate_office_district?: string | null;
+  treasurer_name?: string | null;
+  party?: string | null;
+  form_type?: string | null;
+  report_type?: string | null;
+  report_type_full?: string | null;
+  report_year?: number | null;
+  coverage_start_date?: string | null;
+  coverage_end_date?: string | null;
+  receipt_date?: string | null;
+  amendment_indicator?: string | null;
+  is_amended?: boolean | null;
+  amendment_chain?: number[] | null;
+  total_receipts?: number | null;
+  total_disbursements?: number | null;
+  total_individual_contributions?: number | null;
+  total_unitemized_contributions?: number | null;
+  total_political_party_committee_contributions?: number | null;
+  total_other_political_committee_contributions?: number | null;
+  cash_on_hand_beginning_period?: number | null;
+  cash_on_hand_end_period?: number | null;
+  debts_owed_by_committee?: number | null;
+  debts_owed_to_committee?: number | null;
+  pdf_url?: string | null;
+  html_url?: string | null;
+  fec_url?: string | null;
+}
+
 // Aggregated disbursement by recipient (returned by /schedules/schedule_b/by_recipient_id/)
 export interface FECDisbursementByRecipient {
   recipient_id: string;
@@ -1338,6 +1379,41 @@ export class FECApiService {
       return requestPromise;
     } catch (error) {
       logger.error(`[FEC API] Failed to get committee info for ${committeeId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch a single committee filing (FEC Form 3, 3X, 3P, 3L, 5, etc.) by its
+   * unique file_number. Returns the first matching record from `/filings/`
+   * or `null` if the filing is not found.
+   *
+   * Uses a 24-hour cache — filings are effectively immutable once filed,
+   * but amendments may supersede an earlier file_number on a longer horizon.
+   */
+  async getFilingByFileNumber(fileNumber: number | string): Promise<FECFilingRecord | null> {
+    const numeric = typeof fileNumber === 'string' ? parseInt(fileNumber, 10) : fileNumber;
+    if (!Number.isFinite(numeric) || numeric <= 0) return null;
+
+    const cacheKey = `fec:filing:${numeric}`;
+    try {
+      const cached = await govCache.get<FECFilingRecord>(cacheKey);
+      if (cached) return cached;
+
+      const response = await this.makeRequest<FECApiResponse<FECFilingRecord>>(
+        `/filings/?file_number=${numeric}&per_page=1&sort=-receipt_date`
+      );
+      const result = response.results?.[0] ?? null;
+      if (result) {
+        await govCache.set(cacheKey, result, {
+          ttl: 24 * 60 * 60 * 1000,
+          source: 'fec-filings-api',
+          dataType: 'finance',
+        });
+      }
+      return result;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get filing ${numeric}:`, error);
       return null;
     }
   }
