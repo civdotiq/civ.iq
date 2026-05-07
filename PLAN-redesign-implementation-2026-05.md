@@ -51,7 +51,7 @@ Updated **2026-05-07** (PR 11 landed).
 | 8   | SystemPages (Methodology / About / 404)                                | ✅ done   | `faef7f5f` |
 | 9   | StateLegislator + StateLegislaturePage                                 | ✅ done   | `0120e476` |
 | 10  | RollCallDetail                                                         | ✅ done   | `ba8dbc74` |
-| 11  | Filings (LobbyFilingDetail + FECFilingDetail)                          | ✅ done   | _stage_    |
+| 11  | Filings (LobbyFilingDetail + FECFilingDetail)                          | ✅ done   | `9b80c022` |
 | 12  | IndustrySectorPage                                                     | ☐ pending | —          |
 | 13  | VotingRecord                                                           | ☐ pending | —          |
 | 14  | DistrictPage                                                           | ☐ pending | —          |
