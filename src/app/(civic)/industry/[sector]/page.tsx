@@ -10,9 +10,11 @@ import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { IndustrySectorClient } from './IndustrySectorClient';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
+import { IndustrySectorPage } from '@/components/sectors/IndustrySectorPage';
 
 interface PageProps {
   params: Promise<{ sector: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 function formatSectorName(slug: string): string {
@@ -81,10 +83,19 @@ async function fetchWikiSummary(sectorName: string): Promise<string | null> {
   }
 }
 
-export default async function IndustrySectorPage({ params }: PageProps) {
+export default async function IndustrySectorPageRoute({ params, searchParams }: PageProps) {
   const { sector } = await params;
+  const { v } = await searchParams;
   const resolved = parseSector(sector);
   const displayName = resolved ?? formatSectorName(sector);
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = (v === 'new' || isPreviewEnv) && resolved !== null;
+
+  if (useRedesign && resolved) {
+    return <IndustrySectorPage sector={resolved} sectorSlug={sector} displayName={displayName} />;
+  }
 
   const wikiSummary = await fetchWikiSummary(displayName);
 
