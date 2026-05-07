@@ -8,6 +8,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SimpleStateLegislatorProfile } from '@/features/state-legislature/components/SimpleStateLegislatorProfile';
+import { StateLegislatorProfile } from '@/components/state-officials/StateLegislatorProfile';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
@@ -20,7 +21,7 @@ interface PageProps {
     state: string;
     id: string;
   }>;
-  searchParams?: Promise<{ address?: string }>;
+  searchParams?: Promise<{ address?: string; v?: string }>;
 }
 
 /**
@@ -108,6 +109,23 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
 
   // Get address from search params
   const fromAddress = search?.address;
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = search?.v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    const stateCode = state.toUpperCase();
+    const stateName = getStateName(stateCode) || stateCode;
+    return (
+      <StateLegislatorProfile
+        legislator={legislator}
+        legislatorIdBase64={id}
+        stateCode={stateCode}
+        stateName={stateName}
+      />
+    );
+  }
 
   // Breadcrumb navigation with preserved search context
   const breadcrumbItems = [
