@@ -47,7 +47,7 @@ Updated **2026-05-07** (PR 7 landed).
 | 4     | BillDetail                                                             | ✅ done   | `80858cb7` |
 | 5     | SearchResults                                                          | ✅ done   | `9de89a2c` |
 | 6     | CommitteeDetail                                                        | ✅ done   | `f90e3add` |
-| 7     | StateOverview                                                          | ✅ done   | _stage_    |
+| 7     | StateOverview                                                          | ✅ done   | `e499ebeb` |
 | **8** | **SystemPages (Methodology / About / 404)** (next up)                  | ☐ next    | —          |
 | 9     | StateLegislator + StateLegislaturePage                                 | ☐ pending | —          |
 | 10    | RollCallDetail                                                         | ☐ pending | —          |
