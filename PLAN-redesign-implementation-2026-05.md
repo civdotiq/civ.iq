@@ -45,7 +45,7 @@ Updated **2026-05-07**.
 | 2     | `Cq*` primitives (15 components)                                       | ✅ done   | _stage_    |
 | 3     | ProfileHybrid ⭐                                                       | ✅ done   | `10d86e1f` |
 | 4     | BillDetail                                                             | ✅ done   | `80858cb7` |
-| 5     | SearchResults                                                          | ✅ done   | _stage_    |
+| 5     | SearchResults                                                          | ✅ done   | `9de89a2c` |
 | **6** | **CommitteeDetail** (next up)                                          | ☐ next    | —          |
 | 7     | StateOverview                                                          | ☐ pending | —          |
 | 8     | SystemPages (Methodology / About / 404)                                | ☐ pending | —          |
