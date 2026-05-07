@@ -36,7 +36,7 @@ Replace `<N>` with the next pending PR number from the status table.
 
 ## Status
 
-Updated **2026-05-07** (PR 9 landed).
+Updated **2026-05-07** (PR 10 landed).
 
 | PR     | Title                                                                  | Status    | Commit     |
 | ------ | ---------------------------------------------------------------------- | --------- | ---------- |
@@ -50,8 +50,8 @@ Updated **2026-05-07** (PR 9 landed).
 | 7      | StateOverview                                                          | ✅ done   | `e499ebeb` |
 | 8      | SystemPages (Methodology / About / 404)                                | ✅ done   | `faef7f5f` |
 | 9      | StateLegislator + StateLegislaturePage                                 | ✅ done   | `0120e476` |
-| **10** | **RollCallDetail** (next up)                                           | ☐ next    | —          |
-| 11     | Filings (LobbyFilingDetail + FECFilingDetail)                          | ☐ pending | —          |
+| 10     | RollCallDetail                                                         | ✅ done   | _stage_    |
+| **11** | **Filings (LobbyFilingDetail + FECFilingDetail)** (next up)            | ☐ next    | —          |
 | 12     | IndustrySectorPage                                                     | ☐ pending | —          |
 | 13     | VotingRecord                                                           | ☐ pending | —          |
 | 14     | DistrictPage                                                           | ☐ pending | —          |
