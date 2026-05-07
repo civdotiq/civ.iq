@@ -46,7 +46,7 @@ Updated **2026-05-07** (PR 6 landed).
 | 3     | ProfileHybrid ⭐                                                       | ✅ done   | `10d86e1f` |
 | 4     | BillDetail                                                             | ✅ done   | `80858cb7` |
 | 5     | SearchResults                                                          | ✅ done   | `9de89a2c` |
-| 6     | CommitteeDetail                                                        | ✅ done   | _stage_    |
+| 6     | CommitteeDetail                                                        | ✅ done   | `f90e3add` |
 | **7** | **StateOverview** (next up)                                            | ☐ next    | —          |
 | 8     | SystemPages (Methodology / About / 404)                                | ☐ pending | —          |
 | 9     | StateLegislator + StateLegislaturePage                                 | ☐ pending | —          |
