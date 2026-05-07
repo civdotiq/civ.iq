@@ -8,7 +8,8 @@ import { CqButton, CqChip, CqDisclaimer, CqLabel, CqSourceTag, CqStat } from '@/
 import { StateMark } from './StateMark';
 import { SenatorsPanel } from './SenatorsPanel';
 import { HousePanel } from './HousePanel';
-import { RecentBillsPanel } from './RecentBillsPanel';
+import { StateLegislaturePanel } from './StateLegislaturePanel';
+import { StateExecutivesPanel } from './StateExecutivesPanel';
 import { Aside } from './Aside';
 import {
   formatCompactCurrency,
@@ -19,7 +20,9 @@ import {
 import type { StateOverviewData } from './types';
 
 const SOURCES: ReadonlyArray<{ name: string; id?: string }> = [
-  { name: 'Congress.gov', id: 'delegation' },
+  { name: 'OpenStates', id: 'state legislature' },
+  { name: 'Wikidata', id: 'state executives' },
+  { name: 'Congress.gov', id: 'federal delegation' },
   { name: 'Census.gov', id: 'ACS 2021' },
   { name: 'USASpending.gov', id: 'FY rollup' },
 ];
@@ -29,12 +32,22 @@ interface StateOverviewProps {
 }
 
 export function StateOverview({ data }: StateOverviewProps) {
-  const { stateCode, stateName, delegation, demographics, spending, fetchedAt } = data;
+  const {
+    stateCode,
+    stateName,
+    delegation,
+    demographics,
+    spending,
+    legislature,
+    executives,
+    governorResult,
+    fetchedAt,
+  } = data;
   const senators = delegation?.senators ?? [];
   const houseMembers = delegation?.houseMembers ?? [];
   const totals = delegation?.totals ?? { d: 0, r: 0, i: 0 };
   const districtCount = houseMembers.length;
-  const totalDelegation = senators.length + houseMembers.length;
+  const stateLegSeats = legislature?.totalCount ?? 0;
   const dataAsOf = formatDate(fetchedAt);
 
   return (
@@ -175,9 +188,15 @@ export function StateOverview({ data }: StateOverviewProps) {
         </StatCell>
         <StatCell index={2}>
           <CqStat
-            label="Total delegation"
-            value={totalDelegation > 0 ? totalDelegation : '—'}
-            caption={totalDelegation > 0 ? '119th Congress' : 'Roster pending'}
+            label="State legislators"
+            value={stateLegSeats > 0 ? stateLegSeats : '—'}
+            caption={
+              legislature
+                ? legislature.isUnicameral
+                  ? 'Unicameral'
+                  : 'Bicameral'
+                : 'Data unavailable'
+            }
             size={32}
           />
         </StatCell>
@@ -243,18 +262,19 @@ export function StateOverview({ data }: StateOverviewProps) {
         }}
       >
         <div>
+          <StateLegislaturePanel stateCode={stateCode} legislature={legislature} />
+          <StateExecutivesPanel executives={executives} />
           <SenatorsPanel senators={senators} />
           <HousePanel houseMembers={houseMembers} stateCode={stateCode} />
-          <RecentBillsPanel stateName={stateName} />
         </div>
-        <Aside stateCode={stateCode} spending={spending} />
+        <Aside stateCode={stateCode} spending={spending} governorResult={governorResult} />
       </div>
 
       <div style={{ marginTop: 36, paddingTop: 16, borderTop: '2px solid var(--ink)' }}>
         <CqDisclaimer
-          confidence={0.92}
+          confidence={0.9}
           asof={dataAsOf}
-          method="Direct ingestion · Congress.gov + Census ACS + USAspending"
+          method="Direct ingestion · OpenStates + Wikidata + Congress.gov + Census ACS + USAspending"
         />
       </div>
     </div>

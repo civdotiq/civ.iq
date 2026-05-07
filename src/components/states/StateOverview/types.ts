@@ -43,12 +43,60 @@ export interface StateFederalSpending {
   source: string;
 }
 
+export interface StateChamber {
+  name: string;
+  totalSeats: number;
+  democraticSeats: number;
+  republicanSeats: number;
+  otherSeats: number;
+}
+
+export interface StateLegislatureSummary {
+  upper: StateChamber | null;
+  lower: StateChamber | null;
+  totalCount: number;
+  sessionName?: string;
+  sessionStatus?: string;
+  isUnicameral: boolean;
+}
+
+export interface StateExecutiveSummary {
+  id: string;
+  name: string;
+  position: string;
+  party: 'd' | 'r' | 'i';
+  partyLabel: string;
+  termEndYear?: number;
+}
+
+export interface StateExecutivesSummary {
+  governor: StateExecutiveSummary | null;
+  others: StateExecutiveSummary[];
+  totalCount: number;
+  nextElectionDate?: string;
+  nextElectionOffices?: string[];
+}
+
+export interface StateElectionResult {
+  year: number;
+  office: 'GOVERNOR' | 'US_SENATE' | 'US_PRESIDENT';
+  raceLabel: string;
+  winner: 'D' | 'R' | 'I';
+  demPct: number;
+  repPct: number;
+  margin: number;
+  totalVotes: number;
+}
+
 export interface StateOverviewData {
   stateCode: string;
   stateName: string;
   delegation: DelegationSummary | null;
   demographics: StateDemographics | null;
   spending: StateFederalSpending | null;
+  legislature: StateLegislatureSummary | null;
+  executives: StateExecutivesSummary | null;
+  governorResult: StateElectionResult | null;
   fetchedAt: string;
 }
 
