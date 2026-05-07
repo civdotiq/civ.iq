@@ -49,7 +49,7 @@ Updated **2026-05-07** (PR 9 landed).
 | 6      | CommitteeDetail                                                        | ✅ done   | `f90e3add` |
 | 7      | StateOverview                                                          | ✅ done   | `e499ebeb` |
 | 8      | SystemPages (Methodology / About / 404)                                | ✅ done   | `faef7f5f` |
-| 9      | StateLegislator + StateLegislaturePage                                 | ✅ done   | _stage_    |
+| 9      | StateLegislator + StateLegislaturePage                                 | ✅ done   | `0120e476` |
 | **10** | **RollCallDetail** (next up)                                           | ☐ next    | —          |
 | 11     | Filings (LobbyFilingDetail + FECFilingDetail)                          | ☐ pending | —          |
 | 12     | IndustrySectorPage                                                     | ☐ pending | —          |
