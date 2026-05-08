@@ -54,7 +54,7 @@ Updated **2026-05-07** (PR 13 landed).
 | 11  | Filings (LobbyFilingDetail + FECFilingDetail)                          | ✅ done   | `9b80c022` |
 | 12  | IndustrySectorPage                                                     | ✅ done   | `7605ed1e` |
 | 13  | VotingRecord                                                           | ✅ done   | `f064a19e` |
-| 14  | DistrictPage                                                           | ☐ pending | —          |
+| 14  | DistrictPage                                                           | ✅ done   | `0f581f4e` |
 | 15  | Compare                                                                | ☐ pending | —          |
 | 16  | IssueTopic                                                             | ☐ pending | —          |
 | 17  | PACProfile                                                             | ☐ pending | —          |
