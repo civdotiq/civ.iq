@@ -56,7 +56,7 @@ Updated **2026-05-08** (PR 16 landed).
 | 13  | VotingRecord                                                           | ✅ done   | `f064a19e` |
 | 14  | DistrictPage                                                           | ✅ done   | `0f581f4e` |
 | 15  | Compare                                                                | ✅ done   | `b008bb74` |
-| 16  | IssueTopic                                                             | ✅ done   | _stage_    |
+| 16  | IssueTopic                                                             | ✅ done   | `659c6de9` |
 | 17  | PACProfile                                                             | ☐ pending | —          |
 | 18  | SpendingContract                                                       | ☐ pending | —          |
 | 19  | Election                                                               | ☐ pending | —          |
