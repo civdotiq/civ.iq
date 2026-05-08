@@ -55,7 +55,7 @@ Updated **2026-05-07** (PR 15 landed).
 | 12  | IndustrySectorPage                                                     | ✅ done   | `7605ed1e` |
 | 13  | VotingRecord                                                           | ✅ done   | `f064a19e` |
 | 14  | DistrictPage                                                           | ✅ done   | `0f581f4e` |
-| 15  | Compare                                                                | ✅ done   | _stage_    |
+| 15  | Compare                                                                | ✅ done   | `b008bb74` |
 | 16  | IssueTopic                                                             | ☐ pending | —          |
 | 17  | PACProfile                                                             | ☐ pending | —          |
 | 18  | SpendingContract                                                       | ☐ pending | —          |
