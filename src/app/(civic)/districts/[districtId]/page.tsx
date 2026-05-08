@@ -6,9 +6,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { DistrictPage as RedesignedDistrictPage } from '@/components/districts/DistrictPage';
 import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
 import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
 import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
@@ -131,7 +132,15 @@ interface APIResponse {
 
 export default function DistrictPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const districtId = params?.districtId as string;
+
+  // PR 14: redesigned district page behind ?v=new (or NEXT_PUBLIC_CIVIQ_V
+  // outside production). Old design path stays untouched below.
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = searchParams?.get('v') === 'new' || isPreviewEnv;
+
   const [district, setDistrict] = useState<DistrictDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +174,10 @@ export default function DistrictPage() {
       fetchDistrict();
     }
   }, [districtId]);
+
+  if (useRedesign) {
+    return <RedesignedDistrictPage districtId={districtId} />;
+  }
 
   if (loading) {
     return (
