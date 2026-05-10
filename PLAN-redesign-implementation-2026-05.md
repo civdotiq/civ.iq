@@ -58,7 +58,7 @@ Updated **2026-05-10** (PR 18 landed).
 | 15  | Compare                                                                | ✅ done   | `b008bb74` |
 | 16  | IssueTopic                                                             | ✅ done   | `659c6de9` |
 | 17  | PACProfile                                                             | ✅ done   | `8e5e8393` |
-| 18  | SpendingContract                                                       | ✅ done   | _pending_  |
+| 18  | SpendingContract                                                       | ✅ done   | `426ab153` |
 | 19  | Election                                                               | ☐ pending | —          |
 | 20  | LocalCouncil                                                           | ☐ pending | —          |
 | 21  | Search Variants (5 row templates)                                      | ☐ pending | —          |
