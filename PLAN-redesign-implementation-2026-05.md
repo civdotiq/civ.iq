@@ -36,7 +36,7 @@ Replace `<N>` with the next pending PR number from the status table.
 
 ## Status
 
-Updated **2026-05-08** (PR 16 landed).
+Updated **2026-05-10** (PR 17 landed).
 
 | PR  | Title                                                                  | Status    | Commit     |
 | --- | ---------------------------------------------------------------------- | --------- | ---------- |
@@ -57,7 +57,7 @@ Updated **2026-05-08** (PR 16 landed).
 | 14  | DistrictPage                                                           | ✅ done   | `0f581f4e` |
 | 15  | Compare                                                                | ✅ done   | `b008bb74` |
 | 16  | IssueTopic                                                             | ✅ done   | `659c6de9` |
-| 17  | PACProfile                                                             | ☐ pending | —          |
+| 17  | PACProfile                                                             | ✅ done   | `8e5e8393` |
 | 18  | SpendingContract                                                       | ☐ pending | —          |
 | 19  | Election                                                               | ☐ pending | —          |
 | 20  | LocalCouncil                                                           | ☐ pending | —          |
