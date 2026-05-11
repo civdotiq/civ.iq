@@ -36,7 +36,7 @@ Replace `<N>` with the next pending PR number from the status table.
 
 ## Status
 
-Updated **2026-05-11** (PR 20 landed).
+Updated **2026-05-11** (PR 21 landed).
 
 | PR  | Title                                                                  | Status    | Commit     |
 | --- | ---------------------------------------------------------------------- | --------- | ---------- |
@@ -61,7 +61,7 @@ Updated **2026-05-11** (PR 20 landed).
 | 18  | SpendingContract                                                       | ✅ done   | `426ab153` |
 | 19  | Election                                                               | ✅ done   | `6ee686fe` |
 | 20  | LocalCouncil                                                           | ✅ done   | `2a9c802f` |
-| 21  | Search Variants (5 row templates)                                      | ☐ pending | —          |
+| 21  | Search Variants (5 row templates)                                      | ✅ done   | `b1416bfc` |
 | 22  | EmbedMode (3 widths + print)                                           | ☐ pending | —          |
 | 23  | AI Surface (AskEntry + AskResult)                                      | ☐ pending | —          |
 
