@@ -6,8 +6,8 @@
 /**
  * /ask — Question directory page.
  *
- * Displays all question templates grouped by category (WHO/HOW/WHAT/WHERE/WHY).
- * Static page — no dynamic data fetching, just reads from the in-memory registry.
+ * Default branch: legacy directory listing.
+ * `?v=new` (or NEXT_PUBLIC_CIVIQ_V === 'new' in non-prod): AskEntryPage chassis.
  */
 
 import type { Metadata } from 'next';
@@ -18,6 +18,7 @@ import {
   type QuestionTemplate,
 } from '@/lib/questions/question-registry';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { AskEntryPage } from '@/components/ask/AskEntryPage';
 
 export const metadata: Metadata = {
   title: 'Ask a Question | CIV.IQ',
@@ -59,7 +60,20 @@ function displayQuestion(template: QuestionTemplate): string {
   return template.questionPattern.replace(/\{name\}/g, placeholder);
 }
 
-export default function AskIndexPage() {
+interface PageProps {
+  searchParams: Promise<{ v?: string; q?: string }>;
+}
+
+export default async function AskIndexPage({ searchParams }: PageProps) {
+  const { v, q } = await searchParams;
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <AskEntryPage initialQuery={q ?? ''} />;
+  }
+
   const templates = getAllTemplates();
 
   const grouped = new Map<QuestionTemplate['category'], QuestionTemplate[]>();

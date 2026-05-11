@@ -36,7 +36,7 @@ Replace `<N>` with the next pending PR number from the status table.
 
 ## Status
 
-Updated **2026-05-11** (PR 22 landed).
+Updated **2026-05-11** (PR 23 landed).
 
 | PR  | Title                                                                  | Status    | Commit     |
 | --- | ---------------------------------------------------------------------- | --------- | ---------- |
@@ -63,7 +63,7 @@ Updated **2026-05-11** (PR 22 landed).
 | 20  | LocalCouncil                                                           | ✅ done   | `2a9c802f` |
 | 21  | Search Variants (5 row templates)                                      | ✅ done   | `b1416bfc` |
 | 22  | EmbedMode (3 widths + print)                                           | ✅ done   | `1b60adc0` |
-| 23  | AI Surface (AskEntry + AskResult)                                      | ☐ pending | —          |
+| 23  | AI Surface (AskEntry + AskResult)                                      | ✅ done   | _stage_    |
 
 **Update protocol.** When a PR completes: edit the row to `✅ done`, paste the
 short commit hash into the Commit column, update the "Updated" date at the top

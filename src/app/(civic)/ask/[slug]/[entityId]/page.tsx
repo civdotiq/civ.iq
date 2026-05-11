@@ -5,13 +5,18 @@
 
 /**
  * Question Page — server component that fetches data and renders
- * template-specific answer pods inside a shared QuestionLayout.
+ * template-specific answer pods.
+ *
+ * Default branch: legacy QuestionLayout (unchanged).
+ * `?v=new` (or NEXT_PUBLIC_CIVIQ_V === 'new' in non-prod): AskResultPage
+ * chassis that wraps the SAME typed pod with the redesign question echo,
+ * citation rail, methodology, confidence band, and limitations.
  *
  * Route: /ask/[slug]/[entityId]
  */
 
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern } from '@/lib/questions/question-registry';
@@ -49,6 +54,7 @@ import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
+import { AskResultPage, type AskEntity } from '@/components/ask/AskResultPage';
 
 export const revalidate = 3600;
 
@@ -59,6 +65,7 @@ export const maxDuration = 150;
 
 interface PageProps {
   params: Promise<{ slug: string; entityId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 /**
@@ -154,8 +161,154 @@ function buildFaqAnswer(
   }
 }
 
-export default async function QuestionPage({ params }: PageProps) {
+/**
+ * Map upstream party string to the Cq chip 'd'/'r'/'i' variant.
+ */
+function partyVariant(party: string): 'd' | 'r' | 'i' {
+  const p = party.trim().toLowerCase();
+  if (p.startsWith('d')) return 'd';
+  if (p.startsWith('r')) return 'r';
+  return 'i';
+}
+
+interface ConfidenceComputation {
+  score: number;
+  basis: string;
+}
+
+/**
+ * Per Correction 4: confidence is a heuristic over the resolved pod data.
+ * - 0.91 when the primary field resolved
+ * - 0.74 when partial / fallback data
+ * - 0.40 when no data
+ */
+function computeConfidence(
+  slug: string,
+  data: {
+    rep?: { name: string } | null;
+    campaign?: CampaignContributionsData;
+    voting?: VotingRecordTemplateData;
+    billsSponsored?: BillsSponsoredData;
+    topicBills?: TopicBillsData;
+    committeeMembers?: CommitteeMembersData;
+    committeeActivity?: CommitteeActivityData;
+    committeLobbying?: CommitteeLobbyingData;
+  }
+): ConfidenceComputation {
+  switch (slug) {
+    case 'campaign-contributions': {
+      const finance = data.campaign?.finance;
+      const hasIndustries = (data.campaign?.industries?.topIndustries?.length ?? 0) > 0;
+      if (finance?.totalRaised && hasIndustries) {
+        return {
+          score: 0.91,
+          basis: 'FEC cycle totals and industry classification both resolved.',
+        };
+      }
+      if (finance?.totalRaised || hasIndustries) {
+        return {
+          score: 0.74,
+          basis: 'Partial FEC data; some breakdowns are not yet filed for this cycle.',
+        };
+      }
+      return {
+        score: 0.4,
+        basis: 'No FEC filings resolved for this candidate ID in the current cycle.',
+      };
+    }
+    case 'voting-record': {
+      const totalVotes = data.voting?.votes?.totalResults ?? 0;
+      if (totalVotes >= 50) {
+        return {
+          score: 0.91,
+          basis: `Based on ${totalVotes.toLocaleString()} recorded floor votes in the current Congress.`,
+        };
+      }
+      if (totalVotes > 0) {
+        return {
+          score: 0.74,
+          basis: `Limited sample — only ${totalVotes} recorded floor votes resolved so far.`,
+        };
+      }
+      return { score: 0.4, basis: 'No recorded floor votes resolved for this member.' };
+    }
+    case 'bills-sponsored': {
+      const sponsored = data.billsSponsored?.sponsoredCount ?? 0;
+      const cosponsored = data.billsSponsored?.cosponsoredCount ?? 0;
+      if (sponsored + cosponsored > 0) {
+        return {
+          score: 0.91,
+          basis: `Resolved ${sponsored} sponsored and ${cosponsored} cosponsored bills in the 119th Congress.`,
+        };
+      }
+      return {
+        score: 0.4,
+        basis: 'No sponsored or cosponsored bills resolved in the current Congress.',
+      };
+    }
+    case 'contact-info':
+      return {
+        score: 0.91,
+        basis: 'Directory entry resolved from the canonical congress-legislators record.',
+      };
+    case 'donor-voting-alignment':
+      return {
+        score: 0.74,
+        basis:
+          'Confidence is medium by default — correlation only. The analyzer streams in; final sample size depends on bill subject tagging.',
+      };
+    case 'topic-bills': {
+      const billCount = data.topicBills?.results?.bills?.length ?? 0;
+      if (billCount > 0) {
+        return {
+          score: 0.91,
+          basis: `Resolved ${billCount} bills tagged to this policy area in Congress.gov.`,
+        };
+      }
+      return { score: 0.4, basis: 'No bills resolved under this policy-area tag.' };
+    }
+    case 'committee-members': {
+      const count = data.committeeMembers?.committee?.members?.length ?? 0;
+      if (count > 0) {
+        return { score: 0.91, basis: `Resolved ${count} current members of the committee.` };
+      }
+      return { score: 0.4, basis: 'No committee member roster resolved.' };
+    }
+    case 'committee-activity': {
+      const meetings = data.committeeActivity?.meetings?.length ?? 0;
+      const bills = data.committeeActivity?.bills?.length ?? 0;
+      if (meetings + bills > 0) {
+        return {
+          score: 0.91,
+          basis: `Resolved ${meetings} recent meetings and ${bills} bills in committee.`,
+        };
+      }
+      return { score: 0.4, basis: 'No recent committee meetings or bills resolved.' };
+    }
+    case 'committee-lobbying': {
+      const orgs = data.committeLobbying?.lobbying?.organizationCount ?? 0;
+      if (orgs > 0) {
+        return {
+          score: 0.91,
+          basis: `Resolved lobbying disclosures from ${orgs.toLocaleString()} organizations.`,
+        };
+      }
+      return {
+        score: 0.4,
+        basis: 'No Senate LDA filings naming this committee in the current period.',
+      };
+    }
+    default:
+      return { score: 0.4, basis: 'Heuristic baseline — slug not enumerated.' };
+  }
+}
+
+export default async function QuestionPage({ params, searchParams }: PageProps) {
   const { slug, entityId } = await params;
+  const { v } = await searchParams;
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
 
   const template = getTemplate(slug);
   if (!template) notFound();
@@ -170,6 +323,36 @@ export default async function QuestionPage({ params }: PageProps) {
     const topicBills = await fetchTopicBillsData(policyArea);
 
     const faqAnswer = buildFaqAnswer(slug, policyArea, { topicBills });
+    const podBody: ReactNode = topicBills.results ? (
+      <TopicBillsAnswer results={topicBills.results} />
+    ) : (
+      <div className="border-2 border-black bg-white p-4 sm:p-6">
+        <p className="type-sm text-gray-500">
+          Data for this policy area is currently unavailable. Try again later.
+        </p>
+      </div>
+    );
+
+    if (useRedesign) {
+      const { score, basis } = computeConfidence(slug, { topicBills });
+      const entity: AskEntity = { type: 'topic', name: policyArea, slug: entityId };
+      return (
+        <>
+          <FAQPageSchema question={question} answer={faqAnswer} />
+          <AskResultPage
+            slug={slug}
+            category={template.category}
+            question={question}
+            entity={entity}
+            confidence={score}
+            confidenceBasis={basis}
+            relatedQuestions={relatedQuestions}
+          >
+            {podBody}
+          </AskResultPage>
+        </>
+      );
+    }
 
     return (
       <>
@@ -226,6 +409,62 @@ export default async function QuestionPage({ params }: PageProps) {
       committeLobbying,
     });
 
+    const podBody: ReactNode = (
+      <>
+        {slug === 'committee-members' && committeeMembers && (
+          <CommitteeMembersAnswer committee={committeeMembers.committee} />
+        )}
+        {slug === 'committee-activity' && committeeActivity && (
+          <CommitteeActivityAnswer
+            meetings={committeeActivity.meetings}
+            bills={committeeActivity.bills}
+            jurisdiction={committeeActivity.jurisdiction}
+            fetchedAt={committeeActivity.fetchedAt}
+          />
+        )}
+        {slug === 'committee-lobbying' && (
+          <CommitteeLobbyingAnswer
+            lobbying={committeLobbying?.lobbying ?? null}
+            committeeId={entityId}
+            committeeName={committee.name}
+            chamber={committee.chamber}
+            jurisdiction={committee.jurisdiction}
+          />
+        )}
+      </>
+    );
+
+    if (useRedesign) {
+      const { score, basis } = computeConfidence(slug, {
+        committeeMembers,
+        committeeActivity,
+        committeLobbying,
+      });
+      const entity: AskEntity = {
+        type: 'committee',
+        name: committee.name,
+        committeeId: entityId.toUpperCase(),
+        chamber: committee.chamber,
+        jurisdiction: committee.jurisdiction,
+      };
+      return (
+        <>
+          <FAQPageSchema question={question} answer={faqAnswer} />
+          <AskResultPage
+            slug={slug}
+            category={template.category}
+            question={question}
+            entity={entity}
+            confidence={score}
+            confidenceBasis={basis}
+            relatedQuestions={relatedQuestions}
+          >
+            {podBody}
+          </AskResultPage>
+        </>
+      );
+    }
+
     return (
       <>
         <FAQPageSchema question={question} answer={faqAnswer} />
@@ -234,26 +473,7 @@ export default async function QuestionPage({ params }: PageProps) {
           category={template.category}
           relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
         >
-          {slug === 'committee-members' && committeeMembers && (
-            <CommitteeMembersAnswer committee={committeeMembers.committee} />
-          )}
-          {slug === 'committee-activity' && committeeActivity && (
-            <CommitteeActivityAnswer
-              meetings={committeeActivity.meetings}
-              bills={committeeActivity.bills}
-              jurisdiction={committeeActivity.jurisdiction}
-              fetchedAt={committeeActivity.fetchedAt}
-            />
-          )}
-          {slug === 'committee-lobbying' && (
-            <CommitteeLobbyingAnswer
-              lobbying={committeLobbying?.lobbying ?? null}
-              committeeId={entityId}
-              committeeName={committee.name}
-              chamber={committee.chamber}
-              jurisdiction={committee.jurisdiction}
-            />
-          )}
+          {podBody}
         </QuestionLayout>
       </>
     );
@@ -300,6 +520,84 @@ export default async function QuestionPage({ params }: PageProps) {
     billsSponsored,
   });
 
+  const podBody: ReactNode = (
+    <>
+      {slug === 'campaign-contributions' && campaign && (
+        <CampaignContributionsAnswer
+          finance={campaign.finance}
+          industries={campaign.industries}
+          voteFinanceInsight={campaign.voteFinance}
+        />
+      )}
+      {slug === 'voting-record' && voting && (
+        <VotingRecordAnswer votes={voting.votes} bills={voting.bills} />
+      )}
+      {slug === 'bills-sponsored' && billsSponsored && (
+        <BillsSponsoredAnswer
+          bills={billsSponsored.bills}
+          sponsoredCount={billsSponsored.sponsoredCount}
+          cosponsoredCount={billsSponsored.cosponsoredCount}
+        />
+      )}
+      {slug === 'contact-info' && (
+        <ContactInfoAnswer
+          phone={rep.currentTerm?.phone ?? rep.phone}
+          address={rep.currentTerm?.address ?? rep.contact?.dcOffice?.address}
+          office={rep.currentTerm?.office}
+          contactForm={rep.currentTerm?.contactForm ?? rep.contact?.contactForm}
+          website={rep.currentTerm?.website ?? rep.website}
+          email={rep.email}
+          socialMedia={rep.socialMedia}
+          committees={rep.committees}
+          districtOffices={rep.contact?.districtOffices}
+        />
+      )}
+      {slug === 'donor-voting-alignment' && (
+        <Suspense fallback={<DonorVotingAlignmentSkeleton />}>
+          <StreamedDonorVotingAlignment bioguideId={id} />
+        </Suspense>
+      )}
+    </>
+  );
+
+  if (useRedesign) {
+    const { score, basis } = computeConfidence(slug, {
+      rep,
+      campaign,
+      voting,
+      billsSponsored,
+    });
+    const earliestTerm = rep.terms?.[0]?.startYear;
+    const tenureCaption = earliestTerm ? `In office since ${earliestTerm}` : undefined;
+    const repEntity: AskEntity = {
+      type: 'representative',
+      name: rep.name,
+      bioguideId: id,
+      party: partyVariant(rep.party),
+      chamber: rep.chamber,
+      state: rep.state,
+      district: rep.district,
+      portraitSrc: rep.imageUrl,
+      tenureCaption,
+    };
+    return (
+      <>
+        <FAQPageSchema question={question} answer={faqAnswer} />
+        <AskResultPage
+          slug={slug}
+          category={template.category}
+          question={question}
+          entity={repEntity}
+          confidence={score}
+          confidenceBasis={basis}
+          relatedQuestions={relatedQuestions}
+        >
+          {podBody}
+        </AskResultPage>
+      </>
+    );
+  }
+
   return (
     <>
       <FAQPageSchema question={question} answer={faqAnswer} />
@@ -308,41 +606,7 @@ export default async function QuestionPage({ params }: PageProps) {
         category={template.category}
         relatedQuestions={<RelatedQuestions questions={relatedQuestions} />}
       >
-        {slug === 'campaign-contributions' && campaign && (
-          <CampaignContributionsAnswer
-            finance={campaign.finance}
-            industries={campaign.industries}
-            voteFinanceInsight={campaign.voteFinance}
-          />
-        )}
-        {slug === 'voting-record' && voting && (
-          <VotingRecordAnswer votes={voting.votes} bills={voting.bills} />
-        )}
-        {slug === 'bills-sponsored' && billsSponsored && (
-          <BillsSponsoredAnswer
-            bills={billsSponsored.bills}
-            sponsoredCount={billsSponsored.sponsoredCount}
-            cosponsoredCount={billsSponsored.cosponsoredCount}
-          />
-        )}
-        {slug === 'contact-info' && (
-          <ContactInfoAnswer
-            phone={rep.currentTerm?.phone ?? rep.phone}
-            address={rep.currentTerm?.address ?? rep.contact?.dcOffice?.address}
-            office={rep.currentTerm?.office}
-            contactForm={rep.currentTerm?.contactForm ?? rep.contact?.contactForm}
-            website={rep.currentTerm?.website ?? rep.website}
-            email={rep.email}
-            socialMedia={rep.socialMedia}
-            committees={rep.committees}
-            districtOffices={rep.contact?.districtOffices}
-          />
-        )}
-        {slug === 'donor-voting-alignment' && (
-          <Suspense fallback={<DonorVotingAlignmentSkeleton />}>
-            <StreamedDonorVotingAlignment bioguideId={id} />
-          </Suspense>
-        )}
+        {podBody}
       </QuestionLayout>
     </>
   );
