@@ -2,15 +2,20 @@
  * Embeddable Widget: District Snapshot
  * Server component - fetches data at render time via existing API.
  *
+ * PR 22 gate: `?v=new` swaps the legacy body for EmbedDistrictCard while
+ * sharing the same resolved `district` object.
+ *
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import type { Metadata } from 'next';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { EmbedDistrictCard } from '@/components/embed/EmbedDistrictCard';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -56,8 +61,9 @@ function formatNumber(num: number): string {
   return num.toLocaleString();
 }
 
-export default async function EmbedDistrictPage({ params }: PageProps) {
+export default async function EmbedDistrictPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
+  const { v } = await searchParams;
 
   let data: DistrictData | null = null;
   try {
@@ -80,6 +86,14 @@ export default async function EmbedDistrictPage({ params }: PageProps) {
         </p>
       </div>
     );
+  }
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <EmbedDistrictCard districtId={districtId} district={data.district} />;
   }
 
   const { district } = data;

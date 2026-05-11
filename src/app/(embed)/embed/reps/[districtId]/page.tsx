@@ -2,15 +2,20 @@
  * Embeddable Widget: District Representatives
  * Server component - fetches data at render time via existing service layer.
  *
+ * PR 22 gate: `?v=new` swaps the legacy body for EmbedRepsCard while sharing
+ * the same resolved `reps` array.
+ *
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import type { Metadata } from 'next';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import { EmbedRepsCard } from '@/components/embed/EmbedRepsCard';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -26,8 +31,9 @@ function partyColor(party: string): string {
   return '#6b7280';
 }
 
-export default async function EmbedRepsPage({ params }: PageProps) {
+export default async function EmbedRepsPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
+  const { v } = await searchParams;
 
   // Parse district ID (e.g., "MI-12", "CA-04")
   const parts = districtId.toUpperCase().split('-');
@@ -62,6 +68,14 @@ export default async function EmbedRepsPage({ params }: PageProps) {
         </p>
       </div>
     );
+  }
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <EmbedRepsCard districtId={districtId} reps={allReps} />;
   }
 
   return (
@@ -122,7 +136,7 @@ export default async function EmbedRepsPage({ params }: PageProps) {
               <div style={{ fontWeight: 600, fontSize: '14px', color: '#111827' }}>{rep.name}</div>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>
                 <span style={{ color: partyColor(rep.party), fontWeight: 500 }}>{rep.party}</span>
-                {' \u00b7 '}
+                {' · '}
                 {rep.chamber === 'Senate' ? 'U.S. Senator' : `U.S. Representative`}
               </div>
               {rep.currentTerm?.phone && (

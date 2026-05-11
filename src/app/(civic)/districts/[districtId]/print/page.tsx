@@ -14,9 +14,11 @@ import { getStateName } from '@/lib/data/us-states';
 import { QRCode } from './QRCode';
 import '@/styles/civic-pack-print.css';
 import { PrintButton } from './PrintButton';
+import { PrintDistrictPage } from '@/components/embed/PrintDistrictPage';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -91,8 +93,9 @@ function formatNumber(num: number): string {
   return num.toLocaleString();
 }
 
-export default async function PrintCivicPackPage({ params }: PageProps) {
+export default async function PrintCivicPackPage({ params, searchParams }: PageProps) {
   const { districtId } = await params;
+  const { v } = await searchParams;
   const upper = districtId.toUpperCase();
   const baseUrl = getServerBaseUrl();
   const civiqUrl = `https://civdotiq.org/districts/${districtId}`;
@@ -142,6 +145,22 @@ export default async function PrintCivicPackPage({ params }: PageProps) {
 
   const federalReps = [...senators, ...houseReps];
   const now = new Date();
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return (
+      <PrintDistrictPage
+        districtId={districtId}
+        stateName={stateName}
+        district={district}
+        spending={spending ?? null}
+        federalReps={federalReps}
+      />
+    );
+  }
 
   return (
     <div className="civic-pack">

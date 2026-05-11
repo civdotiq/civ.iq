@@ -2,15 +2,21 @@
  * Embeddable Widget: Bill Status Tracker
  * Server component - fetches data at render time via existing service layer.
  *
+ * PR 22 gate: `?v=new` swaps the legacy chassis for the redesign chassis
+ * (EmbedBillCard). Data resolution is shared — the new chassis renders the
+ * same `bill` object the legacy body has always rendered.
+ *
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import type { Metadata } from 'next';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { EmbedBillCard } from '@/components/embed/EmbedBillCard';
 
 interface PageProps {
   params: Promise<{ billId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -54,8 +60,9 @@ function getStatusIndex(status: string): number {
   return idx >= 0 ? idx : 0;
 }
 
-export default async function EmbedBillPage({ params }: PageProps) {
+export default async function EmbedBillPage({ params, searchParams }: PageProps) {
   const { billId } = await params;
+  const { v } = await searchParams;
 
   const bill = await fetchBillFromCongress(billId);
 
@@ -65,6 +72,14 @@ export default async function EmbedBillPage({ params }: PageProps) {
         <p style={{ color: '#6b7280', fontSize: '14px' }}>Bill {billId.toUpperCase()} not found.</p>
       </div>
     );
+  }
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <EmbedBillCard bill={bill} />;
   }
 
   const currentStatus = bill.status.current;

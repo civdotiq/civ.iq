@@ -1,0 +1,223 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ *
+ * Embed + Print redesign chassis CSS (PR 22).
+ *
+ * Two purposes:
+ *   1. Container queries for the embed chassis. The host iframe gets
+ *      ONE width; the panel grid reflows at 320 / 480 / 640 based on
+ *      the embed container's own inline size — not the viewport.
+ *   2. Print rules for the /districts/[id]/print?v=new chassis: black
+ *      on white, no hover, link hrefs print inline, no chrome.
+ */
+
+/* ── Embed chassis ─────────────────────────────────── */
+.civiq-embed-shell {
+  container-type: inline-size;
+  container-name: civiq-embed;
+  width: 100%;
+  background: var(--bg1);
+  color: var(--fg1);
+  border: 2px solid var(--ink);
+  font-family: var(--font-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.civiq-embed-body {
+  padding: 18px;
+  flex: 1 1 auto;
+}
+
+@container civiq-embed (max-width: 360px) {
+  .civiq-embed-body {
+    padding: 14px;
+  }
+}
+
+/* Grid utilities used by individual embed cards. The chassis flips
+   between 1 / 2 / 3 columns based on container width. Layout-level
+   classes live here so the chassis JSX stays declarative. */
+
+.civiq-embed-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.civiq-embed-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@container civiq-embed (min-width: 360px) {
+  .civiq-embed-grid-2 {
+    grid-template-columns: 1fr 130px;
+    gap: 12px;
+  }
+}
+
+.civiq-embed-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@container civiq-embed (min-width: 360px) {
+  .civiq-embed-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+}
+
+.civiq-embed-reps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@container civiq-embed (min-width: 480px) {
+  .civiq-embed-reps {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@container civiq-embed (min-width: 600px) {
+  .civiq-embed-reps {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.civiq-embed-rep-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--bg1);
+}
+
+@container civiq-embed (min-width: 480px) {
+  .civiq-embed-rep-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.civiq-embed-only-wide {
+  display: none;
+}
+
+@container civiq-embed (min-width: 600px) {
+  .civiq-embed-only-wide {
+    display: block;
+  }
+}
+
+/* ── Print chassis ─────────────────────────────────── */
+.civiq-print-shell {
+  font-family: var(--font-primary);
+  color: #000;
+  background: #fff;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.civiq-print-columns {
+  column-count: 2;
+  column-gap: 32px;
+  column-rule: 1px solid #d4d4d4;
+}
+
+.civiq-print-section {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+.civiq-print-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.civiq-print-rule {
+  height: 0;
+  border-top: 1px solid #000;
+  margin: 6px 0 10px;
+}
+
+.civiq-print-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 0.5px solid #d4d4d4;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.civiq-print-row-label {
+  font-family: var(--font-mono);
+  color: #000;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 700;
+  padding-top: 2px;
+}
+
+.civiq-print-row-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #000;
+  font-family: var(--font-mono);
+}
+
+@media print {
+  .civiq-print-shell {
+    padding: 0;
+    max-width: none;
+  }
+
+  .civiq-print-no-print {
+    display: none !important;
+  }
+
+  .civiq-print-shell a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  /* Resolve href inline next to the link text — paper readers need
+     the URL since there's nothing to click. */
+  .civiq-print-shell a[href^='http']::after {
+    content: ' ⟨' attr(href) '⟩';
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    color: #555;
+  }
+
+  .civiq-print-section,
+  .civiq-print-shell header,
+  .civiq-print-shell footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .civiq-print-shell * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .civiq-print-shell button {
+    display: none !important;
+  }
+}
