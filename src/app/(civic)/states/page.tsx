@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { StateListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
   title: 'U.S. States - All 50 State Legislatures',
@@ -121,7 +122,25 @@ const faqItems = [
   },
 ];
 
-export default function StatesHubPage() {
+interface StatesPageProps {
+  searchParams: Promise<{ v?: string; region?: string }>;
+}
+
+export default async function StatesHubPage({ searchParams }: StatesPageProps) {
+  const { v, region } = await searchParams;
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <StateListingPage region={region} />;
+  }
+
+  return <LegacyStatesHubPage />;
+}
+
+function LegacyStatesHubPage() {
   // Group states by region
   const statesByRegion = STATES.reduce(
     (acc, state) => {

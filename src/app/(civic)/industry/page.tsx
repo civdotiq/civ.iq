@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { SectorListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
   title: 'Industries',
@@ -34,7 +35,25 @@ const SECTORS = [
   { name: 'Labor', slug: 'labor' },
 ];
 
-export default function IndustryIndexPage() {
+interface IndustryPageProps {
+  searchParams: Promise<{ v?: string; cycle?: string }>;
+}
+
+export default async function IndustryIndexPage({ searchParams }: IndustryPageProps) {
+  const { v, cycle } = await searchParams;
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <SectorListingPage cycle={cycle} />;
+  }
+
+  return <LegacyIndustryIndexPage />;
+}
+
+function LegacyIndustryIndexPage() {
   return (
     <>
       <BreadcrumbSchema

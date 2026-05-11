@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { TopicListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
   title: 'Legislative Topics - Policy Areas & Issues',
@@ -149,7 +150,25 @@ const faqItems = [
   },
 ];
 
-export default function TopicsHubPage() {
+interface TopicsPageProps {
+  searchParams: Promise<{ v?: string }>;
+}
+
+export default async function TopicsHubPage({ searchParams }: TopicsPageProps) {
+  const { v } = await searchParams;
+
+  const isPreviewEnv =
+    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
+  const useRedesign = v === 'new' || isPreviewEnv;
+
+  if (useRedesign) {
+    return <TopicListingPage />;
+  }
+
+  return <LegacyTopicsHubPage />;
+}
+
+function LegacyTopicsHubPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <BreadcrumbSchema
