@@ -51,7 +51,11 @@ const linkStyle = {
 } as const;
 
 export function ContactStrip({ representative: r }: ContactStripProps) {
-  const dc = r.contact?.dcOffice;
+  const dc =
+    r.contact?.dcOffice ??
+    (r.currentTerm?.address || r.currentTerm?.phone
+      ? { address: r.currentTerm.address, phone: r.currentTerm.phone }
+      : undefined);
   const districts = r.contact?.districtOffices ?? [];
   const district1 = districts[0];
   const district2 = districts[1];

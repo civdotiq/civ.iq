@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import useSWR from 'swr';
 import {
   CqButton,
   CqChip,
@@ -18,6 +19,46 @@ import { CommitteesPanel } from './CommitteesPanel';
 import { MeetingsPanel } from './MeetingsPanel';
 import { partyKey, partyLong } from './types';
 import type { ProfileHybridProps } from './types';
+
+interface SummaryBatchResponse {
+  data?: {
+    bills?: {
+      currentCongress?: { count?: number };
+      totalCurrentCongress?: number;
+    };
+    votes?: {
+      votes?: unknown[];
+      totalResults?: number;
+    };
+    finance?: {
+      totalRaised?: number;
+      cycle?: number;
+      metadata?: { dataFromCycle?: number; matchedCycle?: number };
+    };
+  };
+}
+
+const summaryBatch = (bioguideId: string) => async (): Promise<SummaryBatchResponse> => {
+  const r = await fetch(`/api/representative/${bioguideId}/batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      endpoints: ['bills', 'votes', 'finance'],
+      options: { bills: { summaryOnly: true } },
+    }),
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+};
+
+function formatCurrencyShort(amount: number | undefined): string | null {
+  if (amount === undefined || amount === null || !Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(2)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toFixed(0)}`;
+}
 
 type TabKey = 'record' | 'money' | 'bills' | 'committees' | 'meetings';
 
@@ -46,13 +87,34 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
   const currentTerm = terms[0];
   const currentCongress = currentTerm?.congress;
   const nextElection = r.nextElection ?? currentTerm?.endYear;
+  const leftOfficeYear = currentTerm?.endYear;
+  const isHistorical =
+    r.isHistorical === true ||
+    (leftOfficeYear !== undefined && Number(leftOfficeYear) < new Date().getFullYear());
 
   const committeesCount = r.committees?.length ?? 0;
   const caucusesCount = r.caucuses?.length ?? 0;
 
-  const dcOffices = r.contact?.dcOffice ? 1 : 0;
+  const { data: summary, isLoading: summaryLoading } = useSWR<SummaryBatchResponse>(
+    `summary-batch:${r.bioguideId}`,
+    summaryBatch(r.bioguideId),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
+  const billsSponsoredCount =
+    summary?.data?.bills?.currentCongress?.count ?? summary?.data?.bills?.totalCurrentCongress;
+  const rollCallVotesCount =
+    summary?.data?.votes?.totalResults ?? summary?.data?.votes?.votes?.length;
+  const totalRaised = summary?.data?.finance?.totalRaised;
+  const financeCycle =
+    summary?.data?.finance?.cycle ??
+    summary?.data?.finance?.metadata?.matchedCycle ??
+    summary?.data?.finance?.metadata?.dataFromCycle;
+  const raisedLabel = totalRaised !== undefined ? formatCurrencyShort(totalRaised) : null;
+
+  const hasDcOffice = !!(r.contact?.dcOffice ?? r.currentTerm?.address ?? r.currentTerm?.phone);
   const districtOfficeCount = r.contact?.districtOffices?.length ?? 0;
-  const officesTotal = dcOffices + districtOfficeCount;
+  const officesTotal = (hasDcOffice ? 1 : 0) + districtOfficeCount;
   const websiteHost = r.website
     ? r.website.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : undefined;
@@ -74,6 +136,30 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
         margin: '0 auto',
       }}
     >
+      {isHistorical && (
+        <div
+          style={{
+            borderLeft: '6px solid var(--color-warning)',
+            border: '2px solid var(--ink)',
+            background: 'var(--bg2)',
+            padding: '14px 18px',
+            marginBottom: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+          role="note"
+          aria-label="Historical record notice"
+        >
+          <CqLabel color="amber">Historical record</CqLabel>
+          <span style={{ fontSize: 13, color: 'var(--fg1)', lineHeight: 1.4 }}>
+            Former {role} · no longer in Congress
+            {leftOfficeYear ? ` (left office ${leftOfficeYear})` : ''}. Current-Congress stats and
+            recent activity below will be empty.
+          </span>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',
@@ -85,7 +171,7 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
         }}
       >
         <CqLabel>
-          ← Federal · {r.chamber} · {r.state}
+          ← {isHistorical ? 'Historical' : 'Federal'} · {r.chamber} · {r.state}
           {r.district ? ` · District ${r.district}` : ''}
         </CqLabel>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -205,23 +291,53 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
         <StatCell index={0}>
           <CqStat
             label="Bills sponsored"
-            value={<UnknownStat caption="Loaded from /bills" />}
-            caption="Loads with panel"
+            value={
+              summaryLoading
+                ? '…'
+                : billsSponsoredCount !== undefined && billsSponsoredCount > 0
+                  ? billsSponsoredCount
+                  : '—'
+            }
+            caption={
+              summaryLoading
+                ? 'Loading…'
+                : billsSponsoredCount !== undefined && billsSponsoredCount > 0
+                  ? `${currentCongress ?? 119} Congress`
+                  : 'Data unavailable'
+            }
           />
         </StatCell>
         <StatCell index={1}>
           <CqStat
             label="Roll-call votes"
-            value={<UnknownStat caption="Loaded from /votes" />}
-            caption="Loads with panel"
+            value={
+              summaryLoading
+                ? '…'
+                : rollCallVotesCount !== undefined && rollCallVotesCount > 0
+                  ? rollCallVotesCount
+                  : '—'
+            }
+            caption={
+              summaryLoading
+                ? 'Loading…'
+                : rollCallVotesCount !== undefined && rollCallVotesCount > 0
+                  ? 'Recent floor votes'
+                  : 'Data unavailable'
+            }
           />
         </StatCell>
         <StatCell index={2}>
           <CqStat
             label="Raised, cycle"
-            value={<UnknownStat caption="Loaded from /finance" />}
+            value={summaryLoading ? '…' : (raisedLabel ?? '—')}
             color="blue"
-            caption="Loads with panel"
+            caption={
+              summaryLoading
+                ? 'Loading…'
+                : raisedLabel
+                  ? `${financeCycle ?? 2024} cycle · FEC`
+                  : 'Data unavailable'
+            }
           />
         </StatCell>
         <StatCell index={3}>
@@ -245,46 +361,6 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
             caption={caucusesCount > 0 ? 'House caucus disclosures' : 'Data unavailable'}
           />
         </StatCell>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          borderBottom: '2px solid var(--ink)',
-          background: 'var(--bg2)',
-        }}
-      >
-        {[
-          { l: `Votes w/ ${partyLong(r.party)}`, v: '—', c: 'var(--fg4)' },
-          { l: 'Votes w/ chamber majority', v: '—', c: 'var(--fg4)' },
-          { l: 'Bipartisan co-sponsorships', v: '—', c: 'var(--fg4)' },
-        ].map((row, i) => (
-          <div
-            key={row.l}
-            style={{
-              padding: '10px 18px',
-              borderLeft: i === 0 ? 0 : '1px solid var(--line)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <CqLabel>{row.l}</CqLabel>
-            <span
-              style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: row.c,
-                fontVariantNumeric: 'tabular-nums',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {row.v}
-            </span>
-          </div>
-        ))}
       </div>
 
       <ContactStrip representative={r} />
@@ -361,19 +437,5 @@ function StatCell({ index, children }: { index: number; children: React.ReactNod
     <div style={{ padding: '20px 18px', borderLeft: index === 0 ? 0 : '1px solid var(--line)' }}>
       {children}
     </div>
-  );
-}
-
-function UnknownStat({ caption }: { caption: string }) {
-  return (
-    <span
-      title={caption}
-      style={{
-        color: 'var(--fg4)',
-        fontVariantNumeric: 'tabular-nums',
-      }}
-    >
-      —
-    </span>
   );
 }

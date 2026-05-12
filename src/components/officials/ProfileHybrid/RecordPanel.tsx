@@ -53,10 +53,13 @@ const batchVotes = (bioguideId: string) => async () => {
   return r.json();
 };
 
-function chipVariantFor(position: string | undefined): 'd' | 'r' | 'i' {
-  if (position === 'Yea' || position === 'Yes') return 'd';
-  if (position === 'Nay' || position === 'No') return 'r';
-  return 'i';
+function chipStyleFor(position: string | undefined): {
+  variant: 'ink' | 'i';
+  filled: boolean;
+} {
+  if (position === 'Yea' || position === 'Yes') return { variant: 'ink', filled: true };
+  if (position === 'Nay' || position === 'No') return { variant: 'ink', filled: false };
+  return { variant: 'i', filled: false };
 }
 
 function formatDate(date: string | undefined): string {
@@ -147,6 +150,7 @@ export function RecordPanel({ representative: r }: RecordPanelProps) {
             {recent.map((v, idx) => {
               const billNum = v.bill?.number ?? `Roll ${v.rollNumber ?? '—'}`;
               const title = v.bill?.title ?? v.question ?? v.description ?? '—';
+              const chip = chipStyleFor(v.position);
               return (
                 <div
                   key={`${v.rollNumber ?? 'r'}-${idx}`}
@@ -161,7 +165,7 @@ export function RecordPanel({ representative: r }: RecordPanelProps) {
                 >
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{billNum}</span>
                   <span style={{ fontSize: 13 }}>{title}</span>
-                  <CqChip variant={chipVariantFor(v.position)} size="sm" filled={false}>
+                  <CqChip variant={chip.variant} size="sm" filled={chip.filled}>
                     {v.position ?? '—'}
                   </CqChip>
                   <span style={{ fontSize: 11, color: 'var(--fg2)' }}>{v.result ?? '—'}</span>

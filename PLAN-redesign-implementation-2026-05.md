@@ -276,10 +276,11 @@ each tab, behind `?v=new`.
 npx tsc --noEmit
 npx eslint src/components/officials/ProfileHybrid/
 npm run dev
-# Visit (replace bioguide ID with a real one — H001075 = Jeffries):
-#   http://localhost:3000/representative/H001075           → old design
-#   http://localhost:3000/representative/H001075?v=new     → ProfileHybrid
+# Visit (active members in 119th Congress):
+#   http://localhost:3000/representative/T000488           → Thanedar (D, House) — old design
+#   http://localhost:3000/representative/T000488?v=new     → ProfileHybrid
 # Try a Republican: M001153 = Murkowski (Senate)
+# Note: H001075 = Kamala Harris (historical — left office 2021, not in 119th).
 # Confirm:
 #   - 5 tabs render and switch
 #   - PanelHeader has CqSourceTag on the right of every panel
