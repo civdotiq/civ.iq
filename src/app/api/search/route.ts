@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
-import { cachedFetch } from '@/lib/cache';
+import { cache } from '@/lib/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
 
 // Dynamic route with ISR caching - uses searchParams
@@ -476,12 +476,22 @@ export async function GET(request: NextRequest) {
     // Create cache key from filters
     const cacheKey = `search-${JSON.stringify(filters)}`;
 
-    // Perform search with caching
-    const searchResults = await cachedFetch(
-      cacheKey,
-      () => performSearch(filters),
-      5 * 60 * 1000 // 5 minutes cache
-    );
+    // Read cache directly — and treat zero-result hits as a miss. Zero is
+    // almost always an upstream failure (the dataset has ~535 reps), so a
+    // cached empty result would poison subsequent identical queries until
+    // TTL expires.
+    let searchResults = await cache.get<Awaited<ReturnType<typeof performSearch>>>(cacheKey);
+    if (!searchResults || (searchResults.results?.length ?? 0) === 0) {
+      searchResults = await performSearch(filters);
+      // Only cache non-empty results.
+      if (searchResults.results && searchResults.results.length > 0) {
+        await cache.set(cacheKey, searchResults, 300); // 5 minutes
+      } else {
+        logger.warn('Search returned zero results; skipping cache write', {
+          query: filters.query,
+        });
+      }
+    }
 
     // Detect whether the search term resolved through ZIP. A ZIP-only query
     // (or a query that parses to a ZIP without street) triggers ZIP-based
