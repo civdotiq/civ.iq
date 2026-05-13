@@ -49,6 +49,14 @@ jest.mock('@/lib/monitoring/telemetry-edge', () => ({
 
 jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn((_key: string, fetcher: () => Promise<unknown>) => fetcher()),
+  cache: {
+    get: jest.fn(() => Promise.resolve(null)),
+    set: jest.fn(() => Promise.resolve(true)),
+    delete: jest.fn(() => Promise.resolve(true)),
+    clear: jest.fn(() => Promise.resolve(true)),
+    exists: jest.fn(() => Promise.resolve(false)),
+    getStatus: jest.fn(() => ({ connected: true })),
+  },
 }));
 
 jest.mock('@/services/cache', () => ({
