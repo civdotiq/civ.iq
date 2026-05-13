@@ -31,9 +31,10 @@ export class RepresentativesCoreService {
     const startTime = Date.now();
 
     try {
-      // Check cache first
+      // Check cache first. Treat an empty cached array as a miss so a
+      // transient upstream failure can't pin the service into an empty state.
       const cached = await govCache.get<EnhancedRepresentative[]>(cacheKey);
-      if (cached) {
+      if (cached && cached.length > 0) {
         logger.info('Core service cache hit for all representatives', {
           count: cached.length,
           responseTime: Date.now() - startTime,
@@ -79,9 +80,9 @@ export class RepresentativesCoreService {
     const startTime = Date.now();
 
     try {
-      // Check state-specific cache first
+      // Check state-specific cache first. Treat empty arrays as miss.
       const cached = await govCache.get<EnhancedRepresentative[]>(cacheKey);
-      if (cached) {
+      if (cached && cached.length > 0) {
         logger.info('Core service cache hit for state representatives', {
           state,
           count: cached.length,

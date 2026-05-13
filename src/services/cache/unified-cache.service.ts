@@ -61,6 +61,10 @@ export class UnifiedCacheService {
    * Get cached data with Redis primary, fallback secondary
    */
   async get<T>(key: string): Promise<T | null> {
+    // Empty arrays are treated as cache miss so transient upstream failures
+    // can't poison the cache. See also cachedFetch in src/lib/cache.ts.
+    const isEmpty = (v: unknown): boolean => Array.isArray(v) && v.length === 0;
+
     // Try Redis first
     try {
       const redisResult = await this.redisCache.get<CacheEntry<T>>(key);
@@ -70,8 +74,13 @@ export class UnifiedCacheService {
 
         // Double-check expiry (Redis should handle this automatically)
         if (Date.now() <= entry.expiresAt) {
-          logger.debug(`[Unified Cache HIT-Redis] ${key} (source: ${entry.source})`);
-          return entry.data;
+          if (isEmpty(entry.data)) {
+            logger.warn(`[Unified Cache] Treating empty cached value as miss`, { key });
+            await this.redisCache.delete(key);
+          } else {
+            logger.debug(`[Unified Cache HIT-Redis] ${key} (source: ${entry.source})`);
+            return entry.data;
+          }
         } else {
           logger.debug(`[Unified Cache EXPIRED-Redis] ${key}`);
           await this.redisCache.delete(key);
@@ -88,8 +97,13 @@ export class UnifiedCacheService {
     const fallbackEntry = this.fallbackCache.get(key);
     if (fallbackEntry) {
       if (Date.now() <= fallbackEntry.expiresAt) {
-        logger.debug(`[Unified Cache HIT-Fallback] ${key} (source: ${fallbackEntry.source})`);
-        return fallbackEntry.data as T;
+        if (isEmpty(fallbackEntry.data)) {
+          logger.warn(`[Unified Cache] Treating empty fallback value as miss`, { key });
+          this.fallbackCache.delete(key);
+        } else {
+          logger.debug(`[Unified Cache HIT-Fallback] ${key} (source: ${fallbackEntry.source})`);
+          return fallbackEntry.data as T;
+        }
       } else {
         logger.debug(`[Unified Cache EXPIRED-Fallback] ${key}`);
         this.fallbackCache.delete(key);
@@ -121,6 +135,13 @@ export class UnifiedCacheService {
     // Use provided TTL or data type defaults
     const redisTtl = options?.ttl ? Math.floor(options.ttl / 1000) : ttlConfig.redis;
     const memoryTtl = options?.ttl || ttlConfig.memory;
+
+    // Don't cache empty arrays — they indicate upstream fetch failure and
+    // would lock the cache into a broken state until TTL expires.
+    if (Array.isArray(data) && data.length === 0) {
+      logger.warn(`[Unified Cache] Skipping write for empty result`, { key });
+      return;
+    }
 
     const entry: CacheEntry<T> = {
       data,

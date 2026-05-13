@@ -28,7 +28,9 @@ export async function cachedFetch<T>(
 
   try {
     const cached = await cache.get<T>(key);
-    if (cached) {
+    // Treat empty arrays as cache miss — they indicate an upstream fetch
+    // failure that should be retried, not served from cache.
+    if (cached && !(Array.isArray(cached) && cached.length === 0)) {
       monitor.end(true);
       logger.info('Cache hit', { key, ttl: ttlSeconds });
       return cached;
@@ -37,6 +39,13 @@ export async function cachedFetch<T>(
     monitor.end(false);
     logger.info('Cache miss, fetching data', { key });
     const data = await fetchFn();
+
+    // Don't cache empty arrays — they would poison the cache and prevent
+    // recovery when the upstream source comes back.
+    if (Array.isArray(data) && data.length === 0) {
+      logger.warn('Skipping cache write for empty result', { key });
+      return data;
+    }
 
     // Set in cache with monitoring
     const setMonitor = monitorCache('set', key);

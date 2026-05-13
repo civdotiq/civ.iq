@@ -167,9 +167,11 @@ async function persistentCachedFetch<T>(
 ): Promise<T> {
   const startTime = Date.now();
 
-  // Try file cache first for persistence across restarts
+  // Try file cache first for persistence across restarts.
+  // Empty arrays are treated as miss so a transient upstream failure can't
+  // poison the cache.
   const fileCached = await fileCache.get<T>(key);
-  if (fileCached) {
+  if (fileCached && !(Array.isArray(fileCached) && fileCached.length === 0)) {
     const duration = Date.now() - startTime;
     logger.debug('File cache hit', { key, duration });
     logger.info('File cache hit for congress data', { key, duration });
@@ -190,6 +192,12 @@ async function persistentCachedFetch<T>(
       const fetchDuration = Date.now() - fetchStartTime;
 
       logger.info('Download complete', { key, fetchDuration });
+
+      // Don't persist empty results — they indicate fetch failure.
+      if (Array.isArray(data) && data.length === 0) {
+        logger.warn('Skipping file cache write for empty congress data', { key });
+        return data;
+      }
 
       // Save to file cache for persistence
       const cacheStartTime = Date.now();
