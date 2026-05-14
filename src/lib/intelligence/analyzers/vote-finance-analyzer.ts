@@ -85,7 +85,14 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
  * trimming just drops tail latency without meaningfully changing the
  * insight. Only applies here — other analyzers keep their own cap.
  */
-const MAX_VOTES = 120;
+// MR12: 50 (was 120). With the JSON /members swap, each House vote costs two
+// sequential Congress.gov API calls (members + bill enrichment) gated through
+// a 5-concurrency limiter on the singleton BatchVotingService. 120 × 2
+// sessions × 2 calls = 480 internal fetches per analyzer run, which overflows
+// the 55s budget once FEC contribution retries are running in parallel.
+// 50 keeps total work near 200 calls (~12s baseline), still well above the
+// 10-per-sector statistical minimum from intelligence-layer.md.
+const MAX_VOTES = 50;
 
 /** Standard disclaimer */
 const DISCLAIMER =
