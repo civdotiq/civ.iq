@@ -85,23 +85,14 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
  * trimming just drops tail latency without meaningfully changing the
  * insight. Only applies here — other analyzers keep their own cap.
  */
-// MR12: 50 (was 120). With the JSON /members swap, each House vote costs two
-// sequential Congress.gov API calls (members + bill enrichment) gated through
-// a 5-concurrency limiter on the singleton BatchVotingService. Empirically
-// (preview probes 2026-05-14):
-//
-//   MAX_VOTES=120  cold ~108s    timeout (was already over budget pre-Akamai)
-//   MAX_VOTES=100  cold ~53s     timeout when 2+ /members fetches hit the
-//                                 httpClient retry tail (3× 10s + backoffs)
-//   MAX_VOTES=50   cold ~37s     status:'complete' for both probed reps
-//
-// 50 keeps total work near ~10s fetchVotes baseline, parallel with ~30s FEC
-// contributions, well under the 55s budget. Trade-off: each sector lands
-// below MIN_VOTES_PER_SECTOR=10 with this cap, so `overallCorrelation`
-// remains null until either (a) the httpClient retry policy is tightened so
-// MAX_VOTES can safely climb, or (b) the bill-classification rate (~12% of
-// raw House votes today) is widened. Both are tracked as MR12 follow-ups.
-const MAX_VOTES = 50;
+// MR13: 150 (was 50 in MR12). With the JSON /members swap (MR12) plus the
+// MR13 httpClient retry tightening (no retry on AbortError; 5s timeout on
+// the /members fetch), a failed upstream now costs ~5s instead of ~37s. At
+// 150 votes per session through a 5-concurrency limiter, even a few tail
+// failures stay well inside the 55s analyzer budget. 150 gives enough
+// cushion for the top sectors to clear MIN_VOTES_PER_SECTOR=10 after the
+// ~12% bill-classification rate is applied.
+const MAX_VOTES = 150;
 
 /** Standard disclaimer */
 const DISCLAIMER =

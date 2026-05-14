@@ -13,7 +13,7 @@ import { getAllMappings } from '@/lib/data/legislator-mappings';
 import { circuitBreakers } from '@/lib/circuit-breaker';
 
 // Connection pooling with HTTP keep-alive for performance optimization
-class HttpClient {
+export class HttpClient {
   private static instance: HttpClient;
   private controller: AbortController;
 
@@ -102,6 +102,18 @@ class HttpClient {
           return response;
         } catch (error) {
           lastError = error instanceof Error ? error : new Error('Unknown fetch error');
+
+          // Skip retry on AbortError: the abort came from our own AbortSignal.timeout,
+          // so retrying just burns another full timeout window. Other network errors
+          // (DNS, connection reset) still retry. See MR13.
+          if (lastError.name === 'AbortError' || lastError.name === 'TimeoutError') {
+            logger.debug('Fetch aborted by timeout, not retrying', {
+              url,
+              attempt: attempt + 1,
+              error: lastError.message,
+            });
+            break;
+          }
 
           // Retry on network errors with exponential backoff
           if (attempt < maxRetries - 1) {
@@ -918,7 +930,10 @@ export class BatchVotingService {
             ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
             Accept: 'application/json',
           },
-          signal: AbortSignal.timeout(10000),
+          // MR13: 5s timeout — Congress.gov /members is sub-second when
+          // healthy; a slow tail isn't going to recover within the analyzer
+          // budget even if we wait 10s. Paired with MR13's no-retry-on-abort.
+          signal: AbortSignal.timeout(5000),
         });
 
         if (!res.ok) {

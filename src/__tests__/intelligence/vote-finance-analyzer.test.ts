@@ -156,9 +156,9 @@ describe('analyzeVoteFinance', () => {
   it('fetches both sessions of 119th Congress', async () => {
     await analyzeVoteFinance('P000197');
 
-    // Should call getHouseMemberVotes with sessions 1 and 2, trimmed cap (MR12)
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 50);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 50);
+    // Should call getHouseMemberVotes with sessions 1 and 2, trimmed cap (MR13)
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 150);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 150);
   });
 
   it('classifies votes by sector', async () => {
