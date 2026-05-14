@@ -85,14 +85,19 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
  * trimming just drops tail latency without meaningfully changing the
  * insight. Only applies here — other analyzers keep their own cap.
  */
-// MR12: 50 (was 120). With the JSON /members swap, each House vote costs two
+// MR12: 100 (was 120). With the JSON /members swap, each House vote costs two
 // sequential Congress.gov API calls (members + bill enrichment) gated through
 // a 5-concurrency limiter on the singleton BatchVotingService. 120 × 2
-// sessions × 2 calls = 480 internal fetches per analyzer run, which overflows
-// the 55s budget once FEC contribution retries are running in parallel.
-// 50 keeps total work near 200 calls (~12s baseline), still well above the
-// 10-per-sector statistical minimum from intelligence-layer.md.
-const MAX_VOTES = 50;
+// sessions = 240 raw votes was overflowing the 55s budget once FEC
+// contribution retries hit a network blip. 100 × 2 = 200 raw votes ≈ 20s
+// fetchVotes baseline, parallel with ~30s fetchContributions = ~30s
+// fetchUpstream, leaves headroom for classify+narrative inside 55s.
+//
+// Below ~80 raw votes, sector-classified vote counts (~12% of raw after the
+// bill-filter) drop below MIN_VOTES_PER_SECTOR=10 in every sector, which
+// collapses `overallCorrelation` to null. 100 keeps the largest sectors at or
+// above the floor so the money-report orchestrator emits `state: 'ready'`.
+const MAX_VOTES = 100;
 
 /** Standard disclaimer */
 const DISCLAIMER =
