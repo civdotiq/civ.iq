@@ -295,6 +295,30 @@ interface VoteListItem {
   legislationUrl?: string;
 }
 
+/**
+ * Shape returned by `https://api.congress.gov/v3/house-vote/{cong}/{sess}/{rollNum}/members?format=json`.
+ * Only the fields we actually consume are typed.
+ */
+interface HouseMembersJsonResponse {
+  houseRollCallVoteMemberVotes?: {
+    congress?: number;
+    sessionNumber?: number;
+    rollCallNumber?: number;
+    voteQuestion?: string;
+    result?: string;
+    sourceDataURL?: string;
+    startDate?: string;
+    results?: Array<{
+      bioguideID?: string;
+      firstName?: string;
+      lastName?: string;
+      voteCast?: string;
+      voteParty?: string;
+      voteState?: string;
+    }>;
+  };
+}
+
 // Circuit breaker for handling API failures
 class CircuitBreaker {
   private failures = 0;
@@ -439,7 +463,13 @@ export class BatchVotingService {
       }
 
       // Step 2: Batch process all votes with caching and parallel fetching
-      const votes = await this.batchProcessHouseVotes(voteList, bioguideId, bypassCache);
+      const votes = await this.batchProcessHouseVotes(
+        voteList,
+        bioguideId,
+        bypassCache,
+        congress,
+        session
+      );
 
       logger.info('House member votes retrieved (optimized)', {
         bioguideId,
@@ -447,7 +477,7 @@ export class BatchVotingService {
         totalProcessed: voteList.length,
         responseTime: Date.now() - startTime,
         cacheHits: voteList.filter(v =>
-          this.cache.has(`house-vote-${congress}-${v.rollCallNumber}`)
+          this.cache.has(`house-vote-${congress}-${session}-${v.rollCallNumber}`)
         ).length,
       });
 
@@ -534,7 +564,7 @@ export class BatchVotingService {
         logger.warn('No House votes found for chamber roll calls', { congress, session });
         return [];
       }
-      return await this.fetchHouseVotesRaw(voteList, bypassCache);
+      return await this.fetchHouseVotesRaw(voteList, bypassCache, congress, session);
     } catch (error) {
       logger.error('Failed to get House chamber roll calls', error as Error, {
         congress,
@@ -789,7 +819,9 @@ export class BatchVotingService {
   private async batchProcessHouseVotes(
     voteList: VoteListItem[],
     bioguideId: string,
-    bypassCache = false
+    bypassCache = false,
+    congress = 119,
+    session = 1
   ): Promise<
     Array<{
       voteId: string;
@@ -801,7 +833,7 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
-    const allVotes = await this.fetchHouseVotesRaw(voteList, bypassCache);
+    const allVotes = await this.fetchHouseVotesRaw(voteList, bypassCache, congress, session);
     return this.extractMemberVotes(bioguideId, allVotes);
   }
 
@@ -815,14 +847,16 @@ export class BatchVotingService {
    */
   private async fetchHouseVotesRaw(
     voteList: VoteListItem[],
-    bypassCache = false
+    bypassCache = false,
+    congress = 119,
+    session = 1
   ): Promise<StandardizedVote[]> {
     // Step 1: Check cache for all votes (unless bypassing cache)
     const cachedVotes: StandardizedVote[] = [];
     const uncachedVotes: VoteListItem[] = [];
 
     for (const vote of voteList) {
-      const cacheKey = `house-vote-119-${vote.rollCallNumber}`;
+      const cacheKey = `house-vote-${congress}-${session}-${vote.rollCallNumber}`;
       const cached = bypassCache ? null : this.cache.get<StandardizedVote>(cacheKey);
 
       if (cached) {
@@ -832,9 +866,10 @@ export class BatchVotingService {
       }
     }
 
-    // Step 2: Fetch uncached XMLs in parallel (with rate limiting)
+    // Step 2: Fetch uncached rosters from Congress.gov JSON /members in parallel.
+    // (clerk.house.gov XML is Akamai-blocked from Vercel cloud IPs; MR12.)
     const fetchTasks = uncachedVotes.map(vote =>
-      this.limiter.run(() => this.fetchAndParseHouseXML(vote))
+      this.limiter.run(() => this.fetchAndParseHouseMembersJSON(vote, congress, session))
     );
 
     const newVotes = await Promise.allSettled(fetchTasks);
@@ -845,10 +880,10 @@ export class BatchVotingService {
         successfulVotes.push(result.value);
 
         // Cache the parsed vote
-        const cacheKey = `house-vote-119-${result.value.rollCallNumber}`;
+        const cacheKey = `house-vote-${congress}-${session}-${result.value.rollCallNumber}`;
         this.cache.set(cacheKey, result.value);
       } else {
-        logger.debug('Failed to parse House vote XML', {
+        logger.debug('Failed to fetch House vote members', {
           rollCallNumber: uncachedVotes[_index]?.rollCallNumber,
           error: result.status === 'rejected' ? result.reason : 'Unknown error',
         });
@@ -859,41 +894,60 @@ export class BatchVotingService {
   }
 
   /**
-   * Fetch and parse House XML vote data, with bill information enrichment
+   * Fetch the per-vote member roster from Congress.gov JSON `/members` and
+   * adapt it to `StandardizedVote`. Replaces the historical XML path that
+   * hit `clerk.house.gov`, which is Akamai-blocked from Vercel cloud IPs
+   * (MR10). The JSON sub-resource lives on `api.congress.gov`, the same
+   * host as the working vote-list endpoint, and is reachable from both
+   * residential and serverless egress.
+   *
+   * Bill enrichment via `fetchBillDetails` is unchanged — that path uses
+   * Congress.gov JSON and was never affected.
    */
-  private async fetchAndParseHouseXML(vote: VoteListItem): Promise<StandardizedVote | null> {
-    if (!vote.sourceDataURL) {
-      return null;
-    }
+  private async fetchAndParseHouseMembersJSON(
+    vote: VoteListItem,
+    congress: number,
+    session: number
+  ): Promise<StandardizedVote | null> {
+    const url = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${vote.rollCallNumber}/members?format=json`;
 
     try {
-      const response = await this.circuitBreaker.call(async () => {
-        const res = await httpClient.fetch(vote.sourceDataURL, {
-          signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
+      const data = await this.circuitBreaker.call(async () => {
+        const res = await httpClient.fetch(url, {
+          headers: {
+            ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
+            Accept: 'application/json',
+          },
+          signal: AbortSignal.timeout(10000),
         });
 
         if (!res.ok) {
-          throw new Error(`XML fetch failed: ${res.status}`);
+          throw new Error(`Members JSON fetch failed: ${res.status}`);
         }
 
-        return res.text();
+        return (await res.json()) as HouseMembersJsonResponse;
       });
 
-      const parsedVote = this.parseHouseXML(response, vote);
+      const standardizedVote = this.adaptHouseMembersJSON(data, vote, congress, session);
+      if (!standardizedVote) {
+        return null;
+      }
 
       // Enrich with bill information if available
-      if (parsedVote && vote.legislationNumber && vote.legislationType) {
-        parsedVote.bill = await this.fetchBillDetails(
+      if (vote.legislationNumber && vote.legislationType) {
+        standardizedVote.bill = await this.fetchBillDetails(
           vote.legislationNumber,
           vote.legislationType,
           vote.legislationUrl
         );
       }
 
-      return parsedVote;
+      return standardizedVote;
     } catch (error) {
-      logger.debug('Failed to fetch House XML', {
+      logger.debug('Failed to fetch House members JSON', {
         rollCallNumber: vote.rollCallNumber,
+        congress,
+        session,
         error: (error as Error).message,
       });
       return null;
@@ -901,234 +955,82 @@ export class BatchVotingService {
   }
 
   /**
-   * Parse House XML vote data with fallback support for different XML schemas
+   * Adapt the Congress.gov `/members` response to `StandardizedVote`.
+   * Prefers metadata from the JSON envelope (voteQuestion, result,
+   * sessionNumber, sourceDataURL) when available, falling back to the
+   * list-level `voteInfo` so the shape stays stable if Congress.gov ever
+   * drops a field.
    */
-  private parseHouseXML(xmlText: string, voteInfo: VoteListItem): StandardizedVote | null {
-    try {
-      // Extract question and description from XML
-      const getXmlTag = (tag: string) =>
-        xmlText.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() || '';
-
-      const voteQuestion = getXmlTag('vote-question') || getXmlTag('question') || voteInfo.question;
-      const voteDesc = getXmlTag('vote-desc') || getXmlTag('description') || '';
-      const legislativeNumber = getXmlTag('legis-num') || '';
-
-      // Combine question and description for a more descriptive question
-      let enhancedQuestion = voteQuestion || 'Unknown Question';
-      if (voteDesc && voteDesc !== voteQuestion) {
-        enhancedQuestion = voteDesc ? `${voteQuestion}: ${voteDesc}` : voteQuestion;
-      }
-
-      // Debug: Log the parsing process
-      logger.debug('Parsing House XML', {
+  private adaptHouseMembersJSON(
+    data: HouseMembersJsonResponse,
+    voteInfo: VoteListItem,
+    congress: number,
+    session: number
+  ): StandardizedVote | null {
+    const envelope = data.houseRollCallVoteMemberVotes;
+    if (!envelope) {
+      logger.warn('House members JSON missing envelope', {
         rollCallNumber: voteInfo.rollCallNumber,
-        xmlLength: xmlText.length,
-        extractedQuestion: voteQuestion,
-        extractedDesc: voteDesc,
-        extractedLegisNum: legislativeNumber,
-        enhancedQuestion,
-      });
-
-      // Try primary parsing method first
-      let memberVotes = this.parseHouseXMLPrimary(xmlText);
-
-      // If primary parsing fails or returns no results, try fallback methods
-      if (memberVotes.length === 0) {
-        logger.debug('Primary parsing failed, trying fallback methods', {
-          rollCallNumber: voteInfo.rollCallNumber,
-        });
-
-        memberVotes =
-          this.parseHouseXMLLegacy(xmlText) || this.parseHouseXMLAlternative(xmlText) || [];
-      }
-
-      // Enhanced logging for debugging
-      const parsingResult = {
-        rollCallNumber: voteInfo.rollCallNumber,
-        memberVotesFound: memberVotes.length,
-        parsingMethod: memberVotes.length > 0 ? 'success' : 'failed',
-        xmlLength: xmlText.length,
-        containsRecordedVote: xmlText.includes('<recorded-vote>'),
-        containsMemberTag: xmlText.includes('<member>'),
-        containsLegislatorTag: xmlText.includes('<legislator'),
-        firstFewVoteIds: memberVotes.slice(0, 3).map(v => v.bioguideId),
-      };
-
-      if (memberVotes.length === 0) {
-        logger.warn('House XML parsing returned no member votes', parsingResult);
-      } else {
-        logger.info('House XML parsing successful', parsingResult);
-      }
-
-      // Calculate totals
-      const totals = {
-        yea: memberVotes.filter((v: StandardizedVote['memberVotes'][0]) => v.position === 'Yea')
-          .length,
-        nay: memberVotes.filter((v: StandardizedVote['memberVotes'][0]) => v.position === 'Nay')
-          .length,
-        present: memberVotes.filter(
-          (v: StandardizedVote['memberVotes'][0]) => v.position === 'Present'
-        ).length,
-        notVoting: memberVotes.filter(
-          (v: StandardizedVote['memberVotes'][0]) => v.position === 'Not Voting'
-        ).length,
-      };
-
-      return {
-        voteId: `house-119-${voteInfo.rollCallNumber}`,
-        congress: 119,
-        session: 1,
-        chamber: 'House',
-        rollCallNumber: voteInfo.rollCallNumber,
-        date: voteInfo.date,
-        question: enhancedQuestion,
-        result: voteInfo.result,
-        totals,
-        memberVotes,
-        sourceUrl: voteInfo.sourceDataURL,
-        processedAt: new Date().toISOString(),
-        // Bill will be populated later in fetchAndParseHouseXML
-        bill: undefined,
-      };
-    } catch (error) {
-      logger.error('Failed to parse House XML', error as Error);
-      return null;
-    }
-  }
-
-  /**
-   * Primary House XML parsing method for current format
-   */
-  private parseHouseXMLPrimary(xmlText: string): StandardizedVote['memberVotes'] {
-    const memberVotes: StandardizedVote['memberVotes'] = [];
-
-    try {
-      const memberMatches = xmlText.matchAll(/<recorded-vote>[\s\S]*?<\/recorded-vote>/g);
-      const memberMatchesArray = Array.from(memberMatches);
-
-      for (const [memberXml] of memberMatchesArray) {
-        // Extract vote from <vote> tag
-        const voteMatch = memberXml.match(/<vote>([^<]*)<\/vote>/);
-        const vote = voteMatch?.[1]?.trim() || '';
-
-        // Extract legislator name (text content between <legislator> tags)
-        const legislatorNameMatch = memberXml.match(/<legislator[^>]*>([^<]*)<\/legislator>/);
-        const name = legislatorNameMatch?.[1]?.trim() || '';
-
-        // Extract attributes from <legislator> tag
-        const bioguideMatch = memberXml.match(/name-id="([^"]+)"/);
-        const partyMatch = memberXml.match(/party="([^"]+)"/);
-        const stateMatch = memberXml.match(/state="([^"]+)"/);
-
-        const bioguideId = bioguideMatch?.[1] || '';
-        const party = partyMatch?.[1] || 'Unknown';
-        const state = stateMatch?.[1] || 'Unknown';
-
-        // Only add if we have essential data
-        if (bioguideId && vote) {
-          memberVotes.push({
-            bioguideId,
-            name: name || 'Unknown',
-            party,
-            state,
-            position: this.normalizePosition(vote),
-          });
-        }
-      }
-    } catch (error) {
-      logger.debug('Primary House XML parsing failed', {
-        error: error instanceof Error ? error.message : 'Unknown',
-      });
-    }
-
-    return memberVotes;
-  }
-
-  /**
-   * Legacy House XML parsing method for older formats
-   */
-  private parseHouseXMLLegacy(xmlText: string): StandardizedVote['memberVotes'] | null {
-    const memberVotes: StandardizedVote['memberVotes'] = [];
-
-    try {
-      // Try older format with different tag structure
-      const memberMatches = xmlText.matchAll(/<member>[\s\S]*?<\/member>/g);
-      const memberMatchesArray = Array.from(memberMatches);
-
-      for (const [memberXml] of memberMatchesArray) {
-        const getName = (tag: string) =>
-          memberXml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() || '';
-
-        const bioguideId = getName('bioguide_id') || getName('bioguide') || getName('id');
-        const name = getName('name') || getName('full_name') || getName('member_name');
-        const party = getName('party') || 'Unknown';
-        const state = getName('state') || 'Unknown';
-        const vote = getName('vote') || getName('position') || getName('vote_cast');
-
-        if (bioguideId && vote) {
-          memberVotes.push({
-            bioguideId,
-            name: name || 'Unknown',
-            party,
-            state,
-            position: this.normalizePosition(vote),
-          });
-        }
-      }
-    } catch (error) {
-      logger.debug('Legacy House XML parsing failed', {
-        error: error instanceof Error ? error.message : 'Unknown',
       });
       return null;
     }
 
-    return memberVotes.length > 0 ? memberVotes : null;
-  }
-
-  /**
-   * Alternative House XML parsing method for different formats
-   */
-  private parseHouseXMLAlternative(xmlText: string): StandardizedVote['memberVotes'] | null {
+    const results = Array.isArray(envelope.results) ? envelope.results : [];
     const memberVotes: StandardizedVote['memberVotes'] = [];
 
-    try {
-      // Try alternative format with inline attributes
-      const memberMatches = xmlText.matchAll(/<vote[^>]*bioguide="([^"]+)"[^>]*>([^<]*)<\/vote>/g);
+    for (const raw of results) {
+      const bioguideId = String(raw.bioguideID ?? '').trim();
+      if (!bioguideId) continue;
 
-      for (const match of memberMatches) {
-        const bioguideId = match[1];
-        const vote = match[2]?.trim();
+      const first = String(raw.firstName ?? '').trim();
+      const last = String(raw.lastName ?? '').trim();
+      const name = [first, last].filter(Boolean).join(' ') || 'Unknown';
 
-        if (bioguideId && vote) {
-          // Try to extract name and party from surrounding context
-          const contextStart = Math.max(0, xmlText.indexOf(match[0]) - 200);
-          const contextEnd = Math.min(
-            xmlText.length,
-            xmlText.indexOf(match[0]) + match[0].length + 200
-          );
-          const context = xmlText.substring(contextStart, contextEnd);
+      memberVotes.push({
+        bioguideId,
+        name,
+        party: String(raw.voteParty ?? 'Unknown'),
+        state: String(raw.voteState ?? 'Unknown'),
+        position: this.normalizePosition(String(raw.voteCast ?? '')),
+      });
+    }
 
-          const nameMatch = context.match(/name="([^"]+)"/);
-          const partyMatch = context.match(/party="([^"]+)"/);
-          const stateMatch = context.match(/state="([^"]+)"/);
-
-          memberVotes.push({
-            bioguideId,
-            name: nameMatch?.[1] || 'Unknown',
-            party: partyMatch?.[1] || 'Unknown',
-            state: stateMatch?.[1] || 'Unknown',
-            position: this.normalizePosition(vote),
-          });
-        }
-      }
-    } catch (error) {
-      logger.debug('Alternative House XML parsing failed', {
-        error: error instanceof Error ? error.message : 'Unknown',
+    if (memberVotes.length === 0) {
+      logger.warn('House members JSON returned no rosters', {
+        rollCallNumber: voteInfo.rollCallNumber,
       });
       return null;
     }
 
-    return memberVotes.length > 0 ? memberVotes : null;
+    const totals = {
+      yea: memberVotes.filter(v => v.position === 'Yea').length,
+      nay: memberVotes.filter(v => v.position === 'Nay').length,
+      present: memberVotes.filter(v => v.position === 'Present').length,
+      notVoting: memberVotes.filter(v => v.position === 'Not Voting').length,
+    };
+
+    logger.info('House members JSON parsed', {
+      rollCallNumber: voteInfo.rollCallNumber,
+      memberVotesFound: memberVotes.length,
+      yea: totals.yea,
+      nay: totals.nay,
+    });
+
+    return {
+      voteId: `house-${congress}-${voteInfo.rollCallNumber}`,
+      congress,
+      session: envelope.sessionNumber ?? session,
+      chamber: 'House',
+      rollCallNumber: voteInfo.rollCallNumber,
+      date: voteInfo.date,
+      question: envelope.voteQuestion?.trim() || voteInfo.question || 'Unknown Question',
+      result: envelope.result || voteInfo.result,
+      totals,
+      memberVotes,
+      sourceUrl: envelope.sourceDataURL || voteInfo.sourceDataURL,
+      processedAt: new Date().toISOString(),
+      bill: undefined,
+    };
   }
 
   /**
@@ -1644,11 +1546,11 @@ export class BatchVotingService {
     // Try to find the cached vote
     const session1Key =
       chamber === 'House'
-        ? `house-vote-${congress}-${rollCallNumber}`
+        ? `house-vote-${congress}-1-${rollCallNumber}`
         : `senate-vote-${congress}-1-${rollCallNumber}`;
     const session2Key =
       chamber === 'House'
-        ? `house-vote-${congress}-${rollCallNumber}`
+        ? `house-vote-${congress}-2-${rollCallNumber}`
         : `senate-vote-${congress}-2-${rollCallNumber}`;
 
     const cached =
