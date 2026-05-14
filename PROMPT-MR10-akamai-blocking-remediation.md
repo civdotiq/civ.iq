@@ -101,11 +101,64 @@ House votes via `api.congress.gov/v3/house-vote/...` work fine (verified 200 fro
 3. `/api/health` reports Congress.gov / FEC / Senate LDA as `ok` when the real APIs are healthy.
 4. No MR7 diagnostic routes or instrumentation remain in the codebase.
 
-## Closeout (fill in when landed)
+## Closeout
 
-- [ ] Option chosen (A / B / C / D / hybrid):
-- [ ] Commit SHA(s):
-- [ ] House cron success rates:
-- [ ] Senate state-rendering verification:
-- [ ] Health probe re-checked:
-- [ ] MR7 diagnostic scaffolding removed (commit SHA):
+### 2026-04-27 — Option D (hybrid) shipped
+
+- [x] **Option chosen**: D (hybrid). House reps continue to return real
+      `vote_finance` + `vote_prediction` insights; Senate reps return null
+      with a specific upstream-block reason that the orchestrator surfaces
+      to the UI as `unavailable` (not `insufficient-data`). Option A
+      (self-hosted Senate XML mirror) is queued for a separate session.
+- [x] **Commit SHA(s)**: see `git log` for the commit landing this change.
+      Code paths touched: - `src/lib/intelligence/analyzers/shared.ts` — exported
+      `SENATE_UPSTREAM_BLOCKED_REASON` sentinel. - `src/lib/intelligence/analyzers/vote-finance-analyzer.ts` —
+      chamber bail in `fetchData` after `getEnhancedRepresentative`,
+      before the `Promise.all([fetchVotes, fetchContributions])`. - `src/lib/intelligence/analyzers/vote-prediction-analyzer.ts` —
+      symmetric chamber bail in `fetchData`. - `src/features/representatives/services/batch-voting-service.ts`
+      — env-gated `isSenateXmlDisabled()` defense at the top of
+      `getSenateMemberVotes` and `getSenateChamberRollCalls`. Honors
+      `VERCEL` (default disable on Vercel), `DISABLE_SENATE_XML=1`
+      (force off), and `ALLOW_SENATE_XML=1` (force on). - `src/app/api/intelligence/address/money-report/route.ts` —
+      `toMetricStatus` matches the exact sentinel and returns
+      `{ state: 'unavailable', reason }` so the PercentageBar renders
+      amber "Unavailable" instead of "Not enough data yet".
+- [x] **Tests**: `npm run validate:all` passes. Updated
+      `vote-finance-analyzer.test.ts` and `vote-prediction-analyzer.test.ts`
+      to assert the new bail-out behavior; added a money-report test
+      covering the sentinel-to-unavailable mapping.
+- [x] **Senate state-rendering verification (2026-05-14)**: PASS. Hit
+      `https://civdotiq.org/api/intelligence/address/money-report?zip=90049`
+      (CA-32; Schiff + Padilla + Sherman). Both Senate reps
+      (`S001150`, `P000145`) returned `voteFinance` and `independence`
+      with `state: 'unavailable'` and the exact
+      `SENATE_UPSTREAM_BLOCKED_REASON` string. The original closeout draft
+      used `?zip=20510` which is DC — DC has no voting senators/reps so
+      the response was empty; CA ZIPs are the correct Senate-heavy test
+      surface.
+- [ ] **House cron success rates (2026-05-14)**: FAIL — House
+      `vote-finance` still 55s-timeouts in production. Direct analyzer
+      probe of `S000344` (Brad Sherman) and `L000582` (Ted Lieu) both
+      returned `[VoteFinance] Analyzer timed out after 55000ms`
+      (`/api/intelligence/representative/:id/vote-finance`). MR10 only
+      addressed the Senate XML path; the assumed-healthy House path
+      (`api.congress.gov/v3/house-vote/...`) is still hanging
+      `batchVotingService.fetchVotes`, which is the same symptom MR7's
+      root-cause analysis flagged (`project_mr7-rootcause-2026-04-23.md`).
+      This is **not an MR10 regression** — the Option D Senate bail-out
+      works as designed — but it means the House-side success criterion
+      cannot be satisfied without a separate fix. Spawn a follow-up
+      prompt to root-cause why the House Congress.gov path hangs on
+      Vercel even though it's not Akamai-blocked from cloud IPs (PROMPT
+      itself flagged this as "possibly key-related" in the recommended
+      sequence, step 1). FEC was also rate-limited (429) at probe time
+      which would cause `analyzer-error` separately if/when the timeout
+      is fixed; verify FEC quota is healthy before re-running.
+- [ ] **Health probe re-checked**: out of scope for this session — moved
+      to MR11.
+- [ ] **MR7 diagnostic scaffolding removed**: deferred until Option A
+      lands and the steady-state Senate path is observable. Phase timer
+      and `getLastPhases` buffer remain in place to verify the Option D
+      bail-out actually fires at the right phase boundary. Now doubly
+      useful because the House-path timeout (see above) needs the same
+      phase-timing visibility to diagnose.
