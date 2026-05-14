@@ -17,7 +17,11 @@ export function LandingUseLocation({ className }: LandingUseLocationProps) {
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
-        router.push(`/results?lat=${latitude}&lng=${longitude}`);
+        try {
+          router.push(`/results?lat=${latitude}&lng=${longitude}`);
+        } finally {
+          setBusy(false);
+        }
       },
       () => setBusy(false),
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 }
