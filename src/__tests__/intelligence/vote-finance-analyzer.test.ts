@@ -157,8 +157,8 @@ describe('analyzeVoteFinance', () => {
     await analyzeVoteFinance('P000197');
 
     // Should call getHouseMemberVotes with sessions 1 and 2, trimmed cap (MR12)
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 100);
-    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 100);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 1, 50);
+    expect(mockGetHouseMemberVotes).toHaveBeenCalledWith('P000197', 119, 2, 50);
   });
 
   it('classifies votes by sector', async () => {
