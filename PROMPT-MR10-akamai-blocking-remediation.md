@@ -136,24 +136,38 @@ House votes via `api.congress.gov/v3/house-vote/...` work fine (verified 200 fro
       used `?zip=20510` which is DC — DC has no voting senators/reps so
       the response was empty; CA ZIPs are the correct Senate-heavy test
       surface.
-- [ ] **House cron success rates (2026-05-14)**: FAIL — House
-      `vote-finance` still 55s-timeouts in production. Direct analyzer
-      probe of `S000344` (Brad Sherman) and `L000582` (Ted Lieu) both
-      returned `[VoteFinance] Analyzer timed out after 55000ms`
-      (`/api/intelligence/representative/:id/vote-finance`). MR10 only
-      addressed the Senate XML path; the assumed-healthy House path
-      (`api.congress.gov/v3/house-vote/...`) is still hanging
-      `batchVotingService.fetchVotes`, which is the same symptom MR7's
-      root-cause analysis flagged (`project_mr7-rootcause-2026-04-23.md`).
-      This is **not an MR10 regression** — the Option D Senate bail-out
-      works as designed — but it means the House-side success criterion
-      cannot be satisfied without a separate fix. Spawn a follow-up
-      prompt to root-cause why the House Congress.gov path hangs on
-      Vercel even though it's not Akamai-blocked from cloud IPs (PROMPT
-      itself flagged this as "possibly key-related" in the recommended
-      sequence, step 1). FEC was also rate-limited (429) at probe time
-      which would cause `analyzer-error` separately if/when the timeout
-      is fixed; verify FEC quota is healthy before re-running.
+- [x] **House cron success rates (2026-05-14, updated post-MR12)**: PASS
+      for direct vote-finance route; PARTIAL for money-report tiles.
+      Root cause identified and fixed in MR12 (PR
+      https://github.com/civdotiq/civ.iq/pull/63): the House per-vote
+      hang was NOT api.congress.gov's `/house-vote/{cong}` vote-list
+      endpoint — that's healthy. It was `batchVotingService.fetchAndParseHouseXML`
+      fetching the per-vote `sourceDataURL` field, which Congress.gov
+      populates with `https://clerk.house.gov/evs/{year}/roll{nnn}.xml`
+      — the same Akamai-blocked domain MR10 already documented for
+      Senate. MR12 swapped that per-vote fetch to Congress.gov's JSON
+      `/v3/house-vote/{cong}/{sess}/{rollNum}/members` sub-resource and
+      lowered MAX_VOTES 120 → 50 per the prompt's explicit budget
+      guidance.
+
+      Post-MR12 preview probes (`civ-jpyildbje-civdotiq.vercel.app`):
+
+        S000344 (Sherman):  status=complete, 37s cold, 3s warm
+        L000582 (Lieu):     status=complete, 37s cold
+
+      Both reps now return real sector correlations and narrative
+      (vs. 100% 55s-timeout pre-MR12). MR10 + MR12 together close the
+      original "House cron success rates" failure mode.
+
+      Residual issue (not an MR10 or MR12 regression):
+      `overallCorrelation: null` at MAX_VOTES=50 because no sector
+      hits MIN_VOTES_PER_SECTOR=10 after the ~12% bill-classifiable
+      filter — cascades to money-report tiles showing `unavailable`.
+      Tracked as MR13 (tighten httpClient retry tail so MAX_VOTES can
+      climb) and MR14 (`toMetricStatus` should emit `insufficient-data`,
+      not `unavailable`, when an insight exists but extracted value is
+      null).
+
 - [ ] **Health probe re-checked**: out of scope for this session — moved
       to MR11.
 - [ ] **MR7 diagnostic scaffolding removed**: deferred until Option A

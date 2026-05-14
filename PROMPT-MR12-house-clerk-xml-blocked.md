@@ -111,12 +111,83 @@ Accept that the per-vote roster is unfetchable from Vercel and have the analyzer
 3. `/api/cron/warm-intelligence` House-row success rate ≥ 80% over one full 435-rep sweep.
 4. MR10 closeout's "House cron success rates" checkbox is checked, with the post-deploy probe outputs pasted in.
 
-## Closeout (fill in when landed)
+## Closeout (filled 2026-05-14, PR https://github.com/civdotiq/civ.iq/pull/63)
 
-- [ ] JSON `/members` endpoint verified reachable from Vercel (probe output):
-- [ ] Option chosen (A / B / C):
-- [ ] Commit SHA(s):
-- [ ] House voteFinance probes for `S000344` + `L000582` returned `ready` (paste response):
-- [ ] House cron success rate post-deploy:
-- [ ] MR10 closeout's House item marked checked (commit SHA):
-- [ ] MR7 diagnostic scaffolding still needed? (decision + rationale):
+- [x] **JSON `/members` endpoint verified reachable from Vercel** (probe output):
+
+  ```
+  $ vercel curl --deployment https://civ-3wo8e7t4v-civdotiq.vercel.app \
+        /api/debug/probe-house-members
+  {"ok":true,
+   "url":"https://api.congress.gov/v3/house-vote/119/1/1/members?format=json",
+   "httpStatus":200,"elapsedMs":304,"memberCount":435,
+   "sampleBioguideId":"A000055","sampleVoteCast":"Present",
+   "voteQuestion":"Call by States",
+   "sourceDataURL":"https://clerk.house.gov/evs/2025/roll001.xml",
+   "runtime":"nodejs","region":"iad1"}
+  ```
+
+  Session 2 also verified (`?session=2&roll=1` → 200, 289ms, 430 members).
+
+- [x] **Option chosen**: A (swap `fetchAndParseHouseXML` to JSON `/members`).
+      Includes a latent cache-key bug fix (House per-vote cache key now
+      includes session — previously session 1 / session 2 of same rollNumber
+      collided), plus `MAX_VOTES` 120 → 50 per the prompt's explicit
+      "lower MAX_VOTES rather than raising the timeout" guidance.
+
+- [x] **Commit SHAs** (branch `fix/mr12-house-json-members`, PR #63):
+  - `c0787825` — probe route (`/api/debug/probe-house-members`)
+  - `82814416` — JSON swap (`batch-voting-service.ts`, ~244 LoC deleted)
+  - `aecd60c9` — MAX_VOTES 120 → 50 (vote-finance-analyzer)
+  - `12d80839` — MAX_VOTES 50 → 100 experiment (rolled back next commit)
+  - `4ce3fc33` — revert MAX_VOTES → 50 after 100 hit httpClient retry tail
+
+- [x] **House voteFinance probes** (preview `civ-jpyildbje-civdotiq.vercel.app`):
+
+  ```
+  S000344 (Brad Sherman):     status=complete, 37s cold, 3s warm
+    4 sectors (Defense/Labor/Transportation/Agribusiness),
+    overallAlignment=0.58, narrative present, overallCorrelation=null *
+
+  L000582 (Ted Lieu):         status=complete, 37s cold
+    4 sectors (Labor/Defense/Transportation/Agribusiness),
+    overallAlignment=0.55, narrative present, overallCorrelation=null *
+  ```
+
+  **Both reps return `status: 'complete'` with real sector correlations**
+  (down from 100% timeout pre-MR12). The success criterion technically
+  asked for `'ready'` _and a numeric `overallCorrelation`_; the numeric
+  part is residual — see below.
+
+  ⚠️ `* overallCorrelation: null` because at MAX_VOTES=50, each sector
+  lands at 3–6 classified votes vs. the MIN_VOTES_PER_SECTOR=10 floor.
+  ~88% of House votes are procedural (no bill), so the bill-classifier
+  only catches ~12% of raw votes. Raising MAX_VOTES higher exposes the
+  httpClient retry tail (3× 10s + backoffs per upstream-timed-out
+  /members fetch ≈ 37s per failure) — confirmed at MAX_VOTES=100 where
+  Lieu hit a 58s timeout. Two follow-up MRs queued:
+  - **MR13**: tighten `HttpClient.fetch` retry policy for `api.congress.gov`
+    — shorter timeout (5s vs 10s), skip retry on AbortError. Unblocks
+    MAX_VOTES=100+ safely.
+  - **MR14**: money-report `toMetricStatus` — when an insight exists but
+    the extracted value is null, emit `insufficient-data` (not the
+    defensive `unavailable`). Makes Sherman's tile honestly say "needs
+    more sector samples" instead of an opaque "unavailable".
+
+- [ ] **House cron success rate post-deploy**: needs production run after PR
+      merge. Direct route success (both probed reps `complete`) implies the
+      cron will succeed for the majority — but `overallCorrelation=null`
+      cascades through to money-report rep tiles showing `unavailable`
+      until MR13/MR14 land. Tracked as MR12 deferred verification.
+
+- [ ] **MR10 closeout's House item marked checked**: PR #63 description
+      links MR10. Will check the box in PROMPT-MR10's closeout after this
+      PR merges and the production cron run validates House success rate.
+
+- [x] **MR7 diagnostic scaffolding still needed?** **YES — keep it.** The
+      MR7 phase-timer (`timer.mark('fetchRep'|'fetchVotes'|...)`) was the
+      only production-side visibility we had into where the 55s budget
+      was burning. It directly informed the MAX_VOTES decision (showed
+      fetchVotes=108s pre-MR12 vs ~10s post-swap) and revealed the
+      httpClient retry tail at MAX_VOTES=100 (fetchVotes=53s with two
+      /members fetches in retry loops). Removing it would blind MR13.
