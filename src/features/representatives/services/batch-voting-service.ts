@@ -81,8 +81,10 @@ export class HttpClient {
     const fetchOperation = async (): Promise<Response> => {
       const maxRetries = 3;
       let lastError: Error | null = null;
+      let attemptsMade = 0;
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
+        attemptsMade = attempt + 1;
         try {
           const response = await fetch(url, mergedOptions);
 
@@ -130,10 +132,12 @@ export class HttpClient {
         }
       }
 
-      // All retries exhausted
-      logger.warn('HTTP client fetch failed after retries', {
+      // Fetch failed — either we broke out early (e.g. AbortError) or
+      // exhausted all retries. Report the *actual* number of attempts made.
+      logger.warn('HTTP client fetch failed', {
         url,
-        attempts: maxRetries,
+        attempts: attemptsMade,
+        maxAttempts: maxRetries,
         error: lastError?.message || 'Unknown',
       });
       throw lastError || new Error('Fetch failed after retries');
