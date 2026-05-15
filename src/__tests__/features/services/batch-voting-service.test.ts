@@ -15,7 +15,10 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-import { BatchVotingService } from '@/features/representatives/services/batch-voting-service';
+import {
+  BatchVotingService,
+  HttpClient,
+} from '@/features/representatives/services/batch-voting-service';
 
 describe('BatchVotingService', () => {
   describe('singleton', () => {
@@ -24,6 +27,58 @@ describe('BatchVotingService', () => {
       const b = BatchVotingService.getInstance();
       expect(a).toBe(b);
     });
+  });
+
+  describe('HttpClient.fetch (MR13 retry policy)', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('does not retry on AbortError (no backoff, single attempt)', async () => {
+      const fetchMock = jest.fn().mockImplementation(() => {
+        const err = new Error('The operation was aborted due to timeout');
+        err.name = 'AbortError';
+        throw err;
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const client = HttpClient.getInstance();
+      const start = Date.now();
+      await expect(client.fetch('https://example.invalid/test')).rejects.toThrow(/aborted/i);
+      const elapsed = Date.now() - start;
+
+      // Exactly one fetch attempt — no retry loop, no backoff sleeps.
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // Without the MR13 fix this would have been 3 attempts + 1s + 2s backoff = >3s.
+      expect(elapsed).toBeLessThan(500);
+    });
+
+    it('also skips retry when AbortSignal.timeout throws a TimeoutError', async () => {
+      const fetchMock = jest.fn().mockImplementation(() => {
+        const err = new Error('signal timed out');
+        err.name = 'TimeoutError';
+        throw err;
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const client = HttpClient.getInstance();
+      await expect(client.fetch('https://example.invalid/test')).rejects.toThrow(/timed out/i);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('still retries on generic network errors (DNS, connection reset)', async () => {
+      const fetchMock = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('ECONNRESET'))
+        .mockRejectedValueOnce(new Error('ECONNRESET'))
+        .mockRejectedValueOnce(new Error('ECONNRESET'));
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const client = HttpClient.getInstance();
+      await expect(client.fetch('https://example.invalid/test')).rejects.toThrow(/ECONNRESET/);
+      // Full 3-attempt retry preserved for genuinely transient failures.
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    }, 15000);
   });
 
   describe('getHouseMemberVotes', () => {
