@@ -626,13 +626,47 @@ export class RedisCache {
 
   async keys(pattern: string): Promise<string[]> {
     try {
+      // Upstash REST API — without this, /api/cache/invalidate silently
+      // returns 0 matches in production because this.client is null (REST
+      // mode skips ioredis entirely). Verified post-MR15/MR16 deploy: stale
+      // analyzer cache entries could not be flushed without this path.
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/keys/${encodeURIComponent(pattern)}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            return Array.isArray(data.result) ? (data.result as string[]) : [];
+          }
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on keys, falling back to memory', {
+            pattern,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         return await this.client.keys(pattern);
-      } else {
-        // Search fallback cache
-        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-        return Array.from(this.fallbackCache.keys()).filter(key => regex.test(key));
       }
+
+      // Search fallback cache
+      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      return Array.from(this.fallbackCache.keys()).filter(key => regex.test(key));
     } catch (error) {
       logger.error('Failed to get keys', error as Error, { pattern });
       return [];
