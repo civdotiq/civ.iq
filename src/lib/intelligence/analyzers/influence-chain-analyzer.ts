@@ -62,7 +62,7 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
 const MAX_VOTES = 200;
 
 /** Max contributions to sample from FEC */
-const MAX_CONTRIBUTIONS = 500;
+const MAX_CONTRIBUTIONS = 250;
 
 /** Max chains to return */
 const MAX_CHAINS = 10;
@@ -224,6 +224,8 @@ interface RawVote {
   billNumber: string;
   billCongress: number;
   billTitle: string;
+  billPolicyArea?: string;
+  billSubjects?: string[];
   position: string;
   date: string;
 }
@@ -601,7 +603,10 @@ async function fetchAndClassifyVotes(
       const results = await Promise.all(
         batch.map(async vote => {
           const billId = `${vote.billType}${vote.billNumber}-${vote.billCongress}`;
-          const sectors = await getBillSectors(billId, vote.billTitle);
+          const sectors = await getBillSectors(billId, vote.billTitle, {
+            policyArea: vote.billPolicyArea,
+            subjects: vote.billSubjects,
+          });
           if (sectors.length === 0) return null;
           return { ...vote, billId, sectors };
         })
@@ -636,6 +641,8 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
           billNumber: String(v.bill?.number ?? ''),
           billCongress: v.bill?.congress ?? 0,
           billTitle: v.bill?.title ?? '',
+          billPolicyArea: v.bill?.policyArea,
+          billSubjects: v.bill?.subjects,
           position: v.position,
           date: v.date,
         }));

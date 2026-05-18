@@ -318,7 +318,7 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
       return v;
     }),
     fecApiService
-      .getSampleContributions(fecId, cycle, 500)
+      .getSampleContributions(fecId, cycle, 250)
       .catch(() => [])
       .then(c => {
         timer?.record('fetchContributions', performance.now() - contribStart, {
@@ -374,7 +374,10 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
 
     let billSectors: IndustrySector[] = [];
     try {
-      billSectors = await getBillSectors(billId, billTitle);
+      billSectors = await getBillSectors(billId, billTitle, {
+        policyArea: v.bill?.policyArea,
+        subjects: v.bill?.subjects,
+      });
       if (billSectors.length > 0) votesWithSectors++;
     } catch {
       // Skip sector classification

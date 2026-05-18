@@ -266,6 +266,10 @@ export interface StandardizedVote {
     number: string;
     title: string;
     url?: string;
+    /** Top-level policy area from Congress.gov (e.g., "Armed Forces and National Security"). */
+    policyArea?: string;
+    /** Fine-grained legislative subjects from Congress.gov (5–20 per bill, e.g., "Defense spending"). */
+    subjects?: string[];
   };
   totals: {
     yea: number;
@@ -1458,13 +1462,23 @@ export class BatchVotingService {
 
       const normalizedType = billTypeMap[billType.toUpperCase()] || billType.toLowerCase();
       const apiUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}?format=json`;
+      const subjectsUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}/subjects?format=json`;
 
-      const response = await httpClient.fetch(apiUrl, {
-        headers: {
-          'X-API-Key': this.apiKey,
-        },
-        signal: AbortSignal.timeout(2000), // Quick timeout for bill details
-      });
+      // Fire bill-detail and subjects in parallel — the subjects sub-resource
+      // gives 5–20 fine-grained tags ("Defense spending", "Health insurance")
+      // that drive bill-sector classification downstream (MR15).
+      const [response, subjectsResponse] = await Promise.all([
+        httpClient.fetch(apiUrl, {
+          headers: { 'X-API-Key': this.apiKey },
+          signal: AbortSignal.timeout(2000),
+        }),
+        httpClient
+          .fetch(subjectsUrl, {
+            headers: { 'X-API-Key': this.apiKey },
+            signal: AbortSignal.timeout(2000),
+          })
+          .catch(() => null),
+      ]);
 
       if (!response.ok) {
         logger.debug('Failed to fetch bill details', {
@@ -1498,6 +1512,33 @@ export class BatchVotingService {
       // Extract the title - Congress.gov provides it directly
       const title = billData.title || billData.shortTitle || `${billType} ${billNumber}`;
 
+      // policyArea is inline on the main bill response.
+      const policyAreaInline: string | undefined =
+        typeof billData.policyArea?.name === 'string' ? billData.policyArea.name : undefined;
+
+      // legislativeSubjects + policyArea (alt source) come from the subjects sub-resource.
+      let subjects: string[] | undefined;
+      let policyAreaFromSubjects: string | undefined;
+      if (subjectsResponse && subjectsResponse.ok) {
+        try {
+          const subjectsData = await subjectsResponse.json();
+          const list = subjectsData?.subjects?.legislativeSubjects;
+          if (Array.isArray(list) && list.length > 0) {
+            const names = list
+              .map((s: { name?: string }) => (typeof s?.name === 'string' ? s.name : null))
+              .filter((n): n is string => !!n);
+            if (names.length > 0) {
+              subjects = names;
+            }
+          }
+          if (typeof subjectsData?.subjects?.policyArea?.name === 'string') {
+            policyAreaFromSubjects = subjectsData.subjects.policyArea.name;
+          }
+        } catch {
+          // Subjects parse failure is non-fatal — bill still has title/policyArea.
+        }
+      }
+
       const bill: StandardizedVote['bill'] = {
         congress: 119,
         type: billType,
@@ -1506,6 +1547,10 @@ export class BatchVotingService {
         url:
           billUrl ||
           `https://www.congress.gov/bill/119th-congress/${normalizedType}-bill/${billNumber}`,
+        ...(policyAreaInline || policyAreaFromSubjects
+          ? { policyArea: policyAreaInline ?? policyAreaFromSubjects }
+          : {}),
+        ...(subjects ? { subjects } : {}),
       };
 
       // Cache the bill details for 24 hours
