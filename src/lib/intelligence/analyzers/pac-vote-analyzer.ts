@@ -356,7 +356,10 @@ async function processRecipientVotes(
     if (!vote.bill || (vote.position !== 'Yea' && vote.position !== 'Nay')) continue;
 
     const billId = `${vote.bill.type}${vote.bill.number}-${vote.bill.congress}`;
-    const sectors = await getBillSectors(billId, vote.bill.title);
+    const sectors = await getBillSectors(billId, vote.bill.title, {
+      policyArea: vote.bill.policyArea,
+      subjects: vote.bill.subjects,
+    });
 
     if (!sectors.includes(pacSector)) continue;
 

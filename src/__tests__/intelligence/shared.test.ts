@@ -225,6 +225,48 @@ describe('shared intelligence utilities', () => {
       const sectors = await getBillSectors('HR1234-119', 'Resolution on procedural matters');
       expect(sectors).toEqual([]);
     });
+
+    // ── MR15: subjects/policyArea classification context ────────────
+
+    it('feeds bill subjects + policyArea to the embedding classifier when provided', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([{ sector: 'DEFENSE', confidence: 0.8 }]);
+
+      const sectors = await getBillSectors('HR9999-119', 'Some bill', {
+        policyArea: 'Armed Forces and National Security',
+        subjects: ['Defense spending', 'Military procurement', 'Veterans benefits'],
+      });
+
+      expect(sectors).toEqual(['DEFENSE']);
+      // Classifier should see the subjects + policyArea + title joined, not just the title.
+      const passedText = mockClassifyBillSectors.mock.calls[0][0] as string;
+      expect(passedText).toContain('Defense spending');
+      expect(passedText).toContain('Military procurement');
+      expect(passedText).toContain('Armed Forces and National Security');
+      expect(passedText).toContain('Some bill');
+    });
+
+    it('uses policyArea to resolve sectors when the ML chain returns empty', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([]);
+      mockClassifyBillSectorsZeroShot.mockResolvedValue([]);
+
+      const sectors = await getBillSectors('HR8888-119', 'Procedural motion', {
+        policyArea: 'Health',
+      });
+
+      expect(sectors).toContain('HEALTH');
+    });
+
+    it('falls back to title-only behavior when no context is provided', async () => {
+      mockGetSummary.mockResolvedValue(null);
+      mockClassifyBillSectors.mockResolvedValue([{ sector: 'HEALTH', confidence: 0.9 }]);
+
+      await getBillSectors('HR7777-119', 'Medicare Act');
+
+      // Classifier text equals the title alone — no leading separators.
+      expect(mockClassifyBillSectors).toHaveBeenCalledWith('Medicare Act');
+    });
   });
 
   // ── inferSectorsFromTitle ───────────────────────────────────────

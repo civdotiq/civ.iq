@@ -106,7 +106,7 @@ export async function GET(
           const contributions = await fecApiService.getSampleContributions(
             fecMapping.fecId,
             2024,
-            500
+            250
           );
 
           // Categorize each contribution by sector

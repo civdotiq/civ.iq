@@ -214,7 +214,7 @@ describe('analyzeVoteFinance', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v3:P000197'
+      (call: unknown[]) => (call[0] as string) === 'insight:vote_finance:v4:P000197'
     );
     expect(insightCall).toBeDefined();
     expect(insightCall![2]).toBe(7 * 24 * 60 * 60);
@@ -241,7 +241,8 @@ describe('analyzeVoteFinance', () => {
   it('writes per-bill sector cache on first classify (MR2)', async () => {
     // BillSummaryCache misses force getBillSectors to fall through to the
     // embedding/keyword tiers, whose resolved result must land in Redis
-    // under `insight:bill_sectors:v1:{billId}`.
+    // under `insight:bill_sectors:v2:{billId}` (v2 introduced in MR15 when
+    // the classifier started consuming bill subjects + policyArea).
     mockGetSummary.mockResolvedValue(null);
     mockGetHouseMemberVotes.mockResolvedValue(makeVotes(3));
     mockGetSenateMemberVotes.mockResolvedValue([]);
@@ -249,7 +250,7 @@ describe('analyzeVoteFinance', () => {
     await analyzeVoteFinance('P000197');
 
     const sectorCacheWrite = mockRedisSet.mock.calls.find((call: unknown[]) =>
-      (call[0] as string).startsWith('insight:bill_sectors:v1:')
+      (call[0] as string).startsWith('insight:bill_sectors:v2:')
     );
     expect(sectorCacheWrite).toBeDefined();
     // 30-day TTL
@@ -264,7 +265,7 @@ describe('analyzeVoteFinance', () => {
     // pre-populated classification, so BillSummaryCache.getSummary must
     // NOT be consulted.
     mockRedisGet.mockImplementation(async (key: string) => {
-      if (key.startsWith('insight:bill_sectors:v1:')) return ['HEALTH'];
+      if (key.startsWith('insight:bill_sectors:v2:')) return ['HEALTH'];
       return null;
     });
 

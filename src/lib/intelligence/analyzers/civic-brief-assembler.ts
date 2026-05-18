@@ -246,7 +246,7 @@ async function fetchFundingData(
   try {
     const [summary, contributions] = await Promise.all([
       fecApiService.getFinancialSummary(fecId, cycle).catch(() => null),
-      fecApiService.getSampleContributions(fecId, cycle, 500).catch(() => []),
+      fecApiService.getSampleContributions(fecId, cycle, 250).catch(() => []),
     ]);
 
     const totalRaised = summary?.receipts ?? summary?.total_receipts ?? null;

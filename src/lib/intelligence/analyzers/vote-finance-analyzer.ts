@@ -131,7 +131,10 @@ export async function analyzeVoteFinance(bioguideId: string): Promise<VoteFinanc
 export async function analyzeVoteFinanceWithReason(
   bioguideId: string
 ): Promise<VoteFinanceOutcome> {
-  const cacheKey = `insight:vote_finance:v3:${bioguideId}`;
+  // v4: bumped in MR15 because the classifier now sees bill subjects + policyArea,
+  // so v3-cached "insufficient-data" results would otherwise mask the new
+  // sector coverage and keep `overallCorrelation` stuck at null.
+  const cacheKey = `insight:vote_finance:v4:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -360,6 +363,8 @@ interface RawVote {
   billNumber: string;
   billCongress: number;
   billTitle: string;
+  billPolicyArea?: string;
+  billSubjects?: string[];
   position: string;
   date: string;
 }
@@ -379,6 +384,8 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
           billNumber: String(v.bill?.number ?? ''),
           billCongress: v.bill?.congress ?? 0,
           billTitle: v.bill?.title ?? '',
+          billPolicyArea: v.bill?.policyArea,
+          billSubjects: v.bill?.subjects,
           position: v.position,
           date: v.date,
         }));
@@ -394,7 +401,7 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
 
 async function fetchContributions(fecId: string) {
   try {
-    return await fecApiService.getSampleContributions(fecId, getCurrentElectionCycle(), 500);
+    return await fecApiService.getSampleContributions(fecId, getCurrentElectionCycle(), 250);
   } catch {
     return [];
   }
@@ -420,7 +427,10 @@ async function classifyVoteIndustries(rawVotes: RawVote[]): Promise<VoteWithIndu
       if (index >= rawVotes.length) return;
       const vote = rawVotes[index]!;
       const billId = `${vote.billType}${vote.billNumber}-${vote.billCongress}`;
-      const sectors = await getBillSectors(billId, vote.billTitle);
+      const sectors = await getBillSectors(billId, vote.billTitle, {
+        policyArea: vote.billPolicyArea,
+        subjects: vote.billSubjects,
+      });
       if (sectors.length === 0) continue;
       results.push({
         billId,

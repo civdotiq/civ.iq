@@ -454,7 +454,7 @@ async function analyzeMemberSectorDonations(
     contributions = await fecApiService.getSampleContributions(
       fecId,
       getCurrentElectionCycle(),
-      500
+      250
     );
   } catch {
     return null;
