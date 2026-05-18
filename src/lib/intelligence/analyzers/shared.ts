@@ -290,7 +290,25 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
  * version if the classifier itself changes in a breaking way.
  */
 const BILL_SECTORS_CACHE_TTL_S = 30 * 24 * 60 * 60;
-const BILL_SECTORS_CACHE_PREFIX = 'insight:bill_sectors:v1:';
+/**
+ * Cache key version. Bumped to v2 in MR15 because the classifier now sees
+ * bill subjects + policyArea text in addition to the title, so v1 entries
+ * (title-only classifications) would poison the new pipeline.
+ */
+const BILL_SECTORS_CACHE_PREFIX = 'insight:bill_sectors:v2:';
+
+/**
+ * Optional bill metadata that materially improves classification when present.
+ * Sourced from Congress.gov's `/v3/bill/{cong}/{type}/{num}/subjects` endpoint
+ * via `batchVotingService.fetchBillDetails`. When omitted, the classifier
+ * falls back to title-only behavior (MR15 Phase B).
+ */
+export interface BillClassificationContext {
+  /** Top-level policy area (e.g., "Armed Forces and National Security"). */
+  policyArea?: string;
+  /** Fine-grained legislative subjects (5–20 short phrases per bill). */
+  subjects?: string[];
+}
 
 /**
  * Get industry sectors for a bill. Four-tier fallback:
@@ -299,10 +317,14 @@ const BILL_SECTORS_CACHE_PREFIX = 'insight:bill_sectors:v1:';
  * 3. Zero-shot NLI classification (NLI model, understands natural language)
  * 4. Keyword-based inference (static, always works)
  *
- * The resolved result is memoized in Redis under `insight:bill_sectors:v1:{billId}`
+ * The resolved result is memoized in Redis under `insight:bill_sectors:v2:{billId}`
  * so the expensive classifier pipeline runs at most once per bill.
  */
-export async function getBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
+export async function getBillSectors(
+  billId: string,
+  billTitle: string,
+  context?: BillClassificationContext
+): Promise<IndustrySector[]> {
   const cacheKey = `${BILL_SECTORS_CACHE_PREFIX}${billId}`;
 
   try {
@@ -314,7 +336,7 @@ export async function getBillSectors(billId: string, billTitle: string): Promise
     // Cache miss or error — fall through and compute
   }
 
-  const sectors = await computeBillSectors(billId, billTitle);
+  const sectors = await computeBillSectors(billId, billTitle, context);
 
   try {
     await getRedisCache().set(cacheKey, sectors, BILL_SECTORS_CACHE_TTL_S);
@@ -325,7 +347,32 @@ export async function getBillSectors(billId: string, billTitle: string): Promise
   return sectors;
 }
 
-async function computeBillSectors(billId: string, billTitle: string): Promise<IndustrySector[]> {
+/**
+ * Build the text the classifier should see. Prefers Congress.gov's editorial
+ * subjects (5–20 short tags) over the bill title — titles are often only 4
+ * words long, which is noisy for embeddings/zero-shot. policyArea is also
+ * included as a strong top-level signal. Title is appended as a fallback
+ * signal regardless, so single-tag bills don't lose context.
+ */
+function buildClassificationText(billTitle: string, context?: BillClassificationContext): string {
+  const parts: string[] = [];
+  if (context?.subjects && context.subjects.length > 0) {
+    parts.push(context.subjects.join(', '));
+  }
+  if (context?.policyArea) {
+    parts.push(context.policyArea);
+  }
+  if (billTitle) {
+    parts.push(billTitle);
+  }
+  return parts.join('. ').trim();
+}
+
+async function computeBillSectors(
+  billId: string,
+  billTitle: string,
+  context?: BillClassificationContext
+): Promise<IndustrySector[]> {
   // Step 1: Cached AI summary
   try {
     const summary = await BillSummaryCache.getSummary(billId);
@@ -336,9 +383,11 @@ async function computeBillSectors(billId: string, billTitle: string): Promise<In
     // Cache miss — try embedding classifier
   }
 
+  const classifierText = buildClassificationText(billTitle, context);
+
   // Step 2: Semantic embedding classification
   try {
-    const embeddingResults = await classifyBillSectors(billTitle);
+    const embeddingResults = await classifyBillSectors(classifierText);
     if (embeddingResults.length > 0) {
       return embeddingResults.map(r => r.sector);
     }
@@ -348,7 +397,7 @@ async function computeBillSectors(billId: string, billTitle: string): Promise<In
 
   // Step 3: Zero-shot NLI classification
   try {
-    const zeroShotResults = await classifyBillSectorsZeroShot(billTitle);
+    const zeroShotResults = await classifyBillSectorsZeroShot(classifierText);
     if (zeroShotResults.length > 0) {
       return zeroShotResults.map(r => r.sector);
     }
@@ -356,8 +405,14 @@ async function computeBillSectors(billId: string, billTitle: string): Promise<In
     // Zero-shot failed — fall back to keywords
   }
 
-  // Step 4: Keyword-based inference
-  return inferSectorsFromTitle(billTitle);
+  // Step 4: Keyword-based inference. policyArea is the strongest signal here
+  // because it maps directly to the policy-area → sectors table, so prefer it
+  // when present; otherwise fall back to subjects + title text.
+  if (context?.policyArea) {
+    const fromPolicyArea = getIndustrySectorsForPolicyArea(context.policyArea);
+    if (fromPolicyArea.length > 0) return fromPolicyArea;
+  }
+  return inferSectorsFromTitle(classifierText || billTitle);
 }
 
 /**

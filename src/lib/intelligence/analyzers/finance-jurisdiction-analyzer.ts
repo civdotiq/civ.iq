@@ -273,7 +273,7 @@ async function fetchData(bioguideId: string): Promise<FetchResult> {
     contributions = await fecApiService.getSampleContributions(
       fecId,
       getCurrentElectionCycle(),
-      500
+      250
     );
   } catch {
     const unavailableReason = 'FEC contribution fetch failed';

@@ -724,9 +724,14 @@ export class FECApiService {
             const pageNonConduits = firstPage.results.filter(c => !isConduit(c));
             nonConduitContributions.push(...pageNonConduits);
 
-            // Determine how many more pages to fetch (max 4 more, cap at 500 total)
+            // Derive maxPages from the caller's requested count, not a hardcoded 5.
+            // Previously every call fetched up to 5 pages (500 raw contributions)
+            // regardless of `count`, which dominates cold-cache wall time for
+            // high-donor reps (MR16: Sherman was 25.8s on fetchContributions).
+            // Cap at 5 pages absolute to bound worst-case fan-out.
             const totalAvailable = firstPage.pagination?.count ?? firstPage.results.length;
-            const maxPages = Math.min(5, Math.ceil(totalAvailable / perPage));
+            const pagesForCount = Math.ceil(count / perPage);
+            const maxPages = Math.min(pagesForCount, 5, Math.ceil(totalAvailable / perPage));
             const needMore =
               nonConduitContributions.length < count &&
               firstPage.results.length >= perPage &&
