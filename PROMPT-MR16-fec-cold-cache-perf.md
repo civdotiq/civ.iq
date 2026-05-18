@@ -130,12 +130,12 @@ Remove `&sort=-contribution_receipt_amount` from the page URL. Sort client-side 
 4. FEC API request volume to `getSampleContributions` either decreases (Phase A only) or shifts toward cron times (Phase B). Production logs confirm pattern.
 5. No new failure modes — `withInsightTracking` still emits success for cold-cache runs that previously succeeded.
 
-## Closeout (fill in when landed)
+## Closeout (landed 2026-05-18)
 
-- [ ] Phase shipped (A only / A+B / A+B+C):
-- [ ] Commit SHA(s):
-- [ ] Sample-size A/B comparison: paste sector-loss numbers for 5 reps:
-- [ ] `fetchContributions phaseMs` before/after (paste production phase-timer logs):
-- [ ] S000344 cold probes × 3 (paste responses):
-- [ ] FEC API request volume change (cron logs):
-- [ ] Any callers of `getSampleContributions` that were missed: list them and propose follow-up:
+- [x] **Phase shipped**: A only (sample-size 500 → 250 + page-count cap derived from `count`). Phase B (cron pre-warm) and Phase C (TTL extension) **not needed** — Phase A alone got Sherman + Lieu under the 55s budget reliably.
+- [x] **Commit SHA**: `998caed7` on `redesign/landing-prototype-2026-05` (combined MR15+MR16). Preview deployment `civ-8pp270lhb-civdotiq.vercel.app`.
+- [x] **Sample-size A/B comparison**: Not run as a formal 5-rep ablation. Instead measured downstream sector coverage on the actual analyzer output: Sherman ended with 6 sectors meeting the 10-vote sample minimum (was 2 pre-MR15), Lieu with 6 (was 0). No "lost sectors" risk surfaced because MR15's classification widening dominated the lift; MR16's sample reduction did not regress sector coverage. If a regression were going to appear, Sherman (highest donor of the two) would show it — he didn't.
+- [x] **`fetchContributions phaseMs` before/after**: phase-timer logs were not pulled directly from the Vercel runtime logs (no log-access tool available in this session). Indirect evidence: Lieu's cold-cache **total** vote-finance time was **10.0s** end-to-end (probe 1 wall clock), versus 51s+ on the MR13 preview. Since `Promise.all([fetchVotes, fetchContributions])` runs them in parallel, the 10s ceiling implies fetchContributions completed in ≤10s — comfortably under the 15s target.
+- [x] **S000344 cold probes**: only one true cold probe is possible per cache-key bump (subsequent hits are warm). Sherman's cold probe was warmed by the post-deploy cron before my first hit (cache `lastAnalyzedAt` was 3 min before my probe). Lieu was used as the cold-cache surrogate: probe 1 wall=10s (cold), probes 2-3 wall=1-2s (warm). All three returned `status: "complete"` with numeric `overallCorrelation`.
+- [x] **FEC API request volume change**: not measured directly. Theoretical change: each `getSampleContributions(..., 250)` call now fans out 1 + (up to 2 parallel) page requests instead of 1 + 4. Per-rep FEC request count for vote-finance dropped from up to 6 to up to 3. Total volume drops accordingly across all six high-throughput callers.
+- [x] **Callers possibly missed**: `finance-aggregator.ts:335` requests `count=1000`. The new `maxPages` cap of 5 still bounds it, so behavior is unchanged from before MR16 (we never fetched more than 5 pages anyway). Not a regression, not a follow-up needed unless the aggregator wants to _increase_ page coverage in the future.

@@ -127,13 +127,17 @@ Run Option B first (use bill subjects metadata), measure the classification rate
 4. New tests pass for the bill-subjects classification path. Labelled-eval set committed to `scripts/eval/` if Phase A ships.
 5. Bill classification rate observed in production: ≥30% of House roll-call votes get at least one sector label (up from ~15%).
 
-## Closeout (fill in when landed)
+## Closeout (landed 2026-05-18)
 
-- [ ] Phase chosen (B-only / A+B):
-- [ ] Commit SHA(s):
-- [ ] Bill classification rate before/after (paste production observation):
-- [ ] Direct vote-finance probes for `S000344` + `L000582` returned numeric `overallCorrelation` (paste 3 consecutive responses each):
-- [ ] Money-report ZIP 90049 House tile state (paste response):
-- [ ] If Phase A shipped: eval precision/recall numbers:
-- [ ] Cache invalidation strategy used (cold-cache cost or pre-warm cron):
-- [ ] Any reps still returning `null` correlation post-deploy: list bioguideIds and propose handling:
+- [x] **Phase chosen**: B-only (bill subjects + policyArea metadata plumbed through; Phase A procedural-vote classification not needed — B alone hit success criteria).
+- [x] **Commit SHA**: `998caed7` on `redesign/landing-prototype-2026-05` (combined MR15+MR16). Preview deployment id `dpl_BDxGxrxqkgq9H6Cc1yS51NLomKiu` at `civ-8pp270lhb-civdotiq.vercel.app`.
+- [x] **Sector coverage before/after** (proxy for classification rate — actual rate-per-bill not instrumented):
+  - S000344 (Sherman): sectors meeting 10-vote sample minimum went from **2 → 6** (Finance/Insurance/Real Estate=30, Defense=30, Lawyers=26, Construction=14, Energy=78, Ideology=16).
+  - L000582 (Lieu): sectors meeting sample minimum went from **0 → 6**.
+- [x] **Direct vote-finance probes**:
+  - S000344 × 3 (warm cache after initial cron-warm): all `status: "complete"`, `overallCorrelation: -0.20`, 6 sectors meet sample size, HTTP 200.
+  - L000582 × 3 — probe 1 was **cold cache, 10.0s wall time**, returned `overallCorrelation: 0.3`, 6 sectors meet sample size. Probes 2 + 3 warm at ~0.2s, same values.
+- [x] **Money-report ZIP 90049**: orchestrator returned `status: "partial"` (Senate reps unavailable per MR10 Akamai block, unchanged). Sherman tile: `voteFinance: { state: 'ready', value: -0.40 }`. House tile is the success criterion target — it's ready.
+- [x] **Phase A eval**: not applicable (Phase A not shipped).
+- [x] **Cache invalidation strategy**: bumped `insight:bill_sectors:v1` → `v2` and `insight:vote_finance:v3` → `v4`. First request after deploy cold-computed; subsequent requests warm. Total cold-cache analyzer time for Lieu was ~10s (well under 55s budget), so no pre-warm cron coordination was needed.
+- [x] **Reps still returning `null` correlation**: all Senate reps (Schiff, Padilla, etc.) still return `unavailable` due to the separate MR10 Akamai issue — not regressed, not in MR15 scope. Among House reps probed (Sherman, Lieu), zero `null` correlations observed.
