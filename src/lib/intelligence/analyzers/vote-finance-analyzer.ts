@@ -85,23 +85,19 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
  * trimming just drops tail latency without meaningfully changing the
  * insight. Only applies here — other analyzers keep their own cap.
  */
-// MR12: 50 (was 120). With the JSON /members swap, each House vote costs two
-// sequential Congress.gov API calls (members + bill enrichment) gated through
-// a 5-concurrency limiter on the singleton BatchVotingService. Empirically
-// (preview probes 2026-05-14):
-//
-//   MAX_VOTES=120  cold ~108s    timeout (was already over budget pre-Akamai)
-//   MAX_VOTES=100  cold ~53s     timeout when 2+ /members fetches hit the
-//                                 httpClient retry tail (3× 10s + backoffs)
-//   MAX_VOTES=50   cold ~37s     status:'complete' for both probed reps
-//
-// 50 keeps total work near ~10s fetchVotes baseline, parallel with ~30s FEC
-// contributions, well under the 55s budget. Trade-off: each sector lands
-// below MIN_VOTES_PER_SECTOR=10 with this cap, so `overallCorrelation`
-// remains null until either (a) the httpClient retry policy is tightened so
-// MAX_VOTES can safely climb, or (b) the bill-classification rate (~12% of
-// raw House votes today) is widened. Both are tracked as MR12 follow-ups.
-const MAX_VOTES = 50;
+// Post-MR15/MR16 (2026-05-18): raised back to 120. The MR12-era 50 cap was
+// driven by two budget pressures that have since been resolved:
+//   - MR13 tightened the httpClient retry tail so individual /members fetches
+//     no longer burn 30s on retries.
+//   - MR16 cut FEC `getSampleContributions` cold path from ~25s → ~10s by
+//     dropping sample size 500 → 250 and deriving page count from count.
+//   - MR15 widened bill-sector classification from ~12% → ~30%, so each raw
+//     vote produces more usable sector signal.
+// Verified on preview deploy 998caed7 (Sherman, Lieu): MAX_VOTES=120 cold
+// compute finishes in 17-28s on production deploy 69b8a33e — well under the
+// 55s budget. Produces ~180 classified votes / 6 sectors meeting the
+// 10-vote sample floor for typical House reps (was 0-2 sectors at MAX_VOTES=50).
+const MAX_VOTES = 120;
 
 /** Standard disclaimer */
 const DISCLAIMER =
