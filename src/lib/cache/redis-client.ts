@@ -312,13 +312,21 @@ export class RedisCache {
         process.env.UPSTASH_REDIS_REST_TOKEN
       ) {
         try {
+          // Use SETEX with the value in the request body — Upstash REST treats
+          // the body as the last command argument. The previous SET path
+          // (.../set/<key>/<value>/EX/<ttl>) put the unencoded JSON in the URL
+          // path, so any value containing '/' (every money_report payload, any
+          // URL or ISO timestamp) returned 400 "ERR syntax error" and silently
+          // fell through to in-memory fallback. Verified with /tmp probe on
+          // 2026-05-19 — see commit message.
           const response = await fetch(
-            `${process.env.UPSTASH_REDIS_REST_URL}/set/${encodeURIComponent(this.keyPrefix + key)}/${serializedValue}/EX/${ttlSeconds}`,
+            `${process.env.UPSTASH_REDIS_REST_URL}/setex/${encodeURIComponent(this.keyPrefix + key)}/${ttlSeconds}`,
             {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
               },
+              body: serializedValue,
             }
           );
 
@@ -328,7 +336,8 @@ export class RedisCache {
             return true;
           }
 
-          throw new Error(`REST API failed: ${response.status}`);
+          const errorBody = await response.text().catch(() => '');
+          throw new Error(`REST API failed: ${response.status} ${errorBody}`);
         } catch (restError) {
           logger.warn('[Cache] REST API error on set, falling back to memory', {
             key,
