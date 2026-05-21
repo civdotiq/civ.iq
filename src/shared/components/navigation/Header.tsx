@@ -200,7 +200,7 @@ function NavDropdown({
           role="menu"
           aria-label={`${section.name} navigation`}
           className={`absolute top-full left-0 mt-1 bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] z-50 ${
-            section.groups ? 'w-[400px]' : 'min-w-[180px]'
+            section.groups ? 'w-[640px]' : 'min-w-[220px]'
           }`}
         >
           {section.groups ? (
@@ -225,10 +225,10 @@ function NavDropdown({
                           href={item.href}
                           role="menuitem"
                           aria-current={isCurrentPage ? 'page' : undefined}
-                          className={`block px-4 py-1.5 text-sm transition-colors ${
+                          className={`block px-4 py-2 text-base transition-colors rounded-sm ${
                             isCurrentPage
-                              ? 'text-civiq-blue font-medium'
-                              : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
+                              ? 'text-civiq-blue font-medium bg-[#eaf4fa] dark:bg-[#2a2a2e]'
+                              : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue hover:bg-[#eaf4fa] dark:hover:bg-[#2a2a2e]'
                           }`}
                           onClick={() => setIsOpen(false)}
                         >
@@ -263,10 +263,10 @@ function NavDropdown({
                     href={item.href}
                     role="menuitem"
                     aria-current={isCurrentPage ? 'page' : undefined}
-                    className={`block px-4 py-2 text-sm transition-colors ${
+                    className={`block px-4 py-2.5 text-base transition-colors rounded-sm ${
                       isCurrentPage
-                        ? 'bg-gray-100 dark:bg-[#2a2a2e] text-civiq-blue font-medium'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-civiq-blue'
+                        ? 'bg-[#eaf4fa] dark:bg-[#2a2a2e] text-civiq-blue font-medium'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-[#eaf4fa] dark:hover:bg-[#2a2a2e] hover:text-civiq-blue'
                     }`}
                     onClick={() => setIsOpen(false)}
                   >
@@ -287,8 +287,8 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
   const pathname = usePathname();
 
   const headerClasses = transparent
-    ? 'bg-white dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]'
-    : 'bg-white dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]';
+    ? 'bg-white dark:bg-[#1a1a1e] border-b border-[#E5E5E0] dark:border-[#333333]'
+    : 'bg-white dark:bg-[#1a1a1e] border-b border-[#E5E5E0] dark:border-[#333333]';
 
   return (
     <>

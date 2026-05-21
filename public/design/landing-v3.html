@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CIV.IQ — Know Your Representatives (design preview v3)</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      @font-face {
+        font-family: 'Braun Linear';
+        src: url('/fonts/BraunLinear-Light.woff2') format('woff2');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Braun Linear';
+        src: url('/fonts/BraunLinear-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Braun Linear';
+        src: url('/fonts/BraunLinear-Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Braun Linear';
+        src: url('/fonts/BraunLinear-Bold.woff2') format('woff2');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        /* Brand — canonical CIV.IQ tokens (matches src/styles/aicher-system.css) */
+        --red: #e11d07;
+        --green: #0a9338;
+        --blue: #3ea2d4;
+
+        /* Ink + paper (standalone palette — softer than aicher-system.css fg1/fg2) */
+        --ink: #15161a;
+        --ink-2: #4a4d55;
+        --ink-3: #7a7e88;
+        --line: #e5e5e0;
+        --line-2: #efeee9;
+        --paper: #ffffff;
+        --mute: #f5f4ef;
+
+        --max: 1180px;
+        --font: 'Braun Linear', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+        --duration: 150ms;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font);
+        font-size: 15px;
+        line-height: 1.5;
+        letter-spacing: 0.025em;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      button {
+        font-family: inherit;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      *:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+
+      /* ============ HEADER ============ */
+      .nav {
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .nav-inner {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        height: 60px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 17px;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .brand .dot {
+        color: var(--red);
+      }
+      .brand-mark {
+        width: 18px;
+        height: 28px;
+        flex: none;
+      }
+      .nav-links {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a,
+      .nav-links button {
+        color: var(--ink);
+        background: none;
+        border: 0;
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: color var(--duration) var(--timing);
+      }
+      .nav-links a:hover,
+      .nav-links button:hover {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      .caret {
+        width: 8px;
+        height: 8px;
+        display: inline-block;
+        transition: transform 150ms var(--timing);
+      }
+
+      /* ============ NAV DROPDOWNS ============ */
+      .dropdown {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .dropdown > button {
+        position: relative;
+        padding: 0 2px;
+      }
+      .dropdown.open > button {
+        color: var(--blue);
+      }
+      .dropdown.open > button::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -23px;
+        height: 3px;
+        background: var(--blue);
+      }
+      .dropdown.open .caret {
+        transform: rotate(180deg);
+      }
+
+      .dropdown-panel {
+        position: absolute;
+        top: calc(100% + 22px);
+        background: #fff;
+        border: 2px solid var(--ink);
+        display: none;
+        z-index: 30;
+      }
+      .dropdown.open .dropdown-panel {
+        display: block;
+      }
+      .dropdown-panel.federal {
+        left: 0;
+        width: 640px;
+        padding: 22px 26px 18px;
+      }
+      .dropdown.open .dropdown-panel.federal {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 36px;
+        row-gap: 4px;
+      }
+      .dp-section {
+        padding: 4px 0;
+      }
+      .dropdown-panel.federal > .dp-section:nth-child(3),
+      .dropdown-panel.federal > .dp-section:nth-child(4) {
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+        margin-top: 14px;
+      }
+      .dp-section h6 {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        margin: 0 0 8px;
+        padding: 0 10px;
+      }
+      .dp-section ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .dp-section a {
+        display: block;
+        padding: 8px 10px;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 400;
+        text-decoration: none;
+        border-radius: 3px;
+        transition:
+          background 100ms var(--timing),
+          color 100ms var(--timing);
+      }
+      .dp-section a:hover,
+      .dp-section a:focus-visible {
+        background: #eaf4fa;
+        color: var(--blue);
+        outline: none;
+      }
+      .dp-footer {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--line);
+        margin-top: 14px;
+        padding-top: 12px;
+      }
+      .dp-footer a {
+        display: inline-block;
+        padding: 6px 10px;
+        color: var(--blue);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 3px;
+      }
+      .dp-footer a:hover {
+        background: #eaf4fa;
+      }
+      .dropdown-panel.state,
+      .dropdown-panel.local {
+        left: 0;
+        min-width: 220px;
+        padding: 10px;
+      }
+      .dropdown-panel.state ul,
+      .dropdown-panel.local ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .dropdown-panel.state a,
+      .dropdown-panel.local a {
+        display: block;
+        padding: 10px 14px;
+        color: var(--ink);
+        font-size: 16px;
+        text-decoration: none;
+        border-radius: 3px;
+        transition:
+          background 100ms var(--timing),
+          color 100ms var(--timing);
+      }
+      .dropdown-panel.state a:hover,
+      .dropdown-panel.state a:focus-visible,
+      .dropdown-panel.local a:hover,
+      .dropdown-panel.local a:focus-visible {
+        background: #eaf4fa;
+        color: var(--blue);
+        outline: none;
+      }
+
+      .nav-search {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 6px 10px;
+        background: #fff;
+        width: 220px;
+        font-size: 13px;
+        color: var(--ink-3);
+      }
+      .nav-search input {
+        border: 0;
+        outline: 0;
+        flex: 1;
+        font: inherit;
+        background: transparent;
+        color: var(--ink);
+        margin-left: 6px;
+        min-width: 0;
+      }
+      .theme-toggle {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        display: grid;
+        place-items: center;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      /* ============ HERO ============ */
+      .hero {
+        padding: 56px 28px 36px;
+        text-align: center;
+      }
+      .hero-mark {
+        margin: 0 auto 24px;
+        width: 78px;
+        height: 122px;
+        display: block;
+      }
+      .eyebrow {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 6px;
+      }
+      .eyebrow .dot {
+        color: var(--red);
+      }
+      h1 {
+        margin: 0 auto 18px;
+        font-size: 56px;
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+        max-width: 720px;
+        text-transform: uppercase;
+      }
+      .lede {
+        font-size: 16px;
+        color: var(--ink-2);
+        max-width: 520px;
+        margin: 0 auto 28px;
+        line-height: 1.55;
+      }
+
+      .search-row {
+        max-width: 540px;
+        margin: 0 auto;
+        display: flex;
+        gap: 0;
+        align-items: stretch;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .search-row:focus-within {
+        border-color: var(--blue);
+      }
+      .search-row .search-icon {
+        display: flex;
+        align-items: center;
+        padding: 14px 0 14px 16px;
+        color: var(--ink-3);
+      }
+      .search-row input {
+        flex: 1;
+        border: 0;
+        outline: 0;
+        padding: 14px 16px;
+        font: inherit;
+        font-size: 15px;
+        color: var(--ink);
+        background: transparent;
+        min-width: 0;
+      }
+      .search-row input::placeholder {
+        color: var(--ink-3);
+      }
+      .search-row button[type='submit'] {
+        border: 0;
+        background: var(--mute);
+        color: var(--ink-3);
+        padding: 0 28px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition:
+          background var(--duration) var(--timing),
+          color var(--duration) var(--timing);
+      }
+      .search-row button[type='submit']:hover {
+        background: var(--blue);
+        color: #fff;
+      }
+      .loc-btn {
+        margin: 14px auto 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 22px;
+        border: 1px solid var(--blue);
+        color: var(--blue);
+        background: #fff;
+        border-radius: 3px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition:
+          background var(--duration) var(--timing),
+          color var(--duration) var(--timing);
+      }
+      .loc-btn:hover {
+        background: var(--blue);
+        color: #fff;
+      }
+      .try-line {
+        margin-top: 20px;
+        font-size: 13px;
+        color: var(--ink-2);
+      }
+      .sources {
+        margin-top: 40px;
+        font-size: 13px;
+        color: var(--ink-2);
+        line-height: 1.7;
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* ============ SECTION CHROME ============ */
+      section.block {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 64px 28px;
+      }
+      .section-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+      }
+      .section-sub {
+        text-align: center;
+        font-size: 14px;
+        color: var(--ink-2);
+        margin: 0 0 36px;
+      }
+
+      /* ============ CARD GRID ("What you can do") ============ */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        padding: 18px;
+        background: #fff;
+        transition: border-color var(--duration) var(--timing);
+      }
+      .card:hover {
+        border-color: var(--blue);
+      }
+      .card-icon {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 14px;
+        color: #fff;
+      }
+      .card-icon.red {
+        background: var(--red);
+      }
+      .card-icon.green {
+        background: var(--green);
+      }
+      .card-icon.blue {
+        background: var(--blue);
+      }
+      .card-title {
+        font-weight: 700;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+      .card-desc {
+        font-size: 13px;
+        color: var(--ink-2);
+        line-height: 1.5;
+        margin-bottom: 14px;
+      }
+      .card-link {
+        font-size: 13px;
+        color: var(--blue);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
+      }
+
+      /* ============ QUICK START ============ */
+      .qs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+      }
+      .qs::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--line);
+      }
+      .qs-col h4 {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin: 0 0 10px;
+      }
+      .qs-box {
+        border: 1px solid var(--line);
+        padding: 16px 18px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      .qs-box h5 {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+      }
+      .qs-box p {
+        font-size: 12px;
+        color: var(--ink-3);
+        margin: 0;
+      }
+      .qs-list-item {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        margin-top: 8px;
+        background: #fff;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color var(--duration) var(--timing);
+      }
+      a.qs-list-item:hover {
+        border-color: var(--blue);
+        text-decoration: none;
+      }
+      .qs-list-item .name {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .qs-list-item .role {
+        font-size: 12px;
+        color: var(--ink-3);
+        font-variant-numeric: tabular-nums lining-nums;
+      }
+      .qs-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink-3);
+        margin-top: 8px;
+        border-radius: 3px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%237A7E88' d='M0 0h10L5 6z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+      }
+
+      /* ============ ASK ============ */
+      .ask-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 16px;
+      }
+      .ask-head h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .ask-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .ask-card {
+        border: 1px solid var(--line);
+        padding: 16px 18px;
+        background: #fff;
+        transition: border-color var(--duration) var(--timing);
+      }
+      .ask-card:hover {
+        border-color: var(--blue);
+        cursor: pointer;
+      }
+      .ask-tag {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .ask-q {
+        font-size: 14px;
+        color: var(--blue);
+      }
+
+      /* ============ FOOTER ============ */
+      footer {
+        border-top: 1px solid var(--line);
+        margin-top: 36px;
+      }
+      .foot-inner {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 48px 28px 28px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+      }
+      .foot-col h6 {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        margin: 0 0 14px;
+      }
+      .foot-col a {
+        display: block;
+        font-size: 13px;
+        color: var(--ink);
+        padding: 4px 0;
+        text-decoration: underline;
+        text-decoration-color: rgba(0, 0, 0, 0.15);
+        text-underline-offset: 3px;
+      }
+      .foot-col a:hover {
+        color: var(--blue);
+        text-decoration-color: currentColor;
+      }
+      .copy {
+        text-align: center;
+        font-size: 12px;
+        color: var(--ink-3);
+        padding: 20px 0 28px;
+        border-top: 1px solid var(--line-2);
+      }
+
+      /* ============ FAB ============ */
+      .fab {
+        position: fixed;
+        bottom: 22px;
+        left: 22px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        cursor: pointer;
+        border: 0;
+        transition: transform var(--duration) var(--timing);
+      }
+      .fab:hover {
+        transform: translateY(-1px);
+      }
+
+      /* ============ RESPONSIVE ============ */
+      @media (max-width: 960px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .nav-search {
+          display: none;
+        }
+        .nav-inner {
+          gap: 16px;
+          padding: 14px 20px;
+        }
+        .nav-links {
+          gap: 14px;
+        }
+      }
+      @media (max-width: 640px) {
+        h1 {
+          font-size: 40px;
+        }
+        .hero {
+          padding: 36px 20px 24px;
+        }
+        section.block {
+          padding: 40px 20px;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .qs {
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+        .qs::before {
+          display: none;
+        }
+        .ask-grid {
+          grid-template-columns: 1fr;
+        }
+        .foot-inner {
+          grid-template-columns: repeat(2, 1fr);
+          padding: 32px 20px 20px;
+        }
+        .nav-links a:not(.about),
+        .nav-links button {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ============ HEADER ============ -->
+    <nav class="nav" aria-label="Primary">
+      <div class="nav-inner">
+        <a class="brand" href="/" aria-label="CIV.IQ home">
+          <svg
+            class="brand-mark"
+            viewBox="0 0 120 188"
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+          >
+            <circle cx="60" cy="28" r="28" fill="#e11d07"></circle>
+            <path d="M 32 62 A 105 105 0 0 0 88 62 L 88 140 L 32 140 Z" fill="#0a9338"></path>
+            <circle cx="32" cy="156" r="7" fill="#3ea2d4"></circle>
+            <circle cx="50.7" cy="156" r="7" fill="#3ea2d4"></circle>
+            <circle cx="69.3" cy="156" r="7" fill="#3ea2d4"></circle>
+            <circle cx="88" cy="156" r="7" fill="#3ea2d4"></circle>
+          </svg>
+          <span>CIV<span class="dot">.</span>IQ</span>
+        </a>
+        <div class="nav-links">
+          <div class="dropdown" data-dropdown="federal">
+            <button
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="dp-federal"
+            >
+              Federal
+              <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+                <path d="M0 0h10L5 6z" fill="currentColor"></path>
+              </svg>
+            </button>
+            <div
+              class="dropdown-panel federal"
+              id="dp-federal"
+              role="menu"
+              aria-label="Federal pages"
+            >
+              <div class="dp-section">
+                <h6>People &amp; Institutions</h6>
+                <ul>
+                  <li><a href="/representatives" role="menuitem">Representatives</a></li>
+                  <li><a href="/congress" role="menuitem">Congress</a></li>
+                  <li><a href="/districts" role="menuitem">Districts</a></li>
+                  <li><a href="/committees" role="menuitem">Committees</a></li>
+                </ul>
+              </div>
+              <div class="dp-section">
+                <h6>Legislation &amp; Policy</h6>
+                <ul>
+                  <li><a href="/legislation" role="menuitem">Legislation</a></li>
+                  <li><a href="/regulations" role="menuitem">Regulations</a></li>
+                  <li><a href="/executive-orders" role="menuitem">Executive Orders</a></li>
+                  <li><a href="/comment-periods" role="menuitem">Comment Periods</a></li>
+                </ul>
+              </div>
+              <div class="dp-section">
+                <h6>Money &amp; Influence</h6>
+                <ul>
+                  <li><a href="/spending" role="menuitem">Spending</a></li>
+                  <li><a href="/influence" role="menuitem">Influence</a></li>
+                  <li><a href="/industry" role="menuitem">Industries</a></li>
+                  <li><a href="/your-reps/money-report" role="menuitem">Money Report</a></li>
+                </ul>
+              </div>
+              <div class="dp-section">
+                <h6>Tools</h6>
+                <ul>
+                  <li><a href="/your-reps" role="menuitem">Your Reps</a></li>
+                  <li><a href="/investigate" role="menuitem">Connections</a></li>
+                  <li><a href="/elections" role="menuitem">Elections</a></li>
+                </ul>
+              </div>
+              <div class="dp-footer">
+                <a href="/federal" role="menuitem">View all federal pages &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="dropdown" data-dropdown="state">
+            <button
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="dp-state"
+            >
+              State
+              <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+                <path d="M0 0h10L5 6z" fill="currentColor"></path>
+              </svg>
+            </button>
+            <div class="dropdown-panel state" id="dp-state" role="menu" aria-label="State pages">
+              <ul>
+                <li><a href="/states" role="menuitem">Legislatures</a></li>
+                <li><a href="/elections/state" role="menuitem">Elections</a></li>
+                <li><a href="/state-districts" role="menuitem">Districts</a></li>
+                <li><a href="/state-bills" role="menuitem">Bills</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="dropdown" data-dropdown="local">
+            <button
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="dp-local"
+            >
+              Local
+              <svg class="caret" viewBox="0 0 10 6" aria-hidden="true">
+                <path d="M0 0h10L5 6z" fill="currentColor"></path>
+              </svg>
+            </button>
+            <div class="dropdown-panel local" id="dp-local" role="menu" aria-label="Local pages">
+              <ul>
+                <li><a href="/local" role="menuitem">Officials</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <a class="about" href="https://www.civdotiq.org/about">About</a>
+          <div class="nav-search">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#7A7E88"
+              stroke-width="2.5"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="m21 21-4-4"></path>
+            </svg>
+            <label class="sr-only" for="nav-search-input">Search</label>
+            <input id="nav-search-input" type="text" placeholder="Search (CA: for state)" />
+          </div>
+          <button
+            type="button"
+            class="theme-toggle"
+            aria-label="Toggle dark mode"
+            aria-pressed="false"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#15161A"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="main">
+      <!-- ============ HERO ============ -->
+      <header class="hero">
+        <svg
+          class="hero-mark"
+          viewBox="0 0 120 188"
+          preserveAspectRatio="xMidYMid meet"
+          aria-label="CIV.IQ mark"
+          role="img"
+        >
+          <circle cx="60" cy="28" r="28" fill="#e11d07"></circle>
+          <path d="M 32 62 A 105 105 0 0 0 88 62 L 88 140 L 32 140 Z" fill="#0a9338"></path>
+          <circle cx="32" cy="156" r="7" fill="#3ea2d4"></circle>
+          <circle cx="50.7" cy="156" r="7" fill="#3ea2d4"></circle>
+          <circle cx="69.3" cy="156" r="7" fill="#3ea2d4"></circle>
+          <circle cx="88" cy="156" r="7" fill="#3ea2d4"></circle>
+        </svg>
+        <p class="eyebrow">CIV<span class="dot">.</span>IQ</p>
+        <h1>Know your<br />Representatives</h1>
+        <p class="lede">
+          See how your representatives vote, who funds them, and what they sponsor — all from public
+          government data.
+        </p>
+
+        <form class="search-row" action="/search" method="get" role="search">
+          <span class="search-icon" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="m21 21-4-4"></path>
+            </svg>
+          </span>
+          <label class="sr-only" for="address-input">Enter your home address</label>
+          <input
+            id="address-input"
+            name="q"
+            type="text"
+            placeholder="Enter address"
+            autocomplete="street-address"
+          />
+          <button type="submit">SEARCH</button>
+        </form>
+
+        <button type="button" class="loc-btn">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            aria-hidden="true"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          USE MY LOCATION
+        </button>
+
+        <p class="try-line">
+          Try: &ldquo;123 Main St, Detroit, MI&rdquo; or &ldquo;1600 Pennsylvania Ave, Washington,
+          DC&rdquo;
+        </p>
+
+        <p class="sources">
+          Federal data from
+          <a href="https://www.congress.gov" target="_blank" rel="noopener">Congress.gov</a>,
+          <a href="https://www.fec.gov" target="_blank" rel="noopener">FEC</a>, and
+          <a href="https://www.census.gov" target="_blank" rel="noopener">Census Bureau</a>. State
+          legislature data from
+          <a href="https://openstates.org" target="_blank" rel="noopener">Open States</a>.<br />
+          All data available via <a href="/open">open API</a>,
+          <a href="https://www.civdotiq.org/feeds/bills" target="_blank" rel="noopener">RSS</a>, and
+          <a href="https://njump.me/civiq@civdotiq.org" target="_blank" rel="noopener">Nostr</a>. No
+          account required.
+        </p>
+      </header>
+
+      <!-- ============ WHAT YOU CAN DO ============ -->
+      <section class="block" aria-labelledby="what-title">
+        <h2 class="section-title" id="what-title">What you can do</h2>
+        <p class="section-sub">Explore federal and state government data from official sources</p>
+
+        <div class="cards">
+          <article class="card">
+            <div class="card-icon blue">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M4 21V8h6v13M14 21V4h6v17M4 21h16"></path>
+              </svg>
+            </div>
+            <div class="card-title">Federal Representatives</div>
+            <div class="card-desc">
+              All 535 House and Senate members with profiles and contact info
+            </div>
+            <a class="card-link" href="/representatives">535 Members</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon green">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="card-title">State Legislatures</div>
+            <div class="card-desc">Track state legislators and bills across all 50 states</div>
+            <a class="card-link" href="/states">All 50 States</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon red">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18"></rect>
+                <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+              </svg>
+            </div>
+            <div class="card-title">District Maps</div>
+            <div class="card-desc">
+              Interactive maps showing congressional and state legislative districts
+            </div>
+            <a class="card-link" href="/districts">7,383 Districts</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon blue">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="1"></rect>
+                <path d="m8 12 3 3 5-7"></path>
+              </svg>
+            </div>
+            <div class="card-title">Voting Records</div>
+            <div class="card-desc">See how your representatives voted on legislation</div>
+            <a class="card-link" href="/legislation">1,200+ Votes</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon green">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v6M12 17v.01"></path>
+              </svg>
+            </div>
+            <div class="card-title">Campaign Finance</div>
+            <div class="card-desc">Track contributions and spending from FEC data</div>
+            <a class="card-link" href="/industry">$2B+ Tracked</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon red">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M4 21V8h6v13M14 21V4h6v17M4 21h16"></path>
+              </svg>
+            </div>
+            <div class="card-title">Committees</div>
+            <div class="card-desc">Explore congressional committees and their activities</div>
+            <a class="card-link" href="/committees">34 Committees</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon blue">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M4 4h12l4 4v12H4z"></path>
+                <path d="M8 10h8M8 14h8M8 18h5"></path>
+              </svg>
+            </div>
+            <div class="card-title">Bill Tracking</div>
+            <div class="card-desc">Follow legislation from the 119th Congress in real-time</div>
+            <a class="card-link" href="/legislation">8,000+ Bills</a>
+          </article>
+
+          <article class="card">
+            <div class="card-icon green">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="card-title">Local Government</div>
+            <div class="card-desc">Local government coverage — expanding incrementally</div>
+            <a class="card-link" href="/local">Roadmap</a>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ QUICK START ============ -->
+      <section class="block" aria-labelledby="qs-title">
+        <h2 class="section-title" id="qs-title">Quick start</h2>
+        <p class="section-sub">Alternative ways to explore the platform</p>
+
+        <div class="qs">
+          <div class="qs-col">
+            <h4>Federal</h4>
+            <div class="qs-box">
+              <h5>Example Profiles</h5>
+              <p>See what congressional member profiles look like</p>
+              <a class="qs-list-item" href="/representative/J000294"
+                ><span class="name">Hakeem Jeffries</span
+                ><span class="role">House Minority Leader</span></a
+              >
+              <a class="qs-list-item" href="/representative/T000250"
+                ><span class="name">John Thune</span
+                ><span class="role">Senate Majority Leader</span></a
+              >
+              <a class="qs-list-item" href="/representative/J000299"
+                ><span class="name">Mike Johnson</span
+                ><span class="role">Speaker of the House</span></a
+              >
+            </div>
+            <a class="qs-list-item" href="/representatives"
+              ><span class="name">All Representatives</span
+              ><span class="role">535 members of Congress</span></a
+            >
+            <a class="qs-list-item" href="/districts"
+              ><span class="name">All Districts</span
+              ><span class="role">435 congressional districts</span></a
+            >
+          </div>
+          <div class="qs-col">
+            <h4>State</h4>
+            <div class="qs-box">
+              <h5>Browse by State</h5>
+              <p>View state legislators and bills</p>
+              <label class="sr-only" for="state-select">Select a state</label>
+              <select class="qs-select" id="state-select">
+                <option>Select a state&hellip;</option>
+                <option>Alabama</option>
+                <option>Alaska</option>
+                <option>Arizona</option>
+                <option>Arkansas</option>
+                <option>California</option>
+                <option>Colorado</option>
+                <option>Connecticut</option>
+                <option>Delaware</option>
+                <option>Florida</option>
+                <option>Georgia</option>
+                <option>Hawaii</option>
+                <option>Idaho</option>
+                <option>Illinois</option>
+                <option>Indiana</option>
+                <option>Iowa</option>
+                <option>Kansas</option>
+                <option>Kentucky</option>
+                <option>Louisiana</option>
+                <option>Maine</option>
+                <option>Maryland</option>
+                <option>Massachusetts</option>
+                <option>Michigan</option>
+                <option>Minnesota</option>
+                <option>Mississippi</option>
+                <option>Missouri</option>
+                <option>Montana</option>
+                <option>Nebraska</option>
+                <option>Nevada</option>
+                <option>New Hampshire</option>
+                <option>New Jersey</option>
+                <option>New Mexico</option>
+                <option>New York</option>
+                <option>North Carolina</option>
+                <option>North Dakota</option>
+                <option>Ohio</option>
+                <option>Oklahoma</option>
+                <option>Oregon</option>
+                <option>Pennsylvania</option>
+                <option>Rhode Island</option>
+                <option>South Carolina</option>
+                <option>South Dakota</option>
+                <option>Tennessee</option>
+                <option>Texas</option>
+                <option>Utah</option>
+                <option>Vermont</option>
+                <option>Virginia</option>
+                <option>Washington</option>
+                <option>West Virginia</option>
+                <option>Wisconsin</option>
+                <option>Wyoming</option>
+              </select>
+            </div>
+            <a class="qs-list-item" href="/states"
+              ><span class="name">All State Legislatures</span
+              ><span class="role">50 states + territories</span></a
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ASK A QUESTION ============ -->
+      <section class="block" aria-labelledby="ask-title">
+        <div class="ask-head">
+          <h3 id="ask-title">Ask a question</h3>
+          <a href="/ask">See all questions</a>
+        </div>
+        <div class="ask-grid">
+          <a class="ask-card" href="/ask/campaign-contributions/P000197">
+            <div class="ask-tag">Where</div>
+            <div class="ask-q">Where do Nancy Pelosi&rsquo;s campaign contributions come from?</div>
+          </a>
+          <a class="ask-card" href="/ask/voting-record/J000302">
+            <div class="ask-tag">How</div>
+            <div class="ask-q">How does Jim Jordan vote?</div>
+          </a>
+          <a class="ask-card" href="/ask/donor-voting-alignment/M001153">
+            <div class="ask-tag">Why</div>
+            <div class="ask-q">Does Lisa Murkowski&rsquo;s voting align with her donors?</div>
+          </a>
+          <a class="ask-card" href="/ask/topic-bills/health">
+            <div class="ask-tag">What</div>
+            <div class="ask-q">What bills are about Health?</div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer>
+      <div class="foot-inner">
+        <div class="foot-col">
+          <h6>Platform</h6>
+          <a href="/about">About</a>
+          <a href="/education">Education</a>
+          <a href="/glossary">Glossary</a>
+        </div>
+        <div class="foot-col">
+          <h6>Developers</h6>
+          <a href="/developers">Public API</a>
+          <a href="/developers">MCP Server</a>
+          <a href="/developers">TypeScript SDK</a>
+          <a href="/embed-docs">Embed Widgets</a>
+          <a href="/openapi.json">OpenAPI Spec</a>
+          <a href="/developers">Bulk Data</a>
+          <a href="/open">Open Data</a>
+          <a href="https://www.npmjs.com/org/civiq" target="_blank" rel="noopener">npm Packages</a>
+        </div>
+        <div class="foot-col">
+          <h6>Open Protocols</h6>
+          <a href="https://github.com/civdotiq/civ.iq" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.civdotiq.org/feeds/bills" target="_blank" rel="noopener"
+            >RSS Feeds</a
+          >
+          <a href="https://njump.me/civiq@civdotiq.org" target="_blank" rel="noopener">Nostr</a>
+          <a href="/llms.txt">llms.txt</a>
+        </div>
+        <div class="foot-col">
+          <h6>Legal</h6>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
+          <a href="/disclaimer">Disclaimer</a>
+        </div>
+      </div>
+      <div class="copy">&copy; 2026 CIV.IQ. All rights reserved.</div>
+    </footer>
+
+    <button type="button" class="fab" aria-label="Nostr feed (placeholder)">N</button>
+
+    <script>
+      (function () {
+        const dropdowns = Array.from(document.querySelectorAll('.dropdown'));
+        if (!dropdowns.length) return;
+
+        function closeAll(except) {
+          dropdowns.forEach(function (d) {
+            if (d === except) return;
+            if (!d.classList.contains('open')) return;
+            d.classList.remove('open');
+            const btn = d.querySelector('button[aria-expanded]');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+          });
+        }
+
+        dropdowns.forEach(function (d) {
+          const btn = d.querySelector('button[aria-expanded]');
+          if (!btn) return;
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = d.classList.toggle('open');
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) closeAll(d);
+          });
+        });
+
+        document.addEventListener('click', function (e) {
+          if (!e.target.closest('.dropdown')) closeAll(null);
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          const open = dropdowns.find(function (d) {
+            return d.classList.contains('open');
+          });
+          if (!open) return;
+          closeAll(null);
+          const btn = open.querySelector('button[aria-expanded]');
+          if (btn) btn.focus();
+        });
+      })();
+    </script>
+  </body>
+</html>

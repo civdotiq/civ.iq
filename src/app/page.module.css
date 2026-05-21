@@ -1,0 +1,310 @@
+/* Landing page styles — ported from public/design/landing-v3.html
+ * Scoped locally via CSS Modules. Variables defined on .landing so they
+ * don't leak. Chrome (header/footer) styles live with their components.
+ */
+
+.landing {
+  --red: #e11d07;
+  --green: #0a9338;
+  --blue: #3ea2d4;
+  --ink: #15161a;
+  --ink-2: #4a4d55;
+  --ink-3: #7a7e88;
+  --line: #e5e5e0;
+  --line-2: #efeee9;
+  --paper: #ffffff;
+  --mute: #f5f4ef;
+  --max: 1180px;
+  --timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration: 150ms;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Braun Linear', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0.025em;
+}
+
+.landing a {
+  color: var(--blue);
+  text-decoration: none;
+}
+.landing a:hover {
+  text-decoration: underline;
+}
+
+/* ============ HERO ============ */
+.hero {
+  padding: 56px 28px 36px;
+  text-align: center;
+}
+.heroMark {
+  margin: 0 auto 24px;
+  width: 78px;
+  height: 122px;
+  display: block;
+}
+.eyebrow {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.dot {
+  color: var(--red);
+}
+.title {
+  margin: 0 auto 18px;
+  font-size: 56px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  max-width: 720px;
+  text-transform: uppercase;
+}
+.lede {
+  font-size: 16px;
+  color: var(--ink-2);
+  max-width: 520px;
+  margin: 0 auto 28px;
+  line-height: 1.55;
+}
+.sources {
+  margin: 40px auto 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.7;
+  max-width: 720px;
+}
+
+/* ============ SECTION CHROME ============ */
+.block {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 64px 28px;
+}
+.sectionTitle {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.sectionSub {
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 36px;
+}
+
+/* ============ CARD GRID — "What you can do" ============ */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.card {
+  border: 1px solid var(--line);
+  padding: 18px;
+  background: #fff;
+  transition: border-color var(--duration) var(--timing);
+}
+.card:hover {
+  border-color: var(--blue);
+}
+.cardIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  color: #fff;
+}
+.cardIconRed {
+  background: var(--red);
+}
+.cardIconGreen {
+  background: var(--green);
+}
+.cardIconBlue {
+  background: var(--blue);
+}
+.cardTitle {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.cardDesc {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.cardLink {
+  font-size: 13px;
+  color: var(--blue);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ============ QUICK START ============ */
+.qs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+.qs::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+.qsCol h4 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 10px;
+}
+.qsBox {
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+.qsBox h5 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+.qsBox p {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin: 0;
+}
+.qsItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  margin-top: 8px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration) var(--timing);
+}
+.qsItem:hover {
+  border-color: var(--blue);
+  text-decoration: none;
+}
+.qsName {
+  font-weight: 700;
+  font-size: 13px;
+}
+.qsRole {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.qsSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 8px;
+  border-radius: 3px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%237A7E88' d='M0 0h10L5 6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* ============ ASK ============ */
+.askHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.askHead h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.askGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.askCard {
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+  background: #fff;
+  transition: border-color var(--duration) var(--timing);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.askCard:hover {
+  border-color: var(--blue);
+  text-decoration: none;
+}
+.askTag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.askQ {
+  font-size: 14px;
+  color: var(--blue);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 960px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .title {
+    font-size: 40px;
+  }
+  .hero {
+    padding: 36px 20px 24px;
+  }
+  .block {
+    padding: 40px 20px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .qs {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .qs::before {
+    display: none;
+  }
+  .askGrid {
+    grid-template-columns: 1fr;
+  }
+}

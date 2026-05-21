@@ -18,12 +18,14 @@ interface SiteFooterProps {
  */
 export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProps) {
   const isDark = variant === 'dark';
-  const linkClass = `${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-civiq-blue'} transition-colors underline`;
-  const labelClass = isDark ? 'text-gray-500' : 'text-gray-400';
+  const linkClass = isDark
+    ? 'text-gray-400 hover:text-white transition-colors underline'
+    : 'text-[#15161A] hover:text-civiq-blue transition-colors underline decoration-black/15 hover:decoration-current underline-offset-[3px]';
+  const labelClass = isDark ? 'text-gray-500' : 'text-[#7A7E88]';
 
   return (
     <footer
-      className={`${isDark ? 'bg-gray-900 text-white' : 'border-t border-gray-200'} ${className}`}
+      className={`${isDark ? 'bg-gray-900 text-white' : 'border-t border-[#E5E5E0]'} ${className}`}
     >
       <div className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 py-grid-4 sm:py-grid-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-grid-4 sm:gap-grid-6">
@@ -62,17 +64,17 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
             </h3>
             <ul className="space-y-grid-1 text-xs sm:text-sm">
               <li>
-                <Link href="/docs/api" className={linkClass}>
+                <Link href="/developers" className={linkClass}>
                   Public API
                 </Link>
               </li>
               <li>
-                <Link href="/developers#mcp" className={linkClass}>
+                <Link href="/developers" className={linkClass}>
                   MCP Server
                 </Link>
               </li>
               <li>
-                <Link href="/developers#sdk" className={linkClass}>
+                <Link href="/developers" className={linkClass}>
                   TypeScript SDK
                 </Link>
               </li>
@@ -87,7 +89,7 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </a>
               </li>
               <li>
-                <Link href="/developers#bulk-data" className={linkClass}>
+                <Link href="/developers" className={linkClass}>
                   Bulk Data
                 </Link>
               </li>
@@ -128,9 +130,9 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </a>
               </li>
               <li>
-                <Link href="/feeds/bills" className={linkClass}>
+                <a href="/feeds/bills" className={linkClass}>
                   RSS Feeds
-                </Link>
+                </a>
               </li>
               <li>
                 <a
@@ -141,9 +143,6 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 >
                   Nostr
                 </a>
-              </li>
-              <li>
-                <span className={linkClass}>Fediverse</span>
               </li>
               <li>
                 <a href="/llms.txt" className={linkClass}>
