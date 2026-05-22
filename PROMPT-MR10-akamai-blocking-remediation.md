@@ -101,11 +101,78 @@ House votes via `api.congress.gov/v3/house-vote/...` work fine (verified 200 fro
 3. `/api/health` reports Congress.gov / FEC / Senate LDA as `ok` when the real APIs are healthy.
 4. No MR7 diagnostic routes or instrumentation remain in the codebase.
 
-## Closeout (fill in when landed)
+## Closeout
 
-- [ ] Option chosen (A / B / C / D / hybrid):
-- [ ] Commit SHA(s):
-- [ ] House cron success rates:
-- [ ] Senate state-rendering verification:
-- [ ] Health probe re-checked:
-- [ ] MR7 diagnostic scaffolding removed (commit SHA):
+### 2026-04-27 — Option D (hybrid) shipped
+
+- [x] **Option chosen**: D (hybrid). House reps continue to return real
+      `vote_finance` + `vote_prediction` insights; Senate reps return null
+      with a specific upstream-block reason that the orchestrator surfaces
+      to the UI as `unavailable` (not `insufficient-data`). Option A
+      (self-hosted Senate XML mirror) is queued for a separate session.
+- [x] **Commit SHA(s)**: see `git log` for the commit landing this change.
+      Code paths touched: - `src/lib/intelligence/analyzers/shared.ts` — exported
+      `SENATE_UPSTREAM_BLOCKED_REASON` sentinel. - `src/lib/intelligence/analyzers/vote-finance-analyzer.ts` —
+      chamber bail in `fetchData` after `getEnhancedRepresentative`,
+      before the `Promise.all([fetchVotes, fetchContributions])`. - `src/lib/intelligence/analyzers/vote-prediction-analyzer.ts` —
+      symmetric chamber bail in `fetchData`. - `src/features/representatives/services/batch-voting-service.ts`
+      — env-gated `isSenateXmlDisabled()` defense at the top of
+      `getSenateMemberVotes` and `getSenateChamberRollCalls`. Honors
+      `VERCEL` (default disable on Vercel), `DISABLE_SENATE_XML=1`
+      (force off), and `ALLOW_SENATE_XML=1` (force on). - `src/app/api/intelligence/address/money-report/route.ts` —
+      `toMetricStatus` matches the exact sentinel and returns
+      `{ state: 'unavailable', reason }` so the PercentageBar renders
+      amber "Unavailable" instead of "Not enough data yet".
+- [x] **Tests**: `npm run validate:all` passes. Updated
+      `vote-finance-analyzer.test.ts` and `vote-prediction-analyzer.test.ts`
+      to assert the new bail-out behavior; added a money-report test
+      covering the sentinel-to-unavailable mapping.
+- [x] **Senate state-rendering verification (2026-05-14)**: PASS. Hit
+      `https://civdotiq.org/api/intelligence/address/money-report?zip=90049`
+      (CA-32; Schiff + Padilla + Sherman). Both Senate reps
+      (`S001150`, `P000145`) returned `voteFinance` and `independence`
+      with `state: 'unavailable'` and the exact
+      `SENATE_UPSTREAM_BLOCKED_REASON` string. The original closeout draft
+      used `?zip=20510` which is DC — DC has no voting senators/reps so
+      the response was empty; CA ZIPs are the correct Senate-heavy test
+      surface.
+- [x] **House cron success rates (2026-05-14, updated post-MR12)**: PASS
+      for direct vote-finance route; PARTIAL for money-report tiles.
+      Root cause identified and fixed in MR12 (PR
+      https://github.com/civdotiq/civ.iq/pull/63): the House per-vote
+      hang was NOT api.congress.gov's `/house-vote/{cong}` vote-list
+      endpoint — that's healthy. It was `batchVotingService.fetchAndParseHouseXML`
+      fetching the per-vote `sourceDataURL` field, which Congress.gov
+      populates with `https://clerk.house.gov/evs/{year}/roll{nnn}.xml`
+      — the same Akamai-blocked domain MR10 already documented for
+      Senate. MR12 swapped that per-vote fetch to Congress.gov's JSON
+      `/v3/house-vote/{cong}/{sess}/{rollNum}/members` sub-resource and
+      lowered MAX_VOTES 120 → 50 per the prompt's explicit budget
+      guidance.
+
+      Post-MR12 preview probes (`civ-jpyildbje-civdotiq.vercel.app`):
+
+        S000344 (Sherman):  status=complete, 37s cold, 3s warm
+        L000582 (Lieu):     status=complete, 37s cold
+
+      Both reps now return real sector correlations and narrative
+      (vs. 100% 55s-timeout pre-MR12). MR10 + MR12 together close the
+      original "House cron success rates" failure mode.
+
+      Residual issue (not an MR10 or MR12 regression):
+      `overallCorrelation: null` at MAX_VOTES=50 because no sector
+      hits MIN_VOTES_PER_SECTOR=10 after the ~12% bill-classifiable
+      filter — cascades to money-report tiles showing `unavailable`.
+      Tracked as MR13 (tighten httpClient retry tail so MAX_VOTES can
+      climb) and MR14 (`toMetricStatus` should emit `insufficient-data`,
+      not `unavailable`, when an insight exists but extracted value is
+      null).
+
+- [ ] **Health probe re-checked**: out of scope for this session — moved
+      to MR11.
+- [ ] **MR7 diagnostic scaffolding removed**: deferred until Option A
+      lands and the steady-state Senate path is observable. Phase timer
+      and `getLastPhases` buffer remain in place to verify the Option D
+      bail-out actually fires at the right phase boundary. Now doubly
+      useful because the House-path timeout (see above) needs the same
+      phase-timing visibility to diagnose.
