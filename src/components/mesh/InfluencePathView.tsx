@@ -23,8 +23,8 @@ export default function InfluencePathView({ result }: InfluencePathViewProps) {
   if (result.pathCount === 0) {
     return (
       <div className="bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] p-4 sm:p-8">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">
-          No Connections Found
+        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
+          No connections found
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           We could not find a documented connection between these entities in current FEC filings
@@ -39,8 +39,8 @@ export default function InfluencePathView({ result }: InfluencePathViewProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] p-4 sm:p-6">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-1">
-          Connections Found
+        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+          Connections found
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {result.pathCount} documented connection{result.pathCount !== 1 ? 's' : ''} between{' '}

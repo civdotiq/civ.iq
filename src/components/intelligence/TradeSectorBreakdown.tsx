@@ -61,9 +61,7 @@ export function TradeSectorBreakdown({ bioguideId, className = '' }: TradeSector
       role="img"
       aria-label={`Stock trades by sector. ${sectors.length} sectors. ${hasOverlap ? 'Some sectors overlap with committee jurisdictions.' : 'No committee jurisdiction overlaps detected.'}`}
     >
-      <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
-        Trades by sector
-      </h4>
+      <h4 className="text-sm font-semibold text-gray-900 mb-3">Trades by sector</h4>
 
       <div className="space-y-2">
         {sectors.map((sector: SectorTradeCount) => (

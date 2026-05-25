@@ -104,8 +104,8 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
                 x={point.quarter}
                 y={point.partyLineRate}
                 r={6}
-                fill="#e11d07"
-                stroke="#e11d07"
+                fill="#d97706"
+                stroke="#d97706"
               />
             ))}
           </LineChart>
@@ -125,7 +125,7 @@ export function VoteShiftTimeline({ quarters, shifts }: VoteShiftTimelineProps) 
         </span>
         {shifts.length > 0 && (
           <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2" style={{ backgroundColor: '#e11d07' }} />
+            <span className="inline-block w-2 h-2" style={{ backgroundColor: '#d97706' }} />
             Detected shift
           </span>
         )}

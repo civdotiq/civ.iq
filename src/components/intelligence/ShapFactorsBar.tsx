@@ -49,7 +49,7 @@ export function ShapFactorsBar({ factors, className = '' }: ShapFactorsBarProps)
                   <div className="flex-1 flex justify-end">
                     {!isYea && (
                       <div
-                        className="h-5 bg-[#e11d07]"
+                        className="h-5 bg-[#d97706]"
                         style={{ width: `${barWidth}%` }}
                         role="img"
                         aria-label={`${factor.humanLabel}: ${(factor.importance * 100).toFixed(0)}% importance, pushes toward Nay`}
@@ -62,7 +62,7 @@ export function ShapFactorsBar({ factors, className = '' }: ShapFactorsBarProps)
                   <div className="flex-1">
                     {isYea && (
                       <div
-                        className="h-5 bg-[#0a9338]"
+                        className="h-5 bg-[#3ea2d4]"
                         style={{ width: `${barWidth}%` }}
                         role="img"
                         aria-label={`${factor.humanLabel}: ${(factor.importance * 100).toFixed(0)}% importance, pushes toward Yea`}

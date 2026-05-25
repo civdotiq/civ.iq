@@ -143,8 +143,8 @@ function KeyStat({ value, label }: { value: string; label: string }) {
 function CostEstimatesTable({ costs }: { costs: PreambleCostEstimate[] }) {
   return (
     <div className="mb-4">
-      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Cost Estimates
+      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 mb-2">
+        Cost estimates
       </h3>
       <table className="w-full border-collapse">
         <thead>
@@ -200,8 +200,8 @@ function CostTypeBadge({ type }: { type: PreambleCostEstimate['type'] }) {
 function IndustryImpactsList({ impacts }: { impacts: PreambleIndustryImpact[] }) {
   return (
     <div className="mb-4">
-      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Affected Industries
+      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 mb-2">
+        Affected industries
       </h3>
       <div className="space-y-2">
         {impacts.map((impact, i) => (
@@ -230,8 +230,8 @@ function IndustryImpactsList({ impacts }: { impacts: PreambleIndustryImpact[] })
 function TimelineList({ timelines }: { timelines: PreambleTimeline[] }) {
   return (
     <div className="mb-4">
-      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Key Dates
+      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 mb-2">
+        Key dates
       </h3>
       <div className="space-y-1">
         {timelines.map((entry, i) => (
@@ -286,8 +286,8 @@ function EntitiesSection({ entities }: { entities: CivicEntity[] }) {
 
   return (
     <div className="mb-4">
-      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Extracted Entities
+      <h3 className="type-xs aicher-heading-wide text-gray-500 dark:text-gray-400 mb-2">
+        Extracted entities
       </h3>
       <div className="space-y-2">
         {displayOrder

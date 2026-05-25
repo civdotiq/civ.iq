@@ -228,8 +228,8 @@ export function InfluencePathSection() {
       {/* Featured connections (shown when no result yet) */}
       {!result && !loading && (
         <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-4 sm:p-6">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-1">
-            Notable Connections
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+            Notable connections
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Select one to see documented lobbying and financial ties, or search your own above.

@@ -25,9 +25,7 @@ export default function CascadeSummary({ result }: CascadeSummaryProps) {
   return (
     <div className="bg-white border-2 border-black p-4 sm:p-8 space-y-6">
       <div>
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-1">
-          Cascade Simulation
-        </h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">Cascade simulation</h3>
         <p className="text-sm text-gray-500">
           If <span className="font-medium text-gray-700">{displaySector(result.sector)}</span>{' '}
           funding {direction}s by {Math.abs(result.changePercent)}%
@@ -60,9 +58,7 @@ export default function CascadeSummary({ result }: CascadeSummaryProps) {
       {/* Top affected reps */}
       {result.affectedReps.length > 0 && (
         <section>
-          <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-            Most sensitive representatives
-          </h4>
+          <h4 className="text-xs font-bold text-gray-600 mb-2">Most sensitive representatives</h4>
           <div className="space-y-1">
             {result.affectedReps.slice(0, 10).map(rep => (
               <RepEffectRow key={rep.bioguideId} rep={rep} />

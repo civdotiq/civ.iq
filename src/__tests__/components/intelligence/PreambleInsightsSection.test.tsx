@@ -113,18 +113,18 @@ describe('PreambleInsightsSection', () => {
     ).toBeInTheDocument();
 
     // Cost estimates
-    expect(screen.getByText('Cost Estimates')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Cost estimates' })).toBeInTheDocument();
     expect(screen.getByText('$2.3 billion')).toBeInTheDocument();
     expect(screen.getByText('$8.5 billion')).toBeInTheDocument();
 
     // Industry impacts
-    expect(screen.getByText('Affected Industries')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Affected industries' })).toBeInTheDocument();
     expect(screen.getByText('Petroleum Refining')).toBeInTheDocument();
     expect(screen.getByText('New requirement')).toBeInTheDocument();
     expect(screen.getByText('~12,000 entities affected')).toBeInTheDocument();
 
     // Timeline
-    expect(screen.getByText('Key Dates')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Key dates' })).toBeInTheDocument();
     expect(screen.getByText('2026-01-15')).toBeInTheDocument();
     expect(screen.getByText('Rule takes effect')).toBeInTheDocument();
 
@@ -171,9 +171,9 @@ describe('PreambleInsightsSection', () => {
     mockUseSWR.mockReturnValue({ data: minimalInsight, isLoading: false });
     render(<PreambleInsightsSection documentNumber="2025-12345" />);
 
-    expect(screen.queryByText('Cost Estimates')).not.toBeInTheDocument();
-    expect(screen.queryByText('Affected Industries')).not.toBeInTheDocument();
-    expect(screen.queryByText('Key Dates')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Cost estimates' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Affected industries' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Key dates' })).not.toBeInTheDocument();
     // Should show "Facts extracted" as fallback key stat
     expect(screen.getByText('Facts extracted')).toBeInTheDocument();
   });

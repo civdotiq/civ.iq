@@ -69,9 +69,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
   if (error || !profile) {
     return (
       <div className="bg-white border-2 border-black p-6">
-        <p className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">
-          District profile not available
-        </p>
+        <p className="text-sm font-bold text-gray-900 mb-2">District profile not available</p>
         <p className="text-sm text-gray-500">
           We don&apos;t have an economic and representation profile for this district yet. These
           profiles are computed on demand from federal spending, employment, and voting data — check
@@ -84,7 +82,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
   return (
     <div className="bg-white border-2 border-black p-4 sm:p-8 space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Your District at a Glance</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Your district at a glance</h2>
         <p className="text-sm text-gray-500">
           How well your elected representatives match your district&apos;s economic needs
         </p>
@@ -96,9 +94,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
       {/* Top Industries */}
       {profile.topSectors.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-gray-900 mb-1 uppercase tracking-wide">
-            Top Industries in Your District
-          </h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-1">Top industries in your district</h3>
           <p className="text-xs text-gray-500 mb-3">
             Where the money flows — the industries with the most economic activity in your area
           </p>
@@ -121,8 +117,8 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
       {/* Representative Scores */}
       {profile.representatives.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-gray-900 mb-1 uppercase tracking-wide">
-            How Well Does Your Rep Represent You?
+          <h3 className="text-sm font-bold text-gray-900 mb-1">
+            How well does your rep represent you?
           </h3>
           <p className="text-xs text-gray-500 mb-3">
             A higher score means your representative&apos;s votes, committee work, and funding
@@ -140,9 +136,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
       {/* Funding Trends */}
       {profile.alignmentHistory.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-gray-900 mb-1 uppercase tracking-wide">
-            Campaign Funding Over Time
-          </h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-1">Campaign funding over time</h3>
           <p className="text-xs text-gray-500 mb-3">
             How campaign donations to your representatives have changed quarter by quarter
           </p>
@@ -157,9 +151,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
       {/* Similar Districts */}
       {profile.peerDistricts.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-gray-900 mb-1 uppercase tracking-wide">
-            Districts With Similar Economies
-          </h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-1">Districts with similar economies</h3>
           <p className="text-xs text-gray-500 mb-3">
             Other congressional districts where the mix of industries looks like yours
           </p>
@@ -179,8 +171,8 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
       {/* Bills That Could Affect Your District */}
       {profile.pendingBillExposure.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-gray-900 mb-1 uppercase tracking-wide">
-            Bills That Could Affect Your District
+          <h3 className="text-sm font-bold text-gray-900 mb-1">
+            Bills that could affect your district
           </h3>
           <p className="text-xs text-gray-500 mb-3">
             Legislation currently in Congress that relates to your district&apos;s top industries

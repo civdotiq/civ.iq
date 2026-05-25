@@ -26,9 +26,7 @@ export default function CounterfactualCard({ result }: CounterfactualCardProps) 
   return (
     <div className="bg-white border-2 border-black p-4 sm:p-8 space-y-6">
       <div>
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-1">
-          Counterfactual Analysis
-        </h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">Counterfactual analysis</h3>
         <p className="text-sm text-gray-500">
           What if donations from{' '}
           <span className="font-medium text-gray-700">

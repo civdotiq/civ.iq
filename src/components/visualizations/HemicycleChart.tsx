@@ -177,27 +177,6 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                   className="hover:opacity-80 transition-opacity"
                 />
               ))}
-
-              {/* Center line and labels */}
-              <line
-                x1={svgDimensions.width / 2}
-                y1="30"
-                x2={svgDimensions.width / 2}
-                y2="220"
-                stroke="#e5e7eb"
-                strokeWidth="1"
-                strokeDasharray="3,3"
-              />
-
-              {/* Total seats label */}
-              <text
-                x={svgDimensions.width / 2}
-                y="250"
-                textAnchor="middle"
-                className="text-base font-medium fill-gray-700"
-              >
-                {data.totalSeats} Total Seats
-              </text>
             </svg>
           </div>
         </div>
@@ -239,7 +218,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
             {/* Party Breakdown */}
             <div>
               <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
-                Party Breakdown
+                Party breakdown
               </h4>
               <div className="space-y-2 sm:space-y-3">
                 {partyCounts.map(party => {
@@ -270,27 +249,29 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
             </div>
 
             {/* Key Numbers */}
-            <div className="bg-civiq-blue/10 p-3 sm:p-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-civiq-blue mb-2">Key Numbers</h4>
+            <div>
+              <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
+                Key numbers
+              </h4>
               <div className="space-y-1 text-xs sm:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-civiq-blue">Majority Needed:</span>
-                  <span className="font-medium text-civiq-blue">{majorityThreshold}</span>
+                  <span className="text-gray-500">Majority needed</span>
+                  <span className="font-medium text-gray-900">{majorityThreshold}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-civiq-blue">Total Seats:</span>
-                  <span className="font-medium text-civiq-blue">{data.totalSeats}</span>
+                  <span className="text-gray-500">Total seats</span>
+                  <span className="font-medium text-gray-900">{data.totalSeats}</span>
                 </div>
                 {data.chamber === 'house' && (
                   <div className="flex justify-between">
-                    <span className="text-civiq-blue">Districts:</span>
-                    <span className="font-medium text-civiq-blue">435</span>
+                    <span className="text-gray-500">Districts</span>
+                    <span className="font-medium text-gray-900">435</span>
                   </div>
                 )}
                 {data.chamber === 'senate' && (
                   <div className="flex justify-between">
-                    <span className="text-civiq-blue">States:</span>
-                    <span className="font-medium text-civiq-blue">50</span>
+                    <span className="text-gray-500">States</span>
+                    <span className="font-medium text-gray-900">50</span>
                   </div>
                 )}
               </div>
