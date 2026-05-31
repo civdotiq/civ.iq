@@ -63,9 +63,10 @@ const DATA_SOURCES: SourceDefinition[] = [
     name: 'FEC',
     tier: 'critical',
     // FEC requires api_key on every request — without it the API returns 403.
-    // /legal/citations is a lightweight reference endpoint that costs less
-    // against our 1000/hr quota than candidate/contribution searches.
-    probeUrl: 'https://api.open.fec.gov/v1/legal/citations/?per_page=1',
+    // /legal/citations was retired (returns 404 as of 2026-05). /candidates is
+    // the canonical lightweight probe: per_page=1 keeps the payload minimal and
+    // every FEC request costs the same 1 unit against our 1000/hr quota.
+    probeUrl: 'https://api.open.fec.gov/v1/candidates/?per_page=1',
     requiresKey: 'FEC_API_KEY',
     keyMethod: 'query',
     keyParam: 'api_key',
@@ -208,9 +209,11 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'hud:*',
   },
   {
+    // Verified 2026-05-30: bare /banks 404s; fdic-service.ts queries
+    // /banks/institutions. Probe the same path the service uses (returns 200).
     name: 'FDIC',
     tier: 'standard',
-    probeUrl: 'https://api.fdic.gov/banks?limit=1',
+    probeUrl: 'https://api.fdic.gov/banks/institutions?limit=1',
     staleTtlHours: 720,
     cacheKeyPattern: 'fdic:*',
   },
@@ -240,11 +243,14 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'nih:*',
   },
   {
-    // Verified: cms-provider-service.ts uses DKAN distribution UUID ae3f2207-...
+    // Verified 2026-05-30: CMS rotated the Hospital General Information (xubh-q36u)
+    // distribution UUID — old ae3f2207-... now 400s ("No datastore storage found").
+    // Current UUID is b0a92ff7-... NOTE: cms-provider-service.ts still hardcodes
+    // the stale UUID and is itself broken upstream — fix the service separately.
     name: 'CMS',
     tier: 'standard',
     probeUrl:
-      'https://data.cms.gov/provider-data/api/1/datastore/query/ae3f2207-fca8-50d5-9fd5-d6a7d3426ee3?limit=1',
+      'https://data.cms.gov/provider-data/api/1/datastore/query/b0a92ff7-a457-54f9-b247-20022db14590?limit=1',
     staleTtlHours: 720,
     cacheKeyPattern: 'cms:*',
   },
@@ -259,10 +265,13 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'scorecard:*',
   },
   {
-    // Verified: nhtsa-service.ts uses /recalls/recallsByVehicle
+    // Verified 2026-05-30: recallsByVehicle requires make+model+modelYear
+    // together — make+modelYear alone 400s. Added model=camry so the probe
+    // returns 200. Matches nhtsa-service.ts /recalls/recallsByVehicle path.
     name: 'NHTSA',
     tier: 'standard',
-    probeUrl: 'https://api.nhtsa.gov/recalls/recallsByVehicle?make=toyota&modelYear=2024',
+    probeUrl:
+      'https://api.nhtsa.gov/recalls/recallsByVehicle?make=toyota&model=camry&modelYear=2024',
     staleTtlHours: 720,
     cacheKeyPattern: 'nhtsa:*',
   },
@@ -289,9 +298,12 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'openstates:*',
   },
   {
+    // Verified 2026-05-30: bare references/agency/ 404s (needs a path arg).
+    // toptier_agencies/ is a stable lightweight reachability probe (returns 200)
+    // on the same host the production services POST against.
     name: 'USASpending',
     tier: 'standard',
-    probeUrl: 'https://api.usaspending.gov/api/v2/references/agency/',
+    probeUrl: 'https://api.usaspending.gov/api/v2/references/toptier_agencies/',
     staleTtlHours: 336,
     cacheKeyPattern: 'usaspending:*',
   },

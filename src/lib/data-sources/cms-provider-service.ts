@@ -20,9 +20,16 @@ import type { Hospital, NursingHome } from '@/types/cms';
 // CMS DKAN query endpoint
 const CMS_QUERY_BASE = 'https://data.cms.gov/provider-data/api/1/datastore/query';
 
-// Distribution UUIDs (not dataset UUIDs — CMS DKAN requires these)
-const HOSPITAL_DIST_UUID = 'ae3f2207-fca8-50d5-9fd5-d6a7d3426ee3';
-const NURSING_HOME_DIST_UUID = '70aaea3b-015d-5534-91fc-469709efb895';
+// Distribution UUIDs (not dataset UUIDs — CMS DKAN requires these).
+// CMS rotates these when datasets are republished; the previous pair
+// (ae3f2207… / 70aaea3b…) began returning HTTP 400 "No datastore storage
+// found". Re-resolved from the DKAN metastore on 2026-05-30:
+//   Hospital General Information → b0a92ff7…
+//   Nursing-home "Provider Information" → 588f22e8…
+// Note: CMS dropped the *_national_comparison columns from Hospital General
+// Information — transformHospital() degrades those to null (data unavailable).
+const HOSPITAL_DIST_UUID = 'b0a92ff7-a457-54f9-b247-20022db14590';
+const NURSING_HOME_DIST_UUID = '588f22e8-145d-5db5-baff-f59ce253316c';
 
 const MIN_REQUEST_INTERVAL_MS = 200;
 let lastRequestTime = 0;
