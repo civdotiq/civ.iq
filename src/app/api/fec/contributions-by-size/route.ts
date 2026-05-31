@@ -13,7 +13,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const candidateId = searchParams.get('candidateId');
-  const cycle = parseInt(searchParams.get('cycle') || '2024');
+  const currentCycle = (() => {
+    const y = new Date().getFullYear();
+    return y % 2 === 0 ? y : y + 1;
+  })();
+  const cycle = parseInt(searchParams.get('cycle') || String(currentCycle));
 
   if (!candidateId) {
     return NextResponse.json({ error: 'candidateId query parameter is required' }, { status: 400 });
@@ -48,7 +52,9 @@ export async function GET(request: NextRequest) {
     // Calculate summary statistics
     const totalAmount = results.reduce((sum, b) => sum + (b.total || 0), 0);
     const totalCount = results.reduce((sum, b) => sum + (b.count || 0), 0);
-    const smallDonorBucket = results.find(b => b.size === 200);
+    // FEC schedule_a/by_size bucket floors are 0, 200, 500, 1000, 2000.
+    // The "<=$200" small-donor bucket has size === 0 (size === 200 is $200-$499).
+    const smallDonorBucket = results.find(b => b.size === 0);
     const smallDonorTotal = smallDonorBucket?.total || 0;
     const smallDonorPercent = totalAmount > 0 ? (smallDonorTotal / totalAmount) * 100 : 0;
     const averageContribution = totalCount > 0 ? totalAmount / totalCount : 0;

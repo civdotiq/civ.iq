@@ -92,22 +92,17 @@ export function memberDistrictLabel(entry: LeaderboardEntry): string {
   return `${party}-${entry.state}`;
 }
 
-/** Combine PAC + lobbying-org rows into a single leaderboard, sorted by amount. */
+/**
+ * Build a spending leaderboard from lobbying-org rows, sorted by amount.
+ * PACs are excluded: the FEC committee-search endpoint returns no spend totals,
+ * so there is no real amount to rank or display for them.
+ */
 export function combinedContributors(
   orgs: IndustryOrganizationsResponse | undefined,
   limit = 8
 ): ContributorRow[] {
   if (!orgs) return [];
   const rows: ContributorRow[] = [];
-  for (const pac of orgs.topPACs) {
-    rows.push({
-      kind: 'pac',
-      committeeId: pac.committeeId,
-      name: pac.name,
-      amount: pac.totalDisbursements,
-      sublabel: 'PAC · disbursements',
-    });
-  }
   for (const lobby of orgs.topLobbyingOrgs) {
     rows.push({
       kind: 'lobby',

@@ -48,7 +48,6 @@ interface FECCommitteeResult {
   name: string;
   committee_type: string;
   designation: string;
-  total_disbursements: number;
 }
 
 interface SearchResults {

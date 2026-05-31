@@ -16,7 +16,7 @@ interface ContributorsTableProps {
 const COLUMNS = '40px minmax(0, 1fr) 110px 70px';
 
 function rowHref(row: ContributorRow): string {
-  return row.kind === 'pac' ? `/pac/${row.committeeId}` : `/lobby/registrants/${row.registrantId}`;
+  return `/lobby/registrants/${row.registrantId}`;
 }
 
 export function ContributorsTable({ rows, loading = false }: ContributorsTableProps) {
@@ -46,7 +46,7 @@ export function ContributorsTable({ rows, loading = false }: ContributorsTablePr
         ))}
       </div>
       {rows.map((row, i) => {
-        const key = row.kind === 'pac' ? `pac:${row.committeeId}` : `lobby:${row.registrantId}`;
+        const key = `lobby:${row.registrantId}`;
         const pct = (row.amount / max) * 100;
         return (
           <Link
@@ -126,7 +126,7 @@ export function ContributorsTable({ rows, loading = false }: ContributorsTablePr
               </div>
             </div>
             <CqChip variant="info" filled={false} size="sm">
-              {row.kind === 'pac' ? 'PAC' : 'Lobby'}
+              Lobby
             </CqChip>
           </Link>
         );

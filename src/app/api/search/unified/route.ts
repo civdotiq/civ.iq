@@ -146,7 +146,6 @@ interface FECCommitteeResult {
   name: string;
   committee_type: string;
   designation: string;
-  total_disbursements: number;
 }
 
 interface UnifiedSearchResult {
@@ -424,7 +423,6 @@ async function searchFECCommittees(query: string, limit: number): Promise<FECCom
       name: c.name,
       committee_type: c.committee_type,
       designation: c.designation,
-      total_disbursements: c.total_disbursements,
     }));
   } catch (error) {
     logger.error('Error searching FEC committees', error as Error);

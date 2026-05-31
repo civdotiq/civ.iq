@@ -44,7 +44,6 @@ interface IndustryOrganizationsResponse {
     committeeId: string;
     name: string;
     sector: string;
-    totalDisbursements: number;
   }>;
   topLobbyingOrgs: Array<{
     registrantId: string;
@@ -262,17 +261,6 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
                           name={pac.name}
                           className="text-sm font-medium"
                         />
-                        {pac.totalDisbursements > 0 && (
-                          <span className="text-xs text-gray-500 tabular-nums">
-                            $
-                            {pac.totalDisbursements >= 1_000_000
-                              ? `${(pac.totalDisbursements / 1_000_000).toFixed(1)}M`
-                              : pac.totalDisbursements >= 1_000
-                                ? `${(pac.totalDisbursements / 1_000).toFixed(0)}K`
-                                : pac.totalDisbursements.toLocaleString()}{' '}
-                            disbursed
-                          </span>
-                        )}
                       </div>
                     ))}
                   </div>

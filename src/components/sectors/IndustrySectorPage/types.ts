@@ -48,7 +48,6 @@ export interface IndustryOrganizationsResponse {
     committeeId: string;
     name: string;
     sector: string;
-    totalDisbursements: number;
   }>;
   topLobbyingOrgs: Array<{
     registrantId: string;
@@ -94,19 +93,11 @@ export interface IndustryConnectionsResponse {
 }
 
 export type LeaderboardEntry = SectorLeaderboardResponse['entries'][number];
-export type ContributorRow =
-  | {
-      kind: 'pac';
-      committeeId: string;
-      name: string;
-      amount: number;
-      sublabel: string;
-    }
-  | {
-      kind: 'lobby';
-      registrantId: string;
-      name: string;
-      amount: number;
-      sublabel: string;
-    };
+export type ContributorRow = {
+  kind: 'lobby';
+  registrantId: string;
+  name: string;
+  amount: number;
+  sublabel: string;
+};
 export type BillRow = IndustryConnectionsResponse['recentBills'][number];

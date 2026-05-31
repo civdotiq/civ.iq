@@ -28,7 +28,6 @@ interface IndustryOrganizationsResponse {
     committeeId: string;
     name: string;
     sector: string;
-    totalDisbursements: number;
   }>;
   topLobbyingOrgs: Array<{
     registrantId: string;
@@ -112,12 +111,12 @@ export async function GET(
                 committeeId: pac.committee_id,
                 name: pac.name,
                 sector: classification.sector,
-                totalDisbursements: pac.total_disbursements ?? 0,
               });
             }
           }
 
-          topPACs.sort((a, b) => b.totalDisbursements - a.totalDisbursements);
+          // FEC committee search returns no spend totals, so PACs are kept in
+          // the API's relevance/receipts order rather than sorted by spend.
           if (topPACs.length > 10) topPACs.length = 10;
 
           if (topPACs.length > 0) dataSources.push('Federal Election Commission');

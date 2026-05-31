@@ -55,6 +55,7 @@
     "generate-district-neighbors": "tsx scripts/generate-district-neighbors.ts",
     "process-election-data": "tsx scripts/process-election-data.ts",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
+    "diagnose:fec": "node scripts/diagnose-fec.js",
     "generate:embeddings": "tsx scripts/generate-sector-embeddings.ts",
     "collect:training-data": "DOTENV_CONFIG_PATH=.env.local tsx -r dotenv/config scripts/collect-training-data.ts",
     "warm:intelligence": "tsx scripts/warm-intelligence-cache.ts",

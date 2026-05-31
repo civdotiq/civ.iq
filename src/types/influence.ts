@@ -21,7 +21,6 @@ export interface FECCommitteeSearchResult {
   treasurer_name: string;
   cycles: number[];
   candidate_ids: string[];
-  total_disbursements: number;
 }
 
 /** Financial totals from FEC /committee/{id}/totals/ */

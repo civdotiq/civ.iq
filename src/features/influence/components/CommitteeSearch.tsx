@@ -22,16 +22,6 @@ function debounce<T extends (...args: Parameters<T>) => void>(
   };
 }
 
-function formatCurrency(amount: number): string {
-  if (amount >= 1_000_000) {
-    return `$${(amount / 1_000_000).toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    return `$${(amount / 1_000).toFixed(0)}K`;
-  }
-  return `$${amount.toLocaleString()}`;
-}
-
 interface CommitteeSearchProps {
   initialQuery?: string;
 }
@@ -162,14 +152,6 @@ export function CommitteeSearch({ initialQuery = '' }: CommitteeSearchProps) {
                       <span className="font-mono">{committee.committee_id}</span>
                       {committee.state && <span>{committee.state}</span>}
                     </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    {committee.total_disbursements > 0 && (
-                      <div className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                        {formatCurrency(committee.total_disbursements)}
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500 dark:text-gray-400">disbursements</div>
                   </div>
                 </div>
               </button>
