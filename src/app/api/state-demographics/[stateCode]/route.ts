@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { STATE_FIPS } from '@/app/api/districts/census-helpers';
 import { US_STATES } from '@/lib/data/us-states';
+import { getRedisCache } from '@/lib/cache/redis-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,9 +67,11 @@ interface StateDemographics {
 
 // State name mapping - using centralized US_STATES from @/lib/data/us-states
 
-// In-memory cache for state demographics (30 minutes TTL)
-const demographicsCache = new Map<string, { data: StateDemographics; timestamp: number }>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+// Redis cache for state demographics. ACS 5-Year estimates are released
+// annually and immutable for a given survey year, so a 30-day TTL is safe and
+// shared across instances — unlike the previous 30-minute in-memory Map, which
+// reset on every cold start and never persisted between serverless invocations.
+const CACHE_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 /**
  * Calculate Simpson's Diversity Index
@@ -115,10 +118,14 @@ async function fetchStateDemographics(
   }
 
   // Check cache first
-  const cacheKey = `state-${stateCode}`;
-  const cached = demographicsCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
+  const cacheKey = `state-demographics:${stateCode}`;
+  try {
+    const cached = await getRedisCache().get<StateDemographics>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+  } catch {
+    // Cache miss or Redis error — fall through and fetch from Census
   }
 
   // Census API variables for state-level data
@@ -243,11 +250,12 @@ async function fetchStateDemographics(
     survey_year: 2021,
   };
 
-  // Cache the result
-  demographicsCache.set(cacheKey, {
-    data: stateDemographics,
-    timestamp: Date.now(),
-  });
+  // Cache the result (non-fatal on Redis error — the data is still returned)
+  try {
+    await getRedisCache().set(cacheKey, stateDemographics, CACHE_TTL_SECONDS);
+  } catch {
+    // Non-fatal
+  }
 
   return stateDemographics;
 }

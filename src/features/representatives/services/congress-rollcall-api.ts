@@ -262,27 +262,40 @@ export class CongressRollCallAPI {
       // Process votes in batches to avoid overwhelming the XML parsing
       const maxVotes = Math.min(limit, rollCallList.houseRollCallVotes.length);
 
-      for (let i = 0; i < maxVotes; i++) {
-        const rollCallVote = rollCallList.houseRollCallVotes[i];
-        if (!rollCallVote) continue;
+      // Each vote needs two dependent network calls (details -> member XML),
+      // but the votes are independent of each other. Fan out BATCH_SIZE at a
+      // time instead of awaiting ~2*maxVotes round-trips serially; results are
+      // collected in roll-call order, and per-vote failures are isolated.
+      const BATCH_SIZE = 8;
+      for (let start = 0; start < maxVotes; start += BATCH_SIZE) {
+        const batchIndices = Array.from(
+          { length: Math.min(BATCH_SIZE, maxVotes - start) },
+          (_, k) => start + k
+        );
 
-        try {
-          // Get detailed vote info including sourceDataURL
-          const voteDetails = await this.getHouseRollCallVote(
-            congress,
-            session,
-            rollCallVote.rollCallNumber
-          );
+        const batchResults = await Promise.all(
+          batchIndices.map(async (i): Promise<(typeof memberVotes)[number] | null> => {
+            const rollCallVote = rollCallList.houseRollCallVotes[i];
+            if (!rollCallVote) return null;
 
-          // Parse XML from sourceDataURL to get individual member votes
-          if (voteDetails.houseRollCallVote.sourceDataURL) {
-            const memberVote = await this.parseHouseRollCallXML(
-              voteDetails.houseRollCallVote.sourceDataURL,
-              bioguideId
-            );
+            try {
+              // Get detailed vote info including sourceDataURL
+              const voteDetails = await this.getHouseRollCallVote(
+                congress,
+                session,
+                rollCallVote.rollCallNumber
+              );
 
-            if (memberVote) {
-              memberVotes.push({
+              // Parse XML from sourceDataURL to get individual member votes
+              if (!voteDetails.houseRollCallVote.sourceDataURL) return null;
+
+              const memberVote = await this.parseHouseRollCallXML(
+                voteDetails.houseRollCallVote.sourceDataURL,
+                bioguideId
+              );
+              if (!memberVote) return null;
+
+              return {
                 voteId: `congress-${congress}-${session}-${rollCallVote.rollCallNumber}`,
                 rollCallNumber: rollCallVote.rollCallNumber,
                 date: rollCallVote.startDate?.split('T')[0] || 'Unknown',
@@ -300,14 +313,19 @@ export class CongressRollCallAPI {
                         url: voteDetails.houseRollCallVote.legislationUrl || '',
                       }
                     : undefined,
+              };
+            } catch (error) {
+              logger.debug('Failed to process House roll call vote', {
+                rollCallNumber: rollCallVote.rollCallNumber,
+                error: (error as Error).message,
               });
+              return null;
             }
-          }
-        } catch (error) {
-          logger.debug('Failed to process House roll call vote', {
-            rollCallNumber: rollCallVote.rollCallNumber,
-            error: (error as Error).message,
-          });
+          })
+        );
+
+        for (const result of batchResults) {
+          if (result) memberVotes.push(result);
         }
       }
 
