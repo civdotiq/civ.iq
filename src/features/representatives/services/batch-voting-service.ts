@@ -103,8 +103,16 @@ class HttpClient {
         } catch (error) {
           lastError = error instanceof Error ? error : new Error('Unknown fetch error');
 
-          // Retry on network errors with exponential backoff
-          if (attempt < maxRetries - 1) {
+          // Fail fast on an aborted / timed-out request. The timeout signal in
+          // `mergedOptions` is shared across attempts and fires only once, so a
+          // retry would instant-abort anyway — retrying just burns backoff
+          // sleep and stacks toward the analyzer timeout budget. This was the
+          // dominant multiplier behind analyzer 55s stalls when an upstream
+          // (e.g. Congress.gov) hangs or repeatedly 404s. Genuinely transient
+          // network errors still get retried with backoff.
+          const aborted = lastError.name === 'AbortError' || mergedOptions.signal?.aborted === true;
+
+          if (!aborted && attempt < maxRetries - 1) {
             const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
             logger.debug('Network error, retrying with backoff', {
               url,
@@ -115,6 +123,7 @@ class HttpClient {
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
+          break;
         }
       }
 

@@ -444,6 +444,11 @@ async function fetchAndMatchBills(
             Accept: 'application/json',
             'X-API-Key': apiKey,
           },
+          // Bound the request: without a timeout a hung/slow Congress.gov
+          // connection can consume the full function budget. 15s is generous
+          // for a single 250-bill list call; on timeout the outer catch
+          // degrades gracefully to "no matched bills".
+          signal: AbortSignal.timeout(15000),
         });
 
         if (!response.ok) {
