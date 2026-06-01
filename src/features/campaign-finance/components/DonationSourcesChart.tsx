@@ -62,7 +62,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     const percentage = ((data.value / data.total) * 100).toFixed(1);
 
     return (
-      <div className="bg-white p-3 border border-gray-200 border-2 border-black">
+      <div className="bg-white p-3 border-2 border-black">
         <p className="font-semibold text-gray-900">{data.name}</p>
         <p className="text-sm text-gray-600 mb-1">{data.description}</p>
         <p className="text-lg font-bold" style={{ color: data.color }}>

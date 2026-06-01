@@ -414,7 +414,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return (
       <div className="space-y-6">
         {/* Cash Flow Projections */}
-        <div className="bg-gradient-to-r from-civiq-blue/10 to-civiq-blue/10 p-6 border">
+        <div className="bg-civiq-blue/10 p-6 border">
           <h4 className="font-semibold text-gray-900 mb-4">Cash Flow Projections</h4>
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">

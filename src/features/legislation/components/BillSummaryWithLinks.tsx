@@ -49,7 +49,7 @@ export function BillSummaryWithLinks({
   };
 
   return (
-    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
+    <div className={`bg-white border-2 border-black ${className}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">

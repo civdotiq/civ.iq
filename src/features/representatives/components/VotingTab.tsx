@@ -700,7 +700,7 @@ const VotingTabComponent = React.memo(
                 </p>
               </div>
             )}
-            <div className="overflow-x-auto border border-gray-200 border-2 border-black">
+            <div className="overflow-x-auto border-2 border-black">
               <table className="w-full border-collapse bg-white" style={{ minWidth: '900px' }}>
                 <thead>
                   <tr className="bg-white border-b-2 border-gray-200">

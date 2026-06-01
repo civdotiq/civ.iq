@@ -15,8 +15,8 @@ import { ApiErrors } from '@/lib/api/error-responses';
 import logger from '@/lib/logging/simple-logger';
 import type { CommitteeProfile } from '@/types/influence';
 
+// Dynamic: reads `cycle` query param. CDN caching handled via Cache-Control header below.
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // 1-hour ISR
 
 export async function GET(
   request: NextRequest,

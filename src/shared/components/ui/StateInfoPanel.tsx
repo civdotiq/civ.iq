@@ -24,7 +24,7 @@ export default function StateInfoPanel({ state, onClose }: StateInfoPanelProps) 
   if (!state) return null;
 
   return (
-    <div className="absolute top-4 right-4 bg-white border-2 border-black border border-gray-200 p-6 w-80 z-[1000]">
+    <div className="absolute top-4 right-4 bg-white border-2 border-black p-6 w-80 z-[1000]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-gray-900">{state.name}</h3>
         <button

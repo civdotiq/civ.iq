@@ -93,7 +93,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
 
   if (loading) {
     return (
-      <div className="bg-white border-2 border-black border border-gray-100 p-8">
+      <div className="bg-white border-2 border-black p-8">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 w-48 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -108,7 +108,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
 
   if (error || !data) {
     return (
-      <div className="bg-white border-2 border-black border border-gray-100 p-8">
+      <div className="bg-white border-2 border-black p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Federal Investment & Services</h3>
         <div className="bg-white p-6 text-center">
           <p className="text-gray-600">Government spending data not available for this district</p>
@@ -123,7 +123,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
   const { government } = data;
 
   return (
-    <div className="bg-white border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Federal Investment & Services</h3>
 
       {/* Federal Investment */}
@@ -133,7 +133,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
           Federal Investment
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6">
+          <div className="bg-civiq-green/10 p-6">
             <div className="text-2xl font-bold text-civiq-green">
               {formatLargeNumber(government.federalInvestment.totalAnnualSpending)}
             </div>
@@ -141,7 +141,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             <p className="text-xs text-civiq-green mt-1">Federal dollars to district</p>
           </div>
 
-          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6">
+          <div className="bg-civiq-blue/10 p-6">
             <div className="text-2xl font-bold text-civiq-blue">
               {formatNumber(government.federalInvestment.contractsAndGrants)}
             </div>
@@ -149,7 +149,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             <p className="text-xs text-civiq-blue mt-1">Active federal awards</p>
           </div>
 
-          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6">
+          <div className="bg-civiq-blue/10 p-6">
             <div className="text-2xl font-bold text-civiq-blue">
               {formatLargeNumber(government.federalInvestment.infrastructureInvestment)}
             </div>
@@ -195,7 +195,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {government.socialServices.snapBeneficiaries > 0 && (
-              <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6">
+              <div className="bg-civiq-red/10 p-6">
                 <div className="text-2xl font-bold text-civiq-red">
                   {new Intl.NumberFormat('en-US').format(
                     government.socialServices.snapBeneficiaries
@@ -207,7 +207,7 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             )}
 
             {government.socialServices.medicaidEnrollment > 0 && (
-              <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6">
+              <div className="bg-civiq-red/10 p-6">
                 <div className="text-2xl font-bold text-civiq-red">
                   {new Intl.NumberFormat('en-US').format(
                     government.socialServices.medicaidEnrollment

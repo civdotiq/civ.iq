@@ -174,7 +174,7 @@ export default function CommitteeActivityTimeline({
           <div className="text-xs text-gray-600">Bills</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-civiq-green">{stats.reportsCount}</div>
+          <div className="text-2xl font-bold text-civiq-blue">{stats.reportsCount}</div>
           <div className="text-xs text-gray-600">Reports</div>
         </div>
         <div className="text-center">
@@ -182,11 +182,11 @@ export default function CommitteeActivityTimeline({
           <div className="text-xs text-gray-600">Hearings</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-civiq-red">{stats.markupsCount}</div>
+          <div className="text-2xl font-bold text-civiq-blue">{stats.markupsCount}</div>
           <div className="text-xs text-gray-600">Markups</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-civiq-red">{stats.votesCount}</div>
+          <div className="text-2xl font-bold text-civiq-blue">{stats.votesCount}</div>
           <div className="text-xs text-gray-600">Votes</div>
         </div>
       </div>

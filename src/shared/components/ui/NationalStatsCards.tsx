@@ -77,10 +77,7 @@ export default function NationalStatsCards({ districts = [] }: NationalStatsCard
         const colorClasses = getColorClasses(stat.color);
 
         return (
-          <div
-            key={index}
-            className="bg-white border-2 border-black border hover:border-2 border-black transition-border-2 border-black"
-          >
+          <div key={index} className="bg-white border-2 border-black transition-colors">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 border ${colorClasses}`}>

@@ -34,7 +34,7 @@ interface InfoCardProps {
 
 function InfoCard({ title, icon, children, className = '' }: InfoCardProps) {
   return (
-    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
+    <div className={`bg-white border-2 border-black ${className}`}>
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="text-gray-500">{icon}</div>
@@ -152,7 +152,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
     <div className={`space-y-6 ${className}`}>
       {/* Quick Facts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
+        <div className="bg-white p-4 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Years in Office</span>
@@ -163,7 +163,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
           </div>
         </div>
 
-        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
+        <div className="bg-white p-4 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Committees</span>
@@ -175,7 +175,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
         </div>
 
         {birthInfo && (
-          <div className="bg-white p-4 border border-gray-200 border-2 border-black">
+          <div className="bg-white p-4 border-2 border-black">
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-600">Age</span>
@@ -185,7 +185,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
           </div>
         )}
 
-        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
+        <div className="bg-white p-4 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Represents</span>

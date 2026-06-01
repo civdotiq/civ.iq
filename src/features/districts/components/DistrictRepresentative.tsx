@@ -24,7 +24,7 @@ export default function DistrictRepresentative({
   districtName,
 }: DistrictRepresentativeProps) {
   return (
-    <div className="bg-white border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black p-8">
       <div className="flex items-center space-x-6">
         <div className="flex-shrink-0">
           <RepresentativePhoto

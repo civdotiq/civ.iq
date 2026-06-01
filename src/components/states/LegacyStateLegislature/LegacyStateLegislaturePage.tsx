@@ -480,7 +480,7 @@ export function LegacyStateLegislaturePage() {
         />
 
         {/* Page header */}
-        <div className="bg-gradient-to-r from-civiq-blue to-civiq-blue text-white p-4 sm:p-8 mb-8">
+        <div className="bg-civiq-blue text-white p-4 sm:p-8 mb-8">
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <span className="text-2xl font-bold">{legislatureData.state}</span>

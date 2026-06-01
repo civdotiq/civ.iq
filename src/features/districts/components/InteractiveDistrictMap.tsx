@@ -435,7 +435,7 @@ export function InteractiveDistrictMap({
         </div>
 
         {/* Map Legend - Overlay */}
-        <div className="absolute top-4 right-4 bg-white bg-opacity-95 backdrop-blur-sm p-3 border-2 border-black border border-gray-200 z-[1000]">
+        <div className="absolute top-4 right-4 bg-white bg-opacity-95 backdrop-blur-sm p-3 border-2 border-black z-[1000]">
           <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">

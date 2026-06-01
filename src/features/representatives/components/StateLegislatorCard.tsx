@@ -67,7 +67,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${base64Id}`;
 
   return (
-    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
+    <div className="bg-white border-2 border-black overflow-hidden">
       {/* Header Section - Always visible, clickable on mobile to expand */}
       <button
         type="button"

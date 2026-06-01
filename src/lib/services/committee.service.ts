@@ -473,7 +473,10 @@ export async function getCommitteeDataService(
   // Always try to get real member data from congress-legislators
   const realCommittee = await fetchCommitteeFromCongressLegislators(committeeId);
 
-  // Merge hardcoded data (jurisdiction) with real data (members, leadership)
+  // Merge hardcoded jurisdiction text onto real data (members, leadership).
+  // Never serve hardcoded members/leadership alone: the hardcoded files are
+  // stale, so when the live source fails we fall through to the empty state
+  // ("data unavailable") rather than present stale rosters as current.
   if (hardcodedCommittee && realCommittee) {
     committee = {
       ...realCommittee,
@@ -481,8 +484,6 @@ export async function getCommitteeDataService(
     };
   } else if (realCommittee) {
     committee = realCommittee;
-  } else if (hardcodedCommittee) {
-    committee = hardcodedCommittee;
   }
 
   // Return empty data instead of null if nothing found

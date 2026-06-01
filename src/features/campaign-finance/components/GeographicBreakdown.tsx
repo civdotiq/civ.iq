@@ -72,7 +72,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
+      <div className="bg-white p-4 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
         {data.isHomeState && <p className="text-xs text-civiq-blue font-medium mb-2">Home State</p>}
         <p className="text-lg font-bold text-civiq-blue">${data.amount.toLocaleString()}</p>
@@ -89,7 +89,7 @@ const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
+      <div className="bg-white p-4 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
         {data.isHomeState && <p className="text-xs text-civiq-blue font-medium mb-2">Home State</p>}
         <p className="text-lg font-bold" style={{ color: data.color }}>

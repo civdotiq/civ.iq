@@ -246,11 +246,11 @@ export default function CommitteesPage() {
 
           <Link
             href="#senate"
-            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-civiq-green transition-colors group"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-civiq-blue transition-colors group"
           >
-            <Scale className="w-12 h-12 text-civiq-green mb-4" />
+            <Scale className="w-12 h-12 text-civiq-blue mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{senateCommittees.length}</div>
-            <div className="text-sm text-gray-600 group-hover:text-civiq-green">
+            <div className="text-sm text-gray-600 group-hover:text-civiq-blue">
               Senate Committees
             </div>
           </Link>

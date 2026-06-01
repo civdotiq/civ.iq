@@ -82,7 +82,7 @@ export default function UnifiedDistrictSidebar({
       )}
 
       {/* Quick Facts Card (Federal Pages + Enhanced State Pages) */}
-      <div className="bg-white border-2 border-black border border-gray-100 p-8">
+      <div className="bg-white border-2 border-black p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Facts</h3>
 
         <div className="space-y-4">

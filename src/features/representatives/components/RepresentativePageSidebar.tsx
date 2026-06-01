@@ -55,7 +55,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
   return (
     <div className="space-y-6 lg:sticky lg:top-6">
       {/* Federal Level Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
+      <div className="bg-white border-2 border-black p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-civiq-blue/10 border-2 border-black flex items-center justify-center">
@@ -90,7 +90,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* District Information Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
+      <div className="bg-white border-2 border-black p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-civiq-green/10 border-2 border-black flex items-center justify-center">
@@ -152,7 +152,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* ARCHIVED: Trading Card Feature - Remove comments to restore
-   <div className="bg-white border-2 border-black border border-gray-200 p-6">
+   <div className="bg-white border-2 border-black p-6">
     <div className="flex items-center mb-3">
      <div className="flex-shrink-0">
       <div className="w-8 h-8 bg-indigo-100 flex items-center justify-center">
@@ -216,7 +216,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
    */}
 
       {/* Additional Resources Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-civiq-red/10 flex items-center justify-center">

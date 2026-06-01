@@ -410,7 +410,7 @@ export default function StateBillsPage() {
         </nav>
 
         {/* Page header */}
-        <div className="bg-gradient-to-r from-civiq-green to-civiq-green text-white p-8 mb-8">
+        <div className="bg-civiq-green text-white p-8 mb-8">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <FileText className="w-8 h-8" />

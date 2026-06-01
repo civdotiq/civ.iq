@@ -99,9 +99,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
   const displayTerms = showAllTerms ? filteredTerms : filteredTerms.slice(0, 5);
 
   return (
-    <div
-      className={`bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
-    >
+    <div className={`bg-white border-2 border-black transition-colors duration-200 ${className}`}>
       <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">

@@ -39,7 +39,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
   return (
     <div className={`space-y-4 ${className}`}>
       {/* District Information */}
-      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border-2 border-black transition-colors duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-civiq-red/10">
@@ -86,7 +86,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Office Contact */}
-      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border-2 border-black transition-colors duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-civiq-blue/10">
@@ -149,7 +149,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border-2 border-black transition-colors duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#0e8d37' }}>
             Quick Actions
@@ -161,7 +161,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-gradient-to-r from-civiq-blue to-civiq-blue text-white text-center py-3 px-4 text-sm font-bold hover:from-civiq-blue hover:to-civiq-blue transition-all border-2 border-black hover:border-2 border-black transform hover:-translate-y-0.5"
+              className="block w-full bg-civiq-blue text-white text-center py-3 px-4 text-sm font-bold transition-all border-2 border-black transform hover:-translate-y-0.5"
             >
               Visit Website
             </a>
@@ -173,7 +173,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Data Sources */}
-      <div className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
+      <div className="bg-white border-2 border-black transition-colors duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
             Data Sources

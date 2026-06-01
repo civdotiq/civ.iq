@@ -90,7 +90,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     const description = INDUSTRY_DESCRIPTIONS[data.industry] || 'Industry sector';
 
     return (
-      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
+      <div className="bg-white p-4 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{displaySector(data.industry)}</p>
         <p className="text-xs text-gray-600 mb-2">{description}</p>
         <p className="text-lg font-bold text-civiq-blue">${data.amount.toLocaleString()}</p>
@@ -108,7 +108,7 @@ const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
     const description = INDUSTRY_DESCRIPTIONS[data.industry] || 'Industry sector';
 
     return (
-      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
+      <div className="bg-white p-4 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{displaySector(data.industry)}</p>
         <p className="text-xs text-gray-600 mb-2">{description}</p>
         <p className="text-lg font-bold" style={{ color: data.color }}>

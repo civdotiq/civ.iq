@@ -256,7 +256,7 @@ export function FinanceTab({
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6 border border-civiq-green hover:border-2 border-black transition-all duration-200">
+        <div className="bg-civiq-green/10 p-6 border border-civiq-green hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-civiq-green mb-2">Total Raised</h3>
           <div className="text-3xl font-bold text-civiq-green mb-2">
             {formatCurrency(data.totalRaised)}
@@ -277,7 +277,7 @@ export function FinanceTab({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6 border border-civiq-red hover:border-2 border-black transition-all duration-200">
+        <div className="bg-civiq-red/10 p-6 border border-civiq-red hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-civiq-red mb-2">Total Spent</h3>
           <div className="text-3xl font-bold text-civiq-red mb-2">
             {formatCurrency(data.totalSpent)}
@@ -298,7 +298,7 @@ export function FinanceTab({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6 border border-civiq-blue hover:border-2 border-black transition-all duration-200">
+        <div className="bg-civiq-blue/10 p-6 border border-civiq-blue hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-civiq-blue mb-2">Cash on Hand</h3>
           <div className="text-3xl font-bold text-civiq-blue mb-2">
             {formatCurrency(data.cashOnHand)}

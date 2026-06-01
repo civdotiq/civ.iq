@@ -126,7 +126,7 @@ export function ResponsiveTableRow({
 }: ResponsiveTableRowProps) {
   const baseClasses = 'transition-colors';
   const desktopClasses = `hidden md:table-row hover:bg-white ${onClick ? 'cursor-pointer' : ''}`;
-  const mobileClasses = 'block md:hidden bg-white border border-gray-200 border-2 border-black';
+  const mobileClasses = 'block md:hidden bg-white border-2 border-black';
 
   // Handle keyboard activation for interactive rows
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -261,7 +261,7 @@ export function VoteCard({
 
   return (
     <article
-      className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2"
+      className="bg-white border-2 border-black transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2"
       onClick={() => onToggleExpansion(vote.voteId)}
       onKeyDown={handleKeyDown}
       tabIndex={0}

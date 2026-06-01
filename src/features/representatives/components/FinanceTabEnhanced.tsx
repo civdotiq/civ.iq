@@ -323,7 +323,7 @@ function ContributionTrendsChart({
               <div key={index} className="flex-1 flex flex-col items-center justify-end">
                 <div className="text-xs text-gray-600 mb-1">{formatCurrency(trend.amount)}</div>
                 <div
-                  className="w-full bg-gradient-to-t from-civiq-blue to-civiq-blue hover:from-civiq-blue hover:to-civiq-blue transition-colors cursor-pointer"
+                  className="w-full bg-civiq-blue transition-colors cursor-pointer"
                   style={{ height: `${height}%`, minHeight: '4px' }}
                   title={`${trend.count} contributions totaling ${formatCurrency(trend.amount)}`}
                 />
@@ -456,7 +456,7 @@ export const FinanceTabEnhanced = React.memo(
 
         {/* Financial Overview with Enhanced FEC Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-civiq-green/10 to-civiq-green/10 p-6 border border-civiq-green">
+          <div className="bg-civiq-green/10 p-6 border border-civiq-green">
             <div className="flex items-center">
               <h3 className="text-lg font-semibold text-civiq-green">Total Raised</h3>
               <InfoTooltip text="Total contributions received during the current election cycle as reported to the FEC" />
@@ -478,7 +478,7 @@ export const FinanceTabEnhanced = React.memo(
             </a>
           </div>
 
-          <div className="bg-gradient-to-br from-civiq-red/10 to-civiq-red/10 p-6 border border-civiq-red">
+          <div className="bg-civiq-red/10 p-6 border border-civiq-red">
             <div className="flex items-center">
               <h3 className="text-lg font-semibold text-civiq-red">Total Spent</h3>
               <InfoTooltip text="Total disbursements made by the campaign as reported to the FEC" />
@@ -501,7 +501,7 @@ export const FinanceTabEnhanced = React.memo(
             </a>
           </div>
 
-          <div className="bg-gradient-to-br from-civiq-blue/10 to-civiq-blue/10 p-6 border border-civiq-blue">
+          <div className="bg-civiq-blue/10 p-6 border border-civiq-blue">
             <div className="flex items-center">
               <h3 className="text-lg font-semibold text-civiq-blue">Cash on Hand</h3>
               <InfoTooltip text="Available campaign funds at the end of the last reporting period" />

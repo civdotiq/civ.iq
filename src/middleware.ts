@@ -425,7 +425,7 @@ function validateRequest(request: NextRequest): {
   // Validate content length for POST/PUT requests
   if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
     const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+    if (contentLength && parseInt(contentLength, 10) > 10 * 1024 * 1024) {
       // 10MB limit
       return { isValid: false, reason: 'Request too large', statusCode: 413 };
     }

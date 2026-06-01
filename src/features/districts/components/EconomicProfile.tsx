@@ -116,7 +116,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
   const { economic } = data;
 
   return (
-    <div className="bg-white border-2 border-black border border-gray-100 p-8">
+    <div className="bg-white border-2 border-black p-8">
       <h3 className="aicher-heading text-lg text-gray-900 mb-6">
         Economic & Infrastructure Health
       </h3>
