@@ -33,8 +33,13 @@ import {
 } from '@/features/representatives/services/batch-voting-service';
 import { confidenceScore } from '../statistics/civic-stats';
 
-/** Redis cache TTL: 6 hours. Roll-call data changes slowly mid-congress. */
-const CACHE_TTL = 6 * 60 * 60;
+/**
+ * Redis cache TTL: 7 days. Roll-call votes are immutable once cast, so this
+ * insight only changes when *new* votes land — a 6h TTL forced needless
+ * recomputation of identical results. Matches the 7d tier used by the other
+ * vote-based analyzers (vote-finance, vote-prediction, pac-votes).
+ */
+const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /** Minimum qualifying votes before an alignment number can be reported. */
 export const MIN_VOTES_FOR_ALIGNMENT = 10;

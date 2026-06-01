@@ -324,34 +324,38 @@ async function fetchCityCouncils(
   const cities = getCitiesForState(state);
   if (cities.length === 0) return [];
 
-  const results: Array<{ city: string; members: CityCouncilMember[] }> = [];
+  // Each city's council lookup is independent, so fetch them concurrently
+  // instead of serially. Per-city failures resolve to null and are filtered
+  // out, preserving the previous "skip on error" behavior.
+  const settled = await Promise.all(
+    cities.map(async (city): Promise<{ city: string; members: CityCouncilMember[] } | null> => {
+      try {
+        const response = await fetch(`${getServerBaseUrl()}/api/city/${city}/council?active=true`);
 
-  for (const city of cities) {
-    try {
-      const response = await fetch(`${getServerBaseUrl()}/api/city/${city}/council?active=true`);
+        if (!response.ok) return null;
 
-      if (!response.ok) continue;
+        const data = await response.json();
+        if (!data.success) return null;
 
-      const data = await response.json();
-      if (!data.success) continue;
+        return {
+          city: data.city?.name || city,
+          members: (data.members || [])
+            .slice(0, 10)
+            .map((m: { id: number; name: string; title: string | null }) => ({
+              id: m.id,
+              name: m.name,
+              city: data.city?.name || city,
+              title: m.title,
+            })),
+        };
+      } catch (error) {
+        logger.error('Error fetching city council', error as Error, { city });
+        return null;
+      }
+    })
+  );
 
-      results.push({
-        city: data.city?.name || city,
-        members: (data.members || [])
-          .slice(0, 10)
-          .map((m: { id: number; name: string; title: string | null }) => ({
-            id: m.id,
-            name: m.name,
-            city: data.city?.name || city,
-            title: m.title,
-          })),
-      });
-    } catch (error) {
-      logger.error('Error fetching city council', error as Error, { city });
-    }
-  }
-
-  return results;
+  return settled.filter((r): r is { city: string; members: CityCouncilMember[] } => r !== null);
 }
 
 export async function GET(

@@ -290,6 +290,12 @@ export class FECApiService {
   private async makeRequest<T>(endpoint: string, maxRetries: number = 3): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
+    // Backoff ceiling. Callers run under tight budgets (e.g. the 55s analyzer
+    // timeout); a single honored `Retry-After: 30` could blow that on its own.
+    // Cap exponential backoff here, and fail fast (below) when the server asks
+    // for a longer wait than we can afford.
+    const MAX_BACKOFF_MS = 5000;
+
     logger.info(`[FEC API] Requesting: ${endpoint}`);
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -311,14 +317,24 @@ export class FECApiService {
         if (shouldRetry && attempt < maxRetries) {
           const retryAfterHeader = response.headers.get('retry-after');
           const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : NaN;
-          const backoffMs = Number.isFinite(retryAfterSec)
-            ? retryAfterSec * 1000
-            : Math.min(30000, 1000 * 2 ** attempt);
-          logger.warn(
-            `[FEC API] ${response.status} on ${endpoint} — retrying in ${backoffMs}ms (attempt ${attempt + 1}/${maxRetries})`
-          );
-          await new Promise(r => setTimeout(r, backoffMs));
-          continue;
+          const retryAfterMs = Number.isFinite(retryAfterSec) ? retryAfterSec * 1000 : NaN;
+
+          // If the server named a wait longer than our ceiling, retrying early
+          // would just hit the same quota wall — fail fast instead of blocking.
+          if (Number.isFinite(retryAfterMs) && retryAfterMs > MAX_BACKOFF_MS) {
+            logger.warn(
+              `[FEC API] ${response.status} on ${endpoint} — Retry-After ${retryAfterSec}s exceeds ${MAX_BACKOFF_MS}ms cap, failing fast`
+            );
+          } else {
+            const backoffMs = Number.isFinite(retryAfterMs)
+              ? retryAfterMs
+              : Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt);
+            logger.warn(
+              `[FEC API] ${response.status} on ${endpoint} — retrying in ${backoffMs}ms (attempt ${attempt + 1}/${maxRetries})`
+            );
+            await new Promise(r => setTimeout(r, backoffMs));
+            continue;
+          }
         }
 
         throw new FECApiError(
@@ -331,7 +347,7 @@ export class FECApiService {
           throw error;
         }
         if (attempt < maxRetries) {
-          const backoffMs = Math.min(30000, 1000 * 2 ** attempt);
+          const backoffMs = Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt);
           logger.warn(
             `[FEC API] Network error on ${endpoint} — retrying in ${backoffMs}ms (attempt ${attempt + 1}/${maxRetries})`
           );

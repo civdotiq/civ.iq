@@ -36,8 +36,13 @@ import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import type { EnforcementAction, EnforcementInsight, PeerComparison } from '../types';
 
-/** Redis cache TTL: 6 hours */
-const CACHE_TTL = 6 * 60 * 60;
+/**
+ * Redis cache TTL: 7 days. Enforcement records (EPA ECHO / OSHA / CFPB) are
+ * historical and only accumulate on monthly+ cadences, so a 6h TTL recomputed
+ * identical results dozens of times a day. dataAsOf still reflects the true
+ * source dates, so a stale cache never misrepresents freshness.
+ */
+const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /** Minimum enforcement actions to produce an insight */
 const MIN_ENFORCEMENT_ACTIONS = 3;
