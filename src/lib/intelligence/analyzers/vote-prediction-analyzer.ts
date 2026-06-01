@@ -26,6 +26,7 @@ import {
   freshestDate,
   getBillSectors,
   generateInsightNarrative,
+  mapWithConcurrency,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
@@ -58,6 +59,13 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
 
 /** Max votes to fetch for analysis */
 const MAX_VOTES = 200;
+
+/**
+ * Concurrency cap for bill-sector classification. Matches the pool size used
+ * by vote-finance-analyzer; the zero-shot fallback classifier is CPU-bound on
+ * the serverless runtime, so unbounded parallelism would thrash it.
+ */
+const CLASSIFY_CONCURRENCY = 8;
 
 /** Minimum confident predictions needed for meaningful independence score */
 const MIN_CONFIDENT_PREDICTIONS = 20;
@@ -356,12 +364,26 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
     donorProfile[entry.sector] = totalDonations > 0 ? entry.totalAmount / totalDonations : 0;
   }
 
-  // Classify votes
+  // Classify votes. Bill-sector classification dominates this phase and was
+  // previously awaited one vote at a time (up to ~400 serial calls). Since
+  // getBillSectors caches by billId alone, we classify each *unique* bill once
+  // in a bounded pool, then build the per-vote records from the resulting map —
+  // identical output, minus the redundant serial round-trips that drove the
+  // 55s timeouts.
   const party = normalizeParty(rep.party);
-  const votes: FetchedData['votes'] = [];
-  let votesWithSectors = 0;
-
   const classifyStart = performance.now();
+
+  // First pass (sync): keep only Yea/Nay votes, in order, and collect the
+  // distinct bills that need classification.
+  const normalizedVotes: Array<{
+    voteId: string;
+    billId: string;
+    billTitle: string;
+    position: 'yea' | 'nay';
+    date: string;
+  }> = [];
+  const billInputs = new Map<string, { title: string; policyArea?: string; subjects?: string[] }>();
+
   for (const v of rawVotes) {
     const position = v.position.toLowerCase();
     if (position !== 'yea' && position !== 'yes' && position !== 'nay' && position !== 'no') {
@@ -372,32 +394,63 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
     const billId = v.bill ? `${v.bill.type}${v.bill.number}-${v.bill.congress}` : v.voteId;
     const billTitle = v.bill?.title ?? v.question;
 
-    let billSectors: IndustrySector[] = [];
-    try {
-      billSectors = await getBillSectors(billId, billTitle, {
-        policyArea: v.bill?.policyArea,
-        subjects: v.bill?.subjects,
-      });
-      if (billSectors.length > 0) votesWithSectors++;
-    } catch {
-      // Skip sector classification
-    }
-
-    votes.push({
+    normalizedVotes.push({
       voteId: v.voteId,
       billId,
       billTitle,
       position: normalizedVote,
       date: v.date,
+    });
+    if (!billInputs.has(billId)) {
+      billInputs.set(billId, {
+        title: billTitle,
+        policyArea: v.bill?.policyArea,
+        subjects: v.bill?.subjects,
+      });
+    }
+  }
+
+  // Classify each distinct bill once, in parallel (fail-soft per bill).
+  const classified = await mapWithConcurrency(
+    [...billInputs.entries()],
+    CLASSIFY_CONCURRENCY,
+    async ([billId, input]): Promise<[string, IndustrySector[]]> => {
+      try {
+        const sectors = await getBillSectors(billId, input.title, {
+          policyArea: input.policyArea,
+          subjects: input.subjects,
+        });
+        return [billId, sectors];
+      } catch {
+        return [billId, []];
+      }
+    }
+  );
+  const sectorMap = new Map<string, IndustrySector[]>(classified);
+
+  // Second pass (sync): build per-vote records in original order.
+  const votes: FetchedData['votes'] = [];
+  let votesWithSectors = 0;
+  for (const nv of normalizedVotes) {
+    const billSectors = sectorMap.get(nv.billId) ?? [];
+    if (billSectors.length > 0) votesWithSectors++;
+    votes.push({
+      voteId: nv.voteId,
+      billId: nv.billId,
+      billTitle: nv.billTitle,
+      position: nv.position,
+      date: nv.date,
       billSectors,
       cosponsorCount: 0,
       sponsorSameParty: false,
     });
   }
-  timer?.mark('classifyVotesSerial', {
+
+  timer?.mark('classifyVotesParallel', {
     classifiedCount: votes.length,
     votesWithSectors,
     rawCount: rawVotes.length,
+    uniqueBills: billInputs.size,
     avgMsPerVote:
       votes.length > 0 ? Math.round((performance.now() - classifyStart) / votes.length) : 0,
   });

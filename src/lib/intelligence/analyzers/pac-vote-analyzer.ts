@@ -29,6 +29,7 @@ import {
   freshestDate,
   getBillSectors,
   generateInsightNarrative,
+  mapWithConcurrency,
   withTimeout,
   ANALYZER_TIMEOUT_MS,
   trackInsightCacheHit,
@@ -53,6 +54,16 @@ const MAX_VOTES = 200;
 
 /** Max recipients to analyze (sorted by amount desc) */
 const MAX_RECIPIENTS = 15;
+
+/**
+ * Concurrency caps for the analyzer's three fan-out phases. Recipient
+ * enrichment and vote fetching hit rate-limited Congress.gov endpoints, so
+ * they stay modest; bill classification can fall back to the CPU-bound
+ * zero-shot model, so it matches vote-finance-analyzer's pool size of 8.
+ */
+const RECIPIENT_ENRICH_CONCURRENCY = 5;
+const RECIPIENT_FETCH_CONCURRENCY = 4;
+const CLASSIFY_CONCURRENCY = 8;
 
 /** Min total relevant votes across all recipients */
 const MIN_TOTAL_RELEVANT_VOTES = 10;
@@ -266,22 +277,28 @@ async function resolveRecipients(committeeId: string): Promise<LinkedRecipient[]
 
     if (withBioguide.length < MIN_PAC_RECIPIENTS) return null;
 
-    // Enrich with representative details (name, party)
-    const enriched: LinkedRecipient[] = [];
-
-    for (const r of withBioguide.slice(0, MAX_RECIPIENTS)) {
-      const rep = await getEnhancedRepresentative(r.bioguideId!);
-      if (rep) {
-        enriched.push({
+    // Enrich with representative details (name, party). The lookups are
+    // independent per recipient, so run them in a bounded pool rather than
+    // serially. mapWithConcurrency preserves order, so the result stays
+    // sorted by disbursement amount; unresolved reps drop out via the filter.
+    const top = withBioguide.slice(0, MAX_RECIPIENTS);
+    const enrichedMaybe = await mapWithConcurrency(
+      top,
+      RECIPIENT_ENRICH_CONCURRENCY,
+      async (r): Promise<LinkedRecipient | null> => {
+        const rep = await getEnhancedRepresentative(r.bioguideId!);
+        if (!rep) return null;
+        return {
           bioguideId: r.bioguideId!,
           name: rep.name,
           party: rep.party,
           state: rep.state,
           chamber: rep.chamber,
           amountReceived: r.totalAmount,
-        });
+        };
       }
-    }
+    );
+    const enriched = enrichedMaybe.filter((r): r is LinkedRecipient => r !== null);
 
     return enriched.length >= MIN_PAC_RECIPIENTS ? enriched : null;
   } catch (error) {
@@ -295,57 +312,127 @@ async function resolveRecipients(committeeId: string): Promise<LinkedRecipient[]
 
 // ── Vote Fetching & Classification ───────────────────────────────────
 
+type RecipientVotes = Awaited<ReturnType<typeof fetchRecipientRawVotes>>;
+
 async function fetchAndClassifyRecipientVotes(
   recipients: LinkedRecipient[],
   pacSector: IndustrySector
 ): Promise<{ records: PACRecipientVoteRecord[]; freshestVoteDate: string | undefined }> {
+  // Phase 1: fetch raw votes for every recipient in parallel. Each recipient
+  // resolves independently, so a slow lookup no longer blocks the others.
+  const fetched = await mapWithConcurrency(
+    recipients,
+    RECIPIENT_FETCH_CONCURRENCY,
+    async recipient => {
+      try {
+        return { recipient, rawVotes: await fetchRecipientRawVotes(recipient) };
+      } catch (error) {
+        logger.warn('[PACVotes] Failed to fetch recipient votes', {
+          bioguideId: recipient.bioguideId,
+          error: (error as Error).message,
+        });
+        return { recipient, rawVotes: [] as RecipientVotes };
+      }
+    }
+  );
+
+  // Phase 2: classify each *unique* bill exactly once. getBillSectors caches
+  // by billId alone, so reusing one classification across every recipient who
+  // voted on that bill is identical to the old per-vote calls — minus the
+  // heavy duplication (≈recipients × votes) that drove the 55s timeouts.
+  const sectorMap = await classifyUniqueBills(fetched);
+
+  // Phase 3: tally each recipient synchronously against the precomputed map.
   const records: PACRecipientVoteRecord[] = [];
   let freshestVoteDate: string | undefined;
 
-  for (const recipient of recipients) {
-    try {
-      const result = await processRecipientVotes(recipient, pacSector);
-      if (result) {
-        records.push(result.record);
-        if (
-          result.latestVoteDate &&
-          (!freshestVoteDate || result.latestVoteDate > freshestVoteDate)
-        ) {
-          freshestVoteDate = result.latestVoteDate;
-        }
+  for (const { recipient, rawVotes } of fetched) {
+    const result = tallyRecipientVotes(recipient, rawVotes, pacSector, sectorMap);
+    if (result) {
+      records.push(result.record);
+      if (
+        result.latestVoteDate &&
+        (!freshestVoteDate || result.latestVoteDate > freshestVoteDate)
+      ) {
+        freshestVoteDate = result.latestVoteDate;
       }
-    } catch (error) {
-      logger.warn('[PACVotes] Failed to process recipient votes', {
-        bioguideId: recipient.bioguideId,
-        error: (error as Error).message,
-      });
     }
   }
 
   return { records, freshestVoteDate };
 }
 
-async function processRecipientVotes(
-  recipient: LinkedRecipient,
-  pacSector: IndustrySector
-): Promise<{ record: PACRecipientVoteRecord; latestVoteDate: string | undefined } | null> {
-  // Fetch votes from both sessions of the 119th Congress
-  const fetchSession = async (session: 1 | 2) =>
+/** Fetch a recipient's votes across both sessions of the 119th Congress. */
+async function fetchRecipientRawVotes(recipient: LinkedRecipient) {
+  const fetchSession = (session: 1 | 2) =>
     recipient.chamber === 'House'
-      ? await batchVotingService.getHouseMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES)
-      : await batchVotingService.getSenateMemberVotes(
-          recipient.bioguideId,
-          119,
-          session,
-          MAX_VOTES
-        );
+      ? batchVotingService.getHouseMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES)
+      : batchVotingService.getSenateMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES);
 
   const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
-  const rawVotes = [...session1, ...session2];
+  return [...session1, ...session2];
+}
 
+/**
+ * Build a billId → sectors map by classifying each distinct bill once across
+ * all recipients' votes, using a bounded pool. The first occurrence of a bill
+ * supplies the classification context; getBillSectors keys its cache on billId
+ * alone, so any later occurrence would resolve to the same value regardless.
+ */
+async function classifyUniqueBills(
+  fetched: ReadonlyArray<{ recipient: LinkedRecipient; rawVotes: RecipientVotes }>
+): Promise<Map<string, IndustrySector[]>> {
+  const billInputs = new Map<string, { title: string; policyArea?: string; subjects?: string[] }>();
+
+  for (const { rawVotes } of fetched) {
+    for (const vote of rawVotes) {
+      if (!vote.bill || (vote.position !== 'Yea' && vote.position !== 'Nay')) continue;
+      const billId = `${vote.bill.type}${vote.bill.number}-${vote.bill.congress}`;
+      if (!billInputs.has(billId)) {
+        billInputs.set(billId, {
+          title: vote.bill.title,
+          policyArea: vote.bill.policyArea,
+          subjects: vote.bill.subjects,
+        });
+      }
+    }
+  }
+
+  const entries = [...billInputs.entries()];
+  const classified = await mapWithConcurrency(
+    entries,
+    CLASSIFY_CONCURRENCY,
+    async ([billId, input]): Promise<[string, IndustrySector[]]> => {
+      try {
+        const sectors = await getBillSectors(billId, input.title, {
+          policyArea: input.policyArea,
+          subjects: input.subjects,
+        });
+        return [billId, sectors];
+      } catch (error) {
+        // Fail soft per-bill: a bill we can't classify simply contributes no
+        // relevant votes, rather than dropping the whole recipient.
+        logger.warn('[PACVotes] Bill classification failed', {
+          billId,
+          error: (error as Error).message,
+        });
+        return [billId, []];
+      }
+    }
+  );
+
+  return new Map(classified);
+}
+
+/** Synchronous tally of a recipient's PAC-relevant votes using classified bills. */
+function tallyRecipientVotes(
+  recipient: LinkedRecipient,
+  rawVotes: RecipientVotes,
+  pacSector: IndustrySector,
+  sectorMap: Map<string, IndustrySector[]>
+): { record: PACRecipientVoteRecord; latestVoteDate: string | undefined } | null {
   if (rawVotes.length === 0) return null;
 
-  // Classify each vote and filter to PAC-relevant ones
   let relevantYea = 0;
   let relevantNay = 0;
   let baselineYeaSum = 0;
@@ -356,12 +443,8 @@ async function processRecipientVotes(
     if (!vote.bill || (vote.position !== 'Yea' && vote.position !== 'Nay')) continue;
 
     const billId = `${vote.bill.type}${vote.bill.number}-${vote.bill.congress}`;
-    const sectors = await getBillSectors(billId, vote.bill.title, {
-      policyArea: vote.bill.policyArea,
-      subjects: vote.bill.subjects,
-    });
-
-    if (!sectors.includes(pacSector)) continue;
+    const sectors = sectorMap.get(billId);
+    if (!sectors || !sectors.includes(pacSector)) continue;
 
     // This vote is relevant to the PAC sector
     if (vote.position === 'Yea') relevantYea++;
