@@ -175,7 +175,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
   const renderSidebar = () => (
     <div className="space-y-4">
       {/* District Card - Highlighted */}
-      <div className="bg-civiq-red text-white p-4">
+      <div className="bg-gray-900 text-white p-4">
         <h3 className="aicher-heading-wide text-xs uppercase mb-3 flex items-center gap-2">
           <MapPin className="w-4 h-4" />
           District
@@ -202,7 +202,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
       {/* Contact Information */}
       <div className="bg-white aicher-border p-4">
-        <h3 className="aicher-heading-wide text-xs text-civiq-red uppercase mb-3 flex items-center gap-2">
+        <h3 className="aicher-heading-wide text-xs text-gray-900 uppercase mb-3 flex items-center gap-2">
           <Phone className="w-4 h-4" />
           Contact Information
         </h3>
@@ -270,7 +270,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
       {/* Current Term */}
       {legislator.terms && legislator.terms.length > 0 && (
         <div className="bg-white aicher-border p-4">
-          <h3 className="aicher-heading-wide text-xs text-civiq-red uppercase mb-3 flex items-center gap-2">
+          <h3 className="aicher-heading-wide text-xs text-gray-900 uppercase mb-3 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Current Term
           </h3>
@@ -290,7 +290,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
       {/* Legislation Links */}
       <div className="bg-white aicher-border p-4">
-        <h3 className="aicher-heading-wide text-xs text-civiq-red uppercase mb-3 flex items-center gap-2">
+        <h3 className="aicher-heading-wide text-xs text-gray-900 uppercase mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4" />
           Legislation
         </h3>
@@ -320,7 +320,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
       {/* Quick Actions */}
       <div className="bg-white aicher-border p-4">
-        <h3 className="aicher-heading-wide text-xs text-civiq-red uppercase mb-3 flex items-center gap-2">
+        <h3 className="aicher-heading-wide text-xs text-gray-900 uppercase mb-3 flex items-center gap-2">
           <Clock className="w-4 h-4" />
           Quick Actions
         </h3>
@@ -357,10 +357,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             {/* Biography Section */}
             <div>
               <h3
-                className="aicher-heading text-lg text-civiq-red mb-4 flex items-center gap-2"
+                className="aicher-heading text-lg text-gray-900 mb-4 flex items-center gap-2"
                 style={{ marginBottom: 'calc(var(--grid) * 3)' }}
               >
-                <span className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></span>
+                <span className="aicher-border border-black bg-black w-4 h-4"></span>
                 Biography
               </h3>
               <div className="bg-gray-50 aicher-border p-4">
@@ -438,10 +438,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             {/* Committee Memberships */}
             <div>
               <h3
-                className="aicher-heading text-lg text-civiq-red mb-4 flex items-center gap-2"
+                className="aicher-heading text-lg text-gray-900 mb-4 flex items-center gap-2"
                 style={{ marginBottom: 'calc(var(--grid) * 3)' }}
               >
-                <span className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></span>
+                <span className="aicher-border border-black bg-black w-4 h-4"></span>
                 Committee Memberships
               </h3>
               {legislator.committees && legislator.committees.length > 0 ? (
@@ -470,7 +470,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                                 : committee.role.toLowerCase().includes('vice')
                                   ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
                                   : committee.role.toLowerCase().includes('ranking')
-                                    ? 'bg-civiq-green/10 text-civiq-green border-civiq-green'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-600'
                                     : 'bg-white text-gray-800 border-black'
                             }`}
                           >
@@ -496,10 +496,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             {legislator.terms && legislator.terms.length > 0 && (
               <div>
                 <h3
-                  className="aicher-heading text-lg text-civiq-red mb-4 flex items-center gap-2"
+                  className="aicher-heading text-lg text-gray-900 mb-4 flex items-center gap-2"
                   style={{ marginBottom: 'calc(var(--grid) * 3)' }}
                 >
-                  <span className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></span>
+                  <span className="aicher-border border-black bg-black w-4 h-4"></span>
                   State Service History
                 </h3>
                 <div className="bg-gray-50 aicher-border p-4">
@@ -541,10 +541,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             {/* Upcoming Schedule */}
             <div>
               <h3
-                className="aicher-heading text-lg text-civiq-red mb-4 flex items-center gap-2"
+                className="aicher-heading text-lg text-gray-900 mb-4 flex items-center gap-2"
                 style={{ marginBottom: 'calc(var(--grid) * 3)' }}
               >
-                <span className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></span>
+                <span className="aicher-border border-black bg-black w-4 h-4"></span>
                 Upcoming Schedule
               </h3>
               {calendarData?.events && calendarData.events.length > 0 ? (
@@ -588,14 +588,14 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
             {/* Need Help Section */}
             <div
-              className="bg-civiq-red/10 aicher-border border-civiq-red"
+              className="bg-gray-50 aicher-border border-black"
               style={{ padding: 'calc(var(--grid) * 3)' }}
             >
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-civiq-red flex-shrink-0 mt-1" />
+                <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
                 <div>
                   <h3
-                    className="aicher-heading type-lg text-civiq-red"
+                    className="aicher-heading type-lg text-gray-900"
                     style={{ marginBottom: 'calc(var(--grid) * 2)' }}
                   >
                     Need Help?
@@ -608,7 +608,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                     href={`https://openstates.org/${legislator.state.toLowerCase()}/legislators/`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-civiq-red hover:underline type-sm font-semibold aicher-heading-wide"
+                    className="inline-flex items-center text-civiq-blue hover:underline type-sm font-semibold aicher-heading-wide"
                   >
                     Find alternative contact methods →
                   </a>
@@ -914,11 +914,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 {/* Votes Cast */}
                 <button
                   onClick={() => setActiveTab('voting')}
-                  className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-green transition-colors cursor-pointer text-left"
+                  className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
                   type="button"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <Vote className="w-4 h-4 text-civiq-green" />
+                    <Vote className="w-4 h-4 text-civiq-blue" />
                     <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                       Votes Cast
                     </span>
@@ -930,11 +930,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 {/* Co-sponsored */}
                 <button
                   onClick={() => setActiveTab('legislation')}
-                  className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-red transition-colors cursor-pointer text-left"
+                  className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
                   type="button"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <Users className="w-4 h-4 text-civiq-red" />
+                    <Users className="w-4 h-4 text-civiq-blue" />
                     <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                       Co-sponsored
                     </span>
@@ -1019,21 +1019,21 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
           <h3 className="aicher-heading type-lg text-gray-900 mb-4 sm:mb-6">Data Sources</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
-              <div className="aicher-border border-civiq-blue bg-civiq-blue w-4 h-4"></div>
+              <div className="aicher-border border-black bg-black w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">OpenStates</div>
                 <div className="type-xs text-gray-600">Bills, votes, committees</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="aicher-border border-civiq-green bg-civiq-green w-4 h-4"></div>
+              <div className="aicher-border border-black bg-black w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">Wikipedia</div>
                 <div className="type-xs text-gray-600">Biographical information</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></div>
+              <div className="aicher-border border-black bg-black w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">State Legislature</div>
                 <div className="type-xs text-gray-600">Official contact information</div>
