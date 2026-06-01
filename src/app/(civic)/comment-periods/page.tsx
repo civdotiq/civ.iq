@@ -37,6 +37,7 @@ export default function CommentPeriodsPage() {
   const [data, setData] = useState<CommentPeriodsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +57,36 @@ export default function CommentPeriodsPage() {
 
     fetchData();
   }, []);
+
+  // Fetch all comment counts in a single batched request once the list loads,
+  // replacing the previous per-item client fan-out against the rate-limited API.
+  useEffect(() => {
+    if (!data?.success) return;
+    const documentNumbers = [...data.closingSoon, ...data.openComments].map(item => item.id);
+    if (documentNumbers.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/federal-register/comments/counts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documentNumbers }),
+        });
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        if (!cancelled && json?.success && json.counts) {
+          setCommentCounts(json.counts);
+        }
+      } catch {
+        // Supplementary data — silently ignore failures.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data]);
 
   const renderItem = (item: CommentPeriodItem, urgency: boolean = false) => (
     <div
@@ -115,7 +146,7 @@ export default function CommentPeriodsPage() {
             Submit a comment →
           </a>
         )}
-        <CommentCountBadge documentNumber={item.id} />
+        <CommentCountBadge count={commentCounts[item.id]} />
       </div>
     </div>
   );
@@ -260,39 +291,15 @@ export default function CommentPeriodsPage() {
   );
 }
 
-function CommentCountBadge({ documentNumber }: { documentNumber: string }) {
-  const [commentCount, setCommentCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // Stagger requests to avoid flooding the rate-limited API
-    const delay = Math.floor(Math.random() * 2000);
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/federal-register/${documentNumber}/comments?pageSize=1`);
-        if (!res.ok || cancelled) return;
-        const json = await res.json();
-        if (!cancelled && json?.success && json.stats?.total > 0) {
-          setCommentCount(json.stats.total);
-        }
-      } catch {
-        // Silently fail — this is supplementary data
-      }
-    }, delay);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [documentNumber]);
-
-  if (commentCount === null) return null;
+function CommentCountBadge({ count }: { count?: number }) {
+  // Counts are fetched in one batched request by the parent; render only when
+  // this document has a known, non-zero comment total.
+  if (count == null || count <= 0) return null;
 
   return (
     <span className="inline-flex items-center gap-1 text-xs text-gray-500">
       <Users className="w-3 h-3" />
-      {commentCount.toLocaleString()} comment{commentCount !== 1 ? 's' : ''}
+      {count.toLocaleString()} comment{count !== 1 ? 's' : ''}
     </span>
   );
 }
