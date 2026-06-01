@@ -13,7 +13,12 @@ import {
   multiDistrictCache,
   type MultiDistrictInfo,
 } from '@/lib/services/district-enhancement.service';
-import { getCongressionalDistrictForZip } from '@/lib/data/zip-district-mapping-integrated';
+// Type-only import — erased at build time, so it adds no runtime weight. The
+// ~2MB ZIP->district map behind this module is loaded lazily via dynamic
+// import() at the call sites below, keeping it out of the initial client bundle.
+import type { LegacyZipDistrictMapping } from '@/lib/data/zip-district-mapping-integrated';
+
+type ZipMappingResult = LegacyZipDistrictMapping | { state: string; district: string } | null;
 
 interface EnhancedDistrictData {
   id: string;
@@ -114,19 +119,49 @@ export function useEnhancedDistrictData(
   const [error, setError] = useState<string | null>(null);
   const [multiDistrictInfo, setMultiDistrictInfo] = useState<MultiDistrictInfo | undefined>();
 
-  // Get district mapping from ZIP code or parse district ID
-  const zipMapping = useMemo(() => {
-    if (!zipCode) return null;
+  // Resolve ZIP / district-ID input to a district mapping. District IDs (e.g.
+  // "SC-04") resolve synchronously; a ZIP code lazily imports the large
+  // ZIP->district map so its ~2MB stays out of the initial client bundle.
+  // `mappingResolved` distinguishes "still resolving" from "resolved to null"
+  // so the fetch effect below doesn't flash a transient "not found" error.
+  const [zipMapping, setZipMapping] = useState<ZipMappingResult>(null);
+  const [mappingResolved, setMappingResolved] = useState(false);
+
+  useEffect(() => {
+    if (!zipCode) {
+      setZipMapping(null);
+      setMappingResolved(true);
+      return;
+    }
 
     // Check if input is a district ID (e.g., "SC-04")
     const districtIdMatch = zipCode.match(/^([A-Z]{2})-(\d{1,2})$/);
     if (districtIdMatch) {
       const [, state, district] = districtIdMatch;
-      return { state, district: district?.padStart(2, '0') || '00' };
+      setZipMapping({ state: state ?? '', district: district?.padStart(2, '0') || '00' });
+      setMappingResolved(true);
+      return;
     }
 
-    // Otherwise treat as ZIP code
-    return getCongressionalDistrictForZip(zipCode);
+    // Otherwise treat as ZIP code — load the map on demand.
+    let cancelled = false;
+    setMappingResolved(false);
+    void (async () => {
+      try {
+        const { getCongressionalDistrictForZip } = await import(
+          '@/lib/data/zip-district-mapping-integrated'
+        );
+        if (!cancelled) setZipMapping(getCongressionalDistrictForZip(zipCode));
+      } catch {
+        if (!cancelled) setZipMapping(null);
+      } finally {
+        if (!cancelled) setMappingResolved(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [zipCode]);
 
   const isMultiDistrict = useMemo(() => {
@@ -274,6 +309,13 @@ export function useEnhancedDistrictData(
       return;
     }
 
+    // ZIP->district resolution still in flight (lazy map import). Keep the UI
+    // in a loading state rather than flashing a "not found" error.
+    if (!mappingResolved) {
+      setLoading(true);
+      return;
+    }
+
     if (!districtId) {
       // ZIP code provided but no district mapping found
       setData(null);
@@ -285,7 +327,7 @@ export function useEnhancedDistrictData(
     }
 
     fetchDistrictData(districtId);
-  }, [zipCode, districtId, fetchDistrictData]);
+  }, [zipCode, districtId, mappingResolved, fetchDistrictData]);
 
   // Cache status information
   const cacheStatus = useMemo(() => {
@@ -368,6 +410,9 @@ export function useDistrictPrefetch() {
   });
 
   const prefetchByZip = useCallback(async (zipCode: string) => {
+    const { getCongressionalDistrictForZip } = await import(
+      '@/lib/data/zip-district-mapping-integrated'
+    );
     const zipMapping = getCongressionalDistrictForZip(zipCode);
     if (!zipMapping) return;
 

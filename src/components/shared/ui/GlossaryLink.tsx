@@ -5,11 +5,14 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, X } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { getTermByName } from '@/lib/data/civic-glossary';
+// Type-only import — erased at build time. The ~51KB glossary is loaded lazily
+// via dynamic import() below so it stays out of the shared client bundle that
+// every page carrying a GlossaryLink would otherwise pull in.
+import type { GlossaryTerm } from '@/lib/data/civic-glossary';
 
 interface GlossaryLinkProps {
   /** The glossary term to look up (must match a term in civic-glossary.ts) */
@@ -33,9 +36,26 @@ function termToSlug(term: string): string {
  */
 export default function GlossaryLink({ term, children, className = '' }: GlossaryLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [glossaryTerm, setGlossaryTerm] = useState<GlossaryTerm | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const glossaryTerm = getTermByName(term);
+  // Look up the term from the lazily-loaded glossary. The visible text renders
+  // immediately; the interactive popover affordance appears once the glossary
+  // chunk resolves. Terms not in the glossary stay plain text (unchanged).
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { getTermByName } = await import('@/lib/data/civic-glossary');
+        if (!cancelled) setGlossaryTerm(getTermByName(term) ?? null);
+      } catch {
+        if (!cancelled) setGlossaryTerm(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [term]);
 
   const handleClose = useCallback(() => setIsOpen(false), []);
 

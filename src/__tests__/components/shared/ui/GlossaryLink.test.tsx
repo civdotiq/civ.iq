@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 
 // Mock next/link to render as a plain anchor
@@ -26,29 +26,32 @@ jest.mock('next/link', () => {
 });
 
 describe('GlossaryLink', () => {
-  it('renders the term as a clickable button', () => {
+  // The glossary is now loaded lazily via dynamic import(), so the interactive
+  // link resolves asynchronously — tests await the button before interacting.
+
+  it('renders the term as a clickable button', async () => {
     render(<GlossaryLink term="Roll Call Vote" />);
 
-    const button = screen.getByRole('button', { name: /definition: roll call vote/i });
+    const button = await screen.findByRole('button', { name: /definition: roll call vote/i });
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent('Roll Call Vote');
   });
 
-  it('renders custom children text instead of term name', () => {
+  it('renders custom children text instead of term name', async () => {
     render(<GlossaryLink term="Roll Call Vote">Roll Call</GlossaryLink>);
 
-    const button = screen.getByRole('button');
+    const button = await screen.findByRole('button');
     expect(button).toHaveTextContent('Roll Call');
   });
 
-  it('shows definition popover when clicked', () => {
+  it('shows definition popover when clicked', async () => {
     render(<GlossaryLink term="Cloture" />);
 
     // Popover should not be visible initially
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    // Click to open
-    fireEvent.click(screen.getByRole('button'));
+    // Click to open (await the lazily-loaded term resolving first)
+    fireEvent.click(await screen.findByRole('button'));
 
     // Popover should now be visible with definition
     const dialog = screen.getByRole('dialog');
@@ -64,11 +67,11 @@ describe('GlossaryLink', () => {
     expect(glossaryLink.closest('a')).toHaveAttribute('href', '/glossary/cloture');
   });
 
-  it('closes popover when close button is clicked', () => {
+  it('closes popover when close button is clicked', async () => {
     render(<GlossaryLink term="Cloture" />);
 
     // Open
-    fireEvent.click(screen.getByRole('button', { name: /definition/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /definition/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Close via X button
@@ -76,11 +79,11 @@ describe('GlossaryLink', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('closes popover on Escape key', () => {
+  it('closes popover on Escape key', async () => {
     render(<GlossaryLink term="Cloture" />);
 
     // Open
-    fireEvent.click(screen.getByRole('button', { name: /definition/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /definition/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Escape
@@ -88,26 +91,31 @@ describe('GlossaryLink', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('renders plain text for unknown terms', () => {
+  it('renders plain text for unknown terms', async () => {
     render(<GlossaryLink term="Nonexistent Civic Term XYZ" />);
 
-    // Should render as plain span, not a button
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    // Visible text renders immediately; after the glossary resolves (term not
+    // found) it stays plain text — never a button.
     expect(screen.getByText('Nonexistent Civic Term XYZ')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
   });
 
-  it('generates correct glossary slug for multi-word terms', () => {
+  it('generates correct glossary slug for multi-word terms', async () => {
     render(<GlossaryLink term="Roll Call Vote" />);
 
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(await screen.findByRole('button'));
 
     const glossaryLink = screen.getByText(/full definition/i).closest('a');
     expect(glossaryLink).toHaveAttribute('href', '/glossary/roll-call-vote');
   });
 
-  it('applies custom className', () => {
+  it('applies custom className', async () => {
     const { container } = render(<GlossaryLink term="Cloture" className="my-custom-class" />);
 
+    // Wait for resolution so the enhanced markup settles (avoids act warnings).
+    await screen.findByRole('button');
     expect(container.firstChild).toHaveClass('my-custom-class');
   });
 });
