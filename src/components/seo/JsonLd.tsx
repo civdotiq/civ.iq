@@ -30,6 +30,12 @@ interface OrganizationSchemaProps {
   keywords?: string | string[];
   /** Canonical page describing this organization. */
   mainEntityOfPage?: string;
+  /** ISO founding date (e.g. from Wikidata). */
+  foundingDate?: string;
+  /** Postal address; emitted only when at least one part is present. */
+  address?: { locality?: string; region?: string; country?: string };
+  /** Parent/registry org this entity belongs to (e.g. a disclosure registry). */
+  memberOf?: { name: string; url?: string; type?: string };
 }
 
 /**
@@ -49,6 +55,9 @@ export function OrganizationSchema({
   identifier,
   keywords,
   mainEntityOfPage,
+  foundingDate,
+  address,
+  memberOf,
 }: OrganizationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -57,9 +66,11 @@ export function OrganizationSchema({
     name,
     url,
     description,
-    sameAs,
   };
 
+  // Omit empty sameAs: keeps third-party orgs (PACs, lobby groups) from
+  // emitting an empty array or inheriting the CIV.IQ default.
+  if (sameAs && sameAs.length > 0) schema.sameAs = sameAs;
   if (logo) schema.logo = logo;
   if (identifier) schema.identifier = identifier;
   if (keywords && (!Array.isArray(keywords) || keywords.length > 0)) {
@@ -67,6 +78,22 @@ export function OrganizationSchema({
   }
   if (mainEntityOfPage) {
     schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
+  if (foundingDate) schema.foundingDate = foundingDate;
+  if (address && (address.locality || address.region || address.country)) {
+    schema.address = {
+      '@type': 'PostalAddress',
+      ...(address.locality && { addressLocality: address.locality }),
+      ...(address.region && { addressRegion: address.region }),
+      ...(address.country && { addressCountry: address.country }),
+    };
+  }
+  if (memberOf) {
+    schema.memberOf = {
+      '@type': memberOf.type ?? 'Organization',
+      name: memberOf.name,
+      ...(memberOf.url && { url: memberOf.url }),
+    };
   }
 
   return (

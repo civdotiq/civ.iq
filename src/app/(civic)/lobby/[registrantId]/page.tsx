@@ -8,10 +8,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { LobbyOrgClient } from './LobbyOrgClient';
-import { LobbyOrgSchema } from './LobbyOrgSchema';
 import { getLobbyingOrgProfile } from '@/app/api/lobby/[registrantId]/route';
 
 export const dynamic = 'force-dynamic';
@@ -32,10 +31,31 @@ export default async function LobbyOrgPage({ params }: PageProps) {
 
   const pageUrl = `https://civdotiq.org/lobby/${registrantId}`;
 
+  const lobbySameAs: string[] = [];
+  if (profile.wiki?.website) lobbySameAs.push(profile.wiki.website);
+  if (profile.wiki?.wikidataId) {
+    lobbySameAs.push(`https://www.wikidata.org/wiki/${profile.wiki.wikidataId}`);
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
       <main className="container mx-auto px-4 py-8">
-        <LobbyOrgSchema profile={profile} url={pageUrl} />
+        <OrganizationSchema
+          name={profile.name}
+          url={pageUrl}
+          id={`${pageUrl}#organization`}
+          logo={null}
+          description={`Lobbying organization registered with the U.S. Senate. ${profile.totalFilings} filings on record.`}
+          mainEntityOfPage={pageUrl}
+          sameAs={lobbySameAs}
+          foundingDate={profile.wiki?.foundingDate ?? undefined}
+          address={profile.wiki?.headquarters ? { locality: profile.wiki.headquarters } : undefined}
+          memberOf={{
+            name: 'Senate Lobbying Disclosure',
+            url: 'https://lda.senate.gov',
+            type: 'GovernmentOrganization',
+          }}
+        />
         <BreadcrumbSchema
           items={[
             { name: 'Home', url: 'https://civdotiq.org' },
