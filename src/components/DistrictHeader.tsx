@@ -75,9 +75,29 @@ function getDistrictLean(pvi: string): string {
 function formatDistrictName(state: string, district: string): string {
   // Use centralized state name lookup from @/lib/data/us-states
   const stateName = getStateName(state) || state;
-  return district === '00' || district === 'AL'
+  // At-large districts arrive as "AL", "0", "00", or empty depending on the
+  // source, so normalize all of them — otherwise a single-district state renders
+  // as "...'s 0 Congressional District".
+  const normalized = district?.trim() ?? '';
+  const isAtLarge = normalized === 'AL' || normalized === '' || parseInt(normalized, 10) === 0;
+  return isAtLarge
     ? `${stateName} At-Large District`
     : `${stateName}'s ${district} Congressional District`;
+}
+
+/**
+ * Normalize a party value to a display label. The data source supplies full
+ * names ("Republican", "Democrat"/"Democratic") in some paths and single
+ * letters ("R"/"D"/"I") in others; matching only single letters mislabeled
+ * full-name parties as "Independent". Unknown values pass through unchanged
+ * rather than being forced to "Independent".
+ */
+function formatParty(party: string): string {
+  const p = (party ?? '').trim().toUpperCase();
+  if (p === 'D' || p.startsWith('DEMOCRAT')) return 'Democrat';
+  if (p === 'R' || p.startsWith('REPUBLICAN')) return 'Republican';
+  if (p === 'I' || p.startsWith('INDEPENDENT')) return 'Independent';
+  return party;
 }
 
 export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps) {
@@ -353,11 +373,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
                 {districtData.representative.name}
               </p>
               <p className="text-xs text-civiq-green">
-                {districtData.representative.party === 'D'
-                  ? 'Democrat'
-                  : districtData.representative.party === 'R'
-                    ? 'Republican'
-                    : 'Independent'}
+                {formatParty(districtData.representative.party)}
               </p>
             </div>
           </div>
