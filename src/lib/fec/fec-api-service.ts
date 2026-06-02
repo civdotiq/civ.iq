@@ -203,6 +203,8 @@ export interface FECCommitteeResponse {
   committee_id: string;
   name: string;
   designation: string;
+  /** Human-readable designation (e.g. "Leadership PAC"); returned by the FEC committee endpoint. */
+  designation_full?: string;
   cycles: number[];
   candidate_ids: string[];
   party: string;

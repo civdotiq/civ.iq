@@ -30,6 +30,26 @@ interface PageProps {
   searchParams: Promise<{ cycle?: string }>;
 }
 
+/** FEC committee designation code → human label, used when the API omits designation_full. */
+function designationLabel(code: string | undefined): string {
+  switch (code) {
+    case 'A':
+      return 'Authorized by a candidate';
+    case 'B':
+      return 'Lobbyist/Registrant PAC';
+    case 'D':
+      return 'Leadership PAC';
+    case 'J':
+      return 'Joint fundraising committee';
+    case 'P':
+      return 'Principal campaign committee';
+    case 'U':
+      return 'Unauthorized';
+    default:
+      return '';
+  }
+}
+
 async function getCommitteeProfile(
   committeeId: string,
   cycle: number
@@ -50,7 +70,8 @@ async function getCommitteeProfile(
         type: committeeInfo.committee_type,
         typeFull: committeeInfo.committee_type_full,
         designation: committeeInfo.designation,
-        designationFull: committeeInfo.designation ?? '',
+        designationFull:
+          committeeInfo.designation_full ?? designationLabel(committeeInfo.designation),
         party: committeeInfo.party,
         state: committeeInfo.state ?? '',
         treasurerName: '',
