@@ -209,7 +209,9 @@ export function useEnhancedDistrictData(
         if (!response.ok) return;
 
         const result = await response.json();
-        if (!result.success || !result.district) return;
+        // /api/districts/[id] returns { district, metadata } on success (no
+        // `success` flag); HTTP errors are already filtered by response.ok above.
+        if (!result.district) return;
 
         const enhancedData = await enhanceDistrictData(result.district);
         districtDataCache.set(targetDistrictId, {
@@ -260,8 +262,11 @@ export function useEnhancedDistrictData(
 
         const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to load district data');
+        // Success shape is { district, metadata } — no `success` flag. A
+        // non-ok HTTP status was already thrown above; a 200 without a district
+        // payload is the only remaining failure case.
+        if (!result.district) {
+          throw new Error('Failed to load district data');
         }
 
         // Enhance the district data with new features
@@ -431,7 +436,7 @@ export function useDistrictPrefetch() {
         const response = await fetch(`/api/districts/${districtId}`);
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.district) {
+          if (result.district) {
             const enhancedData = await enhanceDistrictData(result.district);
             districtDataCache.set(districtId, {
               data: enhancedData,
