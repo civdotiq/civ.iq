@@ -237,6 +237,30 @@ class FECApiError extends Error {
 }
 
 /**
+ * FEC committee designation code → human label.
+ * Use when the API omits `designation_full`.
+ * Reference: https://www.fec.gov/campaign-finance-data/committee-type-code-descriptions/
+ */
+export function designationLabel(code: string | undefined): string {
+  switch (code) {
+    case 'A':
+      return 'Authorized by a candidate';
+    case 'B':
+      return 'Lobbyist/Registrant PAC';
+    case 'D':
+      return 'Leadership PAC';
+    case 'J':
+      return 'Joint fundraising committee';
+    case 'P':
+      return 'Principal campaign committee';
+    case 'U':
+      return 'Unauthorized';
+    default:
+      return '';
+  }
+}
+
+/**
  * Classify PAC type based on FEC committee type codes
  * Reference: https://www.fec.gov/campaign-finance-data/committee-type-code-descriptions/
  */

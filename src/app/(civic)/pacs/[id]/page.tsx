@@ -15,7 +15,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { PACProfilePage } from '@/components/pacs/PACProfilePage';
-import { fecApiService } from '@/lib/fec/fec-api-service';
+import { fecApiService, designationLabel } from '@/lib/fec/fec-api-service';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -207,6 +207,10 @@ export default async function PACProfileRoute({ params, searchParams }: PageProp
   // node rather than emit a placeholder. (Cached 30 days inside the service.)
   const committeeInfo = await fecApiService.getCommitteeInfo(upperId).catch(() => null);
   const pacUrl = `https://civdotiq.org/pacs/${upperId}`;
+  // Prefer the FEC-provided full designation; fall back to the code→label map.
+  const designationFull =
+    committeeInfo &&
+    (committeeInfo.designation_full ?? designationLabel(committeeInfo.designation));
 
   return (
     <>
@@ -223,7 +227,9 @@ export default async function PACProfileRoute({ params, searchParams }: PageProp
           url={pacUrl}
           id={`${pacUrl}#organization`}
           logo={null}
-          description={`${committeeInfo.committee_type_full ?? 'Political committee'} registered with the U.S. Federal Election Commission (committee ${upperId}).`}
+          description={`${committeeInfo.committee_type_full ?? 'Political committee'}${
+            designationFull ? ` — ${designationFull}` : ''
+          } registered with the U.S. Federal Election Commission (committee ${upperId}).`}
           sameAs={[`https://www.fec.gov/data/committee/${upperId}/`]}
           identifier={upperId}
         />

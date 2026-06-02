@@ -11,7 +11,7 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { fecApiService } from '@/lib/fec/fec-api-service';
+import { fecApiService, designationLabel } from '@/lib/fec/fec-api-service';
 import { resolveCommitteeRecipients } from '@/lib/fec/recipient-resolver';
 import { categorizePACByName } from '@/lib/fec/industry-taxonomy';
 import { displaySector } from '@/lib/mesh/sector-display';
@@ -28,26 +28,6 @@ export const revalidate = 3600;
 interface PageProps {
   params: Promise<{ committeeId: string }>;
   searchParams: Promise<{ cycle?: string }>;
-}
-
-/** FEC committee designation code → human label, used when the API omits designation_full. */
-function designationLabel(code: string | undefined): string {
-  switch (code) {
-    case 'A':
-      return 'Authorized by a candidate';
-    case 'B':
-      return 'Lobbyist/Registrant PAC';
-    case 'D':
-      return 'Leadership PAC';
-    case 'J':
-      return 'Joint fundraising committee';
-    case 'P':
-      return 'Principal campaign committee';
-    case 'U':
-      return 'Unauthorized';
-    default:
-      return '';
-  }
 }
 
 async function getCommitteeProfile(
