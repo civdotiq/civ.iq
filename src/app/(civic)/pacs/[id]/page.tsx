@@ -13,8 +13,9 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { PACProfilePage } from '@/components/pacs/PACProfilePage';
+import { fecApiService } from '@/lib/fec/fec-api-service';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -202,15 +203,31 @@ export default async function PACProfileRoute({ params, searchParams }: PageProp
     return <CommitteeNotFound id={id} />;
   }
 
+  // Real FEC committee data only — if the lookup fails, omit the Organization
+  // node rather than emit a placeholder. (Cached 30 days inside the service.)
+  const committeeInfo = await fecApiService.getCommitteeInfo(upperId).catch(() => null);
+  const pacUrl = `https://civdotiq.org/pacs/${upperId}`;
+
   return (
     <>
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Money', url: 'https://civdotiq.org/finance/filings' },
-          { name: `PAC ${upperId}`, url: `https://civdotiq.org/pacs/${upperId}` },
+          { name: `PAC ${upperId}`, url: pacUrl },
         ]}
       />
+      {committeeInfo?.name && (
+        <OrganizationSchema
+          name={committeeInfo.name}
+          url={pacUrl}
+          id={`${pacUrl}#organization`}
+          logo={null}
+          description={`${committeeInfo.committee_type_full ?? 'Political committee'} registered with the U.S. Federal Election Commission (committee ${upperId}).`}
+          sameAs={[`https://www.fec.gov/data/committee/${upperId}/`]}
+          identifier={upperId}
+        />
+      )}
       <PACProfilePage committeeId={upperId} />
     </>
   );

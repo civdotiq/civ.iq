@@ -28,14 +28,14 @@ jest.mock('@/lib/fec/recipient-resolver', () => ({
 }));
 jest.mock('@/lib/fec/industry-taxonomy', () => ({ categorizePACByName: () => null }));
 jest.mock('@/lib/mesh/sector-display', () => ({ displaySector: (s: string) => s }));
-jest.mock('@/app/(civic)/influence/[committeeId]/PACPageSchema', () => ({
-  PACPageSchema: () => null,
-}));
 jest.mock('@/app/(civic)/influence/[committeeId]/CommitteeProfileClient', () => ({
   CommitteeProfileClient: () => null,
 }));
 jest.mock('@/components/shared/ui/OpenDataStrip', () => ({ OpenDataStrip: () => null }));
-jest.mock('@/components/seo/JsonLd', () => ({ BreadcrumbSchema: () => null }));
+jest.mock('@/components/seo/JsonLd', () => ({
+  BreadcrumbSchema: () => null,
+  OrganizationSchema: () => null,
+}));
 
 import { CommitteeNotFoundEmptyState } from '@/app/(civic)/influence/[committeeId]/page';
 

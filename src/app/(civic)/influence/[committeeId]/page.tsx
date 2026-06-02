@@ -19,8 +19,7 @@ import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
-import { PACPageSchema } from './PACPageSchema';
+import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { isCongressionalSystemCode, isValidFecCommitteeId } from '@/lib/data/route-slugs';
 
 export const dynamic = 'force-dynamic';
@@ -239,11 +238,16 @@ export default async function CommitteeProfilePage({ params, searchParams }: Pag
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1e]">
       <main className="container mx-auto px-4 py-8">
-        <PACPageSchema
+        <OrganizationSchema
           name={profile.committee.name}
-          description={`${profile.committee.typeFull} — ${profile.committee.designationFull}. FEC ID: ${profile.committee.committeeId}`}
           url={`https://civdotiq.org/influence/${committeeId}`}
-          sector={classification?.sector ?? null}
+          id={`https://civdotiq.org/influence/${committeeId}#organization`}
+          logo={null}
+          description={`${profile.committee.typeFull} — ${profile.committee.designationFull}. FEC ID: ${profile.committee.committeeId}`}
+          sameAs={[profile.committee.fecUrl]}
+          identifier={profile.committee.committeeId}
+          keywords={classification?.sector ?? undefined}
+          mainEntityOfPage={`https://civdotiq.org/influence/${committeeId}`}
         />
         <BreadcrumbSchema
           items={[

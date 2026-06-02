@@ -46,6 +46,7 @@ export default async function StateLayout({ children, params }: LayoutProps) {
         name={stateName}
         url={`https://civdotiq.org/states/${state.toLowerCase()}`}
         containedInPlace="United States of America"
+        containedInType="Country"
       />
       {children}
     </>

@@ -26,9 +26,9 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Silence noisy deps
-jest.mock('@/components/seo/JsonLd', () => ({ BreadcrumbSchema: () => null }));
-jest.mock('@/app/(civic)/influence/[committeeId]/PACPageSchema', () => ({
-  PACPageSchema: () => null,
+jest.mock('@/components/seo/JsonLd', () => ({
+  BreadcrumbSchema: () => null,
+  OrganizationSchema: () => null,
 }));
 jest.mock('@/app/(civic)/influence/[committeeId]/CommitteeProfileClient', () => ({
   CommitteeProfileClient: () => null,

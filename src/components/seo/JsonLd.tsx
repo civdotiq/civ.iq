@@ -18,37 +18,56 @@ function safeJsonLd(data: Record<string, unknown>): string {
 interface OrganizationSchemaProps {
   name?: string;
   url?: string;
-  logo?: string;
+  /** Logo URL. Pass null to omit (e.g. for third-party orgs like PACs). */
+  logo?: string | null;
   description?: string;
   sameAs?: string[];
+  /** Override the node @id. Defaults to `${url}/#organization` (the CIV.IQ org). */
+  id?: string;
+  /** External identifier (e.g. an FEC committee id) for KG disambiguation. */
+  identifier?: string;
+  /** Topical keywords (e.g. a PAC's industry sector). */
+  keywords?: string | string[];
+  /** Canonical page describing this organization. */
+  mainEntityOfPage?: string;
 }
 
 /**
- * Organization schema for the website
- * Used on homepage and global layout
+ * Organization schema.
+ *
+ * Defaults describe CIV.IQ itself (used in the global layout and /about).
+ * Pass `id`, `identifier`, `logo={null}`, `description`, and `sameAs` to
+ * describe a third-party organization (e.g. a PAC linking to its FEC page).
  */
 export function OrganizationSchema({
   name = 'CIV.IQ',
   url = 'https://civdotiq.org',
   logo = 'https://civdotiq.org/images/civiq-logo.png',
   description = 'Civic intelligence platform providing real-time access to federal and state government data — plus 10 pilot cities — including representatives, voting records, bills, and campaign finance.',
-  sameAs = ['https://twitter.com/civdotiq'],
+  sameAs = ['https://twitter.com/civdotiq', 'https://github.com/civdotiq'],
+  id,
+  identifier,
+  keywords,
+  mainEntityOfPage,
 }: OrganizationSchemaProps) {
-  const schema = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    '@id': `${url}/#organization`,
+    '@id': id ?? `${url}/#organization`,
     name,
     url,
-    logo,
     description,
     sameAs,
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer support',
-      url: `${url}/contact`,
-    },
   };
+
+  if (logo) schema.logo = logo;
+  if (identifier) schema.identifier = identifier;
+  if (keywords && (!Array.isArray(keywords) || keywords.length > 0)) {
+    schema.keywords = keywords;
+  }
+  if (mainEntityOfPage) {
+    schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
+  }
 
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
@@ -465,6 +484,8 @@ interface AdministrativeAreaSchemaProps {
   description?: string;
   url?: string;
   containedInPlace?: string;
+  /** Schema.org type of the containing place. Districts sit in a State; a State sits in a Country. */
+  containedInType?: 'State' | 'Country';
   geo?: {
     latitude: number;
     longitude: number;
@@ -481,6 +502,7 @@ export function AdministrativeAreaSchema({
   description,
   url,
   containedInPlace,
+  containedInType = 'State',
   geo,
   population,
   mainEntityOfPage,
@@ -499,7 +521,7 @@ export function AdministrativeAreaSchema({
 
   if (containedInPlace) {
     schema.containedInPlace = {
-      '@type': 'State',
+      '@type': containedInType,
       name: containedInPlace,
     };
   }
@@ -828,6 +850,9 @@ interface ProfilePageSchemaProps {
 export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
   const personData: Record<string, unknown> = {
     '@type': 'Person',
+    // Stable @id distinct from the ProfilePage node @id (which is `url`),
+    // so the Knowledge Graph can disambiguate the person from the page.
+    '@id': `${url}#person`,
     name: person.name,
     jobTitle: person.jobTitle,
   };

@@ -4,7 +4,7 @@
  */
 
 import { Metadata } from 'next';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Recent Legislation',
@@ -26,6 +26,11 @@ export default function LegislationLayout({ children }: { children: React.ReactN
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'Legislation', url: 'https://civdotiq.org/legislation' },
         ]}
+      />
+      <CollectionPageSchema
+        name="Recent Legislation"
+        description="Browse the latest bills introduced in the 119th Congress. See sponsors, cosponsors, voting records, and track legislation through the legislative process."
+        url="https://civdotiq.org/legislation"
       />
       {children}
     </>
