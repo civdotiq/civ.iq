@@ -16,6 +16,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { cache } from '@/lib/cache';
+import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
 
 export const CAMPAIGN_FINANCE_CACHE_KEY = 'dataset:campaign-finance';
@@ -117,6 +118,12 @@ async function fetchFECTotals(fecCandidateId: string): Promise<{
 
   for (const cycle of cycles) {
     try {
+      // This path uses its own fetch (not FECApiService), so gate it directly.
+      // Under cron priority this paces/yields to live traffic; live callers pass
+      // straight through. A yielded call means skip this run — the next one retries.
+      const reservation = await reserveFecCall();
+      if (!reservation.allowed) break;
+
       const url = `https://api.open.fec.gov/v1/candidate/${fecCandidateId}/totals/?api_key=${fecApiKey}&cycle=${cycle}&per_page=1`;
       const response = await fetch(url, {
         signal: AbortSignal.timeout(10000),

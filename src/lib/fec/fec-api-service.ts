@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { PAC_ACRONYMS } from '@/lib/data/pac-acronyms';
+import { getFecPriority, reserveFecCall } from './fec-rate-limiter';
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 
@@ -282,13 +283,27 @@ export class FECApiService {
   /**
    * Make authenticated request to FEC API.
    *
-   * FEC enforces a 1000 req/hr quota and returns 429 when exhausted. On 429
-   * we back off (honouring Retry-After when present) and retry up to
-   * maxRetries times before surfacing the failure. 5xx errors get the same
-   * retry treatment because FEC occasionally times out under load.
+   * The shared FEC key has a thin per-minute quota (observed
+   * `X-RateLimit-Limit: 60`) and returns 429 when exhausted. Two layers guard
+   * it: (1) a pre-flight reservation against a shared per-minute budget that
+   * makes background crons yield to live traffic (see fec-rate-limiter), and
+   * (2) on a real 429/5xx we back off (honouring Retry-After when present) and
+   * retry up to maxRetries times before surfacing the failure.
    */
   private async makeRequest<T>(endpoint: string, maxRetries: number = 3): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+
+    // Pre-flight: live calls always pass; cron calls yield once the minute's
+    // shared budget is spent, leaving FEC quota for real users.
+    const priority = getFecPriority();
+    const reservation = await reserveFecCall(priority);
+    if (!reservation.allowed) {
+      throw new FECApiError(
+        `FEC budget reserved for live traffic — cron call throttled (${reservation.count}/${reservation.ceiling} this minute)`,
+        429,
+        endpoint
+      );
+    }
 
     // Backoff ceiling. Callers run under tight budgets (e.g. the 55s analyzer
     // timeout); a single honored `Retry-After: 30` could blow that on its own.
@@ -310,6 +325,17 @@ export class FECApiService {
         });
 
         if (response.ok) {
+          // Surface when we're close to the key's wall so we can act before 429s.
+          const remaining = Number(response.headers.get('x-ratelimit-remaining'));
+          const limit = Number(response.headers.get('x-ratelimit-limit'));
+          if (
+            Number.isFinite(remaining) &&
+            Number.isFinite(limit) &&
+            limit > 0 &&
+            remaining / limit < 0.15
+          ) {
+            logger.warn(`[FEC API] quota low: ${remaining}/${limit} remaining`, { endpoint });
+          }
           return (await response.json()) as T;
         }
 

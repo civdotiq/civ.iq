@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCampaignFinanceOnDemand } from '@/lib/datasets/generators/campaign-finance';
+import { runWithFecPriority } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const result = await generateCampaignFinanceOnDemand();
+    // Run under cron priority so the ~535 FEC calls yield to live traffic.
+    const result = await runWithFecPriority('cron', () => generateCampaignFinanceOnDemand());
     const totalTime = Date.now() - startTime;
 
     logger.info('Dataset generator cron job completed', {

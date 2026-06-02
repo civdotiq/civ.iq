@@ -28,11 +28,15 @@ import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import { runWithFecPriority } from '@/lib/fec/fec-rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_SLICE_SIZE = 20;
-const REP_CONCURRENCY = 5;
+// Concurrent reps per inner batch. Each rep fans out ~8-12 FEC calls across the
+// four analyzers, so we keep this low and let the shared FEC rate limiter
+// (cron priority) do the real pacing against live traffic.
+const DEFAULT_REP_CONCURRENCY = 3;
 const PER_ANALYZER_TIMEOUT_MS = 55_000;
 const CURSOR_KEY = 'cron:warm-intel:cursor';
 
@@ -41,6 +45,13 @@ function getSliceSize(): number {
   if (!raw) return DEFAULT_SLICE_SIZE;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_SLICE_SIZE;
+}
+
+function getRepConcurrency(): number {
+  const raw = process.env.WARM_INTEL_REP_CONCURRENCY;
+  if (!raw) return DEFAULT_REP_CONCURRENCY;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_REP_CONCURRENCY;
 }
 
 type AnalyzerName = 'finance_jurisdiction' | 'vote_finance' | 'vote_prediction' | 'influence_chain';
@@ -112,8 +123,9 @@ async function warmRep(bioguideId: string): Promise<RepOutcome> {
 
 async function processSlice(reps: { bioguideId: string }[]): Promise<RepOutcome[]> {
   const outcomes: RepOutcome[] = [];
-  for (let i = 0; i < reps.length; i += REP_CONCURRENCY) {
-    const batch = reps.slice(i, i + REP_CONCURRENCY);
+  const concurrency = getRepConcurrency();
+  for (let i = 0; i < reps.length; i += concurrency) {
+    const batch = reps.slice(i, i + concurrency);
     const batchOutcomes = await Promise.all(batch.map(rep => warmRep(rep.bioguideId)));
     outcomes.push(...batchOutcomes);
   }
@@ -186,7 +198,8 @@ export async function POST(request: NextRequest) {
       totalReps: reps.length,
     });
 
-    const outcomes = await processSlice(slice);
+    // Run under cron priority so every nested FEC call yields to live traffic.
+    const outcomes = await runWithFecPriority('cron', () => processSlice(slice));
     const totalsByAnalyzer = summarize(outcomes);
     const errorCount = outcomes.reduce(
       (acc, rep) => acc + rep.results.filter(r => r.status !== 'ok').length,
