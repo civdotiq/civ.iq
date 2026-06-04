@@ -10,6 +10,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { getVotesByMember } from '@/features/representatives/services/congress-api';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import logger from '@/lib/logging/simple-logger';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 export const dynamic = 'force-dynamic';
 
@@ -140,10 +141,11 @@ export async function GET(
 
       for (const bill of billsResponse.bills) {
         const billDate = bill.introducedDate ? new Date(bill.introducedDate) : now;
+        const billPath = buildBillUrl(bill.congress, bill.type || 'hr', bill.number);
         entries.push({
-          id: `${baseUrl}/bill/${bill.type?.toLowerCase() || 'hr'}${bill.number}-${bill.congress}`,
+          id: `${baseUrl}${billPath}`,
           title: `Sponsored: ${bill.title}`,
-          link: `${baseUrl}/bill/${bill.type?.toLowerCase() || 'hr'}${bill.number}-${bill.congress}`,
+          link: `${baseUrl}${billPath}`,
           updated: billDate,
           summary: `${bill.title}. Latest action: ${bill.lastAction || 'Introduced'}.`,
           categories: [{ term: 'sponsored-bill', label: 'Sponsored Bill' }],

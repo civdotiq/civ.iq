@@ -678,7 +678,10 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
         const billActions = await fetchBillActions(congress.toString(), type, number.toString());
 
         const result: Bill = {
-          id: `${bill.congress}-${bill.type}-${bill.number}`,
+          // Lowercase type so the id is the true canonical slug (119-hr-8814);
+          // an uppercase type (119-HR-8814) is only "recoverable" and 308-redirects,
+          // which is wrong for a value used as a canonical URL.
+          id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
           number: `${bill.type.toUpperCase()}. ${bill.number}`,
           title: bill.title || `${bill.type.toUpperCase()}. ${bill.number}`,
           shortTitle: bill.shortTitle,

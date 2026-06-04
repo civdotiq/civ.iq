@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import type { Committee } from '@/types/committee';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 // Sort options
 type SortField = 'name' | 'party' | 'state' | 'role' | 'joined' | 'legislation';
@@ -577,7 +578,11 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                                       <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                           <Link
-                                            href={`/bill/${bill.billId}`}
+                                            href={buildBillUrl(
+                                              bill.congress,
+                                              bill.type,
+                                              bill.number
+                                            )}
                                             className="text-sm font-medium text-civiq-blue hover:text-civiq-blue"
                                           >
                                             {bill.type} {bill.number}

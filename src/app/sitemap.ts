@@ -17,6 +17,7 @@ import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -561,10 +562,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const bills = data.bills || data || [];
 
       for (const bill of bills) {
-        const billId = bill.id || bill.billId || bill.number;
-        if (billId) {
+        // The bill route needs the canonical <congress>-<type>-<number> slug;
+        // a bare number (the only id Congress.gov's list endpoint provides) 404s.
+        if (bill.congress && bill.type && bill.number) {
           entries.push({
-            url: `${BASE_URL}/bill/${billId}`,
+            url: `${BASE_URL}${buildBillUrl(bill.congress, bill.type, bill.number)}`,
             lastModified: bill.latestAction?.date ? new Date(bill.latestAction.date) : now,
             changeFrequency: 'daily',
             priority: 0.6,

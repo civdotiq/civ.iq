@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed, createBillsFeedConfig } from '@/lib/feeds/atom-generator';
 import type { AtomEntry } from '@/lib/feeds/atom-generator';
 import logger from '@/lib/logging/simple-logger';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,10 +76,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         categories.push({ term: bill.originChamber, label: bill.originChamber });
       }
 
+      const billPath = buildBillUrl(congress, billType, bill.number);
       return {
-        id: `https://civdotiq.org/bill/${billType}${bill.number}-${congress}`,
+        id: `https://civdotiq.org${billPath}`,
         title: `${bill.type || 'H.R.'} ${bill.number} — ${bill.title || 'Untitled'}`,
-        link: `https://civdotiq.org/bill/${billType}${bill.number}-${congress}`,
+        link: `https://civdotiq.org${billPath}`,
         updated: new Date(bill.updateDate || bill.latestAction?.actionDate || now),
         summary: bill.latestAction?.text || '',
         categories,

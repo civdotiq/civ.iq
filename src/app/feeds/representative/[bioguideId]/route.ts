@@ -20,6 +20,7 @@ import {
   createRepresentativeFeedConfig,
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 // ISR: Revalidate every 30 minutes
 export const dynamic = 'force-dynamic';
@@ -44,6 +45,8 @@ interface Vote {
 interface Bill {
   id?: string;
   number: string;
+  type?: string;
+  congress?: number;
   title: string;
   introducedDate?: string;
   latestAction?: {
@@ -103,7 +106,9 @@ async function fetchBills(bioguideId: string): Promise<Bill[]> {
     });
     if (!response.ok) return [];
     const data = await response.json();
-    return data.bills ?? data ?? [];
+    // The bills API returns the array under `sponsoredLegislation` (legacy
+    // shape); `data.bills` does not exist, so reading it yielded zero entries.
+    return data.sponsoredLegislation ?? data.bills ?? [];
   } catch {
     return [];
   }
@@ -157,10 +162,14 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
   // Build entries from bills
   const billEntries: AtomEntry[] = bills.map(bill => {
     const date = bill.latestAction?.actionDate ?? bill.introducedDate ?? new Date().toISOString();
+    const billPath =
+      bill.congress && bill.type
+        ? buildBillUrl(bill.congress, bill.type, bill.number)
+        : `/bill/${bill.number}`;
     return {
-      id: `${baseUrl}/bill/${bill.number}`,
+      id: `${baseUrl}${billPath}`,
       title: `Sponsored: ${bill.number} - ${bill.title}`,
-      link: `${baseUrl}/bill/${bill.number}`,
+      link: `${baseUrl}${billPath}`,
       updated: new Date(date),
       published: new Date(bill.introducedDate ?? date),
       summary: bill.latestAction?.text ?? `Bill ${bill.number} sponsored by ${rep.name}`,

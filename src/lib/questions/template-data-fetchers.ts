@@ -55,6 +55,9 @@ export interface BillsSponsoredData {
     // render "H.R. 7927" instead of the bare "7927" that collides across
     // chambers and bill/resolution types.
     type: string;
+    // Congress number (e.g. 119) — needed alongside type/number to build the
+    // canonical bill route slug `<congress>-<type>-<number>` (e.g. 119-hr-8814).
+    congress: number;
     title: string;
     introducedDate: string;
     status: string;
@@ -124,6 +127,10 @@ export interface VotingRecordTemplateData {
     sponsored?: Array<{
       id?: string;
       number?: string;
+      // type + congress are needed to build the canonical /bill/<congress>-<type>-<number>
+      // slug; the bare id/number alone 404s on the bill route.
+      type?: string;
+      congress?: number;
       title?: string;
       introducedDate?: string;
       latestAction?: { text?: string; date?: string };
@@ -131,6 +138,8 @@ export interface VotingRecordTemplateData {
     cosponsored?: Array<{
       id?: string;
       number?: string;
+      type?: string;
+      congress?: number;
       title?: string;
       introducedDate?: string;
       latestAction?: { text?: string; date?: string };
@@ -284,6 +293,8 @@ export async function fetchVotingRecordData(
       .map(b => ({
         id: b.id,
         number: b.number,
+        type: b.type,
+        congress: b.congress,
         title: b.title,
         introducedDate: b.introducedDate,
         latestAction: b.lastAction ? { text: b.lastAction } : undefined,
@@ -293,6 +304,8 @@ export async function fetchVotingRecordData(
       .map(b => ({
         id: b.id,
         number: b.number,
+        type: b.type,
+        congress: b.congress,
         title: b.title,
         introducedDate: b.introducedDate,
         latestAction: b.lastAction ? { text: b.lastAction } : undefined,
@@ -327,6 +340,7 @@ export async function fetchBillsSponsoredData(bioguideId: string): Promise<Bills
       id: b.id,
       number: b.number,
       type: b.type,
+      congress: b.congress,
       title: b.title,
       introducedDate: b.introducedDate,
       status: b.status,

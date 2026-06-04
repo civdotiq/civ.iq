@@ -16,6 +16,7 @@ interface BillItem {
   id: string;
   number: string;
   type: string;
+  congress: number;
   title: string;
   introducedDate: string;
   status: string;
@@ -40,6 +41,16 @@ const BILL_TYPE_LABEL: Record<string, string> = {
   sjres: 'S.J.Res.',
   sconres: 'S.Con.Res.',
 };
+
+/**
+ * Build the canonical bill route slug `<congress>-<type>-<number>` (e.g.
+ * `119-hr-8814`). The `id` field carries the bare bill number from
+ * Congress.gov, which is NOT a valid route param on its own and 404s, so the
+ * link must be assembled from congress + type + number.
+ */
+function billHref(bill: Pick<BillItem, 'congress' | 'type' | 'number'>): string {
+  return `/bill/${bill.congress}-${(bill.type ?? '').toLowerCase()}-${bill.number}`;
+}
 
 function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
   const typeKey = (bill.type ?? '').toLowerCase();
@@ -108,7 +119,7 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0 flex-1">
                 <Link
-                  href={`/bill/${bill.id}`}
+                  href={billHref(bill)}
                   className="type-sm text-[#3ea2d4] hover:underline line-clamp-1"
                 >
                   {formatBillLabel(bill)}: {bill.title}

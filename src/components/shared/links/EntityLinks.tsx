@@ -8,6 +8,7 @@
 
 import Link from 'next/link';
 import { displaySector } from '@/lib/mesh/sector-display';
+import { parseBillSlug } from '@/lib/data/route-slugs';
 
 const linkClass = 'text-[#3ea2d4] hover:underline';
 
@@ -49,8 +50,13 @@ interface BillLinkProps {
 
 export function BillLink({ billId, title, className }: BillLinkProps) {
   if (!billId) return <span className={className}>{title}</span>;
+  // Normalize any accepted slug shape (e.g. the type-first "hr8814-119" that
+  // callers like the influence-chain analyzer produce) to the canonical
+  // <congress>-<type>-<number> form so the link resolves without a 308 hop.
+  const parsed = parseBillSlug(billId);
+  const slug = parsed.kind === 'invalid' ? billId : parsed.canonical;
   return (
-    <Link href={`/bill/${billId}`} className={`${linkClass} ${className ?? ''}`}>
+    <Link href={`/bill/${slug}`} className={`${linkClass} ${className ?? ''}`}>
       {title}
     </Link>
   );

@@ -28,6 +28,7 @@ type Bill = {
   id: string;
   number: string;
   type: string;
+  congress: number;
   title: string;
   introducedDate: string;
   status: string;
@@ -40,6 +41,7 @@ function makeBill(overrides: Partial<Bill> = {}): Bill {
     id: overrides.id ?? 'hr-1',
     number: overrides.number ?? '1',
     type: overrides.type ?? 'HR',
+    congress: overrides.congress ?? 119,
     title: overrides.title ?? 'A Bill',
     introducedDate: overrides.introducedDate ?? '2026-01-03',
     status: overrides.status ?? 'Introduced in House',
@@ -150,6 +152,27 @@ describe('BillsSponsoredAnswer', () => {
       render(<BillsSponsoredAnswer bills={bills} sponsoredCount={1} cosponsoredCount={0} />);
 
       expect(screen.getByText(/S\.Res\. 17: Senate Rules Resolution/)).toBeInTheDocument();
+    });
+
+    it('links to the canonical bill slug, not the bare number (404 regression)', () => {
+      // Regression: the link used `bill.id` (the bare "8814"), which the
+      // /bill/[billId] route rejects as invalid → 404. The href must be the
+      // canonical `<congress>-<type>-<number>` slug.
+      const bills: Bill[] = [
+        makeBill({
+          id: '8814',
+          number: '8814',
+          type: 'HR',
+          congress: 119,
+          title: 'HUD Data Privacy Act of 2026',
+          relationship: 'sponsored',
+        }),
+      ];
+
+      render(<BillsSponsoredAnswer bills={bills} sponsoredCount={1} cosponsoredCount={0} />);
+
+      const link = screen.getByRole('link', { name: /HUD Data Privacy Act/ });
+      expect(link).toHaveAttribute('href', '/bill/119-hr-8814');
     });
   });
 

@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import logger from '@/lib/logging/simple-logger';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       originChamber: bill.originChamber ?? null,
       updateDate: bill.updateDate ?? null,
       latestAction: bill.latestAction ?? null,
-      url: `https://civdotiq.org/bill/${(bill.type || 'hr').toLowerCase()}${bill.number}-${bill.congress}`,
+      url: `https://civdotiq.org${buildBillUrl(bill.congress, bill.type || 'hr', bill.number)}`,
     }));
 
     // Congress.gov doesn't give total count in this endpoint, estimate from pagination

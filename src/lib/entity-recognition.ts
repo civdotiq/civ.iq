@@ -141,7 +141,9 @@ function processMatch(
       const billType = match[1]?.replace(/\./g, '').toUpperCase();
       const billNumber = match[2];
       if (billType && billNumber) {
-        id = `${billType.toLowerCase()}${billNumber}-119`; // Assuming 119th Congress
+        // Canonical <congress>-<type>-<number> slug (119th Congress assumed) so
+        // /bill/${id} resolves directly instead of 308-redirecting.
+        id = `119-${billType.toLowerCase()}-${billNumber}`;
         confidence = 0.95;
       }
       break;

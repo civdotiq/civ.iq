@@ -106,6 +106,46 @@ describe('VotingRecordAnswer', () => {
     expect(link.textContent?.trim()).toBe('Clean Water Act Amendments');
   });
 
+  it('links recent-vote bills to the canonical slug, not the bare number (404 regression)', () => {
+    const votes = [
+      makeVote({
+        voteId: 'h2026-8814',
+        bill: { number: '8814', title: 'HUD Data Privacy Act', type: 'HR', congress: 119 },
+        question: 'On passage',
+      }),
+    ];
+
+    render(<VotingRecordAnswer votes={{ votes, totalResults: 1 }} bills={null} />);
+
+    const link = screen.getByRole('link', { name: /HUD Data Privacy Act/ });
+    expect(link).toHaveAttribute('href', '/bill/119-hr-8814');
+  });
+
+  it('links the "Most recent bill" to the canonical slug, not the bare id (404 regression)', () => {
+    render(
+      <VotingRecordAnswer
+        votes={null}
+        bills={{
+          sponsored: [
+            {
+              id: '8814',
+              number: '8814',
+              type: 'HR',
+              congress: 119,
+              title: 'HUD Data Privacy Act of 2026',
+            },
+          ],
+          cosponsored: [],
+          totalSponsored: 1,
+          totalCosponsored: 0,
+        }}
+      />
+    );
+
+    const link = screen.getByRole('link', { name: /HUD Data Privacy Act/ });
+    expect(link).toHaveAttribute('href', '/bill/119-hr-8814');
+  });
+
   it('renders cosponsored count as "N+" when the upstream fetch cap was hit', () => {
     render(
       <VotingRecordAnswer

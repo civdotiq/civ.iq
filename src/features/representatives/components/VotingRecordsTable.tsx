@@ -15,6 +15,7 @@ import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
 import logger from '@/lib/logging/simple-logger';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 // Using simple Unicode arrows instead of heroicons (unused but available for future use)
 const _ChevronDownIcon = () => <span>▼</span>;
@@ -26,6 +27,7 @@ interface Vote {
     number: string;
     title: string;
     congress: string;
+    type?: string;
   };
   question: string;
   result: string;
@@ -98,7 +100,7 @@ const VotesList = memo(
                   <div className="flex-1 pr-4">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <Link
-                        href={`/bill/${vote.bill.number.replace(/\s+/g, '')}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
+                        href={`${buildBillUrl(vote.bill.congress, vote.bill.type ?? 'hr', vote.bill.number)}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
                         className="text-sm font-medium text-civiq-blue hover:text-civiq-blue hover:underline"
                         onClick={e => e.stopPropagation()}
                       >

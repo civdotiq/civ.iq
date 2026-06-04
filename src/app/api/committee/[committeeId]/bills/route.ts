@@ -319,7 +319,9 @@ function processBillsData(
     }
 
     return {
-      billId: `${bill.congress}-${bill.type}-${bill.number}`,
+      // Lowercase type → true canonical slug (119-hr-8814); an uppercase type
+      // 308-redirects, which is wrong for a value consumed as a bill link/URL.
+      billId: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
       billNumber: `${bill.type.toUpperCase()} ${bill.number}`,
       title: bill.title,
       sponsor: {

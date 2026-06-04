@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CqChip, type CqChipVariant } from '@/components/cq';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 import type { BillResult } from './data';
 
 interface BillResultRowProps {
@@ -8,8 +9,9 @@ interface BillResultRowProps {
 }
 
 function billHref(b: BillResult): string {
-  const slug = `${b.type.toLowerCase()}${b.number.replace(/\D/g, '')}-${b.congress}`;
-  return `/bill/${slug}`;
+  // Canonical <congress>-<type>-<number> slug — the prior type-first form
+  // (hr8814-119) is only "recoverable" and 308-redirects.
+  return buildBillUrl(b.congress, b.type, b.number);
 }
 
 function statusFor(b: BillResult): { label: string; variant: CqChipVariant; filled: boolean } {

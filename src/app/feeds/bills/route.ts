@@ -17,6 +17,7 @@ import {
   createBillsFeedConfig,
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
+import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,10 +72,11 @@ export async function GET(): Promise<NextResponse> {
       ? ` by ${bill.sponsor.name} (${bill.sponsor.party}-${bill.sponsor.state})`
       : '';
 
+    const billPath = buildBillUrl(bill.congress, bill.type, bill.number);
     return {
-      id: `${baseUrl}/bill/${bill.number}`,
+      id: `${baseUrl}${billPath}`,
       title: `${bill.number}: ${bill.title}`,
-      link: `${baseUrl}/bill/${bill.number}`,
+      link: `${baseUrl}${billPath}`,
       updated: new Date(date),
       published: new Date(bill.introducedDate ?? date),
       summary: `${bill.type} introduced${sponsorInfo}. ${bill.latestAction?.text ?? ''}`.trim(),

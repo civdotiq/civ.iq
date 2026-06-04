@@ -230,7 +230,10 @@ async function detectBillChanges(
   for (const bill of bills) {
     if (bill.id === previous.latestBillId) break;
     newBills.push({
-      billId: bill.id ?? `${bill.type}${bill.number}`,
+      // Canonical <congress>-<type>-<number> slug for the alert email link.
+      // bill.id is the bare number, which 404s on the bill route; build the
+      // route-valid slug from the separate fields instead.
+      billId: `${bill.congress}-${(bill.type ?? '').toLowerCase()}-${bill.number}`,
       title: bill.title,
       date: bill.introducedDate,
       relationship: (bill.relationship ?? 'sponsored') as 'sponsored' | 'cosponsored',

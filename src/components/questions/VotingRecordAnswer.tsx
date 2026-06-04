@@ -12,6 +12,8 @@
 
 import Link from 'next/link';
 
+import { buildBillUrl } from '@/lib/helpers/url-builders';
+
 interface Vote {
   voteId: string;
   bill?: { number?: string; title?: string; congress?: number; type?: string };
@@ -51,6 +53,8 @@ interface Bill {
   id?: string;
   billId?: string;
   number?: string;
+  type?: string;
+  congress?: number;
   title?: string;
   introducedDate?: string;
   latestAction?: { text?: string; date?: string };
@@ -192,9 +196,13 @@ function LegislationPod({ bills }: { bills: BillsData | null }) {
           <div>
             <dt className="type-xs text-gray-500 mb-1">Most recent bill</dt>
             <dd>
-              {latestBill.id || latestBill.billId ? (
+              {latestBill.number ? (
                 <Link
-                  href={`/bill/${latestBill.id ?? latestBill.billId}`}
+                  href={buildBillUrl(
+                    latestBill.congress ?? 119,
+                    latestBill.type ?? 'hr',
+                    latestBill.number
+                  )}
                   className="type-sm text-[#3ea2d4] hover:underline line-clamp-2"
                 >
                   {latestBill.title ?? 'Untitled bill'}
