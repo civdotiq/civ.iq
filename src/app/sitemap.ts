@@ -612,8 +612,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     for (const chamber of chambers) {
+      // Route is /state-districts/[state]/[chamber]/[district]; district 1 is the
+      // canonical entry point used by the state-districts index page. Omitting the
+      // district segment 404s (no /state-districts/[state]/[chamber] route exists).
       entries.push({
-        url: `${BASE_URL}/state-districts/${stateLower}/${chamber}`,
+        url: `${BASE_URL}/state-districts/${stateLower}/${chamber}/1`,
         lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.4,

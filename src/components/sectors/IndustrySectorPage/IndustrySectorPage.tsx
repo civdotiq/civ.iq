@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import {
@@ -85,9 +86,15 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
       { revalidateOnFocus: false }
     );
 
+  const [showAllRecipients, setShowAllRecipients] = useState(false);
+
   const partyTotals = leaderboard ? computePartyTotals(leaderboard.entries) : null;
   const totalDonations = partyTotals?.total ?? 0;
-  const recipients = leaderboard ? topRecipients(leaderboard.entries, 8) : [];
+  const recipients = leaderboard
+    ? showAllRecipients
+      ? leaderboard.entries
+      : topRecipients(leaderboard.entries, 8)
+    : [];
   const contributorRows = combinedContributors(orgs ?? undefined, 8);
   const bills = connections?.recentBills ?? [];
   const dataAsOf =
@@ -468,20 +475,25 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
             </div>
           </div>
           <RecipientsTable entries={recipients} loading={leaderboardLoading} />
-          {leaderboard && leaderboard.entries.length > recipients.length && (
+          {leaderboard && leaderboard.entries.length > 8 && (
             <div style={{ marginTop: 12 }}>
-              <Link
-                href="/intelligence"
+              <button
+                type="button"
+                onClick={() => setShowAllRecipients(prev => !prev)}
                 style={{
                   fontSize: 11,
                   color: 'var(--civiq-blue-active)',
                   textDecoration: 'underline',
                   textUnderlineOffset: 3,
                   fontFamily: 'var(--font-mono)',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
                 }}
               >
-                View all {leaderboard.entries.length} →
-              </Link>
+                {showAllRecipients ? 'Show fewer ↑' : `View all ${leaderboard.entries.length} →`}
+              </button>
             </div>
           )}
         </section>

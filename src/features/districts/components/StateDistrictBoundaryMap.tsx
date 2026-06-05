@@ -313,7 +313,7 @@ export default function StateDistrictBoundaryMap({
                 if (neighborId) {
                   // Navigate to neighboring district
                   const [neighborState, neighborChamber, neighborDistrict] = neighborId.split('-');
-                  window.location.href = `/state-districts/${neighborState}/${neighborDistrict}?chamber=${neighborChamber}`;
+                  window.location.href = `/state-districts/${neighborState}/${neighborChamber}/${neighborDistrict}`;
                 }
               }
             );

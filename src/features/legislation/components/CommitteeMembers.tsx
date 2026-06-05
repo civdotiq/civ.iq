@@ -622,7 +622,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
 
                             <div className="mt-3 text-center">
                               <Link
-                                href={`/representative/${member.representative.bioguideId}/bills`}
+                                href={`/representative/${member.representative.bioguideId}`}
                                 className="text-xs text-civiq-blue hover:text-civiq-blue"
                               >
                                 View all bills →
