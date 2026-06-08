@@ -222,7 +222,7 @@ export function IssueTopicPage({
               </div>
             </div>
             <Link
-              href={`/bills?policyArea=${encodeURIComponent(policyArea)}`}
+              href={`/legislation?policyArea=${encodeURIComponent(policyArea)}`}
               style={{
                 fontSize: 11,
                 color: 'var(--civiq-blue-active)',

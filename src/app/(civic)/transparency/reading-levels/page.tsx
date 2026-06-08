@@ -52,7 +52,7 @@ export default function ReadingLevelDashboard() {
         <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
-            { label: 'Transparency', href: '/transparency' },
+            { label: 'Transparency' },
             { label: 'Reading Level Compliance', href: '/transparency/reading-levels' },
           ]}
           className="mb-6"
@@ -72,7 +72,7 @@ export default function ReadingLevelDashboard() {
         <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
-            { label: 'Transparency', href: '/transparency' },
+            { label: 'Transparency' },
             { label: 'Reading Level Compliance', href: '/transparency/reading-levels' },
           ]}
           className="mb-6"

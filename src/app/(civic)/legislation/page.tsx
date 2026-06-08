@@ -6,7 +6,8 @@
  */
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
 import { FloorActivity } from '@/features/legislation/components/FloorActivity';
 import { WitnessSearch } from '@/features/legislation/components/WitnessSearch';
@@ -54,7 +55,8 @@ interface BillsApiResponse {
   };
 }
 
-export default function LegislationPage() {
+function LegislationContent() {
+  const searchParams = useSearchParams();
   const [bills, setBills] = useState<CongressBill[]>([]);
   const [filteredBills, setFilteredBills] = useState<CongressBill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,10 @@ export default function LegislationPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [chamberFilter, setChamberFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
-  const [policyAreaFilter, setPolicyAreaFilter] = useState<string>('');
+  // Pre-filter by ?policyArea= deep links (e.g. from industry/topic pages)
+  const [policyAreaFilter, setPolicyAreaFilter] = useState<string>(
+    searchParams.get('policyArea') ?? ''
+  );
   const [availablePolicyAreas, setAvailablePolicyAreas] = useState<string[]>([]);
 
   // Fetch bills from API
@@ -420,5 +425,19 @@ export default function LegislationPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function LegislationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="aicher-loading w-8 h-8" />
+        </div>
+      }
+    >
+      <LegislationContent />
+    </Suspense>
   );
 }

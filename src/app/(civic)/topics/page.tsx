@@ -268,7 +268,7 @@ function LegacyTopicsHubPage() {
           currentSection="Policy Topics"
           relatedLinks={[
             { href: '/committees', label: 'Committees' },
-            { href: '/bills/latest', label: 'Recent Bills' },
+            { href: '/legislation', label: 'Recent Bills' },
             { href: '/congress', label: 'U.S. Congress' },
           ]}
           dataSource="Congress.gov"

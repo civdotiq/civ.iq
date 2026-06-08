@@ -529,7 +529,7 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
             </div>
           </div>
           <Link
-            href={`/bills?policyArea=${encodeURIComponent(connections?.relatedPolicyAreas[0] ?? '')}`}
+            href={`/legislation?policyArea=${encodeURIComponent(connections?.relatedPolicyAreas[0] ?? '')}`}
             style={{
               fontSize: 11,
               color: 'var(--civiq-blue-active)',

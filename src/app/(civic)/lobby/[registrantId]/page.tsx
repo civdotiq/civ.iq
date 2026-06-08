@@ -67,7 +67,7 @@ export default async function LobbyOrgPage({ params }: PageProps) {
         <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
-            { label: 'Lobbying', href: '/lobby' },
+            { label: 'Lobbying' },
             { label: profile.name, href: `/lobby/${registrantId}` },
           ]}
           className="mb-6"

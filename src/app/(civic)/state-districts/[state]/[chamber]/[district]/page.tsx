@@ -148,7 +148,7 @@ export default async function StateDistrictPage({
               <Link href="/representatives" className="text-gray-600 font-medium">
                 Representatives
               </Link>
-              <Link href="/state-legislature" className="text-civiq-blue font-medium">
+              <Link href="/states" className="text-civiq-blue font-medium">
                 State Legislatures
               </Link>
             </nav>

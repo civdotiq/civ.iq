@@ -177,7 +177,7 @@ export function CommitteeFooter({
               </li>
               <li>
                 <Link
-                  href="/bills/latest"
+                  href="/legislation"
                   className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-0.5"
                 >
                   Recent Bills

@@ -10,7 +10,8 @@ import { ChevronRight } from 'lucide-react';
 
 export interface BreadcrumbItem {
   label: string;
-  href: string;
+  /** Omit to render the item as plain text (e.g. a parent section with no index page). */
+  href?: string;
 }
 
 interface BreadcrumbsProps {
@@ -27,9 +28,9 @@ export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
         const isLast = index === items.length - 1;
 
         return (
-          <div key={item.href} className="flex items-center gap-2">
+          <div key={index} className="flex items-center gap-2">
             {index > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
-            {isLast ? (
+            {isLast || !item.href ? (
               <span className="text-gray-600 font-medium">{item.label}</span>
             ) : (
               <Link
