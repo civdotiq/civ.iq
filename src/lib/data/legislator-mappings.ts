@@ -196,3 +196,66 @@ export async function getLegislatorInfo(bioguideId: string): Promise<LegislatorI
   const map = await getLegislatorInfoMap();
   return map.get(bioguideId) || null;
 }
+
+/**
+ * Senator lookup for resolving Senate roll-call XML identities.
+ * byLis: LIS member ID (e.g. "S348") -> bioguide ID
+ * byNameState: "{lastname}_{state}" (lowercase) -> bioguide ID, fallback when LIS ID is absent
+ */
+export interface SenatorBioguideLookup {
+  byLis: Map<string, string>;
+  byNameState: Map<string, string>;
+}
+
+let SENATOR_LOOKUP: SenatorBioguideLookup | null = null;
+let SENATOR_LOOKUP_PROMISE: Promise<SenatorBioguideLookup> | null = null;
+
+export async function getSenatorBioguideLookup(): Promise<SenatorBioguideLookup> {
+  if (SENATOR_LOOKUP) return SENATOR_LOOKUP;
+  if (SENATOR_LOOKUP_PROMISE) return SENATOR_LOOKUP_PROMISE;
+
+  SENATOR_LOOKUP_PROMISE = loadSenatorBioguideLookup();
+  return SENATOR_LOOKUP_PROMISE;
+}
+
+async function loadSenatorBioguideLookup(): Promise<SenatorBioguideLookup> {
+  const byLis = new Map<string, string>();
+  const byNameState = new Map<string, string>();
+
+  try {
+    const yamlPath = path.join(process.cwd(), 'data', 'legislators-current.yaml');
+
+    if (!fs.existsSync(yamlPath)) {
+      logger.error('legislators-current.yaml not found at:', yamlPath);
+      SENATOR_LOOKUP = { byLis, byNameState };
+      return SENATOR_LOOKUP;
+    }
+
+    const fileContents = fs.readFileSync(yamlPath, 'utf8');
+    const legislators = yaml.load(fileContents) as Legislator[];
+
+    legislators.forEach(legislator => {
+      const bioguide = legislator.id?.bioguide;
+      if (!bioguide || !legislator.terms?.length) return;
+
+      const latestTerm = legislator.terms[legislator.terms.length - 1];
+      if (latestTerm?.type !== 'sen') return;
+
+      if (legislator.id.lis) {
+        byLis.set(legislator.id.lis, bioguide);
+      }
+      byNameState.set(
+        `${legislator.name.last.toLowerCase()}_${latestTerm.state.toLowerCase()}`,
+        bioguide
+      );
+    });
+
+    SENATOR_LOOKUP = { byLis, byNameState };
+    logger.info(`Loaded ${byLis.size} senator LIS mappings`);
+    return SENATOR_LOOKUP;
+  } catch (error) {
+    logger.error('Failed to load senator LIS mappings:', error);
+    SENATOR_LOOKUP = { byLis, byNameState };
+    return SENATOR_LOOKUP;
+  }
+}

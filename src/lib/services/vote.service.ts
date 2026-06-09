@@ -8,7 +8,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
-import { getLegislatorInfoMap } from '@/lib/data/legislator-mappings';
+import { getLegislatorInfoMap, getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 
 // Types for vote data
 export interface UnifiedVoteDetail {
@@ -68,85 +68,38 @@ interface SenatorVote extends MemberVote {
   lisId: string;
 }
 
-// LIS ID to Bioguide mapping for current senators
-function mapLISIdToBioguideId(
-  lisId: string,
-  firstName: string,
-  lastName: string,
-  state: string
-): string | undefined {
-  const lisMapping: Record<string, string> = {
-    S330: 'B001230',
-    S317: 'B001267',
-    S306: 'B000944',
-    S348: 'B001135',
-    S361: 'B001236',
-    S341: 'B001243',
-    S355: 'B001277',
-    S318: 'C000127',
-    S309: 'C001047',
-    S350: 'C001070',
-    S252: 'C001035',
-    S323: 'C001056',
-    S362: 'C001113',
-    S366: 'C001096',
-    S324: 'C001098',
-    S293: 'D000563',
-    S322: 'F000062',
-    S353: 'F000463',
-    S320: 'G000386',
-    S316: 'G000359',
-    S351: 'H001046',
-    S356: 'H001061',
-    S339: 'H001079',
-    S331: 'H001042',
-    S325: 'J000300',
-    S321: 'K000384',
-    S349: 'K000367',
-    S290: 'L000174',
-    S326: 'M000355',
-    S357: 'M001183',
-    S347: 'M001169',
-    S340: 'M001153',
-    S308: 'P000603',
-    S352: 'P000449',
-    S319: 'R000122',
-    S327: 'R000584',
-    S328: 'S000033',
-    S329: 'S001194',
-    S314: 'S000148',
-    S344: 'S001181',
-    S345: 'S001203',
-    S346: 'S001217',
-    S315: 'T000464',
-    S354: 'T000476',
-    S337: 'W000817',
-    S358: 'W000802',
-    S359: 'W000779',
-    S360: 'Y000064',
-  };
+/**
+ * Normalize a raw chamber vote string to the four-member position union.
+ * Senate XML emits values like "Present, Giving Live Pair" and, on
+ * impeachment articles, "Guilty"/"Not Guilty".
+ */
+function normalizeVotePosition(raw: string): MemberVote['position'] {
+  const pos = raw.toLowerCase().trim();
+  if (pos === 'yea' || pos === 'aye' || pos === 'yes' || pos === 'guilty') return 'Yea';
+  if (pos === 'nay' || pos === 'no' || pos === 'not guilty') return 'Nay';
+  if (pos.includes('present')) return 'Present';
+  return 'Not Voting';
+}
 
-  if (lisMapping[lisId]) return lisMapping[lisId];
-
-  const nameStateKey = `${lastName.toLowerCase()}_${state}`;
-  const nameBasedMapping: Record<string, string> = {
-    baldwin_wi: 'B001230',
-    bennet_co: 'B001267',
-    brown_oh: 'B000944',
-    collins_me: 'C001035',
-    cantwell_wa: 'C000127',
-    klobuchar_mn: 'K000367',
-    sanders_vt: 'S000033',
-    warren_ma: 'W000817',
-  };
-
-  return nameBasedMapping[nameStateKey];
+/**
+ * Sessions to try when a vote ID carries no session. Roll-call numbers
+ * restart at 1 each session, so order matters: during a congress's second
+ * (even) year, new votes live in session 2 — try it first so current links
+ * resolve correctly, falling back to session 1 for older roll numbers.
+ */
+export function sessionsToTry(congress: string, session?: string): number[] {
+  if (session === '1' || session === '2') return [parseInt(session, 10)];
+  const congressNum = parseInt(congress, 10);
+  if (!Number.isFinite(congressNum)) return [1, 2];
+  const sessionOneYear = 1789 + (congressNum - 1) * 2;
+  return new Date().getFullYear() === sessionOneYear + 1 ? [2, 1] : [1, 2];
 }
 
 // Parse vote ID to determine chamber
 function parseVoteId(voteId: string): {
   chamber: 'House' | 'Senate';
   congress: string;
+  session?: string;
   rollNumber: string;
   numericId: string;
 } {
@@ -160,6 +113,30 @@ function parseVoteId(voteId: string): {
     };
   }
 
+  // "senate-119-2-00042" (congress-session-roll, emitted by batch-voting-service)
+  const senateSessionMatch = voteId.match(/^senate-(\d+)-([12])-(\d+)$/);
+  if (senateSessionMatch && senateSessionMatch[1] && senateSessionMatch[3]) {
+    return {
+      chamber: 'Senate',
+      congress: senateSessionMatch[1],
+      session: senateSessionMatch[2],
+      rollNumber: senateSessionMatch[3],
+      numericId: senateSessionMatch[3],
+    };
+  }
+
+  // "senate-119-42" (congress-roll, public v1 format)
+  const senatePrefixMatch = voteId.match(/^senate-(\d+)-(\d+)$/);
+  if (senatePrefixMatch && senatePrefixMatch[1] && senatePrefixMatch[2]) {
+    return {
+      chamber: 'Senate',
+      congress: senatePrefixMatch[1],
+      rollNumber: senatePrefixMatch[2],
+      numericId: senatePrefixMatch[2],
+    };
+  }
+
+  // "119-senate-00499" or bare numeric "499"
   const senateMatch = voteId.match(/^(?:(\d+)-senate-)?(\d+)$/);
   if (senateMatch && senateMatch[2]) {
     return {
@@ -216,32 +193,22 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
     if (!xmlText.includes('<legislator') || !xmlText.includes('<vote>')) return [];
 
     const memberPattern =
-      /<recorded-vote><legislator name-id="([^"]+)"[^>]*>([^<]*)<\/legislator><vote>([^<]+)<\/vote><\/recorded-vote>/gi;
+      /<recorded-vote><legislator name-id="([^"]+)"([^>]*)>([^<]*)<\/legislator><vote>([^<]+)<\/vote><\/recorded-vote>/gi;
     const members: MemberVote[] = [];
     let match;
 
     while ((match = memberPattern.exec(xmlText)) !== null) {
-      const [, bioguideId, memberInfo, votePosition] = match;
+      const [, bioguideId, attributes, memberInfo, votePosition] = match;
       if (!bioguideId || !votePosition) continue;
 
       const nameMatch = memberInfo?.match(/([^,]+)/);
       const fullName = nameMatch?.[1]?.trim() || 'Unknown';
       const nameParts = fullName.split(' ');
 
-      let position: MemberVote['position'];
-      switch (votePosition.trim()) {
-        case 'Yea':
-          position = 'Yea';
-          break;
-        case 'Nay':
-          position = 'Nay';
-          break;
-        case 'Present':
-          position = 'Present';
-          break;
-        default:
-          position = 'Not Voting';
-      }
+      // Clerk XML carries party/state on the legislator element
+      const partyAttr = attributes?.match(/party="([^"]*)"/)?.[1]?.trim() ?? '';
+      const party: MemberVote['party'] = partyAttr === 'D' || partyAttr === 'R' ? partyAttr : 'I';
+      const state = attributes?.match(/state="([^"]*)"/)?.[1]?.trim() || 'Unknown';
 
       members.push({
         id: bioguideId,
@@ -249,9 +216,9 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
         firstName: nameParts[0] || 'Unknown',
         lastName: nameParts.slice(1).join(' ') || 'Unknown',
         fullName,
-        state: 'Unknown',
-        party: 'R',
-        position,
+        state,
+        party,
+        position: normalizeVotePosition(votePosition),
       });
     }
     return members;
@@ -264,15 +231,16 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
 async function parseHouseVote(
   voteId: string,
   congress: string,
-  rollNumber: string
+  rollNumber: string,
+  knownSession?: string
 ): Promise<UnifiedVoteDetail | null> {
   try {
-    const sessionsToTry = [1, 2];
+    const sessions = sessionsToTry(congress, knownSession);
     let response: Response | null = null;
-    let sessionNumber = 1;
+    let sessionNumber = sessions[0] ?? 1;
     let apiUrl = '';
 
-    for (const session of sessionsToTry) {
+    for (const session of sessions) {
       apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?format=json`;
       response = await fetch(apiUrl, {
         headers: {
@@ -373,19 +341,33 @@ async function parseHouseVote(
 }
 
 // Parse Senate vote from XML
-async function parseSenateVote(voteId: string): Promise<UnifiedVoteDetail | null> {
+async function parseSenateVote(
+  voteId: string,
+  congress: string,
+  knownSession?: string
+): Promise<UnifiedVoteDetail | null> {
   try {
     const paddedVoteId = voteId.padStart(5, '0');
-    const xmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_${paddedVoteId}.xml`;
 
-    const response = await fetch(xmlUrl, {
-      headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
-      signal: AbortSignal.timeout(10000),
-    });
+    // Roll-call numbers restart each session; try the likeliest session first
+    let xmlUrl = '';
+    let xmlText: string | null = null;
+    for (const session of sessionsToTry(congress, knownSession)) {
+      xmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedVoteId}.xml`;
+      const response = await fetch(xmlUrl, {
+        headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) continue;
+      const body = await response.text();
+      // senate.gov can serve a 200 HTML error page for missing votes
+      if (body.includes('<roll_call_vote')) {
+        xmlText = body;
+        break;
+      }
+    }
 
-    if (!response.ok) return null;
-
-    const xmlText = await response.text();
+    if (!xmlText) return null;
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
@@ -408,13 +390,17 @@ async function parseSenateVote(voteId: string): Promise<UnifiedVoteDetail | null
       const memberList = Array.isArray(rcv.members.member)
         ? rcv.members.member
         : [rcv.members.member];
+      const senatorLookup = await getSenatorBioguideLookup();
       for (const m of memberList) {
         const lisId = String(m.lis_member_id || '');
         const firstName = String(m.first_name || '');
         const lastName = String(m.last_name || '');
         const state = String(m.state || '');
-        const bioguideId = mapLISIdToBioguideId(lisId, firstName, lastName, state);
+        const bioguideId =
+          senatorLookup.byLis.get(lisId) ??
+          senatorLookup.byNameState.get(`${lastName.toLowerCase()}_${state.toLowerCase()}`);
 
+        const partyRaw = String(m.party || '');
         members.push({
           id: bioguideId || lisId,
           lisId,
@@ -423,8 +409,8 @@ async function parseSenateVote(voteId: string): Promise<UnifiedVoteDetail | null
           lastName,
           fullName: String(m.member_full || ''),
           state,
-          party: String(m.party || '') as 'D' | 'R' | 'I',
-          position: String(m.vote_cast || 'Not Voting') as MemberVote['position'],
+          party: partyRaw === 'D' || partyRaw === 'R' ? partyRaw : 'I',
+          position: normalizeVotePosition(String(m.vote_cast || '')),
         });
       }
     }
@@ -545,9 +531,9 @@ export async function getVoteDetailsService(voteId: string): Promise<UnifiedVote
 
   let vote: UnifiedVoteDetail | null;
   if (parsed.chamber === 'House') {
-    vote = await parseHouseVote(voteId, parsed.congress, parsed.rollNumber);
+    vote = await parseHouseVote(voteId, parsed.congress, parsed.rollNumber, parsed.session);
   } else {
-    vote = await parseSenateVote(parsed.numericId);
+    vote = await parseSenateVote(parsed.numericId, parsed.congress, parsed.session);
   }
 
   if (!vote) return null;

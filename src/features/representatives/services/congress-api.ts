@@ -659,35 +659,38 @@ async function getSenateVotesByMember(
       method: 'senate-xml-parsing',
     });
 
-    // Transform to expected format
-    return memberVotes.map(vote => ({
-      voteId: vote.voteId,
-      bill: vote.bill || {
-        number: 'N/A',
-        title: 'Vote without associated bill',
-        congress: '119',
-        type: 'Resolution',
-        url: '',
-      },
-      question: vote.question,
-      result: vote.result,
-      date: vote.date,
-      position: vote.position,
-      chamber: 'Senate' as const,
-      rollNumber: parseInt(vote.voteId.split('-')[3] || '0') || 0,
-      voteType: 'roll-call',
-      sessionNumber: 1,
-      isKeyVote: false,
-      category: 'Legislative' as const,
-      metadata: {
-        sourceUrl: `https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_${(vote.voteId.split('-')[3] || '0').padStart(5, '0')}.xml`,
-        lastUpdated: new Date().toISOString(),
-        confidence: 'high',
-        memberVoteData: null,
-        dataSource: 'senate-xml-parsing',
-        note: 'Real Senate votes from Senate.gov XML parsing',
-      },
-    }));
+    // Transform to expected format (voteId is "senate-{congress}-{session}-{rollNumber}")
+    return memberVotes.map(vote => {
+      const [, voteCongress = '119', voteSession = '1', voteRoll = '0'] = vote.voteId.split('-');
+      return {
+        voteId: vote.voteId,
+        bill: vote.bill || {
+          number: 'N/A',
+          title: 'Vote without associated bill',
+          congress: voteCongress,
+          type: 'Resolution',
+          url: '',
+        },
+        question: vote.question,
+        result: vote.result,
+        date: vote.date,
+        position: vote.position,
+        chamber: 'Senate' as const,
+        rollNumber: parseInt(voteRoll) || 0,
+        voteType: 'roll-call',
+        sessionNumber: parseInt(voteSession) || 1,
+        isKeyVote: false,
+        category: 'Legislative' as const,
+        metadata: {
+          sourceUrl: `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${voteCongress}${voteSession}/vote_${voteCongress}_${voteSession}_${voteRoll.padStart(5, '0')}.xml`,
+          lastUpdated: new Date().toISOString(),
+          confidence: 'high',
+          memberVoteData: null,
+          dataSource: 'senate-xml-parsing',
+          note: 'Real Senate votes from Senate.gov XML parsing',
+        },
+      };
+    });
   } catch (error) {
     logger.error('Error fetching Senate votes with enhanced service', {
       component: 'congressApi',

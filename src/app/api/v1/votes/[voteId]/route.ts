@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
+import { sessionsToTry } from '@/lib/services/vote.service';
 import logger from '@/lib/logging/simple-logger';
 import type { HouseXmlVoteData, SenateXmlVoteData } from '@/types/xml-vote-data';
 
@@ -63,27 +64,41 @@ export async function GET(
     }
 
     const { chamber, congress, rollNumber } = parsed;
-    const session = '1'; // Default to first session
 
-    let voteUrl: string;
-    if (chamber === 'house') {
-      voteUrl = `https://clerk.house.gov/evs/${getYearFromCongress(parseInt(congress))}/roll${rollNumber.padStart(3, '0')}.xml`;
-    } else {
-      voteUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${rollNumber.padStart(5, '0')}.xml`;
+    // Roll-call numbers restart each session; the vote ID carries no session,
+    // so try the likeliest session first and fall back to the other.
+    let xmlText: string | null = null;
+    let lastStatus = 404;
+    for (const session of sessionsToTry(congress)) {
+      const voteUrl =
+        chamber === 'house'
+          ? `https://clerk.house.gov/evs/${getYearFromCongress(parseInt(congress)) + (session - 1)}/roll${rollNumber.padStart(3, '0')}.xml`
+          : `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${rollNumber.padStart(5, '0')}.xml`;
+
+      const response = await fetch(voteUrl, {
+        headers: { 'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)' },
+      });
+
+      if (!response.ok) {
+        lastStatus = response.status;
+        continue;
+      }
+
+      const body = await response.text();
+      // Both chambers can serve a 200 HTML error page for missing votes
+      if (body.includes('rollcall-vote') || body.includes('roll_call_vote')) {
+        xmlText = body;
+        break;
+      }
+      lastStatus = 404;
     }
 
-    const response = await fetch(voteUrl, {
-      headers: { 'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)' },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
+    if (!xmlText) {
+      if (lastStatus === 404) {
         return NextResponse.json(v1Error(404, 'Vote not found'), { status: 404 });
       }
       return NextResponse.json(v1Error(502, 'Failed to fetch vote data'), { status: 502 });
     }
-
-    const xmlText = await response.text();
     const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
     const xmlData = parser.parse(xmlText);
 
