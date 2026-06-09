@@ -34,10 +34,11 @@ export async function GET(
   }
 
   const { searchParams } = request.nextUrl;
-  const quarters = parseInt(searchParams.get('quarters') ?? '8');
+  const quarters = parseInt(searchParams.get('quarters') ?? '8', 10);
 
-  if (quarters < 1 || quarters > 20) {
-    return ApiErrors.validation('quarters must be between 1 and 20');
+  // NaN fails every comparison, so the finite check must be explicit
+  if (!Number.isFinite(quarters) || quarters < 1 || quarters > 20) {
+    return ApiErrors.validation('quarters must be an integer between 1 and 20');
   }
 
   try {

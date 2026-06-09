@@ -37,8 +37,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (maxDepth < 1 || maxDepth > 4) {
-    return ApiErrors.validation('maxDepth must be between 1 and 4');
+  if (!Number.isFinite(maxDepth) || maxDepth < 1 || maxDepth > 4) {
+    return ApiErrors.validation('maxDepth must be an integer between 1 and 4');
   }
 
   // Validate edgeTypes

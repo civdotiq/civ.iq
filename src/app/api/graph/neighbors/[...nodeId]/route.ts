@@ -43,7 +43,15 @@ export async function GET(
   const minConfidence = parseFloat(searchParams.get('minConfidence') ?? '0');
   const since = searchParams.get('since');
   const until = searchParams.get('until');
-  const limit = parseInt(searchParams.get('limit') ?? '50');
+  const limit = parseInt(searchParams.get('limit') ?? '50', 10);
+
+  // NaN fails every comparison, so the finite checks must be explicit
+  if (!Number.isFinite(minConfidence) || minConfidence < 0 || minConfidence > 1) {
+    return ApiErrors.validation('minConfidence must be a number between 0 and 1');
+  }
+  if (!Number.isFinite(limit) || limit < 1 || limit > 500) {
+    return ApiErrors.validation('limit must be an integer between 1 and 500');
+  }
 
   // Validate edgeTypes if provided
   let edgeTypeFilter: Set<GraphEdgeType> | null = null;

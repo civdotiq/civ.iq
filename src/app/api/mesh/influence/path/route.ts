@@ -31,6 +31,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return ApiErrors.validation('IDs must use canonical format (e.g., "org:name", "rep:A000360")');
   }
 
+  if (!Number.isFinite(maxDepth) || maxDepth < 1 || maxDepth > 4) {
+    return ApiErrors.validation('maxDepth must be an integer between 1 and 4');
+  }
+
   try {
     logger.info('[API:InfluencePath] Request', { fromId, toId, maxDepth });
 

@@ -30,6 +30,10 @@ export async function GET(
     return ApiErrors.validation('Invalid committee ID format. Expected format: C00000000');
   }
 
+  if (!Number.isFinite(cycle) || cycle < 1980 || cycle > 2030) {
+    return ApiErrors.validation('cycle must be a year between 1980 and 2030');
+  }
+
   try {
     logger.info(`[Influence Profile] Fetching profile for ${committeeId} cycle=${cycle}`);
 

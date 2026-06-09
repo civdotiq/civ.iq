@@ -32,6 +32,14 @@ export async function GET(
     );
   }
 
+  // parseInt('abc') is NaN, which silently passes range math downstream
+  if (year !== undefined && (!Number.isFinite(year) || year < 1985 || year > 2030)) {
+    return NextResponse.json(
+      { error: 'year must be a four-digit year between 1985 and 2030' },
+      { status: 400 }
+    );
+  }
+
   const stateCode = state.toUpperCase();
 
   try {

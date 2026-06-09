@@ -37,7 +37,12 @@ export async function GET(
   }
 
   const { searchParams } = request.nextUrl;
-  const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 200);
+  const limit = Math.min(parseInt(searchParams.get('limit') ?? '50', 10), 200);
+
+  // Math.min(NaN, 200) is NaN — reject non-numeric limits explicitly
+  if (!Number.isFinite(limit) || limit < 1) {
+    return ApiErrors.validation('limit must be an integer between 1 and 200');
+  }
 
   const keypair = getNostrKeypair();
   if (!keypair) {

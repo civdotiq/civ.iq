@@ -17,10 +17,17 @@ export async function GET(request: NextRequest) {
     const y = new Date().getFullYear();
     return y % 2 === 0 ? y : y + 1;
   })();
-  const cycle = parseInt(searchParams.get('cycle') || String(currentCycle));
+  const cycle = parseInt(searchParams.get('cycle') || String(currentCycle), 10);
 
   if (!candidateId) {
     return NextResponse.json({ error: 'candidateId query parameter is required' }, { status: 400 });
+  }
+
+  if (!Number.isFinite(cycle) || cycle < 1980 || cycle > 2030) {
+    return NextResponse.json(
+      { error: 'cycle must be a year between 1980 and 2030' },
+      { status: 400 }
+    );
   }
 
   try {
