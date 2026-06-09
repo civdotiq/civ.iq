@@ -501,7 +501,9 @@ export const BillsTab = React.memo(
                 <p className="text-sm text-gray-500 mt-1">
                   Introduced:{' '}
                   {bill.introducedDate
-                    ? new Date(bill.introducedDate).toLocaleDateString()
+                    ? new Date(bill.introducedDate).toLocaleDateString('en-US', {
+                        timeZone: 'UTC',
+                      })
                     : 'Date unknown'}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">{bill.lastAction}</p>

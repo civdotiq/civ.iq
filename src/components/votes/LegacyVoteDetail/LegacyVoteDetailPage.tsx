@@ -346,6 +346,7 @@ export function LegacyVoteDetailPage({
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  timeZone: 'UTC',
                 })}
                 {voteDetail.time && ` at ${voteDetail.time}`}
               </span>

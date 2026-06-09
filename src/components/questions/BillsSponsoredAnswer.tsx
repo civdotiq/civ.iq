@@ -129,6 +129,7 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
+                    timeZone: 'UTC',
                   })}
                   {bill.policyArea && <span className="ml-2 text-gray-400">{bill.policyArea}</span>}
                 </p>

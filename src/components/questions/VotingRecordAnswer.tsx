@@ -139,6 +139,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
+                      timeZone: 'UTC',
                     })}
                   </p>
                 </div>

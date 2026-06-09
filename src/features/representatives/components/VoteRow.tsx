@@ -158,6 +158,7 @@ const VoteRowComponent: React.FC<VoteRowProps> = ({ vote, index, isClickable, on
               month: '2-digit',
               day: '2-digit',
               year: 'numeric',
+              timeZone: 'UTC',
             })
           : 'N/A'}
       </td>

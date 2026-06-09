@@ -254,7 +254,8 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
                   {hearing.title}
                 </a>
                 <div className="text-xs text-gray-500 mt-1">
-                  {hearing.chamber} · {new Date(hearing.dateIssued).toLocaleDateString()} ·{' '}
+                  {hearing.chamber} ·{' '}
+                  {new Date(hearing.dateIssued).toLocaleDateString('en-US', { timeZone: 'UTC' })} ·{' '}
                   {hearing.relevance}
                 </div>
               </div>

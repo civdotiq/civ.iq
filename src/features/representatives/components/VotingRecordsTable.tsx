@@ -148,6 +148,7 @@ const VotesList = memo(
                         month: 'long',
                         day: 'numeric',
                         year: 'numeric',
+                        timeZone: 'UTC',
                       })}
                     </div>
                   </div>

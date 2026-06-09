@@ -300,7 +300,7 @@ function ContributionTrendsChart({
   const maxAmount = Math.max(...trends.map(t => t.amount));
   const formatMonth = (month: string) => {
     const date = new Date(month + '-01');
-    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
   };
 
   const formatCurrency = (amount: number) => {
@@ -1137,7 +1137,7 @@ export const FinanceTabEnhanced = React.memo(
                       {pac.date && (
                         <>
                           {pac.pacType !== 'unknown' && ' • '}
-                          {new Date(pac.date).toLocaleDateString()}
+                          {new Date(pac.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                         </>
                       )}
                     </div>
@@ -1259,7 +1259,9 @@ export const FinanceTabEnhanced = React.memo(
                           </div>
                           <div className="text-xs text-gray-600">
                             {expenditure.pacType} •{' '}
-                            {new Date(expenditure.date).toLocaleDateString()}
+                            {new Date(expenditure.date).toLocaleDateString('en-US', {
+                              timeZone: 'UTC',
+                            })}
                           </div>
                           {expenditure.description && (
                             <div className="text-xs text-gray-500 mt-1">
@@ -1295,7 +1297,9 @@ export const FinanceTabEnhanced = React.memo(
                           </div>
                           <div className="text-xs text-gray-600">
                             {expenditure.pacType} •{' '}
-                            {new Date(expenditure.date).toLocaleDateString()}
+                            {new Date(expenditure.date).toLocaleDateString('en-US', {
+                              timeZone: 'UTC',
+                            })}
                           </div>
                           {expenditure.description && (
                             <div className="text-xs text-gray-500 mt-1">
@@ -1440,7 +1444,9 @@ export const FinanceTabEnhanced = React.memo(
                       {contribution.employer && ` • ${contribution.employer}`}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      {new Date(contribution.date).toLocaleDateString()}
+                      {new Date(contribution.date).toLocaleDateString('en-US', {
+                        timeZone: 'UTC',
+                      })}
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-civiq-green ml-4">

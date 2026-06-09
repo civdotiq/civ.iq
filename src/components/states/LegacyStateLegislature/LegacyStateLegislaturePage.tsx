@@ -362,7 +362,9 @@ function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               <span>Sponsor: {bill.sponsor.name}</span>
               <span>•</span>
-              <span>{new Date(bill.lastActionDate).toLocaleDateString()}</span>
+              <span>
+                {new Date(bill.lastActionDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+              </span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
