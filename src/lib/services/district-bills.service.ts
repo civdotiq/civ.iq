@@ -15,6 +15,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { currentFederalFiscalYearWindow } from '@/lib/helpers/federal-fiscal-year';
 import logger from '@/lib/logging/simple-logger';
 import {
   getCommitteesForAgency,
@@ -88,9 +89,7 @@ export function parseDistrictId(districtId: string): { state: string; district: 
 }
 
 async function fetchTopAgenciesForDistrict(state: string, district: string): Promise<string[]> {
-  const fiscalYear = new Date().getFullYear();
-  const startDate = `${fiscalYear - 1}-10-01`;
-  const endDate = `${fiscalYear}-09-30`;
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
   const districtCode = district === 'AL' ? '00' : district;
 
   try {

@@ -4,7 +4,7 @@
  */
 
 // Remove React cache import - not available in current Next.js version
-import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
+import { ZIP_TO_DISTRICT_MAP } from './data/zip-district-mapping';
 import { US_STATES } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 
@@ -19,7 +19,8 @@ export interface CongressionalDistrict {
     black_percent: number;
     hispanic_percent: number;
     asian_percent: number;
-    median_income: number;
+    /** Null when the ACS estimate is suppressed (negative sentinel). */
+    median_income: number | null;
     poverty_rate: number;
     bachelor_degree_percent: number;
   };
@@ -219,23 +220,49 @@ async function fetchDemographics(
       const data = await response.json();
       if (data.length > 1) {
         const [_headers, values] = data;
-        const totalPop = parseInt(values[0]) || 0;
-        const white = parseInt(values[1]) || 0;
-        const black = parseInt(values[2]) || 0;
-        const asian = parseInt(values[3]) || 0;
-        const hispanic = parseInt(values[4]) || 0;
-        const medianIncome = parseInt(values[5]) || 0;
-        const belowPoverty = parseInt(values[6]) || 0;
-        const bachelors = parseInt(values[7]) || 0;
+        // ACS uses large negative sentinels (e.g. -666666666) for
+        // suppressed/unavailable estimates — never let them through as data.
+        const parseAcsValue = (raw: unknown): number | null => {
+          const n = parseInt(String(raw ?? ''), 10);
+          return Number.isFinite(n) && n >= 0 ? n : null;
+        };
+
+        const totalPop = parseAcsValue(values[0]);
+        const white = parseAcsValue(values[1]);
+        const black = parseAcsValue(values[2]);
+        const asian = parseAcsValue(values[3]);
+        const hispanic = parseAcsValue(values[4]);
+        const medianIncome = parseAcsValue(values[5]);
+        const belowPoverty = parseAcsValue(values[6]);
+        const bachelors = parseAcsValue(values[7]);
+
+        // Percentages need real counts — if any are unavailable, report
+        // no demographics rather than fabricated zeros.
+        if (
+          totalPop === null ||
+          totalPop === 0 ||
+          white === null ||
+          black === null ||
+          asian === null ||
+          hispanic === null ||
+          belowPoverty === null ||
+          bachelors === null
+        ) {
+          logger.warn('ACS demographics unavailable or suppressed', {
+            component: 'censusApi',
+            metadata: { state, district },
+          });
+          return undefined;
+        }
 
         return {
-          white_percent: totalPop > 0 ? (white / totalPop) * 100 : 0,
-          black_percent: totalPop > 0 ? (black / totalPop) * 100 : 0,
-          hispanic_percent: totalPop > 0 ? (hispanic / totalPop) * 100 : 0,
-          asian_percent: totalPop > 0 ? (asian / totalPop) * 100 : 0,
+          white_percent: (white / totalPop) * 100,
+          black_percent: (black / totalPop) * 100,
+          hispanic_percent: (hispanic / totalPop) * 100,
+          asian_percent: (asian / totalPop) * 100,
           median_income: medianIncome,
-          poverty_rate: totalPop > 0 ? (belowPoverty / totalPop) * 100 : 0,
-          bachelor_degree_percent: totalPop > 0 ? (bachelors / totalPop) * 100 : 0,
+          poverty_rate: (belowPoverty / totalPop) * 100,
+          bachelor_degree_percent: (bachelors / totalPop) * 100,
         };
       }
     }
@@ -247,16 +274,8 @@ async function fetchDemographics(
     });
   }
 
-  // Return default values if API fails
-  return {
-    white_percent: 0,
-    black_percent: 0,
-    hispanic_percent: 0,
-    asian_percent: 0,
-    median_income: 0,
-    poverty_rate: 0,
-    bachelor_degree_percent: 0,
-  };
+  // Data unavailable — never return fabricated zeros
+  return undefined;
 }
 
 /**
@@ -305,21 +324,9 @@ export const getCongressionalDistrictFromZip = async (
     };
   }
 
-  // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
-  const state = getStateFromZip(zipCode);
-  if (state) {
-    const stateName = US_STATES[state as keyof typeof US_STATES] || state;
-    // For unknown districts, default to district 1 - this is a fallback only
-    const district = '01';
-
-    return {
-      state: state,
-      stateCode: state,
-      district: district,
-      districtName: `${stateName} District 1`,
-    };
-  }
-
+  // ZIP not in any mapping: report unavailable rather than fabricating a
+  // district (the old behavior defaulted to "District 1", which is wrong
+  // data — callers must show an empty state instead).
   return null;
 };
 

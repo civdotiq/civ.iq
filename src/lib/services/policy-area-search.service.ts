@@ -14,6 +14,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { currentFederalFiscalYearWindow } from '@/lib/helpers/federal-fiscal-year';
 import {
   getPolicyAreaMapping,
   getAgencySlugsForPolicyArea,
@@ -166,9 +167,7 @@ async function fetchSpendingByAgencies(
 ): Promise<{ totalAmount: number; topAgencies: Array<{ name: string; amount: number }> }> {
   if (agencySlugs.length === 0) return { totalAmount: 0, topAgencies: [] };
 
-  const fiscalYear = new Date().getFullYear();
-  const startDate = `${fiscalYear - 1}-10-01`;
-  const endDate = `${fiscalYear}-09-30`;
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
 
   const requestBody = {
     subawards: false,

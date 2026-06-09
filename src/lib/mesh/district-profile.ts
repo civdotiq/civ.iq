@@ -20,6 +20,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { currentFederalFiscalYearWindow } from '@/lib/helpers/federal-fiscal-year';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
@@ -385,9 +386,7 @@ async function fetchDistrictSpending(
   district: string
 ): Promise<SpendingResult | null> {
   try {
-    const fiscalYear = new Date().getFullYear();
-    const startDate = `${fiscalYear - 1}-10-01`;
-    const endDate = `${fiscalYear}-09-30`;
+    const { startDate, endDate } = currentFederalFiscalYearWindow();
 
     // Normalize district for USASpending API (expects numeric codes)
     // At-large (AL) -> "00", STATE -> statewide query, numeric -> padded

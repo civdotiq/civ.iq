@@ -12,6 +12,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { currentFederalFiscalYearWindow } from '@/lib/helpers/federal-fiscal-year';
 import logger from '@/lib/logging/simple-logger';
 import type {
   FederalAward,
@@ -60,9 +61,7 @@ async function fetchDistrictAwards(
   awardCodes: string[],
   limit: number = 10
 ): Promise<FederalAward[]> {
-  const fiscalYear = new Date().getFullYear();
-  const startDate = `${fiscalYear - 1}-10-01`;
-  const endDate = `${fiscalYear}-09-30`;
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
 
   try {
     const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
@@ -111,9 +110,7 @@ async function fetchDistrictAggregate(
   state: string,
   district: string
 ): Promise<{ total: number; perCapita: number | null; population: number | null } | null> {
-  const fiscalYear = new Date().getFullYear();
-  const startDate = `${fiscalYear - 1}-10-01`;
-  const endDate = `${fiscalYear}-09-30`;
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
 
   try {
     const response = await fetch(`${USASPENDING_API}/search/spending_by_geography/`, {
