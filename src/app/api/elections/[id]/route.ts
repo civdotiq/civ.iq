@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
 import {
   ELECTION_2024_METADATA,
@@ -100,6 +101,14 @@ interface FecCandidateRow {
 }
 
 async function fecCandidatesTotals(params: URLSearchParams, apiKey: string) {
+  // Account this request against the shared per-minute FEC budget (live
+  // priority by default — see fec-rate-limiter; only cron contexts throttle).
+  const reservation = await reserveFecCall();
+  if (!reservation.allowed) {
+    throw new Error(
+      `FEC budget reserved for live traffic — call throttled (${reservation.count}/${reservation.ceiling} this minute)`
+    );
+  }
   const url = `${FEC_API_BASE}/candidates/totals/?${params.toString()}`;
   const res = await fetch(url, {
     headers: {

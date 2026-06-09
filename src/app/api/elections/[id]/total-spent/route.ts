@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
 import type { ElectionTotalSpentPayload } from '@/types/elections';
 
@@ -24,6 +25,11 @@ export const maxDuration = 12;
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 const CANDIDATE_ID_RE = /^[HSP]\d[A-Z]{2}\d{5}$/;
+// Page callers send 2 ids (D + R); 12 is a generous ceiling that still
+// bounds the FEC fan-out (2 calls per candidate) under the shared key.
+const MAX_CANDIDATE_IDS = 12;
+// Candidates processed at a time → at most 8 concurrent FEC calls.
+const CANDIDATE_CONCURRENCY = 4;
 
 interface FecTotalsRow {
   disbursements: number | null;
@@ -37,6 +43,14 @@ interface FecScheduleEByCandidateRow {
 }
 
 async function fecGet<T>(path: string, apiKey: string): Promise<T> {
+  // Account this request against the shared per-minute FEC budget (live
+  // priority by default — see fec-rate-limiter; only cron contexts throttle).
+  const reservation = await reserveFecCall();
+  if (!reservation.allowed) {
+    throw new Error(
+      `FEC budget reserved for live traffic — call throttled (${reservation.count}/${reservation.ceiling} this minute)`
+    );
+  }
   const res = await fetch(`${FEC_API_BASE}${path}`, {
     headers: {
       Accept: 'application/json',
@@ -51,11 +65,12 @@ async function fecGet<T>(path: string, apiKey: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Returns the dollar amount, or null when the FEC lookup failed (≠ a real $0). */
 async function loadDisbursements(
   candidateId: string,
   cycle: number,
   apiKey: string
-): Promise<number> {
+): Promise<number | null> {
   try {
     const json = await fecGet<{ results?: FecTotalsRow[] }>(
       `/candidate/${candidateId}/totals/?cycle=${cycle}&per_page=1`,
@@ -68,15 +83,16 @@ async function loadDisbursements(
     logger.warn(
       `[elections/total-spent] disbursements lookup failed for ${candidateId}: ${(error as Error).message}`
     );
-    return 0;
+    return null;
   }
 }
 
+/** Returns the dollar amount, or null when the FEC lookup failed (≠ a real $0). */
 async function loadIndependentExpenditures(
   candidateId: string,
   cycle: number,
   apiKey: string
-): Promise<number> {
+): Promise<number | null> {
   try {
     const json = await fecGet<{ results?: FecScheduleEByCandidateRow[] }>(
       `/schedules/schedule_e/by_candidate/?candidate_id=${candidateId}&cycle=${cycle}&per_page=100`,
@@ -88,7 +104,7 @@ async function loadIndependentExpenditures(
     logger.warn(
       `[elections/total-spent] schedule_e lookup failed for ${candidateId}: ${(error as Error).message}`
     );
-    return 0;
+    return null;
   }
 }
 
@@ -112,6 +128,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (ids.length === 0) {
     return NextResponse.json({ error: 'ids query param required.', raceId }, { status: 400 });
   }
+  if (ids.length > MAX_CANDIDATE_IDS) {
+    return NextResponse.json(
+      { error: `Too many candidate ids (max ${MAX_CANDIDATE_IDS}).`, raceId },
+      { status: 400 }
+    );
+  }
   for (const cid of ids) {
     if (!CANDIDATE_ID_RE.test(cid)) {
       return NextResponse.json({ error: `Invalid candidate id: ${cid}`, raceId }, { status: 400 });
@@ -125,16 +147,49 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   try {
-    const [disbArr, ieArr] = await Promise.all([
-      Promise.all(ids.map(cid => loadDisbursements(cid, cycle, apiKey))),
-      Promise.all(ids.map(cid => loadIndependentExpenditures(cid, cycle, apiKey))),
-    ]);
+    // Bounded concurrency: each candidate fires 2 FEC calls, so process
+    // CANDIDATE_CONCURRENCY candidates at a time instead of all at once.
+    const spends: Array<{ disbursements: number | null; independentExpenditures: number | null }> =
+      [];
+    for (let i = 0; i < ids.length; i += CANDIDATE_CONCURRENCY) {
+      const chunk = ids.slice(i, i + CANDIDATE_CONCURRENCY);
+      const chunkResults = await Promise.all(
+        chunk.map(async cid => {
+          const [disbursements, independentExpenditures] = await Promise.all([
+            loadDisbursements(cid, cycle, apiKey),
+            loadIndependentExpenditures(cid, cycle, apiKey),
+          ]);
+          return { disbursements, independentExpenditures };
+        })
+      );
+      spends.push(...chunkResults);
+    }
 
-    const candidateDisbursements = disbArr.reduce((a, b) => a + b, 0);
-    const independentExpenditures = ieArr.reduce((a, b) => a + b, 0);
+    // A candidate is "failed" when either FEC lookup errored — its share of
+    // the total is unknown, which is different from a real $0.
+    const failedCandidates = spends.filter(
+      s => s.disbursements === null || s.independentExpenditures === null
+    ).length;
+
+    if (failedCandidates === ids.length) {
+      return NextResponse.json(
+        { error: 'FEC lookups failed for all candidates', raceId },
+        { status: 502, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
+    const candidateDisbursements = spends.reduce((a, s) => a + (s.disbursements ?? 0), 0);
+    const independentExpenditures = spends.reduce(
+      (a, s) => a + (s.independentExpenditures ?? 0),
+      0
+    );
     const total = candidateDisbursements + independentExpenditures;
+    const incomplete = failedCandidates > 0;
 
-    const payload: ElectionTotalSpentPayload = {
+    const payload: ElectionTotalSpentPayload & {
+      incomplete?: boolean;
+      failedCandidates?: number;
+    } = {
       raceId,
       cycle,
       totalSpent: total,
@@ -144,15 +199,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         total,
       },
       dataAsOf: new Date().toISOString(),
+      ...(incomplete ? { incomplete: true, failedCandidates } : {}),
     };
 
     return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=86400',
+        // Incomplete totals get a short CDN-only TTL; complete totals keep the
+        // long TTL but CDN-only (s-maxage) so wrong data stays purgeable.
+        'Cache-Control': incomplete
+          ? 'public, s-maxage=300'
+          : 'public, s-maxage=86400, stale-while-revalidate=86400',
       },
     });
   } catch (error) {
     logger.error('[elections/total-spent] failed', error as Error, { raceId });
-    return NextResponse.json({ error: 'Failed to fetch total spent', raceId }, { status: 502 });
+    return NextResponse.json(
+      { error: 'Failed to fetch total spent', raceId },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } }
+    );
   }
 }
