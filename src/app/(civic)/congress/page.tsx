@@ -220,12 +220,20 @@ export default function CongressHubPage() {
               Senators and their voting records, committee assignments, and sponsored legislation.
             </p>
           </div>
-          <Link
-            href="/committees"
-            className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
-          >
-            View Senate Committees →
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/representatives?chamber=senate"
+              className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
+            >
+              View all 100 Senators →
+            </Link>
+            <Link
+              href="/committees#senate"
+              className="inline-block border-2 border-civiq-blue text-civiq-blue px-4 py-2 hover:bg-civiq-blue/10"
+            >
+              Senate Committees →
+            </Link>
+          </div>
         </section>
 
         {/* House Section */}
@@ -239,12 +247,20 @@ export default function CongressHubPage() {
             House has exclusive powers including initiating revenue bills and impeaching federal
             officials.
           </p>
-          <Link
-            href="/committees"
-            className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
-          >
-            View House Committees →
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/representatives?chamber=house"
+              className="inline-block bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue"
+            >
+              View all 435 Representatives →
+            </Link>
+            <Link
+              href="/committees#house"
+              className="inline-block border-2 border-civiq-blue text-civiq-blue px-4 py-2 hover:bg-civiq-blue/10"
+            >
+              House Committees →
+            </Link>
+          </div>
         </section>
 
         {/* Committees Section */}
