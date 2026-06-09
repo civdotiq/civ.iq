@@ -93,6 +93,9 @@ jest.mock('@/lib/intelligence/ml/vote-predictor', () => ({
   getModelMetadata: (...args: unknown[]) => mockGetModelMetadata(...args),
   predictVote: (...args: unknown[]) => mockPredictVote(...args),
   buildFeatureVector: (...args: unknown[]) => mockBuildFeatureVector(...args),
+  // Real label map — the analyzer dereferences it at module scope
+  FEATURE_HUMAN_LABELS: jest.requireActual('@/lib/intelligence/ml/vote-predictor')
+    .FEATURE_HUMAN_LABELS,
 }));
 
 const mockGetBillSectors = jest.fn();

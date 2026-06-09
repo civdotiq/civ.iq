@@ -58,3 +58,20 @@ describe('normalizeEntity', () => {
     expect(result.displayName).toBe('JOHN SMITH');
   });
 });
+
+describe('normalizeEntity - entity type word-boundary detection', () => {
+  // Regression: substring matching classified surnames containing org
+  // indicators ("COOPER" -> CO, "PACHECO" -> PAC) as organizations,
+  // skipping LAST, FIRST standardization and breaking contributor dedup.
+  it('classifies individuals whose surnames contain org indicator substrings', () => {
+    expect(normalizeEntity('COOPER, JOHN').entityType).toBe('individual');
+    expect(normalizeEntity('PACHECO, MARIA').entityType).toBe('individual');
+    expect(normalizeEntity('FUNDERBURK, JANE').entityType).toBe('individual');
+  });
+
+  it('still classifies organizations by whole-word indicators', () => {
+    expect(normalizeEntity('ACME CO').entityType).toBe('organization');
+    expect(normalizeEntity('TEACHERS PAC').entityType).toBe('organization');
+    expect(normalizeEntity('SMITH & WESSON, INC.').entityType).toBe('organization');
+  });
+});

@@ -529,12 +529,12 @@ async function computeQuarterlyAlignment(data: FetchedData): Promise<QuarterData
     const [quarter, counts] = sortedQuarters[i]!;
     const alignmentScore = counts.total > 0 ? counts.withParty / counts.total : 0;
 
-    // Rolling 4-quarter average
+    // Trailing 4-quarter average over PRIOR quarters only. Including the
+    // current quarter damped every measured deviation by 25% (deviation
+    // became 0.75 × the true distance from the trailing average).
     let rollingAverage: number | null = null;
-    if (i >= 3) {
-      const window = quarterData
-        .slice(i - 3, i)
-        .concat([{ quarter, alignmentScore, voteCount: counts.total, rollingAverage: null }]);
+    if (i >= 4) {
+      const window = quarterData.slice(i - 4, i);
       rollingAverage = window.reduce((sum, q) => sum + q.alignmentScore, 0) / window.length;
     }
 

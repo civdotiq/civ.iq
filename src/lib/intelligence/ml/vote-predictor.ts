@@ -177,24 +177,42 @@ const SECTOR_ORDER: string[] = [
 
 // ── Feature Name Mapping ─────────────────────────────────────────────
 
-const FEATURE_HUMAN_LABELS: Record<string, string> = {
+/**
+ * Human-readable labels for every model feature. Keys must match
+ * models/vote-prediction-metadata.json featureNames exactly — a unit test
+ * asserts full coverage so raw slugs never reach citizens.
+ */
+export const FEATURE_HUMAN_LABELS: Record<string, string> = {
   donor_pct_agribusiness: 'Agribusiness donations',
-  donor_pct_communications: 'Communications/Electronics donations',
+  donor_pct_communications_electronics: 'Communications/Electronics donations',
   donor_pct_construction: 'Construction donations',
   donor_pct_defense: 'Defense donations',
-  donor_pct_energy: 'Energy/Natural Resources donations',
-  donor_pct_finance: 'Finance/Insurance/Real Estate donations',
+  donor_pct_energy_natural_resources: 'Energy/Natural Resources donations',
+  donor_pct_finance_insurance_real_estate: 'Finance/Insurance/Real Estate donations',
   donor_pct_health: 'Health donations',
-  donor_pct_lawyers: 'Lawyers & Lobbyists donations',
+  donor_pct_lawyers__lobbyists: 'Lawyers & Lobbyists donations',
   donor_pct_transportation: 'Transportation donations',
   donor_pct_misc_business: 'Misc Business donations',
   donor_pct_labor: 'Labor donations',
-  donor_pct_ideology: 'Ideology/Single-Issue donations',
+  'donor_pct_ideology_single-issue': 'Ideology/Single-Issue donations',
   donor_pct_other: 'Other donations',
   party_R: 'Republican party',
   party_D: 'Democratic party',
   chamber_Senate: 'Senate chamber',
   years_in_office: 'Years in office',
+  bill_affects_agribusiness: 'Bill affects agribusiness',
+  bill_affects_communications_electronics: 'Bill affects communications/electronics',
+  bill_affects_construction: 'Bill affects construction',
+  bill_affects_defense: 'Bill affects defense',
+  bill_affects_energy_natural_resources: 'Bill affects energy/natural resources',
+  bill_affects_finance_insurance_real_estate: 'Bill affects finance/insurance/real estate',
+  bill_affects_health: 'Bill affects health',
+  bill_affects_lawyers__lobbyists: 'Bill affects lawyers & lobbyists',
+  bill_affects_transportation: 'Bill affects transportation',
+  bill_affects_misc_business: 'Bill affects misc business',
+  bill_affects_labor: 'Bill affects labor',
+  'bill_affects_ideology_single-issue': 'Bill affects ideology/single-issue groups',
+  bill_affects_other: 'Bill affects other sectors',
   bill_cosponsor_count: 'Cosponsor count',
   sponsor_same_party: 'Same-party sponsor',
   donor_bill_overlap: 'Donor-bill sector overlap',

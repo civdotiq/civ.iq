@@ -195,7 +195,11 @@ function detectEntityType(name: string): 'individual' | 'organization' | 'unknow
     'GROUP',
   ];
 
-  if (orgIndicators.some(indicator => cleaned.includes(indicator))) {
+  // Match indicators as whole words only — substring matching classified
+  // surnames like "COOPER" (CO) or "PACHECO" (PAC) as organizations,
+  // which broke LAST, FIRST standardization and contributor dedup.
+  const words = new Set(cleaned.split(/[^A-Z0-9]+/).filter(Boolean));
+  if (orgIndicators.some(indicator => words.has(indicator))) {
     return 'organization';
   }
 

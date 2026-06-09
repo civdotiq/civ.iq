@@ -47,3 +47,17 @@ describe('vote-predictor error paths', () => {
     expect(metadata!.predictionThreshold).toBeGreaterThan(0.5);
   });
 });
+
+describe('FEATURE_HUMAN_LABELS coverage', () => {
+  it('has a human label for every feature the model was trained on', async () => {
+    const { readFileSync } = await import('fs');
+    const metadata = JSON.parse(readFileSync(REAL_METADATA, 'utf-8')) as {
+      featureNames: string[];
+    };
+    const { FEATURE_HUMAN_LABELS } = await import('../vote-predictor');
+
+    const unlabeled = metadata.featureNames.filter(name => !FEATURE_HUMAN_LABELS[name]);
+    // Raw feature slugs must never reach citizens in topFactors/shapFactors
+    expect(unlabeled).toEqual([]);
+  });
+});

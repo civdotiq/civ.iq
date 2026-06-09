@@ -930,6 +930,28 @@ async function computePeerComparison(
 
 // ── Step 9: Narrative ───────────────────────────────────────────────
 
+/**
+ * Chains exist per org×bill and each carries the org's FULL lobbying and
+ * contribution totals — summing across chains would count one org once per
+ * matched bill. Dedupe to one chain per organization before totaling.
+ */
+function orgLevelTotals(chains: InfluenceChain[]): {
+  uniqueOrgs: string[];
+  totalLobbyingSpending: number;
+  totalContributions: number;
+} {
+  const byOrg = new Map<string, InfluenceChain>();
+  for (const c of chains) {
+    if (!byOrg.has(c.organization)) byOrg.set(c.organization, c);
+  }
+  const perOrg = [...byOrg.values()];
+  return {
+    uniqueOrgs: [...byOrg.keys()],
+    totalLobbyingSpending: perOrg.reduce((sum, c) => sum + c.lobbyingSpending, 0),
+    totalContributions: perOrg.reduce((sum, c) => sum + c.contributionAmount, 0),
+  };
+}
+
 async function generateNarrative(
   rep: RepData,
   chains: InfluenceChain[],
@@ -939,9 +961,7 @@ async function generateNarrative(
     'You analyze civic data for CIV.IQ. You describe factual patterns in lobbying, ' +
     'campaign finance, and voting records. Never claim causation. ';
 
-  const uniqueOrgs = [...new Set(chains.map(c => c.organization))];
-  const totalLobbyingSpending = chains.reduce((sum, c) => sum + c.lobbyingSpending, 0);
-  const totalContributions = chains.reduce((sum, c) => sum + c.contributionAmount, 0);
+  const { uniqueOrgs, totalLobbyingSpending, totalContributions } = orgLevelTotals(chains);
   const avgConfidence =
     chains.length > 0 ? chains.reduce((sum, c) => sum + c.chainConfidence, 0) / chains.length : 0;
 
@@ -987,8 +1007,7 @@ function buildStatisticalFallback(
   chains: InfluenceChain[],
   peer: PeerComparison | null
 ): string {
-  const uniqueOrgs = [...new Set(chains.map(c => c.organization))];
-  const totalLobbyingSpending = chains.reduce((sum, c) => sum + c.lobbyingSpending, 0);
+  const { uniqueOrgs, totalLobbyingSpending } = orgLevelTotals(chains);
 
   let summary =
     `${chains.length} association chains were traced between lobbying organizations, ` +

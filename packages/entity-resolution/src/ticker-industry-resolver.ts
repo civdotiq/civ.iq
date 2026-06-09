@@ -35,6 +35,9 @@ const tickerCikMap = JSON.parse(
 
 /** SIC code cache TTL: 30 days (SIC codes rarely change) */
 const SIC_CACHE_TTL = 30 * 24 * 60 * 60;
+/** Short TTL for transient SEC failures (network/timeout/5xx) so an
+ *  outage doesn't remove tickers from analysis for a month. */
+const TRANSIENT_MISS_TTL = 60 * 60;
 
 /** SEC EDGAR submissions API base URL */
 const SEC_SUBMISSIONS_URL = 'https://data.sec.gov/submissions';
@@ -122,11 +125,16 @@ export async function resolveTickerIndustry(ticker: string): Promise<TickerResol
   }
 
   // Fetch SIC code from SEC EDGAR API
-  const sicCode = await fetchSicCode(cik);
-  if (!sicCode) {
-    await cacheMiss(cacheKey);
+  const sicLookup = await fetchSicCode(cik);
+  if (sicLookup.status !== 'found') {
+    // Transient SEC failures get a short TTL so they retry within the hour
+    await cacheMiss(
+      cacheKey,
+      sicLookup.status === 'transient-error' ? TRANSIENT_MISS_TTL : SIC_CACHE_TTL
+    );
     return null;
   }
+  const sicCode = sicLookup.sic;
 
   // Map SIC code to IndustrySector
   const sector = sicToSector(sicCode);
@@ -158,7 +166,12 @@ export async function resolveTickerIndustry(ticker: string): Promise<TickerResol
  * Fetch SIC code from SEC EDGAR submissions API.
  * The CIK is zero-padded to 10 digits per SEC convention.
  */
-async function fetchSicCode(cik: number): Promise<string | null> {
+type SicLookup =
+  | { status: 'found'; sic: string }
+  | { status: 'not-found' }
+  | { status: 'transient-error' };
+
+async function fetchSicCode(cik: number): Promise<SicLookup> {
   const paddedCik = String(cik).padStart(10, '0');
   const url = `${SEC_SUBMISSIONS_URL}/CIK${paddedCik}.json`;
 
@@ -170,22 +183,23 @@ async function fetchSicCode(cik: number): Promise<string | null> {
 
     if (!response.ok) {
       getLogger().warn(`[TickerResolver] SEC API returned ${response.status} for CIK ${cik}`);
-      return null;
+      // 404 = CIK genuinely unknown; anything else is a transient upstream failure
+      return response.status === 404 ? { status: 'not-found' } : { status: 'transient-error' };
     }
 
     const data = await response.json();
     const sic = data?.sic;
 
     if (!sic) {
-      return null;
+      return { status: 'not-found' };
     }
 
-    return String(sic);
+    return { status: 'found', sic: String(sic) };
   } catch (error) {
     getLogger().error('[TickerResolver] SEC API fetch failed', error as Error, {
       cik: String(cik),
     });
-    return null;
+    return { status: 'transient-error' };
   }
 }
 
@@ -267,11 +281,16 @@ async function resolveSingle(normalizedTicker: string): Promise<TickerResolution
     return null;
   }
 
-  const sicCode = await fetchSicCode(cik);
-  if (!sicCode) {
-    await cacheMiss(cacheKey);
+  const sicLookup = await fetchSicCode(cik);
+  if (sicLookup.status !== 'found') {
+    // Transient SEC failures get a short TTL so they retry within the hour
+    await cacheMiss(
+      cacheKey,
+      sicLookup.status === 'transient-error' ? TRANSIENT_MISS_TTL : SIC_CACHE_TTL
+    );
     return null;
   }
+  const sicCode = sicLookup.sic;
 
   const sector = sicToSector(sicCode);
   if (!sector) {
@@ -296,9 +315,9 @@ async function resolveSingle(normalizedTicker: string): Promise<TickerResolution
 /**
  * Cache a null result to avoid repeated lookups for unresolvable tickers.
  */
-async function cacheMiss(cacheKey: string): Promise<void> {
+async function cacheMiss(cacheKey: string, ttl: number = SIC_CACHE_TTL): Promise<void> {
   try {
-    await getCache().set(cacheKey, 'null', SIC_CACHE_TTL);
+    await getCache().set(cacheKey, 'null', ttl);
   } catch {
     // Non-fatal
   }

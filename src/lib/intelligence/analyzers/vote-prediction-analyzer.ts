@@ -40,6 +40,7 @@ import {
   predictVote,
   buildFeatureVector,
   getModelMetadata,
+  FEATURE_HUMAN_LABELS,
   type ShapFactor,
 } from '../ml/vote-predictor';
 import type { VotePredictionInsight, PeerComparison as PeerComparisonType } from '../types';
@@ -702,17 +703,7 @@ function normalizeParty(party: string): 'D' | 'R' | 'I' {
 }
 
 function getFeatureLabel(feature: string): string {
-  const labels: Record<string, string> = {
-    donor_bill_overlap: 'Donor-bill sector overlap',
-    party_R: 'Republican party',
-    party_D: 'Democratic party',
-    donor_pct_finance: 'Finance sector donations',
-    donor_pct_health: 'Health sector donations',
-    donor_pct_defense: 'Defense sector donations',
-    donor_pct_energy: 'Energy sector donations',
-    max_donor_sector_in_bill: 'Top donor sector in bill',
-    years_in_office: 'Years in office',
-    chamber_Senate: 'Senate chamber',
-  };
-  return labels[feature] ?? feature;
+  // Single source of truth in vote-predictor — keys match the model's
+  // featureNames exactly (coverage is unit-tested there).
+  return FEATURE_HUMAN_LABELS[feature] ?? feature;
 }
