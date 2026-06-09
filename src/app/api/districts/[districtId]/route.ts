@@ -882,7 +882,9 @@ async function getDistrictGeography(
       const { counties, cities } = getPost2023DistrictData(state, district);
 
       return {
-        area: Math.round(boundaryData.area_sqm / 1000000), // Convert sq meters to sq km
+        // Convert sq meters to sq miles (1 sq mi = 2,589,988.11 m²) to match
+        // the Gazetteer fallback below and "sq mi" labels in consumers
+        area: Math.round(boundaryData.area_sqm / 2_589_988.11),
         counties,
         majorCities: cities,
       };

@@ -254,7 +254,7 @@ function ExploreRelatedPod({ committeeId }: { committeeId: string }) {
         </li>
         <li>
           <Link
-            href={`/committees/${committeeId}`}
+            href={`/committee/${committeeId}`}
             className="type-sm text-[#3ea2d4] hover:underline"
           >
             Full committee profile
