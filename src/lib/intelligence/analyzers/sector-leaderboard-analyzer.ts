@@ -51,6 +51,8 @@ export async function buildSectorLeaderboard(
   const chamber = options?.chamber ?? 'all';
   const party = options?.party ?? 'all';
   const limit = Math.min(Math.max(options?.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
+  // Cache key intentionally omits limit: the full leaderboard (MAX_LIMIT
+  // entries) is cached once and sliced to the requested limit on read.
   const cacheKey = `leaderboard:${sector}:${chamber}:${party}`;
 
   // 1. Check cache
@@ -59,7 +61,7 @@ export async function buildSectorLeaderboard(
     if (cached) {
       logger.info('[SectorLeaderboard] Cache hit', { sector, chamber, party });
       trackInsightCacheHit('sector-leaderboard');
-      return cached;
+      return { ...cached, entries: cached.entries.slice(0, limit) };
     }
   } catch {
     // Cache miss or error — continue
@@ -146,10 +148,11 @@ async function computeLeaderboard(
     excludedMembers: excludedCount,
   };
 
-  // 7. Sort, rank, and limit
+  // 7. Sort and rank to MAX_LIMIT — the cached response holds the full
+  //    ranked list; the requested limit is applied on return.
   filtered.sort((a, b) => b.sectorAlignmentScore - a.sectorAlignmentScore);
 
-  const entries: SectorLeaderboardEntry[] = filtered.slice(0, limit).map((entry, index) => ({
+  const entries: SectorLeaderboardEntry[] = filtered.slice(0, MAX_LIMIT).map((entry, index) => ({
     bioguideId: entry.bioguideId,
     name: entry.name,
     party: entry.party,
@@ -188,10 +191,10 @@ async function computeLeaderboard(
     dataAsOf,
   };
 
-  // 8. Cache
+  // 8. Cache the full list, return the requested slice
   await cacheResponse(cacheKey, response);
 
-  return response;
+  return { ...response, entries: response.entries.slice(0, limit) };
 }
 
 // ── Data Loading ─────────────────────────────────────────────────────

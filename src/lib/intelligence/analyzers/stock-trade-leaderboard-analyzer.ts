@@ -82,6 +82,8 @@ export async function buildStockTradeLeaderboard(options?: {
   const party = options?.party ?? 'all';
   const sortBy = options?.sortBy ?? 'trades';
   const limit = Math.min(Math.max(options?.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
+  // Cache key intentionally omits limit: the full leaderboard (MAX_LIMIT
+  // entries) is cached once and sliced to the requested limit on read.
   const cacheKey = `leaderboard:stock-trades:${chamber}:${party}:${sortBy}`;
 
   // 1. Check cache
@@ -89,7 +91,7 @@ export async function buildStockTradeLeaderboard(options?: {
     const cached = await getRedisCache().get<StockTradeLeaderboardResponse>(cacheKey);
     if (cached) {
       logger.info('[StockTradeLeaderboard] Cache hit', { chamber, party, sortBy });
-      return cached;
+      return { ...cached, entries: cached.entries.slice(0, limit) };
     }
   } catch {
     // Cache miss or error — continue
@@ -141,19 +143,22 @@ export async function buildStockTradeLeaderboard(options?: {
     totalMembers: filtered.length,
   };
 
-  // 7. Rank and limit
-  const entries: StockTradeLeaderboardEntry[] = filtered.slice(0, limit).map((entry, index) => ({
-    bioguideId: entry.bioguideId,
-    name: entry.name,
-    party: entry.party,
-    state: entry.state,
-    chamber: entry.chamber,
-    tradeCount: entry.tradeCount,
-    estimatedValue: entry.estimatedValue,
-    lateFilingCount: entry.lateFilingCount,
-    topTickers: entry.topTickers,
-    rank: index + 1,
-  }));
+  // 7. Rank to MAX_LIMIT — the cached response holds the full ranked list;
+  //    the requested limit is applied on return (and on cache read above).
+  const entries: StockTradeLeaderboardEntry[] = filtered
+    .slice(0, MAX_LIMIT)
+    .map((entry, index) => ({
+      bioguideId: entry.bioguideId,
+      name: entry.name,
+      party: entry.party,
+      state: entry.state,
+      chamber: entry.chamber,
+      tradeCount: entry.tradeCount,
+      estimatedValue: entry.estimatedValue,
+      lateFilingCount: entry.lateFilingCount,
+      topTickers: entry.topTickers,
+      rank: index + 1,
+    }));
 
   const dataAvailability: StockTradeLeaderboardResponse['dataAvailability'] = {
     membersWithData: memberStats.length,
@@ -176,10 +181,10 @@ export async function buildStockTradeLeaderboard(options?: {
     generatedAt: new Date().toISOString(),
   };
 
-  // 8. Cache
+  // 8. Cache the full list, return the requested slice
   await cacheResponse(cacheKey, response);
 
-  return response;
+  return { ...response, entries: response.entries.slice(0, limit) };
 }
 
 // ── Data Loading ─────────────────────────────────────────────────────
