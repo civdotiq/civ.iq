@@ -18,6 +18,7 @@ import {
   Globe,
 } from 'lucide-react';
 import type { CommitteeBiographicalData } from '@/lib/services/wikipedia.service';
+import { sanitizeAndValidateWikipediaHtml } from '@/utils/sanitize';
 
 interface CommitteeBiographicalInfoProps {
   committeeId: string;
@@ -151,8 +152,11 @@ export default function CommitteeBiographicalInfo({
                 </div>
                 <div
                   className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                  // SECURITY: Wikipedia HTML is sanitized with DOMPurify before rendering
                   dangerouslySetInnerHTML={{
-                    __html: data.wikipedia.extract_html || data.wikipedia.extract,
+                    __html: sanitizeAndValidateWikipediaHtml(
+                      data.wikipedia.extract_html || data.wikipedia.extract
+                    ),
                   }}
                 />
               </div>

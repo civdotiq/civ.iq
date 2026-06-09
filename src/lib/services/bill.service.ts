@@ -753,7 +753,13 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
           summary: bill.summaries?.[0]
             ? {
-                text: bill.summaries[0].text,
+                // Congress.gov summaries arrive as HTML and are rendered with
+                // dangerouslySetInnerHTML downstream — sanitize here, same as fullText.
+                text: DOMPurify.sanitize(bill.summaries[0].text, {
+                  ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'u', 'ul', 'ol', 'li', 'a'],
+                  ALLOWED_ATTR: ['href', 'title'],
+                  ALLOW_DATA_ATTR: false,
+                }),
                 date: bill.summaries[0].actionDate,
                 version: bill.summaries[0].versionCode,
               }

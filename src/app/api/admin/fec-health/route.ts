@@ -12,15 +12,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { verifyBearerToken } from '@/lib/security/verify-bearer-token';
 
 export const dynamic = 'force-dynamic';
 
 function isAuthorized(request: NextRequest): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
-  const authHeader = request.headers.get('authorization');
   const adminKey = process.env.ADMIN_API_KEY;
-  if (!adminKey || !authHeader?.startsWith('Bearer ')) return false;
-  return authHeader.substring(7) === adminKey;
+  if (!adminKey) return false;
+  return verifyBearerToken(request.headers.get('authorization'), adminKey);
 }
 
 export async function GET(_request: NextRequest) {

@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
+import { sanitizeAndValidateWikipediaHtml } from '@/utils/sanitize';
 import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
 import {
   FileText,
@@ -368,8 +369,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                   <>
                     <div
                       className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                      // SECURITY: Wikipedia HTML is sanitized with DOMPurify before rendering
                       dangerouslySetInnerHTML={{
-                        __html: legislator.wikipedia.htmlSummary || legislator.wikipedia.summary,
+                        __html: sanitizeAndValidateWikipediaHtml(
+                          legislator.wikipedia.htmlSummary || legislator.wikipedia.summary
+                        ),
                       }}
                     />
                     {legislator.wikipedia.pageUrl && (

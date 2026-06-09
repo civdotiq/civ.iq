@@ -189,8 +189,8 @@ export function SummaryPanel({ bill }: SummaryPanelProps) {
 
 function SummaryBody({ text }: { text: string }) {
   // Congress.gov summaries arrive as HTML — render only the first paragraph
-  // visibly, the rest is collapsed for readability. Sanitization is the
-  // service's responsibility (see bill.service.ts).
+  // visibly, the rest is collapsed for readability. The HTML is sanitized
+  // with DOMPurify in bill.service.ts before it reaches this component.
   return (
     <div
       style={{
