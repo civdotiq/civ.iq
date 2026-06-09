@@ -57,4 +57,49 @@ describe('BatchVotingService', () => {
       expect(Array.isArray(votes)).toBe(true);
     }, 30000);
   });
+
+  describe('getPartyYeaRate', () => {
+    const service = BatchVotingService.getInstance();
+    const seedCache = (key: string, value: unknown) => {
+      (
+        service as unknown as {
+          cache: { set(key: string, value: unknown, ttl?: number): void };
+        }
+      ).cache.set(key, value);
+    };
+
+    it('matches long-form party labels against single-letter member parties', () => {
+      // Regression: callers pass "Democrat"/"Republican" (YAML format) while
+      // roll-call member votes carry "D"/"R" — strict compare returned null
+      // for every vote, silently fabricating party baselines downstream.
+      seedCache('house-vote-119-2-42', {
+        memberVotes: [
+          { party: 'D', position: 'Yea' },
+          { party: 'D', position: 'Nay' },
+          { party: 'R', position: 'Yea' },
+          { party: 'R', position: 'Not Voting' },
+        ],
+      });
+
+      expect(service.getPartyYeaRate('House', 119, 42, 'Democrat', 2)).toEqual({
+        yeaRate: 0.5,
+        voteCount: 2,
+      });
+      expect(service.getPartyYeaRate('House', 119, 42, 'Republican')).toEqual({
+        yeaRate: 1,
+        voteCount: 1,
+      });
+    });
+
+    it('does not fall back to another session when session is explicit', () => {
+      // Roll-call numbers restart each session — a session-2 query must not
+      // silently match the session-1 vote with the same number.
+      seedCache('house-vote-119-1-77', {
+        memberVotes: [{ party: 'D', position: 'Yea' }],
+      });
+
+      expect(service.getPartyYeaRate('House', 119, 77, 'Democrat', 2)).toBeNull();
+      expect(service.getPartyYeaRate('House', 119, 77, 'Democrat', 1)).not.toBeNull();
+    });
+  });
 });

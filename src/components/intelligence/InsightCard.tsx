@@ -319,14 +319,16 @@ export function pacVoteKeyStats(insight: PACVoteInsight): KeyStat[] {
       ? `$${(insight.totalDisbursed / 1_000_000).toFixed(1)}M`
       : `$${(insight.totalDisbursed / 1_000).toFixed(0)}K`;
 
-  // Yea rate delta vs baseline
+  // Yea rate delta vs baseline (omitted when no baseline could be computed)
   let yeaDelta: KeyStat['delta'];
-  const diff = (insight.aggregateYeaRate - insight.aggregateBaselineYeaRate) * 100;
-  if (Math.abs(diff) >= 1) {
-    yeaDelta = {
-      change: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}pp`,
-      period: 'vs baseline',
-    };
+  if (insight.aggregateBaselineYeaRate !== null) {
+    const diff = (insight.aggregateYeaRate - insight.aggregateBaselineYeaRate) * 100;
+    if (Math.abs(diff) >= 1) {
+      yeaDelta = {
+        change: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}pp`,
+        period: 'vs baseline',
+      };
+    }
   }
 
   return [

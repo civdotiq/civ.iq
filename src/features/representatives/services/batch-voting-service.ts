@@ -1590,31 +1590,36 @@ export class BatchVotingService {
   /**
    * Get the yea rate for a specific party on a cached vote.
    * Cache-only lookup — no new API calls. Returns null if vote not cached.
+   *
+   * Roll-call numbers restart each session, so pass `session` when the
+   * caller knows it (e.g. derived from the vote date) — otherwise the same
+   * number can resolve to a different session's vote.
    */
   getPartyYeaRate(
     chamber: 'House' | 'Senate',
     congress: number,
     rollCallNumber: number,
-    party: string
+    party: string,
+    session?: 1 | 2
   ): { yeaRate: number; voteCount: number } | null {
-    // Try to find the cached vote
-    const session1Key =
-      chamber === 'House'
-        ? `house-vote-${congress}-1-${rollCallNumber}`
-        : `senate-vote-${congress}-1-${rollCallNumber}`;
-    const session2Key =
-      chamber === 'House'
-        ? `house-vote-${congress}-2-${rollCallNumber}`
-        : `senate-vote-${congress}-2-${rollCallNumber}`;
+    const prefix = chamber === 'House' ? 'house-vote' : 'senate-vote';
+    const sessionsToProbe = session ? [session] : [1, 2];
 
-    const cached =
-      this.cache.get<StandardizedVote>(session1Key) ??
-      this.cache.get<StandardizedVote>(session2Key);
-
+    let cached: StandardizedVote | null = null;
+    for (const s of sessionsToProbe) {
+      cached = this.cache.get<StandardizedVote>(`${prefix}-${congress}-${s}-${rollCallNumber}`);
+      if (cached) break;
+    }
     if (!cached) return null;
 
+    // Party labels arrive in mixed formats ("Democrat" vs "D"); compare normalized
+    const targetParty = this.normalizePartyCode(party);
+    if (!targetParty) return null;
+
     const partyVotes = cached.memberVotes.filter(
-      m => m.party === party && (m.position === 'Yea' || m.position === 'Nay')
+      m =>
+        this.normalizePartyCode(m.party) === targetParty &&
+        (m.position === 'Yea' || m.position === 'Nay')
     );
     if (partyVotes.length === 0) return null;
 
@@ -1623,6 +1628,16 @@ export class BatchVotingService {
       yeaRate: yeaCount / partyVotes.length,
       voteCount: partyVotes.length,
     };
+  }
+
+  /** Normalize mixed party labels ("Democrat", "D", "Republican", "R", "I") to a code. */
+  private normalizePartyCode(party: string): 'D' | 'R' | 'I' | null {
+    const p = party.trim().toLowerCase();
+    if (!p) return null;
+    if (p.startsWith('d')) return 'D';
+    if (p.startsWith('r')) return 'R';
+    if (p.startsWith('i')) return 'I';
+    return null;
   }
 
   /**

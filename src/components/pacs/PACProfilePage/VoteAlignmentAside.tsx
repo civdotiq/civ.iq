@@ -73,8 +73,9 @@ export function VoteAlignmentAside({ insight, unavailable, loading }: VoteAlignm
             }}
           >
             Aggregate yea rate · {(insight.aggregateYeaRate * 100).toFixed(0)}% across{' '}
-            {formatCount(insight.relevantBillCount)} relevant bills · party baseline{' '}
-            {(insight.aggregateBaselineYeaRate * 100).toFixed(0)}%
+            {formatCount(insight.relevantBillCount)} relevant bills
+            {insight.aggregateBaselineYeaRate !== null &&
+              ` · party baseline ${(insight.aggregateBaselineYeaRate * 100).toFixed(0)}%`}
           </div>
         </div>
       )}

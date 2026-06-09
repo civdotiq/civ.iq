@@ -136,10 +136,11 @@ async function computeAndCache(
   }
 
   // 5. Fetch votes and classify per recipient
-  const { records: recipientVotes, freshestVoteDate } = await fetchAndClassifyRecipientVotes(
-    recipients,
-    classification.sector
-  );
+  const {
+    records: recipientVotes,
+    billIdsByRecipient,
+    freshestVoteDate,
+  } = await fetchAndClassifyRecipientVotes(recipients, classification.sector);
 
   // Drop recipients below MIN_RELEVANT_VOTES
   const qualifiedRecipients = recipientVotes.filter(r => r.relevantVoteCount >= MIN_RELEVANT_VOTES);
@@ -160,8 +161,14 @@ async function computeAndCache(
   // 6. Compute aggregate statistics
   const stats = computeAggregateStats(qualifiedRecipients);
 
-  // Count unique bills
-  const relevantBillCount = countUniqueBills(qualifiedRecipients);
+  // Count unique bills across qualified recipients
+  const uniqueBillIds = new Set<string>();
+  for (const r of qualifiedRecipients) {
+    for (const billId of billIdsByRecipient.get(r.bioguideId) ?? []) {
+      uniqueBillIds.add(billId);
+    }
+  }
+  const relevantBillCount = uniqueBillIds.size;
 
   // 7. Peer comparison
   const peer = await computePeerComparison(
@@ -221,7 +228,7 @@ async function computeAndCache(
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       value: stats.aggregateYeaRate,
-      peerAverage: peer?.peerAverage ?? stats.aggregateBaselineYeaRate,
+      peerAverage: peer?.peerAverage ?? stats.aggregateBaselineYeaRate ?? undefined,
       percentileRank: peer?.percentileRank,
       confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     }),
@@ -317,7 +324,11 @@ type RecipientVotes = Awaited<ReturnType<typeof fetchRecipientRawVotes>>;
 async function fetchAndClassifyRecipientVotes(
   recipients: LinkedRecipient[],
   pacSector: IndustrySector
-): Promise<{ records: PACRecipientVoteRecord[]; freshestVoteDate: string | undefined }> {
+): Promise<{
+  records: PACRecipientVoteRecord[];
+  billIdsByRecipient: Map<string, Set<string>>;
+  freshestVoteDate: string | undefined;
+}> {
   // Phase 1: fetch raw votes for every recipient in parallel. Each recipient
   // resolves independently, so a slow lookup no longer blocks the others.
   const fetched = await mapWithConcurrency(
@@ -344,12 +355,14 @@ async function fetchAndClassifyRecipientVotes(
 
   // Phase 3: tally each recipient synchronously against the precomputed map.
   const records: PACRecipientVoteRecord[] = [];
+  const billIdsByRecipient = new Map<string, Set<string>>();
   let freshestVoteDate: string | undefined;
 
   for (const { recipient, rawVotes } of fetched) {
     const result = tallyRecipientVotes(recipient, rawVotes, pacSector, sectorMap);
     if (result) {
       records.push(result.record);
+      billIdsByRecipient.set(recipient.bioguideId, result.relevantBillIds);
       if (
         result.latestVoteDate &&
         (!freshestVoteDate || result.latestVoteDate > freshestVoteDate)
@@ -359,7 +372,7 @@ async function fetchAndClassifyRecipientVotes(
     }
   }
 
-  return { records, freshestVoteDate };
+  return { records, billIdsByRecipient, freshestVoteDate };
 }
 
 /** Fetch a recipient's votes across both sessions of the 119th Congress. */
@@ -430,7 +443,11 @@ function tallyRecipientVotes(
   rawVotes: RecipientVotes,
   pacSector: IndustrySector,
   sectorMap: Map<string, IndustrySector[]>
-): { record: PACRecipientVoteRecord; latestVoteDate: string | undefined } | null {
+): {
+  record: PACRecipientVoteRecord;
+  relevantBillIds: Set<string>;
+  latestVoteDate: string | undefined;
+} | null {
   if (rawVotes.length === 0) return null;
 
   let relevantYea = 0;
@@ -438,6 +455,7 @@ function tallyRecipientVotes(
   let baselineYeaSum = 0;
   let baselineCount = 0;
   const voteDates: string[] = [];
+  const relevantBillIds = new Set<string>();
 
   for (const vote of rawVotes) {
     if (!vote.bill || (vote.position !== 'Yea' && vote.position !== 'Nay')) continue;
@@ -450,14 +468,20 @@ function tallyRecipientVotes(
     if (vote.position === 'Yea') relevantYea++;
     else relevantNay++;
     if (vote.date) voteDates.push(vote.date);
+    relevantBillIds.add(billId);
 
-    // Get party baseline for this vote
+    // Get party baseline for this vote. Roll-call numbers restart each
+    // session, so derive the session from the vote date (119th: 2025 = 1,
+    // 2026 = 2) to avoid matching the wrong session's roll call.
     if (vote.rollCallNumber) {
+      const voteYear = vote.date ? new Date(vote.date).getUTCFullYear() : undefined;
+      const session = voteYear ? (voteYear % 2 === 1 ? 1 : 2) : undefined;
       const baseline = batchVotingService.getPartyYeaRate(
         recipient.chamber,
         119,
         vote.rollCallNumber,
-        recipient.party
+        recipient.party,
+        session
       );
       if (baseline) {
         baselineYeaSum += baseline.yeaRate;
@@ -470,7 +494,9 @@ function tallyRecipientVotes(
   if (totalRelevant === 0) return null;
 
   const yeaRate = relevantYea / totalRelevant;
-  const partyBaselineYeaRate = baselineCount > 0 ? baselineYeaSum / baselineCount : yeaRate;
+  // Honest null when no party baseline could be computed — never substitute
+  // the member's own rate, which fabricates a 0pp difference.
+  const partyBaselineYeaRate = baselineCount > 0 ? baselineYeaSum / baselineCount : null;
   return {
     record: {
       bioguideId: recipient.bioguideId,
@@ -482,8 +508,9 @@ function tallyRecipientVotes(
       relevantVoteCount: totalRelevant,
       yeaRate,
       partyBaselineYeaRate,
-      differenceFromBaseline: yeaRate - partyBaselineYeaRate,
+      differenceFromBaseline: partyBaselineYeaRate === null ? null : yeaRate - partyBaselineYeaRate,
     },
+    relevantBillIds,
     latestVoteDate: voteDates.length > 0 ? (freshestDate(...voteDates) ?? undefined) : undefined,
   };
 }
@@ -492,30 +519,30 @@ function tallyRecipientVotes(
 
 interface AggregateStats {
   aggregateYeaRate: number;
-  aggregateBaselineYeaRate: number;
+  /** Null when no recipient had a computable party baseline. */
+  aggregateBaselineYeaRate: number | null;
 }
 
 function computeAggregateStats(recipients: PACRecipientVoteRecord[]): AggregateStats {
   let totalWeightedYea = 0;
   let totalWeightedBaseline = 0;
   let totalVotes = 0;
+  let baselineVotes = 0;
 
   for (const r of recipients) {
     totalWeightedYea += r.yeaRate * r.relevantVoteCount;
-    totalWeightedBaseline += r.partyBaselineYeaRate * r.relevantVoteCount;
     totalVotes += r.relevantVoteCount;
+    // Only recipients with a real baseline contribute to the aggregate baseline
+    if (r.partyBaselineYeaRate !== null) {
+      totalWeightedBaseline += r.partyBaselineYeaRate * r.relevantVoteCount;
+      baselineVotes += r.relevantVoteCount;
+    }
   }
 
   return {
     aggregateYeaRate: totalVotes > 0 ? totalWeightedYea / totalVotes : 0,
-    aggregateBaselineYeaRate: totalVotes > 0 ? totalWeightedBaseline / totalVotes : 0,
+    aggregateBaselineYeaRate: baselineVotes > 0 ? totalWeightedBaseline / baselineVotes : null,
   };
-}
-
-function countUniqueBills(_recipients: PACRecipientVoteRecord[]): number {
-  // We don't track individual bill IDs in PACRecipientVoteRecord,
-  // so return total relevant votes as a proxy for bill count
-  return _recipients.reduce((sum, r) => sum + r.relevantVoteCount, 0);
 }
 
 // ── Peer Comparison ──────────────────────────────────────────────────
@@ -577,8 +604,10 @@ async function generateNarrative(
       r =>
         `- ${r.name} (${r.party}-${r.state}): $${r.amountReceived.toLocaleString()} received, ` +
         `${r.relevantVoteCount} relevant votes, ${(r.yeaRate * 100).toFixed(1)}% yea rate ` +
-        `(party baseline: ${(r.partyBaselineYeaRate * 100).toFixed(1)}%, ` +
-        `difference: ${r.differenceFromBaseline > 0 ? '+' : ''}${(r.differenceFromBaseline * 100).toFixed(1)}pp)`
+        (r.partyBaselineYeaRate !== null && r.differenceFromBaseline !== null
+          ? `(party baseline: ${(r.partyBaselineYeaRate * 100).toFixed(1)}%, ` +
+            `difference: ${r.differenceFromBaseline > 0 ? '+' : ''}${(r.differenceFromBaseline * 100).toFixed(1)}pp)`
+          : '(party baseline unavailable)')
     )
     .join('\n');
 
@@ -596,7 +625,7 @@ TOTAL DISBURSED TO ANALYZED RECIPIENTS: $${totalDisbursed.toLocaleString()}
 RECIPIENTS ANALYZED: ${recipients.length}
 TOTAL RELEVANT VOTES: ${totalVotes}
 AGGREGATE YEA RATE: ${(stats.aggregateYeaRate * 100).toFixed(1)}%
-AGGREGATE PARTY BASELINE: ${(stats.aggregateBaselineYeaRate * 100).toFixed(1)}%
+AGGREGATE PARTY BASELINE: ${stats.aggregateBaselineYeaRate !== null ? `${(stats.aggregateBaselineYeaRate * 100).toFixed(1)}%` : 'unavailable'}
 
 TOP RECIPIENTS:
 ${recipientLines}
@@ -620,14 +649,17 @@ function buildStatisticalSummary(
 ): string {
   const totalDisbursed = recipients.reduce((sum, r) => sum + r.amountReceived, 0);
   const totalVotes = recipients.reduce((sum, r) => sum + r.relevantVoteCount, 0);
-  const diff = stats.aggregateYeaRate - stats.aggregateBaselineYeaRate;
-  const diffStr = `${diff > 0 ? '+' : ''}${(diff * 100).toFixed(1)}`;
+
+  let baselineClause = '';
+  if (stats.aggregateBaselineYeaRate !== null) {
+    const diff = stats.aggregateYeaRate - stats.aggregateBaselineYeaRate;
+    baselineClause = ` (${diff > 0 ? '+' : ''}${(diff * 100).toFixed(1)} percentage points vs. party baselines)`;
+  }
 
   let summary =
     `${classification.name} disbursed $${totalDisbursed.toLocaleString()} to ${recipients.length} legislators. ` +
     `Across ${totalVotes} votes on ${classification.sector}-related bills, ` +
-    `recipients voted yea ${(stats.aggregateYeaRate * 100).toFixed(1)}% of the time ` +
-    `(${diffStr} percentage points vs. party baselines).`;
+    `recipients voted yea ${(stats.aggregateYeaRate * 100).toFixed(1)}% of the time${baselineClause}.`;
 
   if (peer && peer.peerCount >= MIN_PEERS) {
     summary +=

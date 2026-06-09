@@ -441,8 +441,13 @@ async function fetchData(bioguideId: string, timer?: PhaseTimer): Promise<FetchR
       position: nv.position,
       date: nv.date,
       billSectors,
+      // Sponsor metadata isn't fetched at inference (one Congress.gov call
+      // per bill). Mirror the training pipeline's missing-data defaults
+      // (collect-training-data.ts: sponsorParty falls back to the member's
+      // own party => sponsor_same_party = 1, cosponsorCount = 0) so the
+      // model sees the feature distribution it was trained on.
       cosponsorCount: 0,
-      sponsorSameParty: false,
+      sponsorSameParty: true,
     });
   }
 

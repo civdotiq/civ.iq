@@ -34,18 +34,22 @@ function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function formatPct(value: number): string {
+function formatPct(value: number | null): string {
+  if (value === null) return '—';
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function formatDiff(value: number): string {
+function formatDiff(value: number | null): string {
+  if (value === null) return '—';
   const pct = (value * 100).toFixed(1);
-  return value > 0 ? `+${pct}` : pct;
+  return `${value > 0 ? `+${pct}` : pct}pp`;
 }
 
-function getDiffColor(diff: number): string {
-  if (Math.abs(diff) < 0.03) return 'text-gray-700';
-  return diff > 0 ? 'text-[#0a9338]' : 'text-[#e11d07]';
+function getDiffColor(diff: number | null): string {
+  if (diff === null || Math.abs(diff) < 0.03) return 'text-gray-700';
+  // Amber for notable divergence in either direction — green/red are
+  // reserved for party identification, not metric direction.
+  return 'text-[#d97706]';
 }
 
 function getPartyBadgeClass(party: string): string {
@@ -61,7 +65,10 @@ function getPartyAbbrev(party: string): string {
 }
 
 export function PACVoteTable({ insight, className = '' }: PACVoteTableProps) {
-  const diff = insight.aggregateYeaRate - insight.aggregateBaselineYeaRate;
+  const diff =
+    insight.aggregateBaselineYeaRate !== null
+      ? insight.aggregateYeaRate - insight.aggregateBaselineYeaRate
+      : null;
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -90,7 +97,7 @@ export function PACVoteTable({ insight, className = '' }: PACVoteTableProps) {
           </div>
           <div className="bg-gray-50 p-3">
             <div className={`aicher-heading type-2xl ${getDiffColor(diff)}`}>
-              {formatDiff(diff)}pp
+              {formatDiff(diff)}
             </div>
             <div className="type-xs text-gray-500 aicher-heading-wide">vs. party baseline</div>
           </div>
@@ -165,7 +172,7 @@ export function PACVoteTable({ insight, className = '' }: PACVoteTableProps) {
                     <td
                       className={`py-2 text-right font-mono font-bold ${getDiffColor(r.differenceFromBaseline)}`}
                     >
-                      {formatDiff(r.differenceFromBaseline)}pp
+                      {formatDiff(r.differenceFromBaseline)}
                     </td>
                   </tr>
                 ))}

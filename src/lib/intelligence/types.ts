@@ -304,10 +304,10 @@ export interface PACRecipientVoteRecord {
   relevantVoteCount: number;
   /** Fraction of yea votes on PAC-relevant bills (0-1). */
   yeaRate: number;
-  /** Party-wide yea rate on the same bills (0-1). */
-  partyBaselineYeaRate: number;
-  /** yeaRate - partyBaselineYeaRate. */
-  differenceFromBaseline: number;
+  /** Party-wide yea rate on the same bills (0-1). Null when no baseline could be computed. */
+  partyBaselineYeaRate: number | null;
+  /** yeaRate - partyBaselineYeaRate. Null when baseline unavailable. */
+  differenceFromBaseline: number | null;
 }
 
 /**
@@ -324,7 +324,8 @@ export interface PACVoteInsight extends InsightBase {
   relevantBillCount: number;
   recipientVotes: PACRecipientVoteRecord[];
   aggregateYeaRate: number;
-  aggregateBaselineYeaRate: number;
+  /** Vote-weighted party baseline. Null when no recipient had a computable baseline. */
+  aggregateBaselineYeaRate: number | null;
   peerComparison: PeerComparison;
   narrative: string;
 }

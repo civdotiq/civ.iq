@@ -83,8 +83,10 @@ export interface PACRecipientVoteRow {
   amountReceived: number;
   relevantVoteCount: number;
   yeaRate: number;
-  partyBaselineYeaRate: number;
-  differenceFromBaseline: number;
+  /** Null when no party baseline could be computed for this recipient. */
+  partyBaselineYeaRate: number | null;
+  /** Null when baseline unavailable. */
+  differenceFromBaseline: number | null;
 }
 
 export interface PACVoteInsightPayload {
@@ -95,7 +97,8 @@ export interface PACVoteInsightPayload {
   relevantBillCount: number;
   recipientVotes: PACRecipientVoteRow[];
   aggregateYeaRate: number;
-  aggregateBaselineYeaRate: number;
+  /** Null when no recipient had a computable party baseline. */
+  aggregateBaselineYeaRate: number | null;
   confidence: number;
   dataAsOf: string;
   methodology: string;
