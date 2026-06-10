@@ -253,15 +253,12 @@ function processXmlUrls(xmlText: string): string {
 
   // Replace common relative URL patterns in Senate XML
   const stringPatterns: Array<{ pattern: RegExp; replacement: string }> = [
-    // Convert relative paths like "/legislative/..." to absolute
+    // Convert relative paths like "/legislative/..." to absolute.
+    // Note: this also consumes protocol-relative URLs ("//..."), so no
+    // separate protocol-relative branch can ever match after it.
     {
       pattern: /href="(\/[^"]+)"/g,
       replacement: `href="${baseUrl}$1"`,
-    },
-    // Convert protocol-relative URLs like "//www.senate.gov/..."
-    {
-      pattern: /href="(\/\/[^"]+)"/g,
-      replacement: 'href="https:$1"',
     },
   ];
 
