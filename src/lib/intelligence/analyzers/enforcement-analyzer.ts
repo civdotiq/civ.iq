@@ -27,6 +27,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { oshaService } from '@/lib/data-sources/osha-service';
@@ -147,13 +148,18 @@ async function computeAndCache(
     actions: actions.slice(0, 50), // Cap at 50 for response size
     stats,
     linkedRegulations: [], // Populated by Phase 4 graph assembler
-    peerComparison: peer ?? {
-      value: stats.totalActions,
-      peerAverage: stats.totalActions,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            scope.type === 'sector'
+              ? 'other industry sectors'
+              : scope.type === 'state'
+                ? 'other U.S. states'
+                : 'other organizations'
+          ),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'computed',

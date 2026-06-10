@@ -42,6 +42,7 @@ import {
   SourceCollector,
   createPhaseTimer,
   SENATE_UPSTREAM_BLOCKED_REASON,
+  peerComparisonUnavailable,
 } from './shared';
 import type { VoteFinanceInsight, IndustryCorrelation, PeerComparison } from '../types';
 
@@ -174,20 +175,26 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
 
   // 3. Compute statistics
   const stats = computeStatistics(data);
-  timer.mark('computeStatistics', { sectors: stats?.correlations.length ?? 0 });
-  if (!stats) {
-    const reason = 'Fewer than 10 sector-classified votes in the 119th Congress';
-    logger.info('[VoteFinance] Insufficient data for analysis', { bioguideId, reason });
-    return { insight: null, unavailableReason: reason };
+  if ('unavailableReason' in stats) {
+    timer.mark('computeStatistics', { sectors: 0 });
+    logger.info('[VoteFinance] Insufficient data for analysis', {
+      bioguideId,
+      reason: stats.unavailableReason,
+    });
+    return { insight: null, unavailableReason: stats.unavailableReason };
   }
+  timer.mark('computeStatistics', { sectors: stats.correlations.length });
 
   // 4. Peer comparison
   const peer = await computePeerComparison(bioguideId, stats, data);
   timer.mark('computePeerComparison', { peerCount: peer?.peerCount ?? 0 });
 
-  // 4b. Recompute confidence with actual peer count
+  // 4b. Recompute confidence with actual peer count. Sample size counts
+  // only sectors that meet the 10-vote floor, matching overallAlignment.
   if (peer) {
-    const totalVotes = stats.correlations.reduce((sum, c) => sum + c.billsVotedOn, 0);
+    const totalVotes = stats.correlations
+      .filter(c => c.meetsSampleSize)
+      .reduce((sum, c) => sum + c.billsVotedOn, 0);
     const sectorsWithEnoughData = stats.correlations.filter(c => c.meetsSampleSize).length;
     const baseConfidence = confidenceScore({
       sampleSize: totalVotes,
@@ -215,6 +222,13 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
     overallCorrelation: stats.overallCorrelation,
     overallAlignment: stats.overallAlignment,
     peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other members of the ${data.state} ${data.chamber} delegation`
+          ),
+        }),
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,
@@ -453,7 +467,11 @@ interface ComputedStats {
   confidence: number;
 }
 
-function computeStatistics(data: FetchedData): ComputedStats | null {
+/**
+ * Compute per-sector and overall statistics, or return an honest
+ * `unavailableReason` when the data cannot support the headline number.
+ */
+function computeStatistics(data: FetchedData): ComputedStats | { unavailableReason: string } {
   // Group votes by sector
   const sectorVotes = new Map<IndustrySector, { yea: number; nay: number; total: number }>();
 
@@ -471,7 +489,12 @@ function computeStatistics(data: FetchedData): ComputedStats | null {
     }
   }
 
-  if (sectorVotes.size === 0) return null;
+  if (sectorVotes.size === 0) {
+    return {
+      unavailableReason:
+        "None of this representative's yea or nay votes matched a donor industry sector.",
+    };
+  }
 
   // Compute per-sector alignment and correlations
   const correlations: IndustryCorrelation[] = [];
@@ -508,15 +531,28 @@ function computeStatistics(data: FetchedData): ComputedStats | null {
     minimumSampleSize: 3, // Need at least 3 sectors for meaningful correlation
   });
 
-  // Overall alignment: weighted average across all sectors
+  // Overall alignment: weighted average across sectors that meet the
+  // 10-vote sample floor. Sub-threshold sectors are excluded so the
+  // headline number is consistent with the per-sector methodology
+  // (which already hides sectors below MIN_VOTES_PER_SECTOR).
   let totalWeightedAlignment = 0;
   let totalVotesAcrossSectors = 0;
   for (const c of correlations) {
+    if (!c.meetsSampleSize) continue;
     totalWeightedAlignment += c.alignmentScore * c.billsVotedOn;
     totalVotesAcrossSectors += c.billsVotedOn;
   }
-  const overallAlignment =
-    totalVotesAcrossSectors > 0 ? totalWeightedAlignment / totalVotesAcrossSectors : 0;
+
+  // When no sector reaches the floor there is no honest headline number —
+  // report insufficient data instead of fabricating one from thin sectors.
+  if (totalVotesAcrossSectors === 0) {
+    return {
+      unavailableReason:
+        `No donor industry sector has ${MIN_VOTES_PER_SECTOR} or more recorded votes. ` +
+        `We need at least ${MIN_VOTES_PER_SECTOR} votes in a sector to show a pattern.`,
+    };
+  }
+  const overallAlignment = totalWeightedAlignment / totalVotesAcrossSectors;
 
   const sectorsWithEnoughData = correlations.filter(c => c.meetsSampleSize).length;
 

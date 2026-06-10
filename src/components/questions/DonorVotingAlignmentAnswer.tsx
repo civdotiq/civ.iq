@@ -95,6 +95,11 @@ function HeadlinePod({ insight }: { insight: VoteFinanceInsight | null }) {
           )}
         </dl>
       )}
+      {!peer && insight.peerComparisonUnavailableReason && (
+        <p className="mt-4 pt-3 border-t border-gray-200 type-xs text-gray-500">
+          {insight.peerComparisonUnavailableReason}
+        </p>
+      )}
     </div>
   );
 }

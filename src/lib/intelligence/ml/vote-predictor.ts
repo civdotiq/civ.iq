@@ -57,8 +57,8 @@ export interface IndependenceScore {
   confidentPredictions: number;
   /** Number of times legislator defied prediction. */
   deviations: number;
-  /** Peer comparison — percentile among chamber peers. */
-  peerPercentile: number;
+  /** Peer comparison — percentile among chamber peers. Null when too few peers have data. */
+  peerPercentile: number | null;
   /** Notable deviations — specific bills where they bucked the prediction. */
   notableDeviations: Array<{
     billId: string;

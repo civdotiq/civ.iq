@@ -147,7 +147,7 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
           </div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Avg chain confidence</div>
         </div>
-        {insight.peerComparison.percentileRank > 0 && (
+        {insight.peerComparison && insight.peerComparison.percentileRank > 0 && (
           <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {insight.peerComparison.percentileRank.toFixed(0)}th
@@ -156,6 +156,13 @@ export function InfluenceChainCard({ insight, className = '' }: InfluenceChainCa
           </div>
         )}
       </div>
+
+      {/* Peer comparison unavailable — honest empty state */}
+      {!insight.peerComparison && insight.peerComparisonUnavailableReason && (
+        <p className="type-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-4">
+          {insight.peerComparisonUnavailableReason}
+        </p>
+      )}
 
       {/* Chains list */}
       {displayedChains.map((chain, i) => (
@@ -211,7 +218,7 @@ export function influenceChainKeyStats(
       ? insight.chains.reduce((sum, c) => sum + c.chainConfidence, 0) / insight.chains.length
       : 0;
 
-  return [
+  const stats = [
     {
       label: 'Chains detected',
       value: String(insight.totalChainsDetected),
@@ -220,9 +227,15 @@ export function influenceChainKeyStats(
       label: 'Avg confidence',
       value: `${(avgConfidence * 100).toFixed(0)}%`,
     },
-    {
+  ];
+
+  // Only show a percentile when a real peer comparison exists
+  if (insight.peerComparison) {
+    stats.push({
       label: 'Peer percentile',
       value: `${insight.peerComparison.percentileRank.toFixed(0)}th`,
-    },
-  ];
+    });
+  }
+
+  return stats;
 }

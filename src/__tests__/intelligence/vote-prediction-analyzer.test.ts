@@ -363,7 +363,21 @@ describe('analyzeVotePrediction', () => {
     const result = await analyzeVotePrediction('P000197');
 
     expect(result).not.toBeNull();
-    expect(result!.peerComparison.peerCount).toBeGreaterThan(0);
+    expect(result!.peerComparison!.peerCount).toBeGreaterThan(0);
+    expect(result!.peerComparisonUnavailableReason).toBeUndefined();
+  });
+
+  it('emits honest unavailable variant when no peers are cached', async () => {
+    // Default mocks: no cached independence scores → no peers
+    const result = await analyzeVotePrediction('P000197');
+
+    expect(result).not.toBeNull();
+    // Peer comparison must be honestly null — never a fabricated
+    // 50th-percentile placeholder.
+    expect(result!.peerComparison).toBeNull();
+    expect(result!.peerComparisonUnavailableReason).toBeTruthy();
+    expect(result!.independenceScore.peerPercentile).toBeNull();
+    expect(JSON.stringify(result)).not.toContain('"percentileRank":50');
   });
 
   it('caches result with 7-day TTL', async () => {

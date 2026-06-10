@@ -204,13 +204,9 @@ describe('analyzeInfluenceChains', () => {
       chains: [],
       totalChainsDetected: 0,
       chainsDropped: 0,
-      peerComparison: {
-        value: 0,
-        peerAverage: 0,
-        peerCount: 0,
-        peerGroupLabel: 'Test',
-        percentileRank: 50,
-      },
+      peerComparison: null,
+      peerComparisonUnavailableReason:
+        'Fewer than 5 other House members have comparable data right now, so no peer comparison is shown.',
       narrative: 'Cached narrative',
       confidence: 0.8,
       dataAsOf: '2025-01-01T00:00:00Z',
@@ -254,7 +250,46 @@ describe('analyzeInfluenceChains', () => {
     expect(result!.disclaimer.toLowerCase()).toContain('correlation');
     expect(result!.lastAnalyzedAt).toBeTruthy();
     expect(result!.narrative).toBeTruthy();
-    expect(result!.peerComparison).toBeTruthy();
+    // No cached peers in this fixture — peer comparison must be honestly null,
+    // never a fabricated 50th-percentile placeholder.
+    expect(result!.peerComparison).toBeNull();
+    expect(result!.peerComparisonUnavailableReason).toContain('no peer comparison is shown');
+  });
+
+  it('emits honest unavailable variant when fewer than 5 peers have data', async () => {
+    // Only 2 cached peers — below MIN_PEERS (5)
+    mockRedisKeys.mockResolvedValue([
+      'influence-chain-count:House:A000001',
+      'influence-chain-count:House:A000002',
+    ]);
+    mockRedisMget.mockResolvedValue([3, 7]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.peerComparison).toBeNull();
+    expect(result!.peerComparisonUnavailableReason).toBeTruthy();
+    // Never fabricate a midpoint percentile
+    expect(JSON.stringify(result)).not.toContain('"percentileRank":50');
+  });
+
+  it('computes a real peer comparison when enough peers are cached', async () => {
+    mockRedisKeys.mockResolvedValue([
+      'influence-chain-count:House:A000001',
+      'influence-chain-count:House:A000002',
+      'influence-chain-count:House:A000003',
+      'influence-chain-count:House:A000004',
+      'influence-chain-count:House:A000005',
+      'influence-chain-count:House:A000006',
+    ]);
+    mockRedisMget.mockResolvedValue([1, 2, 3, 4, 5, 6]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.peerComparison).not.toBeNull();
+    expect(result!.peerComparison!.peerCount).toBe(6);
+    expect(result!.peerComparisonUnavailableReason).toBeUndefined();
   });
 
   it('drops chains below 0.5 confidence threshold', async () => {

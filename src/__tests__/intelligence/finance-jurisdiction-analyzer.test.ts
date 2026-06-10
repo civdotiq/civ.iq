@@ -190,7 +190,22 @@ describe('analyzeFinanceJurisdiction', () => {
 
     expect(result).not.toBeNull();
     expect(mockRedisMget).toHaveBeenCalled();
-    expect(result!.peerComparison.peerCount).toBe(5);
+    expect(result!.peerComparison!.peerCount).toBe(5);
+  });
+
+  it('emits honest unavailable variant when fewer than 5 peers have data', async () => {
+    // Only 2 cached peers — below MIN_PEERS (5)
+    mockRedisKeys.mockResolvedValue(['overlap-score:HSEN:A000001', 'overlap-score:HSEN:A000002']);
+    mockRedisMget.mockResolvedValue([0.4, 0.5]);
+
+    const result = await analyzeFinanceJurisdiction('P000197');
+
+    expect(result).not.toBeNull();
+    // Peer comparison must be honestly null — never a fabricated
+    // 50th-percentile placeholder with peerAverage set to the rep's own value.
+    expect(result!.peerComparison).toBeNull();
+    expect(result!.peerComparisonUnavailableReason).toBeTruthy();
+    expect(JSON.stringify(result)).not.toContain('"percentileRank":50');
   });
 
   it('recomputes confidence after peer comparison', async () => {

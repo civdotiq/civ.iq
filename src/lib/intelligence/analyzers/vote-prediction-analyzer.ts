@@ -35,6 +35,7 @@ import {
   SourceCollector,
   createPhaseTimer,
   SENATE_UPSTREAM_BLOCKED_REASON,
+  peerComparisonUnavailable,
 } from './shared';
 import {
   predictVote,
@@ -209,16 +210,17 @@ async function computeAndCache(
       score: predictions.independenceScore,
       confidentPredictions: predictions.confidentPredictions,
       deviations: predictions.deviations,
-      peerPercentile: peer?.percentileRank ?? 50,
+      peerPercentile: peer?.percentileRank ?? null,
     },
     modelAccuracy: metadata.testAccuracy,
-    peerComparison: peer ?? {
-      value: predictions.independenceScore,
-      peerAverage: predictions.independenceScore,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other ${data.chamber} members with vote prediction data`
+          ),
+        }),
     notableDeviations: predictions.notableDeviations.slice(0, 5),
     topPredictiveFactors: metadata.topFeatures.slice(0, 3).map(f => ({
       feature: f.feature,

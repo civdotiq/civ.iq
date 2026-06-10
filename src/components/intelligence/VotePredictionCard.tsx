@@ -44,7 +44,7 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
           </div>
           <div className="type-xs text-gray-500 aicher-heading-wide">Votes against prediction</div>
         </div>
-        {independenceScore.peerPercentile > 0 && (
+        {independenceScore.peerPercentile !== null && independenceScore.peerPercentile > 0 && (
           <div className="bg-gray-50 p-3">
             <div className="aicher-heading type-2xl text-gray-900">
               {independenceScore.peerPercentile.toFixed(0)}th
@@ -53,6 +53,13 @@ export function VotePredictionCard({ insight, className = '' }: VotePredictionCa
           </div>
         )}
       </div>
+
+      {/* Peer comparison unavailable — honest empty state */}
+      {insight.peerComparison === null && insight.peerComparisonUnavailableReason && (
+        <p className="type-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-4">
+          {insight.peerComparisonUnavailableReason}
+        </p>
+      )}
 
       {/* Narrative */}
       <p className="type-sm text-gray-700 leading-relaxed mb-4">{insight.narrative}</p>

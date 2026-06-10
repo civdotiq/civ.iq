@@ -28,6 +28,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import {
   getCommitteesForAgency,
@@ -213,13 +214,12 @@ async function computeAndCache(
     activeRulemakings,
     finalizedRules,
     withdrawnRules,
-    peerComparison: peer ?? {
-      value: regulationNodes.length,
-      peerAverage: regulationNodes.length,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable('other federal agencies'),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'mixed',

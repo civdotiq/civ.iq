@@ -30,6 +30,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import {
   ALL_COMMITTEE_MAPPINGS,
@@ -156,13 +157,14 @@ async function computeAndCache(
     matchedBillCount: stats.matchedBillCount,
     topOrganizations: stats.topOrganizations,
     issueAlignments: stats.issueAlignments,
-    peerComparison: peer ?? {
-      value: stats.totalSpending,
-      peerAverage: stats.totalSpending,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other ${committeeMapping.chamber} committees`
+          ),
+        }),
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,

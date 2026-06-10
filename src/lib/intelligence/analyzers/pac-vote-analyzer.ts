@@ -36,6 +36,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import {
   confidenceScore,
@@ -208,13 +209,14 @@ async function computeAndCache(
     recipientVotes: qualifiedRecipients,
     aggregateYeaRate: stats.aggregateYeaRate,
     aggregateBaselineYeaRate: stats.aggregateBaselineYeaRate,
-    peerComparison: peer ?? {
-      value: stats.aggregateYeaRate,
-      peerAverage: stats.aggregateYeaRate,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other PACs in the ${classification.sector} sector`
+          ),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'computed',

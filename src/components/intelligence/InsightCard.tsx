@@ -95,6 +95,15 @@ export function InsightCard({
       {/* Narrative — primary content */}
       <p className="type-sm text-gray-700 leading-relaxed mb-3">{insight.narrative}</p>
 
+      {/* Peer comparison unavailable — honest empty state, never a fabricated percentile */}
+      {'peerComparison' in insight &&
+        insight.peerComparison === null &&
+        insight.peerComparisonUnavailableReason && (
+          <p className="type-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-3">
+            {insight.peerComparisonUnavailableReason}
+          </p>
+        )}
+
       {/* Collapsible key stats */}
       {keyStats.length > 0 && (
         <div className="border-t-2 border-gray-200 pt-3">
@@ -162,12 +171,11 @@ export function InsightCard({
 export function financeJurisdictionKeyStats(insight: FinanceJurisdictionInsight): KeyStat[] {
   const peer = insight.peerComparison;
   const overlapPct = insight.overlapScore * 100;
-  const peerPct = peer.peerAverage * 100;
 
-  // Delta vs peer average
+  // Delta vs peer average — only when a real peer comparison exists
   let delta: KeyStat['delta'];
-  if (peer.peerCount > 0) {
-    const diff = overlapPct - peerPct;
+  if (peer && peer.peerCount > 0) {
+    const diff = overlapPct - peer.peerAverage * 100;
     if (Math.abs(diff) >= 1) {
       delta = {
         change: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}pp`,
@@ -188,10 +196,10 @@ export function financeJurisdictionKeyStats(insight: FinanceJurisdictionInsight)
     },
   ];
 
-  if (peer.peerCount > 0) {
+  if (peer && peer.peerCount > 0) {
     stats.push({
       label: 'Peer average',
-      value: `${peerPct.toFixed(1)}%`,
+      value: `${(peer.peerAverage * 100).toFixed(1)}%`,
     });
   }
 
@@ -280,10 +288,10 @@ export function lobbyingPipelineKeyStats(insight: LobbyingPipelineInsight): KeyS
       ? `$${(insight.totalSpending / 1_000_000).toFixed(1)}M`
       : `$${(insight.totalSpending / 1_000).toFixed(0)}K`;
 
-  // Delta vs peer spending
+  // Delta vs peer spending — only when a real peer comparison exists
   const peer = insight.peerComparison;
   let delta: KeyStat['delta'];
-  if (peer.peerCount > 0 && peer.peerAverage > 0) {
+  if (peer && peer.peerCount > 0 && peer.peerAverage > 0) {
     const pctDiff = ((insight.totalSpending - peer.peerAverage) / peer.peerAverage) * 100;
     if (Math.abs(pctDiff) >= 5) {
       delta = {

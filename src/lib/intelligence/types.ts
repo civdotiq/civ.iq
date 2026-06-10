@@ -135,8 +135,10 @@ export interface FinanceJurisdictionInsight extends InsightBase {
     /** Percentage of total donations from jurisdiction sectors. */
     jurisdictionDonationPercentage: number;
   }>;
-  /** How this legislator's overlap compares to peers on the same committees. */
-  peerComparison: PeerComparison;
+  /** How this legislator's overlap compares to peers on the same committees. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   /** AI-generated or statistical plain-language summary. */
   narrative: string;
 }
@@ -157,6 +159,8 @@ export interface VoteFinanceInsight extends InsightBase {
   overallAlignment: number;
   /** How this legislator's alignment compares to peers. Null when peer cache is cold. */
   peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   /** AI-generated or statistical plain-language summary. */
   narrative: string;
 }
@@ -206,8 +210,10 @@ export interface TemporalVoteInsight extends InsightBase {
   shifts: VoteShift[];
   /** Overall trend classification across all quarters. */
   overallTrend: 'stable' | 'increasing' | 'decreasing' | 'volatile';
-  /** How this legislator's average alignment compares to chamber/state peers. */
-  peerComparison: PeerComparison;
+  /** How this legislator's average alignment compares to chamber/state peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   /** AI-generated or statistical plain-language summary. */
   narrative: string;
 }
@@ -285,8 +291,10 @@ export interface LobbyingPipelineInsight extends InsightBase {
   topOrganizations: LobbyingOrganizationActivity[];
   /** Issue-to-bill alignment. */
   issueAlignments: TimelineAlignment[];
-  /** How this committee's lobbying volume compares to same-chamber peers. */
-  peerComparison: PeerComparison;
+  /** How this committee's lobbying volume compares to same-chamber peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   /** AI-generated or statistical plain-language summary. */
   narrative: string;
 }
@@ -326,7 +334,10 @@ export interface PACVoteInsight extends InsightBase {
   aggregateYeaRate: number;
   /** Vote-weighted party baseline. Null when no recipient had a computable baseline. */
   aggregateBaselineYeaRate: number | null;
-  peerComparison: PeerComparison;
+  /** How this PAC's recipient yea rate compares to same-sector PACs. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 
@@ -371,7 +382,10 @@ export interface StockCommitteeInsight extends InsightBase {
   flaggedTrades: FlaggedTrade[];
   /** Full sector breakdown — all resolved trades by sector, with committee overlap flag. */
   tradesBySector?: SectorTradeCount[];
-  peerComparison: PeerComparison;
+  /** How this legislator's overlap rate compares to peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 
@@ -472,12 +486,15 @@ export interface VotePredictionInsight extends InsightBase {
     confidentPredictions: number;
     /** Number of times legislator defied prediction. */
     deviations: number;
-    /** Peer comparison — percentile among chamber peers. */
-    peerPercentile: number;
+    /** Peer comparison — percentile among chamber peers. Null when too few peers have data. */
+    peerPercentile: number | null;
   };
   /** Test set accuracy of the model (disclosed for transparency). */
   modelAccuracy: number;
-  peerComparison: PeerComparison;
+  /** How this legislator's independence score compares to peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   /** Top 5 bills where legislator deviated from prediction. */
   notableDeviations: Array<{
     billId: string;
@@ -564,7 +581,10 @@ export interface RegulationInsight extends InsightBase {
   activeRulemakings: number;
   finalizedRules: number;
   withdrawnRules: number;
-  peerComparison: PeerComparison;
+  /** How this agency's rulemaking volume compares to other agencies. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 
@@ -596,7 +616,10 @@ export interface EnforcementInsight extends InsightBase {
     periodMonths: number;
   };
   linkedRegulations: Array<{ docketId: string; title: string; agency: string }>;
-  peerComparison: PeerComparison;
+  /** How this scope's enforcement volume compares to peer scopes. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 
@@ -640,7 +663,10 @@ export interface InfluenceChainInsight extends InsightBase {
   chains: InfluenceChain[];
   totalChainsDetected: number;
   chainsDropped: number;
-  peerComparison: PeerComparison;
+  /** How this legislator's chain count compares to chamber peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 
@@ -677,7 +703,10 @@ export interface InfluenceGraphInsight extends InsightBase {
     regulationLinks: number;
     enforcementLinks: number;
   };
-  peerComparison: PeerComparison;
+  /** How this legislator's graph chain count compares to peers. Null when too few peers have data. */
+  peerComparison: PeerComparison | null;
+  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
+  peerComparisonUnavailableReason?: string;
   narrative: string;
 }
 

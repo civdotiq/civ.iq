@@ -36,6 +36,7 @@ import {
   getBillSectors,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import { analyzeInfluenceChains } from './influence-chain-analyzer';
 import { analyzeEnforcement } from './enforcement-analyzer';
@@ -168,13 +169,14 @@ async function computeAndCache(
     totalChainsDetected: totalDetected,
     chainsDropped,
     graphStats,
-    peerComparison: peer ?? {
-      value: graphChains.length,
-      peerAverage: graphChains.length,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            'other same-chamber legislators'
+          ),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(confidence, 0.5) : confidence,
     confidenceMethod: 'mixed',

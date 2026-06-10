@@ -307,7 +307,7 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
       </div>
 
       {/* Peer comparison — citizen framing */}
-      {insight.peerComparison.percentileRank > 0 && (
+      {insight.peerComparison && insight.peerComparison.percentileRank > 0 && (
         <p className="type-xs text-gray-600 dark:text-gray-400 mb-4">
           More money-to-policy connections than{' '}
           <span className="font-medium">{insight.peerComparison.percentileRank.toFixed(0)}%</span>{' '}
@@ -315,6 +315,13 @@ export function InfluenceGraphCard({ insight, className = '' }: InfluenceGraphCa
           {insight.peerComparison.peerCount > 0 && (
             <span className="text-gray-400"> ({insight.peerComparison.peerCount} compared)</span>
           )}
+        </p>
+      )}
+
+      {/* Peer comparison unavailable — honest empty state */}
+      {!insight.peerComparison && insight.peerComparisonUnavailableReason && (
+        <p className="type-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-4">
+          {insight.peerComparisonUnavailableReason}
         </p>
       )}
 

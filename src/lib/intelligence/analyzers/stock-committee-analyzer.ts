@@ -50,6 +50,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 
 /** Redis cache TTL: 7 days */
@@ -150,13 +151,14 @@ async function computeAndCache(
     committees: stats.committees,
     flaggedTrades: stats.flaggedTrades,
     tradesBySector: stats.tradesBySector,
-    peerComparison: peer ?? {
-      value: stats.overlapRate,
-      peerAverage: stats.overlapRate,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other members of the ${data.state} ${data.chamber} delegation`
+          ),
+        }),
     narrative,
     confidence:
       source === 'statistical-fallback' ? Math.min(stats.confidence, 0.5) : stats.confidence,

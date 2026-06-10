@@ -272,7 +272,8 @@ describe('POST /api/intelligence/address/money-report', () => {
   it('maps fulfilled-with-null + reason to insufficient-data MetricStatus', async () => {
     mockAnalyzeVoteFinance.mockResolvedValue({
       insight: null,
-      unavailableReason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+      unavailableReason:
+        'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.',
     });
 
     const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
@@ -283,7 +284,8 @@ describe('POST /api/intelligence/address/money-report', () => {
     for (const rep of data.representatives) {
       expect(rep.voteFinance).toEqual({
         state: 'insufficient-data',
-        reason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+        reason:
+          'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.',
       });
       expect(rep.voteFinanceCorrelation).toBeNull();
     }

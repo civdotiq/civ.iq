@@ -98,7 +98,10 @@ jest.mock('@/lib/intelligence/embeddings', () => ({
   classifyZeroShot: jest.fn().mockResolvedValue([]),
 }));
 
-import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
+import {
+  analyzeVoteFinance,
+  analyzeVoteFinanceWithReason,
+} from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 
 // ── Test Data ─────────────────────────────────────────────────────
 
@@ -334,5 +337,80 @@ describe('analyzeVoteFinance', () => {
     expect(health).toBeDefined();
     expect(health!.alignmentScore).toBeCloseTo(20 / 30, 2);
     expect(result!.overallAlignment).toBeCloseTo(20 / 30, 2);
+  });
+
+  it('excludes sub-threshold sectors from overallAlignment (M7)', async () => {
+    // 12 HEALTH votes (all Yea) meet the 10-vote floor; 3 DEFENSE votes
+    // (all Nay) do not. The headline must come from HEALTH only (1.0),
+    // not the blended 12/15 = 0.8 that included the thin DEFENSE sector.
+    const votes = Array.from({ length: 15 }, (_, i) => ({
+      bill: { type: 'hr', number: String(i + 1), congress: 119, title: `Bill ${i + 1}` },
+      position: i < 12 ? 'Yea' : 'Nay',
+      date: '2025-03-01',
+      question: 'On Passage',
+      result: 'Passed',
+    }));
+    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
+      Promise.resolve(args[2] === 1 ? votes : [])
+    );
+    mockGetSummary.mockImplementation((...args: unknown[]) => {
+      const num = parseInt(String(args[0]).replace(/^hr/, ''), 10);
+      return Promise.resolve({ affectedIndustries: num <= 12 ? ['HEALTH'] : ['DEFENSE'] });
+    });
+
+    const result = await analyzeVoteFinance('P000197');
+    expect(result).not.toBeNull();
+
+    const defense = result!.correlations.find(c => c.sector === 'DEFENSE');
+    expect(defense).toBeDefined();
+    expect(defense!.meetsSampleSize).toBe(false);
+
+    // Fixed: 12/12 = 1.0. Buggy blended value would be 0.8.
+    expect(result!.overallAlignment).toBeCloseTo(1.0, 5);
+  });
+
+  it('returns insufficient-data when no sector meets the 10-vote floor (M7)', async () => {
+    // 5 HEALTH votes only — below MIN_VOTES_PER_SECTOR. No honest headline
+    // number exists, so the analyzer must report unavailable, not fabricate.
+    const votes = Array.from({ length: 5 }, (_, i) => ({
+      bill: { type: 'hr', number: String(i + 1), congress: 119, title: `Bill ${i + 1}` },
+      position: 'Yea',
+      date: '2025-03-01',
+      question: 'On Passage',
+      result: 'Passed',
+    }));
+    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
+      Promise.resolve(args[2] === 1 ? votes : [])
+    );
+
+    const outcome = await analyzeVoteFinanceWithReason('P000197');
+
+    expect(outcome.insight).toBeNull();
+    expect(outcome.unavailableReason).toBe(
+      'No donor industry sector has 10 or more recorded votes. ' +
+        'We need at least 10 votes in a sector to show a pattern.'
+    );
+  });
+
+  it('reports accurate reason when no yea/nay votes match a sector (M7)', async () => {
+    // All votes are "Present" — sectors classify, but no yea/nay signal
+    // exists, so the reason must describe that condition specifically.
+    const votes = Array.from({ length: 12 }, (_, i) => ({
+      bill: { type: 'hr', number: String(i + 1), congress: 119, title: `Bill ${i + 1}` },
+      position: 'Present',
+      date: '2025-03-01',
+      question: 'On Passage',
+      result: 'Passed',
+    }));
+    mockGetHouseMemberVotes.mockImplementation((...args: unknown[]) =>
+      Promise.resolve(args[2] === 1 ? votes : [])
+    );
+
+    const outcome = await analyzeVoteFinanceWithReason('P000197');
+
+    expect(outcome.insight).toBeNull();
+    expect(outcome.unavailableReason).toBe(
+      "None of this representative's yea or nay votes matched a donor industry sector."
+    );
   });
 });

@@ -195,6 +195,25 @@ export function freshestDate(...dates: (string | undefined | null)[]): string | 
   return valid[0]!;
 }
 
+// ── Peer Comparison Unavailability ──────────────────────────────────
+
+import { MIN_PEERS } from '../statistics/civic-stats';
+
+/**
+ * Citizen-readable reason for a missing peer comparison.
+ *
+ * When an analyzer cannot find enough peers (fewer than MIN_PEERS with
+ * cached scores), it must emit `peerComparison: null` with this reason —
+ * NEVER a fabricated placeholder (percentileRank: 50, peerAverage set to
+ * the subject's own value). Fabricated peers violate the real-data rule.
+ *
+ * @param peerGroupPhrase - Plural noun phrase for the peer group,
+ *   e.g., "other House members", "other federal agencies".
+ */
+export function peerComparisonUnavailable(peerGroupPhrase: string): string {
+  return `Fewer than ${MIN_PEERS} ${peerGroupPhrase} have comparable data right now, so no peer comparison is shown.`;
+}
+
 // ── Signal Classification ────────────────────────────────────────────
 
 import type { InsightSignal, InsightSource } from '../types';

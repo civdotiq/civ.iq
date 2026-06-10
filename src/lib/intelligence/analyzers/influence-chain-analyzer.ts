@@ -39,6 +39,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import type {
   InfluenceChainInsight,
@@ -300,13 +301,14 @@ async function computeAndCache(
     chains,
     totalChainsDetected: totalDetected,
     chainsDropped: dropped,
-    peerComparison: peer ?? {
-      value: chains.length,
-      peerAverage: chains.length,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other ${rep.chamber} members`
+          ),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     confidenceMethod: 'mixed',

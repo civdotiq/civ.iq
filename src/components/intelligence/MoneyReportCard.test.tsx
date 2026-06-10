@@ -148,7 +148,8 @@ describe('MoneyReportCard', () => {
           party: 'R',
           voteFinance: {
             state: 'insufficient-data',
-            reason: 'Fewer than 10 sector-classified votes in the 119th Congress',
+            reason:
+              'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.',
           },
           financeJurisdiction: {
             state: 'insufficient-data',
@@ -167,7 +168,7 @@ describe('MoneyReportCard', () => {
     expect(empties.length).toBe(3);
     expect(empties[0]).toHaveAttribute(
       'title',
-      'Fewer than 10 sector-classified votes in the 119th Congress'
+      'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.'
     );
   });
 

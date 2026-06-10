@@ -178,13 +178,9 @@ describe('Integration: GET /api/intelligence/representative/[bioguideId]/influen
       chains: [],
       totalChainsDetected: 0,
       chainsDropped: 0,
-      peerComparison: {
-        value: 0,
-        peerAverage: 0,
-        peerCount: 0,
-        peerGroupLabel: 'test',
-        percentileRank: 50,
-      },
+      peerComparison: null,
+      peerComparisonUnavailableReason:
+        'Fewer than 5 other House members have comparable data right now, so no peer comparison is shown.',
       narrative: 'Cached narrative',
       confidence: 0.8,
       dataAsOf: new Date().toISOString(),

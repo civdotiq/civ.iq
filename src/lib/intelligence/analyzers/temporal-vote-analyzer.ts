@@ -34,6 +34,7 @@ import {
   withInsightTracking,
   classifySignal,
   SourceCollector,
+  peerComparisonUnavailable,
 } from './shared';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
@@ -357,13 +358,14 @@ async function computeAndCache(
     quarters,
     shifts,
     overallTrend,
-    peerComparison: peer ?? {
-      value: avgAlignment,
-      peerAverage: avgAlignment,
-      peerCount: 0,
-      peerGroupLabel: 'Insufficient peer data',
-      percentileRank: 50,
-    },
+    peerComparison: peer,
+    ...(peer
+      ? {}
+      : {
+          peerComparisonUnavailableReason: peerComparisonUnavailable(
+            `other members of the ${data.state} ${data.chamber} delegation`
+          ),
+        }),
     narrative,
     confidence: source === 'statistical-fallback' ? Math.min(conf, 0.5) : conf,
     confidenceMethod: 'computed',
