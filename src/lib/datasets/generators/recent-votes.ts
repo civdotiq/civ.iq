@@ -134,7 +134,7 @@ async function fetchVoteDetails(): Promise<UnifiedVoteDetail[]> {
       const voteId =
         vote.chamber === 'House'
           ? `house-${vote.congress}-${vote.rollNumber}`
-          : `${vote.congress}-senate-${vote.rollNumber}`;
+          : `senate-${vote.congress}-${vote.rollNumber}`;
       try {
         return await getVoteDetailsService(voteId);
       } catch (error) {
