@@ -22,37 +22,35 @@ interface ApiMetadata {
 }
 
 interface SearchFormProps {
-  onSearch: (zipCode: string) => void;
+  onSearch: (query: string) => void;
   apiMetadata?: ApiMetadata;
 }
 
 export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
-  const [zipCode, setZipCode] = useState('');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (zipCode.trim()) {
+    if (query.trim()) {
       setLoading(true);
-      await onSearch(zipCode.trim());
+      await onSearch(query.trim());
       setLoading(false);
     }
   };
 
   return (
     <div className="bg-white border-2 border-black p-4 mb-6">
-      <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-4 mb-4">
+      <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-4 mb-2">
         <div className="flex-1 min-w-full sm:min-w-[300px]">
           <div className="relative">
             <input
               type="text"
-              value={zipCode}
-              onChange={e => setZipCode(e.target.value)}
-              placeholder="Enter your 5-digit ZIP code to find your representatives..."
-              pattern="\d{5}(-\d{4})?"
-              aria-label="ZIP code"
-              inputMode="numeric"
-              title="Enter a 5-digit ZIP code, e.g. 49503"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Enter your full home address, e.g. 123 Main St, Detroit, MI"
+              aria-label="Home address or ZIP code"
+              title="A full street address finds your exact district. ZIP codes are approximate."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             />
             <svg
@@ -84,6 +82,11 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
           {loading ? 'Searching...' : 'Search'}
         </button>
       </form>
+
+      <p className="text-xs text-gray-500 mb-4">
+        A full street address finds your exact district. ZIP codes also work but are approximate
+        &mdash; about 1 in 5 ZIP codes spans more than one congressional district.
+      </p>
 
       {/* Data Quality Indicator */}
       {apiMetadata && (

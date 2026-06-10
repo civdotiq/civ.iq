@@ -18,6 +18,7 @@ import { DistrictHeader } from '@/components/DistrictHeader';
 import { DistrictInfo } from '@/lib/multi-district/detection';
 import { FilterState } from '@/types/filters';
 import logger from '@/lib/logging/simple-logger';
+import { classifySearchInput, extractZip5 } from '@/features/representatives/utils/search-input';
 
 // Dynamic imports for heavy components
 const FilterSidebar = dynamic(
@@ -48,6 +49,12 @@ interface SearchState {
   representatives: Representative[];
   selectedDistrictInfo: DistrictInfo | null;
   showAddressPrompt: boolean;
+  /** How the current results were found. Address is authoritative; ZIP is approximate. */
+  searchMode: 'address' | 'zip' | null;
+  /** Honesty caveat returned by ZIP-based lookups (10–20% of ZIPs span districts). */
+  accuracyNote: string | null;
+  /** Last submitted query, so the error state can retry either mode. */
+  lastQuery: string | null;
 }
 
 /**
@@ -91,6 +98,9 @@ export function RepresentativesClient({
     representatives: initialRepresentatives,
     selectedDistrictInfo: null,
     showAddressPrompt: false,
+    searchMode: null,
+    accuracyNote: null,
+    lastQuery: null,
   });
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'network'>('grid');
@@ -104,13 +114,93 @@ export function RepresentativesClient({
 
   const [filteredReps, setFilteredReps] = useState<Representative[]>(searchState.representatives);
 
-  // Updated handleZipSearch to use multi-district API as primary source
+  // Address-first dispatch (security rule: full address → Census Geocoder →
+  // district; ZIP is a fallback whose results carry the accuracy caveat).
+  const handleSearch = async (query: string) => {
+    const kind = classifySearchInput(query);
+    if (kind === 'zip') {
+      await handleZipSearch(extractZip5(query));
+      return;
+    }
+    if (kind === 'too-short') {
+      setSearchState(prev => ({
+        ...prev,
+        error:
+          'Please enter a full street address (e.g., 123 Main St, Detroit, MI) or a 5-digit ZIP code.',
+      }));
+      return;
+    }
+    await handleAddressSearch(query);
+  };
+
+  // Authoritative path: geocode the full address to its congressional district
+  const handleAddressSearch = async (address: string) => {
+    setSearchState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      zipCode: null,
+      lastQuery: address,
+    }));
+
+    try {
+      const response = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'address', address }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !data.district) {
+        throw new Error(
+          data.error?.message ||
+            'Could not find a congressional district for this address. Check the street, city, and state.'
+        );
+      }
+
+      const districtInfo: DistrictInfo = {
+        state: data.district.state,
+        district: data.district.district,
+        primary: true,
+        confidence: 'high',
+      };
+
+      setSearchState(prev => ({
+        ...prev,
+        isLoading: false,
+        isMultiDistrict: false,
+        districts: [districtInfo],
+        representatives: data.representatives || [],
+        selectedDistrictInfo: districtInfo,
+        showAddressPrompt: false,
+        searchMode: 'address',
+        accuracyNote: data.accuracyNote ?? null,
+      }));
+
+      logger.info('Address search completed', {
+        state: districtInfo.state,
+        district: districtInfo.district,
+        representativeCount: data.representatives?.length || 0,
+      });
+    } catch (error) {
+      logger.error('Address search failed', error as Error);
+      setSearchState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to search representatives',
+      }));
+    }
+  };
+
+  // Fallback path: ZIP → multi-district API (approximate; carries accuracyNote)
   const handleZipSearch = async (zip: string) => {
     setSearchState(prev => ({
       ...prev,
       isLoading: true,
       error: null,
       zipCode: zip,
+      lastQuery: zip,
     }));
 
     try {
@@ -138,6 +228,8 @@ export function RepresentativesClient({
         representatives: data.representatives || [],
         showAddressPrompt: data.isMultiDistrict,
         selectedDistrictInfo: null, // Reset selection
+        searchMode: 'zip',
+        accuracyNote: data.accuracyNote ?? null,
       }));
 
       logger.info('ZIP search completed', {
@@ -314,14 +406,22 @@ export function RepresentativesClient({
     return (
       <ErrorState
         error={{ code: 'SEARCH_ERROR', message: searchState.error }}
-        onRetry={() => handleZipSearch(searchState.zipCode || '')}
+        onRetry={() => handleSearch(searchState.lastQuery || '')}
       />
     );
   }
 
   return (
     <>
-      <SearchForm onSearch={handleZipSearch} />
+      <SearchForm onSearch={handleSearch} />
+
+      {/* ZIP-honesty caveat: shown only when results came from a ZIP lookup */}
+      {searchState.accuracyNote && searchState.searchMode === 'zip' && (
+        <div className="mb-6 border-l-4 border-amber-600 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="font-bold uppercase tracking-wide text-xs mb-1">Approximate results</p>
+          <p>{searchState.accuracyNote}</p>
+        </div>
+      )}
 
       {/* Multi-district Address Prompt - now controlled by API response */}
       {searchState.showAddressPrompt && searchState.isMultiDistrict && (
@@ -336,7 +436,13 @@ export function RepresentativesClient({
       )}
 
       {/* Conditional Header: District-specific or Congress-wide */}
-      {searchState.zipCode && (searchState.selectedDistrictInfo || !searchState.isMultiDistrict) ? (
+      {searchState.searchMode === 'address' && searchState.selectedDistrictInfo ? (
+        // useEnhancedDistrictData accepts "XX-NN" district IDs as well as ZIPs
+        <DistrictHeader
+          zipCode={`${searchState.selectedDistrictInfo.state}-${searchState.selectedDistrictInfo.district.padStart(2, '0')}`}
+        />
+      ) : searchState.zipCode &&
+        (searchState.selectedDistrictInfo || !searchState.isMultiDistrict) ? (
         <DistrictHeader zipCode={searchState.zipCode || ''} />
       ) : (
         <CongressHeader
