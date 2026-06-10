@@ -57,6 +57,21 @@ describe('GET /api/analytics/reading-levels', () => {
     expect(data.aggregate.fleschEaseTarget).toBe(60);
   });
 
+  test('returns 503 error envelope when stats lookup fails', async () => {
+    const { getReadingLevelStats } = require('@/lib/analytics/reading-level-tracker');
+    getReadingLevelStats.mockRejectedValueOnce(new Error('Redis down'));
+
+    const { GET } = require('@/app/api/analytics/reading-levels/route');
+    const request = new NextRequest('http://localhost:3000/api/analytics/reading-levels');
+    const response = await GET(request);
+    const data = await response.json();
+
+    // Failures must not fabricate zeroed aggregates as a 200
+    expect(response.status).toBe(503);
+    expect(data.error).toBe('Failed to load reading level analytics');
+    expect(data.aggregate).toBeUndefined();
+  });
+
   test('respects custom date range', async () => {
     const { GET } = require('@/app/api/analytics/reading-levels/route');
     const request = new NextRequest(

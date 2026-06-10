@@ -74,11 +74,25 @@ export async function GET(
       generatedAt: new Date().toISOString(),
     };
 
+    // All analyzers failed: this is an upstream outage, not an insight.
+    // 503 + no-store so the failure is never CDN-cached as success.
+    if (status === 'unavailable') {
+      return NextResponse.json(
+        { ...response, errors, status },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
     return NextResponse.json(
       { ...response, errors, status },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=3600',
+          // Partial results cache briefly so the missing analyzer can recover;
+          // only complete results get the long 12h CDN cache.
+          'Cache-Control':
+            status === 'complete'
+              ? 'public, s-maxage=43200, stale-while-revalidate=3600'
+              : 'public, s-maxage=300, stale-while-revalidate=60',
         },
       }
     );

@@ -72,26 +72,16 @@ export async function GET(request: NextRequest) {
       operation: 'reading_level_analytics',
     });
 
+    // 503 with an explicit error envelope — never fabricated zero aggregates
     return NextResponse.json(
       {
-        dateRange: { startDate: '', endDate: '' },
-        daily: [],
-        aggregate: {
-          totalSummaries: 0,
-          avgGradeLevel: 0,
-          passRate: 0,
-          targetGrade: 8,
-          avgFleschEase: 0,
-          fleschEasePassRate: 0,
-          fleschEaseTarget: 60,
-        },
+        error: 'Failed to load reading level analytics',
         metadata: {
           endpoint: '/api/analytics/reading-levels',
           generatedAt: new Date().toISOString(),
-          error: 'Failed to load reading level analytics',
         },
       },
-      { status: 200 }
+      { status: 503, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

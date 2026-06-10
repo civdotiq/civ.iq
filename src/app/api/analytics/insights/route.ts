@@ -75,29 +75,16 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Insight analytics failed', error as Error, { operation: 'insight_analytics' });
+    // 503 with an explicit error envelope — never fabricated zero aggregates
     return NextResponse.json(
       {
-        dateRange: { startDate: '', endDate: '' },
-        daily: [],
-        aggregate: {
-          totalRuns: 0,
-          totalCacheHits: 0,
-          successRate: 0,
-          failureRate: 0,
-          timeoutRate: 0,
-          insufficientDataRate: 0,
-          avgConfidence: 0,
-          aiNarrativeRate: 0,
-          avgLatencyMs: 0,
-        },
-        analyzers: ANALYZER_NAMES,
+        error: 'Failed to load insight analytics',
         metadata: {
           endpoint: '/api/analytics/insights',
           generatedAt: new Date().toISOString(),
-          error: 'Failed to load insight analytics',
         },
       },
-      { status: 200 }
+      { status: 503, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

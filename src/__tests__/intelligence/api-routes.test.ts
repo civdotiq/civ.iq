@@ -189,7 +189,7 @@ describe('Intelligence API Routes', () => {
       expect(data.insights.voteFinance).toBeNull();
     });
 
-    it('returns 500 on unexpected error', async () => {
+    it('returns 503 uncached when all analyzers fail', async () => {
       mockAnalyzeFinanceJurisdiction.mockRejectedValue(new Error('Unexpected'));
       mockAnalyzeVoteFinance.mockRejectedValue(new Error('Unexpected'));
 
@@ -197,9 +197,12 @@ describe('Intelligence API Routes', () => {
         mockRequest('http://localhost/api/intelligence/representative/P000197') as never,
         mockParams({ bioguideId: 'P000197' })
       );
-      // Even on error, the route catches and returns nulls (not 500)
-      // because each analyzer is caught individually
+      // All analyzers failed: upstream outage, not a cacheable success.
+      // (Cache-Control: no-store is set by the route; response headers are
+      // not observable under the jsdom NextResponse polyfill.)
+      expect(res.status).toBe(503);
       const data = await res.json();
+      expect(data.status).toBe('unavailable');
       expect(data.insights.financeJurisdiction).toBeNull();
       expect(data.insights.voteFinance).toBeNull();
     });

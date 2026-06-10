@@ -94,6 +94,10 @@ export async function GET(
       error: 'State judiciary data temporarily unavailable',
     };
 
-    return NextResponse.json(response, { status: 200 });
+    // 503 + no-store: an upstream outage must not be cached or look like success
+    return NextResponse.json(response, {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 }

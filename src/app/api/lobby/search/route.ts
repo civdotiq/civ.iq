@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
           signal: AbortSignal.timeout(10_000),
         });
 
-        if (!res.ok) return null;
+        // Upstream failure must throw — returning null here would make an
+        // outage indistinguishable from a genuine no-match (and get cached).
+        if (!res.ok) throw new Error(`Senate LDA API error: HTTP ${res.status}`);
         const data = await res.json();
         const filings: RawFiling[] = data?.results ?? [];
         if (filings.length === 0) return null;
@@ -76,11 +78,17 @@ export async function GET(request: NextRequest) {
       24 * 60 * 60
     );
 
+    // 200 here means a real answer: either a match or a genuine no-match (null).
+    // Both are safe to cache.
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600' },
     });
   } catch (error) {
     logger.warn('[LobbySearch] Error', { q, error: (error as Error).message });
-    return NextResponse.json(null);
+    // Outage: 503 + no-store so callers can distinguish it from a no-match
+    return NextResponse.json(
+      { error: 'Lobbying data temporarily unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } }
+    );
   }
 }

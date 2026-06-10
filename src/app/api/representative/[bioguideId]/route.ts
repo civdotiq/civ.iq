@@ -40,6 +40,10 @@ async function getHandler(
   try {
     logger.info('Fetching representative data', { bioguideId: upperBioguideId });
 
+    // Track upstream failures so errors are not reported as "not found"
+    let enhancedFetchFailed = false;
+    let congressApiStatus: number | null = null;
+
     // First, try to get enhanced data from congress-legislators with caching
     let enhancedData: EnhancedRepresentative | null = null;
     try {
@@ -69,6 +73,7 @@ async function getHandler(
         }
       }
     } catch (error) {
+      enhancedFetchFailed = true;
       logger.warn('Failed to get enhanced representative data', {
         bioguideId,
         error: (error as Error).message,
@@ -434,6 +439,7 @@ async function getHandler(
           },
         });
       } else {
+        congressApiStatus = response.status;
         logger.warn('Congress.gov API request failed', {
           bioguideId,
           status: response.status,
@@ -441,8 +447,23 @@ async function getHandler(
       }
     }
 
-    // FALLBACK DATA: This section should NEVER fail - always return something
-    logger.info('Using fallback representative data', { bioguideId });
+    // Upstream failure (network error or non-404 API error): report 502, never cache
+    // so a transient outage cannot masquerade as a missing representative.
+    if (enhancedFetchFailed || (congressApiStatus !== null && congressApiStatus !== 404)) {
+      return NextResponse.json(
+        {
+          representative: null,
+          success: false,
+          error: 'Upstream data source unavailable',
+          metadata: {
+            dataSource: 'unavailable',
+            cacheHit: false,
+            responseTime: Date.now(),
+          },
+        },
+        { status: 502, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
 
     // EMERGENCY FIX: Never return fake representative data
     // Previously returned fake representative with fake bioguideId, phone, email, committees
@@ -456,16 +477,19 @@ async function getHandler(
       }
     );
 
-    return NextResponse.json({
-      representative: null,
-      success: false,
-      error: 'Representative not found',
-      metadata: {
-        dataSource: 'unavailable',
-        cacheHit: false,
-        responseTime: Date.now(),
+    return NextResponse.json(
+      {
+        representative: null,
+        success: false,
+        error: 'Representative not found',
+        metadata: {
+          dataSource: 'unavailable',
+          cacheHit: false,
+          responseTime: Date.now(),
+        },
       },
-    });
+      { status: 404, headers: { 'Cache-Control': 'no-store' } }
+    );
   } catch (error) {
     logger.error('Representative API error', error as Error, { bioguideId: bioguideId });
     return NextResponse.json(
