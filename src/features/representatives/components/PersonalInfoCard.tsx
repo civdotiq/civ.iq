@@ -44,7 +44,7 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
     representative.party === 'Republican'
       ? 'border-civiq-red bg-civiq-red/10 text-civiq-red'
       : representative.party === 'Democrat'
-        ? 'border-civiq-blue bg-civiq-blue/10 text-civiq-blue'
+        ? 'border-party-dem bg-party-dem/10 text-party-dem'
         : 'border-gray-200 bg-white text-gray-700';
 
   return (

@@ -13,10 +13,12 @@ export type Party = 'democrat' | 'republican' | 'independent' | 'unknown';
  */
 const PARTY_COLORS = {
   democrat: {
-    text: 'text-civiq-green',
-    bg: 'bg-civiq-green/10',
-    hex: '#0a9338',
-    hexLight: '#E6F4EA',
+    // Democrat blue (#2563eb) is deliberately darker than the interactive
+    // blue (#3ea2d4) so party identity never reads as UI chrome.
+    text: 'text-party-dem',
+    bg: 'bg-party-dem/10',
+    hex: '#2563eb',
+    hexLight: '#DBEAFE',
   },
   republican: {
     text: 'text-civiq-red',

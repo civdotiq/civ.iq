@@ -62,7 +62,7 @@ export function SenatorsPanel({ senators }: SenatorsPanelProps) {
 function SenatorCard({ senator, index }: { senator: DelegationMember; index: number }) {
   const stripe =
     senator.party === 'd'
-      ? 'var(--civiq-green)'
+      ? 'var(--party-democrat)'
       : senator.party === 'r'
         ? 'var(--civiq-red)'
         : 'var(--data-vlau)';

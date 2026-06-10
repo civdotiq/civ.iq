@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import useSWR from 'swr';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 import type {
   InfluenceClusterData,
   LegislatorClusterPoint,
@@ -26,7 +27,7 @@ const fetcher = (url: string) =>
 
 /** Party colors per design system. */
 const PARTY_COLORS = {
-  D: '#0a9338', // Green for Democrat
+  D: SEMANTIC_COLORS.democrat, // Blue for Democrat
   R: '#e11d07', // Red for Republican
   I: '#6b7280', // Gray for Independent
 };

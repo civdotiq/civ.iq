@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { Map, MapLayerMouseEvent } from 'maplibre-gl';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface District {
   id: string;
@@ -234,10 +235,10 @@ export function DistrictMapContainer({
           'circle-color': [
             'case',
             ['==', ['get', 'party'], 'R'],
-            '#dc2626', // Republican red
+            SEMANTIC_COLORS.republican,
             ['==', ['get', 'party'], 'D'],
-            '#2563eb', // Democratic blue
-            '#6b7280', // Independent/other gray
+            SEMANTIC_COLORS.democrat,
+            SEMANTIC_COLORS.independent,
           ],
           'circle-radius': [
             'case',

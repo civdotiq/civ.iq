@@ -6,6 +6,7 @@
  */
 
 import { useMemo, useState, useEffect } from 'react';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface HemicycleData {
   chamber: 'house' | 'senate';
@@ -43,7 +44,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
       allSeats.push({ party: 'Republican', color: '#e11d07' });
     }
     for (let i = 0; i < data.democrats; i++) {
-      allSeats.push({ party: 'Democrat', color: '#0a9338' });
+      allSeats.push({ party: 'Democrat', color: SEMANTIC_COLORS.democrat });
     }
     for (let i = 0; i < data.independents; i++) {
       allSeats.push({ party: 'Independent', color: '#6b7280' });
@@ -130,7 +131,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
   const partyCounts = useMemo(() => {
     return [
       { party: 'Republican', count: data.republicans, color: '#e11d07' },
-      { party: 'Democrat', count: data.democrats, color: '#0a9338' },
+      { party: 'Democrat', count: data.democrats, color: SEMANTIC_COLORS.democrat },
       { party: 'Independent', count: data.independents, color: '#6b7280' },
     ].filter(p => p.count > 0);
   }, [data]);
@@ -195,7 +196,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                       majorityParty === 'Republican'
                         ? '#e11d07'
                         : majorityParty === 'Democrat'
-                          ? '#0a9338'
+                          ? SEMANTIC_COLORS.democrat
                           : '#6b7280',
                   }}
                 ></div>
@@ -206,7 +207,7 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
                       majorityParty === 'Republican'
                         ? '#e11d07'
                         : majorityParty === 'Democrat'
-                          ? '#0a9338'
+                          ? SEMANTIC_COLORS.democrat
                           : '#6b7280',
                   }}
                 >

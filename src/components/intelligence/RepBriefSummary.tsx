@@ -29,7 +29,7 @@ function partyLabel(party: string): string {
 }
 
 function partyColor(party: string): string {
-  if (party === 'D') return 'bg-[#0a9338]';
+  if (party === 'D') return 'bg-party-dem';
   if (party === 'R') return 'bg-[#e11d07]';
   return 'bg-gray-500';
 }

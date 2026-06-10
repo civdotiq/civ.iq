@@ -40,7 +40,7 @@ export default function DistrictRepresentative({
             <span
               className={`px-3 py-1 text-sm font-medium ${
                 representative.party === 'Democrat'
-                  ? 'bg-civiq-blue/10 text-civiq-blue'
+                  ? 'bg-party-dem/10 text-party-dem'
                   : representative.party === 'Republican'
                     ? 'bg-civiq-red/10 text-civiq-red'
                     : 'bg-white border-2 border-gray-300 text-gray-800'

@@ -86,7 +86,7 @@ export function VoteAlignmentAside({ insight, unavailable, loading }: VoteAlignm
 function RecipientVoteRow({ row, index }: { row: PACRecipientVoteRow; index: number }) {
   const partyVar =
     row.party === 'D' || row.party === 'Democrat'
-      ? 'var(--civiq-green)'
+      ? 'var(--party-democrat)'
       : row.party === 'R' || row.party === 'Republican'
         ? 'var(--civiq-red)'
         : 'var(--fg1)';

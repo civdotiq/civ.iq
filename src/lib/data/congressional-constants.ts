@@ -29,9 +29,9 @@ export const PARTIES = {
     code: 'D' as const,
     name: 'Democratic' as const,
     fullName: 'Democratic Party' as const,
-    color: '#0a9338' as const, // CIV.IQ green — party identification only
-    bgClass: 'bg-civiq-green/10' as const,
-    textClass: 'text-civiq-green' as const,
+    color: '#2563eb' as const, // keep in sync with SEMANTIC_COLORS.democrat — party identification only
+    bgClass: 'bg-party-dem/10' as const,
+    textClass: 'text-party-dem' as const,
   },
   REPUBLICAN: {
     code: 'R' as const,

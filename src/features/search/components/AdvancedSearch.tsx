@@ -521,7 +521,7 @@ export function AdvancedSearch() {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-medium ${
                             rep.party === 'D'
-                              ? 'bg-civiq-blue/10 text-civiq-blue'
+                              ? 'bg-party-dem/10 text-party-dem'
                               : rep.party === 'R'
                                 ? 'bg-civiq-red/10 text-civiq-red'
                                 : 'bg-gray-100 text-gray-700'

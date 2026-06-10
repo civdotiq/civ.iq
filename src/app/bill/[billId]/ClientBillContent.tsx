@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
+import { getPartyColors } from '@/lib/party-colors';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
 import {
@@ -544,9 +545,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           <VoteBar vote={vote} />
                           {/* Party text breakdown */}
                           <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="bg-civiq-blue/10 p-2">
-                              <div className="font-medium text-civiq-blue mb-1">Democrats</div>
-                              <div className="text-civiq-blue">
+                            <div className="bg-party-dem/10 p-2">
+                              <div className="font-medium text-party-dem mb-1">Democrats</div>
+                              <div className="text-party-dem">
                                 {vote.breakdown.democratic.yea} Yea /{' '}
                                 {vote.breakdown.democratic.nay} Nay
                               </div>
@@ -604,8 +605,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               <div className="mb-6 p-4 bg-white">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Party Breakdown</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-civiq-blue/10 p-3">
-                    <div className="text-lg font-bold text-civiq-blue">
+                  <div className="bg-party-dem/10 p-3">
+                    <div className="text-lg font-bold text-party-dem">
                       {
                         [
                           bill.sponsor.representative,
@@ -613,7 +614,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         ].filter(rep => rep.party === 'D').length
                       }
                     </div>
-                    <div className="text-xs text-civiq-blue">Democrats</div>
+                    <div className="text-xs text-party-dem">Democrats</div>
                   </div>
                   <div className="bg-civiq-red/10 p-3">
                     <div className="text-lg font-bold text-civiq-red">
@@ -1144,13 +1145,14 @@ function VoteBar({ vote }: { vote: BillVote }) {
   const total = vote.votes.yea + vote.votes.nay + vote.votes.present + vote.votes.notVoting;
   if (total === 0) return null;
 
-  // Segments use party colors: D=green, R=red, I=gray (matching design system)
+  // Segments use party colors: D=blue, R=red, I=gray (matching design system)
   // Yea = solid party color, Nay = lighter shade
+  const demColors = getPartyColors('Democrat');
   const segments: { label: string; count: number; color: string }[] = [
-    { label: 'D Yea', count: vote.breakdown.democratic.yea, color: '#0a9338' },
+    { label: 'D Yea', count: vote.breakdown.democratic.yea, color: demColors.hex },
     { label: 'R Yea', count: vote.breakdown.republican.yea, color: '#e11d07' },
     { label: 'I Yea', count: vote.breakdown.independent.yea, color: '#6b7280' },
-    { label: 'D Nay', count: vote.breakdown.democratic.nay, color: '#86efac' },
+    { label: 'D Nay', count: vote.breakdown.democratic.nay, color: demColors.hexLight },
     { label: 'R Nay', count: vote.breakdown.republican.nay, color: '#fca5a5' },
     { label: 'I Nay', count: vote.breakdown.independent.nay, color: '#d1d5db' },
     {
@@ -1177,13 +1179,18 @@ function VoteBar({ vote }: { vote: BillVote }) {
       </div>
       <div className="flex items-center gap-4 mt-1.5 flex-wrap text-xs text-gray-600">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#0a9338' }} />D Yea
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: demColors.hex }} />D
+          Yea
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#e11d07' }} />R Yea
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#86efac' }} />D Nay
+          <span
+            className="inline-block w-2.5 h-2.5"
+            style={{ backgroundColor: demColors.hexLight }}
+          />
+          D Nay
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#fca5a5' }} />R Nay

@@ -123,7 +123,7 @@ function BillCard({ bill }: { bill: StateBill }) {
   const getPartyColor = (party: string) => {
     switch (party) {
       case 'Democratic':
-        return 'text-civiq-blue';
+        return 'text-party-dem';
       case 'Republican':
         return 'text-civiq-red';
       default:

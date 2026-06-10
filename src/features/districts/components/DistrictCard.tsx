@@ -63,8 +63,8 @@ function getDistrictLean(pvi: string): { text: string; color: string; bgColor: s
   const party = match[1];
   const margin = parseInt(match[2], 10);
   const partyName = party === 'D' ? 'Democratic' : 'Republican';
-  const color = party === 'D' ? 'text-civiq-blue' : 'text-civiq-red';
-  const bgColor = party === 'D' ? 'bg-civiq-blue/10' : 'bg-civiq-red/10';
+  const color = party === 'D' ? 'text-party-dem' : 'text-civiq-red';
+  const bgColor = party === 'D' ? 'bg-party-dem/10' : 'bg-civiq-red/10';
 
   if (margin >= 15) {
     return { text: `Strongly ${partyName}`, color, bgColor };
@@ -80,7 +80,7 @@ export function DistrictCard({ district }: { district: District }) {
   const districtHref = `/districts/${district.id}`;
   const repHref = `/representative/${district.representative.bioguideId}`;
   const partyLabel = district.representative.party === 'D' ? 'Democrat' : 'Republican';
-  const partyColor = district.representative.party === 'D' ? 'text-[#0a9338]' : 'text-[#e11d07]';
+  const partyColor = district.representative.party === 'D' ? 'text-party-dem' : 'text-civiq-red';
   const marginWinner = district.political.lastElection.winner;
   const margin = district.political.lastElection.margin;
 

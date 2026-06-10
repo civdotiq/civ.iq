@@ -164,20 +164,20 @@ export const StateExecutivesTab: React.FC<StateExecutivesTabProps> = ({ state })
             Total Officials
           </div>
         </div>
-        <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
-          <div className="text-3xl font-bold text-civiq-blue">{data.partyBreakdown.Democratic}</div>
-          <div className="text-sm text-civiq-blue mt-1">Democrats</div>
+        <div className="bg-party-dem/10 border-2 border-party-dem p-4 text-center">
+          <div className="text-3xl font-bold text-party-dem">{data.partyBreakdown.Democratic}</div>
+          <div className="text-sm text-party-dem mt-1">Democrats</div>
         </div>
         <div className="bg-civiq-red/10 border-2 border-civiq-red p-4 text-center">
           <div className="text-3xl font-bold text-civiq-red">{data.partyBreakdown.Republican}</div>
           <div className="text-sm text-civiq-red mt-1">Republicans</div>
         </div>
         {data.partyBreakdown.Independent > 0 && (
-          <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
-            <div className="text-3xl font-bold text-civiq-blue">
+          <div className="bg-party-ind/10 border-2 border-party-ind p-4 text-center">
+            <div className="text-3xl font-bold text-party-ind">
               {data.partyBreakdown.Independent}
             </div>
-            <div className="text-sm text-civiq-blue mt-1">Independents</div>
+            <div className="text-sm text-party-ind mt-1">Independents</div>
           </div>
         )}
       </div>

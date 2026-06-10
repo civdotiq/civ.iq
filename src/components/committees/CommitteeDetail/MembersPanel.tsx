@@ -173,7 +173,7 @@ export function CompositionAside({ committee }: CompositionAsideProps) {
   if (total === 0) return null;
   const counts = countByParty(members);
   const rows: ReadonlyArray<{ label: string; n: number; color: string }> = [
-    { label: 'Democrats', n: counts.d, color: 'var(--civiq-green)' },
+    { label: 'Democrats', n: counts.d, color: 'var(--party-democrat)' },
     { label: 'Republicans', n: counts.r, color: 'var(--civiq-red)' },
     { label: 'Independent', n: counts.i, color: 'var(--data-vlau)' },
   ];

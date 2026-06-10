@@ -12,6 +12,9 @@ export const BRAND_COLORS = {
   red: '#e11d07',
   green: '#0a9338',
   blue: '#3ea2d4',
+  // Democrat blue — darker than interactive blue so party identity never
+  // reads as UI chrome. Keep in sync with --party-democrat / party-dem.
+  democrat: '#2563eb',
 } as const;
 
 /**
@@ -31,8 +34,8 @@ export const CHART_COLORS = [
  * Semantic colors for specific data types
  */
 export const SEMANTIC_COLORS = {
-  // Political party colors (design system: green=Democrat, red=Republican)
-  democrat: BRAND_COLORS.green,
+  // Political party colors (design system: blue #2563eb=Democrat, red=Republican)
+  democrat: BRAND_COLORS.democrat,
   republican: BRAND_COLORS.red,
   independent: '#64748b',
 

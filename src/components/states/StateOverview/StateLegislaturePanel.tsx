@@ -139,7 +139,7 @@ function ChamberBar({ chamber }: { chamber: StateChamber }) {
         }}
         aria-hidden="true"
       >
-        {demPct > 0 && <div style={{ width: `${demPct}%`, background: 'var(--civiq-green)' }} />}
+        {demPct > 0 && <div style={{ width: `${demPct}%`, background: 'var(--party-democrat)' }} />}
         {otherPct > 0 && <div style={{ width: `${otherPct}%`, background: 'var(--data-vlau)' }} />}
         {repPct > 0 && <div style={{ width: `${repPct}%`, background: 'var(--civiq-red)' }} />}
       </div>
@@ -169,7 +169,11 @@ function TrifectaLine({ legislature }: { legislature: StateLegislatureSummary })
   const upperDemLead = legislature.upper.democraticSeats > legislature.upper.republicanSeats;
   const lowerDemLead = legislature.lower.democraticSeats > legislature.lower.republicanSeats;
   const aligned = upperDemLead === lowerDemLead;
-  const color = aligned ? (upperDemLead ? 'var(--civiq-green)' : 'var(--civiq-red)') : 'var(--fg2)';
+  const color = aligned
+    ? upperDemLead
+      ? 'var(--party-democrat)'
+      : 'var(--civiq-red)'
+    : 'var(--fg2)';
   const text = aligned
     ? `${upperDemLead ? 'Democratic' : 'Republican'} control of both chambers`
     : 'Divided — chambers controlled by different parties';

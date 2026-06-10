@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+
 interface BarChartProps {
   data: Array<{
     label: string;
@@ -240,7 +242,11 @@ export function PartyAlignmentChart({
   const againstPartyVotes = totalVotes - withPartyVotes;
 
   const partyColor =
-    party === 'Republican' ? '#dc2626' : party === 'Democratic' ? '#2563eb' : '#6b7280';
+    party === 'Republican'
+      ? SEMANTIC_COLORS.republican
+      : party === 'Democratic'
+        ? SEMANTIC_COLORS.democrat
+        : SEMANTIC_COLORS.independent;
 
   return (
     <div className="bg-white border border-gray-200 p-6">
@@ -452,11 +458,11 @@ export function ElectionResults({ title, elections }: ElectionResultsProps) {
     switch (party.toLowerCase()) {
       case 'democrat':
       case 'democratic':
-        return '#2563eb';
+        return SEMANTIC_COLORS.democrat;
       case 'republican':
-        return '#dc2626';
+        return SEMANTIC_COLORS.republican;
       case 'independent':
-        return '#059669';
+        return SEMANTIC_COLORS.independent;
       default:
         return '#6b7280';
     }

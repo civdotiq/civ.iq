@@ -66,8 +66,7 @@ interface DelegationMember {
 
 function getPartyColor(party: string): string {
   const p = party.toLowerCase();
-  if (p.includes('democrat') || p === 'd')
-    return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
+  if (p.includes('democrat') || p === 'd') return 'bg-party-dem/10 text-party-dem border-party-dem';
   if (p.includes('republican') || p === 'r')
     return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
   return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -75,8 +74,8 @@ function getPartyColor(party: string): string {
 
 function getPartyBorderColor(party: string): string {
   const p = party.toLowerCase();
-  if (p.includes('democrat') || p === 'd') return 'border-l-blue-500';
-  if (p.includes('republican') || p === 'r') return 'border-l-red-500';
+  if (p.includes('democrat') || p === 'd') return 'border-l-party-dem';
+  if (p.includes('republican') || p === 'r') return 'border-l-civiq-red';
   return 'border-l-gray-400';
 }
 
@@ -263,7 +262,7 @@ export default async function StateDelegationPage({ params }: PageProps) {
             <div className="bg-gray-50 border-2 border-black p-4 text-center">
               <div className="flex items-center justify-center gap-2">
                 {partyCount.democrat > 0 && (
-                  <span className="text-2xl font-bold text-civiq-blue">{partyCount.democrat}D</span>
+                  <span className="text-2xl font-bold text-party-dem">{partyCount.democrat}D</span>
                 )}
                 {partyCount.democrat > 0 && partyCount.republican > 0 && (
                   <span className="text-gray-400">-</span>

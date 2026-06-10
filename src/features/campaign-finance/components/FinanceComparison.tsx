@@ -14,6 +14,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useResponsiveChartHeight } from '@/hooks/useResponsiveChartHeight';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface FinanceData {
   totalRaised: number;
@@ -59,7 +60,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
   };
 
   const partyColors = {
-    Democrat: '#0a9338',
+    Democrat: SEMANTIC_COLORS.democrat,
     Republican: '#e11d07',
     Independent: '#6B7280',
   };

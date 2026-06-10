@@ -67,7 +67,7 @@ export function DistrictSelector({
 
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat'))
-      return 'text-civiq-blue bg-civiq-blue/10 border-civiq-blue';
+      return 'text-party-dem bg-party-dem/10 border-party-dem';
     if (party.toLowerCase().includes('republican'))
       return 'text-civiq-red bg-civiq-red/10 border-civiq-red';
     return 'text-gray-600 bg-white border-gray-200';

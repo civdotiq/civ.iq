@@ -121,8 +121,8 @@ export function HeroStatsHeader({
   // Get accent bar color based on party affiliation
   const getAccentBarClass = () => {
     if (representative.party === 'Republican') return 'accent-bar-red';
-    if (representative.party === 'Democrat') return 'accent-bar-blue';
-    return 'accent-bar-green';
+    if (representative.party === 'Democrat') return 'accent-bar-democrat';
+    return 'accent-bar-gray';
   };
 
   // Resolve contact info — currentTerm takes precedence
@@ -212,7 +212,7 @@ export function HeroStatsHeader({
                     representative.party === 'Republican'
                       ? 'bg-civiq-red/10 text-civiq-red border-civiq-red'
                       : representative.party === 'Democrat'
-                        ? 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue'
+                        ? 'bg-party-dem/10 text-party-dem border-party-dem'
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
                 >

@@ -53,7 +53,7 @@ function getDiffColor(diff: number | null): string {
 }
 
 function getPartyBadgeClass(party: string): string {
-  if (party === 'Democratic' || party === 'Democrat') return 'bg-[#0a9338] text-white';
+  if (party === 'Democratic' || party === 'Democrat') return 'bg-party-dem text-white';
   if (party === 'Republican') return 'bg-[#e11d07] text-white';
   return 'bg-gray-500 text-white';
 }

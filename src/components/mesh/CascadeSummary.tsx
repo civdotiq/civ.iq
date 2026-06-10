@@ -14,6 +14,7 @@
 
 import type { CascadeResult, CascadeRepEffect } from '@/lib/mesh/propagation/cascade';
 import { displaySector } from '@/lib/mesh/sector-display';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface CascadeSummaryProps {
   result: CascadeResult;
@@ -77,7 +78,12 @@ export default function CascadeSummary({ result }: CascadeSummaryProps) {
 function RepEffectRow({ rep }: { rep: CascadeRepEffect }) {
   const shiftPct = (rep.averageShift * 100).toFixed(1);
   const shiftColor = rep.flippedVotes > 0 ? '#e11d07' : '#999';
-  const partyColor = rep.party === 'D' ? '#0a9338' : rep.party === 'R' ? '#e11d07' : '#999';
+  const partyColor =
+    rep.party === 'D'
+      ? SEMANTIC_COLORS.democrat
+      : rep.party === 'R'
+        ? SEMANTIC_COLORS.republican
+        : SEMANTIC_COLORS.independent;
 
   return (
     <div className="flex items-center justify-between py-2 border-b-2 border-gray-200">

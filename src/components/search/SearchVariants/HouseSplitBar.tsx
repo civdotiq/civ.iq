@@ -13,7 +13,7 @@ interface HouseSplitBarProps {
  * House-seat split bar for StateResultRow.
  *
  * CARVE-OUT: this is the ONE place in the SearchVariants chassis where
- * party tokens (red/green) appear. The chassis is otherwise non-partisan
+ * party tokens (red/blue) appear. The chassis is otherwise non-partisan
  * — rep names, state codes, governor info, etc. all render in ink. The
  * bar encodes vote tallies (D/R seat counts), not row identity, so the
  * party tokens carry semantic weight rather than decoration.
@@ -56,7 +56,7 @@ export function HouseSplitBar({ democrats, republicans, independents = 0 }: Hous
           border: '1px solid var(--ink)',
         }}
       >
-        {dPct > 0 && <div style={{ width: `${dPct}%`, background: 'var(--civiq-green)' }} />}
+        {dPct > 0 && <div style={{ width: `${dPct}%`, background: 'var(--party-democrat)' }} />}
         {rPct > 0 && <div style={{ width: `${rPct}%`, background: 'var(--civiq-red)' }} />}
         {iPct > 0 && <div style={{ width: `${iPct}%`, background: 'var(--fg3)' }} />}
       </div>
@@ -71,7 +71,7 @@ export function HouseSplitBar({ democrats, republicans, independents = 0 }: Hous
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        <span style={{ color: 'var(--civiq-green)', fontWeight: 700 }}>D {democrats}</span>
+        <span style={{ color: 'var(--party-democrat)', fontWeight: 700 }}>D {democrats}</span>
         <span style={{ color: 'var(--civiq-red)', fontWeight: 700 }}>R {republicans}</span>
         {independents > 0 && (
           <span style={{ color: 'var(--fg2)', fontWeight: 700 }}>I {independents}</span>

@@ -30,9 +30,9 @@ interface CardShellProps {
 
 function getPartyAccentColor(party: string): string {
   const p = party.toLowerCase();
-  if (p.includes('democrat')) return 'bg-civiq-blue';
+  if (p.includes('democrat')) return 'bg-party-dem';
   if (p.includes('republican')) return 'bg-civiq-red';
-  if (p.includes('independent')) return 'bg-civiq-green';
+  if (p.includes('independent')) return 'bg-party-ind';
   return 'bg-gray-500';
 }
 

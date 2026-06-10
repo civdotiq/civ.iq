@@ -12,6 +12,7 @@
 import type { Metadata } from 'next';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { EmbedDistrictCard } from '@/components/embed/EmbedDistrictCard';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -50,7 +51,7 @@ interface DistrictData {
 }
 
 function partyColor(party: string): string {
-  if (party === 'Democratic' || party === 'Democrat') return '#0a9338';
+  if (party === 'Democratic' || party === 'Democrat') return SEMANTIC_COLORS.democrat;
   if (party === 'Republican') return '#e11d07';
   return '#6b7280';
 }

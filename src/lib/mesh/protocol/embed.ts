@@ -50,9 +50,9 @@ const BASE_STYLES = `
     margin-left: 8px;
   }
   .bar-fill { height: 100%; }
-  .party-d { color: #0a9338; }
+  .party-d { color: #2563eb; }
   .party-r { color: #e11d07; }
-  .party-i { color: #3ea2d4; }
+  .party-i { color: #6b7280; }
   .attribution {
     margin-top: 12px;
     padding-top: 8px;

@@ -49,7 +49,7 @@ export function raceTitle(parsed: ElectionRaceId): string {
 }
 
 export function partyColorVar(party: ElectionRacePartyChair): string {
-  return party === 'D' ? 'var(--civiq-green)' : 'var(--civiq-red)';
+  return party === 'D' ? 'var(--party-democrat)' : 'var(--civiq-red)';
 }
 
 export function partyChipVariant(party: ElectionRacePartyChair): 'd' | 'r' {

@@ -36,7 +36,7 @@ export function ElectionSummary({ results, raceLabel }: ElectionSummaryProps) {
         <p className="text-lg font-medium">
           {demWins > repWins ? (
             <>
-              <span className="text-[#0a9338]">Democrats</span> won {demWins} of {results.length}{' '}
+              <span className="text-party-dem">Democrats</span> won {demWins} of {results.length}{' '}
               {raceLabel}
             </>
           ) : repWins > demWins ? (
@@ -56,7 +56,7 @@ export function ElectionSummary({ results, raceLabel }: ElectionSummaryProps) {
         <div className="mt-3 flex h-6 w-full overflow-hidden border border-gray-300 dark:border-gray-600">
           {demWins > 0 && (
             <div
-              className="bg-[#0a9338] flex items-center justify-center text-white text-xs font-medium"
+              className="bg-party-dem flex items-center justify-center text-white text-xs font-medium"
               style={{ width: `${(demWins / results.length) * 100}%` }}
             >
               {demWins}
@@ -87,7 +87,7 @@ export function ElectionSummary({ results, raceLabel }: ElectionSummaryProps) {
         <StatCard
           label="Dem popular vote"
           value={`${((totalDem / totalVotes) * 100).toFixed(1)}%`}
-          color="text-[#0a9338]"
+          color="text-party-dem"
         />
         <StatCard
           label="Rep popular vote"
@@ -124,7 +124,7 @@ export function ElectionSummary({ results, raceLabel }: ElectionSummaryProps) {
                     <span
                       className={`inline-flex items-center gap-1 ${
                         r.winner === 'D'
-                          ? 'text-[#0a9338]'
+                          ? 'text-party-dem'
                           : r.winner === 'R'
                             ? 'text-[#e11d07]'
                             : 'text-gray-500'
@@ -133,7 +133,7 @@ export function ElectionSummary({ results, raceLabel }: ElectionSummaryProps) {
                       <span
                         className={`w-2 h-2 rounded-full ${
                           r.winner === 'D'
-                            ? 'bg-[#0a9338]'
+                            ? 'bg-party-dem'
                             : r.winner === 'R'
                               ? 'bg-[#e11d07]'
                               : 'bg-gray-400'

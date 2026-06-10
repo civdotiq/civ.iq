@@ -137,11 +137,11 @@ export function DemographicsDashboard({
         </div>
 
         {/* Democratic seats */}
-        <div className="bg-civiq-blue/10 p-4 sm:p-5">
-          <div className="text-2xl sm:text-3xl font-bold text-civiq-blue">
+        <div className="bg-party-dem/10 p-4 sm:p-5">
+          <div className="text-2xl sm:text-3xl font-bold text-party-dem">
             {stats.democraticDistricts}
           </div>
-          <div className="text-sm text-civiq-blue mt-1">Democratic</div>
+          <div className="text-sm text-party-dem mt-1">Democratic</div>
         </div>
 
         {/* Republican seats */}

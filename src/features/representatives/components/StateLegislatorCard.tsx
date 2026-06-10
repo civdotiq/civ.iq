@@ -48,7 +48,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-civiq-blue bg-civiq-blue/10';
+    if (party.toLowerCase().includes('democrat')) return 'text-party-dem bg-party-dem/10';
     if (party.toLowerCase().includes('republican')) return 'text-civiq-red bg-civiq-red/10';
     return 'text-gray-600 bg-white';
   };

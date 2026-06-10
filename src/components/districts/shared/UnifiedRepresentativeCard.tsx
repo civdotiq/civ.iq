@@ -76,7 +76,7 @@ export default function UnifiedRepresentativeCard({
   const displayParty = party === 'Democratic' ? 'Democrat' : party;
   const partyColorClass =
     party === 'Democrat' || party === 'Democratic'
-      ? 'bg-civiq-blue/10 text-civiq-blue'
+      ? 'bg-party-dem/10 text-party-dem'
       : party === 'Republican'
         ? 'bg-civiq-red/10 text-civiq-red'
         : 'bg-gray-100 text-gray-800';

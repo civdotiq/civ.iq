@@ -29,13 +29,13 @@ function pct(value: number | null): string {
 
 function partyColor(party: string): string {
   if (party === 'R') return 'text-[#e11d07]';
-  if (party === 'D') return 'text-[#0a9338]';
+  if (party === 'D') return 'text-party-dem';
   return 'text-gray-600';
 }
 
 function partyBorderColor(party: string): string {
   if (party === 'R') return 'border-[#e11d07]';
-  if (party === 'D') return 'border-[#0a9338]';
+  if (party === 'D') return 'border-party-dem';
   return 'border-gray-400';
 }
 

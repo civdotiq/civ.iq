@@ -572,10 +572,10 @@ export function LegacyVoteDetailPage({
                       <div
                         className={`text-sm font-medium ${
                           senator.party === 'D'
-                            ? 'text-civiq-blue'
+                            ? 'text-party-dem'
                             : senator.party === 'R'
                               ? 'text-civiq-red'
-                              : 'text-civiq-green'
+                              : 'text-party-ind'
                         }`}
                       >
                         {senator.party === 'D'

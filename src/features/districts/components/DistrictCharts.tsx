@@ -19,6 +19,7 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface DistrictChartsProps {
   districtData: {
@@ -247,7 +248,9 @@ export function ElectionHistoryChart({
         : null;
 
   const winnerColor =
-    winnerLabel === 'Democrat' || winnerLabel === 'Democratic' ? '#0a9338' : '#e11d07';
+    winnerLabel === 'Democrat' || winnerLabel === 'Democratic'
+      ? SEMANTIC_COLORS.democrat
+      : '#e11d07';
 
   const isDemWinner = winnerLabel === 'Democrat' || winnerLabel === 'Democratic';
   const demBar = hasRealData ? (isDemWinner ? 50 + currentMargin / 2 : 50 - currentMargin / 2) : 0;
@@ -261,13 +264,13 @@ export function ElectionHistoryChart({
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span style={{ color: '#0a9338', fontWeight: 600 }}>Democrat</span>
-                <span style={{ color: '#0a9338' }}>{demBar.toFixed(1)}%</span>
+                <span style={{ color: SEMANTIC_COLORS.democrat, fontWeight: 600 }}>Democrat</span>
+                <span style={{ color: SEMANTIC_COLORS.democrat }}>{demBar.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-100 h-6 border border-black">
                 <div
                   className="h-full"
-                  style={{ width: `${demBar}%`, backgroundColor: '#0a9338' }}
+                  style={{ width: `${demBar}%`, backgroundColor: SEMANTIC_COLORS.democrat }}
                 />
               </div>
             </div>

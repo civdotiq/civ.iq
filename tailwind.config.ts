@@ -35,7 +35,8 @@ export default {
         'status-error': '#b45309',
         'status-success': '#3ea2d4',
         // Party identification colors
-        'party-dem': '#0a9338',
+        // Democrat blue is darker than civiq-blue (#3ea2d4, interactive) on purpose
+        'party-dem': '#2563eb',
         'party-rep': '#e11d07',
         'party-ind': '#6b7280',
         // Chromatic greys — Aicher/ERCO tradition for categorical data visualization

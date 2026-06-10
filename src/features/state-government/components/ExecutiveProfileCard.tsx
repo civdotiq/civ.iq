@@ -68,10 +68,10 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
       return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
     if (official.party === 'Democratic') {
-      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
+      return 'bg-party-dem/10 text-party-dem border-party-dem';
     }
     if (official.party === 'Independent') {
-      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
+      return 'bg-gray-50 text-gray-800 border-gray-400';
     }
     return 'bg-gray-50 text-gray-800 border-gray-400';
   };
@@ -79,8 +79,8 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
   // Get accent bar color
   const getAccentBarClass = () => {
     if (official.party === 'Republican') return 'accent-bar-red';
-    if (official.party === 'Democratic') return 'accent-bar-blue';
-    return 'accent-bar-green';
+    if (official.party === 'Democratic') return 'accent-bar-democrat';
+    return 'accent-bar-gray';
   };
 
   // Format term dates safely - handles missing or invalid dates

@@ -26,7 +26,7 @@ export const Badge: FC<BadgeProps> = ({
     danger: 'bg-amber-50 text-amber-700',
     info: 'bg-civiq-blue/10 text-civiq-blue',
     'party-rep': 'bg-civiq-red/10 text-civiq-red',
-    'party-dem': 'bg-civiq-green/10 text-civiq-green',
+    'party-dem': 'bg-party-dem/10 text-party-dem',
   };
 
   const sizes = {

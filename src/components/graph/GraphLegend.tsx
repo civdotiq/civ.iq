@@ -7,6 +7,8 @@
 
 import { useState } from 'react';
 
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+
 export function GraphLegend() {
   const [expanded, setExpanded] = useState(false);
 
@@ -15,7 +17,7 @@ export function GraphLegend() {
       {/* Compact row — always visible */}
       <div className="flex flex-wrap items-center gap-4 p-3">
         <span className="type-xs font-bold text-gray-500">Nodes:</span>
-        <LegendItem shape="circle" color="#0a9338" label="Democrat" />
+        <LegendItem shape="circle" color={SEMANTIC_COLORS.democrat} label="Democrat" />
         <LegendItem shape="circle" color="#e11d07" label="Republican" />
         <LegendItem shape="rect" color="#9ca3af" label="Bill" />
         <LegendItem shape="diamond" color="#3ea2d4" label="Committee" />

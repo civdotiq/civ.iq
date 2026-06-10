@@ -25,7 +25,7 @@ function formatVotes(n: number): string {
 }
 
 function partyColor(party: string): string {
-  if (party === 'D') return '#0a9338';
+  if (party === 'D') return '#2563eb'; // keep in sync with SEMANTIC_COLORS.democrat
   if (party === 'R') return '#e11d07';
   return '#9ca3af';
 }
@@ -113,7 +113,7 @@ function MarginBar({ demPct, repPct, winner }: { demPct: number; repPct: number;
       aria-label={`${winner === 'D' ? 'Democrat' : 'Republican'} lead`}
     >
       {demPct > 0 && (
-        <div className="bg-[#0a9338] transition-all" style={{ width: `${demPct}%` }} />
+        <div className="bg-party-dem transition-all" style={{ width: `${demPct}%` }} />
       )}
       {otherPct > 0 && (
         <div className="bg-gray-300 dark:bg-gray-600" style={{ width: `${otherPct}%` }} />
@@ -208,7 +208,7 @@ function RaceRow({ result, label }: { result: RaceResultFull; label: string }) {
           <div className="grid grid-cols-3 gap-4 text-sm max-w-md">
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Democrat</p>
-              <p className="font-medium text-[#0a9338] tabular-nums">{formatVotes(result.dem)}</p>
+              <p className="font-medium text-party-dem tabular-nums">{formatVotes(result.dem)}</p>
               <p className="text-xs text-gray-400 tabular-nums">{result.demPct.toFixed(1)}%</p>
             </div>
             <div>

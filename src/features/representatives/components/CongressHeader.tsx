@@ -286,13 +286,13 @@ export default function CongressHeader({
             </div>
 
             {/* Democrats */}
-            <div className="bg-civiq-blue/10 p-3 md:p-4 border border-civiq-blue">
+            <div className="bg-party-dem/10 p-3 md:p-4 border border-party-dem">
               <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
-                <BarChart3 className="w-3 h-3 md:w-4 md:h-4 text-civiq-blue" />
-                <span className="text-xs md:text-sm font-medium text-civiq-blue">Dems</span>
+                <BarChart3 className="w-3 h-3 md:w-4 md:h-4 text-party-dem" />
+                <span className="text-xs md:text-sm font-medium text-party-dem">Dems</span>
               </div>
-              <p className="text-xl md:text-2xl font-bold text-civiq-blue">{stats.democrats}</p>
-              <p className="text-[10px] md:text-xs text-civiq-blue">
+              <p className="text-xl md:text-2xl font-bold text-party-dem">{stats.democrats}</p>
+              <p className="text-[10px] md:text-xs text-party-dem">
                 {stats.totalMembers > 0
                   ? `${Math.round((stats.democrats / stats.totalMembers) * 100)}%`
                   : '0%'}

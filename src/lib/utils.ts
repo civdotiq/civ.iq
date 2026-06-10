@@ -61,7 +61,7 @@ export function getPartyColor(party: string): string {
     case 'democrat':
     case 'democratic':
     case 'd':
-      return 'text-civiq-blue';
+      return 'text-party-dem';
     case 'independent':
     case 'i':
       return 'text-gray-600';
@@ -81,7 +81,7 @@ export function getPartyBgColor(party: string): string {
     case 'democrat':
     case 'democratic':
     case 'd':
-      return 'bg-civiq-blue/10';
+      return 'bg-party-dem/10';
     case 'independent':
     case 'i':
       return 'bg-gray-100';

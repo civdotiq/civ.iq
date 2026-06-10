@@ -18,6 +18,8 @@ import { easeLinear } from 'd3-ease';
 import { curveLinearClosed, line } from 'd3-shape';
 import type { SimulationNodeDatum, SimulationLinkDatum, D3DragEvent, Selection } from 'd3';
 
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+
 // Type definitions for D3 visualizations
 interface NetworkNode extends SimulationNodeDatum {
   id: string;
@@ -237,7 +239,9 @@ export function RepresentativeNetwork({
     node
       .append('circle')
       .attr('r', 20)
-      .attr('fill', d => (d.party === 'Democratic' ? '#3b82f6' : '#ef4444'))
+      .attr('fill', d =>
+        d.party === 'Democratic' ? SEMANTIC_COLORS.democrat : SEMANTIC_COLORS.republican
+      )
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
@@ -704,7 +708,10 @@ export function InteractiveDistrictMap({
         .attr('y', y + 5)
         .attr('width', cellWidth - 10)
         .attr('height', cellHeight - 10)
-        .attr('fill', district.party === 'Democratic' ? '#3b82f6' : '#ef4444')
+        .attr(
+          'fill',
+          district.party === 'Democratic' ? SEMANTIC_COLORS.democrat : SEMANTIC_COLORS.republican
+        )
         .attr('opacity', 0.3 + (district.competitiveness / 100) * 0.7)
         .attr('stroke', selectedDistrict === district.id ? '#000' : '#fff')
         .attr('stroke-width', selectedDistrict === district.id ? 3 : 1)

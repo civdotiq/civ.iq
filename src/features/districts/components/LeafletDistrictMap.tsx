@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { Map, MapLayerMouseEvent } from 'maplibre-gl';
 import logger from '@/lib/logging/simple-logger';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface District {
   id: string;
@@ -221,10 +222,10 @@ export default function LeafletDistrictMap({
               'circle-color': [
                 'case',
                 ['==', ['get', 'party'], 'R'],
-                '#dc2626',
+                SEMANTIC_COLORS.republican,
                 ['==', ['get', 'party'], 'D'],
-                '#2563eb',
-                '#6b7280',
+                SEMANTIC_COLORS.democrat,
+                SEMANTIC_COLORS.independent,
               ],
               'circle-radius': ['case', ['==', ['get', 'id'], selectedDistrict || ''], 10, 6],
               'circle-stroke-color': '#ffffff',

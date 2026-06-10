@@ -131,8 +131,8 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
   // Get accent bar color based on party
   const getAccentBarClass = () => {
     if (legislator.party === 'Republican') return 'accent-bar-red';
-    if (legislator.party === 'Democratic') return 'accent-bar-blue';
-    return 'accent-bar-green';
+    if (legislator.party === 'Democratic') return 'accent-bar-democrat';
+    return 'accent-bar-gray';
   };
 
   // Get party badge color
@@ -141,7 +141,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
       return 'bg-civiq-red/10 text-civiq-red border-civiq-red';
     }
     if (legislator.party === 'Democratic') {
-      return 'bg-civiq-blue/10 text-civiq-blue border-civiq-blue';
+      return 'bg-party-dem/10 text-party-dem border-party-dem';
     }
     return 'bg-gray-50 text-gray-800 border-black';
   };
@@ -753,7 +753,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                           <span
                             className={`w-2 h-2 flex-shrink-0 ${
                               collab.party === 'Democratic'
-                                ? 'bg-[#3ea2d4]'
+                                ? 'bg-party-dem'
                                 : collab.party === 'Republican'
                                   ? 'bg-[#e11d07]'
                                   : 'bg-gray-400'

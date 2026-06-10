@@ -267,7 +267,7 @@ const VotesList = memo(
                             <h4 className="font-medium text-gray-900 mb-2">Party Breakdown</h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-civiq-blue font-medium">Democratic:</span>
+                                <span className="text-party-dem font-medium">Democratic:</span>
                                 <span>
                                   {vote.party_breakdown.democratic.yes} Yea,{' '}
                                   {vote.party_breakdown.democratic.no} Nay
@@ -282,7 +282,7 @@ const VotesList = memo(
                               </div>
                               {vote.party_breakdown.independent && (
                                 <div className="flex justify-between">
-                                  <span className="text-civiq-green font-medium">Independent:</span>
+                                  <span className="text-party-ind font-medium">Independent:</span>
                                   <span>
                                     {vote.party_breakdown.independent.yes} Yea,{' '}
                                     {vote.party_breakdown.independent.no} Nay

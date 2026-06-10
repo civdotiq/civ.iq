@@ -325,7 +325,7 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
                 <span
                   className={`w-2 h-2 flex-shrink-0 ${
                     leg.party === 'Democratic'
-                      ? 'bg-[#3ea2d4]'
+                      ? 'bg-party-dem'
                       : leg.party === 'Republican'
                         ? 'bg-[#e11d07]'
                         : 'bg-gray-400'

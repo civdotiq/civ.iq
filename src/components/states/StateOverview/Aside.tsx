@@ -63,7 +63,7 @@ function GovernorResultCard({ result }: { result: StateElectionResult | null }) 
   }
   const winnerColor =
     result.winner === 'D'
-      ? 'var(--civiq-green)'
+      ? 'var(--party-democrat)'
       : result.winner === 'R'
         ? 'var(--civiq-red)'
         : 'var(--data-vlau)';
@@ -95,7 +95,7 @@ function GovernorResultCard({ result }: { result: StateElectionResult | null }) 
         aria-hidden="true"
       >
         {result.demPct > 0 && (
-          <div style={{ width: `${result.demPct}%`, background: 'var(--civiq-green)' }} />
+          <div style={{ width: `${result.demPct}%`, background: 'var(--party-democrat)' }} />
         )}
         {otherPct > 0.5 && (
           <div style={{ width: `${otherPct}%`, background: 'var(--data-vlau)' }} />

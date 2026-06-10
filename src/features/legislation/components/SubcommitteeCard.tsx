@@ -120,9 +120,9 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                             member.representative.party === 'Democrat' ||
                             member.representative.party === 'D'
-                              ? 'bg-civiq-blue/10 text-civiq-blue'
+                              ? 'bg-party-dem/10 text-party-dem'
                               : member.representative.party === 'Independent'
-                                ? 'bg-civiq-blue/10 text-civiq-blue'
+                                ? 'bg-party-ind/10 text-party-ind'
                                 : 'bg-civiq-red/10 text-civiq-red'
                           }`}
                         >

@@ -12,6 +12,7 @@
 import type { Metadata } from 'next';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { EmbedRepsCard } from '@/components/embed/EmbedRepsCard';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 
 interface PageProps {
   params: Promise<{ districtId: string }>;
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 function partyColor(party: string): string {
-  if (party === 'Democratic' || party === 'Democrat') return '#0a9338';
+  if (party === 'Democratic' || party === 'Democrat') return SEMANTIC_COLORS.democrat;
   if (party === 'Republican') return '#e11d07';
   return '#6b7280';
 }

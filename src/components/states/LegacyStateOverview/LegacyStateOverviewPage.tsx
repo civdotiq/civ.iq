@@ -153,7 +153,7 @@ const SWR_OPTIONS = { revalidateOnFocus: false, dedupingInterval: 300_000 };
 // ── Helpers ──────────────────────────────────────────────────────────
 
 const PARTY_COLORS: Record<string, string> = {
-  Democratic: '#0a9338',
+  Democratic: '#2563eb',
   Republican: '#e11d07',
   Independent: '#6b7280',
   Other: '#6b7280',
@@ -529,7 +529,7 @@ function ChamberBar({ chamber }: { chamber: LegislatureChamber }) {
       <div className="flex h-6 border-2 border-gray-200 overflow-hidden">
         <div
           className="h-full"
-          style={{ width: `${demPct}%`, backgroundColor: '#0a9338' }}
+          style={{ width: `${demPct}%`, backgroundColor: '#2563eb' }}
           title={`Democrat: ${chamber.democraticSeats}`}
         />
         <div
@@ -569,7 +569,7 @@ function TrifectaStatus({
     <p className="type-xs text-gray-500 border-t-2 border-gray-100 pt-3">
       <span className="aicher-heading">Legislature control:</span>{' '}
       {isTrifecta ? (
-        <span style={{ color: upperDemLead ? '#0a9338' : '#e11d07' }}>
+        <span style={{ color: upperDemLead ? '#2563eb' : '#e11d07' }}>
           {upperDemLead ? 'Democratic' : 'Republican'} control of both chambers
         </span>
       ) : (
@@ -750,7 +750,7 @@ function RaceResultCard({ title, result }: { title: string; result: RaceResultFu
         {demPct > 0 && (
           <div
             className="h-full"
-            style={{ width: `${demPct}%`, backgroundColor: '#0a9338' }}
+            style={{ width: `${demPct}%`, backgroundColor: '#2563eb' }}
             title={`Democrat: ${demPct.toFixed(1)}%`}
           />
         )}
@@ -781,7 +781,7 @@ function RaceResultCard({ title, result }: { title: string; result: RaceResultFu
         Winner:{' '}
         <span
           className="font-medium"
-          style={{ color: result.winner === 'D' ? '#0a9338' : '#e11d07' }}
+          style={{ color: result.winner === 'D' ? '#2563eb' : '#e11d07' }}
         >
           {result.winner === 'D' ? 'Democrat' : 'Republican'}
         </span>{' '}

@@ -104,7 +104,7 @@ export function CongressStatsBox() {
           />
           <PartyRow
             label="Democrat"
-            color="bg-[#0a9338]"
+            color="bg-party-dem"
             senate={byParty.democrat.senate}
             house={byParty.democrat.house}
             total={byParty.democrat.total}

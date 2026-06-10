@@ -478,7 +478,7 @@ export function RepresentativesClient({
                           <span
                             className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${
                               rep.party === 'D'
-                                ? 'bg-civiq-blue/10 text-civiq-blue'
+                                ? 'bg-party-dem/10 text-party-dem'
                                 : 'bg-civiq-red/10 text-civiq-red'
                             }`}
                           >

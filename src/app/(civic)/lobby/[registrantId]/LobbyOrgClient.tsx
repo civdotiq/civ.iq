@@ -480,7 +480,7 @@ function PACRecipientsSection({ profile }: Props) {
                 <span
                   className={`px-1.5 py-0.5 text-xs font-bold text-white ${
                     r.party === 'Democratic' || r.party === 'Democrat'
-                      ? 'bg-[#0a9338]'
+                      ? 'bg-party-dem'
                       : r.party === 'Republican'
                         ? 'bg-[#e11d07]'
                         : 'bg-gray-500'

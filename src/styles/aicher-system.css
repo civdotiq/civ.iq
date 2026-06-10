@@ -125,7 +125,10 @@
   --color-warning: #d97706; /* Warnings (amber) */
 
   /* Party color tokens — ONLY for political party identification */
-  --party-democrat: var(--aicher-green);
+  /* Democrat blue is deliberately darker than --aicher-blue (#3ea2d4,
+     interactive/links) so party identity never reads as UI chrome. */
+  --aicher-democrat: #2563eb;
+  --party-democrat: var(--aicher-democrat);
   --party-republican: var(--aicher-red);
   --party-independent: #6b7280;
 
@@ -158,6 +161,7 @@
   --civiq-blue-active: var(--aicher-blue-active);
   --civiq-blue-muted: var(--aicher-blue-muted);
   --civiq-blue-cool: var(--aicher-blue-cool);
+  --civiq-democrat: var(--aicher-democrat);
 
   /* Ink/paper neutrals — used by the Cq* primitives */
   --fg1: #111827; /* primary ink */
@@ -195,8 +199,9 @@
   --aicher-green: #4a9e6b; /* Sage — softer than #0a9338 on dark backgrounds */
   --aicher-green-hover: #3f8c5e;
   --aicher-green-muted: #2d5e40;
+  --aicher-democrat: #60a5fa; /* Lightened — #2563eb vibrates against dark backgrounds */
   --party-republican: var(--aicher-red);
-  --party-democrat: var(--aicher-green);
+  --party-democrat: var(--aicher-democrat);
 
   /* Chromatic greys adjusted for dark backgrounds */
   --data-vlau: #8e8ea0;
@@ -1086,6 +1091,16 @@ body {
 
 .accent-bar-blue {
   border-left: 6px solid var(--aicher-blue);
+}
+
+/* Party accents — Democrat blue distinct from interactive .accent-bar-blue;
+   gray for Independent / unknown party */
+.accent-bar-democrat {
+  border-left: 6px solid var(--party-democrat);
+}
+
+.accent-bar-gray {
+  border-left: 6px solid var(--party-independent);
 }
 
 .accent-bar-yellow {

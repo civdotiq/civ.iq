@@ -85,7 +85,7 @@ export function HousePanel({ houseMembers, stateCode }: HousePanelProps) {
               textTransform: 'uppercase',
             }}
           >
-            <LegendSwatch color="var(--civiq-green)" label="Democrat" />
+            <LegendSwatch color="var(--party-democrat)" label="Democrat" />
             <LegendSwatch color="var(--civiq-red)" label="Republican" />
             <LegendSwatch color="var(--data-vlau)" label="Other" />
           </div>
@@ -110,7 +110,7 @@ function LegendSwatch({ color, label }: { color: string; label: string }) {
 function DistrictTile({ member }: { member: DelegationMember }) {
   const fill =
     member.party === 'd'
-      ? 'var(--civiq-green)'
+      ? 'var(--party-democrat)'
       : member.party === 'r'
         ? 'var(--civiq-red)'
         : 'var(--data-vlau)';

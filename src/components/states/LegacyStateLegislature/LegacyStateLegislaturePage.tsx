@@ -119,7 +119,7 @@ function LegislatorCard({
   const getPartyColor = (party: string) => {
     switch (party) {
       case 'Democratic':
-        return 'bg-civiq-blue/10 text-civiq-blue';
+        return 'bg-party-dem/10 text-party-dem';
       case 'Republican':
         return 'bg-civiq-red/10 text-civiq-red';
       case 'Independent':
@@ -277,14 +277,14 @@ function ChamberOverview({
         <div className="flex justify-between text-sm mb-2">
           <span>Chamber Control</span>
           <span
-            className={`font-medium ${majority === 'Democratic' ? 'text-civiq-blue' : 'text-civiq-red'}`}
+            className={`font-medium ${majority === 'Democratic' ? 'text-party-dem' : 'text-civiq-red'}`}
           >
             {majority} (+{majoritySeats - minoritySeats})
           </span>
         </div>
         <div className="relative h-8 bg-gray-200 overflow-hidden">
           <div
-            className="absolute left-0 top-0 h-full bg-civiq-blue transition-all duration-500"
+            className="absolute left-0 top-0 h-full bg-party-dem transition-all duration-500"
             style={{ width: `${demPercentage}%` }}
           />
           <div className="absolute inset-0 flex items-center justify-between px-3 text-xs font-medium">
@@ -296,7 +296,7 @@ function ChamberOverview({
 
       <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
         <div>
-          <p className="text-2xl font-bold text-civiq-blue">{chamberData.democraticSeats}</p>
+          <p className="text-2xl font-bold text-party-dem">{chamberData.democraticSeats}</p>
           <p className="text-xs text-gray-600">Democrats</p>
         </div>
         <div>

@@ -8,6 +8,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import type { GraphNode, GraphEdge, GraphNodeType, GraphEdgeType } from '@/types/graph';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 import { useGraphStore } from './useGraphStore';
 
 interface GraphCanvasProps {
@@ -23,9 +24,9 @@ interface GraphCanvasProps {
 // ── Design System Colors ────────────────────────────────────────────
 
 const PARTY_COLORS: Record<string, string> = {
-  D: '#0a9338',
-  R: '#e11d07',
-  I: '#6b7280',
+  D: SEMANTIC_COLORS.democrat,
+  R: SEMANTIC_COLORS.republican,
+  I: SEMANTIC_COLORS.independent,
 };
 
 const NODE_COLORS: Record<GraphNodeType, string> = {

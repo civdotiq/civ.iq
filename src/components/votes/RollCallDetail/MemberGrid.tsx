@@ -73,9 +73,9 @@ interface MemberRowProps {
 }
 
 function partyAccent(party: RollCallMember['party']): string {
-  if (party === 'D') return 'var(--civiq-green)';
+  if (party === 'D') return 'var(--party-democrat)';
   if (party === 'R') return 'var(--civiq-red)';
-  return 'var(--civiq-blue-active)';
+  return 'var(--party-independent)';
 }
 
 function partyLabel(party: RollCallMember['party']): string {

@@ -10,6 +10,8 @@
  * representative photos from various public sources.
  */
 
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+
 export interface PhotoSources {
   primary: string;
   fallback: string[];
@@ -98,7 +100,7 @@ export function getPartyColor(party: string): string {
   const normalizedParty = party.toLowerCase();
 
   if (normalizedParty.includes('democrat') || normalizedParty.includes('dem')) {
-    return '#0a9338'; // civiq-green (Democrat party color)
+    return SEMANTIC_COLORS.democrat; // party-dem blue (Democrat party color)
   }
 
   if (normalizedParty.includes('republican') || normalizedParty.includes('rep')) {

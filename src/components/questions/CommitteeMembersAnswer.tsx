@@ -20,7 +20,7 @@ interface CommitteeMembersAnswerProps {
 
 function partyColor(party: string): string {
   if (party === 'Republican') return 'text-[#e11d07]';
-  if (party === 'Democratic') return 'text-[#0a9338]';
+  if (party === 'Democratic') return 'text-party-dem';
   return 'text-gray-600';
 }
 

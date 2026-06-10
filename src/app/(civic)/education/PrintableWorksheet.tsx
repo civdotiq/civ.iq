@@ -286,8 +286,8 @@ function CheckboxField({ field }: { field: WorksheetField }) {
           <label key={i} className="flex items-center gap-2 text-[10pt]">
             <span className="w-4 h-4 border-2 border-black flex-shrink-0" />
             <span>{option}</span>
-            {option === 'Democratic' && <span className="w-[10px] h-[10px] bg-[#1976d2]" />}
-            {option === 'Republican' && <span className="w-[10px] h-[10px] bg-[#d32f2f]" />}
+            {option === 'Democratic' && <span className="w-[10px] h-[10px] bg-party-dem" />}
+            {option === 'Republican' && <span className="w-[10px] h-[10px] bg-civiq-red" />}
           </label>
         ))}
       </div>

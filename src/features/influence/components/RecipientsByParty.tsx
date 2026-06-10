@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
 import type { ResolvedRecipient } from '@/types/influence';
 
 interface RecipientsByPartyProps {
@@ -14,7 +15,7 @@ interface RecipientsByPartyProps {
 }
 
 const PARTY_COLORS: Record<string, string> = {
-  Democrat: '#0a9338',
+  Democrat: SEMANTIC_COLORS.democrat,
   Republican: '#e11d07',
   Independent: '#64748b',
   Unknown: '#94a3b8',

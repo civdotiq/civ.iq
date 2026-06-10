@@ -13,6 +13,8 @@ import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } 
 import { drag } from 'd3-drag';
 import type { SimulationNodeDatum, SimulationLinkDatum, D3DragEvent } from 'd3';
 
+import { SEMANTIC_COLORS } from '@/lib/constants/chart-colors';
+
 interface NetworkNode extends SimulationNodeDatum {
   id: string;
   name: string;
@@ -49,7 +51,7 @@ export const RepresentativeNetwork = memo(function RepresentativeNetwork({
 
     const colorScale = scaleOrdinal<string>()
       .domain(['Democratic', 'Republican', 'Independent'])
-      .range(['#3b82f6', '#ef4444', '#8b5cf6']);
+      .range([SEMANTIC_COLORS.democrat, SEMANTIC_COLORS.republican, SEMANTIC_COLORS.independent]);
 
     // Create force simulation
     const simulation = forceSimulation<NetworkNode>(nodes)
