@@ -77,7 +77,8 @@ export async function GET(
 
     const startDate = searchParams.get('startDate') ?? undefined; // ISO 8601 format: YYYY-MM-DD
     const endDate = searchParams.get('endDate') ?? undefined;
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100); // Max 100
+    // parseInt('abc') is NaN and Math.min(NaN, 100) stays NaN — fall back to the default
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '50', 10) || 50, 1), 100); // Max 100
 
     if (!state || state.length !== 2) {
       logger.warn('Invalid state parameter for calendar API', { state });

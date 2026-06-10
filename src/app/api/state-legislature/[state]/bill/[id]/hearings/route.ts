@@ -77,7 +77,8 @@ export async function GET(
     const billId = decodeBase64Url(id); // Decode Base64 bill ID
 
     const { searchParams } = request.nextUrl;
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50); // Max 50
+    // parseInt('abc') is NaN and Math.min(NaN, 50) stays NaN — fall back to the default
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '20', 10) || 20, 1), 50); // Max 50
 
     if (!state || state.length !== 2) {
       logger.warn('Invalid state parameter for bill hearings API', { state });

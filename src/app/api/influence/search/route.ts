@@ -18,8 +18,9 @@ export const dynamic = 'force-dynamic'; // 5-minute ISR
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q') ?? '';
-  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
-  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
+  // Math.max(1, NaN) is NaN — `|| default` must run before the clamps
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10) || 20));
 
   if (!query || query.length < 2) {
     return ApiErrors.validation('Search query must be at least 2 characters');

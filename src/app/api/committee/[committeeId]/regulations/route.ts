@@ -200,7 +200,8 @@ export async function GET(
     }
 
     const { searchParams } = request.nextUrl;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 30);
+    // NaN would poison the cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 30);
 
     const cacheKey = `join-committee-regulations:${committeeId}:${limit}`;
 

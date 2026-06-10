@@ -44,8 +44,9 @@ export async function GET(
     const { committeeId } = await params;
     const { searchParams } = request.nextUrl;
 
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
-    const offset = parseInt(searchParams.get('offset') || '0');
+    // parseInt('abc') is NaN and Math.min(NaN, 50) stays NaN — fall back to defaults
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 50);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
     const chamberParam = searchParams.get('chamber')?.toLowerCase();
 
     logger.info('Committee meetings API request', {

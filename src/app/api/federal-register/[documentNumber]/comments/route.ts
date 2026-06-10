@@ -26,8 +26,12 @@ export async function GET(
 ) {
   const { documentNumber } = await params;
   const { searchParams } = request.nextUrl;
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const pageSize = Math.min(parseInt(searchParams.get('pageSize') ?? '25', 10), 250);
+  // NaN page/pageSize would reach Regulations.gov pagination — fall back to defaults
+  const page = Math.max(parseInt(searchParams.get('page') ?? '1', 10) || 1, 1);
+  const pageSize = Math.min(
+    Math.max(parseInt(searchParams.get('pageSize') ?? '25', 10) || 25, 1),
+    250
+  );
 
   logger.info('Federal Register comments request', { documentNumber, page, pageSize });
 

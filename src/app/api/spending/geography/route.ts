@@ -82,9 +82,16 @@ export async function GET(request: NextRequest): Promise<NextResponse<Geographic
 
     const geoLayerParam = searchParams.get('geo_layer') ?? 'district';
     const scopeParam = searchParams.get('scope') ?? 'place_of_performance';
-    const fiscalYear = parseInt(
-      searchParams.get('fiscal_year') ?? String(new Date().getFullYear())
+    const rawFiscalYear = parseInt(
+      searchParams.get('fiscal_year') ?? String(new Date().getFullYear()),
+      10
     );
+    // NaN or out-of-range years would poison the cache key and reach USASpending —
+    // fall back to the current year (same silent-default style as geo_layer/scope)
+    const fiscalYear =
+      Number.isFinite(rawFiscalYear) && rawFiscalYear >= 2008 && rawFiscalYear <= 2100
+        ? rawFiscalYear
+        : new Date().getFullYear();
 
     // Validate geo_layer
     const validGeoLayers: GeoLayer[] = ['state', 'county', 'district'];

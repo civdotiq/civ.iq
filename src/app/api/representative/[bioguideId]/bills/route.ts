@@ -26,10 +26,14 @@ export async function GET(
       return NextResponse.json({ error: 'BioguideId required' }, { status: 400 });
     }
 
-    // Extract query parameters for pagination and filtering
-    const limit = parseInt(searchParams.get('limit') || '25');
-    const page = parseInt(searchParams.get('page') || '1');
-    const congress = parseInt(searchParams.get('congress') || '119');
+    // Extract query parameters for pagination and filtering.
+    // NaN would poison the bills cache keys and reach Congress.gov — clamp/validate.
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '25', 10) || 25, 1), 250);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
+    const congress = parseInt(searchParams.get('congress') || '119', 10) || 119;
+    if (congress < 93 || congress > 150) {
+      return NextResponse.json({ error: 'congress must be between 93 and 150' }, { status: 400 });
+    }
     const summaryOnly = searchParams.get('summary') === 'true';
     const includeAmendments = searchParams.get('includeAmendments') === 'true';
     const progressive = searchParams.get('progressive') === 'true'; // New progressive loading flag

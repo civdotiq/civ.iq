@@ -249,7 +249,9 @@ export async function GET(
     const { searchParams } = request.nextUrl;
 
     const filter = searchParams.get('filter') || 'all'; // all, bills, reports
-    const limit = parseInt(searchParams.get('limit') || '50');
+    // 0 means "no limit" (see slice below), so only replace NaN — not falsy values
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(rawLimit) ? rawLimit : 50;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 

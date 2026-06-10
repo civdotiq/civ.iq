@@ -294,7 +294,8 @@ export async function GET(
     const committeeId = searchParams.get('committeeId') ?? undefined;
     const billId = searchParams.get('billId') ?? undefined;
     const policyArea = searchParams.get('policyArea') ?? undefined;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    // NaN would poison the cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 50);
 
     if (!committeeId && !billId && !policyArea) {
       return NextResponse.json(

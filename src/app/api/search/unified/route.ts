@@ -509,7 +509,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q') ?? '';
   const limitParam = searchParams.get('limit');
-  const limit = limitParam ? Math.min(parseInt(limitParam, 10), 10) : 5;
+  // parseInt('abc') is NaN and Math.min(NaN, 10) stays NaN — fall back to the default
+  const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 5, 1), 10) : 5;
 
   if (!query || query.length < 2) {
     return NextResponse.json({

@@ -856,7 +856,8 @@ export async function GET(
 
     const { chamber, name } = memberInfo;
     const { searchParams } = request.nextUrl;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    // NaN would poison the votes cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 50);
     const bypassCache =
       searchParams.get('bypassCache') === 'true' || searchParams.get('nocache') === 'true';
 

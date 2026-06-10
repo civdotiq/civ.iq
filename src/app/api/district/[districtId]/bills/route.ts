@@ -43,7 +43,8 @@ export async function GET(
     logger.info('District bills join request', { districtId, state, district });
 
     const { searchParams } = request.nextUrl;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '15'), 30);
+    // parseInt('abc') is NaN and Math.min(NaN, 30) stays NaN — fall back to the default
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '15', 10) || 15, 1), 30);
 
     const result = await getDistrictBills(state, district, limit);
 

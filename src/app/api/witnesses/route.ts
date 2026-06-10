@@ -196,8 +196,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<WitnessSea
 
     const searchQuery = searchParams.get('q') ?? searchParams.get('query');
     const chamberParam = searchParams.get('chamber')?.toLowerCase() ?? 'all';
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100);
-    const offset = parseInt(searchParams.get('offset') ?? '0');
+    // parseInt('abc') is NaN and Math.min(NaN, 100) stays NaN — fall back to defaults
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '50', 10) || 50, 1), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') ?? '0', 10) || 0, 0);
 
     const chamber =
       chamberParam === 'house' || chamberParam === 'h'

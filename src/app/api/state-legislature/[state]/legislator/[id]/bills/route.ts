@@ -29,7 +29,8 @@ export async function GET(
   try {
     const { state, id } = await params;
     const legislatorId = decodeBase64Url(id); // Decode Base64 ID
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    // NaN or unbounded limits would reach OpenStates — clamp to sane bounds
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 100);
     const session = searchParams.get('session') || undefined;
 
     if (!state || !legislatorId) {

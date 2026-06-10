@@ -38,8 +38,15 @@ export async function POST(req: NextRequest) {
       case 'custom':
         const includeBills = searchParams.get('includeBills') === 'true';
         const includeFinance = searchParams.get('includeFinance') === 'true';
-        const maxConcurrent = parseInt(searchParams.get('maxConcurrent') || '2');
-        const delay = parseInt(searchParams.get('delay') || '1000');
+        // NaN or extreme values would break batching/throttling — clamp to sane bounds
+        const maxConcurrent = Math.min(
+          Math.max(parseInt(searchParams.get('maxConcurrent') || '2', 10) || 2, 1),
+          10
+        );
+        const delay = Math.min(
+          Math.max(parseInt(searchParams.get('delay') || '1000', 10) || 1000, 0),
+          60000
+        );
 
         result = await refreshRepresentativesCache(bioguideIds, {
           maxConcurrent,

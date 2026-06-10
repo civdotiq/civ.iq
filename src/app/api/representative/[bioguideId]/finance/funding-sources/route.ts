@@ -65,8 +65,16 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
-  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '') || 2024;
+  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || 2024;
   const startTime = Date.now();
+
+  // Unclamped cycles flow into FEC queries and finance cache keys
+  if (cycle < 1980 || cycle > 2030) {
+    return NextResponse.json(
+      { error: 'cycle must be a year between 1980 and 2030' },
+      { status: 400 }
+    );
+  }
 
   try {
     logger.info('[Funding Sources API] Called', { bioguideId, cycle });

@@ -60,7 +60,11 @@ export async function GET(
     // Parse query parameters
     const includeFull = searchParams.get('includeFull') === 'true';
     const forceRefresh = searchParams.get('forceRefresh') === 'true';
-    const targetReadingLevel = parseInt(searchParams.get('targetReadingLevel') || '8');
+    // NaN or absurd grades would flow into summary generation — clamp to grades 1-16
+    const targetReadingLevel = Math.min(
+      Math.max(parseInt(searchParams.get('targetReadingLevel') || '8', 10) || 8, 1),
+      16
+    );
     const format = (searchParams.get('format') || 'detailed') as 'brief' | 'detailed' | 'full';
 
     logger.info('Bill summary request received', {

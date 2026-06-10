@@ -29,8 +29,12 @@ export async function GET(
   try {
     const { state, id } = await params;
     const legislatorId = decodeBase64Url(id); // Decode Base64 ID
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const perPage = parseInt(searchParams.get('per_page') || '20', 10);
+    // NaN page/perPage would produce NaN slice indices — fall back to defaults
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
+    const perPage = Math.min(
+      Math.max(parseInt(searchParams.get('per_page') || '20', 10) || 20, 1),
+      100
+    );
     // Fetch more to calculate statistics (max 100)
     const limit = Math.min(100, Math.max(perPage * 5, 50));
 

@@ -73,7 +73,8 @@ export async function GET(
       return NextResponse.json({ error: 'Congress.gov API key not configured' }, { status: 503 });
     }
 
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 30);
+    // NaN would poison the cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 30);
     const cacheKey = `join-spending-legislation:${agencySlug || ''}:${keywords || ''}:${limit}`;
 
     const result = await cachedFetch(

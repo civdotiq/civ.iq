@@ -131,7 +131,8 @@ export async function GET(
     }
 
     const { searchParams } = request.nextUrl;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    // NaN would poison the cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 50);
 
     const cacheKey = `join-bill-spending:${billId}:${limit}`;
 

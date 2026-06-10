@@ -107,7 +107,8 @@ export async function GET(
     const sinceParam = searchParams.get('since') ?? '7d';
     const untilParam = searchParams.get('until') ?? null;
     const chamberFilter = searchParams.get('chamber')?.toLowerCase() ?? null;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    // NaN would poison the cache key below — fall back to the default instead
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 50);
 
     if (statusFilter && !VALID_STATUSES.includes(statusFilter as BillStatus)) {
       return NextResponse.json(

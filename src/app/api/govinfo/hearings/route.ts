@@ -117,10 +117,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<HearingsRe
   try {
     const { searchParams } = request.nextUrl;
 
-    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('page_size') ?? '20')));
+    // Math.max(1, NaN) is NaN, so NaN needs an explicit fallback — but 0 must
+    // clamp to 1, not fall back. A NaN congress would also poison the
+    // govinfo-hearings cache key.
+    const rawPageSize = parseInt(searchParams.get('page_size') ?? '20', 10);
+    const pageSize = Math.min(100, Math.max(1, Number.isFinite(rawPageSize) ? rawPageSize : 20));
     const offsetMark = searchParams.get('offset') ?? '*';
     const congressParam = searchParams.get('congress');
-    const congress = congressParam ? parseInt(congressParam) : undefined;
+    const parsedCongress = congressParam ? parseInt(congressParam, 10) : NaN;
+    const congress = Number.isFinite(parsedCongress) ? parsedCongress : undefined;
     const chamberFilter = searchParams.get('chamber')?.toLowerCase();
 
     logger.info('Hearings API request', { pageSize, offsetMark, congress, chamberFilter });

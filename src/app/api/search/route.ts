@@ -440,6 +440,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
+    // parseInt('abc') is NaN: it serializes to null in the cache key (colliding
+    // distinct garbage queries) and bypasses every range comparison — treat
+    // non-numeric values as absent instead.
+    const intParam = (name: string): number | undefined => {
+      const raw = searchParams.get(name);
+      if (!raw) return undefined;
+      const parsed = parseInt(raw, 10);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
+
     // Parse filters from query params
     const filters: SearchFilters = {
       query: searchParams.get('q') || searchParams.get('query') || undefined,
@@ -449,26 +459,14 @@ export async function GET(request: NextRequest) {
       committee: searchParams.get('committee') || undefined,
       votingPattern:
         (searchParams.get('votingPattern') as SearchFilters['votingPattern']) || undefined,
-      experienceYearsMin: searchParams.get('experienceYearsMin')
-        ? parseInt(searchParams.get('experienceYearsMin')!)
-        : undefined,
-      experienceYearsMax: searchParams.get('experienceYearsMax')
-        ? parseInt(searchParams.get('experienceYearsMax')!)
-        : undefined,
-      campaignFinanceMin: searchParams.get('campaignFinanceMin')
-        ? parseInt(searchParams.get('campaignFinanceMin')!)
-        : undefined,
-      campaignFinanceMax: searchParams.get('campaignFinanceMax')
-        ? parseInt(searchParams.get('campaignFinanceMax')!)
-        : undefined,
-      billsSponsoredMin: searchParams.get('billsSponsoredMin')
-        ? parseInt(searchParams.get('billsSponsoredMin')!)
-        : undefined,
-      billsSponsoredMax: searchParams.get('billsSponsoredMax')
-        ? parseInt(searchParams.get('billsSponsoredMax')!)
-        : undefined,
-      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
+      experienceYearsMin: intParam('experienceYearsMin'),
+      experienceYearsMax: intParam('experienceYearsMax'),
+      campaignFinanceMin: intParam('campaignFinanceMin'),
+      campaignFinanceMax: intParam('campaignFinanceMax'),
+      billsSponsoredMin: intParam('billsSponsoredMin'),
+      billsSponsoredMax: intParam('billsSponsoredMax'),
+      page: Math.max(intParam('page') ?? 1, 1),
+      limit: Math.max(intParam('limit') ?? 20, 1),
       sort: (searchParams.get('sort') as SearchFilters['sort']) || 'name',
       order: (searchParams.get('order') as SearchFilters['order']) || 'asc',
     };

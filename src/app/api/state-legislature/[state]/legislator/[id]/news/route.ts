@@ -193,8 +193,9 @@ export async function GET(
   const startTime = Date.now();
   const { state, id } = await params;
   const { searchParams } = request.nextUrl;
-  const limit = parseInt(searchParams.get('limit') || '15');
-  const page = parseInt(searchParams.get('page') || '1');
+  // NaN or unbounded values would reach news provider pagination — clamp to sane bounds
+  const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '15', 10) || 15, 1), 50);
+  const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
 
   if (!state || !id) {
     return NextResponse.json(

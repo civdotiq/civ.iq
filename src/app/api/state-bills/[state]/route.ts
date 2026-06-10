@@ -416,8 +416,9 @@ export async function GET(
   const subject = searchParams.get('subject') || undefined;
   const sponsor = searchParams.get('sponsor') || undefined;
   const search = searchParams.get('search') || searchParams.get('q') || undefined;
-  const limit = parseInt(searchParams.get('limit') || '50');
-  const page = parseInt(searchParams.get('page') || '1');
+  // NaN page would poison the cache key and reach OpenStates — clamp to sane bounds
+  const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 100);
+  const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
 
   if (!state || state.length !== 2) {
     return NextResponse.json({ error: 'Valid state abbreviation is required' }, { status: 400 });

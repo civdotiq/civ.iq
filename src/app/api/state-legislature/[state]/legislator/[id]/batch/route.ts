@@ -159,8 +159,15 @@ export async function GET(
     const legislatorId = decodeBase64Url(id);
 
     // Parse query parameters
-    const billsLimit = parseInt(searchParams.get('billsLimit') || '20', 10);
-    const newsLimit = parseInt(searchParams.get('newsLimit') || '15', 10);
+    // NaN or unbounded limits would reach OpenStates/news providers — clamp to sane bounds
+    const billsLimit = Math.min(
+      Math.max(parseInt(searchParams.get('billsLimit') || '20', 10) || 20, 1),
+      100
+    );
+    const newsLimit = Math.min(
+      Math.max(parseInt(searchParams.get('newsLimit') || '15', 10) || 15, 1),
+      50
+    );
     const session = searchParams.get('session') || undefined;
 
     if (!state || !legislatorId) {

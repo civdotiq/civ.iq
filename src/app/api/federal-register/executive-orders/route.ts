@@ -105,8 +105,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<ExecutiveO
   try {
     const { searchParams } = request.nextUrl;
 
-    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
-    const perPage = Math.min(50, Math.max(1, parseInt(searchParams.get('per_page') ?? '20')));
+    // Math.max(1, NaN) is NaN — `|| default` must run before the clamps
+    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+    const perPage = Math.min(
+      50,
+      Math.max(1, parseInt(searchParams.get('per_page') ?? '20', 10) || 20)
+    );
 
     logger.info('Executive Orders API request', { page, perPage });
 

@@ -39,7 +39,8 @@ export async function GET(
       return NextResponse.json({ error: `Unknown policy area: ${policyArea}` }, { status: 404 });
     }
 
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 30);
+    // parseInt('abc') is NaN and Math.min(NaN, 30) stays NaN — fall back to the default
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 30);
     const result = await searchPolicyArea(policyArea, limit);
 
     if (!result) {
