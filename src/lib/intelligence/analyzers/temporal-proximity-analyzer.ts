@@ -39,7 +39,9 @@ export interface TemporalPattern {
     daysBetween: number;
     amountInvolved?: number;
   }>;
+  /** Distinct effect events with >=1 proximate cause — NOT the cause×effect pair count */
   instanceCount: number;
+  /** Average gap from each effect event to its closest preceding cause */
   avgDaysBetween: number;
   proximityScore: number;
   significance: 'low' | 'medium' | 'high';
@@ -144,7 +146,10 @@ export async function analyzeTemporalProximity(
     dataAsOf: freshestDate(...edgeDates)!,
     methodology:
       'Temporal proximity analysis: edges with dates are compared within configurable windows. ' +
-      'Proximity score = 1 - (daysBetween / windowDays). Significance based on instance count and proximity.',
+      'Each instance is one distinct later event (such as a vote) with at least one earlier event ' +
+      '(such as a contribution) inside the window — multiple earlier events near the same later event ' +
+      'count as one instance. Average gap uses the closest earlier event per instance. ' +
+      'Proximity score = 1 - (avgDaysBetween / windowDays). Significance based on instance count and proximity.',
     disclaimer: DISCLAIMER,
     signal: classifySignal({
       confidence,
@@ -201,15 +206,28 @@ function detectProximity(
     }
   }
 
-  if (pairs.length < MIN_INSTANCES) return null;
+  // Count independent instances: distinct effect events (e.g. votes) with at
+  // least one cause inside the window. The raw pairs list is a cause×effect
+  // cross product — 3 contributions near the same 2 votes is 2 instances,
+  // not 6. Per instance, measure the gap to the closest preceding cause.
+  const closestGapByEffect = new Map<string, number>();
+  for (const pair of pairs) {
+    const prev = closestGapByEffect.get(pair.effect.edgeId);
+    if (prev === undefined || pair.daysBetween < prev) {
+      closestGapByEffect.set(pair.effect.edgeId, pair.daysBetween);
+    }
+  }
+  const instanceCount = closestGapByEffect.size;
+  if (instanceCount < MIN_INSTANCES) return null;
 
-  const avgDays = pairs.reduce((sum, p) => sum + p.daysBetween, 0) / pairs.length;
+  const gaps = Array.from(closestGapByEffect.values());
+  const avgDays = gaps.reduce((sum, d) => sum + d, 0) / gaps.length;
   const proximityScore = 1 - avgDays / windowDays;
 
   const significance: TemporalPattern['significance'] =
-    pairs.length >= 5 && proximityScore > 0.6
+    instanceCount >= 5 && proximityScore > 0.6
       ? 'high'
-      : pairs.length >= 3 || proximityScore > 0.4
+      : instanceCount >= 3 || proximityScore > 0.4
         ? 'medium'
         : 'low';
 
@@ -217,7 +235,7 @@ function detectProximity(
     type: patternType,
     description,
     edgePairs: pairs,
-    instanceCount: pairs.length,
+    instanceCount,
     avgDaysBetween: Math.round(avgDays),
     proximityScore,
     significance,
@@ -234,14 +252,14 @@ function buildStatisticalFallback(patterns: TemporalPattern[]): string {
   for (const pattern of patterns) {
     const typeLabel =
       pattern.type === 'contribution_vote'
-        ? 'contributions were made within the same period as votes on related bills'
+        ? 'a vote followed one or more contributions within the same period'
         : pattern.type === 'lobbying_bill'
-          ? 'lobbying filings appeared within the same period as votes on related bills'
-          : 'committee activity appeared within the same period as related contracts';
+          ? 'a vote on a related bill followed lobbying filings within the same period'
+          : 'a contract followed related committee activity within the same period';
 
     sentences.push(
       `Public records show ${pattern.instanceCount} cases where ${typeLabel}, ` +
-        `with an average gap of ${pattern.avgDaysBetween} days.`
+        `with an average gap of ${pattern.avgDaysBetween} days to the closest earlier event.`
     );
 
     // Find the largest dollar amount across edge pairs

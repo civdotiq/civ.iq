@@ -108,6 +108,42 @@ describe('analyzeTemporalProximity', () => {
     expect(contribPattern!.avgDaysBetween).toBeLessThanOrEqual(90);
   });
 
+  it('counts distinct votes, not the contribution×vote cross product', async () => {
+    const repId = 'rep:A';
+    const nbr: GraphNeighborhood = {
+      center: makeNode(repId),
+      edges: [
+        // 3 contributions, each within 90 days of the same 2 votes
+        makeDonationEdge('org:X', repId, '2026-01-01', 1000),
+        makeDonationEdge('org:Y', repId, '2026-01-10', 2000),
+        makeDonationEdge('org:Z', repId, '2026-01-20', 3000),
+        makeVoteEdge(repId, 'bill:1', '2026-02-01'),
+        makeVoteEdge(repId, 'bill:2', '2026-03-01'),
+      ],
+      connectedNodes: [],
+      completeness: 'complete',
+      failedSources: [],
+    };
+
+    const result = await analyzeTemporalProximity(nbr, 'A000001');
+    expect(result).not.toBeNull();
+    const contribPattern = result!.patterns.find(p => p.type === 'contribution_vote');
+    expect(contribPattern).toBeDefined();
+    // 3 causes × 2 effects = 6 pairs enumerated internally...
+    expect(contribPattern!.edgePairs).toHaveLength(6);
+    // ...but only 2 independent instances (2 distinct votes), NOT 6
+    expect(contribPattern!.instanceCount).toBe(2);
+    // Average gap uses the closest contribution per vote:
+    // bill:1 closest = Jan 20 → Feb 1 = 12 days; bill:2 closest = Jan 20 → Mar 1 = 40 days
+    expect(contribPattern!.avgDaysBetween).toBe(26);
+    // Headline total and confidence input use the de-duplicated count
+    expect(result!.totalPatternsDetected).toBe(2);
+    const { confidenceScore } = jest.requireMock<{
+      confidenceScore: jest.Mock;
+    }>('@/lib/intelligence/statistics/civic-stats');
+    expect(confidenceScore).toHaveBeenLastCalledWith(expect.objectContaining({ sampleSize: 2 }));
+  });
+
   it('does not detect pattern when effect precedes cause', async () => {
     const repId = 'rep:A';
     const nbr: GraphNeighborhood = {
