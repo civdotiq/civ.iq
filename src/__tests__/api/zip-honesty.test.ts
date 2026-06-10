@@ -184,6 +184,8 @@ jest.mock('@/services/district-lookup', () => ({
           id: 'NY-14',
           name: 'NY-14',
         },
+        confidence: 1.0,
+        method: 'census_api',
       })
     ),
     findDistrictByAddress: jest.fn(() =>
@@ -195,6 +197,8 @@ jest.mock('@/services/district-lookup', () => ({
           id: 'NY-14',
           name: 'NY-14',
         },
+        confidence: 1.0,
+        method: 'census_api',
         geocoded: {
           latitude: 40.74,
           longitude: -73.89,
@@ -248,7 +252,8 @@ jest.mock('@/lib/intelligence/statistics/civic-stats', () => ({
 }));
 
 import { NextRequest } from 'next/server';
-import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import { ZIP_ACCURACY_NOTE, BOUNDARY_FALLBACK_NOTE } from '@/lib/backbone/zip-accuracy';
+import { districtLookupService } from '@/services/district-lookup';
 import { GET as representativesGET } from '@/app/api/representatives/route';
 import { GET as multiDistrictGET } from '@/app/api/representatives-multi-district/route';
 import {
@@ -460,6 +465,58 @@ describe('ZIP endpoint honesty contract', () => {
       );
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
+    });
+
+    it('surfaces the lookup method and confidence', async () => {
+      const response = await geocodePOST(
+        makePOST('http://localhost/api/geocode', {
+          mode: 'address',
+          address: '74-09 37th Ave, Queens, NY',
+        })
+      );
+      const data = await response.json();
+      expect(data.lookup).toEqual({ method: 'census_api', confidence: 1.0 });
+    });
+
+    it('degraded boundary lookup (bbox) → BOUNDARY_FALLBACK_NOTE even for address input', async () => {
+      (districtLookupService.findDistrictByAddress as jest.Mock).mockResolvedValueOnce({
+        found: true,
+        district: { state_abbr: 'NY', district_num: '14', id: 'NY-14', name: 'NY-14' },
+        confidence: 0.9,
+        method: 'bbox',
+        geocoded: { latitude: 40.74, longitude: -73.89, address: 'Test Address' },
+      });
+
+      const response = await geocodePOST(
+        makePOST('http://localhost/api/geocode', {
+          mode: 'address',
+          address: '74-09 37th Ave, Queens, NY',
+        })
+      );
+      const data = await response.json();
+      expect(data.accuracyNote).toBe(BOUNDARY_FALLBACK_NOTE);
+      expect(data.lookup).toEqual({ method: 'bbox', confidence: 0.9 });
+    });
+
+    it('degraded lookup + ZIP body → both caveats combined', async () => {
+      (districtLookupService.findDistrictByAddress as jest.Mock).mockResolvedValueOnce({
+        found: true,
+        district: { state_abbr: 'NY', district_num: '14', id: 'NY-14', name: 'NY-14' },
+        confidence: 0.7,
+        method: 'fallback',
+        geocoded: { latitude: 40.74, longitude: -73.89, address: 'Test Address' },
+      });
+
+      const response = await geocodePOST(
+        makePOST('http://localhost/api/geocode', {
+          mode: 'address',
+          address: '74-09 37th Ave, Queens, NY',
+          zipCode: '11372',
+        })
+      );
+      const data = await response.json();
+      expect(data.accuracyNote).toContain(BOUNDARY_FALLBACK_NOTE);
+      expect(data.accuracyNote).toContain(ZIP_ACCURACY_NOTE);
     });
   });
 });

@@ -30,6 +30,15 @@ export const ZIP_ACCURACY_NOTE =
   'ZIP-based district lookup is approximate. ZIP boundaries and congressional district boundaries do not align; 10–20% of ZIPs span multiple districts. For authoritative results, provide a full street address.';
 
 /**
+ * Shown when the Census Bureau point-in-polygon lookup was unavailable and the
+ * district was matched against local bounding boxes / centroid distance
+ * instead. Unlike the ZIP note, the input itself was fine — the boundary
+ * service degraded — so the right user action is to retry, not to change input.
+ */
+export const BOUNDARY_FALLBACK_NOTE =
+  'The official district boundary service was unavailable, so this district was matched approximately. The result may be wrong for addresses near a district line. Please try again in a few minutes for an exact match.';
+
+/**
  * Apply ZIP-input degradation to a BackboneResponse. If the input was a ZIP,
  * downgrade dataQuality to 'partial' (unless already 'unavailable') and attach
  * the accuracy note. No-op when the input was an address or lat-lon pair.

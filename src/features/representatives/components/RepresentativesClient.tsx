@@ -415,8 +415,9 @@ export function RepresentativesClient({
     <>
       <SearchForm onSearch={handleSearch} />
 
-      {/* ZIP-honesty caveat: shown only when results came from a ZIP lookup */}
-      {searchState.accuracyNote && searchState.searchMode === 'zip' && (
+      {/* Accuracy caveat: ZIP lookups are always approximate; address lookups
+          carry a note only when the boundary service degraded to bbox matching */}
+      {searchState.accuracyNote && (
         <div className="mb-6 border-l-4 border-amber-600 bg-amber-50 p-4 text-sm text-amber-800">
           <p className="font-bold uppercase tracking-wide text-xs mb-1">Approximate results</p>
           <p>{searchState.accuracyNote}</p>

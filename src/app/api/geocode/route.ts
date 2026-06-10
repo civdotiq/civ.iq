@@ -9,7 +9,11 @@ import logger from '@/lib/logging/simple-logger';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
-import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
+import {
+  getZipAccuracyNote,
+  BOUNDARY_FALLBACK_NOTE,
+  type InputMode,
+} from '@/lib/backbone/zip-accuracy';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -48,6 +52,16 @@ interface GeocodeResponse {
     district: string;
     name: string;
   }>;
+  /**
+   * How the district was resolved. 'census_api' is the authoritative Census
+   * point-in-polygon path; 'bbox'/'fallback' mean the boundary service
+   * degraded to bounding-box or centroid-distance matching, and the result
+   * carries BOUNDARY_FALLBACK_NOTE in accuracyNote.
+   */
+  lookup?: {
+    method: 'geometry' | 'bbox' | 'census_api' | 'fallback';
+    confidence: number;
+  };
   // TODO(zip-honesty): migrate this route to BackboneResponse<T>. Populated
   // only when the resolved district was inherited from ZIP input (either via
   // `body.zipCode` on POST or because the address resolved to a ZIP-spanning
@@ -160,6 +174,11 @@ export async function GET(request: NextRequest) {
           latitude,
           longitude,
         },
+        lookup: {
+          method: result.method,
+          confidence: result.confidence,
+        },
+        ...(result.method !== 'census_api' ? { accuracyNote: BOUNDARY_FALLBACK_NOTE } : {}),
       },
       {
         status: 200,
@@ -358,7 +377,16 @@ export async function POST(request: NextRequest) {
     //     derived from ZIP → district mapping, which is 10–20% wrong.
     const inputMode: InputMode =
       body.mode === 'coordinates' ? 'lat-lon' : body.zipCode ? 'zip' : 'address';
-    const accuracyNote = getZipAccuracyNote(inputMode);
+
+    // Honesty: the district itself is only authoritative when it came from the
+    // Census point-in-polygon path. If the boundary service degraded to
+    // bbox/centroid matching, say so — even for full-address input.
+    const boundaryDegraded = result.method !== 'census_api';
+    const noteParts = [
+      ...(boundaryDegraded ? [BOUNDARY_FALLBACK_NOTE] : []),
+      ...(getZipAccuracyNote(inputMode) ? [getZipAccuracyNote(inputMode) as string] : []),
+    ];
+    const accuracyNote = noteParts.length > 0 ? noteParts.join(' ') : undefined;
 
     const response: GeocodeResponse = {
       success: true,
@@ -373,6 +401,10 @@ export async function POST(request: NextRequest) {
       stateInfo,
       geocoded,
       isMultiDistrict,
+      lookup: {
+        method: result.method,
+        confidence: result.confidence,
+      },
       ...(isMultiDistrict && { allDistricts }),
       ...(accuracyNote ? { accuracyNote } : {}),
     };
