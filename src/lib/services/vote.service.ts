@@ -96,13 +96,25 @@ export function sessionsToTry(congress: string, session?: string): number[] {
 }
 
 // Parse vote ID to determine chamber
-function parseVoteId(voteId: string): {
+export function parseVoteId(voteId: string): {
   chamber: 'House' | 'Senate';
   congress: string;
   session?: string;
   rollNumber: string;
   numericId: string;
 } {
+  // "house-119-1-100" (congress-session-roll, emitted by sitemap vote URLs)
+  const houseSessionMatch = voteId.match(/^house-(\d+)-([12])-(\d+)$/);
+  if (houseSessionMatch && houseSessionMatch[1] && houseSessionMatch[3]) {
+    return {
+      chamber: 'House',
+      congress: houseSessionMatch[1],
+      session: houseSessionMatch[2],
+      rollNumber: houseSessionMatch[3],
+      numericId: houseSessionMatch[3],
+    };
+  }
+
   const houseMatch = voteId.match(/^house-(\d+)-(\d+)$/);
   if (houseMatch && houseMatch[1] && houseMatch[2]) {
     return {
