@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
+import { verifyAdminAccess, adminUnauthorizedResponse } from '@/lib/security/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,6 +146,10 @@ export async function GET() {
  * Provides cache management operations
  */
 export async function POST(request: Request) {
+  if (!verifyAdminAccess(request)) {
+    return adminUnauthorizedResponse('/api/cache/status');
+  }
+
   try {
     const body = await request.json();
     const { action, pattern } = body;

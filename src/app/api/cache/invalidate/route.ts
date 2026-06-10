@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unifiedCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
+import { verifyAdminAccess, adminUnauthorizedResponse } from '@/lib/security/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,10 @@ export const dynamic = 'force-dynamic';
  * Pattern-based cache invalidation for fine-grained cache management
  */
 export async function POST(request: NextRequest) {
+  if (!verifyAdminAccess(request)) {
+    return adminUnauthorizedResponse('/api/cache/invalidate');
+  }
+
   try {
     const body = await request.json();
     const { pattern, patterns } = body;

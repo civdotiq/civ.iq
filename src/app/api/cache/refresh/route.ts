@@ -10,10 +10,15 @@ import {
   refreshRepresentativesCache,
 } from '@/services/cache/background-refresh';
 import logger from '@/lib/logging/simple-logger';
+import { verifyAdminAccess, adminUnauthorizedResponse } from '@/lib/security/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (!verifyAdminAccess(req)) {
+    return adminUnauthorizedResponse('/api/cache/refresh');
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const refreshType = searchParams.get('type') || 'quick';
