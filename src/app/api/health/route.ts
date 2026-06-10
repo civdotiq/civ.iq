@@ -124,7 +124,9 @@ const DATA_SOURCES: SourceDefinition[] = [
     tier: 'important',
     probeUrl:
       'https://api.regulations.gov/v4/documents?filter[lastModifiedDate][ge]=2025-01-01&page[size]=1',
-    requiresKey: 'REGULATIONS_GOV_API_KEY',
+    // Regulations.gov runs on the api.data.gov platform — the service layer
+    // (regulations-gov-service.ts) uses the shared DATA_GOV_API_KEY
+    requiresKey: 'DATA_GOV_API_KEY',
     keyMethod: 'header',
     keyParam: 'X-Api-Key',
     staleTtlHours: 168,
