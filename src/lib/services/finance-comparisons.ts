@@ -59,9 +59,6 @@ export function calculateComparison(
   const benchmark = averages[metric] || 0;
   const percentDifference = benchmark > 0 ? ((actualAmount - benchmark) / benchmark) * 100 : 0;
 
-  // Calculate percentile rank (simplified approximation)
-  const percentileRank = Math.max(0, Math.min(100, 50 + percentDifference / 10));
-
   // Determine outlier status
   let outlierStatus: ComparisonMetrics['outlierStatus'] = 'normal';
   if (Math.abs(percentDifference) > 500) {
@@ -73,7 +70,11 @@ export function calculateComparison(
   return {
     houseAverage: benchmark,
     partyAverage: benchmark,
-    percentileRank: Math.round(percentileRank),
+    // A true rank needs fundraising totals for every House member; only the
+    // party-average benchmark is available here, so no rank is shown.
+    percentileRank: null,
+    percentileUnavailableReason:
+      'Ranking this amount needs fundraising data for every House member. Only the party average is available here, so no percentile is shown.',
     percentDifference: Math.round(percentDifference),
     outlierStatus,
   };

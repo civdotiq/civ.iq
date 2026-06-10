@@ -285,7 +285,10 @@ export interface FinanceResponse {
 export interface ComparisonMetrics {
   houseAverage: number; // Average for all House members
   partyAverage: number; // Average for representative's party
-  percentileRank: number; // 0-100, where they rank among peers
+  // 0-100 rank among peers. Null when the full peer distribution is not
+  // available — never approximated from an average (real-data rule).
+  percentileRank: number | null;
+  percentileUnavailableReason?: string; // Citizen-readable reason when percentileRank is null
   percentDifference: number; // % difference from party average
   outlierStatus: 'normal' | 'high' | 'low' | 'extreme';
 }
