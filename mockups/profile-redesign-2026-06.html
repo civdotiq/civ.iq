@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOCKUP — Member Profile Redesign — Shri Thanedar | CIV.IQ</title>
+    <style>
+      /* ============================================================
+     CIV.IQ member profile redesign mockup — 2026-06
+     Aicher/Ulm system: 8px grid, border hierarchy 1/2/3px,
+     radius 0 on containers / 2px on interactive, no decoration.
+     Braun Linear with fallback stack (mockup only).
+     ============================================================ */
+      :root {
+        --ink: #000000;
+        --gray-900: #171717;
+        --gray-700: #404040;
+        --gray-500: #737373;
+        --gray-300: #d4d4d4;
+        --gray-100: #f5f5f5;
+        --gray-50: #fafafa;
+        --blue-interactive: #3ea2d4; /* links, active, focus — never party */
+        --party-dem: #2563eb; /* Democrat ONLY */
+        --party-rep: #e11d07; /* Republican ONLY */
+        --amber: #d97706; /* warnings / caveats */
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Braun Linear', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        color: var(--ink);
+        background: #ffffff;
+        letter-spacing: 0.02em;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--blue-interactive);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      a:focus-visible {
+        outline: 3px solid var(--blue-interactive);
+        outline-offset: 2px;
+      }
+
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---- mockup banner (not part of design) ---- */
+      .mockup-banner {
+        background: var(--amber);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 8px;
+      }
+
+      /* ---- site chrome ---- */
+      .site-header {
+        border-bottom: 2px solid var(--ink);
+        background: #fff;
+      }
+      .site-header .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+      }
+      .logo {
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: 0.02em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink);
+      }
+      .logo .mark {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .logo .mark i {
+        width: 8px;
+        height: 8px;
+        display: block;
+      }
+      .logo .mark i:first-child {
+        background: var(--party-rep);
+      }
+      .logo .mark i:last-child {
+        background: var(--party-dem);
+      }
+      .site-nav {
+        display: flex;
+        gap: 32px;
+        font-size: 14px;
+      }
+      .site-nav a {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .search-box {
+        border: 2px solid var(--ink);
+        border-radius: 2px;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: var(--gray-500);
+        width: 224px;
+      }
+
+      .crumbs {
+        font-size: 13px;
+        padding: 16px 0 8px;
+        color: var(--gray-500);
+      }
+      .crumbs a {
+        color: var(--blue-interactive);
+      }
+      .crumbs span.sep {
+        margin: 0 8px;
+        color: var(--gray-300);
+      }
+
+      .freshness {
+        font-size: 12px;
+        color: var(--gray-500);
+        padding-bottom: 16px;
+      }
+
+      /* ============================================================
+     IDENTITY HEADER — compact, task-oriented
+     ============================================================ */
+      .identity {
+        border: 2px solid var(--ink);
+        display: grid;
+        grid-template-columns: 128px 1fr auto;
+        gap: 24px;
+        padding: 24px;
+        align-items: start;
+      }
+      .portrait {
+        width: 128px;
+        height: 160px;
+        background: var(--gray-300);
+        border: 1px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: var(--gray-700);
+        text-align: center;
+      }
+      .identity h1 {
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        line-height: 1.05;
+        text-transform: none; /* sentence case — caps reserved for short labels */
+      }
+      .identity .role {
+        font-size: 18px;
+        font-weight: 500;
+        margin-top: 4px;
+      }
+      .identity .role a {
+        font-weight: 700;
+      }
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+        align-items: center;
+      }
+      .chip {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 2px solid var(--ink);
+        border-radius: 2px;
+        padding: 4px 10px;
+        background: #fff;
+      }
+      .chip.party-dem {
+        border-color: var(--party-dem);
+        color: var(--party-dem);
+      }
+      .chip.quiet {
+        border: 1px solid var(--gray-300);
+        color: var(--gray-700);
+        font-weight: 500;
+      }
+      .id-facts {
+        display: flex;
+        gap: 32px;
+        margin-top: 16px;
+        font-size: 13px;
+      }
+      .id-facts .f b {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .id-facts .f span {
+        color: var(--gray-500);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .id-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 192px;
+      }
+      .btn {
+        display: block;
+        text-align: center;
+        border: 2px solid var(--ink);
+        border-radius: 2px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        background: #fff;
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: var(--ink);
+        color: #fff;
+      }
+      .btn:hover {
+        text-decoration: none;
+        background: var(--gray-100);
+      }
+      .btn.primary:hover {
+        background: var(--gray-900);
+      }
+      .id-actions .contact-line {
+        font-size: 13px;
+        text-align: center;
+        color: var(--gray-700);
+        margin-top: 4px;
+      }
+
+      /* ============================================================
+     STICKY SECTION NAV — wayfinding, replaces the card grid
+     ============================================================ */
+      .section-nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #fff;
+        border-bottom: 1px solid var(--gray-300);
+        margin-top: 32px;
+      }
+      .section-nav .wrap {
+        display: flex;
+        gap: 0;
+        overflow-x: auto;
+      }
+      .section-nav a {
+        padding: 14px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--ink);
+        border-bottom: 3px solid transparent;
+        white-space: nowrap;
+      }
+      .section-nav a:hover {
+        text-decoration: none;
+        background: var(--gray-50);
+      }
+      .section-nav a.active {
+        border-bottom-color: var(--blue-interactive);
+        font-weight: 700;
+      }
+
+      /* ============================================================
+     LAYOUT — main content + task sidebar
+     ============================================================ */
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 32px;
+        padding: 32px 0 64px;
+      }
+      section.block {
+        border: 2px solid var(--ink);
+        margin-bottom: 32px;
+      }
+      section.block:last-child {
+        margin-bottom: 0;
+      }
+      .block-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--gray-300);
+      }
+      .block-head h2 {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .block-head .all-link {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .block-body {
+        padding: 24px;
+      }
+      .block-foot {
+        padding: 8px 24px;
+        border-top: 1px solid var(--gray-300);
+        font-size: 11px;
+        color: var(--gray-500);
+      }
+
+      /* ---- at-a-glance band ---- */
+      .glance {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 2px solid var(--ink);
+        margin-bottom: 32px;
+      }
+      .glance .g {
+        padding: 16px 24px;
+        border-right: 1px solid var(--gray-300);
+      }
+      .glance .g:last-child {
+        border-right: none;
+      }
+      .glance .g b {
+        display: block;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+      .glance .g .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gray-500);
+      }
+      .glance .g .baseline {
+        font-size: 12px;
+        color: var(--gray-700);
+        margin-top: 4px;
+      }
+
+      /* ---- votes table ---- */
+      table.votes {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      table.votes th {
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gray-500);
+        font-weight: 500;
+        padding: 0 16px 8px 0;
+        border-bottom: 2px solid var(--ink);
+      }
+      table.votes td {
+        padding: 12px 16px 12px 0;
+        border-bottom: 1px solid var(--gray-300);
+        vertical-align: top;
+      }
+      table.votes tr:last-child td {
+        border-bottom: none;
+      }
+      .pos {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border: 2px solid var(--ink);
+        border-radius: 2px;
+        padding: 2px 8px;
+      }
+      .pos.nay {
+        border-style: dashed;
+        color: var(--gray-700);
+      }
+      .result-note {
+        color: var(--gray-500);
+        font-size: 12px;
+      }
+
+      /* ---- finance bars (neutral gray — money is non-partisan data) ---- */
+      .fin-top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .fin-num b {
+        display: block;
+        font-size: 32px;
+        font-weight: 700;
+      }
+      .fin-num .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gray-500);
+      }
+      .fin-num .baseline {
+        font-size: 12px;
+        color: var(--gray-700);
+        margin-top: 4px;
+      }
+      .bars {
+        display: grid;
+        gap: 8px;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: 176px 1fr 72px;
+        gap: 12px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .bar-row .track {
+        background: var(--gray-100);
+        height: 16px;
+        border: 1px solid var(--gray-300);
+      }
+      .bar-row .fill {
+        background: var(--gray-700);
+        height: 100%;
+      }
+      .bar-row .amt {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .bars-caption {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 12px;
+      }
+
+      /* ---- bills list ---- */
+      .bill {
+        display: grid;
+        grid-template-columns: 96px 1fr auto;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--gray-300);
+        font-size: 14px;
+      }
+      .bill:first-child {
+        padding-top: 0;
+      }
+      .bill:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .bill .num {
+        font-weight: 700;
+      }
+      .bill .title a {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .bill .title a:hover {
+        color: var(--blue-interactive);
+      }
+      .bill .meta {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 2px;
+      }
+      .status {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid var(--gray-300);
+        border-radius: 2px;
+        padding: 2px 8px;
+        color: var(--gray-700);
+        white-space: nowrap;
+        align-self: start;
+      }
+
+      /* ---- intelligence insight ---- */
+      .insight {
+        border-left: 3px solid var(--blue-interactive);
+        padding-left: 16px;
+      }
+      .insight p.finding {
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .insight .conf-row {
+        display: flex;
+        gap: 24px;
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--gray-700);
+        flex-wrap: wrap;
+      }
+      .conf-meter {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .conf-meter .track {
+        width: 96px;
+        height: 8px;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-300);
+      }
+      .conf-meter .fill {
+        height: 100%;
+        background: var(--blue-interactive);
+      }
+      .disclaimer {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 12px;
+      }
+
+      /* ---- sidebar ---- */
+      aside .card {
+        border: 2px solid var(--ink);
+        margin-bottom: 24px;
+      }
+      aside .card h3 {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--gray-300);
+      }
+      aside .card .pad {
+        padding: 16px;
+        font-size: 14px;
+      }
+      aside .card ul {
+        list-style: none;
+      }
+      aside .card li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 14px;
+      }
+      aside .card li:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      aside .card li:first-child {
+        padding-top: 0;
+      }
+      aside .card li .sub {
+        display: block;
+        font-size: 12px;
+        color: var(--gray-500);
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 13px;
+      }
+      .kv .k {
+        color: var(--gray-500);
+      }
+      .kv .v {
+        font-weight: 500;
+        text-align: right;
+      }
+      .caveat {
+        border-left: 3px solid var(--amber);
+        background: var(--gray-50);
+        font-size: 12px;
+        color: var(--gray-700);
+        padding: 8px 12px;
+        margin-top: 12px;
+      }
+
+      /* ---- common questions, compact ---- */
+      .questions {
+        border-top: 2px solid var(--ink);
+        padding: 24px 0 48px;
+      }
+      .questions h2 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .questions ul {
+        list-style: none;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 32px;
+      }
+      .questions li {
+        font-size: 14px;
+        padding: 4px 0;
+      }
+
+      /* ---- design notes (mockup annotation, not shipped) ---- */
+      details.notes {
+        max-width: 1200px;
+        margin: 0 auto 64px;
+        padding: 0 24px;
+        font-size: 14px;
+      }
+      details.notes summary {
+        cursor: pointer;
+        font-weight: 700;
+        padding: 8px 0;
+      }
+      details.notes ol {
+        margin: 8px 0 0 20px;
+      }
+      details.notes li {
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 960px) {
+        .identity {
+          grid-template-columns: 96px 1fr;
+        }
+        .id-actions {
+          grid-column: 1 / -1;
+          flex-direction: row;
+        }
+        .id-actions .btn {
+          flex: 1;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .glance {
+          grid-template-columns: 1fr 1fr;
+        }
+        .glance .g:nth-child(2) {
+          border-right: none;
+        }
+        .glance .g:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--gray-300);
+        }
+        .questions ul {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mockup-banner">Design mockup — illustrative data, not live</div>
+
+    <header class="site-header">
+      <div class="wrap">
+        <a class="logo" href="#"
+          ><span class="mark"><i></i><i></i></span>CIV.IQ</a
+        >
+        <nav class="site-nav">
+          <a href="#">Federal</a><a href="#">State</a><a href="#">Local</a><a href="#">About</a>
+        </nav>
+        <div class="search-box">Search (CA: for state)</div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <nav class="crumbs">
+        <a href="#">Search</a><span class="sep">›</span><a href="#">Your representatives</a
+        ><span class="sep">›</span>Shri Thanedar
+      </nav>
+      <p class="freshness">
+        Data loaded June 11, 2026 · refreshes hourly from Congress.gov and FEC.gov ·
+        <a href="#">See methodology</a>
+      </p>
+
+      <!-- ============ IDENTITY ============ -->
+      <div class="identity">
+        <div class="portrait">Official<br />photo</div>
+        <div>
+          <h1>Shri Thanedar</h1>
+          <p class="role">U.S. Representative, <a href="#">Michigan’s 13th district</a></p>
+          <div class="chip-row">
+            <span class="chip party-dem">Democrat</span>
+            <span class="chip quiet">Age 71</span>
+            <span class="chip quiet">Up for re-election 2026</span>
+            <span class="chip quiet">Agriculture</span>
+            <span class="chip quiet">Homeland Security</span>
+          </div>
+          <div class="id-facts">
+            <div class="f"><b>2025–2027</b><span>Current term</span></div>
+            <div class="f"><b>2nd term</b><span>In Congress since 2023</span></div>
+            <div class="f">
+              <b><a href="#">4 committees</a></b
+              ><span>Assignments</span>
+            </div>
+            <div class="f">
+              <b><a href="#">Detroit, MI</a></b
+              ><span>District seat</span>
+            </div>
+          </div>
+        </div>
+        <div class="id-actions">
+          <a class="btn primary" href="#">Contact</a>
+          <a class="btn" href="#">Get alerts</a>
+          <p class="contact-line">(202) 225-5802 · <a href="#">thanedar.house.gov</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SECTION NAV (sticky) ============ -->
+    <nav class="section-nav" aria-label="Page sections">
+      <div class="wrap">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#votes">Voting record</a>
+        <a href="#bills">Bills</a>
+        <a href="#money">Campaign finance</a>
+        <a href="#influence">Lobbying &amp; influence</a>
+        <a href="#district">District</a>
+        <a href="#news">News</a>
+      </div>
+    </nav>
+
+    <div class="wrap">
+      <div class="layout">
+        <!-- ============ MAIN COLUMN ============ -->
+        <main id="overview">
+          <!-- At a glance: every number gets a baseline -->
+          <div class="glance">
+            <div class="g">
+              <span class="label">Votes cast</span>
+              <b>20 of 21</b>
+              <p class="baseline">95% participation · House avg 96%</p>
+            </div>
+            <div class="g">
+              <span class="label">Party unity</span>
+              <b>94%</b>
+              <p class="baseline">House Democrat avg 92%</p>
+            </div>
+            <div class="g">
+              <span class="label">Bills sponsored</span>
+              <b>32</b>
+              <p class="baseline">House avg 18 this Congress</p>
+            </div>
+            <div class="g">
+              <span class="label">Raised this cycle</span>
+              <b>$9.7M</b>
+              <p class="baseline">House median $1.8M</p>
+            </div>
+          </div>
+
+          <!-- Recent votes: real content, not a link to content -->
+          <section class="block" id="votes">
+            <div class="block-head">
+              <h2>Recent votes</h2>
+              <a class="all-link" href="#">All 20 votes →</a>
+            </div>
+            <div class="block-body">
+              <table class="votes">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Measure</th>
+                    <th>Position</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Jun 5</td>
+                    <td>
+                      <a href="#"
+                        >H.R. 2483 — SUPPORT for Patients and Communities Reauthorization Act</a
+                      >
+                    </td>
+                    <td><span class="pos">Yea</span></td>
+                    <td>Passed 366–57 <span class="result-note">· with party</span></td>
+                  </tr>
+                  <tr>
+                    <td>May 22</td>
+                    <td><a href="#">H.R. 1 — One Big Beautiful Bill Act</a></td>
+                    <td><span class="pos nay">Nay</span></td>
+                    <td>Passed 215–214 <span class="result-note">· with party</span></td>
+                  </tr>
+                  <tr>
+                    <td>May 14</td>
+                    <td><a href="#">H.R. 2480 — Fix Our Forests Act</a></td>
+                    <td><span class="pos">Yea</span></td>
+                    <td>Passed 268–152 <span class="result-note">· crossed party</span></td>
+                  </tr>
+                  <tr>
+                    <td>Apr 30</td>
+                    <td><a href="#">H.J.Res. 88 — CRA disapproval, vehicle emissions waiver</a></td>
+                    <td><span class="pos nay">Nay</span></td>
+                    <td>Passed 246–164 <span class="result-note">· with party</span></td>
+                  </tr>
+                  <tr>
+                    <td>Apr 9</td>
+                    <td><a href="#">H.R. 22 — SAVE Act</a></td>
+                    <td><span class="pos nay">Nay</span></td>
+                    <td>Passed 220–208 <span class="result-note">· with party</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="block-foot">Source: House Clerk roll-call XML · updated hourly</div>
+          </section>
+
+          <!-- Campaign finance with inline breakdown -->
+          <section class="block" id="money">
+            <div class="block-head">
+              <h2>Campaign finance, 2025–26 cycle</h2>
+              <a class="all-link" href="#">Full finance report →</a>
+            </div>
+            <div class="block-body">
+              <div class="fin-top">
+                <div class="fin-num">
+                  <span class="label">Raised</span>
+                  <b>$9.7M</b>
+                  <p class="baseline">House median $1.8M · 84% from self-funding</p>
+                </div>
+                <div class="fin-num">
+                  <span class="label">Spent</span>
+                  <b>$2.9M</b>
+                  <p class="baseline">$8.1M cash on hand</p>
+                </div>
+              </div>
+              <div class="bars">
+                <div class="bar-row">
+                  <span>Self-funded</span>
+                  <div class="track"><div class="fill" style="width: 84%"></div></div>
+                  <span class="amt">$8.1M</span>
+                </div>
+                <div class="bar-row">
+                  <span>Individual donors</span>
+                  <div class="track"><div class="fill" style="width: 11%"></div></div>
+                  <span class="amt">$1.1M</span>
+                </div>
+                <div class="bar-row">
+                  <span>PACs</span>
+                  <div class="track"><div class="fill" style="width: 4%"></div></div>
+                  <span class="amt">$0.4M</span>
+                </div>
+                <div class="bar-row">
+                  <span>Other</span>
+                  <div class="track"><div class="fill" style="width: 1%"></div></div>
+                  <span class="amt">$0.1M</span>
+                </div>
+              </div>
+              <p class="bars-caption">
+                Top contributing sectors: <a href="#">Health professionals</a>,
+                <a href="#">Real estate</a>, <a href="#">Lawyers &amp; lobbyists</a>
+              </p>
+            </div>
+            <div class="block-foot">Source: FEC.gov · itemized receipts through Q1 2026 filing</div>
+          </section>
+
+          <!-- Sponsored bills -->
+          <section class="block" id="bills">
+            <div class="block-head">
+              <h2>Sponsored bills</h2>
+              <a class="all-link" href="#">All 32 sponsored · 898 cosponsored →</a>
+            </div>
+            <div class="block-body">
+              <div class="bill">
+                <span class="num"><a href="#">H.R. 3712</a></span>
+                <div class="title">
+                  <a href="#">Small Business Innovation Protection Act</a>
+                  <p class="meta">
+                    Introduced May 28, 2026 · 14 cosponsors · referred to Small Business Committee
+                  </p>
+                </div>
+                <span class="status">In committee</span>
+              </div>
+              <div class="bill">
+                <span class="num"><a href="#">H.R. 3104</a></span>
+                <div class="title">
+                  <a href="#">Detroit River Habitat Restoration Act</a>
+                  <p class="meta">Introduced Apr 16, 2026 · 8 cosponsors · bipartisan (3 R)</p>
+                </div>
+                <span class="status">In committee</span>
+              </div>
+              <div class="bill">
+                <span class="num"><a href="#">H.R. 2891</a></span>
+                <div class="title">
+                  <a href="#">Equity in Agriculture Disaster Relief Act</a>
+                  <p class="meta">Introduced Mar 3, 2026 · 22 cosponsors · hearing held Jun 2</p>
+                </div>
+                <span class="status">Hearing held</span>
+              </div>
+            </div>
+            <div class="block-foot">Source: Congress.gov · 119th Congress</div>
+          </section>
+
+          <!-- Intelligence: one finding inline, with required metadata -->
+          <section class="block" id="influence">
+            <div class="block-head">
+              <h2>Lobbying &amp; influence analysis</h2>
+              <a class="all-link" href="#">Full analysis →</a>
+            </div>
+            <div class="block-body">
+              <div class="insight">
+                <p class="finding">
+                  Voting pattern on agriculture bills shows no association with the
+                  agriculture-sector contributions received this cycle ($41K, 0.4% of total raised).
+                  Self-funding makes donor-vote patterns weaker than for 94% of House peers.
+                </p>
+                <div class="conf-row">
+                  <span class="conf-meter"
+                    >Confidence
+                    <span class="track"
+                      ><span class="fill" style="display: block; width: 82%"></span
+                    ></span>
+                    0.82</span
+                  >
+                  <span>Sample: 14 agriculture votes · 6 quarters</span>
+                  <span>Data as of Jun 10, 2026</span>
+                  <span><a href="#">Methodology</a></span>
+                </div>
+                <p class="disclaimer">
+                  Describes statistical patterns, not causation. Baseline: all 435 House members.
+                </p>
+              </div>
+            </div>
+            <div class="block-foot">Sources: Senate LDA filings, FEC.gov, House Clerk votes</div>
+          </section>
+
+          <!-- News -->
+          <section class="block" id="news">
+            <div class="block-head">
+              <h2>Recent news</h2>
+              <a class="all-link" href="#">All coverage →</a>
+            </div>
+            <div class="block-body">
+              <div class="bill">
+                <span class="meta" style="font-size: 12px; color: var(--gray-500)">Jun 8</span>
+                <div class="title">
+                  <a href="#"
+                    >Thanedar introduces small business protection bill with bipartisan support</a
+                  >
+                  <p class="meta">Detroit Free Press</p>
+                </div>
+              </div>
+              <div class="bill">
+                <span class="meta" style="font-size: 12px; color: var(--gray-500)">May 30</span>
+                <div class="title">
+                  <a href="#">Michigan delegation splits on forest management vote</a>
+                  <p class="meta">Bridge Michigan</p>
+                </div>
+              </div>
+            </div>
+            <div class="block-foot">
+              Aggregated from national and Michigan sources · headlines link to publishers
+            </div>
+          </section>
+        </main>
+
+        <!-- ============ SIDEBAR — citizen tasks ============ -->
+        <aside>
+          <div class="card">
+            <h3>Committees</h3>
+            <div class="pad">
+              <ul>
+                <li>
+                  <a href="#">Agriculture</a><span class="sub">Member · 2 subcommittees</span>
+                </li>
+                <li>
+                  <a href="#">Homeland Security</a><span class="sub">Member · 1 subcommittee</span>
+                </li>
+                <li><a href="#">Small Business</a><span class="sub">Member</span></li>
+                <li>
+                  <a href="#">Science, Space &amp; Technology</a><span class="sub">Member</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Next election</h3>
+            <div class="pad">
+              <div class="kv"><span class="k">Seat up</span><span class="v">Nov 3, 2026</span></div>
+              <div class="kv"><span class="k">Primary</span><span class="v">Aug 4, 2026</span></div>
+              <div class="kv">
+                <span class="k">2024 margin</span><span class="v">+38.2 pts</span>
+              </div>
+              <div class="kv">
+                <span class="k">Declared challengers</span
+                ><span class="v"><a href="#">3 filed with FEC</a></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>District MI-13</h3>
+            <div class="pad">
+              <div class="kv"><span class="k">Population</span><span class="v">775,179</span></div>
+              <div class="kv">
+                <span class="k">Median income</span><span class="v">$42,800</span>
+              </div>
+              <div class="kv">
+                <span class="k">Federal spending</span><span class="v">$2.1B / yr</span>
+              </div>
+              <div class="kv">
+                <span class="k">Largest city</span><span class="v">Detroit</span>
+              </div>
+              <p style="margin-top: 8px; font-size: 13px">
+                <a href="#">Full district profile →</a>
+              </p>
+              <div class="caveat">
+                Not sure this is your district? <a href="#">Look up by home address</a> — ZIP codes
+                are wrong 10–20% of the time.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Michigan delegation</h3>
+            <div class="pad">
+              <ul>
+                <li><a href="#">2 U.S. Senators</a></li>
+                <li><a href="#">13 U.S. Representatives</a></li>
+                <li><a href="#">State legislators for MI-13</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Data sources</h3>
+            <div class="pad">
+              <ul>
+                <li>
+                  <a href="#">Congress.gov</a><span class="sub">Bills, votes, committees</span>
+                </li>
+                <li><a href="#">FEC.gov</a><span class="sub">Campaign finance</span></li>
+                <li><a href="#">Senate LDA</a><span class="sub">Lobbying filings</span></li>
+                <li><a href="#">Census ACS</a><span class="sub">District demographics</span></li>
+              </ul>
+              <p style="margin-top: 12px; font-size: 12px; color: var(--gray-500)">
+                All data from official government APIs.
+                <a href="#">Open data: JSON · RSS · Nostr</a>
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Common questions: compact, scannable -->
+      <div class="questions">
+        <h2>Common questions</h2>
+        <ul>
+          <li><a href="#">How does Shri Thanedar vote?</a></li>
+          <li><a href="#">Where do his campaign contributions come from?</a></li>
+          <li><a href="#">What bills has he sponsored?</a></li>
+          <li><a href="#">How do I contact his office?</a></li>
+          <li><a href="#">Who lobbies on his committees?</a></li>
+          <li><a href="#">When is he up for re-election?</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ============ DESIGN RATIONALE (mockup annotation only) ============ -->
+    <details class="notes">
+      <summary>Design notes — what changed and why</summary>
+      <ol>
+        <li>
+          <strong>Content replaces navigation.</strong> The old page was eight "Explore" cards — a
+          menu styled as content. Every section now shows its top 3–5 records inline (votes, bills,
+          donors, news) with an "All →" link. A citizen learns something without clicking.
+        </li>
+        <li>
+          <strong>Every number gets a baseline.</strong> "20 votes cast" became "20 of 21 · 95%
+          participation · House avg 96%". "$9.7M raised" gets "House median $1.8M". Per
+          intelligence-layer rules: numbers without peer comparison are noise.
+        </li>
+        <li>
+          <strong>Sticky section nav for wayfinding.</strong> Replaces the card grid as the
+          navigation layer. Active state is interactive blue (#3ea2d4), 3px border per emphasis
+          hierarchy. Always visible on a long page.
+        </li>
+        <li>
+          <strong>Contact promoted to primary action.</strong> Contacting your representative is the
+          #1 citizen task; it was a small phone number in the old hero. Now a black primary button,
+          persistent in the identity block.
+        </li>
+        <li>
+          <strong>Sidebar carries reference tasks.</strong> Committees (all 4 visible, linked per
+          link-density rule), next election, district snapshot with address-lookup caveat (amber,
+          per address-not-ZIP rule), delegation, data sources.
+        </li>
+        <li>
+          <strong>Identity block tightened.</strong> Name in sentence case (all-caps destroys word
+          shape at 40px+), term/seniority/committee count as scannable facts, party chip in Democrat
+          blue #2563eb used only for party.
+        </li>
+        <li>
+          <strong>Intelligence shown with its required metadata.</strong> Confidence meter, sample
+          size, dataAsOf, methodology link, no-causation disclaimer — inline, not hidden behind a
+          click.
+        </li>
+        <li>
+          <strong>Provenance per section.</strong> Each block footer names its government source,
+          replacing the single generic "Data Sources" band.
+        </li>
+        <li>
+          <strong>Border hierarchy used for scanning.</strong> 2px structural containers, 1px row
+          dividers, 3px only on active/emphasis (section nav, insight rail). The old page used 2px
+          everywhere, so nothing stood out.
+        </li>
+      </ol>
+    </details>
+  </body>
+</html>

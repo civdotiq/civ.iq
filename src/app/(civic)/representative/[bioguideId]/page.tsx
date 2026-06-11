@@ -25,7 +25,30 @@ import { ProfileHybrid } from '@/components/officials/ProfileHybrid';
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
 
-// Dynamic import for the main profile component to reduce initial bundle size
+// Dynamic imports for the profile layouts to reduce initial bundle size
+const ProfileRedesign = dynamicImport(
+  () =>
+    import('@/features/representatives/components/profile-redesign').then(mod => ({
+      default: mod.ProfileRedesign,
+    })),
+  {
+    loading: () => (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-grid-2 md:px-grid-4 py-grid-3">
+          <div className="animate-pulse">
+            <div className="h-48 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
+            <div className="h-12 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-grid-4">
+              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
+              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
+
 const SimpleRepresentativeProfile = dynamicImport(
   () =>
     import('@/features/representatives/components/SimpleRepresentativeProfile').then(mod => ({
@@ -353,9 +376,11 @@ export default async function RepresentativeProfilePage({
   }
 
   const { v } = await searchParams;
-  const isPreviewEnv =
-    process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
-  const useRedesign = v === 'new' || isPreviewEnv;
+  // `?v=new` previews the ProfileHybrid experiment; `?v=classic` restores the
+  // tabbed dashboard layout. Default is the redesigned overview (ProfileRedesign).
+  // The old NEXT_PUBLIC_CIVIQ_V env auto-preview is retired so dev matches prod.
+  const useHybridPreview = v === 'new';
+  const useClassicLayout = v === 'classic';
 
   // Server-side: fetch representative data only (summary loads client-side via SWR
   // to avoid blocking render on slow vote/finance API calls)
@@ -380,7 +405,7 @@ export default async function RepresentativeProfilePage({
     representative.name = `${representative.firstName} ${representative.lastName}`;
   }
 
-  if (useRedesign) {
+  if (useHybridPreview) {
     return (
       <ErrorBoundary>
         <ChunkLoadErrorBoundary>
@@ -494,7 +519,11 @@ export default async function RepresentativeProfilePage({
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
-            <SimpleRepresentativeProfile representative={representative} />
+            {useClassicLayout ? (
+              <SimpleRepresentativeProfile representative={representative} />
+            ) : (
+              <ProfileRedesign representative={representative} />
+            )}
           </ChunkLoadErrorBoundary>
         </ErrorBoundary>
 
