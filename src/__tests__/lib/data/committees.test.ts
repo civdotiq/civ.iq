@@ -11,33 +11,30 @@
 // against src/data/committees-with-subcommittees.json and the House Rules
 // and Manual (HMAN-119).
 
-import { getCommitteeData, HOUSE_COMMITTEES } from '@/lib/data/committees';
+import { HOUSE_COMMITTEES } from '@/lib/data/committees';
+import { getCommitteeJurisdiction } from '@/lib/data/committee-jurisdictions';
 import { COMMITTEE_NAMES, COMMITTEE_INFO } from '@/lib/data/committee-names';
 
 describe('House committee systemCode mapping (HSBA / HSBU)', () => {
-  it('HSBA returns the House Financial Services Committee with the Rule X clause 1(h) jurisdiction', async () => {
-    const committee = await getCommitteeData('HSBA');
-    expect(committee).not.toBeNull();
-    expect(committee!.id).toBe('HSBA');
-    expect(committee!.name).toBe('House Committee on Financial Services');
-    expect(committee!.jurisdiction).toMatch(/Financial Services/);
-    expect(committee!.jurisdiction).toMatch(/Rule X, clause 1\(h\)/);
+  it('HSBA jurisdiction is House Financial Services (Rule X clause 1(h)), not Budget', () => {
+    const jurisdiction = getCommitteeJurisdiction('HSBA');
+    expect(jurisdiction).toBeDefined();
+    expect(jurisdiction).toMatch(/Financial Services/);
+    expect(jurisdiction).toMatch(/Rule X, clause 1\(h\)/);
     // Guard against the original bug: Budget Committee phrasing must not appear.
-    expect(committee!.jurisdiction).not.toMatch(/federal budget process/i);
-    expect(committee!.jurisdiction).not.toMatch(/budget resolution/i);
+    expect(jurisdiction).not.toMatch(/federal budget process/i);
+    expect(jurisdiction).not.toMatch(/budget resolution/i);
   });
 
-  it('HSBU returns the House Budget Committee with the Rule X clause 1(d) jurisdiction', async () => {
-    const committee = await getCommitteeData('HSBU');
-    expect(committee).not.toBeNull();
-    expect(committee!.id).toBe('HSBU');
-    expect(committee!.name).toBe('House Committee on the Budget');
-    expect(committee!.jurisdiction).toMatch(/Rule X, clause 1\(d\)/);
-    expect(committee!.jurisdiction).toMatch(/concurrent resolutions on the budget/i);
-    expect(committee!.jurisdiction).toMatch(/budget process generally/i);
+  it('HSBU jurisdiction is House Budget (Rule X clause 1(d)), not Financial Services', () => {
+    const jurisdiction = getCommitteeJurisdiction('HSBU');
+    expect(jurisdiction).toBeDefined();
+    expect(jurisdiction).toMatch(/Rule X, clause 1\(d\)/);
+    expect(jurisdiction).toMatch(/concurrent resolutions on the budget/i);
+    expect(jurisdiction).toMatch(/budget process generally/i);
     // Guard against the original bug: Financial Services phrasing must not appear.
-    expect(committee!.jurisdiction).not.toMatch(/Financial Services/);
-    expect(committee!.jurisdiction).not.toMatch(/deposit insurance/);
+    expect(jurisdiction).not.toMatch(/Financial Services/);
+    expect(jurisdiction).not.toMatch(/deposit insurance/);
   });
 
   it('HOUSE_COMMITTEES constant maps HSBA to Financial Services and HSBU to Budget', () => {

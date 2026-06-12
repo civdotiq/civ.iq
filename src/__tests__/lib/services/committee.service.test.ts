@@ -29,8 +29,8 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   },
 }));
 
-jest.mock('@/lib/data/committees', () => ({
-  getCommitteeData: jest.fn().mockResolvedValue(null),
+jest.mock('@/lib/data/committee-jurisdictions', () => ({
+  getCommitteeJurisdiction: jest.fn().mockReturnValue(undefined),
 }));
 
 jest.mock('@/features/representatives/services/congress.service', () => ({

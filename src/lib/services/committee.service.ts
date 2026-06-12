@@ -7,7 +7,7 @@ import { cachedFetch, cache } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
-import { getCommitteeData as getHardcodedCommitteeData } from '@/lib/data/committees';
+import { getCommitteeJurisdiction } from '@/lib/data/committee-jurisdictions';
 import {
   fetchCommittees,
   fetchCommitteeMemberships,
@@ -465,25 +465,18 @@ export async function getCommitteeDataService(
     logger.info('Cache bypassed - deleted cached entry', { cacheKey });
   }
 
-  let committee: Committee | null = null;
+  // Members and leadership always come from the live congress-legislators
+  // source. The YAML carries no jurisdiction prose, so overlay the static
+  // hand-curated jurisdiction text where we have it (committee-jurisdictions).
+  // When the live source fails we fall through to the empty state ("data
+  // unavailable") rather than present stale rosters as current.
+  let committee: Committee | null = await fetchCommitteeFromCongressLegislators(committeeId);
 
-  // First try to get hardcoded committee data (for clean jurisdiction text)
-  const hardcodedCommittee = await getHardcodedCommitteeData(committeeId);
-
-  // Always try to get real member data from congress-legislators
-  const realCommittee = await fetchCommitteeFromCongressLegislators(committeeId);
-
-  // Merge hardcoded jurisdiction text onto real data (members, leadership).
-  // Never serve hardcoded members/leadership alone: the hardcoded files are
-  // stale, so when the live source fails we fall through to the empty state
-  // ("data unavailable") rather than present stale rosters as current.
-  if (hardcodedCommittee && realCommittee) {
-    committee = {
-      ...realCommittee,
-      jurisdiction: hardcodedCommittee.jurisdiction,
-    };
-  } else if (realCommittee) {
-    committee = realCommittee;
+  if (committee) {
+    const jurisdiction = getCommitteeJurisdiction(committeeId);
+    if (jurisdiction) {
+      committee = { ...committee, jurisdiction };
+    }
   }
 
   // Return empty data instead of null if nothing found
