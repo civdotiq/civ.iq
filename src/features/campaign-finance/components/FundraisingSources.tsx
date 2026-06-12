@@ -51,7 +51,10 @@ export function FundraisingSources({
         category: 'Party Contributions',
         amount: partyContributions,
         percentage: (partyContributions / totalRaised) * 100,
-        comparison: calculateComparison(partyContributions, party, 'totalRaised'),
+        // No party-contributions average is available (the FEC benchmark set
+        // has no such key); never benchmark against the unrelated total-raised
+        // average. Render amount + share only.
+        comparison: null,
       },
       {
         category: 'Self-Financing',

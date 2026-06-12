@@ -300,7 +300,9 @@ export interface FundraisingSourceWithComparison {
   category: string; // E.g., "Individual Contributions", "PAC Contributions"
   amount: number;
   percentage: number;
-  comparison: ComparisonMetrics;
+  // Null when no real party benchmark exists for this category (never
+  // benchmarked against an unrelated average — real-data rule).
+  comparison: ComparisonMetrics | null;
   contributorCount?: number; // Number of unique contributors
 }
 

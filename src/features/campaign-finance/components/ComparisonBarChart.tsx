@@ -11,7 +11,7 @@ import type { ComparisonMetrics } from '@/types/campaign-finance';
 interface ComparisonBarChartProps {
   label: string;
   amount: number;
-  comparison: ComparisonMetrics;
+  comparison: ComparisonMetrics | null;
   formatValue?: (value: number) => string;
   helpText?: string;
 }
@@ -27,6 +27,30 @@ export function ComparisonBarChart({
   formatValue = v => `$${(v / 1000000).toFixed(2)}M`,
   helpText,
 }: ComparisonBarChartProps) {
+  // No real party benchmark for this category: show the amount honestly
+  // without a misleading comparison bar.
+  if (!comparison) {
+    return (
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="font-medium text-neutral-900">
+            {label}
+            {helpText && (
+              <span className="ml-2 text-xs text-neutral-500" title={helpText}>
+                ⓘ
+              </span>
+            )}
+          </div>
+          <div className="text-sm font-semibold">{formatValue(amount)}</div>
+        </div>
+        <div className="relative mb-2 h-8">
+          <div className="absolute left-0 top-0 h-full bg-civiq-blue" style={{ width: '100%' }} />
+        </div>
+        <div className="text-xs text-neutral-500">No party-average benchmark available</div>
+      </div>
+    );
+  }
+
   const maxValue = Math.max(amount, comparison.houseAverage) * 1.2;
   const actualWidth = maxValue > 0 ? (amount / maxValue) * 100 : 0;
   const benchmarkWidth = maxValue > 0 ? (comparison.houseAverage / maxValue) * 100 : 0;
