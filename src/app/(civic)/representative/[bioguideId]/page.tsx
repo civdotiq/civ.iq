@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
@@ -136,8 +137,12 @@ interface RepresentativeDetails {
   statusEffectiveDate?: string | null;
 }
 
-// Server-side data fetching with direct service import (no HTTP networking)
-async function getRepresentativeData(bioguideId: string): Promise<RepresentativeDetails> {
+// Server-side data fetching with direct service import (no HTTP networking).
+// Wrapped in React cache() so generateMetadata and the page body share a
+// single fetch per request instead of running the full pipeline twice.
+const getRepresentativeData = cache(async function getRepresentativeData(
+  bioguideId: string
+): Promise<RepresentativeDetails> {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
       notFound();
@@ -154,7 +159,7 @@ async function getRepresentativeData(bioguideId: string): Promise<Representative
   } catch {
     notFound();
   }
-}
+});
 
 /**
  * Server-rendered key facts block for AI citation readiness.

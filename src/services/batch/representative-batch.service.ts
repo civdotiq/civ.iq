@@ -45,6 +45,53 @@ export interface BatchResponse {
   errors?: Record<string, { code: string; message: string }>;
 }
 
+interface EndpointComputation {
+  result: unknown;
+  cacheable: boolean;
+}
+
+/**
+ * Per-endpoint caching + in-flight coalescing.
+ *
+ * The profile page issues overlapping batch requests concurrently (the
+ * summary GET and the overview POST both need finance, votes, bills), but
+ * their combo-level cache keys differ, so each one recomputed every shared
+ * endpoint from upstream. Caching at endpoint granularity — keyed only by
+ * the options that change that endpoint's output — lets overlapping batches
+ * reuse each other's work, and the in-flight map collapses concurrent
+ * fetches of the same endpoint into a single upstream call.
+ */
+const inFlightEndpointFetches = new Map<string, Promise<EndpointComputation>>();
+
+const ENDPOINT_CACHE_DATATYPE = {
+  bills: 'bills',
+  votes: 'votes',
+  finance: 'finance',
+  committees: 'committees',
+} as const;
+
+function endpointCacheKey(
+  bioguideId: string,
+  endpointName: string,
+  options: BatchRequest['options'] = {}
+): string | null {
+  switch (endpointName) {
+    case 'bills':
+      return options.bills?.summaryOnly
+        ? `batch-endpoint:${bioguideId}:bills:summary`
+        : `batch-endpoint:${bioguideId}:bills:${options.bills?.limit || 25}:${options.bills?.page || 1}`;
+    case 'votes':
+      return `batch-endpoint:${bioguideId}:votes:${options.votes?.limit || 10}`;
+    case 'finance':
+      // The finance handler ignores per-request options — one result per member.
+      return `batch-endpoint:${bioguideId}:finance`;
+    case 'committees':
+      return `batch-endpoint:${bioguideId}:committees`;
+    default:
+      return null;
+  }
+}
+
 /**
  * Execute batch request using direct service calls
  * Much faster than HTTP-to-HTTP calls
@@ -151,8 +198,11 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
     }
   };
 
-  const processEndpoint = async (endpointName: string): Promise<void> => {
+  const computeEndpoint = async (endpointName: string): Promise<EndpointComputation> => {
     let result;
+    // Flipped off in catch / not-found branches so transient upstream
+    // failures are never cached at the endpoint level.
+    let cacheable = true;
 
     switch (endpointName) {
       case 'bills': {
@@ -181,6 +231,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           const representative = await getEnhancedRepresentative(bioguideId);
           if (!representative) {
             logger.error('Representative not found for votes', { bioguideId });
+            cacheable = false;
             result = {
               votes: [],
               totalResults: 0,
@@ -297,6 +348,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           });
         } catch (error) {
           logger.error(`Batch votes error for ${bioguideId}:`, error);
+          cacheable = false;
           // Return proper error format matching the direct endpoint
           result = {
             votes: [],
@@ -429,6 +481,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           });
         } catch (error) {
           logger.error(`Finance error for ${bioguideId}:`, error);
+          cacheable = false;
           // Return empty data on error
           result = {
             totalRaised: 0,
@@ -462,6 +515,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
           if (!representative) {
             logger.warn(`Representative not found for committees: ${bioguideId}`);
+            cacheable = false;
             result = {
               committees: [],
               count: 0,
@@ -495,6 +549,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           });
         } catch (error) {
           logger.error(`Committees error for ${bioguideId}:`, error);
+          cacheable = false;
           result = {
             committees: [],
             count: 0,
@@ -512,6 +567,44 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
       default:
         throw new Error(`Unknown endpoint: ${endpointName}`);
+    }
+
+    return { result, cacheable };
+  };
+
+  const processEndpoint = async (endpointName: string): Promise<void> => {
+    const epCacheKey = endpointCacheKey(bioguideId, endpointName, options);
+
+    let result: unknown;
+
+    const cachedResult = epCacheKey ? await govCache.get<unknown>(epCacheKey) : null;
+    if (cachedResult !== null && cachedResult !== undefined) {
+      result = cachedResult;
+    } else {
+      const inFlight = epCacheKey ? inFlightEndpointFetches.get(epCacheKey) : undefined;
+      if (inFlight) {
+        result = (await inFlight).result;
+      } else {
+        const computation = computeEndpoint(endpointName).then(computed => {
+          if (epCacheKey && computed.cacheable) {
+            govCache.set(epCacheKey, computed.result, {
+              dataType:
+                ENDPOINT_CACHE_DATATYPE[endpointName as keyof typeof ENDPOINT_CACHE_DATATYPE],
+              source: 'batch-service',
+            });
+          }
+          return computed;
+        });
+        if (epCacheKey) {
+          inFlightEndpointFetches.set(epCacheKey, computation);
+          // Always clear the in-flight slot; swallow only the cleanup chain's
+          // rejection — callers still see the original failure via `await`.
+          computation
+            .finally(() => inFlightEndpointFetches.delete(epCacheKey))
+            .catch(() => undefined);
+        }
+        result = (await computation).result;
+      }
     }
 
     data[endpointName] = result;

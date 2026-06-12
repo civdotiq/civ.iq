@@ -66,31 +66,34 @@ export async function GET(
     const currentYear = new Date().getFullYear();
     const coverageYears = 5;
 
-    // Fetch stock trades via appropriate service + circuit breaker
-    const trades = isSenate
-      ? await circuitBreakers.senateStockWatcher.execute(async () => {
-          const senateTrades = await senateDisclosureService.getTradesForMember(bioguideId);
-          // Backfill stateDistrict on Senate trades (not in source data)
-          return senateTrades.map(t => ({ ...t, stateDistrict }));
-        })
-      : await circuitBreakers.houseClerk.execute(async () => {
-          return houseDisclosureService.getTradesForMember(bioguideId);
-        });
-
-    // Fetch annual financial disclosures (House only — every member files these)
-    const annualDisclosures = isSenate
-      ? []
-      : await circuitBreakers.houseClerk
-          .execute(async () => {
-            return houseDisclosureService.getAnnualDisclosuresForMember(bioguideId);
+    // Fetch stock trades and annual disclosures in parallel — they're
+    // independent requests, so there's no reason to wait on one before
+    // starting the other.
+    const [trades, annualDisclosures] = await Promise.all([
+      isSenate
+        ? circuitBreakers.senateStockWatcher.execute(async () => {
+            const senateTrades = await senateDisclosureService.getTradesForMember(bioguideId);
+            // Backfill stateDistrict on Senate trades (not in source data)
+            return senateTrades.map(t => ({ ...t, stateDistrict }));
           })
-          .catch(err => {
-            logger.warn('Failed to fetch annual disclosures', {
-              bioguideId,
-              error: String(err),
-            });
-            return [];
-          });
+        : circuitBreakers.houseClerk.execute(async () => {
+            return houseDisclosureService.getTradesForMember(bioguideId);
+          }),
+      // Annual financial disclosures (House only — every member files these)
+      isSenate
+        ? Promise.resolve([])
+        : circuitBreakers.houseClerk
+            .execute(async () => {
+              return houseDisclosureService.getAnnualDisclosuresForMember(bioguideId);
+            })
+            .catch(err => {
+              logger.warn('Failed to fetch annual disclosures', {
+                bioguideId,
+                error: String(err),
+              });
+              return [];
+            }),
+    ]);
 
     const yearsChecked = isSenate
       ? []

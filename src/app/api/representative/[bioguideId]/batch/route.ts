@@ -134,16 +134,28 @@ export async function GET(
       // Use optimized summary service for quick stats
       const summary = await getRepresentativeSummary(upperBioguideId);
 
-      return NextResponse.json({
-        success: true,
-        data: summary,
-        metadata: {
-          bioguideId: upperBioguideId,
-          type: 'summary',
-          timestamp: new Date().toISOString(),
-          cached: true,
+      return NextResponse.json(
+        {
+          success: true,
+          data: summary,
+          metadata: {
+            bioguideId: upperBioguideId,
+            type: 'summary',
+            timestamp: new Date().toISOString(),
+            cached: true,
+          },
         },
-      });
+        {
+          headers: {
+            // Match the POST handler: the summary is already Redis-cached for
+            // 30 minutes server-side, so a 5-minute CDN window adds no
+            // staleness — it just spares repeat visitors the function call.
+            'Cache-Control': 'public, max-age=300, s-maxage=300',
+            'CDN-Cache-Control': 'public, max-age=300',
+            Vary: 'Accept-Encoding',
+          },
+        }
+      );
     }
 
     // Default batch request with core endpoints including votes
