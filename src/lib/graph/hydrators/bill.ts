@@ -63,9 +63,9 @@ export async function hydrateBill(identifier: string): Promise<HydrationPlan | n
   const now = new Date().toISOString();
 
   // Fetch bill from Congress.gov
-  const apiKey = process.env.CONGRESS_GOV_API_KEY;
+  const apiKey = process.env.CONGRESS_API_KEY || process.env.CONGRESS_GOV_API_KEY;
   if (!apiKey) {
-    logger.warn('[Graph:Bill] CONGRESS_GOV_API_KEY not configured');
+    logger.warn('[Graph:Bill] CONGRESS_API_KEY not configured');
     return null;
   }
 
