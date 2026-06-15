@@ -198,6 +198,13 @@
     letter-spacing: 0.05em;
   }
 
+  .civic-pack-note {
+    font-size: 7pt;
+    color: #888;
+    margin: 4pt 0 8pt;
+    line-height: 1.4;
+  }
+
   /* ===== FOOTER ===== */
   .civic-pack-footer {
     margin-top: 16pt;
@@ -329,6 +336,13 @@
     text-transform: uppercase;
     color: #666;
     letter-spacing: 0.05em;
+  }
+
+  .civic-pack-note {
+    font-size: 7pt;
+    color: #888;
+    margin: 4pt 0 8pt;
+    line-height: 1.4;
   }
 
   .civic-pack-table {

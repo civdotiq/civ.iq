@@ -53,6 +53,14 @@ interface PrintSpendingData {
     }>;
     infrastructureInvestment: number;
   };
+  stateContext?: {
+    state: string;
+    medicaidChipEnrollment: number | null;
+    medicaidChipPeriod: string | null;
+    medicaidChipPreliminary: boolean;
+    veteranPopulation: number | null;
+    veteranPopulationFiscalYear: string | null;
+  };
 }
 
 interface PrintDistrictPageProps {
@@ -72,6 +80,28 @@ function formatCurrency(amount: number): string {
 
 function formatNumber(num: number): string {
   return num.toLocaleString();
+}
+
+/** Format a YYYYMM reporting period (e.g. "202602") as "Feb 2026". */
+function formatReportingPeriod(period: string | null): string | null {
+  if (!period || period.length !== 6) return null;
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthIndex = parseInt(period.slice(4, 6), 10) - 1;
+  if (monthIndex < 0 || monthIndex > 11) return null;
+  return `${months[monthIndex]} ${period.slice(0, 4)}`;
 }
 
 function partyInitial(party: string): string {
@@ -329,6 +359,38 @@ export function PrintDistrictPage({
           </section>
         )}
 
+        {(spending?.stateContext?.medicaidChipEnrollment != null ||
+          spending?.stateContext?.veteranPopulation != null) && (
+          <section className="civiq-print-section">
+            <span className="civiq-print-label">Statewide context</span>
+            <div className="civiq-print-rule" />
+            {spending.stateContext.medicaidChipEnrollment != null && (
+              <PrintRow
+                label={`Medicaid + CHIP${
+                  formatReportingPeriod(spending.stateContext.medicaidChipPeriod)
+                    ? ` (${formatReportingPeriod(spending.stateContext.medicaidChipPeriod)})`
+                    : ''
+                }`}
+                value={formatNumber(spending.stateContext.medicaidChipEnrollment)}
+              />
+            )}
+            {spending.stateContext.veteranPopulation != null && (
+              <PrintRow
+                label={`Veteran population${
+                  spending.stateContext.veteranPopulationFiscalYear
+                    ? ` (${spending.stateContext.veteranPopulationFiscalYear})`
+                    : ''
+                }`}
+                value={formatNumber(spending.stateContext.veteranPopulation)}
+              />
+            )}
+            <div style={{ fontSize: 9, color: 'var(--fg3)', marginTop: 6, lineHeight: 1.4 }}>
+              Statewide totals for {stateName}, not specific to this district — these federal
+              programs report only at the state level.
+            </div>
+          </section>
+        )}
+
         {district.geography.counties.length > 0 && (
           <section className="civiq-print-section">
             <span className="civiq-print-label">Geography</span>
@@ -363,6 +425,12 @@ export function PrintDistrictPage({
             <li>Congress.gov · /member directory</li>
             <li>U.S. Census · ACS 2023 5-year</li>
             <li>USAspending.gov · FY current</li>
+            {spending?.stateContext?.medicaidChipEnrollment != null && (
+              <li>CMS · data.medicaid.gov (statewide)</li>
+            )}
+            {spending?.stateContext?.veteranPopulation != null && (
+              <li>VA NCVAS · datahub.va.gov (statewide)</li>
+            )}
           </ul>
         </section>
       </div>

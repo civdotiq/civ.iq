@@ -73,6 +73,14 @@ interface SpendingApiResponse {
       }>;
       infrastructureInvestment: number;
     };
+    stateContext: {
+      state: string;
+      medicaidChipEnrollment: number | null;
+      medicaidChipPeriod: string | null;
+      medicaidChipPreliminary: boolean;
+      veteranPopulation: number | null;
+      veteranPopulationFiscalYear: string | null;
+    };
   };
 }
 
@@ -91,6 +99,28 @@ function formatCurrency(amount: number): string {
 
 function formatNumber(num: number): string {
   return num.toLocaleString();
+}
+
+/** Format a YYYYMM reporting period (e.g. "202602") as "Feb 2026". */
+function formatReportingPeriod(period: string | null): string | null {
+  if (!period || period.length !== 6) return null;
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthIndex = parseInt(period.slice(4, 6), 10) - 1;
+  if (monthIndex < 0 || monthIndex > 11) return null;
+  return `${months[monthIndex]} ${period.slice(0, 4)}`;
 }
 
 export default async function PrintCivicPackPage({ params, searchParams }: PageProps) {
@@ -333,6 +363,46 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
               </tbody>
             </table>
           )}
+        </>
+      )}
+
+      {/* Statewide Context — explicitly NOT district-specific */}
+      {(spending?.stateContext?.medicaidChipEnrollment != null ||
+        spending?.stateContext?.veteranPopulation != null) && (
+        <>
+          <div className="civic-pack-section">Statewide Context</div>
+          <div className="civic-pack-stats">
+            {spending.stateContext.medicaidChipEnrollment != null && (
+              <div className="civic-pack-stat">
+                <div className="civic-pack-stat-value">
+                  {formatNumber(spending.stateContext.medicaidChipEnrollment)}
+                </div>
+                <div className="civic-pack-stat-label">
+                  {stateName} Medicaid &amp; CHIP
+                  {formatReportingPeriod(spending.stateContext.medicaidChipPeriod)
+                    ? ` (${formatReportingPeriod(spending.stateContext.medicaidChipPeriod)})`
+                    : ''}
+                </div>
+              </div>
+            )}
+            {spending.stateContext.veteranPopulation != null && (
+              <div className="civic-pack-stat">
+                <div className="civic-pack-stat-value">
+                  {formatNumber(spending.stateContext.veteranPopulation)}
+                </div>
+                <div className="civic-pack-stat-label">
+                  {stateName} Veteran Population
+                  {spending.stateContext.veteranPopulationFiscalYear
+                    ? ` (${spending.stateContext.veteranPopulationFiscalYear})`
+                    : ''}
+                </div>
+              </div>
+            )}
+          </div>
+          <p className="civic-pack-note">
+            Statewide totals, not specific to this district — these federal programs report only at
+            the state level. Sources: CMS (data.medicaid.gov), VA NCVAS (datahub.va.gov).
+          </p>
         </>
       )}
 
