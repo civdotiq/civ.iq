@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
+import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -219,6 +221,29 @@ function getFederalFacilitiesData(): GovernmentServicesProfile['representation']
   return [];
 }
 
+/**
+ * Statewide context — real federal data published only at the state level
+ * (Medicaid/CHIP enrollment from CMS, veteran population from VA). Attached
+ * here as explicitly statewide figures, never as district-specific numbers.
+ */
+async function fetchStateContext(
+  stateCode: string
+): Promise<GovernmentServicesProfile['stateContext']> {
+  const [medicaid, veterans] = await Promise.all([
+    fetchMedicaidEnrollment(stateCode),
+    fetchVeteranPopulation(stateCode),
+  ]);
+
+  return {
+    state: stateCode,
+    medicaidChipEnrollment: medicaid?.totalMedicaidAndChip ?? null,
+    medicaidChipPeriod: medicaid?.reportingPeriod ?? null,
+    medicaidChipPreliminary: medicaid?.preliminary ?? false,
+    veteranPopulation: veterans?.count ?? null,
+    veteranPopulationFiscalYear: veterans?.fiscalYear ?? null,
+  };
+}
+
 async function getGovernmentServicesProfile(
   districtId: string
 ): Promise<GovernmentServicesProfile> {
@@ -240,16 +265,17 @@ async function getGovernmentServicesProfile(
     logger.info('Fetching government services profile for district', { districtId, stateCode });
 
     // Fetch data from multiple sources in parallel
-    const [spendingData, billsData] = await Promise.all([
+    const [spendingData, billsData, stateContext] = await Promise.all([
       fetchUSASpendingData(stateCode),
       fetchCongressionalBillsData(districtId),
+      fetchStateContext(stateCode),
     ]);
 
     // Generate estimates for missing data
     const socialServicesData = getSocialServicesData();
     const federalFacilitiesData = getFederalFacilitiesData();
 
-    // Combine all data sources — use 0/[] when APIs fail (no fake data)
+    // Combine all data sources — use null/[] when APIs fail (no fake data)
     const servicesProfile: GovernmentServicesProfile = {
       federalInvestment: {
         totalAnnualSpending: spendingData.totalAnnualSpending || 0,
@@ -263,6 +289,7 @@ async function getGovernmentServicesProfile(
         federalFacilities: federalFacilitiesData,
         appropriationsSecured: billsData.appropriationsSecured || 0,
       },
+      stateContext,
     };
 
     // Cache the result
@@ -301,6 +328,14 @@ async function getGovernmentServicesProfile(
         federalFacilities: [],
         appropriationsSecured: 0,
       },
+      stateContext: {
+        state: districtId.split('-')[0]?.toUpperCase() ?? '',
+        medicaidChipEnrollment: null,
+        medicaidChipPeriod: null,
+        medicaidChipPreliminary: false,
+        veteranPopulation: null,
+        veteranPopulationFiscalYear: null,
+      },
     };
   }
 }
@@ -325,14 +360,17 @@ export async function GET(
           dataSources: {
             usaspending: 'USASpending.gov - https://api.usaspending.gov/',
             congress: 'Congress.gov enhanced API access',
-            socialServices: 'Data unavailable - no real API source',
+            socialServices: 'Data unavailable - no real district-level API source',
             federalFacilities: 'Data unavailable - no real API source',
+            medicaidChip: 'CMS - data.medicaid.gov (statewide Medicaid + CHIP enrollment, monthly)',
+            veteranPopulation: 'VA NCVAS/VetPop - datahub.va.gov (statewide veteran population)',
           },
           notes: [
             'Federal spending data from USASpending.gov API',
             'Congressional bills from enhanced Congress.gov access',
-            'Social services data unavailable - real government APIs needed',
+            'District-level social services data unavailable - real government APIs needed',
             'Federal facilities data unavailable - real government APIs needed',
+            'stateContext figures are STATEWIDE, not district-specific (Medicaid/CHIP and veteran population are published only at the state level)',
             'Data cached for 30 minutes for performance',
           ],
         },

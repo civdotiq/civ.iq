@@ -85,6 +85,17 @@ export interface GovernmentServicesProfile {
     }>;
     appropriationsSecured: number; // Annual amount
   };
+  // Statewide figures (NOT district-specific). Federal data for these
+  // metrics is only published at the state level; surfaced separately so it
+  // is never read as a district-level number. null = data unavailable.
+  stateContext: {
+    state: string; // 2-letter code these statewide figures belong to
+    medicaidChipEnrollment: number | null; // CMS, statewide Medicaid + CHIP
+    medicaidChipPeriod: string | null; // reporting period, YYYYMM
+    medicaidChipPreliminary: boolean; // newest CMS figure may be revised
+    veteranPopulation: number | null; // VA VetPop, statewide veteran count
+    veteranPopulationFiscalYear: string | null; // e.g. "FY2026"
+  };
 }
 
 // Combined district enhancement data

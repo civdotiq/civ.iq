@@ -290,5 +290,13 @@ async function fetchGovernmentSpending(districtId: string): Promise<GovernmentSe
       federalFacilities: [],
       appropriationsSecured: 0,
     },
+    stateContext: {
+      state: districtId.split('-')[0]?.toUpperCase() ?? '',
+      medicaidChipEnrollment: null,
+      medicaidChipPeriod: null,
+      medicaidChipPreliminary: false,
+      veteranPopulation: null,
+      veteranPopulationFiscalYear: null,
+    },
   };
 }

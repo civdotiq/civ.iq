@@ -23,6 +23,8 @@ interface GovernmentData {
       congress: string;
       socialServices: string;
       federalFacilities: string;
+      medicaidChip?: string;
+      veteranPopulation?: string;
     };
     notes: string[];
   };
@@ -57,6 +59,29 @@ function formatNumber(num: number): string {
     return 'Data unavailable';
   }
   return new Intl.NumberFormat('en-US').format(num);
+}
+
+/** Format a YYYYMM reporting period (e.g. "202602") as "Feb 2026". */
+function formatReportingPeriod(period: string | null): string | null {
+  if (!period || period.length !== 6) return null;
+  const year = period.slice(0, 4);
+  const monthIndex = parseInt(period.slice(4, 6), 10) - 1;
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  if (monthIndex < 0 || monthIndex > 11) return null;
+  return `${months[monthIndex]} ${year}`;
 }
 
 export default function GovernmentServicesProfile({ districtId }: GovernmentServicesProps) {
@@ -239,6 +264,56 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                 </div>
                 <p className="text-sm text-indigo-700 mt-1">Veterans Served</p>
                 <p className="text-xs text-indigo-600 mt-1">VA benefits & services</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Statewide context — explicitly NOT district-specific */}
+      {(government.stateContext.medicaidChipEnrollment !== null ||
+        government.stateContext.veteranPopulation !== null) && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-1 flex items-center">
+            <Users className="w-5 h-5 mr-2 text-civiq-blue" />
+            Statewide context
+          </h4>
+          <p className="text-xs text-gray-500 mb-4">
+            Figures below are statewide totals for {government.stateContext.state}, not specific to
+            this district — these federal programs report only at the state level.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {government.stateContext.medicaidChipEnrollment !== null && (
+              <div className="border-2 border-gray-200 p-6">
+                <div className="text-2xl font-bold text-gray-900">
+                  {new Intl.NumberFormat('en-US').format(
+                    government.stateContext.medicaidChipEnrollment
+                  )}
+                </div>
+                <p className="text-sm text-gray-700 mt-1">Medicaid &amp; CHIP enrollment</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Statewide
+                  {formatReportingPeriod(government.stateContext.medicaidChipPeriod)
+                    ? ` · ${formatReportingPeriod(government.stateContext.medicaidChipPeriod)}`
+                    : ''}
+                  {government.stateContext.medicaidChipPreliminary ? ' · preliminary' : ''} · CMS
+                </p>
+              </div>
+            )}
+
+            {government.stateContext.veteranPopulation !== null && (
+              <div className="border-2 border-gray-200 p-6">
+                <div className="text-2xl font-bold text-gray-900">
+                  {new Intl.NumberFormat('en-US').format(government.stateContext.veteranPopulation)}
+                </div>
+                <p className="text-sm text-gray-700 mt-1">Veteran population</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Statewide
+                  {government.stateContext.veteranPopulationFiscalYear
+                    ? ` · ${government.stateContext.veteranPopulationFiscalYear}`
+                    : ''}{' '}
+                  · VA NCVAS
+                </p>
               </div>
             )}
           </div>
