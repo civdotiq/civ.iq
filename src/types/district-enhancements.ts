@@ -64,10 +64,11 @@ export interface GovernmentServicesProfile {
     infrastructureInvestment: number;
   };
   socialServices: {
-    snapBeneficiaries: number; // Number of households
-    medicaidEnrollment: number;
-    housingAssistanceUnits: number;
-    veteransServices: number; // Number of veterans served
+    // null = data unavailable (no real API source); 0 is reserved for a genuine zero count
+    snapBeneficiaries: number | null; // Number of households
+    medicaidEnrollment: number | null;
+    housingAssistanceUnits: number | null;
+    veteransServices: number | null; // Number of veterans served
   };
   representation: {
     billsAffectingDistrict: Array<{

@@ -202,13 +202,14 @@ async function fetchCongressionalBillsData(
 }
 
 function getSocialServicesData(): GovernmentServicesProfile['socialServices'] {
-  // Return zeros for all social services as no real API is available
-  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
+  // No real API source for district-level social services yet.
+  // Following CLAUDE.md "NO mock data ever": emit null (= unavailable), not 0
+  // (which a consumer would read as a genuine zero count).
   return {
-    snapBeneficiaries: 0,
-    medicaidEnrollment: 0,
-    housingAssistanceUnits: 0,
-    veteransServices: 0,
+    snapBeneficiaries: null,
+    medicaidEnrollment: null,
+    housingAssistanceUnits: null,
+    veteransServices: null,
   };
 }
 
@@ -290,10 +291,10 @@ async function getGovernmentServicesProfile(
         infrastructureInvestment: 0,
       },
       socialServices: {
-        snapBeneficiaries: 0,
-        medicaidEnrollment: 0,
-        housingAssistanceUnits: 0,
-        veteransServices: 0,
+        snapBeneficiaries: null,
+        medicaidEnrollment: null,
+        housingAssistanceUnits: null,
+        veteransServices: null,
       },
       representation: {
         billsAffectingDistrict: [],

@@ -279,10 +279,11 @@ async function fetchGovernmentSpending(districtId: string): Promise<GovernmentSe
       infrastructureInvestment: 0,
     },
     socialServices: {
-      snapBeneficiaries: 0,
-      medicaidEnrollment: 0,
-      housingAssistanceUnits: 0,
-      veteransServices: 0,
+      // null = data unavailable (no real API source), not a genuine zero count
+      snapBeneficiaries: null,
+      medicaidEnrollment: null,
+      housingAssistanceUnits: null,
+      veteransServices: null,
     },
     representation: {
       billsAffectingDistrict: [],
