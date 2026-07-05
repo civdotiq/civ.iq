@@ -64,14 +64,15 @@ interface DistrictApiResponse {
 interface SpendingApiResponse {
   government: {
     federalInvestment: {
-      totalAnnualSpending: number;
-      contractsAndGrants: number;
+      // null = data unavailable from USASpending (never rendered as $0)
+      totalAnnualSpending: number | null;
+      contractsAndGrants: number | null;
       majorProjects: Array<{
         title: string;
         amount: number;
         agency: string;
       }>;
-      infrastructureInvestment: number;
+      infrastructureInvestment: number | null;
     };
     stateContext: {
       state: string;
@@ -319,7 +320,7 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
       )}
 
       {/* Top Federal Spending */}
-      {spending?.federalInvestment && spending.federalInvestment.totalAnnualSpending > 0 && (
+      {spending?.federalInvestment && spending.federalInvestment.totalAnnualSpending != null && (
         <>
           <div className="civic-pack-section">Federal Spending</div>
           <div className="civic-pack-stats">
@@ -331,13 +332,17 @@ export default async function PrintCivicPackPage({ params, searchParams }: PageP
             </div>
             <div className="civic-pack-stat">
               <div className="civic-pack-stat-value">
-                {formatNumber(spending.federalInvestment.contractsAndGrants)}
+                {spending.federalInvestment.contractsAndGrants != null
+                  ? formatNumber(spending.federalInvestment.contractsAndGrants)
+                  : '—'}
               </div>
               <div className="civic-pack-stat-label">Contracts &amp; Grants</div>
             </div>
             <div className="civic-pack-stat">
               <div className="civic-pack-stat-value">
-                {formatCurrency(spending.federalInvestment.infrastructureInvestment || 0)}
+                {spending.federalInvestment.infrastructureInvestment != null
+                  ? formatCurrency(spending.federalInvestment.infrastructureInvestment)
+                  : '—'}
               </div>
               <div className="civic-pack-stat-label">Infrastructure</div>
             </div>

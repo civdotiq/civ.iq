@@ -1,0 +1,187 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Data-integrity regression tests for the district services-health and
+ * government-spending routes: unavailable data must be emitted as null,
+ * never as a fabricated 0 (2026-07 audit item 1; same class as b2841c90).
+ */
+
+import { GET as getServicesHealth } from '@/app/api/districts/[districtId]/services-health/route';
+import { GET as getGovernmentSpending } from '@/app/api/districts/[districtId]/government-spending/route';
+import { createMockRequest, mockFetchResponse } from '../utils/test-helpers';
+
+jest.mock('@/services/cache', () => ({
+  govCache: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('@/lib/logging/simple-logger', () => ({
+  __esModule: true,
+  default: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/server-url', () => ({
+  getServerBaseUrl: jest.fn(() => 'http://localhost:3000'),
+}));
+
+jest.mock('@/lib/data-sources/cms-medicaid-enrollment-service', () => ({
+  fetchMedicaidEnrollment: jest.fn().mockResolvedValue(null),
+}));
+
+jest.mock('@/lib/data-sources/va-veteran-population-service', () => ({
+  fetchVeteranPopulation: jest.fn().mockResolvedValue(null),
+}));
+
+import { govCache } from '@/services/cache';
+
+function makeParams(districtId: string): { params: Promise<{ districtId: string }> } {
+  return { params: Promise.resolve({ districtId }) };
+}
+
+function failAllFetches() {
+  global.fetch = jest.fn().mockRejectedValue(new Error('network down'));
+}
+
+describe('/api/districts/[districtId]/services-health null integrity', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (govCache.get as jest.Mock).mockResolvedValue(null);
+  });
+
+  it('emits null (never 0) for every metric when all upstream APIs fail', async () => {
+    failAllFetches();
+
+    const response = await getServicesHealth(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/services-health'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    const { education, healthcare, publicHealth } = body.services;
+
+    for (const [field, value] of Object.entries(education)) {
+      expect({ field, value }).toEqual({ field, value: null });
+    }
+    for (const [field, value] of Object.entries(healthcare)) {
+      expect({ field, value }).toEqual({ field, value: null });
+    }
+    for (const [field, value] of Object.entries(publicHealth)) {
+      expect({ field, value }).toEqual({ field, value: null });
+    }
+  });
+
+  it('uses Census ASFIN federal revenue (not per-pupil expenditure) for federalEducationFunding', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (String(url).includes('api.census.gov')) {
+        // ASFIN row: [PPEXPGN, TFEDREV, ENROLLM]
+        return mockFetchResponse([
+          ['PPEXPGN', 'TFEDREV', 'ENROLLM', 'state'],
+          ['12000', '5500000000', '5400000', '48'],
+        ]);
+      }
+      return Promise.reject(new Error('unreachable'));
+    });
+
+    const response = await getServicesHealth(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/services-health'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    expect(body.services.education.federalEducationFunding).toBe(5500000000);
+    // Fields with no honest source stay null even when other fetches succeed
+    expect(body.services.education.schoolDistrictPerformance).toBeNull();
+    expect(body.services.education.collegeEnrollmentRate).toBeNull();
+  });
+
+  it('never emits public health or healthcare values (no correct source mapping exists)', async () => {
+    global.fetch = jest.fn().mockImplementation(() => mockFetchResponse({ result: [] }));
+
+    const response = await getServicesHealth(
+      createMockRequest('http://localhost:3000/api/districts/CA-12/services-health'),
+      makeParams('CA-12')
+    );
+    const body = await response.json();
+
+    expect(body.services.healthcare.hospitalQualityRating).toBeNull();
+    expect(body.services.publicHealth.preventableDiseaseRate).toBeNull();
+    expect(body.services.publicHealth.mentalHealthProviderRatio).toBeNull();
+    expect(body.services.publicHealth.substanceAbusePrograms).toBeNull();
+    expect(body.services.publicHealth.preventiveCareCoverage).toBeNull();
+  });
+});
+
+describe('/api/districts/[districtId]/government-spending null integrity', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (govCache.get as jest.Mock).mockResolvedValue(null);
+  });
+
+  it('emits null (never 0) for federal investment when USASpending fails', async () => {
+    failAllFetches();
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/government-spending'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    const { federalInvestment, representation } = body.government;
+
+    expect(federalInvestment.totalAnnualSpending).toBeNull();
+    expect(federalInvestment.contractsAndGrants).toBeNull();
+    expect(federalInvestment.infrastructureInvestment).toBeNull();
+    expect(federalInvestment.majorProjects).toEqual([]);
+    expect(representation.appropriationsSecured).toBeNull();
+  });
+
+  it('never fabricates an impactLevel classification for bills', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/bills')) {
+        return mockFetchResponse([
+          { number: 'HR 1234', title: 'A Real Bill', latestAction: 'Referred to committee' },
+          { number: 'S 99', title: 'Another Bill', latestAction: 'Passed Senate' },
+        ]);
+      }
+      return Promise.reject(new Error('unreachable'));
+    });
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/government-spending'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    const bills = body.government.representation.billsAffectingDistrict;
+    expect(bills.length).toBeGreaterThan(0);
+    for (const bill of bills) {
+      expect(bill.impactLevel).toBeNull();
+    }
+  });
+
+  it('returns all-null profile (not zeros) for an unrecognized state prefix', async () => {
+    failAllFetches();
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/ZZ-01/government-spending'),
+      makeParams('ZZ-01')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.government.federalInvestment.totalAnnualSpending).toBeNull();
+    expect(body.government.representation.appropriationsSecured).toBeNull();
+  });
+});

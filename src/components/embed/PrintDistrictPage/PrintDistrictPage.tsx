@@ -44,14 +44,15 @@ interface PrintDistrictData {
 
 interface PrintSpendingData {
   federalInvestment: {
-    totalAnnualSpending: number;
-    contractsAndGrants: number;
+    // null = data unavailable from USASpending (never rendered as $0)
+    totalAnnualSpending: number | null;
+    contractsAndGrants: number | null;
     majorProjects: Array<{
       title: string;
       amount: number;
       agency: string;
     }>;
-    infrastructureInvestment: number;
+    infrastructureInvestment: number | null;
   };
   stateContext?: {
     state: string;
@@ -312,7 +313,7 @@ export function PrintDistrictPage({
           </section>
         )}
 
-        {spending?.federalInvestment && spending.federalInvestment.totalAnnualSpending > 0 && (
+        {spending?.federalInvestment && spending.federalInvestment.totalAnnualSpending != null && (
           <section className="civiq-print-section">
             <span className="civiq-print-label">Federal spending</span>
             <div className="civiq-print-rule" />
@@ -322,11 +323,19 @@ export function PrintDistrictPage({
             />
             <PrintRow
               label="Contracts + grants"
-              value={formatNumber(spending.federalInvestment.contractsAndGrants)}
+              value={
+                spending.federalInvestment.contractsAndGrants != null
+                  ? formatNumber(spending.federalInvestment.contractsAndGrants)
+                  : '—'
+              }
             />
             <PrintRow
               label="Infrastructure"
-              value={formatCurrency(spending.federalInvestment.infrastructureInvestment || 0)}
+              value={
+                spending.federalInvestment.infrastructureInvestment != null
+                  ? formatCurrency(spending.federalInvestment.infrastructureInvestment)
+                  : '—'
+              }
             />
             {spending.federalInvestment.majorProjects.slice(0, 5).map((project, i) => (
               <div

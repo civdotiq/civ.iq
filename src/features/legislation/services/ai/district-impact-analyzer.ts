@@ -127,10 +127,10 @@ DISTRICT ECONOMIC PROFILE:
 - Fiber Availability: ${economic.connectivity.fiberAvailability}%
 - Average Download Speed: ${economic.connectivity.averageDownloadSpeed} Mbps
 
-DISTRICT FEDERAL SPENDING:
-- Total Annual Spending: $${government.federalInvestment.totalAnnualSpending.toLocaleString()}
-- Active Contracts/Grants: ${government.federalInvestment.contractsAndGrants}
-- Infrastructure Investment: $${government.federalInvestment.infrastructureInvestment.toLocaleString()}
+DISTRICT FEDERAL SPENDING (statewide totals):
+- Total Annual Spending: ${government.federalInvestment.totalAnnualSpending != null ? `$${government.federalInvestment.totalAnnualSpending.toLocaleString()}` : 'Data unavailable'}
+- Active Contracts/Grants: ${government.federalInvestment.contractsAndGrants ?? 'Data unavailable'}
+- Infrastructure Investment: ${government.federalInvestment.infrastructureInvestment != null ? `$${government.federalInvestment.infrastructureInvestment.toLocaleString()}` : 'Data unavailable'}
 
 Analyze how this bill would impact district ${districtData.districtId}. Respond in JSON:
 {
@@ -221,7 +221,10 @@ ${PLAIN_LANGUAGE_RULES}
       });
     }
 
-    if (government.federalInvestment.totalAnnualSpending > 0) {
+    if (
+      government.federalInvestment.totalAnnualSpending != null &&
+      government.federalInvestment.totalAnnualSpending > 0
+    ) {
       relevantDistrictData.push({
         metric: 'Federal Spending',
         value: `$${government.federalInvestment.totalAnnualSpending.toLocaleString()}`,

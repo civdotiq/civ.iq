@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache';
 import type { EconomicProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -64,13 +65,7 @@ const STATE_FIPS: Record<string, string> = {
   WY: '56',
 };
 
-interface CachedEconomicData {
-  data: EconomicProfile;
-  timestamp: number;
-}
-
-const cache = new Map<string, CachedEconomicData>();
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const CACHE_KEY_PREFIX = 'district-economic-profile';
 
 async function fetchBLSData(stateCode: string): Promise<Partial<EconomicProfile['employment']>> {
   try {
@@ -260,12 +255,12 @@ function getInfrastructureData(): EconomicProfile['infrastructure'] {
 }
 
 async function getEconomicProfile(districtId: string): Promise<EconomicProfile> {
-  const cacheKey = `economic-${districtId}`;
-  const cached = cache.get(cacheKey);
+  const cacheKey = `${CACHE_KEY_PREFIX}:${districtId}`;
+  const cached = await govCache.get<EconomicProfile>(cacheKey);
 
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+  if (cached) {
     logger.info('Returning cached economic data', { districtId });
-    return cached.data;
+    return cached;
   }
 
   try {
@@ -309,10 +304,10 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
       },
     };
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: economicProfile,
-      timestamp: Date.now(),
+    // Cache the result (Redis + memory fallback; shared across instances)
+    await govCache.set(cacheKey, economicProfile, {
+      dataType: 'heavyEndpoints',
+      source: 'district-economic-profile',
     });
 
     logger.info('Economic profile compiled successfully', {

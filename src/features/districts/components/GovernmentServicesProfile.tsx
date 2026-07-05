@@ -39,9 +39,6 @@ function formatCurrency(amount: number): string {
 }
 
 function formatLargeNumber(num: number): string {
-  if (num === 0) {
-    return 'N/A';
-  }
   if (num >= 1000000000) {
     return `$${(num / 1000000000).toFixed(1)}B`;
   }
@@ -55,9 +52,6 @@ function formatLargeNumber(num: number): string {
 }
 
 function formatNumber(num: number): string {
-  if (num === 0) {
-    return 'Data unavailable';
-  }
   return new Intl.NumberFormat('en-US').format(num);
 }
 
@@ -151,62 +145,73 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
     <div className="bg-white border-2 border-black p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Federal Investment & Services</h3>
 
-      {/* Federal Investment */}
-      <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <DollarSign className="w-5 h-5 mr-2 text-civiq-green" />
-          Federal Investment
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-civiq-green/10 p-6">
-            <div className="text-2xl font-bold text-civiq-green">
-              {formatLargeNumber(government.federalInvestment.totalAnnualSpending)}
-            </div>
-            <p className="text-sm text-civiq-green mt-1">Total Annual Spending</p>
-            <p className="text-xs text-civiq-green mt-1">Federal dollars to district</p>
+      {/* Federal Investment - statewide USASpending totals; hide cards without real data */}
+      {(government.federalInvestment.totalAnnualSpending != null ||
+        government.federalInvestment.contractsAndGrants != null ||
+        government.federalInvestment.infrastructureInvestment != null ||
+        government.federalInvestment.majorProjects.length > 0) && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <DollarSign className="w-5 h-5 mr-2 text-civiq-green" />
+            Federal Investment
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {government.federalInvestment.totalAnnualSpending != null && (
+              <div className="bg-civiq-green/10 p-6">
+                <div className="text-2xl font-bold text-civiq-green">
+                  {formatLargeNumber(government.federalInvestment.totalAnnualSpending)}
+                </div>
+                <p className="text-sm text-civiq-green mt-1">Total Annual Spending</p>
+                <p className="text-xs text-civiq-green mt-1">Statewide federal dollars</p>
+              </div>
+            )}
+
+            {government.federalInvestment.contractsAndGrants != null && (
+              <div className="bg-civiq-blue/10 p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatNumber(government.federalInvestment.contractsAndGrants)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Contracts & Grants</p>
+                <p className="text-xs text-civiq-blue mt-1">Active federal awards, statewide</p>
+              </div>
+            )}
+
+            {government.federalInvestment.infrastructureInvestment != null && (
+              <div className="bg-civiq-blue/10 p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatLargeNumber(government.federalInvestment.infrastructureInvestment)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Infrastructure Investment</p>
+                <p className="text-xs text-civiq-blue mt-1">Roads, bridges, utilities</p>
+              </div>
+            )}
           </div>
 
-          <div className="bg-civiq-blue/10 p-6">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {formatNumber(government.federalInvestment.contractsAndGrants)}
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">Contracts & Grants</p>
-            <p className="text-xs text-civiq-blue mt-1">Active federal awards</p>
-          </div>
-
-          <div className="bg-civiq-blue/10 p-6">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {formatLargeNumber(government.federalInvestment.infrastructureInvestment)}
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">Infrastructure Investment</p>
-            <p className="text-xs text-civiq-blue mt-1">Roads, bridges, utilities</p>
-          </div>
-        </div>
-
-        {government.federalInvestment.majorProjects.length > 0 && (
-          <div className="mt-6">
-            <h5 className="text-sm font-medium text-gray-700 mb-3">Major Federal Projects:</h5>
-            <div className="space-y-3">
-              {government.federalInvestment.majorProjects.slice(0, 3).map((project, index) => (
-                <div key={index} className="bg-white p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h6 className="font-medium text-gray-900">{project.title}</h6>
-                      <p className="text-sm text-gray-600 mt-1">{project.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">{project.agency}</p>
-                    </div>
-                    <div className="text-right ml-4">
-                      <span className="text-lg font-bold text-gray-900">
-                        {formatLargeNumber(project.amount)}
-                      </span>
+          {government.federalInvestment.majorProjects.length > 0 && (
+            <div className="mt-6">
+              <h5 className="text-sm font-medium text-gray-700 mb-3">Major Federal Projects:</h5>
+              <div className="space-y-3">
+                {government.federalInvestment.majorProjects.slice(0, 3).map((project, index) => (
+                  <div key={index} className="bg-white p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h6 className="font-medium text-gray-900">{project.title}</h6>
+                        <p className="text-sm text-gray-600 mt-1">{project.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">{project.agency}</p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <span className="text-lg font-bold text-gray-900">
+                          {formatLargeNumber(project.amount)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Social Services - Only show if any social services data exists */}
       {((government.socialServices.snapBeneficiaries ?? 0) > 0 ||
@@ -335,13 +340,15 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             <p className="text-xs text-violet-600 mt-1">Affecting this district</p>
           </div>
 
-          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
-            <div className="text-2xl font-bold text-cyan-900">
-              {formatLargeNumber(government.representation.appropriationsSecured)}
+          {government.representation.appropriationsSecured != null && (
+            <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
+              <div className="text-2xl font-bold text-cyan-900">
+                {formatLargeNumber(government.representation.appropriationsSecured)}
+              </div>
+              <p className="text-sm text-cyan-700 mt-1">Appropriations Secured</p>
+              <p className="text-xs text-cyan-600 mt-1">By representatives</p>
             </div>
-            <p className="text-sm text-cyan-700 mt-1">Appropriations Secured</p>
-            <p className="text-xs text-cyan-600 mt-1">By representatives</p>
-          </div>
+          )}
         </div>
 
         {government.representation.billsAffectingDistrict.length > 0 && (
@@ -359,17 +366,19 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                         <span className="text-xs text-gray-600">{bill.status}</span>
                       </div>
                     </div>
-                    <span
-                      className={`px-2 py-1 text-xs ${
-                        bill.impactLevel === 'High'
-                          ? 'bg-civiq-red/10 text-civiq-red'
-                          : bill.impactLevel === 'Medium'
-                            ? 'bg-gray-100 text-gray-600'
-                            : 'bg-civiq-green/10 text-civiq-green'
-                      }`}
-                    >
-                      {bill.impactLevel}
-                    </span>
+                    {bill.impactLevel != null && (
+                      <span
+                        className={`px-2 py-1 text-xs ${
+                          bill.impactLevel === 'High'
+                            ? 'bg-civiq-red/10 text-civiq-red'
+                            : bill.impactLevel === 'Medium'
+                              ? 'bg-gray-100 text-gray-600'
+                              : 'bg-civiq-green/10 text-civiq-green'
+                        }`}
+                      >
+                        {bill.impactLevel}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

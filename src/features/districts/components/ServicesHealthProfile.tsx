@@ -127,86 +127,133 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
 
   const { services } = data;
 
+  const hasEducationData =
+    services.education.graduationRate != null ||
+    services.education.schoolDistrictPerformance != null ||
+    services.education.collegeEnrollmentRate != null ||
+    services.education.federalEducationFunding != null ||
+    services.education.teacherToStudentRatio != null;
+
+  const hasPublicHealthData =
+    services.publicHealth.preventableDiseaseRate != null ||
+    services.publicHealth.mentalHealthProviderRatio != null ||
+    services.publicHealth.substanceAbusePrograms != null ||
+    services.publicHealth.preventiveCareCoverage != null;
+
+  const hasHealthcareData =
+    services.healthcare.hospitalQualityRating != null ||
+    services.healthcare.primaryCarePhysiciansPerCapita != null ||
+    services.healthcare.healthOutcomeIndex != null ||
+    services.healthcare.medicareProviderCount != null ||
+    services.healthcare.healthcareCostIndex != null;
+
+  // Designed empty state: explain why, never render blank zeros
+  if (!hasEducationData && !hasPublicHealthData && !hasHealthcareData) {
+    return (
+      <div className="bg-white border-aicher border-black p-grid-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Education & Healthcare Access</h3>
+        <div className="bg-white border border-gray-300 p-grid-3 text-center">
+          <p className="text-gray-600">
+            No education or healthcare data is available for this district.
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            The federal sources for these metrics (Department of Education, CDC, Census school
+            finance survey) are not currently providing usable data. CIV.IQ shows real government
+            data only — never estimates.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border-aicher border-black p-grid-4">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Education & Healthcare Access</h3>
 
-      {/* Education Metrics */}
-      <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <StatisticsIcon className="w-5 h-5 mr-2 text-civiq-blue" />
-          Education Performance
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {formatPercentage(services.education.graduationRate)}
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">Graduation Rate</p>
-            <p className="text-xs text-civiq-blue mt-1">
-              {services.education.graduationRate >= 85
-                ? 'Excellent'
-                : services.education.graduationRate >= 75
-                  ? 'Good'
-                  : 'Needs Improvement'}
-            </p>
-          </div>
+      {/* Education Metrics - Only show cards with real data */}
+      {hasEducationData && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <StatisticsIcon className="w-5 h-5 mr-2 text-civiq-blue" />
+            Education Performance
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.education.graduationRate != null && (
+              <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatPercentage(services.education.graduationRate)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Graduation Rate</p>
+                <p className="text-xs text-civiq-blue mt-1">
+                  {services.education.graduationRate >= 85
+                    ? 'Excellent'
+                    : services.education.graduationRate >= 75
+                      ? 'Good'
+                      : 'Needs Improvement'}
+                </p>
+              </div>
+            )}
 
-          <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {services.education.schoolDistrictPerformance}/100
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">District Performance</p>
-            <p className="text-xs text-civiq-blue mt-1">Overall school quality</p>
-          </div>
+            {services.education.schoolDistrictPerformance != null && (
+              <div className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {services.education.schoolDistrictPerformance}/100
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">District Performance</p>
+                <p className="text-xs text-civiq-blue mt-1">Overall school quality</p>
+              </div>
+            )}
 
-          <div className="bg-indigo-50 border-aicher border-indigo-600 p-grid-3">
-            <div className="text-2xl font-bold text-indigo-900">
-              {formatPercentage(services.education.collegeEnrollmentRate)}
-            </div>
-            <p className="text-sm text-indigo-700 mt-1">College Enrollment</p>
-            <p className="text-xs text-indigo-600 mt-1">Post-secondary education</p>
+            {services.education.collegeEnrollmentRate != null && (
+              <div className="bg-indigo-50 border-aicher border-indigo-600 p-grid-3">
+                <div className="text-2xl font-bold text-indigo-900">
+                  {formatPercentage(services.education.collegeEnrollmentRate)}
+                </div>
+                <p className="text-sm text-indigo-700 mt-1">College Enrollment</p>
+                <p className="text-xs text-indigo-600 mt-1">Post-secondary education</p>
+              </div>
+            )}
+
+            {services.education.federalEducationFunding != null && (
+              <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
+                <div className="text-2xl font-bold text-emerald-900">
+                  {formatLargeNumber(services.education.federalEducationFunding)}
+                </div>
+                <p className="text-sm text-emerald-700 mt-1">Federal Education Funding</p>
+                <p className="text-xs text-emerald-600 mt-1">
+                  Statewide federal revenue to school systems
+                </p>
+              </div>
+            )}
+
+            {services.education.teacherToStudentRatio != null && (
+              <div className="bg-cyan-50 border-aicher border-cyan-600 p-grid-3">
+                <div className="text-2xl font-bold text-cyan-900">
+                  {services.education.teacherToStudentRatio.toFixed(1)}:1
+                </div>
+                <p className="text-sm text-cyan-700 mt-1">Teacher-Student Ratio</p>
+                <p className="text-xs text-cyan-600 mt-1">
+                  {services.education.teacherToStudentRatio <= 15
+                    ? 'Excellent'
+                    : services.education.teacherToStudentRatio <= 20
+                      ? 'Good'
+                      : 'High'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
-
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
-            <div className="text-2xl font-bold text-emerald-900">
-              {formatLargeNumber(services.education.federalEducationFunding)}
-            </div>
-            <p className="text-sm text-emerald-700 mt-1">Federal Education Funding</p>
-            <p className="text-xs text-emerald-600 mt-1">Annual investment</p>
-          </div>
-
-          <div className="bg-cyan-50 border-aicher border-cyan-600 p-grid-3">
-            <div className="text-2xl font-bold text-cyan-900">
-              {services.education.teacherToStudentRatio.toFixed(1)}:1
-            </div>
-            <p className="text-sm text-cyan-700 mt-1">Teacher-Student Ratio</p>
-            <p className="text-xs text-cyan-600 mt-1">
-              {services.education.teacherToStudentRatio <= 15
-                ? 'Excellent'
-                : services.education.teacherToStudentRatio <= 20
-                  ? 'Good'
-                  : 'High'}
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Healthcare Access - Only show if any healthcare data exists */}
-      {(services.healthcare.hospitalQualityRating > 0 ||
-        services.healthcare.primaryCarePhysiciansPerCapita > 0 ||
-        services.healthcare.healthOutcomeIndex > 0 ||
-        services.healthcare.medicareProviderCount > 0 ||
-        services.healthcare.healthcareCostIndex > 0) && (
+      {hasHealthcareData && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
             <CheckIcon className="w-5 h-5 mr-2 text-civiq-red" />
             Healthcare Access
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.healthcare.hospitalQualityRating > 0 && (
+            {services.healthcare.hospitalQualityRating != null && (
               <div className="bg-civiq-red/10 border-aicher border-civiq-red p-grid-3">
                 <div className="text-2xl font-bold text-civiq-red">
                   {getStarRating(services.healthcare.hospitalQualityRating)}
@@ -218,7 +265,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
               </div>
             )}
 
-            {services.healthcare.primaryCarePhysiciansPerCapita > 0 && (
+            {services.healthcare.primaryCarePhysiciansPerCapita != null && (
               <div className="bg-pink-50 border-aicher border-pink-600 p-grid-3">
                 <div className="text-2xl font-bold text-pink-900">
                   {services.healthcare.primaryCarePhysiciansPerCapita}
@@ -228,7 +275,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
               </div>
             )}
 
-            {services.healthcare.healthOutcomeIndex > 0 && (
+            {services.healthcare.healthOutcomeIndex != null && (
               <div className="bg-rose-50 border-aicher border-rose-600 p-grid-3">
                 <div className="text-2xl font-bold text-rose-900">
                   {services.healthcare.healthOutcomeIndex}/100
@@ -245,10 +292,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             )}
           </div>
 
-          {(services.healthcare.medicareProviderCount > 0 ||
-            services.healthcare.healthcareCostIndex > 0) && (
+          {(services.healthcare.medicareProviderCount != null ||
+            services.healthcare.healthcareCostIndex != null) && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {services.healthcare.medicareProviderCount > 0 && (
+              {services.healthcare.medicareProviderCount != null && (
                 <div className="bg-civiq-red/10 border-aicher border-civiq-red p-grid-3">
                   <div className="text-2xl font-bold text-civiq-red">
                     {services.healthcare.medicareProviderCount}
@@ -258,7 +305,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
                 </div>
               )}
 
-              {services.healthcare.healthcareCostIndex > 0 && (
+              {services.healthcare.healthcareCostIndex != null && (
                 <div className="bg-amber-50 border-aicher border-amber-600 p-grid-3">
                   <div className="text-2xl font-bold text-amber-900">
                     {(services.healthcare.healthcareCostIndex * 100).toFixed(0)}%
@@ -278,46 +325,56 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         </div>
       )}
 
-      {/* Public Health */}
-      <div className="mb-6">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <CheckIcon className="w-5 h-5 mr-2 text-civiq-green" />
-          Public Health & Prevention
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-civiq-green/10 border-aicher border-civiq-green p-grid-3">
-            <div className="text-2xl font-bold text-civiq-green">
-              {services.publicHealth.preventableDiseaseRate.toFixed(0)}
-            </div>
-            <p className="text-sm text-civiq-green mt-1">Preventable Disease Rate</p>
-            <p className="text-xs text-civiq-green mt-1">Per 100,000 population</p>
-          </div>
+      {/* Public Health - Only show cards with real data */}
+      {hasPublicHealthData && (
+        <div className="mb-6">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <CheckIcon className="w-5 h-5 mr-2 text-civiq-green" />
+            Public Health & Prevention
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.publicHealth.preventableDiseaseRate != null && (
+              <div className="bg-civiq-green/10 border-aicher border-civiq-green p-grid-3">
+                <div className="text-2xl font-bold text-civiq-green">
+                  {services.publicHealth.preventableDiseaseRate.toFixed(0)}
+                </div>
+                <p className="text-sm text-civiq-green mt-1">Preventable Disease Rate</p>
+                <p className="text-xs text-civiq-green mt-1">Per 100,000 population</p>
+              </div>
+            )}
 
-          <div className="bg-teal-50 border-aicher border-teal-600 p-grid-3">
-            <div className="text-2xl font-bold text-teal-900">
-              {services.publicHealth.mentalHealthProviderRatio.toFixed(1)}
-            </div>
-            <p className="text-sm text-teal-700 mt-1">Mental Health Provider Ratio</p>
-            <p className="text-xs text-teal-600 mt-1">Per 1,000 residents</p>
-          </div>
+            {services.publicHealth.mentalHealthProviderRatio != null && (
+              <div className="bg-teal-50 border-aicher border-teal-600 p-grid-3">
+                <div className="text-2xl font-bold text-teal-900">
+                  {services.publicHealth.mentalHealthProviderRatio.toFixed(1)}
+                </div>
+                <p className="text-sm text-teal-700 mt-1">Mental Health Provider Ratio</p>
+                <p className="text-xs text-teal-600 mt-1">Per 1,000 residents</p>
+              </div>
+            )}
 
-          <div className="bg-lime-50 border-aicher border-lime-600 p-grid-3">
-            <div className="text-2xl font-bold text-lime-900">
-              {services.publicHealth.substanceAbusePrograms}
-            </div>
-            <p className="text-sm text-lime-700 mt-1">Substance Abuse Programs</p>
-            <p className="text-xs text-lime-600 mt-1">Available programs</p>
-          </div>
+            {services.publicHealth.substanceAbusePrograms != null && (
+              <div className="bg-lime-50 border-aicher border-lime-600 p-grid-3">
+                <div className="text-2xl font-bold text-lime-900">
+                  {services.publicHealth.substanceAbusePrograms}
+                </div>
+                <p className="text-sm text-lime-700 mt-1">Substance Abuse Programs</p>
+                <p className="text-xs text-lime-600 mt-1">Available programs</p>
+              </div>
+            )}
 
-          <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
-            <div className="text-2xl font-bold text-emerald-900">
-              {formatPercentage(services.publicHealth.preventiveCareCoverage)}
-            </div>
-            <p className="text-sm text-emerald-700 mt-1">Preventive Care Coverage</p>
-            <p className="text-xs text-emerald-600 mt-1">Population with access</p>
+            {services.publicHealth.preventiveCareCoverage != null && (
+              <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
+                <div className="text-2xl font-bold text-emerald-900">
+                  {formatPercentage(services.publicHealth.preventiveCareCoverage)}
+                </div>
+                <p className="text-sm text-emerald-700 mt-1">Preventive Care Coverage</p>
+                <p className="text-xs text-emerald-600 mt-1">Population with access</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Data Sources */}
       <div className="border-t pt-4">

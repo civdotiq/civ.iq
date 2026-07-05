@@ -270,13 +270,13 @@ async function fetchGovernmentSpending(districtId: string): Promise<GovernmentSe
     });
   }
 
-  // Return zero values on failure
+  // All metrics honestly unavailable on failure (null, never 0)
   return {
     federalInvestment: {
-      totalAnnualSpending: 0,
-      contractsAndGrants: 0,
+      totalAnnualSpending: null,
+      contractsAndGrants: null,
       majorProjects: [],
-      infrastructureInvestment: 0,
+      infrastructureInvestment: null,
     },
     socialServices: {
       // null = data unavailable (no real API source), not a genuine zero count
@@ -288,7 +288,7 @@ async function fetchGovernmentSpending(districtId: string): Promise<GovernmentSe
     representation: {
       billsAffectingDistrict: [],
       federalFacilities: [],
-      appropriationsSecured: 0,
+      appropriationsSecured: null,
     },
     stateContext: {
       state: districtId.split('-')[0]?.toUpperCase() ?? '',

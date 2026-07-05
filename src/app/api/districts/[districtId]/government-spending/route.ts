@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
 import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
@@ -67,13 +68,7 @@ const STATE_FIPS: Record<string, string> = {
   WY: '56',
 };
 
-interface CachedSpendingData {
-  data: GovernmentServicesProfile;
-  timestamp: number;
-}
-
-const cache = new Map<string, CachedSpendingData>();
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const CACHE_KEY_PREFIX = 'district-government-spending';
 
 async function fetchUSASpendingData(
   stateCode: string
@@ -185,13 +180,14 @@ async function fetchCongressionalBillsData(
           billNumber: String(billData.number || 'Unknown'),
           title: String(billData.title || 'Federal Legislation'),
           status: String(billData.latestAction || 'In Progress'),
-          impactLevel: 'Medium' as const,
+          // No real impact classification exists — never fabricate one
+          impactLevel: null,
         };
       });
 
       return {
         billsAffectingDistrict,
-        appropriationsSecured: 0, // Requires CBO appropriations data
+        appropriationsSecured: null, // Requires CBO appropriations data
       };
     }
 
@@ -247,12 +243,12 @@ async function fetchStateContext(
 async function getGovernmentServicesProfile(
   districtId: string
 ): Promise<GovernmentServicesProfile> {
-  const cacheKey = `spending-${districtId}`;
-  const cached = cache.get(cacheKey);
+  const cacheKey = `${CACHE_KEY_PREFIX}:${districtId}`;
+  const cached = await govCache.get<GovernmentServicesProfile>(cacheKey);
 
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+  if (cached) {
     logger.info('Returning cached government services data', { districtId });
-    return cached.data;
+    return cached;
   }
 
   try {
@@ -278,24 +274,24 @@ async function getGovernmentServicesProfile(
     // Combine all data sources — use null/[] when APIs fail (no fake data)
     const servicesProfile: GovernmentServicesProfile = {
       federalInvestment: {
-        totalAnnualSpending: spendingData.totalAnnualSpending || 0,
-        contractsAndGrants: spendingData.contractsAndGrants || 0,
+        totalAnnualSpending: spendingData.totalAnnualSpending ?? null,
+        contractsAndGrants: spendingData.contractsAndGrants ?? null,
         majorProjects: spendingData.majorProjects || [],
-        infrastructureInvestment: spendingData.infrastructureInvestment || 0,
+        infrastructureInvestment: spendingData.infrastructureInvestment ?? null,
       },
       socialServices: socialServicesData,
       representation: {
         billsAffectingDistrict: billsData.billsAffectingDistrict || [],
         federalFacilities: federalFacilitiesData,
-        appropriationsSecured: billsData.appropriationsSecured || 0,
+        appropriationsSecured: billsData.appropriationsSecured ?? null,
       },
       stateContext,
     };
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: servicesProfile,
-      timestamp: Date.now(),
+    // Cache the result (Redis + memory fallback; shared across instances)
+    await govCache.set(cacheKey, servicesProfile, {
+      dataType: 'heavyEndpoints',
+      source: 'district-government-spending',
     });
 
     logger.info('Government services profile compiled successfully', {
@@ -309,13 +305,13 @@ async function getGovernmentServicesProfile(
   } catch (error) {
     logger.error('Error compiling government services profile', error as Error, { districtId });
 
-    // Return fallback data if everything fails
+    // Everything failed: all metrics honestly unavailable (never cached)
     return {
       federalInvestment: {
-        totalAnnualSpending: 0,
-        contractsAndGrants: 0,
+        totalAnnualSpending: null,
+        contractsAndGrants: null,
         majorProjects: [],
-        infrastructureInvestment: 0,
+        infrastructureInvestment: null,
       },
       socialServices: {
         snapBeneficiaries: null,
@@ -326,7 +322,7 @@ async function getGovernmentServicesProfile(
       representation: {
         billsAffectingDistrict: [],
         federalFacilities: [],
-        appropriationsSecured: 0,
+        appropriationsSecured: null,
       },
       stateContext: {
         state: districtId.split('-')[0]?.toUpperCase() ?? '',
@@ -366,12 +362,12 @@ export async function GET(
             veteranPopulation: 'VA NCVAS/VetPop - datahub.va.gov (statewide veteran population)',
           },
           notes: [
-            'Federal spending data from USASpending.gov API',
-            'Congressional bills from enhanced Congress.gov access',
+            'null values mean data is unavailable from real government sources - never estimated',
+            'Federal spending figures from USASpending.gov are STATEWIDE totals, not district-specific',
+            'Congressional bills from enhanced Congress.gov access; no impact classification is available (impactLevel is null)',
             'District-level social services data unavailable - real government APIs needed',
             'Federal facilities data unavailable - real government APIs needed',
             'stateContext figures are STATEWIDE, not district-specific (Medicaid/CHIP and veteran population are published only at the state level)',
-            'Data cached for 30 minutes for performance',
           ],
         },
       },

@@ -27,41 +27,44 @@ export interface EconomicProfile {
 }
 
 // Education & Healthcare Access Data Types
+// All metrics are number | null: null = data unavailable (no real API source
+// or upstream failure); 0 is reserved for a genuine measured zero.
 export interface ServicesHealthProfile {
   education: {
-    schoolDistrictPerformance: number; // 0-100 scale
-    graduationRate: number; // Percentage
-    collegeEnrollmentRate: number; // Percentage
-    federalEducationFunding: number; // Annual funding
-    teacherToStudentRatio: number;
+    schoolDistrictPerformance: number | null; // 0-100 scale
+    graduationRate: number | null; // Percentage
+    collegeEnrollmentRate: number | null; // Percentage
+    federalEducationFunding: number | null; // Annual federal revenue to state school systems (statewide, Census ASFIN)
+    teacherToStudentRatio: number | null; // Students per teacher
   };
   healthcare: {
-    hospitalQualityRating: number; // 0-5 star rating
-    primaryCarePhysiciansPerCapita: number;
-    healthOutcomeIndex: number; // 0-100 scale
-    medicareProviderCount: number;
-    healthcareCostIndex: number; // Relative to national average
+    hospitalQualityRating: number | null; // 0-5 star rating
+    primaryCarePhysiciansPerCapita: number | null;
+    healthOutcomeIndex: number | null; // 0-100 scale
+    medicareProviderCount: number | null;
+    healthcareCostIndex: number | null; // Relative to national average
   };
   publicHealth: {
-    preventableDiseaseRate: number; // Per 100,000 population
-    mentalHealthProviderRatio: number;
-    substanceAbusePrograms: number;
-    preventiveCareCoverage: number; // Percentage
+    preventableDiseaseRate: number | null; // Per 100,000 population
+    mentalHealthProviderRatio: number | null;
+    substanceAbusePrograms: number | null;
+    preventiveCareCoverage: number | null; // Percentage
   };
 }
 
 // Government Investment & Services Data Types
 export interface GovernmentServicesProfile {
   federalInvestment: {
-    totalAnnualSpending: number; // Federal dollars to district
-    contractsAndGrants: number; // Number of active contracts/grants
+    // null = data unavailable (USASpending fetch failed or returned nothing)
+    totalAnnualSpending: number | null; // Federal dollars (statewide total)
+    contractsAndGrants: number | null; // Number of active contracts/grants
     majorProjects: Array<{
       title: string;
       amount: number;
       agency: string;
       description: string;
     }>;
-    infrastructureInvestment: number;
+    infrastructureInvestment: number | null;
   };
   socialServices: {
     // null = data unavailable (no real API source); 0 is reserved for a genuine zero count
@@ -75,7 +78,8 @@ export interface GovernmentServicesProfile {
       billNumber: string;
       title: string;
       status: string;
-      impactLevel: 'High' | 'Medium' | 'Low';
+      // null = no real impact classification available (never fabricate one)
+      impactLevel: 'High' | 'Medium' | 'Low' | null;
     }>;
     federalFacilities: Array<{
       name: string;
@@ -83,7 +87,7 @@ export interface GovernmentServicesProfile {
       employees: number;
       economicImpact: number;
     }>;
-    appropriationsSecured: number; // Annual amount
+    appropriationsSecured: number | null; // Annual amount; null = no data source
   };
   // Statewide figures (NOT district-specific). Federal data for these
   // metrics is only published at the state level; surfaced separately so it

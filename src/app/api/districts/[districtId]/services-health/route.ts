@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -64,13 +65,7 @@ const STATE_FIPS: Record<string, string> = {
   WY: '56',
 };
 
-interface CachedServicesData {
-  data: ServicesHealthProfile;
-  timestamp: number;
-}
-
-const cache = new Map<string, CachedServicesData>();
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const CACHE_KEY_PREFIX = 'district-services-health';
 
 async function fetchEducationData(
   stateCode: string
@@ -100,7 +95,6 @@ async function fetchEducationData(
     if (data.result && data.result.length > 0) {
       // Calculate averages from district data
       let totalGradRate = 0;
-      let totalEnrollment = 0;
       let totalStudents = 0;
       let totalTeachers = 0;
       let validDistricts = 0;
@@ -109,7 +103,6 @@ async function fetchEducationData(
         const districtData = district as Record<string, unknown>;
         if (districtData.graduation_rate && districtData.enrollment) {
           totalGradRate += parseFloat(String(districtData.graduation_rate)) || 0;
-          totalEnrollment += parseInt(String(districtData.enrollment)) || 0;
           totalStudents += parseInt(String(districtData.total_students)) || 0;
           totalTeachers += parseInt(String(districtData.total_teachers)) || 0;
           validDistricts++;
@@ -117,13 +110,12 @@ async function fetchEducationData(
       });
 
       if (validDistricts > 0) {
+        // Only emit metrics this API genuinely provides. collegeEnrollmentRate
+        // (previously derived as enrollment/students capped at 95) and
+        // schoolDistrictPerformance have no real source here — stay null.
         return {
           graduationRate: totalGradRate / validDistricts,
-          collegeEnrollmentRate:
-            totalStudents > 0 ? Math.min(95, (totalEnrollment / totalStudents) * 100) : 0,
-          federalEducationFunding: 0, // Per-pupil funding data requires ED budget API
-          teacherToStudentRatio: totalTeachers > 0 ? totalStudents / totalTeachers : 0,
-          schoolDistrictPerformance: 0, // Composite score requires real performance framework
+          teacherToStudentRatio: totalTeachers > 0 ? totalStudents / totalTeachers : null,
         };
       }
     }
@@ -136,91 +128,39 @@ async function fetchEducationData(
   }
 }
 
-async function fetchCDCHealthData(
-  stateCode: string
-): Promise<Partial<ServicesHealthProfile['publicHealth']>> {
-  try {
-    // CDC PLACES API for state-level health data
-    const cdcApiUrl = `https://data.cdc.gov/resource/cwsq-ngmh.json?stateabbr=${stateCode}&$limit=100`;
-
-    logger.info('Fetching CDC health data', {
-      stateCode,
-      url: cdcApiUrl,
-    });
-
-    const response = await fetch(cdcApiUrl, {
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`CDC API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data && data.length > 0) {
-      // Extract relevant health metrics
-      let preventableDisease = 0;
-      let mentalHealthAccess = 0;
-      let preventiveCare = 0;
-      let validRecords = 0;
-
-      data.forEach((record: unknown) => {
-        const recordData = record as Record<string, unknown>;
-        if (recordData.data_value && recordData.measure) {
-          const value = parseFloat(String(recordData.data_value)) || 0;
-          const measure = String(recordData.measure);
-
-          // Map CDC measures to our metrics
-          if (measure.includes('Diabetes') || measure.includes('Heart Disease')) {
-            preventableDisease += value;
-            validRecords++;
-          } else if (measure.includes('Mental Health')) {
-            mentalHealthAccess += value;
-            validRecords++;
-          } else if (measure.includes('Preventive') || measure.includes('Screening')) {
-            preventiveCare += value;
-            validRecords++;
-          }
-        }
-      });
-
-      if (validRecords > 0) {
-        return {
-          preventableDiseaseRate: preventableDisease / validRecords,
-          mentalHealthProviderRatio: Math.max(1, mentalHealthAccess / 100),
-          preventiveCareCoverage: Math.min(100, preventiveCare / validRecords),
-          substanceAbusePrograms: 0, // Requires SAMHSA treatment locator API
-        };
-      }
-    }
-
-    logger.warn('CDC API returned no usable data', { stateCode });
-    return {};
-  } catch (error) {
-    logger.error('Error fetching CDC data', error as Error, { stateCode });
-    return {};
-  }
-}
-
-function getHealthcareData(): ServicesHealthProfile['healthcare'] {
-  // Return zeros for all healthcare metrics as no real API is available
-  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
+function getPublicHealthData(): ServicesHealthProfile['publicHealth'] {
+  // Public health metrics are unavailable until a correct CDC PLACES measure
+  // mapping exists. The previous integration misrepresented PLACES data:
+  // prevalence percentages were summed with a divisor shared across
+  // categories, presented as "per 100,000" rates, and a prevalence measure
+  // was passed off as a provider ratio. Following CLAUDE.md "NO mock data
+  // ever": emit null (= unavailable), never a miscomputed number.
   return {
-    hospitalQualityRating: 0,
-    primaryCarePhysiciansPerCapita: 0,
-    healthOutcomeIndex: 0,
-    medicareProviderCount: 0,
-    healthcareCostIndex: 0,
+    preventableDiseaseRate: null,
+    mentalHealthProviderRatio: null,
+    substanceAbusePrograms: null, // Requires SAMHSA treatment locator API
+    preventiveCareCoverage: null,
   };
 }
 
-async function fetchCensusEducationFunding(
-  stateCode: string
-): Promise<{ perPupilExpenditure: number; totalFederalRevenue: number; enrollment: number }> {
+function getHealthcareData(): ServicesHealthProfile['healthcare'] {
+  // No real API source for these healthcare metrics.
+  // Following CLAUDE.md "NO mock data ever": emit null (= unavailable), not 0
+  // (which a consumer would read as a genuine measurement).
+  return {
+    hospitalQualityRating: null,
+    primaryCarePhysiciansPerCapita: null,
+    healthOutcomeIndex: null,
+    medicareProviderCount: null,
+    healthcareCostIndex: null,
+  };
+}
+
+async function fetchCensusEducationFunding(stateCode: string): Promise<{
+  perPupilExpenditure: number | null;
+  totalFederalRevenue: number | null;
+  enrollment: number | null;
+}> {
   try {
     const stateFips = STATE_FIPS[stateCode];
     if (!stateFips) {
@@ -245,9 +185,14 @@ async function fetchCensusEducationFunding(
 
     if (data && data.length > 1) {
       const [, values] = data;
-      const perPupilExpenditure = parseInt(values[0]) || 0;
-      const totalFederalRevenue = parseInt(values[1]) || 0;
-      const enrollment = parseInt(values[2]) || 0;
+      // NaN/unparseable → null (unavailable), never 0
+      const parseValue = (raw: unknown): number | null => {
+        const parsed = parseInt(String(raw));
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      const perPupilExpenditure = parseValue(values[0]);
+      const totalFederalRevenue = parseValue(values[1]);
+      const enrollment = parseValue(values[2]);
 
       logger.info('Census ASFIN data received', {
         stateCode,
@@ -260,32 +205,34 @@ async function fetchCensusEducationFunding(
     }
 
     logger.warn('Census ASFIN API returned no data', { stateCode });
-    return { perPupilExpenditure: 0, totalFederalRevenue: 0, enrollment: 0 };
+    return { perPupilExpenditure: null, totalFederalRevenue: null, enrollment: null };
   } catch (error) {
     logger.error('Error fetching Census ASFIN data', error as Error, { stateCode });
-    return { perPupilExpenditure: 0, totalFederalRevenue: 0, enrollment: 0 };
+    return { perPupilExpenditure: null, totalFederalRevenue: null, enrollment: null };
   }
 }
 
-function getEducationEstimatesData(): Partial<ServicesHealthProfile['education']> {
-  // Return zeros for education estimates as no reliable fallback API is available
-  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
+function getUnavailableProfile(): ServicesHealthProfile {
   return {
-    schoolDistrictPerformance: 0,
-    graduationRate: 0,
-    collegeEnrollmentRate: 0,
-    federalEducationFunding: 0,
-    teacherToStudentRatio: 0,
+    education: {
+      schoolDistrictPerformance: null,
+      graduationRate: null,
+      collegeEnrollmentRate: null,
+      federalEducationFunding: null,
+      teacherToStudentRatio: null,
+    },
+    healthcare: getHealthcareData(),
+    publicHealth: getPublicHealthData(),
   };
 }
 
 async function getServicesHealthProfile(districtId: string): Promise<ServicesHealthProfile> {
-  const cacheKey = `services-${districtId}`;
-  const cached = cache.get(cacheKey);
+  const cacheKey = `${CACHE_KEY_PREFIX}:${districtId}`;
+  const cached = await govCache.get<ServicesHealthProfile>(cacheKey);
 
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+  if (cached) {
     logger.info('Returning cached services health data', { districtId });
-    return cached.data;
+    return cached;
   }
 
   try {
@@ -297,84 +244,45 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
 
     logger.info('Fetching services health profile for district', { districtId, stateCode });
 
-    // Fetch data from multiple sources in parallel
-    const [educationApiData, cdcData, censusEducation] = await Promise.all([
+    // Fetch data from real sources in parallel
+    const [educationApiData, censusEducation] = await Promise.all([
       fetchEducationData(stateCode),
-      fetchCDCHealthData(stateCode),
       fetchCensusEducationFunding(stateCode),
     ]);
 
-    // Get fallback data (returns zeros as no real APIs available)
-    const educationEstimates = getEducationEstimatesData();
-    const healthcareEstimates = getHealthcareData();
-
-    // Combine all data sources — use 0 when APIs fail (no fake data)
+    // Combine data sources — null when unavailable, never 0 (no fake data)
     const servicesProfile: ServicesHealthProfile = {
       education: {
-        schoolDistrictPerformance:
-          educationApiData.schoolDistrictPerformance ||
-          educationEstimates.schoolDistrictPerformance ||
-          0,
-        graduationRate: educationApiData.graduationRate || educationEstimates.graduationRate || 0,
-        collegeEnrollmentRate:
-          educationApiData.collegeEnrollmentRate || educationEstimates.collegeEnrollmentRate || 0,
-        federalEducationFunding:
-          censusEducation.perPupilExpenditure ||
-          educationApiData.federalEducationFunding ||
-          educationEstimates.federalEducationFunding ||
-          0,
-        teacherToStudentRatio:
-          educationApiData.teacherToStudentRatio || educationEstimates.teacherToStudentRatio || 0,
+        schoolDistrictPerformance: null, // No real performance framework source
+        graduationRate: educationApiData.graduationRate ?? null,
+        collegeEnrollmentRate: null, // No real source (previous formula was fabricated)
+        // Federal revenue to the state's school systems (statewide, Census ASFIN)
+        federalEducationFunding: censusEducation.totalFederalRevenue,
+        teacherToStudentRatio: educationApiData.teacherToStudentRatio ?? null,
       },
-      healthcare: healthcareEstimates,
-      publicHealth: {
-        preventableDiseaseRate: cdcData.preventableDiseaseRate || 0,
-        mentalHealthProviderRatio: cdcData.mentalHealthProviderRatio || 0,
-        substanceAbusePrograms: cdcData.substanceAbusePrograms || 0,
-        preventiveCareCoverage: cdcData.preventiveCareCoverage || 0,
-      },
+      healthcare: getHealthcareData(),
+      publicHealth: getPublicHealthData(),
     };
 
-    // Cache the result
-    cache.set(cacheKey, {
-      data: servicesProfile,
-      timestamp: Date.now(),
+    // Cache the result (Redis + memory fallback; shared across instances)
+    await govCache.set(cacheKey, servicesProfile, {
+      dataType: 'heavyEndpoints',
+      source: 'district-services-health',
     });
 
     logger.info('Services health profile compiled successfully', {
       districtId,
       stateCode,
       graduationRate: servicesProfile.education.graduationRate,
-      hospitalQuality: servicesProfile.healthcare.hospitalQualityRating,
+      federalEducationFunding: servicesProfile.education.federalEducationFunding,
     });
 
     return servicesProfile;
   } catch (error) {
     logger.error('Error compiling services health profile', error as Error, { districtId });
 
-    // Return fallback data if everything fails
-    return {
-      education: {
-        schoolDistrictPerformance: 0,
-        graduationRate: 0,
-        collegeEnrollmentRate: 0,
-        federalEducationFunding: 0,
-        teacherToStudentRatio: 0,
-      },
-      healthcare: {
-        hospitalQualityRating: 0,
-        primaryCarePhysiciansPerCapita: 0,
-        healthOutcomeIndex: 0,
-        medicareProviderCount: 0,
-        healthcareCostIndex: 0,
-      },
-      publicHealth: {
-        preventableDiseaseRate: 0,
-        mentalHealthProviderRatio: 0,
-        substanceAbusePrograms: 0,
-        preventiveCareCoverage: 0,
-      },
-    };
+    // Everything failed: all metrics honestly unavailable (never cached)
+    return getUnavailableProfile();
   }
 }
 
@@ -399,15 +307,15 @@ export async function GET(
             education: 'Department of Education - https://api.ed.gov/',
             censusAsfin:
               'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
-            cdc: 'Centers for Disease Control - https://data.cdc.gov/',
+            cdc: 'Data unavailable - CDC PLACES integration disabled pending correct measure mapping',
             healthcare: 'Data unavailable - no real API source',
           },
           notes: [
+            'null values mean data is unavailable from real government sources - never estimated',
             'Education data from Department of Education API when available',
-            'Per-pupil expenditure from Census ASFIN survey',
-            'Health outcomes from CDC PLACES dataset',
+            'Federal education funding is the statewide federal revenue to school systems (Census ASFIN survey), not district-specific',
+            'Public health data unavailable - CDC PLACES integration disabled pending correct measure mapping',
             'Healthcare data unavailable - real government APIs needed',
-            'Data cached for 30 minutes for performance',
           ],
         },
       },
