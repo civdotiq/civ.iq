@@ -47,10 +47,12 @@ export default function SpendingSearch({
         throw new Error('Search failed');
       }
 
-      const data: { results: SearchResult[] } = await response.json();
+      const data: { data?: { results: SearchResult[] } } = await response.json();
 
       // Find the House representative to get the district
-      const houseRep = data.results?.find(r => r.chamber === 'House' && r.state && r.district);
+      const houseRep = data.data?.results?.find(
+        r => r.chamber === 'House' && r.state && r.district
+      );
 
       if (houseRep?.state && houseRep.district) {
         onDistrictSelected(`${houseRep.state}-${houseRep.district}`);
@@ -58,7 +60,7 @@ export default function SpendingSearch({
       }
 
       // If we found any results with state info, use that (at-large districts)
-      const anyRep = data.results?.find(r => r.state);
+      const anyRep = data.data?.results?.find(r => r.state);
       if (anyRep?.state) {
         onDistrictSelected(`${anyRep.state}-00`);
         return;

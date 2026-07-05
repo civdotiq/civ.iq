@@ -70,11 +70,17 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch map data');
+          throw new Error(
+            errorData.error?.message || errorData.error || 'Failed to fetch map data'
+          );
         }
 
-        const data: MapData = await response.json();
-        setMapData(data);
+        // Unwrap the BackboneResponse envelope
+        const envelope: { data: MapData; error?: { message: string } } = await response.json();
+        if (envelope.error) {
+          throw new Error(envelope.error.message);
+        }
+        setMapData(envelope.data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');

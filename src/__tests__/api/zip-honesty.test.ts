@@ -457,6 +457,15 @@ describe('ZIP endpoint honesty contract', () => {
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
     });
+
+    it('ZIP-only query → BackboneResponse envelope, never complete', async () => {
+      const response = await searchGET(makeGET('http://localhost/api/search?q=10001'));
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+      expect(Array.isArray(body.data.results)).toBe(true);
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
+    });
   });
 
   describe('/api/district-map', () => {
@@ -477,6 +486,16 @@ describe('ZIP endpoint honesty contract', () => {
       const data = await response.json();
       expect(response.status).toBe(400);
       expect(data.accuracyNote).toBeUndefined();
+    });
+
+    it('ZIP input → BackboneResponse envelope, never complete on success', async () => {
+      const response = await districtMapGET(makeGET('http://localhost/api/district-map?zip=10001'));
+      const body = await response.json();
+      if (response.status === 200) {
+        expect(body.data).toBeDefined();
+        expect(Array.isArray(body.sourceStatus)).toBe(true);
+        expect(['partial', 'empty']).toContain(body.dataQuality);
+      }
     });
   });
 

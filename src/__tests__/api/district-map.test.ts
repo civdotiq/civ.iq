@@ -84,14 +84,14 @@ describe('/api/district-map', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toHaveProperty('zipCode', '10001');
-      expect(data).toHaveProperty('state', 'NY');
-      expect(data).toHaveProperty('coordinates');
-      expect(data).toHaveProperty('boundaries');
-      expect(data.boundaries).toHaveProperty('congressional');
-      expect(data.boundaries).toHaveProperty('state_senate');
-      expect(data.boundaries).toHaveProperty('state_house');
-      expect(data).toHaveProperty('bbox');
+      expect(data.data).toHaveProperty('zipCode', '10001');
+      expect(data.data).toHaveProperty('state', 'NY');
+      expect(data.data).toHaveProperty('coordinates');
+      expect(data.data).toHaveProperty('boundaries');
+      expect(data.data.boundaries).toHaveProperty('congressional');
+      expect(data.data.boundaries).toHaveProperty('state_senate');
+      expect(data.data.boundaries).toHaveProperty('state_house');
+      expect(data.data).toHaveProperty('bbox');
     });
 
     it('should return 400 for missing ZIP code', async () => {
@@ -146,8 +146,8 @@ describe('/api/district-map', () => {
 
       // Route should still return 200 even if TIGER APIs fail
       expect(response.status).toBe(200);
-      expect(data).toHaveProperty('zipCode', '10001');
-      expect(data).toHaveProperty('boundaries');
+      expect(data.data).toHaveProperty('zipCode', '10001');
+      expect(data.data).toHaveProperty('boundaries');
     });
   });
 
@@ -239,12 +239,12 @@ describe('/api/district-map', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(data.bbox).toHaveProperty('minLat');
-      expect(data.bbox).toHaveProperty('maxLat');
-      expect(data.bbox).toHaveProperty('minLng');
-      expect(data.bbox).toHaveProperty('maxLng');
-      expect(data.bbox.minLat).toBeLessThan(data.bbox.maxLat);
-      expect(data.bbox.minLng).toBeLessThan(data.bbox.maxLng);
+      expect(data.data.bbox).toHaveProperty('minLat');
+      expect(data.data.bbox).toHaveProperty('maxLat');
+      expect(data.data.bbox).toHaveProperty('minLng');
+      expect(data.data.bbox).toHaveProperty('maxLng');
+      expect(data.data.bbox.minLat).toBeLessThan(data.data.bbox.maxLat);
+      expect(data.data.bbox.minLng).toBeLessThan(data.data.bbox.maxLng);
     });
   });
 
@@ -286,7 +286,7 @@ describe('/api/district-map', () => {
       // Should still return 200, using default district
       expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data).toHaveProperty('zipCode', '10001');
+      expect(data.data).toHaveProperty('zipCode', '10001');
     });
   });
 });

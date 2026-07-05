@@ -18,6 +18,7 @@ import {
   parseAddressComponents,
 } from '@/lib/census-geocoder';
 import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
+import type { DataQuality } from '@/types/backbone-response';
 
 interface SearchFilters {
   query?: string;
@@ -90,13 +91,14 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
           `${getServerBaseUrl()}/api/representatives-multi-district?zip=${addressComponents.zip}`
         );
         if (zipResponse.ok) {
+          // representatives-multi-district returns a BackboneResponse
+          // envelope: failure = `error` present, payload under `data`
           const zipData = await zipResponse.json();
-          if (zipData.success && zipData.representatives?.length > 0) {
+          const zipReps = zipData.data?.representatives;
+          if (!zipData.error && zipReps?.length > 0) {
             return {
-              results: zipData.representatives.map((rep: unknown) =>
-                transformToSearchResult(rep as SearchResult)
-              ),
-              totalResults: zipData.representatives.length,
+              results: zipReps.map((rep: unknown) => transformToSearchResult(rep as SearchResult)),
+              totalResults: zipReps.length,
               page: 1,
               totalPages: 1,
             };
@@ -495,7 +497,6 @@ export async function GET(request: NextRequest) {
     // (or a query that parses to a ZIP without street) triggers ZIP-based
     // district resolution, which is approximate. Address queries with a
     // street component are authoritative.
-    // TODO(zip-honesty): migrate this route to BackboneResponse<T>.
     const inputMode: InputMode = (() => {
       if (!filters.query) return 'address';
       const components = parseAddressComponents(filters.query);
@@ -505,18 +506,33 @@ export async function GET(request: NextRequest) {
     })();
     const accuracyNote = getZipAccuracyNote(inputMode);
 
+    // BackboneResponse envelope. ZIP-resolved queries are never 'complete'
+    // (approximate join); an authoritative query with zero hits is 'empty'.
+    const hasResults = (searchResults.results?.length ?? 0) > 0;
+    const dataQuality: DataQuality =
+      inputMode === 'zip' ? 'partial' : hasResults ? 'complete' : 'empty';
+
     return NextResponse.json(
       {
-        ...searchResults,
-        searchTerm: filters.query || '',
-        filters,
-        ...(accuracyNote ? { accuracyNote } : {}),
-        metadata: {
-          cacheHit: false, // Would need to track this in cachedFetch
-          dataSource: 'congress-legislators',
-          note: 'Voting scores, campaign finance, and bills sponsored are placeholder values pending integration',
-          ...(accuracyNote ? { accuracyNote } : {}),
+        data: {
+          ...searchResults,
+          searchTerm: filters.query || '',
+          filters,
+          metadata: {
+            cacheHit: false, // Would need to track this in cachedFetch
+            dataSource: 'congress-legislators',
+            note: 'Voting scores, campaign finance, and bills sponsored are placeholder values pending integration',
+          },
         },
+        dataQuality,
+        sourceStatus: [
+          {
+            source: 'congress-legislators',
+            status: 'ok',
+            fetchedAt: new Date().toISOString(),
+          },
+        ],
+        ...(accuracyNote ? { accuracyNote } : {}),
       },
       {
         headers: {
@@ -529,8 +545,20 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: 'Failed to perform search',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        data: { results: [], totalResults: 0, page: 1, totalPages: 0, searchTerm: '', filters: {} },
+        dataQuality: 'unavailable',
+        sourceStatus: [
+          {
+            source: 'search-api',
+            status: 'error',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            fetchedAt: new Date().toISOString(),
+          },
+        ],
+        error: {
+          code: 'SEARCH_FAILED',
+          message: 'Failed to perform search',
+        },
       },
       { status: 500 }
     );

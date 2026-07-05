@@ -383,8 +383,8 @@ function ResultsContent() {
 
         // Convert unified search response to legacy format
         const apiData: ApiResponse = {
-          success: response.ok && searchData.results && searchData.results.length > 0,
-          representatives: searchData.results || [],
+          success: response.ok && searchData.data?.results && searchData.data.results.length > 0,
+          representatives: searchData.data?.results || [],
           error: !response.ok ? { code: 'SEARCH_ERROR', message: 'Search failed' } : undefined,
           metadata: {
             timestamp: new Date().toISOString(),

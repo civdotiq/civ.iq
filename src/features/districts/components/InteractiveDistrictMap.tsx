@@ -195,10 +195,17 @@ export function InteractiveDistrictMap({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch map data');
+          throw new Error(
+            errorData.error?.message || errorData.error || 'Failed to fetch map data'
+          );
         }
 
-        const data: MapData = await response.json();
+        // Unwrap the BackboneResponse envelope
+        const envelope: { data: MapData; error?: { message: string } } = await response.json();
+        if (envelope.error) {
+          throw new Error(envelope.error.message);
+        }
+        const data = envelope.data;
 
         setMapData(data);
         setError(null);

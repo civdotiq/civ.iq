@@ -169,8 +169,8 @@ export function AdvancedSearch() {
 
       const data = await response.json();
 
-      setResults(data.results || []);
-      setResultCount(data.totalResults || 0);
+      setResults(data.data?.results || []);
+      setResultCount(data.data?.totalResults || 0);
     } catch (error) {
       logger.error('Advanced search error', {
         component: 'AdvancedSearch',

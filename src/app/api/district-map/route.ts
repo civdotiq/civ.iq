@@ -8,6 +8,7 @@ import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import type { BackboneResponse } from '@/types/backbone-response';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,11 +42,16 @@ interface MapData {
     minLng: number;
     maxLng: number;
   };
-  // TODO(zip-honesty): migrate to BackboneResponse<T>. Until then, this
-  // sibling field carries the ZIP honesty signal. ZIP is the only input for
-  // this route, so the note is always populated on success responses.
-  accuracyNote?: string;
 }
+
+/**
+ * BackboneResponse envelope. ZIP is the only input for this route, so
+ * successful responses are always 'partial' with accuracyNote populated —
+ * ZIP ↔ district alignment is 10–20% wrong.
+ */
+type MapResponse = BackboneResponse<MapData> & {
+  error?: { code: string; message: string };
+};
 
 // Helper function to get state FIPS code
 function getStateFips(state: string): string {
@@ -409,9 +415,10 @@ export async function GET(request: NextRequest) {
         );
 
         if (repResponse.ok) {
+          // /api/representatives returns a BackboneResponse envelope
           const repData = await repResponse.json();
-          if (repData.success && repData.representatives?.[0]) {
-            const state = repData.representatives[0].state;
+          if (!repData.error && repData.data?.representatives?.[0]) {
+            const state = repData.data.representatives[0].state;
             // Use approximate state center coordinates
             const stateCoordinates = getApproximateStateCoordinates(state);
             if (stateCoordinates) {
@@ -463,11 +470,12 @@ export async function GET(request: NextRequest) {
         );
 
         if (repResponse.ok) {
+          // /api/representatives returns a BackboneResponse envelope
           const repData = await repResponse.json();
 
           // Find the House representative to get the district number
-          if (repData.success && repData.representatives) {
-            const houseRep = repData.representatives.find(
+          if (!repData.error && repData.data?.representatives) {
+            const houseRep = repData.data.representatives.find(
               (rep: { chamber: string; district?: string }) =>
                 rep.chamber === 'House' && rep.district
             );
@@ -590,25 +598,54 @@ export async function GET(request: NextRequest) {
             maxLng: zipInfo.lng + 0.01,
           };
 
-    const mapData: MapData = {
-      zipCode,
-      state: districtState,
-      coordinates: {
-        lat: zipInfo.lat,
-        lng: zipInfo.lng,
+    const hasAnyBoundary =
+      boundaries.congressional !== null ||
+      boundaries.state_senate !== null ||
+      boundaries.state_house !== null;
+
+    const response: MapResponse = {
+      data: {
+        zipCode,
+        state: districtState,
+        coordinates: {
+          lat: zipInfo.lat,
+          lng: zipInfo.lng,
+        },
+        boundaries,
+        bbox,
       },
-      boundaries,
-      bbox,
+      // ZIP-only input → never 'complete'; no boundaries at all → 'empty'
+      dataQuality: hasAnyBoundary ? 'partial' : 'empty',
+      sourceStatus: [
+        {
+          source: 'census-tigerweb',
+          status: hasAnyBoundary ? 'ok' : 'error',
+          ...(hasAnyBoundary ? {} : { errorMessage: 'No district boundaries resolved' }),
+          fetchedAt: new Date().toISOString(),
+        },
+      ],
       accuracyNote: ZIP_ACCURACY_NOTE,
     };
 
-    return NextResponse.json(mapData, {
+    return NextResponse.json(response, {
       headers: {
         'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=1209600',
       },
     });
   } catch (error) {
     logger.error('District map API error', error as Error, { zipCode });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const failed: Partial<MapResponse> = {
+      dataQuality: 'unavailable',
+      sourceStatus: [
+        {
+          source: 'district-map-api',
+          status: 'error',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          fetchedAt: new Date().toISOString(),
+        },
+      ],
+      error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
+    };
+    return NextResponse.json(failed, { status: 500 });
   }
 }
