@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -271,68 +272,98 @@ async function fetchStateLegislators(
         ...districts.house.map(d => ({ district: d, chamber: 'lower' })),
       ];
 
-      for (const { district, chamber } of allDistrictsToFetch.slice(0, 10)) {
-        // Limit to avoid too many requests
-        const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&district=${district}`;
+      // Fetch districts in parallel with bounded concurrency (was a serial
+      // loop: up to 10 back-to-back OpenStates round-trips per request).
+      // Concurrency stays at 4 — OpenStates rate limits are tight.
+      // Order preserved; a failed district yields [] without sinking the rest.
+      const districtsToFetch = allDistrictsToFetch.slice(0, 10); // Limit to avoid too many requests
+      const perDistrictLegislators = await mapWithConcurrency(
+        districtsToFetch,
+        4,
+        async ({ district, chamber }): Promise<StateLegislator[]> => {
+          const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&district=${district}`;
 
-        logger.debug('Fetching legislators from district', {
-          district,
-          chamber,
-          url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
-          operation: 'district_legislators_fetch',
-        });
-
-        const fetchStartTime = Date.now();
-        const response = await fetch(url, {
-          headers: {
-            'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-          },
-        });
-
-        const fetchDuration = Date.now() - fetchStartTime;
-
-        // Log external API call
-        logger.info('OpenStates fetchLegislators API call', {
-          district,
-          chamber,
-          duration: fetchDuration,
-          success: response.ok,
-          statusCode: response.status,
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const districtLegislators =
-            data.results?.map((person: OpenStatesPerson) => ({
-              id: person.id,
-              name: person.name,
-              party: person.current_role?.party || 'Unknown',
-              chamber: person.current_role?.org_classification || chamber,
-              district: person.current_role?.district || district,
-              image: person.image,
-              email: person.email,
-              phone: person.phone,
-              website: person.links?.find(
-                (link: { note?: string; url?: string }) => link.note === 'website'
-              )?.url,
-              offices: person.offices?.map(
-                (office: { name?: string; address?: string; phone?: string; email?: string }) => ({
-                  name: office.name || 'Office',
-                  address: office.address,
-                  phone: office.phone,
-                  email: office.email,
-                })
-              ),
-            })) || [];
-
-          legislators.push(...districtLegislators);
-          logger.info('Found legislators in district', {
+          logger.debug('Fetching legislators from district', {
             district,
-            legislatorCount: districtLegislators.length,
-            operation: 'district_legislators_found',
+            chamber,
+            url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
+            operation: 'district_legislators_fetch',
           });
+
+          const fetchStartTime = Date.now();
+          try {
+            const response = await fetch(url, {
+              signal: AbortSignal.timeout(10000),
+              headers: {
+                'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+              },
+            });
+
+            const fetchDuration = Date.now() - fetchStartTime;
+
+            // Log external API call
+            logger.info('OpenStates fetchLegislators API call', {
+              district,
+              chamber,
+              duration: fetchDuration,
+              success: response.ok,
+              statusCode: response.status,
+            });
+
+            if (!response.ok) {
+              return [];
+            }
+
+            const data = await response.json();
+            const districtLegislators: StateLegislator[] =
+              data.results?.map((person: OpenStatesPerson) => ({
+                id: person.id,
+                name: person.name,
+                party: person.current_role?.party || 'Unknown',
+                chamber: person.current_role?.org_classification || chamber,
+                district: person.current_role?.district || district,
+                image: person.image,
+                email: person.email,
+                phone: person.phone,
+                website: person.links?.find(
+                  (link: { note?: string; url?: string }) => link.note === 'website'
+                )?.url,
+                offices: person.offices?.map(
+                  (office: {
+                    name?: string;
+                    address?: string;
+                    phone?: string;
+                    email?: string;
+                  }) => ({
+                    name: office.name || 'Office',
+                    address: office.address,
+                    phone: office.phone,
+                    email: office.email,
+                  })
+                ),
+              })) || [];
+
+            logger.info('Found legislators in district', {
+              district,
+              legislatorCount: districtLegislators.length,
+              operation: 'district_legislators_found',
+            });
+            return districtLegislators;
+          } catch (error) {
+            // Per-district fault isolation: one failed/timed-out district
+            // must not sink the others
+            logger.error('Error fetching district legislators', error as Error, {
+              district,
+              chamber,
+              duration: Date.now() - fetchStartTime,
+              operation: 'district_legislators_fetch_error',
+            });
+            return [];
+          }
         }
-      }
+      );
+
+      legislators.push(...perDistrictLegislators.flat());
     } else {
       // Fallback: fetch all current legislators for the state
       const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&per_page=20`;
