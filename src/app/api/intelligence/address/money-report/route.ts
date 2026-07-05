@@ -39,9 +39,34 @@ import type {
   MetricStatus,
 } from '@/lib/intelligence/types';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import type { SourceStatus } from '@/types/backbone-response';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
+
+// ADDITIVE BackboneResponse fields (geocode precedent, decision 2026-07-05):
+// this route is publicly documented in openapi.json, so the existing payload
+// stays top-level and dataQuality/sourceStatus are added alongside it.
+function sourceStatusOf(
+  source: string,
+  status: SourceStatus['status'],
+  errorMessage?: string
+): SourceStatus {
+  return {
+    source,
+    status,
+    ...(errorMessage ? { errorMessage } : {}),
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+function pipelineSourceStatus(errors: InsightError[]): SourceStatus {
+  return sourceStatusOf(
+    'intelligence-pipeline',
+    errors.length > 0 ? 'error' : 'ok',
+    errors.length > 0 ? `${errors.length} analyzer error(s)` : undefined
+  );
+}
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
 // Plan reference: PLAN-money-report-restoration-2026-04.md (MR3)
@@ -444,6 +469,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<MoneyRepo
           error: 'Could not resolve congressional district for this address',
           errors: [] as InsightError[],
           status: 'unavailable' as const,
+          dataQuality: 'empty' as const,
+          sourceStatus: [
+            sourceStatusOf('census-geocoder', 'ok', 'No district matched this address'),
+          ],
         },
         { status: 404 }
       );
@@ -462,7 +491,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<MoneyRepo
     );
 
     return NextResponse.json(
-      { ...insight, errors, status: 'complete' as const },
+      {
+        ...insight,
+        errors,
+        status: 'complete' as const,
+        // Address input is authoritative; analyzer errors degrade to partial
+        dataQuality: (errors.length > 0 ? 'partial' : 'complete') as 'partial' | 'complete',
+        sourceStatus: [sourceStatusOf('census-geocoder', 'ok'), pipelineSourceStatus(errors)],
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
@@ -498,6 +534,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
           error: `No congressional district found for ZIP ${zip}`,
           errors: [] as InsightError[],
           status: 'unavailable' as const,
+          dataQuality: 'empty' as const,
+          sourceStatus: [
+            sourceStatusOf('zip-district-mapping', 'ok', 'ZIP not mapped to any district'),
+          ],
         },
         { status: 404 }
       );
@@ -518,14 +558,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<MoneyRepor
       'MoneyReportPipeline'
     );
 
-    // TODO(zip-honesty): migrate this route to BackboneResponse<T>. Until then,
-    // surface accuracyNote as a sibling field and mark status 'partial'.
     return NextResponse.json(
       {
         ...insight,
         accuracyNote: ZIP_ACCURACY_NOTE,
         errors,
+        // ZIP input is approximate — never 'complete'
         status: 'partial' as const,
+        dataQuality: 'partial' as const,
+        sourceStatus: [sourceStatusOf('zip-district-mapping', 'ok'), pipelineSourceStatus(errors)],
       },
       {
         headers: {

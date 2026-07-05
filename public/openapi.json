@@ -932,6 +932,15 @@
                       "type": "string",
                       "enum": ["complete", "partial", "unavailable"],
                       "description": "'partial' when accuracyNote is set (ZIP input); 'complete' for address input."
+                    },
+                    "dataQuality": {
+                      "$ref": "#/components/schemas/DataQuality"
+                    },
+                    "sourceStatus": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SourceStatus"
+                      }
                     }
                   }
                 }
@@ -991,6 +1000,15 @@
                     "status": {
                       "type": "string",
                       "enum": ["partial", "unavailable"]
+                    },
+                    "dataQuality": {
+                      "$ref": "#/components/schemas/DataQuality"
+                    },
+                    "sourceStatus": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SourceStatus"
+                      }
                     }
                   }
                 }
@@ -2983,6 +3001,15 @@
             "type": "string",
             "enum": ["complete", "partial", "unavailable"],
             "description": "'partial' when accuracyNote is set (ZIP input); 'complete' for address input."
+          },
+          "dataQuality": {
+            "$ref": "#/components/schemas/DataQuality"
+          },
+          "sourceStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            }
           }
         }
       },

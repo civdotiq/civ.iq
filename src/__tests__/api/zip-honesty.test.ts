@@ -393,6 +393,17 @@ describe('ZIP endpoint honesty contract', () => {
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
     });
+
+    it('ZIP input (GET) → additive envelope, never complete', async () => {
+      const response = await intelAddrRepsGET(
+        makeGET('http://localhost/api/intelligence/address/representatives?zip=10001')
+      );
+      const body = await response.json();
+      // Public route: legacy top-level payload preserved (no `data` wrapper)
+      expect(body.data).toBeUndefined();
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
+    });
   });
 
   describe('/api/intelligence/address/money-report', () => {
@@ -414,6 +425,17 @@ describe('ZIP endpoint honesty contract', () => {
       );
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
+    });
+
+    it('ZIP input (GET) → additive envelope, never complete', async () => {
+      const response = await moneyReportGET(
+        makeGET('http://localhost/api/intelligence/address/money-report?zip=10001')
+      );
+      const body = await response.json();
+      // Public route: legacy top-level payload preserved (no `data` wrapper)
+      expect(body.data).toBeUndefined();
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
     });
   });
 

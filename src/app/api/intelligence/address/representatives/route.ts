@@ -21,6 +21,20 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import type { InsightError } from '@/lib/intelligence/types';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import type { DataQuality, SourceStatus } from '@/types/backbone-response';
+
+function sourceStatusOf(
+  source: string,
+  status: SourceStatus['status'],
+  errorMessage?: string
+): SourceStatus {
+  return {
+    source,
+    status,
+    ...(errorMessage ? { errorMessage } : {}),
+    fetchedAt: new Date().toISOString(),
+  };
+}
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -41,9 +55,14 @@ interface RepresentativesResponse {
   state: string;
   district: string;
   multiDistrict: boolean;
-  // TODO(zip-honesty): migrate this route to BackboneResponse<T> in follow-up.
   // accuracyNote is only populated on ZIP (GET) input; address POST leaves it unset.
   accuracyNote?: string;
+  // ADDITIVE BackboneResponse fields. This route is publicly documented in
+  // openapi.json, so the existing top-level payload is preserved and the
+  // envelope's honesty fields are added alongside it (geocode precedent,
+  // decision 2026-07-05) rather than wrapping the payload under `data`.
+  dataQuality?: DataQuality;
+  sourceStatus?: SourceStatus[];
 }
 
 type RouteResponse = RepresentativesResponse | { error: string };
@@ -116,6 +135,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
           error: 'Could not resolve congressional district for this address',
           errors: [] as InsightError[],
           status: 'unavailable' as const,
+          dataQuality: 'empty' as const,
+          sourceStatus: [
+            sourceStatusOf('census-geocoder', 'ok', 'No district matched this address'),
+          ],
         },
         { status: 404 }
       );
@@ -128,7 +151,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
     );
 
     return NextResponse.json(
-      { ...result, errors: [] as InsightError[], status: 'complete' as const },
+      {
+        ...result,
+        errors: [] as InsightError[],
+        status: 'complete' as const,
+        // Address input resolved via Census: authoritative
+        dataQuality: 'complete' as const,
+        sourceStatus: [
+          sourceStatusOf('census-geocoder', 'ok'),
+          sourceStatusOf('congress-legislators', 'ok'),
+        ],
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
@@ -164,6 +197,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
           error: `No congressional district found for ZIP ${zip}`,
           errors: [] as InsightError[],
           status: 'unavailable' as const,
+          dataQuality: 'empty' as const,
+          sourceStatus: [
+            sourceStatusOf('zip-district-mapping', 'ok', 'ZIP not mapped to any district'),
+          ],
         },
         { status: 404 }
       );
@@ -185,6 +222,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
         errors: [] as InsightError[],
         // ZIP input is approximate — the wider pipeline signals this as 'partial'.
         status: 'partial' as const,
+        dataQuality: 'partial' as const,
+        sourceStatus: [
+          sourceStatusOf('zip-district-mapping', 'ok'),
+          sourceStatusOf('congress-legislators', 'ok'),
+        ],
       },
       {
         headers: {
