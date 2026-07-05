@@ -74,6 +74,19 @@ describe('Temporal Mesh', () => {
   });
 
   describe('computeTrend', () => {
+    // computeTrend reads new Date() internally and the fixed-date fixtures
+    // below assume "now" is in Q2 2026. Pin system time so the suite doesn't
+    // rot as wall-clock time crosses quarter boundaries (failed 2026-07:
+    // lastSeen '2026-03-15' had aged into the "ended" branch).
+    beforeAll(() => {
+      jest.useFakeTimers({ doNotFake: ['performance'] });
+      jest.setSystemTime(new Date('2026-06-15T12:00:00Z'));
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
     const makeBuckets = (values: number[], startYear = 2023, startQ = 1): TemporalBucket[] =>
       values.map((value, i) => {
         const q = ((startQ - 1 + i) % 4) + 1;
