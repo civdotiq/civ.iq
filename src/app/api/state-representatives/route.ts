@@ -16,13 +16,11 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import type { BackboneResponse, SourceStatus } from '@/types/backbone-response';
 
 export const dynamic = 'force-dynamic';
 
-// API Response shape (for backwards compatibility with existing frontend)
-// TODO(zip-honesty): migrate to BackboneResponse<T> so accuracyNote and
-// dataQuality sit at the top level — tracked in follow-up issue.
-interface StateApiResponse {
+interface StatePayload {
   zipCode: string;
   state: string;
   stateName: string;
@@ -46,7 +44,24 @@ interface StateApiResponse {
       classification: string;
     }>;
   };
-  accuracyNote?: string;
+}
+
+/**
+ * BackboneResponse envelope: dataQuality/sourceStatus/accuracyNote at the
+ * top level so consumers can distinguish "no data exists" from "upstream
+ * failed" and surface the ZIP-accuracy caveat uniformly.
+ */
+type StateApiResponse = BackboneResponse<StatePayload> & {
+  error?: { code: string; message: string };
+};
+
+function sourceStatusOf(status: SourceStatus['status'], errorMessage?: string): SourceStatus {
+  return {
+    source: 'openstates',
+    status,
+    ...(errorMessage ? { errorMessage } : {}),
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 // Helper function to get state from ZIP code using our ZIP-to-district mapping
@@ -214,14 +229,12 @@ export async function GET(request: NextRequest) {
 
       // Return a specific error response when no legislators are found
       // This is typically due to OpenStates API rate limiting or service unavailability
-      return NextResponse.json(
-        {
+      const unavailable: StateApiResponse = {
+        data: {
           zipCode,
           state: stateAbbrevUpper,
           stateName,
           legislators: [],
-          error: 'State legislature data temporarily unavailable. Please try again later.',
-          errorCode: 'OPENSTATES_UNAVAILABLE',
           jurisdiction: jurisdiction
             ? transformJurisdictionForResponse(jurisdiction)
             : {
@@ -232,10 +245,17 @@ export async function GET(request: NextRequest) {
                   { name: 'Senate', classification: 'upper' },
                 ],
               },
-          accuracyNote: ZIP_ACCURACY_NOTE,
         },
-        { status: 200 } // Return 200 with error field so frontend can show appropriate message
-      );
+        dataQuality: 'unavailable',
+        sourceStatus: [sourceStatusOf('error', 'OpenStates returned no legislators')],
+        accuracyNote: ZIP_ACCURACY_NOTE,
+        error: {
+          code: 'OPENSTATES_UNAVAILABLE',
+          message: 'State legislature data temporarily unavailable. Please try again later.',
+        },
+      };
+      // Return 200 with error field so frontend can show appropriate message
+      return NextResponse.json(unavailable, { status: 200 });
     }
 
     // ZIP codes don't map precisely to state legislative districts
@@ -262,23 +282,27 @@ export async function GET(request: NextRequest) {
       });
 
     const response: StateApiResponse = {
-      zipCode,
-      state: stateAbbrevUpper,
-      stateName,
-      legislators: transformedLegislators,
-      jurisdiction: jurisdiction
-        ? transformJurisdictionForResponse(jurisdiction)
-        : {
-            name: stateName,
-            classification: 'state',
-            chambers: [
-              { name: 'House of Representatives', classification: 'lower' },
-              { name: 'Senate', classification: 'upper' },
-            ],
-          },
-      // ZIP is always the lookup key for this route — surface the honesty signal.
+      data: {
+        zipCode,
+        state: stateAbbrevUpper,
+        stateName,
+        legislators: transformedLegislators,
+        jurisdiction: jurisdiction
+          ? transformJurisdictionForResponse(jurisdiction)
+          : {
+              name: stateName,
+              classification: 'state',
+              chambers: [
+                { name: 'House of Representatives', classification: 'lower' },
+                { name: 'Senate', classification: 'upper' },
+              ],
+            },
+      },
+      // ZIP input is approximate by nature → 'partial', never 'complete'.
       // State legislative districts are even less aligned to ZIP than federal
       // districts, which is why the handler returns the full state roster.
+      dataQuality: 'partial',
+      sourceStatus: [sourceStatusOf('ok')],
       accuracyNote: ZIP_ACCURACY_NOTE,
     };
 
@@ -300,12 +324,17 @@ export async function GET(request: NextRequest) {
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch state representatives',
-        message: error instanceof Error ? error.message : 'Unknown error',
+    const failed: StateApiResponse = {
+      data: { zipCode, state: '', stateName: '', legislators: [] },
+      dataQuality: 'unavailable',
+      sourceStatus: [
+        sourceStatusOf('error', error instanceof Error ? error.message : 'Unknown error'),
+      ],
+      error: {
+        code: 'STATE_REPRESENTATIVES_FAILED',
+        message: 'Failed to fetch state representatives',
       },
-      { status: 500 }
-    );
+    };
+    return NextResponse.json(failed, { status: 500 });
   }
 }

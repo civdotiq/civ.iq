@@ -50,6 +50,14 @@ interface StateApiResponse {
   };
 }
 
+/** BackboneResponse envelope returned by /api/state-representatives */
+interface StateApiEnvelope {
+  data: Omit<StateApiResponse, 'error' | 'errorCode'>;
+  dataQuality: 'complete' | 'partial' | 'empty' | 'unavailable';
+  accuracyNote?: string;
+  error?: { code: string; message: string };
+}
+
 interface StateRepresentativesTabProps {
   zipCode: string;
   /** State abbreviation (e.g., 'MI', 'CA') */
@@ -156,11 +164,20 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch state representatives');
+          throw new Error(
+            errorData.error?.message || errorData.error || 'Failed to fetch state representatives'
+          );
         }
 
-        const data: StateApiResponse = await response.json();
-        setStateData(data);
+        // Unwrap the BackboneResponse envelope; keep the error fields the
+        // rest of this component already handles
+        const envelope: StateApiEnvelope = await response.json();
+        setStateData({
+          ...envelope.data,
+          ...(envelope.error
+            ? { error: envelope.error.message, errorCode: envelope.error.code }
+            : {}),
+        });
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');

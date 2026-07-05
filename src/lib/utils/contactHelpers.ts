@@ -142,16 +142,16 @@ export async function findUserRepresentatives(zipCode: string): Promise<Represen
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = (await response.json()) as {
-      representatives?: RepresentativeSummary[];
-      error?: string;
+    const json = (await response.json()) as {
+      data?: { representatives?: RepresentativeSummary[] };
+      error?: { message?: string };
     };
 
-    if (data.error) {
-      throw new Error(data.error);
+    if (json.error?.message) {
+      throw new Error(json.error.message);
     }
 
-    return data.representatives || [];
+    return json.data?.representatives || [];
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching representatives:', error);

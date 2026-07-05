@@ -6,23 +6,24 @@
 import useSWR from 'swr';
 import { Representative } from '@/features/representatives/services/congress-api';
 
-interface RepresentativesResponse {
-  success: boolean;
+import type { BackboneResponse } from '@/types/backbone-response';
+
+// /api/representatives returns a BackboneResponse envelope
+type RepresentativesResponse = BackboneResponse<{
   representatives: Representative[];
-  metadata?: {
-    dataQuality?: 'high' | 'medium' | 'low' | 'unavailable';
+  lookup: string;
+  metadata: {
     dataSource: string;
     freshness?: string;
-    validationScore?: number;
     timestamp: string;
-    validationStatus?: string;
   };
+}> & {
   error?: {
     code: string;
     message: string;
     details?: string;
   };
-}
+};
 
 // SWR fetcher function
 const fetcher = async (url: string): Promise<RepresentativesResponse> => {
@@ -50,8 +51,10 @@ export function useRepresentativesByZip(zipCode: string | null) {
   );
 
   return {
-    representatives: data?.representatives || [],
-    metadata: data?.metadata,
+    representatives: data?.data?.representatives || [],
+    metadata: data?.data?.metadata,
+    dataQuality: data?.dataQuality,
+    accuracyNote: data?.accuracyNote,
     isLoading,
     error: error || data?.error,
     refetch: mutate,
@@ -75,8 +78,10 @@ export function useRepresentativesByDistrict(state: string | null, district: str
   );
 
   return {
-    representatives: data?.representatives || [],
-    metadata: data?.metadata,
+    representatives: data?.data?.representatives || [],
+    metadata: data?.data?.metadata,
+    dataQuality: data?.dataQuality,
+    accuracyNote: data?.accuracyNote,
     isLoading,
     error: error || data?.error,
     refetch: mutate,

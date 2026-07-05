@@ -319,12 +319,27 @@ describe('ZIP endpoint honesty contract', () => {
       expect(data.accuracyNote).toBe(ZIP_ACCURACY_NOTE);
     });
 
+    it('ZIP input → BackboneResponse envelope, never complete', async () => {
+      const response = await representativesGET(
+        makeGET('http://localhost/api/representatives?zip=10001')
+      );
+      const body = await response.json();
+      // Envelope contract: data payload + top-level dataQuality/sourceStatus
+      expect(body.data).toBeDefined();
+      expect(Array.isArray(body.data.representatives)).toBe(true);
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      // ZIP input is never 'complete' — the answer is approximate by nature
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
+    });
+
     it('state+district input → no accuracyNote', async () => {
       const response = await representativesGET(
         makeGET('http://localhost/api/representatives?state=NY&district=14')
       );
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
+      expect(data.data).toBeDefined();
+      expect(['complete', 'empty']).toContain(data.dataQuality);
     });
   });
 
@@ -398,6 +413,17 @@ describe('ZIP endpoint honesty contract', () => {
       );
       const data = await response.json();
       expect(data.accuracyNote).toBe(ZIP_ACCURACY_NOTE);
+    });
+
+    it('ZIP input → BackboneResponse envelope, never complete', async () => {
+      const response = await stateRepsGET(
+        makeGET('http://localhost/api/state-representatives?zip=10001')
+      );
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+      expect(Array.isArray(body.data.legislators)).toBe(true);
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
     });
 
     it('missing ZIP → 400 and no accuracyNote', async () => {

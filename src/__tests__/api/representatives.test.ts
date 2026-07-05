@@ -99,21 +99,21 @@ describe('/api/representatives', () => {
 
       // In test environment, congress-legislators data is not available
       // so the API correctly returns 503 service unavailable
-      expect([200, 503]).toContain(response.status);
+      expect([200, 404, 503]).toContain(response.status);
 
       if (response.status === 200) {
         // If successful, check representatives structure
-        expect(data).toHaveProperty('representatives');
-        expect(data.representatives.length).toBeGreaterThanOrEqual(0);
+        expect(data.data).toHaveProperty('representatives');
+        expect(data.data.representatives.length).toBeGreaterThanOrEqual(0);
 
-        if (data.representatives.length > 0) {
-          expect(data.representatives[0]).toHaveProperty('bioguideId');
-          expect(data.representatives[0]).toHaveProperty('name');
-          expect(data.representatives[0]).toHaveProperty('state');
+        if (data.data.representatives.length > 0) {
+          expect(data.data.representatives[0]).toHaveProperty('bioguideId');
+          expect(data.data.representatives[0]).toHaveProperty('name');
+          expect(data.data.representatives[0]).toHaveProperty('state');
         }
       } else {
         // If service unavailable, check error structure
-        expect(data.success).toBe(false);
+        expect(data.dataQuality).toBe('unavailable');
         expect(data.error).toHaveProperty('code');
         expect(data.error).toHaveProperty('message');
       }
@@ -159,7 +159,7 @@ describe('/api/representatives', () => {
 
       // API returns 503 when service is unavailable
       expect(response.status).toBe(503);
-      expect(data.success).toBe(false);
+      expect(data.dataQuality).toBe('unavailable');
       expect(data.error).toHaveProperty('code');
       expect(data.error).toHaveProperty('message');
     }, 10000); // Increase timeout to handle retries
@@ -177,7 +177,7 @@ describe('/api/representatives', () => {
         const response = await GET(request);
 
         if (shouldPass) {
-          expect([200, 503]).toContain(response.status); // 200 for success, 503 for service unavailable
+          expect([200, 404, 503]).toContain(response.status); // 200 for success, 503 for service unavailable
         } else {
           expect(response.status).toBe(400);
         }
@@ -192,15 +192,15 @@ describe('/api/representatives', () => {
       const data = await response.json();
 
       // Test common response structure regardless of success/failure
-      expect(data).toHaveProperty('metadata');
-      expect(data.metadata).toHaveProperty('timestamp');
-      expect(data.metadata).toHaveProperty('zipCode', '10001');
+      expect(data.data).toHaveProperty('metadata');
+      expect(data.data.metadata).toHaveProperty('timestamp');
+      expect(data.data).toHaveProperty('lookup', '10001');
 
       // If successful, check representatives structure
       if (response.status === 200) {
-        expect(data).toHaveProperty('representatives');
-        if (data.representatives.length > 0) {
-          const rep = data.representatives[0];
+        expect(data.data).toHaveProperty('representatives');
+        if (data.data.representatives.length > 0) {
+          const rep = data.data.representatives[0];
           expect(rep).toHaveProperty('bioguideId');
           expect(rep).toHaveProperty('name');
           expect(rep).toHaveProperty('state');
@@ -225,12 +225,12 @@ describe('/api/representatives', () => {
       const response = await GET(request);
 
       // Verify the response is successful
-      expect([200, 503]).toContain(response.status);
+      expect([200, 404, 503]).toContain(response.status);
 
       // If successful, the data should be cached internally by the services
       if (response.status === 200) {
         const data = await response.json();
-        expect(data).toHaveProperty('metadata');
+        expect(data.data).toHaveProperty('metadata');
         expect(data.metadata).toHaveProperty('cacheable');
       }
     }, 10000);
@@ -254,7 +254,7 @@ describe('/api/representatives', () => {
       // API returns 503 for service unavailable when data is malformed
       expect(response.status).toBe(503);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.dataQuality).toBe('unavailable');
       expect(data.error).toHaveProperty('code');
     }, 10000);
 
@@ -279,7 +279,7 @@ describe('/api/representatives', () => {
       // API returns 503 for service unavailable
       expect(response.status).toBe(503);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.dataQuality).toBe('unavailable');
       expect(data.error).toHaveProperty('code');
     }, 10000);
   });

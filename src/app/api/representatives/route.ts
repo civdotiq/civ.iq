@@ -10,6 +10,7 @@ import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapp
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { getZipAccuracyNote, type InputMode } from '@/lib/backbone/zip-accuracy';
+import type { BackboneResponse, SourceStatus } from '@/types/backbone-response';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -41,29 +42,29 @@ interface RepresentativeResponse {
   };
 }
 
-interface ApiResponse {
-  success: boolean;
-  representatives?: RepresentativeResponse[];
+interface RepresentativesPayload {
+  representatives: RepresentativeResponse[];
+  /** Original lookup key: ZIP or "STATE-DISTRICT" */
+  lookup: string;
+  metadata: {
+    timestamp: string;
+    dataSource: string;
+    freshness?: string;
+  };
+}
+
+/**
+ * BackboneResponse envelope: dataQuality and accuracyNote sit at the top
+ * level so UI/SDK/MCP consumers can distinguish "no data exists" from
+ * "upstream failed" and surface the ZIP-accuracy caveat uniformly.
+ */
+type ApiResponse = BackboneResponse<RepresentativesPayload> & {
   error?: {
     code: string;
     message: string;
     details?: unknown;
   };
-  // TODO(zip-honesty): migrate this route to BackboneResponse<T> so accuracyNote
-  // and dataQuality sit at the top level. Tracked in GitHub follow-up issue.
-  accuracyNote?: string;
-  metadata: {
-    timestamp: string;
-    zipCode: string;
-    dataQuality: 'high' | 'medium' | 'low' | 'unavailable';
-    dataSource: string;
-    cacheable: boolean;
-    freshness?: string;
-    validationScore?: number;
-    validationStatus?: 'excellent' | 'good' | 'fair' | 'poor';
-    accuracyNote?: string;
-  };
-}
+};
 
 // Circuit breaker pattern
 class CircuitBreaker {
@@ -150,32 +151,47 @@ async function retryWithBackoff<T>(
 
 // Removed getRepresentativesByStateDistrict - now using RepresentativesCoreService directly
 
+function makeSourceStatus(
+  source: string,
+  status: SourceStatus['status'],
+  errorMessage?: string
+): SourceStatus {
+  return {
+    source,
+    status,
+    ...(errorMessage ? { errorMessage } : {}),
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
 // Honest data fetching with transparency
 async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
   const startTime = Date.now();
-  const metadata: ApiResponse['metadata'] = {
-    timestamp: new Date().toISOString(),
-    zipCode,
-    dataQuality: 'unavailable',
-    dataSource: 'none',
-    cacheable: false,
-  };
+  const emptyPayload = (dataSource: string): RepresentativesPayload => ({
+    representatives: [],
+    lookup: zipCode,
+    metadata: { timestamp: new Date().toISOString(), dataSource },
+  });
 
-  // Check cache first
+  // Check cache first. `'data' in cached` also rejects pre-envelope cached
+  // shapes left over from before the BackboneResponse migration.
   const cacheKey = `representatives:${zipCode}`;
   const cached = await govCache.get<ApiResponse>(cacheKey);
-  if (cached && typeof cached === 'object' && 'success' in cached && cached.success) {
+  if (cached && typeof cached === 'object' && 'data' in cached && !cached.error) {
     logger.info(`Cache hit for representatives lookup`, {
       zipCode,
       cacheKey,
-      representativeCount: (cached as ApiResponse).representatives?.length || 0,
+      representativeCount: cached.data.representatives.length,
     });
     return {
-      ...(cached as ApiResponse),
-      metadata: {
-        ...(cached as ApiResponse).metadata,
-        freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
-        dataSource: `${(cached as ApiResponse).metadata.dataSource} (cached)`,
+      ...cached,
+      data: {
+        ...cached.data,
+        metadata: {
+          ...cached.data.metadata,
+          freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
+          dataSource: `${cached.data.metadata.dataSource} (cached)`,
+        },
       },
     };
   }
@@ -222,17 +238,16 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
     if (districtInfos.length === 0) {
       return {
-        success: false,
+        data: emptyPayload('census-failed'),
+        dataQuality: 'unavailable',
+        sourceStatus: [
+          makeSourceStatus('zip-district-mapping', 'error', 'ZIP not mapped to any district'),
+        ],
         error: {
           code: 'DISTRICT_NOT_FOUND',
           message: `Could not determine congressional district for ZIP code ${zipCode}`,
           details:
             'This ZIP code may be invalid or not currently mapped to a congressional district',
-        },
-        metadata: {
-          ...metadata,
-          dataQuality: 'unavailable',
-          dataSource: 'census-failed',
         },
       };
     }
@@ -263,17 +278,16 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
     if (!allRepresentatives || allRepresentatives.length === 0) {
       return {
-        success: false,
+        data: emptyPayload('congress-legislators-failed'),
+        dataQuality: 'unavailable',
+        sourceStatus: [
+          makeSourceStatus('zip-district-mapping', 'ok'),
+          makeSourceStatus('congress-legislators', 'error', 'Legislators database inaccessible'),
+        ],
         error: {
           code: 'REPRESENTATIVES_DATA_UNAVAILABLE',
           message: 'Representative data is temporarily unavailable',
           details: 'Congress legislators database could not be accessed',
-        },
-        metadata: {
-          ...metadata,
-          dataQuality: 'unavailable',
-          dataSource: 'congress-legislators-failed',
-          freshness: `District lookup successful (${Date.now() - startTime}ms)`,
         },
       };
     }
@@ -353,7 +367,14 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
     if (districtRepresentatives.length === 0) {
       return {
-        success: false,
+        data: emptyPayload('congress-legislators-partial'),
+        // Both sources answered but the join produced nothing — 'empty',
+        // not 'unavailable' (no data exists ≠ upstream failed)
+        dataQuality: 'empty',
+        sourceStatus: [
+          makeSourceStatus('zip-district-mapping', 'ok'),
+          makeSourceStatus('congress-legislators', 'ok'),
+        ],
         error: {
           code: 'NO_REPRESENTATIVES_FOUND',
           message: `No representatives found for ${primaryState}-${allDistricts.join(',')}`,
@@ -362,12 +383,6 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
             state: primaryState,
             totalRepsInDatabase: allRepresentatives.length,
           },
-        },
-        metadata: {
-          ...metadata,
-          dataQuality: 'low',
-          dataSource: 'congress-legislators-partial',
-          freshness: `Data retrieved in ${Date.now() - startTime}ms`,
         },
       };
     }
@@ -392,26 +407,28 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       },
     }));
 
-    // Simplified quality assessment
-    const dataQuality: 'high' | 'medium' | 'low' =
-      representatives.length > 0 && districtInfos.length > 0 ? 'high' : 'medium';
-
     const result: ApiResponse = {
-      success: true,
-      representatives,
-      metadata: {
-        ...metadata,
-        dataQuality,
-        dataSource: 'representatives-core-service + census',
-        cacheable: true,
-        freshness: `Retrieved in ${Date.now() - startTime}ms`,
-        validationScore: representatives.length > 0 ? 95 : 70,
-        validationStatus: representatives.length > 0 ? 'excellent' : 'fair',
+      data: {
+        representatives,
+        lookup: zipCode,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSource: 'representatives-core-service + census',
+          freshness: `Retrieved in ${Date.now() - startTime}ms`,
+        },
       },
+      // ZIP input: the answer is approximate by nature (ZIP ↔ district is
+      // 10–20% wrong), so quality is 'partial' with the accuracy caveat
+      dataQuality: 'partial',
+      sourceStatus: [
+        makeSourceStatus('zip-district-mapping', 'ok'),
+        makeSourceStatus('congress-legislators', 'ok'),
+      ],
+      ...(getZipAccuracyNote('zip') ? { accuracyNote: getZipAccuracyNote('zip') } : {}),
     };
 
     // Cache the successful result
-    if (result.success && representatives.length > 0) {
+    if (representatives.length > 0) {
       govCache.set(cacheKey, result, {
         ttl: 86400000, // 24 hours - Congressional rosters change rarely (elections every 2 years)
         source: 'congress-legislators + census',
@@ -456,17 +473,19 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
     return {
-      success: false,
+      data: emptyPayload('error'),
+      dataQuality: 'unavailable',
+      sourceStatus: [
+        makeSourceStatus(
+          'representatives-zip-lookup',
+          errorCode === 'SERVICE_TIMEOUT' ? 'timeout' : 'error',
+          errorMessage
+        ),
+      ],
       error: {
         code: errorCode,
         message: errorMessage,
         details: errorDetails,
-      },
-      metadata: {
-        ...metadata,
-        dataQuality: 'unavailable',
-        dataSource: 'error',
-        freshness: `Failed after ${Date.now() - startTime}ms`,
       },
     };
   }
@@ -501,23 +520,24 @@ export async function GET(request: NextRequest) {
     logger.info('Request parameters received', { zipCode, state, district });
 
     // Input validation
+    const validationError = (code: string, message: string): ApiResponse => ({
+      data: {
+        representatives: [],
+        lookup: zipCode || `${state ?? ''}-${district ?? ''}`,
+        metadata: { timestamp: new Date().toISOString(), dataSource: 'validation-error' },
+      },
+      dataQuality: 'unavailable',
+      sourceStatus: [makeSourceStatus('input-validation', 'error', message)],
+      error: { code, message },
+    });
+
     if (!zipCode && (!state || !district)) {
       logger.warn('Missing required parameters');
       return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'MISSING_PARAMETERS',
-            message: 'Either zip code or both state and district parameters are required',
-          },
-          metadata: {
-            timestamp: new Date().toISOString(),
-            zipCode: zipCode || '',
-            dataQuality: 'unavailable' as const,
-            dataSource: 'validation-error',
-            cacheable: false,
-          },
-        },
+        validationError(
+          'MISSING_PARAMETERS',
+          'Either zip code or both state and district parameters are required'
+        ),
         { status: 400 }
       );
     }
@@ -525,20 +545,10 @@ export async function GET(request: NextRequest) {
     // Validate ZIP code format
     if (zipCode && !/^\d{5}(-\d{4})?$/.test(zipCode)) {
       return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'INVALID_ZIP_CODE',
-            message: 'ZIP code must be 5 digits (e.g., 10001) or 9 digits (e.g., 10001-1234)',
-          },
-          metadata: {
-            timestamp: new Date().toISOString(),
-            zipCode,
-            dataQuality: 'unavailable' as const,
-            dataSource: 'validation-error',
-            cacheable: false,
-          },
-        },
+        validationError(
+          'INVALID_ZIP_CODE',
+          'ZIP code must be 5 digits (e.g., 10001) or 9 digits (e.g., 10001-1234)'
+        ),
         { status: 400 }
       );
     }
@@ -583,49 +593,46 @@ export async function GET(request: NextRequest) {
           },
         }));
     } else if (zipCode) {
-      // ZIP code lookup using the refactored function
+      // ZIP code lookup — the helper already returns the full envelope
+      // (incl. accuracyNote and per-source status), so pass it through
       logger.info('Getting representatives by ZIP code', { zipCode });
       const zipResult = await getRepresentativesByZip(zipCode);
 
-      if (zipResult.success) {
-        representatives = zipResult.representatives || [];
-      } else {
-        // Return the error from ZIP lookup, annotated for ZIP honesty
-        const zipAccuracyNote = getZipAccuracyNote('zip');
-        return NextResponse.json(
-          {
-            ...zipResult,
-            accuracyNote: zipAccuracyNote,
-            metadata: { ...zipResult.metadata, accuracyNote: zipAccuracyNote },
-          },
-          {
-            status: zipResult.error?.code === 'INVALID_ZIP_CODE' ? 400 : 503,
-          }
-        );
+      if (zipResult.error) {
+        const status =
+          zipResult.error.code === 'INVALID_ZIP_CODE'
+            ? 400
+            : zipResult.dataQuality === 'empty'
+              ? 404
+              : 503;
+        return NextResponse.json(zipResult, { status });
       }
+
+      return NextResponse.json(zipResult, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
-    const inputMode: InputMode = zipCode ? 'zip' : 'address';
+    const inputMode: InputMode = 'address';
     const accuracyNote = getZipAccuracyNote(inputMode);
-    // When input was a ZIP, downgrade confidence signal: citizens and SDK
-    // consumers must see that the answer is approximate.
-    const isZipInput = inputMode === 'zip';
 
+    // state+district path: authoritative input, 'complete' when data exists
     const result: ApiResponse = {
-      success: true,
-      representatives,
-      ...(accuracyNote ? { accuracyNote } : {}),
-      metadata: {
-        timestamp: new Date().toISOString(),
-        zipCode: zipCode || `${state}-${district}`,
-        dataQuality: isZipInput ? 'medium' : 'high',
-        dataSource: 'representatives-core-service',
-        cacheable: true,
-        freshness: `Retrieved in ${Date.now() - startTime}ms`,
-        validationScore: isZipInput ? 80 : 95,
-        validationStatus: isZipInput ? 'good' : 'excellent',
-        ...(accuracyNote ? { accuracyNote } : {}),
+      data: {
+        representatives,
+        lookup: `${state}-${district}`,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSource: 'representatives-core-service',
+          freshness: `Retrieved in ${Date.now() - startTime}ms`,
+        },
       },
+      dataQuality: representatives.length > 0 ? 'complete' : 'empty',
+      sourceStatus: [makeSourceStatus('congress-legislators', 'ok')],
+      ...(accuracyNote ? { accuracyNote } : {}),
     };
 
     logger.info('Representatives API request completed successfully', {
@@ -645,23 +652,26 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('Unexpected error in Representatives API', error as Error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'An internal server error occurred',
-          details: error instanceof Error ? error.message : 'Unknown error',
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          zipCode: '',
-          dataQuality: 'unavailable' as const,
-          dataSource: 'internal-error',
-          cacheable: false,
-        },
+    const internalError: ApiResponse = {
+      data: {
+        representatives: [],
+        lookup: '',
+        metadata: { timestamp: new Date().toISOString(), dataSource: 'internal-error' },
       },
-      { status: 500 }
-    );
+      dataQuality: 'unavailable',
+      sourceStatus: [
+        makeSourceStatus(
+          'representatives-api',
+          'error',
+          error instanceof Error ? error.message : 'Unknown error'
+        ),
+      ],
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An internal server error occurred',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+    };
+    return NextResponse.json(internalError, { status: 500 });
   }
 }
