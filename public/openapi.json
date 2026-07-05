@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "CIV.IQ Public API",
-    "description": "Open REST API for normalized U.S. government data — federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.",
+    "description": "Open REST API for normalized U.S. government data \u2014 federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.",
     "version": "1.1.0",
     "license": {
       "name": "MIT",
@@ -31,7 +31,9 @@
             "description": "API index with endpoint listing",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/IndexResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/IndexResponse"
+                }
               }
             }
           }
@@ -41,10 +43,14 @@
     "/v1/analytics": {
       "get": {
         "summary": "Per-endpoint request counts",
-        "description": "Returns request counts per endpoint for a given date range. Authenticated with a bearer token (CACHE_WARM_SECRET). Intended for operational observability — not part of the citizen-facing read path.",
+        "description": "Returns request counts per endpoint for a given date range. Authenticated with a bearer token (CACHE_WARM_SECRET). Intended for operational observability \u2014 not part of the citizen-facing read path.",
         "operationId": "getAnalytics",
         "tags": ["Analytics"],
-        "security": [{ "BearerAuth": [] }],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "start",
@@ -76,13 +82,21 @@
             "description": "Request counts for the date range",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AnalyticsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
         }
       }
     },
@@ -96,31 +110,47 @@
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string", "enum": ["house", "senate"] },
+            "schema": {
+              "type": "string",
+              "enum": ["house", "senate"]
+            },
             "description": "Filter by chamber"
           },
           {
             "name": "state",
             "in": "query",
-            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
             "description": "Two-letter state code (e.g., MI)"
           },
           {
             "name": "party",
             "in": "query",
-            "schema": { "type": "string", "enum": ["D", "R", "I"] },
+            "schema": {
+              "type": "string",
+              "enum": ["D", "R", "I"]
+            },
             "description": "Filter by party"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 100, "maximum": 535 },
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 535
+            },
             "description": "Results per page"
           },
           {
             "name": "offset",
             "in": "query",
-            "schema": { "type": "integer", "default": 0 },
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
             "description": "Pagination offset"
           }
         ],
@@ -135,7 +165,9 @@
               }
             }
           },
-          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
         }
       }
     },
@@ -150,7 +182,10 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[A-Z]\\d{6}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]\\d{6}$"
+            },
             "description": "Bioguide ID (e.g., P000197)",
             "example": "P000197"
           }
@@ -166,8 +201,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -196,13 +235,20 @@
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 50, "maximum": 250 },
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 250
+            },
             "description": "Results per page"
           },
           {
             "name": "offset",
             "in": "query",
-            "schema": { "type": "integer", "default": 0 },
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
             "description": "Pagination offset"
           }
         ],
@@ -211,11 +257,15 @@
             "description": "List of bills",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BillListResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/BillListResponse"
+                }
               }
             }
           },
-          "502": { "$ref": "#/components/responses/BadGateway" }
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
         }
       }
     },
@@ -230,7 +280,9 @@
             "name": "billId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bill ID in format: {congress}-{type}-{number}",
             "example": "119-hr-1"
           }
@@ -240,13 +292,21 @@
             "description": "Bill detail",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BillDetailResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/BillDetailResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "502": { "$ref": "#/components/responses/BadGateway" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
         }
       }
     },
@@ -261,7 +321,9 @@
             "name": "billId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bill ID in format: {congress}-{type}-{number}",
             "example": "119-hr-1"
           }
@@ -271,12 +333,18 @@
             "description": "Bill summary",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BillSummaryResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/BillSummaryResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -291,7 +359,9 @@
             "name": "voteId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Vote ID in format: {chamber}-{congress}-{rollNumber}",
             "example": "house-119-116"
           }
@@ -301,13 +371,21 @@
             "description": "Vote detail with positions",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/VoteDetailResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/VoteDetailResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "502": { "$ref": "#/components/responses/BadGateway" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
         }
       }
     },
@@ -341,7 +419,9 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -355,19 +435,28 @@
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Filter by chamber"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 100, "maximum": 250 },
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 250
+            },
             "description": "Results per page"
           },
           {
             "name": "offset",
             "in": "query",
-            "schema": { "type": "integer", "default": 0 },
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
             "description": "Pagination offset"
           }
         ],
@@ -382,7 +471,9 @@
               }
             }
           },
-          "502": { "$ref": "#/components/responses/BadGateway" }
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
         }
       }
     },
@@ -397,7 +488,9 @@
             "name": "committeeId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Committee system code",
             "example": "HSJU"
           }
@@ -413,8 +506,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -429,7 +526,9 @@
             "description": "Changelog",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ChangelogResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ChangelogResponse"
+                }
               }
             }
           }
@@ -443,7 +542,9 @@
         "operationId": "mcpStream",
         "tags": ["MCP"],
         "responses": {
-          "200": { "description": "MCP protocol response" }
+          "200": {
+            "description": "MCP protocol response"
+          }
         }
       },
       "post": {
@@ -452,7 +553,9 @@
         "operationId": "mcpServer",
         "tags": ["MCP"],
         "responses": {
-          "200": { "description": "MCP protocol response" }
+          "200": {
+            "description": "MCP protocol response"
+          }
         }
       },
       "delete": {
@@ -461,8 +564,12 @@
         "operationId": "mcpSessionDelete",
         "tags": ["MCP"],
         "responses": {
-          "200": { "description": "Session terminated" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "200": {
+            "description": "Session terminated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -477,7 +584,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -493,8 +602,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -509,7 +622,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -525,8 +640,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -541,7 +660,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -557,8 +678,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -573,7 +698,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -589,8 +716,12 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -605,26 +736,38 @@
             "name": "sector",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Industry sector name (e.g., Defense, Health, Energy)",
             "example": "Defense"
           },
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string", "enum": ["house", "senate"] },
+            "schema": {
+              "type": "string",
+              "enum": ["house", "senate"]
+            },
             "description": "Filter by chamber"
           },
           {
             "name": "party",
             "in": "query",
-            "schema": { "type": "string", "enum": ["D", "R", "I"] },
+            "schema": {
+              "type": "string",
+              "enum": ["D", "R", "I"]
+            },
             "description": "Filter by party"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 20, "maximum": 50 },
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 50
+            },
             "description": "Number of results"
           }
         ],
@@ -639,14 +782,16 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
     "/intelligence/address/money-report": {
       "get": {
         "summary": "Money report by ZIP code",
-        "description": "Campaign finance report card for representatives serving a ZIP code. ZIP-based responses include `accuracyNote` and `status: 'partial'` — ZIP ↔ congressional district alignment is 10–20% wrong. For authoritative results, use the address POST endpoint.",
+        "description": "Campaign finance report card for representatives serving a ZIP code. ZIP-based responses include `accuracyNote` and `status: 'partial'` \u2014 ZIP \u2194 congressional district alignment is 10\u201320% wrong. For authoritative results, use the address POST endpoint.",
         "operationId": "getMoneyReportByZip",
         "tags": ["Intelligence"],
         "parameters": [
@@ -654,21 +799,28 @@
             "name": "zip",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "pattern": "^\\d{5}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{5}$"
+            },
             "description": "5-digit ZIP code",
             "example": "48226"
           }
         ],
         "responses": {
           "200": {
-            "description": "Money report for ZIP (approximate — see accuracyNote)",
+            "description": "Money report for ZIP (approximate \u2014 see accuracyNote)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MoneyReportResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MoneyReportResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       },
       "post": {
@@ -687,8 +839,14 @@
                     "type": "string",
                     "example": "1600 Pennsylvania Ave"
                   },
-                  "city": { "type": "string", "example": "Washington" },
-                  "state": { "type": "string", "example": "DC" }
+                  "city": {
+                    "type": "string",
+                    "example": "Washington"
+                  },
+                  "state": {
+                    "type": "string",
+                    "example": "DC"
+                  }
                 },
                 "required": ["street", "city", "state"]
               }
@@ -700,18 +858,22 @@
             "description": "Money report for address",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MoneyReportResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MoneyReportResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
     "/intelligence/address/representatives": {
       "post": {
         "summary": "Representatives by address",
-        "description": "Look up all federal representatives (House + Senate) for a street address. Address-based responses do NOT include `accuracyNote` — the district is authoritative.",
+        "description": "Look up all federal representatives (House + Senate) for a street address. Address-based responses do NOT include `accuracyNote` \u2014 the district is authoritative.",
         "operationId": "getRepresentativesByAddress",
         "tags": ["Intelligence"],
         "requestBody": {
@@ -725,8 +887,14 @@
                     "type": "string",
                     "example": "1600 Pennsylvania Ave"
                   },
-                  "city": { "type": "string", "example": "Washington" },
-                  "state": { "type": "string", "example": "DC" }
+                  "city": {
+                    "type": "string",
+                    "example": "Washington"
+                  },
+                  "state": {
+                    "type": "string",
+                    "example": "DC"
+                  }
                 },
                 "required": ["street", "city", "state"]
               }
@@ -747,12 +915,18 @@
                         "$ref": "#/components/schemas/RepresentativeSummary"
                       }
                     },
-                    "state": { "type": "string" },
-                    "district": { "type": "string" },
-                    "multiDistrict": { "type": "boolean" },
+                    "state": {
+                      "type": "string"
+                    },
+                    "district": {
+                      "type": "string"
+                    },
+                    "multiDistrict": {
+                      "type": "boolean"
+                    },
                     "accuracyNote": {
                       "type": "string",
-                      "description": "Populated only on ZIP-based GET responses (not address POST). Communicates that ZIP ↔ district alignment is 10–20% wrong and address-based lookup is preferred for authoritative results."
+                      "description": "Populated only on ZIP-based GET responses (not address POST). Communicates that ZIP \u2194 district alignment is 10\u201320% wrong and address-based lookup is preferred for authoritative results."
                     },
                     "status": {
                       "type": "string",
@@ -764,12 +938,14 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       },
       "get": {
         "summary": "Representatives by ZIP code",
-        "description": "ZIP-code fallback for the address-based lookup. Responses include `accuracyNote` and `status: 'partial'` because ZIP ↔ district alignment is 10–20% wrong; prefer the address POST endpoint for authoritative results.",
+        "description": "ZIP-code fallback for the address-based lookup. Responses include `accuracyNote` and `status: 'partial'` because ZIP \u2194 district alignment is 10\u201320% wrong; prefer the address POST endpoint for authoritative results.",
         "operationId": "getRepresentativesByZip",
         "tags": ["Intelligence"],
         "parameters": [
@@ -777,14 +953,17 @@
             "name": "zip",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "pattern": "^\\d{5}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{5}$"
+            },
             "description": "5-digit ZIP code",
             "example": "48226"
           }
         ],
         "responses": {
           "200": {
-            "description": "Representatives for ZIP (approximate — see accuracyNote)",
+            "description": "Representatives for ZIP (approximate \u2014 see accuracyNote)",
             "content": {
               "application/json": {
                 "schema": {
@@ -796,12 +975,18 @@
                         "$ref": "#/components/schemas/RepresentativeSummary"
                       }
                     },
-                    "state": { "type": "string" },
-                    "district": { "type": "string" },
-                    "multiDistrict": { "type": "boolean" },
+                    "state": {
+                      "type": "string"
+                    },
+                    "district": {
+                      "type": "string"
+                    },
+                    "multiDistrict": {
+                      "type": "boolean"
+                    },
                     "accuracyNote": {
                       "type": "string",
-                      "description": "Present on ZIP-based responses. ZIP ↔ district alignment is 10–20% wrong; use address POST for authoritative results."
+                      "description": "Present on ZIP-based responses. ZIP \u2194 district alignment is 10\u201320% wrong; use address POST for authoritative results."
                     },
                     "status": {
                       "type": "string",
@@ -812,7 +997,9 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -826,7 +1013,9 @@
           {
             "name": "bioguideId",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Optional: get cluster for a specific legislator"
           }
         ],
@@ -840,11 +1029,15 @@
                   "properties": {
                     "clusters": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
                     "crossPartyHighlights": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     }
                   }
                 }
@@ -865,14 +1058,20 @@
             "name": "q",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Search query. Supports state prefix (e.g., CA:pelosi)",
             "example": "healthcare"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 10, "maximum": 50 },
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 50
+            },
             "description": "Results per category"
           }
         ],
@@ -887,7 +1086,9 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -902,14 +1103,19 @@
             "name": "policyArea",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Policy area name",
             "example": "Health"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 10 },
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
             "description": "Results per category"
           }
         ],
@@ -921,24 +1127,42 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "policyArea": { "type": "string" },
-                    "bills": { "type": "array", "items": { "type": "object" } },
+                    "policyArea": {
+                      "type": "string"
+                    },
+                    "bills": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
                     "regulations": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "spending": { "type": "object", "nullable": true },
+                    "spending": {
+                      "type": "object",
+                      "nullable": true
+                    },
                     "committees": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "metadata": { "type": "object" }
+                    "metadata": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -953,7 +1177,9 @@
             "name": "lat",
             "in": "query",
             "required": true,
-            "schema": { "type": "number" },
+            "schema": {
+              "type": "number"
+            },
             "description": "Latitude (WGS84 decimal degrees)",
             "example": 38.8977
           },
@@ -961,7 +1187,9 @@
             "name": "lng",
             "in": "query",
             "required": true,
-            "schema": { "type": "number" },
+            "schema": {
+              "type": "number"
+            },
             "description": "Longitude (WGS84 decimal degrees)",
             "example": -77.0365
           }
@@ -971,12 +1199,18 @@
             "description": "District resolved from coordinates",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GeocodeResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       },
       "post": {
@@ -1000,8 +1234,12 @@
                     "type": "string",
                     "example": "1600 Pennsylvania Ave, Washington DC"
                   },
-                  "latitude": { "type": "number" },
-                  "longitude": { "type": "number" }
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
                 }
               }
             }
@@ -1012,11 +1250,15 @@
             "description": "Geocoded district and representatives",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GeocodeResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1030,13 +1272,19 @@
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 435 },
+            "schema": {
+              "type": "integer",
+              "default": 435
+            },
             "description": "Results per page"
           },
           {
             "name": "offset",
             "in": "query",
-            "schema": { "type": "integer", "default": 0 },
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
             "description": "Pagination offset"
           }
         ],
@@ -1050,9 +1298,13 @@
                   "properties": {
                     "districts": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/DistrictDetail" }
+                      "items": {
+                        "$ref": "#/components/schemas/DistrictDetail"
+                      }
                     },
-                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
                   }
                 }
               }
@@ -1071,17 +1323,25 @@
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string", "enum": ["house", "senate"] }
+            "schema": {
+              "type": "string",
+              "enum": ["house", "senate"]
+            }
           },
           {
             "name": "state",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "party",
             "in": "query",
-            "schema": { "type": "string", "enum": ["D", "R", "I"] }
+            "schema": {
+              "type": "string",
+              "enum": ["D", "R", "I"]
+            }
           }
         ],
         "responses": {
@@ -1098,7 +1358,9 @@
                         "$ref": "#/components/schemas/RepresentativeSummary"
                       }
                     },
-                    "metadata": { "type": "object" }
+                    "metadata": {
+                      "type": "object"
+                    }
                   }
                 }
               }
@@ -1118,7 +1380,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -1134,21 +1398,37 @@
                     "representative": {
                       "$ref": "#/components/schemas/RepresentativeDetail"
                     },
-                    "profile": { "type": "object" },
+                    "profile": {
+                      "type": "object"
+                    },
                     "committees": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "biography": { "type": "object", "nullable": true },
-                    "socialMedia": { "type": "object", "nullable": true },
-                    "identifiers": { "type": "object" },
-                    "metadata": { "type": "object" }
+                    "biography": {
+                      "type": "object",
+                      "nullable": true
+                    },
+                    "socialMedia": {
+                      "type": "object",
+                      "nullable": true
+                    },
+                    "identifiers": {
+                      "type": "object"
+                    },
+                    "metadata": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -1163,7 +1443,9 @@
             "name": "bioguideId",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Comma-separated bioguide IDs to compare (2-4)",
             "example": "P000197,M000312"
           }
@@ -1176,15 +1458,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "votingRecord": { "type": "object" },
-                    "campaignFinance": { "type": "object" },
-                    "effectiveness": { "type": "object" }
+                    "votingRecord": {
+                      "type": "object"
+                    },
+                    "campaignFinance": {
+                      "type": "object"
+                    },
+                    "effectiveness": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1199,20 +1489,28 @@
             "name": "state",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
             "description": "Two-letter state code",
             "example": "MI"
           },
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string", "enum": ["upper", "lower"] },
+            "schema": {
+              "type": "string",
+              "enum": ["upper", "lower"]
+            },
             "description": "Filter by chamber (upper = Senate, lower = House/Assembly)"
           },
           {
             "name": "party",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Filter by party"
           }
         ],
@@ -1224,19 +1522,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "state": { "type": "string" },
-                    "stateName": { "type": "string" },
+                    "state": {
+                      "type": "string"
+                    },
+                    "stateName": {
+                      "type": "string"
+                    },
                     "legislators": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "totalCount": { "type": "integer" }
+                    "totalCount": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1251,32 +1559,46 @@
             "name": "state",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
             "description": "Two-letter state code",
             "example": "MI"
           },
           {
             "name": "search",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Keyword search"
           },
           {
             "name": "status",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Filter by bill status"
           },
           {
             "name": "chamber",
             "in": "query",
-            "schema": { "type": "string", "enum": ["upper", "lower"] },
+            "schema": {
+              "type": "string",
+              "enum": ["upper", "lower"]
+            },
             "description": "Filter by chamber"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 20, "maximum": 100 },
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            },
             "description": "Results per page"
           }
         ],
@@ -1288,17 +1610,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "state": { "type": "string" },
-                    "stateName": { "type": "string" },
-                    "bills": { "type": "array", "items": { "type": "object" } },
-                    "totalCount": { "type": "integer" },
-                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                    "state": {
+                      "type": "string"
+                    },
+                    "stateName": {
+                      "type": "string"
+                    },
+                    "bills": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "totalCount": {
+                      "type": "integer"
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1313,27 +1650,35 @@
             "name": "street",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Street address line"
           },
           {
             "name": "city",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "state",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Two-letter state abbreviation (e.g., CA, NY)"
           },
           {
             "name": "zip",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Optional ZIP code to assist geocoding"
           }
         ],
@@ -1347,15 +1692,21 @@
                   "properties": {
                     "legislators": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "district": { "type": "object" }
+                    "district": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       },
       "post": {
@@ -1370,10 +1721,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "street": { "type": "string" },
-                  "city": { "type": "string" },
-                  "state": { "type": "string" },
-                  "zip": { "type": "string" }
+                  "street": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "zip": {
+                    "type": "string"
+                  }
                 },
                 "required": ["street", "city", "state"]
               }
@@ -1390,15 +1749,21 @@
                   "properties": {
                     "legislators": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "district": { "type": "object" }
+                    "district": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1413,26 +1778,38 @@
             "name": "nodeId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Node ID in format type:identifier (e.g., rep:P000197, bill:119-hr-1)",
             "example": "rep:P000197"
           },
           {
             "name": "edgeTypes",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Comma-separated edge types to include"
           },
           {
             "name": "minConfidence",
             "in": "query",
-            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
             "description": "Minimum confidence threshold (0-1)"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 20, "maximum": 100 },
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            },
             "description": "Maximum edges to return"
           }
         ],
@@ -1444,20 +1821,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "center": { "type": "object" },
-                    "edges": { "type": "array", "items": { "type": "object" } },
+                    "center": {
+                      "type": "object"
+                    },
+                    "edges": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
                     "connectedNodes": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     },
-                    "metadata": { "type": "object" }
+                    "metadata": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -1472,7 +1864,9 @@
             "name": "nodeId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Entity ID in format type:identifier (e.g., rep:P000197)",
             "example": "rep:P000197"
           }
@@ -1481,11 +1875,19 @@
           "200": {
             "description": "Full entity with context",
             "content": {
-              "application/json": { "schema": { "type": "object" } }
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
         }
       }
     },
@@ -1500,7 +1902,9 @@
             "name": "nodeId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Entity ID",
             "example": "rep:P000197"
           },
@@ -1520,10 +1924,16 @@
           "200": {
             "description": "Temporal profile",
             "content": {
-              "application/json": { "schema": { "type": "object" } }
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1538,14 +1948,19 @@
             "name": "type",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "enum": ["scorecard", "district"] },
+            "schema": {
+              "type": "string",
+              "enum": ["scorecard", "district"]
+            },
             "description": "Widget type"
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Entity ID (bioguideId for scorecard, districtId for district)",
             "example": "P000197"
           }
@@ -1555,11 +1970,15 @@
             "description": "Self-contained HTML widget",
             "content": {
               "text/html": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
         }
       }
     },
@@ -1574,7 +1993,9 @@
             "name": "bioguideId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bioguide ID",
             "example": "P000197"
           }
@@ -1584,7 +2005,9 @@
             "description": "Atom XML feed",
             "content": {
               "application/atom+xml": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1602,7 +2025,9 @@
             "name": "districtId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "District ID (e.g., MI-12)",
             "example": "MI-12"
           }
@@ -1612,7 +2037,9 @@
             "description": "Atom XML feed",
             "content": {
               "application/atom+xml": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1629,7 +2056,11 @@
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 50, "maximum": 100 },
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            },
             "description": "Number of bills"
           }
         ],
@@ -1638,7 +2069,9 @@
             "description": "Atom XML feed",
             "content": {
               "application/atom+xml": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1656,7 +2089,9 @@
             "name": "billId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Bill ID",
             "example": "119-hr-1"
           }
@@ -1666,7 +2101,9 @@
             "description": "Atom XML feed",
             "content": {
               "application/atom+xml": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1684,7 +2121,9 @@
             "name": "committeeId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Committee system code",
             "example": "HSJU"
           }
@@ -1694,7 +2133,9 @@
             "description": "Atom XML feed",
             "content": {
               "application/atom+xml": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1707,21 +2148,43 @@
       "Meta": {
         "type": "object",
         "properties": {
-          "apiVersion": { "type": "string", "example": "v1" },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "source": { "type": "string" },
-          "license": { "type": "string", "example": "MIT" },
-          "documentation": { "type": "string", "format": "uri" }
+          "apiVersion": {
+            "type": "string",
+            "example": "v1"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "example": "MIT"
+          },
+          "documentation": {
+            "type": "string",
+            "format": "uri"
+          }
         },
         "required": ["apiVersion", "timestamp"]
       },
       "Pagination": {
         "type": "object",
         "properties": {
-          "total": { "type": "integer" },
-          "limit": { "type": "integer" },
-          "offset": { "type": "integer" },
-          "hasMore": { "type": "boolean" }
+          "total": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
         },
         "required": ["total", "limit", "offset", "hasMore"]
       },
@@ -1731,13 +2194,21 @@
           "error": {
             "type": "object",
             "properties": {
-              "code": { "type": "integer" },
-              "message": { "type": "string" },
-              "details": { "type": "string" }
+              "code": {
+                "type": "integer"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "string"
+              }
             },
             "required": ["code", "message"]
           },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "IntelligenceMetadata": {
@@ -1769,135 +2240,342 @@
       "RepresentativeSummary": {
         "type": "object",
         "properties": {
-          "bioguideId": { "type": "string", "example": "P000197" },
-          "name": { "type": "string", "example": "Nancy Pelosi" },
-          "party": { "type": "string", "enum": ["D", "R", "I"] },
-          "state": { "type": "string", "example": "CA" },
-          "district": { "type": "string", "nullable": true },
-          "chamber": { "type": "string", "enum": ["House", "Senate"] },
-          "title": { "type": "string" },
-          "phone": { "type": "string", "nullable": true },
-          "website": { "type": "string", "nullable": true },
-          "yearsInOffice": { "type": "number", "nullable": true },
-          "nextElection": { "type": "string", "nullable": true }
+          "bioguideId": {
+            "type": "string",
+            "example": "P000197"
+          },
+          "name": {
+            "type": "string",
+            "example": "Nancy Pelosi"
+          },
+          "party": {
+            "type": "string",
+            "enum": ["D", "R", "I"]
+          },
+          "state": {
+            "type": "string",
+            "example": "CA"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "chamber": {
+            "type": "string",
+            "enum": ["House", "Senate"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "yearsInOffice": {
+            "type": "number",
+            "nullable": true
+          },
+          "nextElection": {
+            "type": "string",
+            "nullable": true
+          }
         },
         "required": ["bioguideId", "name", "party", "state", "chamber", "title"]
       },
       "RepresentativeDetail": {
         "type": "object",
         "properties": {
-          "bioguideId": { "type": "string" },
-          "name": { "type": "string" },
-          "party": { "type": "string" },
-          "state": { "type": "string" },
-          "district": { "type": "string", "nullable": true },
-          "chamber": { "type": "string" },
-          "title": { "type": "string" },
-          "isHistorical": { "type": "boolean" },
-          "votingMember": { "type": "boolean" },
-          "role": { "type": "string" },
-          "bio": { "type": "string", "nullable": true },
-          "currentTerm": { "type": "object", "nullable": true },
-          "socialMedia": { "type": "object", "nullable": true },
-          "contact": { "type": "object", "nullable": true },
-          "committees": { "type": "array", "items": { "type": "object" } },
-          "leadershipRoles": { "type": "array", "items": { "type": "object" } },
-          "yearsInOffice": { "type": "number", "nullable": true },
-          "nextElection": { "type": "string", "nullable": true }
+          "bioguideId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "party": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "chamber": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "isHistorical": {
+            "type": "boolean"
+          },
+          "votingMember": {
+            "type": "boolean"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentTerm": {
+            "type": "object",
+            "nullable": true
+          },
+          "socialMedia": {
+            "type": "object",
+            "nullable": true
+          },
+          "contact": {
+            "type": "object",
+            "nullable": true
+          },
+          "committees": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "leadershipRoles": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "yearsInOffice": {
+            "type": "number",
+            "nullable": true
+          },
+          "nextElection": {
+            "type": "string",
+            "nullable": true
+          }
         },
         "required": ["bioguideId", "name", "party", "state", "chamber"]
       },
       "BillSummary": {
         "type": "object",
         "properties": {
-          "congress": { "type": "integer" },
-          "number": { "type": "string" },
-          "type": { "type": "string", "nullable": true },
-          "title": { "type": "string", "nullable": true },
-          "originChamber": { "type": "string", "nullable": true },
-          "updateDate": { "type": "string", "nullable": true },
+          "congress": {
+            "type": "integer"
+          },
+          "number": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "originChamber": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateDate": {
+            "type": "string",
+            "nullable": true
+          },
           "latestAction": {
             "type": "object",
             "nullable": true,
             "properties": {
-              "actionDate": { "type": "string" },
-              "text": { "type": "string" }
+              "actionDate": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
             }
           },
-          "url": { "type": "string" }
+          "url": {
+            "type": "string"
+          }
         },
         "required": ["congress", "number", "url"]
       },
       "BillDetail": {
         "type": "object",
         "properties": {
-          "billId": { "type": "string" },
-          "congress": { "type": "integer" },
-          "type": { "type": "string" },
-          "number": { "type": "string" },
-          "title": { "type": "string" },
-          "shortTitle": { "type": "string", "nullable": true },
-          "originChamber": { "type": "string" },
-          "introducedDate": { "type": "string" },
-          "updateDate": { "type": "string", "nullable": true },
-          "latestAction": { "type": "object", "nullable": true },
-          "policyArea": { "type": "string", "nullable": true },
+          "billId": {
+            "type": "string"
+          },
+          "congress": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "shortTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "originChamber": {
+            "type": "string"
+          },
+          "introducedDate": {
+            "type": "string"
+          },
+          "updateDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "latestAction": {
+            "type": "object",
+            "nullable": true
+          },
+          "policyArea": {
+            "type": "string",
+            "nullable": true
+          },
           "sponsors": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "bioguideId": { "type": "string" },
-                "fullName": { "type": "string" },
-                "party": { "type": "string" },
-                "state": { "type": "string" }
+                "bioguideId": {
+                  "type": "string"
+                },
+                "fullName": {
+                  "type": "string"
+                },
+                "party": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
               }
             }
           },
-          "cosponsorsCount": { "type": "integer" },
-          "committeesCount": { "type": "integer" },
-          "actionsCount": { "type": "integer" },
-          "textVersionsCount": { "type": "integer" },
-          "url": { "type": "string" }
+          "cosponsorsCount": {
+            "type": "integer"
+          },
+          "committeesCount": {
+            "type": "integer"
+          },
+          "actionsCount": {
+            "type": "integer"
+          },
+          "textVersionsCount": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          }
         },
         "required": ["billId", "congress", "type", "number", "title"]
       },
       "BillAISummary": {
         "type": "object",
         "properties": {
-          "billId": { "type": "string" },
-          "title": { "type": "string" },
-          "summary": { "type": "string" },
-          "whatItDoes": { "type": "string" },
-          "whyItMatters": { "type": "string" },
-          "keyPoints": { "type": "array", "items": { "type": "string" } },
-          "whoItAffects": { "type": "array", "items": { "type": "string" } },
-          "readingLevel": { "type": "string" },
-          "confidence": { "type": "number" },
-          "lastUpdated": { "type": "string", "format": "date-time" },
-          "source": { "type": "string" }
+          "billId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "whatItDoes": {
+            "type": "string"
+          },
+          "whyItMatters": {
+            "type": "string"
+          },
+          "keyPoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "whoItAffects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "readingLevel": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          }
         },
         "required": ["billId", "title", "summary"]
       },
       "VoteDetail": {
         "type": "object",
         "properties": {
-          "voteId": { "type": "string" },
-          "chamber": { "type": "string" },
-          "congress": { "type": "integer" },
-          "rollNumber": { "type": "integer" },
-          "question": { "type": "string", "nullable": true },
-          "description": { "type": "string", "nullable": true },
-          "result": { "type": "string", "nullable": true },
-          "date": { "type": "string", "nullable": true },
-          "time": { "type": "string", "nullable": true },
+          "voteId": {
+            "type": "string"
+          },
+          "chamber": {
+            "type": "string"
+          },
+          "congress": {
+            "type": "integer"
+          },
+          "rollNumber": {
+            "type": "integer"
+          },
+          "question": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
+          "time": {
+            "type": "string",
+            "nullable": true
+          },
           "totals": {
             "type": "object",
             "properties": {
-              "yea": { "type": "integer" },
-              "nay": { "type": "integer" },
-              "present": { "type": "integer" },
-              "notVoting": { "type": "integer" }
+              "yea": {
+                "type": "integer"
+              },
+              "nay": {
+                "type": "integer"
+              },
+              "present": {
+                "type": "integer"
+              },
+              "notVoting": {
+                "type": "integer"
+              }
             }
           },
           "positions": {
@@ -1905,28 +2583,51 @@
             "items": {
               "type": "object",
               "properties": {
-                "name": { "type": "string" },
-                "party": { "type": "string" },
-                "state": { "type": "string" },
-                "vote": { "type": "string" },
-                "bioguideId": { "type": "string" }
+                "name": {
+                  "type": "string"
+                },
+                "party": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "vote": {
+                  "type": "string"
+                },
+                "bioguideId": {
+                  "type": "string"
+                }
               }
             }
           },
-          "url": { "type": "string" }
+          "url": {
+            "type": "string"
+          }
         },
         "required": ["voteId", "chamber", "congress", "rollNumber"]
       },
       "DistrictDetail": {
         "type": "object",
         "properties": {
-          "districtId": { "type": "string", "example": "MI-12" },
-          "state": { "type": "string" },
-          "district": { "type": "string" },
-          "label": { "type": "string" },
+          "districtId": {
+            "type": "string",
+            "example": "MI-12"
+          },
+          "state": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
           "representatives": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+            "items": {
+              "$ref": "#/components/schemas/RepresentativeSummary"
+            }
           }
         },
         "required": ["districtId", "state", "district", "representatives"]
@@ -1934,42 +2635,103 @@
       "CommitteeSummary": {
         "type": "object",
         "properties": {
-          "systemCode": { "type": "string" },
-          "name": { "type": "string" },
-          "chamber": { "type": "string" },
-          "type": { "type": "string", "nullable": true },
-          "url": { "type": "string" }
+          "systemCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "chamber": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          }
         },
         "required": ["systemCode", "name", "chamber"]
       },
       "CommitteeDetail": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "chamber": { "type": "string" },
-          "type": { "type": "string", "nullable": true },
-          "jurisdiction": { "type": "string", "nullable": true },
-          "url": { "type": "string", "nullable": true },
-          "chair": { "type": "object", "nullable": true },
-          "rankingMember": { "type": "object", "nullable": true },
-          "members": { "type": "array", "items": { "type": "object" } },
-          "subcommittees": { "type": "array", "items": { "type": "object" } },
-          "lastUpdated": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "chamber": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "jurisdiction": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "chair": {
+            "type": "object",
+            "nullable": true
+          },
+          "rankingMember": {
+            "type": "object",
+            "nullable": true
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "subcommittees": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
         "required": ["id", "name", "chamber"]
       },
       "IndexResponse": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "version": { "type": "string" },
-          "description": { "type": "string" },
-          "endpoints": { "type": "object" },
-          "feeds": { "type": "object" },
-          "rateLimit": { "type": "object" },
-          "links": { "type": "object" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "object"
+          },
+          "feeds": {
+            "type": "object"
+          },
+          "rateLimit": {
+            "type": "object"
+          },
+          "links": {
+            "type": "object"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "RepresentativeListResponse": {
@@ -1977,17 +2739,27 @@
         "properties": {
           "data": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+            "items": {
+              "$ref": "#/components/schemas/RepresentativeSummary"
+            }
           },
-          "pagination": { "$ref": "#/components/schemas/Pagination" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "RepresentativeDetailResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/RepresentativeDetail" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/RepresentativeDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "BillListResponse": {
@@ -1995,38 +2767,60 @@
         "properties": {
           "data": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/BillSummary" }
+            "items": {
+              "$ref": "#/components/schemas/BillSummary"
+            }
           },
-          "pagination": { "$ref": "#/components/schemas/Pagination" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "BillDetailResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/BillDetail" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/BillDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "BillSummaryResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/BillAISummary" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/BillAISummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "VoteDetailResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/VoteDetail" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/VoteDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "DistrictDetailResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/DistrictDetail" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/DistrictDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "CommitteeListResponse": {
@@ -2034,17 +2828,27 @@
         "properties": {
           "data": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CommitteeSummary" }
+            "items": {
+              "$ref": "#/components/schemas/CommitteeSummary"
+            }
           },
-          "pagination": { "$ref": "#/components/schemas/Pagination" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "CommitteeDetailResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/CommitteeDetail" },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "data": {
+            "$ref": "#/components/schemas/CommitteeDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "ChangelogResponse": {
@@ -2053,74 +2857,127 @@
           "data": {
             "type": "object",
             "properties": {
-              "currentVersion": { "type": "string" },
+              "currentVersion": {
+                "type": "string"
+              },
               "versions": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "version": { "type": "string" },
-                    "date": { "type": "string", "format": "date" },
+                    "version": {
+                      "type": "string"
+                    },
+                    "date": {
+                      "type": "string",
+                      "format": "date"
+                    },
                     "changes": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
       },
       "IntelligenceInsightResponse": {
         "type": "object",
         "description": "Standard intelligence analyzer response",
         "properties": {
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "dataAsOf": { "type": "string", "format": "date-time" },
-          "methodology": { "type": "string" },
-          "disclaimer": { "type": "string" }
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "dataAsOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "methodology": {
+            "type": "string"
+          },
+          "disclaimer": {
+            "type": "string"
+          }
         },
         "required": ["confidence", "dataAsOf", "methodology", "disclaimer"]
       },
       "SectorLeaderboardResponse": {
         "type": "object",
         "properties": {
-          "sector": { "type": "string" },
+          "sector": {
+            "type": "string"
+          },
           "legislators": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "bioguideId": { "type": "string" },
-                "name": { "type": "string" },
-                "party": { "type": "string" },
-                "state": { "type": "string" },
-                "totalFromSector": { "type": "number" },
-                "percentOfTotal": { "type": "number" }
+                "bioguideId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "party": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "totalFromSector": {
+                  "type": "number"
+                },
+                "percentOfTotal": {
+                  "type": "number"
+                }
               }
             }
           },
-          "metadata": { "type": "object" }
+          "metadata": {
+            "type": "object"
+          }
         }
       },
       "MoneyReportResponse": {
         "type": "object",
         "properties": {
-          "state": { "type": "string" },
-          "district": { "type": "string" },
+          "state": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
           "representatives": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+            "items": {
+              "$ref": "#/components/schemas/RepresentativeSummary"
+            }
           },
-          "aggregates": { "type": "object" },
-          "narrative": { "type": "string" },
-          "confidence": { "type": "number" },
-          "dataAsOf": { "type": "string", "format": "date-time" },
+          "aggregates": {
+            "type": "object"
+          },
+          "narrative": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "dataAsOf": {
+            "type": "string",
+            "format": "date-time"
+          },
           "accuracyNote": {
             "type": "string",
-            "description": "Present on ZIP-based GET responses. ZIP ↔ district alignment is 10–20% wrong; use the address POST endpoint for authoritative results."
+            "description": "Present on ZIP-based GET responses. ZIP \u2194 district alignment is 10\u201320% wrong; use the address POST endpoint for authoritative results."
           },
           "status": {
             "type": "string",
@@ -2132,38 +2989,87 @@
       "GeocodeResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean" },
-          "district": { "type": "string" },
+          "success": {
+            "type": "boolean"
+          },
+          "district": {
+            "type": "string"
+          },
           "representatives": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+            "items": {
+              "$ref": "#/components/schemas/RepresentativeSummary"
+            }
           },
           "stateLegislators": {
             "type": "array",
-            "items": { "type": "object" }
+            "items": {
+              "type": "object"
+            }
           },
-          "stateInfo": { "type": "object" },
-          "geocoded": { "type": "object" },
+          "stateInfo": {
+            "type": "object"
+          },
+          "geocoded": {
+            "type": "object"
+          },
           "accuracyNote": {
             "type": "string",
-            "description": "Present when the request carried a ZIP code (body.zipCode) rather than pure coordinates or address-only. Downstream consumers using the returned district inherit ZIP imprecision (10–20% misalignment)."
+            "description": "Present when the request carried a ZIP code (body.zipCode) rather than pure coordinates or address-only. Downstream consumers using the returned district inherit ZIP imprecision (10\u201320% misalignment)."
           },
-          "isMultiDistrict": { "type": "boolean" }
+          "isMultiDistrict": {
+            "type": "boolean"
+          },
+          "dataQuality": {
+            "$ref": "#/components/schemas/DataQuality"
+          },
+          "sourceStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            }
+          }
         }
       },
       "UnifiedSearchResponse": {
         "type": "object",
         "properties": {
-          "query": { "type": "string" },
-          "totalResults": { "type": "integer" },
-          "representatives": { "type": "array", "items": { "type": "object" } },
-          "bills": { "type": "array", "items": { "type": "object" } },
-          "committees": { "type": "array", "items": { "type": "object" } },
+          "query": {
+            "type": "string"
+          },
+          "totalResults": {
+            "type": "integer"
+          },
+          "representatives": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "bills": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "committees": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
           "stateLegislators": {
             "type": "array",
-            "items": { "type": "object" }
+            "items": {
+              "type": "object"
+            }
           },
-          "stateBills": { "type": "array", "items": { "type": "object" } }
+          "stateBills": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
         }
       },
       "AnalyticsResponse": {
@@ -2183,21 +3089,65 @@
                 "type": "object",
                 "required": ["start", "end"],
                 "properties": {
-                  "start": { "type": "string", "format": "date" },
-                  "end": { "type": "string", "format": "date" }
+                  "start": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date"
+                  }
                 }
               },
-              "totalRequests": { "type": "integer", "minimum": 0 },
-              "endpointCount": { "type": "integer", "minimum": 0 },
+              "totalRequests": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "endpointCount": {
+                "type": "integer",
+                "minimum": 0
+              },
               "endpoints": {
                 "type": "object",
-                "additionalProperties": { "type": "integer", "minimum": 0 },
-                "description": "Map of endpoint path → request count"
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "description": "Map of endpoint path \u2192 request count"
               }
             }
           },
-          "meta": { "$ref": "#/components/schemas/Meta" }
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
         }
+      },
+      "DataQuality": {
+        "type": "string",
+        "enum": ["complete", "partial", "empty", "unavailable"],
+        "description": "Backbone data-quality signal. 'complete' = all sources healthy and input authoritative; 'partial' = approximate input (e.g. ZIP-based lookup) or a degraded/failed sub-source; 'empty' = sources healthy but no data exists; 'unavailable' = upstream failure."
+      },
+      "SourceStatus": {
+        "type": "object",
+        "description": "Per-upstream-source fetch status, so consumers can distinguish \"no data exists\" from \"upstream failed\".",
+        "properties": {
+          "source": {
+            "type": "string",
+            "example": "census-geocoder"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "error", "timeout", "rate-limited", "not-configured"]
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["source", "status", "fetchedAt"]
       }
     },
     "securitySchemes": {
@@ -2212,7 +3162,9 @@
         "description": "Invalid request parameters",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       },
@@ -2220,7 +3172,9 @@
         "description": "Resource not found",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       },
@@ -2228,7 +3182,9 @@
         "description": "Missing or invalid bearer token",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       },
@@ -2236,7 +3192,9 @@
         "description": "Upstream data source error",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       },
@@ -2244,7 +3202,9 @@
         "description": "Service temporarily unavailable",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       },
@@ -2252,57 +3212,85 @@
         "description": "Rate limit exceeded (60 requests/minute per IP)",
         "headers": {
           "X-RateLimit-Limit": {
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Maximum requests per window"
           },
           "X-RateLimit-Remaining": {
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Remaining requests in current window"
           },
           "X-RateLimit-Reset": {
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Unix timestamp when window resets"
           },
           "Retry-After": {
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Seconds until rate limit resets"
           }
         },
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/V1Error" }
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
           }
         }
       }
     }
   },
   "tags": [
-    { "name": "Index", "description": "API discovery and versioning" },
+    {
+      "name": "Index",
+      "description": "API discovery and versioning"
+    },
     {
       "name": "Representatives",
-      "description": "Members of Congress — federal level"
+      "description": "Members of Congress \u2014 federal level"
     },
-    { "name": "Bills", "description": "Legislation and AI summaries" },
-    { "name": "Votes", "description": "Roll-call votes" },
+    {
+      "name": "Bills",
+      "description": "Legislation and AI summaries"
+    },
+    {
+      "name": "Votes",
+      "description": "Roll-call votes"
+    },
     {
       "name": "Districts",
       "description": "Congressional districts and geocoding"
     },
-    { "name": "Committees", "description": "Congressional committees" },
+    {
+      "name": "Committees",
+      "description": "Congressional committees"
+    },
     {
       "name": "Intelligence",
-      "description": "ML-powered analysis — vote prediction, influence chains, temporal shifts"
+      "description": "ML-powered analysis \u2014 vote prediction, influence chains, temporal shifts"
     },
-    { "name": "Search", "description": "Cross-domain search" },
+    {
+      "name": "Search",
+      "description": "Cross-domain search"
+    },
     {
       "name": "States",
       "description": "State legislators and bills via OpenStates"
     },
     {
       "name": "Graph",
-      "description": "Civic knowledge graph — entity resolution and connections"
+      "description": "Civic knowledge graph \u2014 entity resolution and connections"
     },
-    { "name": "Feeds", "description": "Atom XML feeds for subscriptions" },
+    {
+      "name": "Feeds",
+      "description": "Atom XML feeds for subscriptions"
+    },
     {
       "name": "Widgets",
       "description": "Embeddable HTML widgets for iframe embedding"

@@ -52,11 +52,11 @@ export default function SearchForm() {
             // Fetch actual multi-district data
             const multiDistrictCheck = await checkMultiDistrict(zipCode);
 
-            if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+            if (!multiDistrictCheck.error && multiDistrictCheck.data.isMultiDistrict) {
               setMultiDistrictWarning(true);
               setIsLoading(false);
               return; // Don't navigate yet - show enhanced warning
-            } else if (!multiDistrictCheck.success) {
+            } else if (multiDistrictCheck.error) {
               setError({
                 type: 'api_error',
                 message: 'Unable to verify district information',
@@ -162,7 +162,7 @@ export default function SearchForm() {
       if (isLikelyMultiDistrict) {
         const multiDistrictCheck = await checkMultiDistrict(postalCode);
 
-        if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+        if (!multiDistrictCheck.error && multiDistrictCheck.data.isMultiDistrict) {
           // Multi-district ZIP - navigate to results page with district selector
           setIsGeolocating(false);
           router.push(`/results?zip=${postalCode}`);

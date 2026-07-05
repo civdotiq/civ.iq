@@ -4,6 +4,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import type { BackboneResponse } from '@/types/backbone-response';
 
 export interface DistrictInfo {
   state: string;
@@ -12,17 +13,13 @@ export interface DistrictInfo {
   confidence?: 'high' | 'medium' | 'low';
 }
 
-export interface MultiDistrictResponse {
-  success: boolean;
+export interface MultiDistrictPayload {
   zipCode: string;
   isMultiDistrict: boolean;
   districts: DistrictInfo[];
   primaryDistrict?: DistrictInfo;
   representatives?: unknown[];
   warnings?: string[];
-  // TODO(zip-honesty): this response shape pre-dates BackboneResponse.
-  // accuracyNote is surfaced here until the full migration follow-up lands.
-  accuracyNote?: string;
   metadata: {
     timestamp: string;
     dataSource: string;
@@ -32,16 +29,23 @@ export interface MultiDistrictResponse {
     coverage: {
       zipFound: boolean;
       representativesFound: boolean;
-      dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
     };
-    accuracyNote?: string;
   };
+}
+
+/**
+ * BackboneResponse envelope: dataQuality/sourceStatus/accuracyNote sit at
+ * the top level. ZIP input is never 'complete' — the ZIP ↔ district join is
+ * 10–20% wrong, so successful lookups are 'partial' with accuracyNote.
+ * Presence of `error` (not a success flag) signals failure.
+ */
+export type MultiDistrictResponse = BackboneResponse<MultiDistrictPayload> & {
   error?: {
     code: string;
     message: string;
     details?: unknown;
   };
-}
+};
 
 /**
  * Check if a ZIP code spans multiple congressional districts
@@ -60,36 +64,45 @@ export async function checkMultiDistrict(zipCode: string): Promise<MultiDistrict
 
     logger.info('Multi-district check completed', {
       zipCode,
-      isMultiDistrict: data.isMultiDistrict,
-      districtCount: data.districts.length,
-      success: data.success,
+      isMultiDistrict: data.data?.isMultiDistrict,
+      districtCount: data.data?.districts.length,
+      dataQuality: data.dataQuality,
     });
 
     return data;
   } catch (error) {
     logger.error('Multi-district check failed', error as Error, { zipCode });
 
-    // Return fallback response
+    // Return fallback envelope
     return {
-      success: false,
-      zipCode,
-      isMultiDistrict: false,
-      districts: [],
+      data: {
+        zipCode,
+        isMultiDistrict: false,
+        districts: [],
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSource: 'error',
+          totalDistricts: 0,
+          lookupMethod: 'fallback',
+          processingTime: 0,
+          coverage: {
+            zipFound: false,
+            representativesFound: false,
+          },
+        },
+      },
+      dataQuality: 'unavailable',
+      sourceStatus: [
+        {
+          source: 'representatives-multi-district',
+          status: 'error',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          fetchedAt: new Date().toISOString(),
+        },
+      ],
       error: {
         code: 'DETECTION_FAILED',
         message: 'Unable to check multi-district status',
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataSource: 'error',
-        totalDistricts: 0,
-        lookupMethod: 'fallback',
-        processingTime: 0,
-        coverage: {
-          zipFound: false,
-          representativesFound: false,
-          dataQuality: 'poor',
-        },
       },
     };
   }
@@ -120,8 +133,8 @@ export async function getDistrictsForZip(
     logger.info('Districts retrieved for ZIP', {
       zipCode,
       selectedDistrict,
-      districtCount: data.districts.length,
-      representativeCount: data.representatives?.length || 0,
+      districtCount: data.data?.districts.length,
+      representativeCount: data.data?.representatives?.length || 0,
     });
 
     return data;

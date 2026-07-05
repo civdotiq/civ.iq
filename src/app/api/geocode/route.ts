@@ -14,6 +14,20 @@ import {
   BOUNDARY_FALLBACK_NOTE,
   type InputMode,
 } from '@/lib/backbone/zip-accuracy';
+import type { DataQuality, SourceStatus } from '@/types/backbone-response';
+
+function sourceStatusOf(
+  source: string,
+  status: SourceStatus['status'],
+  errorMessage?: string
+): SourceStatus {
+  return {
+    source,
+    status,
+    ...(errorMessage ? { errorMessage } : {}),
+    fetchedAt: new Date().toISOString(),
+  };
+}
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -62,12 +76,17 @@ interface GeocodeResponse {
     method: 'geometry' | 'bbox' | 'census_api' | 'fallback';
     confidence: number;
   };
-  // TODO(zip-honesty): migrate this route to BackboneResponse<T>. Populated
-  // only when the resolved district was inherited from ZIP input (either via
-  // `body.zipCode` on POST or because the address resolved to a ZIP-spanning
-  // block). Per .claude/rules/security.md, ZIP ↔ district alignment is
-  // 10–20% wrong — consumers should surface this to end users.
+  // Populated only when the resolved district was inherited from ZIP input
+  // (either via `body.zipCode` on POST or because the address resolved to a
+  // ZIP-spanning block). Per .claude/rules/security.md, ZIP ↔ district
+  // alignment is 10–20% wrong — consumers should surface this to end users.
   accuracyNote?: string;
+  // ADDITIVE BackboneResponse fields. This route is publicly documented in
+  // openapi.json, so the existing top-level payload is preserved and the
+  // envelope's honesty fields are added alongside it (decision 2026-07-05)
+  // rather than wrapping the payload under `data`.
+  dataQuality?: DataQuality;
+  sourceStatus?: SourceStatus[];
   error?: {
     code: string;
     message: string;
@@ -178,6 +197,16 @@ export async function GET(request: NextRequest) {
           method: result.method,
           confidence: result.confidence,
         },
+        // Coordinates are precise input; quality only degrades when the
+        // boundary service fell back from Census point-in-polygon
+        dataQuality: (result.method === 'census_api' ? 'complete' : 'partial') as DataQuality,
+        sourceStatus: [
+          sourceStatusOf(
+            'census-geocoder',
+            'ok',
+            result.method !== 'census_api' ? `degraded to ${result.method}` : undefined
+          ),
+        ],
         ...(result.method !== 'census_api' ? { accuracyNote: BOUNDARY_FALLBACK_NOTE } : {}),
       },
       {
@@ -292,6 +321,10 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           geocoded,
+          dataQuality: 'empty',
+          sourceStatus: [
+            sourceStatusOf('census-geocoder', 'ok', 'No district matched this location'),
+          ],
           error: {
             code: 'DISTRICT_NOT_FOUND',
             message: result.error || 'Could not determine congressional district for this location',
@@ -326,6 +359,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch federal representatives for the found district
     let representatives: unknown[] = [];
+    let repsFailed = false;
     try {
       const allReps = await RepresentativesCoreService.getAllRepresentatives();
       representatives = allReps.filter(rep => {
@@ -342,6 +376,7 @@ export async function POST(request: NextRequest) {
         return false;
       });
     } catch (error) {
+      repsFailed = true;
       logger.error('Error fetching representatives for geocoded district', error as Error, {
         state,
         district: districtNum,
@@ -351,6 +386,7 @@ export async function POST(request: NextRequest) {
     // Fetch state legislators for the state
     let stateLegislators: unknown[] = [];
     let stateInfo;
+    let stateLegsFailed = false;
     try {
       const legislators = await StateLegislatureCoreService.getAllStateLegislators(state);
       stateLegislators = legislators;
@@ -364,6 +400,7 @@ export async function POST(request: NextRequest) {
         legislatorCount: legislators.length,
       };
     } catch (error) {
+      stateLegsFailed = true;
       logger.error('Error fetching state legislators for geocoded location', error as Error, {
         state,
       });
@@ -388,6 +425,15 @@ export async function POST(request: NextRequest) {
     ];
     const accuracyNote = noteParts.length > 0 ? noteParts.join(' ') : undefined;
 
+    // Additive envelope quality: 'complete' only for authoritative input
+    // (non-ZIP) resolved via Census point-in-polygon with all sub-sources
+    // healthy; ZIP input, boundary degradation, or a failed sub-source
+    // all cap it at 'partial'.
+    const dataQuality: DataQuality =
+      inputMode !== 'zip' && !boundaryDegraded && !repsFailed && !stateLegsFailed
+        ? 'complete'
+        : 'partial';
+
     const response: GeocodeResponse = {
       success: true,
       district: {
@@ -405,6 +451,24 @@ export async function POST(request: NextRequest) {
         method: result.method,
         confidence: result.confidence,
       },
+      dataQuality,
+      sourceStatus: [
+        sourceStatusOf(
+          'census-geocoder',
+          'ok',
+          boundaryDegraded ? `degraded to ${result.method}` : undefined
+        ),
+        sourceStatusOf(
+          'congress-legislators',
+          repsFailed ? 'error' : 'ok',
+          repsFailed ? 'Representative lookup failed' : undefined
+        ),
+        sourceStatusOf(
+          'openstates',
+          stateLegsFailed ? 'error' : 'ok',
+          stateLegsFailed ? 'State legislator lookup failed' : undefined
+        ),
+      ],
       ...(isMultiDistrict && { allDistricts }),
       ...(accuracyNote ? { accuracyNote } : {}),
     };
@@ -434,6 +498,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
+        dataQuality: 'unavailable',
+        sourceStatus: [
+          sourceStatusOf(
+            'geocode-api',
+            'error',
+            error instanceof Error ? error.message : 'Unknown error'
+          ),
+        ],
         error: {
           code: 'INTERNAL_ERROR',
           message: 'An internal error occurred during geocoding',

@@ -216,13 +216,13 @@ function ResultsContent() {
           nextStage(); //"Checking district boundaries..."
           const multiDistrictCheck = await checkMultiDistrict(searchQuery);
 
-          if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+          if (!multiDistrictCheck.error && multiDistrictCheck.data.isMultiDistrict) {
             // Multi-district ZIP - show district selector
             setMultiDistrictData(multiDistrictCheck);
             clearTimeout(loadingTimeout); // Clear timeout before completing
             completeLoading();
             return;
-          } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
+          } else if (!multiDistrictCheck.error && !multiDistrictCheck.data.isMultiDistrict) {
             // Single district - continue with normal flow using multi-district API for consistency
             nextStage(); //"Looking up representatives..."
             const response = await fetch(
@@ -230,39 +230,39 @@ function ResultsContent() {
             );
             const apiData: MultiDistrictResponse = await response.json();
 
-            if (apiData.success && apiData.representatives) {
+            if (!apiData.error && apiData.data.representatives) {
               // Convert multi-district response to legacy format
               const legacyData: ApiResponse = {
                 success: true,
-                representatives: (apiData.representatives as MultiDistrictRepresentative[]).map(
-                  rep => ({
-                    bioguideId: rep.bioguideId,
-                    name: rep.name,
-                    party: rep.party,
-                    state: rep.state,
-                    district: rep.district,
-                    chamber: rep.chamber as 'House' | 'Senate',
-                    title: rep.title,
-                    phone: rep.phone,
-                    email: '', // Not in multi-district response
-                    website: rep.website,
-                    committees: [],
-                    terms: [],
-                    yearsInOffice: 0,
-                    nextElection: '',
-                    imageUrl: '',
-                    dataComplete: 0,
-                  })
-                ),
+                representatives: (
+                  apiData.data.representatives as MultiDistrictRepresentative[]
+                ).map(rep => ({
+                  bioguideId: rep.bioguideId,
+                  name: rep.name,
+                  party: rep.party,
+                  state: rep.state,
+                  district: rep.district,
+                  chamber: rep.chamber as 'House' | 'Senate',
+                  title: rep.title,
+                  phone: rep.phone,
+                  email: '', // Not in multi-district response
+                  website: rep.website,
+                  committees: [],
+                  terms: [],
+                  yearsInOffice: 0,
+                  nextElection: '',
+                  imageUrl: '',
+                  dataComplete: 0,
+                })),
                 metadata: {
-                  timestamp: apiData.metadata.timestamp,
+                  timestamp: apiData.data.metadata.timestamp,
                   zipCode: searchQuery,
-                  dataQuality: apiData.metadata.coverage.dataQuality as
+                  dataQuality: (apiData.dataQuality === 'partial' ? 'medium' : 'high') as
                     | 'high'
                     | 'medium'
                     | 'low'
                     | 'unavailable',
-                  dataSource: apiData.metadata.dataSource,
+                  dataSource: apiData.data.metadata.dataSource,
                   cacheable: true,
                   freshness: 'live',
                 },
@@ -279,10 +279,10 @@ function ResultsContent() {
               });
 
               // Set district info
-              if (apiData.primaryDistrict) {
+              if (apiData.data.primaryDistrict) {
                 setDistrictInfo({
-                  state: apiData.primaryDistrict.state,
-                  district: apiData.primaryDistrict.district,
+                  state: apiData.data.primaryDistrict.state,
+                  district: apiData.data.primaryDistrict.district,
                 });
               }
 
@@ -306,11 +306,11 @@ function ResultsContent() {
           );
           const apiData: MultiDistrictResponse = await response.json();
 
-          if (apiData.success && apiData.representatives) {
+          if (!apiData.error && apiData.data.representatives) {
             // Convert to legacy format and continue
             const legacyData: ApiResponse = {
               success: true,
-              representatives: (apiData.representatives as MultiDistrictRepresentative[]).map(
+              representatives: (apiData.data.representatives as MultiDistrictRepresentative[]).map(
                 rep => ({
                   bioguideId: rep.bioguideId,
                   name: rep.name,
@@ -331,14 +331,14 @@ function ResultsContent() {
                 })
               ),
               metadata: {
-                timestamp: apiData.metadata.timestamp,
+                timestamp: apiData.data.metadata.timestamp,
                 zipCode: searchQuery,
-                dataQuality: apiData.metadata.coverage.dataQuality as
+                dataQuality: (apiData.dataQuality === 'partial' ? 'medium' : 'high') as
                   | 'high'
                   | 'medium'
                   | 'low'
                   | 'unavailable',
-                dataSource: apiData.metadata.dataSource,
+                dataSource: apiData.data.metadata.dataSource,
                 cacheable: true,
                 freshness: 'live',
               },
@@ -688,9 +688,9 @@ function ResultsContent() {
                   {multiDistrictData && !showAddressRefinement && (
                     <div className="mb-8">
                       <DistrictSelector
-                        zipCode={multiDistrictData.zipCode}
-                        districts={multiDistrictData.districts}
-                        representatives={multiDistrictData.representatives as Representative[]}
+                        zipCode={multiDistrictData.data.zipCode}
+                        districts={multiDistrictData.data.districts}
+                        representatives={multiDistrictData.data.representatives as Representative[]}
                         onSelect={handleDistrictSelect}
                         onRefineAddress={handleAddressRefinement}
                       />

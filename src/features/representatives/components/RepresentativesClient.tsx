@@ -213,30 +213,34 @@ export function RepresentativesClient({
         throw new Error(`API request failed: ${response.status}`);
       }
 
-      const data = await response.json();
+      // BackboneResponse envelope: failure is signaled by `error`, payload
+      // lives under `data`, accuracyNote stays top-level
+      const envelope = await response.json();
 
-      if (!data.success) {
-        throw new Error(data.error?.message || 'Failed to fetch representatives');
+      if (envelope.error) {
+        throw new Error(envelope.error.message || 'Failed to fetch representatives');
       }
+
+      const payload = envelope.data;
 
       // Update state based on API response
       setSearchState(prev => ({
         ...prev,
         isLoading: false,
-        isMultiDistrict: data.isMultiDistrict,
-        districts: data.districts || [],
-        representatives: data.representatives || [],
-        showAddressPrompt: data.isMultiDistrict,
+        isMultiDistrict: payload.isMultiDistrict,
+        districts: payload.districts || [],
+        representatives: payload.representatives || [],
+        showAddressPrompt: payload.isMultiDistrict,
         selectedDistrictInfo: null, // Reset selection
         searchMode: 'zip',
-        accuracyNote: data.accuracyNote ?? null,
+        accuracyNote: envelope.accuracyNote ?? null,
       }));
 
       logger.info('ZIP search completed', {
         zip,
-        isMultiDistrict: data.isMultiDistrict,
-        districtCount: data.districts?.length || 0,
-        representativeCount: data.representatives?.length || 0,
+        isMultiDistrict: payload.isMultiDistrict,
+        districtCount: payload.districts?.length || 0,
+        representativeCount: payload.representatives?.length || 0,
       });
     } catch (error) {
       logger.error('ZIP search failed', error as Error, { zip });
@@ -259,24 +263,24 @@ export function RepresentativesClient({
         `/api/representatives-multi-district?zip=${encodeURIComponent(searchState.zipCode)}&district=${district.state}-${district.district}`
       );
 
-      const data = await response.json();
+      const envelope = await response.json();
 
-      if (data.success && data.representatives) {
+      if (!envelope.error && envelope.data?.representatives) {
         setSearchState(prev => ({
           ...prev,
           isLoading: false,
           selectedDistrictInfo: district,
-          representatives: data.representatives,
+          representatives: envelope.data.representatives,
           showAddressPrompt: false,
         }));
 
         logger.info('District selected', {
           zipCode: searchState.zipCode,
           district: `${district.state}-${district.district}`,
-          representativeCount: data.representatives.length,
+          representativeCount: envelope.data.representatives.length,
         });
       } else {
-        throw new Error(data.error?.message || 'Failed to fetch district representatives');
+        throw new Error(envelope.error?.message || 'Failed to fetch district representatives');
       }
     } catch (error) {
       logger.error('District selection failed', error as Error, {

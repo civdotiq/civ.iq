@@ -360,6 +360,17 @@ describe('ZIP endpoint honesty contract', () => {
       expect(response.status).toBe(400);
       expect(data.accuracyNote).toBeUndefined();
     });
+
+    it('ZIP input → BackboneResponse envelope, never complete', async () => {
+      const response = await multiDistrictGET(
+        makeGET('http://localhost/api/representatives-multi-district?zip=10001')
+      );
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+      expect(Array.isArray(body.data.districts)).toBe(true);
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
+    });
   });
 
   describe('/api/intelligence/address/representatives', () => {
@@ -491,6 +502,23 @@ describe('ZIP endpoint honesty contract', () => {
       );
       const data = await response.json();
       expect(data.accuracyNote).toBeUndefined();
+    });
+
+    it('additive envelope: dataQuality + sourceStatus alongside the legacy payload', async () => {
+      const response = await geocodePOST(
+        makePOST('http://localhost/api/geocode', {
+          mode: 'address',
+          address: '74-09 37th Ave, Queens, NY',
+          zipCode: '11372',
+        })
+      );
+      const body = await response.json();
+      // Public route: legacy top-level payload preserved (no `data` wrapper)
+      expect(body.data).toBeUndefined();
+      expect(body.success).toBe(true);
+      expect(Array.isArray(body.sourceStatus)).toBe(true);
+      // ZIP-adjacent input is never 'complete'
+      expect(['partial', 'empty', 'unavailable']).toContain(body.dataQuality);
     });
 
     it('surfaces the lookup method and confidence', async () => {
