@@ -15,6 +15,7 @@
  * @example GET /api/search/unified?q=pelosi&limit=5   (federal only)
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
@@ -345,7 +346,7 @@ async function searchBills(query: string, limit: number): Promise<Bill[]> {
           return [];
         }
 
-        const congress = process.env.CURRENT_CONGRESS || '119';
+        const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
         const response = await fetch(
           `https://api.congress.gov/v3/bill/${congress}?limit=100&sort=updateDate+desc`,
           {

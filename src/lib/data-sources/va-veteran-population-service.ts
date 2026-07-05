@@ -24,10 +24,19 @@ import logger from '@/lib/logging/simple-logger';
 import { getStateName } from '@/lib/data/us-states';
 
 const VA_RESOURCE_BASE = 'https://www.datahub.va.gov/resource';
-// Veteran Population by State, FY2026.
+// Veteran Population by State, FY2026. The resource UUID is pinned to the
+// FY2026 VetPop dataset and FISCAL_YEAR labels THAT dataset — do NOT derive
+// it from today's date, or the label would lie about the data's vintage once
+// the calendar rolls past FY2026. When VA publishes the FY2027 dataset (a
+// NEW resource UUID), update both constants together. A tripwire test
+// (va-veteran-population-freshness.test.ts) fails after FY2026 ends to
+// force that check.
 const VETERAN_POP_RESOURCE = 'w6fb-7dn4';
 const FISCAL_YEAR = 'FY2026';
 const CACHE_TTL = 86400; // 24 hours
+
+/** Exported for the freshness tripwire test. */
+export const VETERAN_POP_DATASET_FISCAL_YEAR = 2026;
 
 export interface VeteranPopulation {
   /** Estimated number of veterans living in the state */

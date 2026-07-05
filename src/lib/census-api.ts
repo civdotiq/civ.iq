@@ -5,6 +5,7 @@
 
 // Remove React cache import - not available in current Next.js version
 import { ZIP_TO_DISTRICT_MAP } from './data/zip-district-mapping';
+import { findCongressionalDistrictLayer } from '@/lib/census-geocoder';
 import { US_STATES } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 
@@ -110,7 +111,7 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
       address: zipCode,
       benchmark: 'Public_AR_Current',
       vintage: 'Current_Current',
-      layers: '54', // Congressional Districts layer (119th Congress)
+      layers: 'all', // parser selects the newest Congressional Districts layer
       format: 'json',
     });
 
@@ -131,14 +132,12 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
       const coordinates = match.coordinates;
       const geographies = match.geographies;
 
-      // Extract congressional district info - 119th Congress only
+      // Extract congressional district info — newest Congress layer present
       const congressionalDistricts =
-        geographies['119th Congressional Districts'] ||
-        geographies['Congressional Districts'] ||
-        [];
+        findCongressionalDistrictLayer<Record<string, string>>(geographies) ?? [];
 
-      if (congressionalDistricts.length > 0) {
-        const district = congressionalDistricts[0];
+      const district = congressionalDistricts[0];
+      if (district) {
         const stateCode = district.STATE || '';
         const districtCode = district.CD || district.DISTRICT || '';
         const stateName = US_STATES[stateCode as keyof typeof US_STATES] || stateCode;
@@ -159,7 +158,7 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
               latitude: coordinates.y,
               longitude: coordinates.x,
             },
-            area_sqmi: parseFloat(district.AREALAND) / 2589988.11 || 0, // Convert sq meters to sq miles
+            area_sqmi: parseFloat(district.AREALAND ?? '') / 2589988.11 || 0, // Convert sq meters to sq miles
           },
           demographics,
         };
@@ -348,7 +347,7 @@ export const getCongressionalDistrictFromAddress = async (
       address: cleanAddress,
       benchmark: 'Public_AR_Current',
       vintage: 'Current_Current',
-      layers: '54', // Congressional Districts layer (119th Congress)
+      layers: 'all', // parser selects the newest Congressional Districts layer
       format: 'json',
     });
 
@@ -378,18 +377,20 @@ export const getCongressionalDistrictFromAddress = async (
       const coordinates = match.coordinates;
       const geographies = match.geographies;
 
-      // Extract congressional district info
+      // Extract congressional district info — newest Congress layer present
       const congressionalDistricts =
-        geographies['119th Congressional Districts'] ||
-        geographies['118th Congressional Districts'] ||
-        geographies['Congressional Districts'] ||
-        [];
+        findCongressionalDistrictLayer<Record<string, string>>(geographies) ?? [];
 
-      if (congressionalDistricts.length > 0) {
-        const district = congressionalDistricts[0];
+      const district = congressionalDistricts[0];
+      if (district) {
         const stateCode = district.STATE || '';
         const districtCode =
-          district.CD119 || district.CD118 || district.CD || district.DISTRICT || '';
+          district.BASENAME ||
+          district.CD119 ||
+          district.CD118 ||
+          district.CD ||
+          district.DISTRICT ||
+          '';
         const stateName = US_STATES[stateCode as keyof typeof US_STATES] || stateCode;
 
         // Get additional demographic data from ACS API if API key is available
@@ -408,7 +409,7 @@ export const getCongressionalDistrictFromAddress = async (
               latitude: coordinates.y,
               longitude: coordinates.x,
             },
-            area_sqmi: parseFloat(district.AREALAND) / 2589988.11 || 0, // Convert sq meters to sq miles
+            area_sqmi: parseFloat(district.AREALAND ?? '') / 2589988.11 || 0, // Convert sq meters to sq miles
           },
           demographics,
           matchedAddress: match.matchedAddress,

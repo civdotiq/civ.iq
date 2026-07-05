@@ -11,6 +11,7 @@
  * Runs daily at 8am UTC via Vercel Cron.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
@@ -242,7 +243,7 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const congress = process.env.CURRENT_CONGRESS || '119';
+    const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
     const bills = await fetchRecentBills(congress);
 
     logger.info(`Fetched ${bills.length} recent bills`, {

@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed, createBillsFeedConfig } from '@/lib/feeds/atom-generator';
 import type { AtomEntry } from '@/lib/feeds/atom-generator';
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return new NextResponse('Congress.gov API key required', { status: 500 });
     }
 
-    const congress = process.env.CURRENT_CONGRESS || '119';
+    const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
     const { searchParams } = request.nextUrl;
     const rawLimit = parseInt(searchParams.get('limit') || '50', 10) || 50;
     const limit = Math.min(Math.max(rawLimit, 1), 100);

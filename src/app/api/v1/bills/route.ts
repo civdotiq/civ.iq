@@ -10,6 +10,7 @@
  * Wraps the same Congress.gov API call as /api/bills/latest.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import logger from '@/lib/logging/simple-logger';
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       });
     }
 
-    const congress = process.env.CURRENT_CONGRESS || '119';
+    const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
     const { searchParams } = request.nextUrl;
     const validSorts = ['updateDate+desc', 'updateDate+asc', 'number+desc', 'number+asc'];
     const sortParam = searchParams.get('sort') || 'updateDate+desc';

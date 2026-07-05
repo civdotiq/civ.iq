@@ -10,6 +10,8 @@
  * ensuring accuracy, and tracking data sources across all APIs.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+
 interface DataSource {
   name: string;
   url: string;
@@ -753,12 +755,22 @@ class DataValidator {
   }
 
   /**
-   * Validate data specifically for 119th Congress
+   * Validate data belongs to the currently sitting Congress.
+   *
+   * The current Congress is derived from today's date (Jan 3 boundary), so
+   * this validator does not go stale at Congress transitions. The previous
+   * Congress is tolerated as a warning (not an error) to absorb
+   * boundary-week data that upstream sources haven't rolled over yet.
    */
-  validate119thCongress(data: unknown): ValidationResult {
+  validateCurrentCongress(data: unknown): ValidationResult {
+    const currentCongress = getCurrentCongressNumber();
+    const previousCongress = currentCongress - 1;
     const errors: string[] = [];
     const warnings: string[] = [];
     let confidence = 100;
+
+    const isCongressValue = (value: unknown, congress: number): boolean =>
+      value === congress || value === String(congress);
 
     if (!data || typeof data !== 'object') {
       errors.push('Invalid data: must be an object');
@@ -767,9 +779,16 @@ class DataValidator {
       const obj = data as Record<string, unknown>;
 
       // Check for congress number
-      if (obj.congress && obj.congress !== 119 && obj.congress !== '119') {
-        errors.push(`Invalid Congress ${obj.congress}, must be 119`);
-        confidence -= 30;
+      if (obj.congress && !isCongressValue(obj.congress, currentCongress)) {
+        if (isCongressValue(obj.congress, previousCongress)) {
+          warnings.push(
+            `Congress ${obj.congress} is the previous Congress - acceptable near a transition, verify freshness`
+          );
+          confidence -= 10;
+        } else {
+          errors.push(`Invalid Congress ${obj.congress}, must be ${currentCongress}`);
+          confidence -= 30;
+        }
       }
 
       // Check for terms with wrong congress
@@ -777,18 +796,24 @@ class DataValidator {
         for (const term of obj.terms) {
           if (typeof term === 'object' && term !== null) {
             const termObj = term as Record<string, unknown>;
-            if (termObj.congress && termObj.congress !== 119 && termObj.congress !== '119') {
-              errors.push(`Invalid term congress ${termObj.congress}, must be 119`);
+            if (termObj.congress && !isCongressValue(termObj.congress, currentCongress)) {
+              errors.push(`Invalid term congress ${termObj.congress}, must be ${currentCongress}`);
               confidence -= 20;
             }
           }
         }
       }
 
-      // Check for outdated years
+      // Check for years that predate the current Congress (derived, not
+      // hardcoded: for the 119th this flags 2023/2024, for the 120th
+      // 2025/2026, and so on)
+      const congressStartYear = 1789 + (currentCongress - 1) * 2;
+      const staleYears = [congressStartYear - 2, congressStartYear - 1];
       const dataStr = JSON.stringify(data).toLowerCase();
-      if (dataStr.includes('2023') || dataStr.includes('2024')) {
-        warnings.push('Data contains 2023/2024 dates - verify this is historical data');
+      if (staleYears.some(year => dataStr.includes(String(year)))) {
+        warnings.push(
+          `Data contains ${staleYears.join('/')} dates - verify this is historical data`
+        );
         confidence -= 5;
       }
 

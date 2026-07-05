@@ -9,6 +9,7 @@
  */
 
 import type { MetadataRoute } from 'next';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -400,11 +401,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Senate and House roll call votes for 119th Congress
   // ===========================================
   try {
-    // Generate vote IDs for current congress session
-    // Senate votes: senate-119-1-{rollNumber}
-    // House votes: house-119-1-{rollNumber}
-    const congress = 119;
-    const session = 1;
+    // Generate vote IDs for the current congress session
+    // Senate votes: senate-{congress}-{session}-{rollNumber}
+    // House votes: house-{congress}-{session}-{rollNumber}
+    // Session 1 = odd calendar year, session 2 = even (roll numbers reset
+    // each session, and /api/votes/recent returns current-session rolls).
+    const congress = getCurrentCongressNumber();
+    const session = new Date().getUTCFullYear() % 2 === 1 ? 1 : 2;
 
     // Fetch recent votes to determine current roll numbers
     const [senateRes, houseRes] = await Promise.allSettled([

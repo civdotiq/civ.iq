@@ -12,6 +12,7 @@
  * - Both: Return identical Vote objects with consistent field structure
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
@@ -120,7 +121,7 @@ function generateCongressUrl(
   congress: string,
   rollNumber: number
 ): string {
-  const congressNum = congress || '119';
+  const congressNum = congress || String(getCurrentCongressNumber());
   const chamberSlug = chamber.toLowerCase() === 'house' ? 'house' : 'senate';
 
   if (rollNumber && rollNumber > 0) {
@@ -253,7 +254,7 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
           : {
               number: 'N/A',
               title: 'Vote without associated bill',
-              congress: '119',
+              congress: String(getCurrentCongressNumber()),
               type: 'Senate Resolution',
               url: undefined,
             },
@@ -530,7 +531,7 @@ async function getHouseVotes(
           // Log for validation and debugging
           logger.debug('[Vote Enrichment] Session calculated', {
             currentYear,
-            congress: 119,
+            congress: getCurrentCongressNumber(),
             calculatedSession: sessionNumber,
           });
           const rollCallDetails = await fetchRollCallVoteDetails(
@@ -653,7 +654,7 @@ async function getHouseVotes(
         bill: {
           number: String(vote.bill?.number || 'N/A'),
           title: enrichedBillTitle,
-          congress: String(vote.bill?.congress || '119'),
+          congress: String(vote.bill?.congress || String(getCurrentCongressNumber())),
           type: vote.bill?.type || 'House Resolution',
           url: vote.bill?.url,
         },
@@ -664,7 +665,11 @@ async function getHouseVotes(
         chamber: 'House' as const,
         rollNumber,
         description: enrichedQuestion,
-        congressUrl: generateCongressUrl('House', String(vote.bill?.congress || '119'), rollNumber),
+        congressUrl: generateCongressUrl(
+          'House',
+          String(vote.bill?.congress || String(getCurrentCongressNumber())),
+          rollNumber
+        ),
         category,
         isKeyVote,
         total: enrichedTotal,

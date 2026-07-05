@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
@@ -14,7 +15,13 @@ export function registerLegislationTools(server: McpServer): void {
     'search_legislation',
     'Search for bills in Congress. Returns bill ID, title, sponsor, status, and policy area. Note: Congress.gov does not support keyword search — results are sorted by most recent activity. Filter by subject or sponsor after retrieval.',
     {
-      congress: z.number().int().min(1).max(120).optional().describe('Congress number (e.g., 119)'),
+      congress: z
+        .number()
+        .int()
+        .min(1)
+        .max(getCurrentCongressNumber() + 1)
+        .optional()
+        .describe('Congress number (defaults to the current Congress)'),
       type: z
         .enum(['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'])
         .optional()
@@ -127,8 +134,18 @@ export function registerLegislationTools(server: McpServer): void {
         const maxVotes = Math.min(limit ?? 20, 50);
         const votes =
           chamber === 'House'
-            ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, maxVotes)
-            : await batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, maxVotes);
+            ? await batchVotingService.getHouseMemberVotes(
+                bioguideId,
+                getCurrentCongressNumber(),
+                undefined,
+                maxVotes
+              )
+            : await batchVotingService.getSenateMemberVotes(
+                bioguideId,
+                getCurrentCongressNumber(),
+                undefined,
+                maxVotes
+              );
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(votes, null, 2) }] };
       } catch (error) {

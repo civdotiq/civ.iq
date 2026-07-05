@@ -20,7 +20,7 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
-import { filterCurrent119thCongress, is119thCongressTerm } from '@/lib/helpers/congress-validation';
+import { filterCurrentCongress, isCurrentCongressTerm } from '@/lib/helpers/congress-validation';
 import { getMemberStatus } from '@/lib/data/congressional-vacancies';
 import { getFileCache } from '@/lib/cache/file-cache';
 import fs from 'fs';
@@ -777,7 +777,7 @@ export async function getEnhancedRepresentative(
 
     // Get current term for 119th Congress (post-2023 redistricting)
     const currentTerm =
-      legislator.terms.find(term => is119thCongressTerm(term)) ||
+      legislator.terms.find(term => isCurrentCongressTerm(term)) ||
       legislator.terms[legislator.terms.length - 1];
 
     // Ensure we have a current term before proceeding
@@ -958,7 +958,7 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
     });
 
     // Filter for current 119th Congress members only
-    const currentLegislators = filterCurrent119thCongress(legislators);
+    const currentLegislators = filterCurrentCongress(legislators);
 
     // Include ALL current members (voting + non-voting delegates)
     // Constitutional distinction: Article I grants voting power only to state representatives
@@ -999,7 +999,7 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
         const bioguideId = legislator.id.bioguide;
         const social = socialMedia.find(s => s.bioguide === bioguideId);
         const currentTerm =
-          legislator.terms.find(term => is119thCongressTerm(term)) ||
+          legislator.terms.find(term => isCurrentCongressTerm(term)) ||
           legislator.terms[legislator.terms.length - 1];
 
         // Skip legislators without a current term

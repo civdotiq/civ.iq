@@ -10,6 +10,7 @@
  * Delegates to fetchBillFromCongress from bill.service.ts.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
@@ -64,7 +65,7 @@ export async function GET(
       },
     };
 
-    const CURRENT_CONGRESS = 119;
+    const CURRENT_CONGRESS = getCurrentCongressNumber();
     const billCongress = parseInt(bill.congress);
     const isHistorical = billCongress < CURRENT_CONGRESS;
     const cacheMaxAge = isHistorical ? 31536000 : 86400;

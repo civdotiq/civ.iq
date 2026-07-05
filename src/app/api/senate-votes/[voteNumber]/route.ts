@@ -8,6 +8,7 @@
  * Handles CORS and provides better error handling
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
 import { getSecureCorsOrigin } from '@/config/api.config';
@@ -151,7 +152,7 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams;
 
   // Extract congress and session from query params or use defaults
-  const congress = searchParams.get('congress') || '119';
+  const congress = searchParams.get('congress') || String(getCurrentCongressNumber());
   const session = searchParams.get('session') || '1';
   const type = searchParams.get('type') || 'vote'; // 'vote' or 'list'
 

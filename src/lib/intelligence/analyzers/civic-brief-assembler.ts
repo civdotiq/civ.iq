@@ -12,6 +12,7 @@
  * Pattern: CivicAlignmentAnalyzer (cache check → parallel fetch → pre-compute → AI → fallback)
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
@@ -316,8 +317,18 @@ async function fetchVotingData(
     // Fetch votes and bill sponsorship counts in parallel
     const [votes, billsSummary] = await Promise.all([
       chamber === 'House'
-        ? batchVotingService.getHouseMemberVotes(bioguideId, 119, undefined, 200)
-        : batchVotingService.getSenateMemberVotes(bioguideId, 119, undefined, 200),
+        ? batchVotingService.getHouseMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            undefined,
+            200
+          )
+        : batchVotingService.getSenateMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            undefined,
+            200
+          ),
       getBillsSummary(bioguideId).catch(() => null),
     ]);
 
@@ -336,7 +347,7 @@ async function fetchVotingData(
         const billsResponse = await getComprehensiveBillsByMember({
           bioguideId,
           limit: 50,
-          congress: 119,
+          congress: getCurrentCongressNumber(),
         });
         const progressedStatuses =
           /passed|reported|enacted|signed|became law|ordered to be reported/i;

@@ -16,12 +16,13 @@
  * count, and a single sample bioguideID. No secrets, no roster dump.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const DEFAULT_CONGRESS = 119;
+const DEFAULT_CONGRESS = getCurrentCongressNumber();
 const DEFAULT_SESSION = 1;
 const DEFAULT_ROLL = 1;
 

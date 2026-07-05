@@ -16,9 +16,20 @@
 // any local-time parsing regression shows up regardless of machine TZ.
 process.env.TZ = 'America/Los_Angeles';
 
-import { isCurrentMember, is119thCongressTerm } from '@/lib/helpers/congress-validation';
+import { isCurrentMember, isCurrentCongressTerm } from '@/lib/helpers/congress-validation';
 import type { EnhancedRepresentative } from '@/types/representative';
 import type { CongressLegislatorTerm } from '@/features/representatives/services/congress.service';
+
+// The fixtures below assume the 119th Congress is sitting. Pin system time
+// so the suite doesn't rot when the 120th convenes (Jan 2027).
+beforeAll(() => {
+  jest.useFakeTimers({ doNotFake: ['performance'] });
+  jest.setSystemTime(new Date('2026-06-15T12:00:00Z'));
+});
+
+afterAll(() => {
+  jest.useRealTimers();
+});
 
 function repWithTermEnd(end: string | undefined): EnhancedRepresentative {
   return {
@@ -46,24 +57,24 @@ describe('congress-validation UTC boundary semantics', () => {
     });
   });
 
-  describe('is119thCongressTerm', () => {
+  describe('isCurrentCongressTerm', () => {
     const term = (start: string): CongressLegislatorTerm =>
       ({ start, end: undefined }) as unknown as CongressLegislatorTerm;
 
     it('includes a term starting exactly on 2025-01-03 (UTC equality)', () => {
-      expect(is119thCongressTerm(term('2025-01-03'))).toBe(true);
+      expect(isCurrentCongressTerm(term('2025-01-03'))).toBe(true);
     });
 
     it('excludes a term starting the day before the 119th', () => {
-      expect(is119thCongressTerm(term('2025-01-02'))).toBe(false);
+      expect(isCurrentCongressTerm(term('2025-01-02'))).toBe(false);
     });
 
     it('excludes a term starting exactly on the 120th Congress start', () => {
-      expect(is119thCongressTerm(term('2027-01-03'))).toBe(false);
+      expect(isCurrentCongressTerm(term('2027-01-03'))).toBe(false);
     });
 
     it('includes a mid-Congress start date', () => {
-      expect(is119thCongressTerm(term('2026-06-15'))).toBe(true);
+      expect(isCurrentCongressTerm(term('2026-06-15'))).toBe(true);
     });
   });
 });

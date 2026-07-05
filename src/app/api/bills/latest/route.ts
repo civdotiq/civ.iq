@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     // Use current Congress (119th - 2025-2027)
-    const congress = process.env.CURRENT_CONGRESS || '119';
+    const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
     const { searchParams } = req.nextUrl;
     const validSorts = ['updateDate+desc', 'updateDate+asc', 'number+desc', 'number+asc'];
     const sortParam = searchParams.get('sort') || 'updateDate+desc';

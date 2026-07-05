@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import {
@@ -34,7 +35,7 @@ interface CommitteeMeetingsResponse {
   error?: string;
 }
 
-const CURRENT_CONGRESS = 119;
+const CURRENT_CONGRESS = getCurrentCongressNumber();
 
 export async function GET(
   request: NextRequest,

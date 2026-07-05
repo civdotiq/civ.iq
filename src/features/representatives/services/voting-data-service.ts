@@ -8,6 +8,7 @@
  * Aggregates voting records from multiple sources to provide comprehensive data
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { congressApi } from './congress-api';
 import { parseRollCallXML } from '../../legislation/services/rollcall-parser';
 import { logger } from '@/lib/logging/logger-edge';
@@ -201,7 +202,7 @@ export class VotingDataService {
           try {
             // Get detailed bill information including actions
             const billDetails = await congressApi.getBillDetails(
-              bill.congress || '119',
+              bill.congress || String(getCurrentCongressNumber()),
               bill.type || 'hr',
               bill.number || ''
             );
@@ -261,7 +262,7 @@ export class VotingDataService {
               number: `${(details.type || 'hr').toUpperCase()}. ${details.number || ''}`,
               title:
                 details.title || `${(details.type || 'hr').toUpperCase()}. ${details.number || ''}`,
-              congress: details.congress?.toString() || '119',
+              congress: details.congress?.toString() || String(getCurrentCongressNumber()),
               type: details.type || 'hr',
               url: details.url,
             },
@@ -318,7 +319,7 @@ export class VotingDataService {
                 bill: {
                   number: parsedVote.bill?.number || `Roll Call ${rollNumber}`,
                   title: parsedVote.bill?.title || parsedVote.question || 'Congressional Vote',
-                  congress: '119',
+                  congress: String(getCurrentCongressNumber()),
                   type: 'rollcall',
                 },
                 question: parsedVote.question || 'On Passage',

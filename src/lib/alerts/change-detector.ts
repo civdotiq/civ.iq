@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
@@ -147,15 +148,35 @@ async function detectVoteChanges(
 
   // Use chamber from subscription data to call the right API directly
   if (entity.chamber === 'Senate') {
-    votes = await batchVotingService.getSenateMemberVotes(entity.id, 119, undefined, 10);
+    votes = await batchVotingService.getSenateMemberVotes(
+      entity.id,
+      getCurrentCongressNumber(),
+      undefined,
+      10
+    );
   } else if (entity.chamber === 'House') {
-    votes = await batchVotingService.getHouseMemberVotes(entity.id, 119, undefined, 10);
+    votes = await batchVotingService.getHouseMemberVotes(
+      entity.id,
+      getCurrentCongressNumber(),
+      undefined,
+      10
+    );
   } else {
     // Fallback: try House first (more common), then Senate
     try {
-      votes = await batchVotingService.getHouseMemberVotes(entity.id, 119, undefined, 10);
+      votes = await batchVotingService.getHouseMemberVotes(
+        entity.id,
+        getCurrentCongressNumber(),
+        undefined,
+        10
+      );
     } catch {
-      votes = await batchVotingService.getSenateMemberVotes(entity.id, 119, undefined, 10);
+      votes = await batchVotingService.getSenateMemberVotes(
+        entity.id,
+        getCurrentCongressNumber(),
+        undefined,
+        10
+      );
     }
   }
 
@@ -209,7 +230,7 @@ async function detectBillChanges(
     bioguideId: entity.id,
     limit: 10,
     page: 1,
-    congress: 119,
+    congress: getCurrentCongressNumber(),
   });
 
   const bills = result.bills ?? [];

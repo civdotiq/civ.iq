@@ -6,31 +6,43 @@
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
+/** Entry in a Census "<N>th Congressional Districts" geography layer */
+export interface CongressionalDistrictLayerEntry {
+  GEOID: string;
+  CENTLAT: string;
+  CENTLON: string;
+  NAME: string;
+  STATE: string;
+  BASENAME: string; // Congressional District number
+  CDSESSN: string; // Congress session number
+}
+
+/** Entry in the legacy congressionalDistricts geography field */
+export interface LegacyCongressionalDistrictEntry {
+  GEOID: string;
+  CENTLAT: string;
+  CENTLON: string;
+  NAME: string;
+  STATE: string;
+  CD: string;
+}
+
 export interface GeocodeResult {
   matchedAddress: string;
   coordinates: {
     x: number; // longitude
     y: number; // latitude
   };
+  // The Census TIGERweb response names its congressional-district layer by
+  // Congress ("119th Congressional Districts", "120th ..." after the next
+  // boundary). Keyed generically so the parser doesn't go stale — use
+  // findCongressionalDistrictLayer() instead of a hardcoded key.
   geographies: {
-    '119th Congressional Districts'?: Array<{
-      GEOID: string;
-      CENTLAT: string;
-      CENTLON: string;
-      NAME: string;
-      STATE: string;
-      BASENAME: string; // Congressional District number
-      CDSESSN: string; // Congress session number
-    }>;
-    // Legacy field for backwards compatibility
-    congressionalDistricts?: Array<{
-      GEOID: string;
-      CENTLAT: string;
-      CENTLON: string;
-      NAME: string;
-      STATE: string;
-      CD: string;
-    }>;
+    congressionalDistricts?: LegacyCongressionalDistrictEntry[];
+    [layerName: string]:
+      | CongressionalDistrictLayerEntry[]
+      | LegacyCongressionalDistrictEntry[]
+      | undefined;
   };
   addressComponents: {
     streetNumber?: string;
@@ -39,6 +51,36 @@ export interface GeocodeResult {
     state?: string;
     zip?: string;
   };
+}
+
+const CD_LAYER_PATTERN = /^(\d+)(?:st|nd|rd|th) Congressional Districts$/;
+
+/**
+ * Find the congressional-district entries in a Census geographies object,
+ * whatever Congress the layer is named for. Prefers the newest "<N>th
+ * Congressional Districts" layer present, falling back to the legacy
+ * congressionalDistricts / "Congressional Districts" fields. Generic so the
+ * census-api and district-lookup response shapes can reuse it.
+ */
+export function findCongressionalDistrictLayer<T>(
+  geographies: Record<string, readonly T[] | undefined> | undefined
+): T[] | undefined {
+  if (!geographies) return undefined;
+
+  let best: { congress: number; entries: T[] } | null = null;
+  for (const [layerName, entries] of Object.entries(geographies)) {
+    const match = layerName.match(CD_LAYER_PATTERN);
+    if (match && entries && entries.length > 0) {
+      const congress = parseInt(match[1]!, 10);
+      if (!best || congress > best.congress) {
+        best = { congress, entries: entries as T[] };
+      }
+    }
+  }
+  if (best) return best.entries;
+
+  const legacy = geographies['congressionalDistricts'] ?? geographies['Congressional Districts'];
+  return legacy && legacy.length > 0 ? (legacy as T[]) : undefined;
 }
 
 export interface GeocodeResponse {
@@ -192,14 +234,14 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       };
     }
 
-    // Process results to ensure we have congressional district data
-    // Check for both new (119th Congressional Districts) and legacy (congressionalDistricts) fields
-    const validMatches = data.result.addressMatches.filter(match => {
-      const has119thDistricts =
-        match.geographies?.['119th Congressional Districts']?.length ?? 0 > 0;
-      const hasLegacyDistricts = match.geographies?.congressionalDistricts?.length ?? 0 > 0;
-      return has119thDistricts || hasLegacyDistricts;
-    });
+    // Process results to ensure we have congressional district data —
+    // any "<N>th Congressional Districts" layer or the legacy field counts
+    const validMatches = data.result.addressMatches.filter(
+      match =>
+        findCongressionalDistrictLayer<
+          CongressionalDistrictLayerEntry | LegacyCongressionalDistrictEntry
+        >(match.geographies) !== undefined
+    );
 
     if (validMatches.length === 0) {
       logger.warn('Addresses found but no congressional district data', {
@@ -227,13 +269,13 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       matchCount: validMatches.length,
       districts: validMatches
         .map(m => {
-          // Prefer 119th Congressional Districts, fall back to legacy
-          const districts =
-            m.geographies['119th Congressional Districts'] || m.geographies.congressionalDistricts;
+          const districts = findCongressionalDistrictLayer<
+            CongressionalDistrictLayerEntry | LegacyCongressionalDistrictEntry
+          >(m.geographies);
           if (!districts) return [];
 
           return districts.map(d => {
-            // Use BASENAME for 119th, CD for legacy
+            // Congress-named layers use BASENAME, legacy uses CD
             const districtNum = 'BASENAME' in d ? d.BASENAME : d.CD;
             return `${d.STATE}-${districtNum}`;
           });
@@ -332,15 +374,15 @@ export function extractDistrictFromResult(result: GeocodeResult): {
   district: string;
   fullDistrict: string;
 } | null {
-  // Try new 119th Congressional Districts format first
-  const cd119th = result.geographies?.['119th Congressional Districts']?.[0];
-  const cdLegacy = result.geographies?.congressionalDistricts?.[0];
-
-  const cd = cd119th || cdLegacy;
+  // Whatever Congress the layer is named for (119th, 120th, ...), with
+  // legacy congressionalDistricts as the fallback
+  const cd = findCongressionalDistrictLayer<
+    CongressionalDistrictLayerEntry | LegacyCongressionalDistrictEntry
+  >(result.geographies)?.[0];
   if (!cd) return null;
 
   // Get district number from appropriate field
-  // 119th format uses BASENAME, legacy uses CD
+  // Congress-named layers use BASENAME, legacy uses CD
   const rawDistrictNumber = 'BASENAME' in cd ? cd.BASENAME : cd.CD;
 
   // Handle at-large districts ("00", "98", or "AL")

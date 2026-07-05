@@ -188,6 +188,10 @@ export const CONGRESS_SESSIONS = {
 
 /**
  * Current active Congress (119th)
+ *
+ * @deprecated Evaluated once at module load, so a long-lived process keeps
+ * the stale session after a Congress boundary. Use getCurrentCongressNumber()
+ * or getCurrentCongressSession() instead.
  */
 export const CURRENT_CONGRESS = CONGRESS_SESSIONS[119];
 
@@ -200,11 +204,49 @@ export function getCongressNumber(year: number): number {
 }
 
 /**
- * Get current Congress number based on today's date
+ * Get current Congress number based on today's date.
+ *
+ * A new Congress convenes January 3 of odd years (20th Amendment), NOT
+ * January 1 — so on Jan 1–2 of an odd year the previous Congress is still
+ * sitting. Computed in UTC so every server instance agrees on the boundary.
  */
-export function getCurrentCongressNumber(): number {
-  const currentYear = new Date().getFullYear();
-  return getCongressNumber(currentYear);
+export function getCurrentCongressNumber(now: Date = new Date()): number {
+  const year = now.getUTCFullYear();
+  const congressFromYear = getCongressNumber(year);
+  if (year % 2 === 1) {
+    // Odd year: before Jan 3 UTC the outgoing Congress is still sitting
+    const convening = Date.UTC(year, 0, 3);
+    if (now.getTime() < convening) {
+      return congressFromYear - 1;
+    }
+  }
+  return congressFromYear;
+}
+
+/**
+ * Session info for the currently sitting Congress. Returns undefined once
+ * the calendar advances past the last hardcoded CONGRESS_SESSIONS entry —
+ * callers should treat that as "update the table".
+ */
+export function getCurrentCongressSession(now: Date = new Date()) {
+  const number = getCurrentCongressNumber(now);
+  return number in CONGRESS_SESSIONS
+    ? CONGRESS_SESSIONS[number as keyof typeof CONGRESS_SESSIONS]
+    : undefined;
+}
+
+/**
+ * Convening (start) and end instants of a Congress, as UTC Dates.
+ * Computed from the January 3 rule (20th Amendment), so valid for any
+ * modern Congress without a lookup table. Congress n convenes Jan 3 of
+ * year 1789 + 2(n-1) and ends Jan 3 two years later.
+ */
+export function getCongressDateRange(congressNumber: number): { start: Date; end: Date } {
+  const startYear = 1789 + (congressNumber - 1) * 2;
+  return {
+    start: new Date(Date.UTC(startYear, 0, 3)),
+    end: new Date(Date.UTC(startYear + 2, 0, 3)),
+  };
 }
 
 /**

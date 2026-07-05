@@ -20,9 +20,7 @@ export async function GET() {
   try {
     const stats = await govCache.getStats();
 
-    // Calculate hit rate estimates (since we don't track requests vs hits)
     const activeEntries = stats.combined?.activeEntries || 0;
-    const estimatedHitRate = activeEntries > 0 ? Math.min(85, 60 + activeEntries * 2) : 0;
 
     // Memory usage estimation in MB (from fallback cache)
     const memoryUsageMB = ((stats.fallback?.memorySizeEstimate || 0) / 1024 / 1024).toFixed(2);
@@ -50,7 +48,10 @@ export async function GET() {
 
       // Performance metrics
       performance: {
-        estimatedHitRate: `${estimatedHitRate}%`,
+        // No hit/miss counters exist — a previous version fabricated a hit
+        // rate from entry counts. Honest null until real counters are built.
+        hitRate: null,
+        hitRateUnavailableReason: 'hit/miss counters not implemented',
         efficiencyScore: `${efficiencyScore}%`,
         cacheHealthStatus:
           efficiencyScore >= 80

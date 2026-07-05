@@ -23,6 +23,7 @@
  * - Comprehensive error handling and logging
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { BaseUnifiedService } from '../../../services/base/unified-base.service';
 import type {
   IUnifiedRepresentativeService,
@@ -39,7 +40,7 @@ import { logger } from '@/lib/logging/logger-edge';
 // Configuration
 const CONGRESS_API_BASE = 'https://api.congress.gov/v3';
 const _SENATE_GOV_BASE = 'https://www.senate.gov';
-const CURRENT_CONGRESS = 119;
+const CURRENT_CONGRESS = getCurrentCongressNumber();
 const CURRENT_SESSION = 1;
 
 interface EnhancedVoteData {

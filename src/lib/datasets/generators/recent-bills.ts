@@ -10,6 +10,7 @@
  * Source: Congress.gov API v3.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
 
@@ -83,7 +84,7 @@ export async function generateRecentBills(): Promise<DatasetResult> {
     return emptyResult();
   }
 
-  const congress = process.env.CURRENT_CONGRESS || '119';
+  const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
   const url = `https://api.congress.gov/v3/bill/${congress}?limit=250&sort=updateDate+desc&format=json`;
 
   const response = await fetch(url, {

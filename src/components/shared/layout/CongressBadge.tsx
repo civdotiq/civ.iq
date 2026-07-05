@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import React from 'react';
 
 interface CongressBadgeProps {
@@ -20,7 +21,7 @@ interface CongressBadgeProps {
  * Always shows 119th Congress (2025-2027) unless overridden.
  */
 export function CongressBadge({
-  congress = 119,
+  congress = getCurrentCongressNumber(),
   startYear = '2025',
   endYear = '2027',
   className = '',

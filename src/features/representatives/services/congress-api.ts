@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber, getCongressDateRange } from '@/lib/data/congressional-constants';
 import { unstable_cache as cache } from 'next/cache';
 import type {
   CongressApiMember,
@@ -144,7 +145,7 @@ export const getCurrentMembersByState = cache(
           url: `${CONGRESS_API_BASE}/member`,
           params: new URLSearchParams({
             format: 'json',
-            congress: '119',
+            congress: String(getCurrentCongressNumber()),
             limit: '250',
           }),
         },
@@ -198,6 +199,9 @@ export const getCurrentMembersByState = cache(
       const data = { members: allMembers };
 
       // Filter by state and current terms - handle both state codes and full names
+      const congressStartYear = getCongressDateRange(
+        getCurrentCongressNumber()
+      ).start.getUTCFullYear();
       const stateMembers =
         data.members?.filter((member: CongressApiMember) => {
           // Congress API uses full state names like "Michigan"
@@ -205,11 +209,12 @@ export const getCurrentMembersByState = cache(
           const stateName = US_STATES[state as keyof typeof US_STATES] || state;
           const matchesState = member.state === stateName || member.state === state;
 
-          // Also check if member has a current term in 119th Congress (2025-2027)
+          // Also check if member has a term overlapping the sitting Congress
           const hasCurrentTerm = member.terms?.item?.some(
             term =>
-              term.startYear >= 2025 ||
-              (term.startYear <= 2025 && (!term.endYear || term.endYear >= 2025))
+              term.startYear >= congressStartYear ||
+              (term.startYear <= congressStartYear &&
+                (!term.endYear || term.endYear >= congressStartYear))
           );
 
           return matchesState && hasCurrentTerm;
@@ -595,7 +600,7 @@ async function getHouseVotesByMember(
       bill: vote.bill || {
         number: 'N/A',
         title: 'Vote without associated bill',
-        congress: '119',
+        congress: String(getCurrentCongressNumber()),
         type: 'House Resolution',
         url: '',
       },
@@ -661,7 +666,12 @@ async function getSenateVotesByMember(
 
     // Transform to expected format (voteId is "senate-{congress}-{session}-{rollNumber}")
     return memberVotes.map(vote => {
-      const [, voteCongress = '119', voteSession = '1', voteRoll = '0'] = vote.voteId.split('-');
+      const [
+        ,
+        voteCongress = String(getCurrentCongressNumber()),
+        voteSession = '1',
+        voteRoll = '0',
+      ] = vote.voteId.split('-');
       return {
         voteId: vote.voteId,
         bill: vote.bill || {
@@ -887,7 +897,7 @@ export async function getCommitteesByMember(
     const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/committee-memberships`);
 
     url.searchParams.append('format', 'json');
-    url.searchParams.append('congress', '119'); // Current congress
+    url.searchParams.append('congress', String(getCurrentCongressNumber())); // Current congress
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -930,7 +940,7 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
     const url = new URL(`${CONGRESS_API_BASE}/bill`);
 
     url.searchParams.append('format', 'json');
-    url.searchParams.append('congress', '119');
+    url.searchParams.append('congress', String(getCurrentCongressNumber()));
     url.searchParams.append('limit', limit.toString());
     url.searchParams.append('sort', 'latestAction.actionDate+desc');
 
@@ -975,7 +985,7 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
     const url = new URL(`${CONGRESS_API_BASE}/bill`);
 
     url.searchParams.append('format', 'json');
-    url.searchParams.append('congress', '119');
+    url.searchParams.append('congress', String(getCurrentCongressNumber()));
     url.searchParams.append('limit', limit.toString());
 
     // Note: Congress API doesn't support direct text search in the current version
@@ -1094,9 +1104,9 @@ export async function getSenateVoteDetails(
   success: boolean;
 }> {
   try {
-    // Only support 119th Congress for now
-    if (congress !== 119) {
-      logger.warn('Senate votes only supported for 119th Congress', {
+    // Senate roll-call XML is only plumbed for the sitting Congress
+    if (congress !== getCurrentCongressNumber()) {
+      logger.warn('Senate votes only supported for the current Congress', {
         component: 'congressApi',
         congress,
         voteNumber,

@@ -9,6 +9,7 @@ import {
   districtBoundaryService,
   type DistrictBoundary,
 } from '@/lib/helpers/district-boundary-utils';
+import { findCongressionalDistrictLayer } from '@/lib/census-geocoder';
 import logger from '@/lib/logging/simple-logger';
 
 interface GeocodeResult {
@@ -121,7 +122,7 @@ class DistrictLookupService {
         `https://geocoding.geo.census.gov/geocoder/geographies/coordinates` +
         `?x=${longitude}&y=${latitude}` +
         `&benchmark=Public_AR_Current&vintage=Current_Current` +
-        `&layers=119th Congressional Districts` +
+        `&layers=all` +
         `&format=json`;
 
       const response = await fetch(url, {
@@ -139,17 +140,15 @@ class DistrictLookupService {
         return null;
       }
 
-      // Extract 119th Congressional District
+      // Extract the newest Congressional Districts layer present
       const congressionalDistricts =
-        geographies['119th Congressional Districts'] ??
-        geographies['Congressional Districts'] ??
-        [];
+        findCongressionalDistrictLayer<Record<string, unknown>>(geographies) ?? [];
 
-      if (congressionalDistricts.length === 0) {
+      const censusDistrict = congressionalDistricts[0];
+      if (!censusDistrict) {
         return null;
       }
 
-      const censusDistrict = congressionalDistricts[0];
       const geoid = censusDistrict.GEOID as string;
 
       if (!geoid || geoid.length < 4) {

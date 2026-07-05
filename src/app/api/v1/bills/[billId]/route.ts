@@ -10,6 +10,7 @@
  * Accepts bill IDs like "hr1-119", "s100-119", "hjres5-119".
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import { parseBillNumber } from '@/types/bill';
@@ -124,7 +125,7 @@ export async function GET(
     logger.info('v1 bill detail', { billId, title: bill.title });
 
     // Congress-aware caching
-    const CURRENT_CONGRESS = 119;
+    const CURRENT_CONGRESS = getCurrentCongressNumber();
     const isHistorical = bill.congress < CURRENT_CONGRESS;
     const cacheMaxAge = isHistorical ? 31536000 : 86400;
     const staleRevalidate = isHistorical ? 86400 : 3600;

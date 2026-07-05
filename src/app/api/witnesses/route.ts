@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -10,7 +11,7 @@ import logger from '@/lib/logging/simple-logger';
 export const dynamic = 'force-dynamic';
 
 const CONGRESS_API_KEY = process.env.CONGRESS_API_KEY;
-const CURRENT_CONGRESS = 119;
+const CURRENT_CONGRESS = getCurrentCongressNumber();
 
 // Types for witness data
 interface Witness {

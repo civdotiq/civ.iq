@@ -15,6 +15,7 @@
  * Pattern: vote-finance-analyzer.ts
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
@@ -381,8 +382,18 @@ async function fetchAndClassifyRecipientVotes(
 async function fetchRecipientRawVotes(recipient: LinkedRecipient) {
   const fetchSession = (session: 1 | 2) =>
     recipient.chamber === 'House'
-      ? batchVotingService.getHouseMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES)
-      : batchVotingService.getSenateMemberVotes(recipient.bioguideId, 119, session, MAX_VOTES);
+      ? batchVotingService.getHouseMemberVotes(
+          recipient.bioguideId,
+          getCurrentCongressNumber(),
+          session,
+          MAX_VOTES
+        )
+      : batchVotingService.getSenateMemberVotes(
+          recipient.bioguideId,
+          getCurrentCongressNumber(),
+          session,
+          MAX_VOTES
+        );
 
   const [session1, session2] = await Promise.all([fetchSession(1), fetchSession(2)]);
   return [...session1, ...session2];

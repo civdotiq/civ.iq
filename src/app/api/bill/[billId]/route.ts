@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
@@ -82,7 +83,7 @@ export async function GET(
     // Congress-aware caching:
     // - Past congresses (118th and earlier): Indefinite cache (immutable historical data)
     // - Current congress (119th): 24 hours (active legislation)
-    const CURRENT_CONGRESS = 119;
+    const CURRENT_CONGRESS = getCurrentCongressNumber();
     const billCongress = parseInt(bill.congress);
     const isHistorical = billCongress < CURRENT_CONGRESS;
 

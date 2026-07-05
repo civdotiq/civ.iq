@@ -9,6 +9,7 @@
  */
 
 import { logger } from '@/lib/logging/logger-edge';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getAllMappings } from '@/lib/data/legislator-mappings';
 import { circuitBreakers } from '@/lib/circuit-breaker';
 
@@ -449,7 +450,7 @@ export class BatchVotingService {
    */
   async getHouseMemberVotes(
     bioguideId: string,
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20,
     bypassCache = false
@@ -506,7 +507,7 @@ export class BatchVotingService {
    */
   async getSenateMemberVotes(
     bioguideId: string,
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20
   ): Promise<
@@ -566,7 +567,7 @@ export class BatchVotingService {
    * callers that have already loaded member-level views.
    */
   async getHouseChamberRollCalls(
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 50,
     bypassCache = false
@@ -593,7 +594,7 @@ export class BatchVotingService {
    * peer averages). Reuses the shared cache.
    */
   async getSenateChamberRollCalls(
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 50
   ): Promise<StandardizedVote[]> {
@@ -833,7 +834,7 @@ export class BatchVotingService {
     voteList: VoteListItem[],
     bioguideId: string,
     bypassCache = false,
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = 1
   ): Promise<
     Array<{
@@ -861,7 +862,7 @@ export class BatchVotingService {
   private async fetchHouseVotesRaw(
     voteList: VoteListItem[],
     bypassCache = false,
-    congress = 119,
+    congress = getCurrentCongressNumber(),
     session = 1
   ): Promise<StandardizedVote[]> {
     // Step 1: Check cache for all votes (unless bypassing cache)
@@ -951,7 +952,8 @@ export class BatchVotingService {
         standardizedVote.bill = await this.fetchBillDetails(
           vote.legislationNumber,
           vote.legislationType,
-          vote.legislationUrl
+          vote.legislationUrl,
+          congress
         );
       }
 
@@ -1330,11 +1332,13 @@ export class BatchVotingService {
   private async fetchBillDetails(
     billNumber: string,
     billType: string,
-    billUrl?: string
+    billUrl?: string,
+    congress: number = getCurrentCongressNumber()
   ): Promise<StandardizedVote['bill'] | undefined> {
     try {
-      // Try to get from cache first
-      const cacheKey = `bill-${billType.toLowerCase()}-${billNumber}`;
+      // Try to get from cache first (congress-scoped: bill numbers restart
+      // every Congress, so HR 1 of the 119th ≠ HR 1 of the 120th)
+      const cacheKey = `bill-${congress}-${billType.toLowerCase()}-${billNumber}`;
       const cached = this.cache.get<StandardizedVote['bill']>(cacheKey);
       if (cached) {
         return cached;
@@ -1343,7 +1347,7 @@ export class BatchVotingService {
       // If we don't have an API key, return basic info
       if (!this.apiKey) {
         return {
-          congress: 119,
+          congress,
           type: billType,
           number: billNumber,
           title: `${billType} ${billNumber}`,
@@ -1372,8 +1376,8 @@ export class BatchVotingService {
       };
 
       const normalizedType = billTypeMap[billType.toUpperCase()] || billType.toLowerCase();
-      const apiUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}?format=json`;
-      const subjectsUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}/subjects?format=json`;
+      const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${normalizedType}/${billNumber}?format=json`;
+      const subjectsUrl = `https://api.congress.gov/v3/bill/${congress}/${normalizedType}/${billNumber}/subjects?format=json`;
 
       // Fire bill-detail and subjects in parallel — the subjects sub-resource
       // gives 5–20 fine-grained tags ("Defense spending", "Health insurance")
@@ -1399,7 +1403,7 @@ export class BatchVotingService {
         });
         // Return basic info on failure
         return {
-          congress: 119,
+          congress,
           type: billType,
           number: billNumber,
           title: `${billType} ${billNumber}`,
@@ -1412,7 +1416,7 @@ export class BatchVotingService {
 
       if (!billData) {
         return {
-          congress: 119,
+          congress,
           type: billType,
           number: billNumber,
           title: `${billType} ${billNumber}`,
@@ -1451,13 +1455,13 @@ export class BatchVotingService {
       }
 
       const bill: StandardizedVote['bill'] = {
-        congress: 119,
+        congress,
         type: billType,
         number: billNumber,
         title,
         url:
           billUrl ||
-          `https://www.congress.gov/bill/119th-congress/${normalizedType}-bill/${billNumber}`,
+          `https://www.congress.gov/bill/${congress}th-congress/${normalizedType}-bill/${billNumber}`,
         ...(policyAreaInline || policyAreaFromSubjects
           ? { policyArea: policyAreaInline ?? policyAreaFromSubjects }
           : {}),
@@ -1476,7 +1480,7 @@ export class BatchVotingService {
       });
       // Return basic info on error
       return {
-        congress: 119,
+        congress,
         type: billType,
         number: billNumber,
         title: `${billType} ${billNumber}`,

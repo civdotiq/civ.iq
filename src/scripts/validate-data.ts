@@ -13,6 +13,7 @@
 
 /* eslint-disable no-console */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { dataValidator } from '../lib/data-validation';
 import logger from '../lib/logging/simple-logger';
 
@@ -95,15 +96,15 @@ class DataValidationRunner {
 
     // Validate 119th Congress configuration
     const currentCongress = process.env.CURRENT_CONGRESS;
-    if (currentCongress && currentCongress !== '119') {
+    if (currentCongress && currentCongress !== String(getCurrentCongressNumber())) {
       this.recordIssue(
         'error',
         'environment',
-        `CURRENT_CONGRESS should be 119, got ${currentCongress}`
+        `CURRENT_CONGRESS should be ${getCurrentCongressNumber()}, got ${currentCongress}`
       );
       this.summary.failed++;
-    } else if (currentCongress === '119') {
-      console.log('  [OK]CURRENT_CONGRESS: Correctly set to 119');
+    } else if (currentCongress === String(getCurrentCongressNumber())) {
+      console.log('  [OK]CURRENT_CONGRESS: matches the sitting Congress');
       this.summary.passed++;
     }
 
@@ -181,11 +182,11 @@ class DataValidationRunner {
       party: 'Democratic',
       state: 'CA',
       chamber: 'House',
-      congress: 119,
+      congress: getCurrentCongressNumber(),
     };
 
     this.summary.totalChecks++;
-    const repValidation = dataValidator.validate119thCongress(sampleRepData);
+    const repValidation = dataValidator.validateCurrentCongress(sampleRepData);
 
     if (repValidation.isValid) {
       console.log(

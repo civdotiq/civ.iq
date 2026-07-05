@@ -13,6 +13,7 @@
  * Flow: check cache → fetch data → run predictions → compute independence → AI narrative → cache
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
@@ -481,8 +482,18 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate') {
   try {
     const fetchSession = async (session: 1 | 2) => {
       return chamber === 'House'
-        ? batchVotingService.getHouseMemberVotes(bioguideId, 119, session, MAX_VOTES)
-        : batchVotingService.getSenateMemberVotes(bioguideId, 119, session, MAX_VOTES);
+        ? batchVotingService.getHouseMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            session,
+            MAX_VOTES
+          )
+        : batchVotingService.getSenateMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            session,
+            MAX_VOTES
+          );
     };
     const [s1, s2] = await Promise.all([fetchSession(1), fetchSession(2)]);
     return [...s1, ...s2].filter(v => v.bill && v.position);

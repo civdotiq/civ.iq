@@ -5,6 +5,7 @@
 
 'use client';
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import Link from 'next/link';
 import { CqButton, CqChip, CqLabel, CqPortrait } from '@/components/cq';
 import { partyKey, partyLong } from '@/components/officials/ProfileHybrid/types';
@@ -20,7 +21,7 @@ export function CompactHero({ representative: r, totalVotes, loading }: CompactH
   const pKey = partyKey(r.party);
   const role = r.role ?? (r.chamber === 'Senate' ? 'Senator' : 'Representative');
   const districtLabel = r.district ? `${r.state}-${String(r.district).padStart(2, '0')}` : r.state;
-  const congress = r.terms?.[0]?.congress ?? '119';
+  const congress = r.terms?.[0]?.congress ?? String(getCurrentCongressNumber());
 
   return (
     <div

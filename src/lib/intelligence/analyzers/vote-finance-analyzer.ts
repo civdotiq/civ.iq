@@ -15,6 +15,7 @@
  * Pattern: CivicAlignmentAnalyzer (src/features/legislation/services/ai/civic-alignment-analyzer.ts)
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
@@ -384,8 +385,18 @@ async function fetchVotes(bioguideId: string, chamber: 'House' | 'Senate'): Prom
     const fetchSession = async (session: 1 | 2) => {
       const rawVotes =
         chamber === 'House'
-          ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, session, MAX_VOTES)
-          : await batchVotingService.getSenateMemberVotes(bioguideId, 119, session, MAX_VOTES);
+          ? await batchVotingService.getHouseMemberVotes(
+              bioguideId,
+              getCurrentCongressNumber(),
+              session,
+              MAX_VOTES
+            )
+          : await batchVotingService.getSenateMemberVotes(
+              bioguideId,
+              getCurrentCongressNumber(),
+              session,
+              MAX_VOTES
+            );
 
       return rawVotes
         .filter(v => v.bill && v.position)

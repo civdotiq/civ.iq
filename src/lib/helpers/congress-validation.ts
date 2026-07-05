@@ -8,26 +8,28 @@ import type {
   CongressLegislatorTerm,
 } from '@/features/representatives/services/congress.service';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { getCurrentCongressNumber, getCongressDateRange } from '@/lib/data/congressional-constants';
 
 /**
- * Check if a representative is a current member of the 119th Congress
- * 119th Congress: January 3, 2025 - January 3, 2027
+ * Check if a representative is a current member of the sitting Congress.
  *
- * Congress boundary dates use an explicit T00:00:00Z suffix. Per the
- * ECMAScript spec a date-ONLY string ('2025-01-03') already parses as UTC
- * midnight, so this is intent-documentation, not a behavior change — but a
- * datetime string WITHOUT the Z ('2025-01-03T00:00:00') would parse as
- * LOCAL time and make comparisons timezone-dependent. Keep the Z.
+ * Boundary dates are derived from the January 3 rule (20th Amendment) via
+ * getCongressDateRange — never hardcoded — and are UTC instants. Term
+ * date strings from the congress-legislators dataset are date-only
+ * ('2025-01-03'), which the ECMAScript spec parses as UTC midnight, so
+ * comparisons are timezone-independent. A datetime string WITHOUT a Z
+ * ('2025-01-03T00:00:00') would parse as LOCAL time — don't introduce one.
  */
 export function isCurrentMember(
   representative: CongressLegislator | EnhancedRepresentative
 ): boolean {
+  const congressStart = getCongressDateRange(getCurrentCongressNumber()).start;
+
   // Handle EnhancedRepresentative type
   if ('currentTerm' in representative && representative.currentTerm) {
     const termEnd = representative.currentTerm.end
       ? new Date(representative.currentTerm.end)
       : null;
-    const congressStart = new Date('2025-01-03T00:00:00Z');
 
     // Current if no end date or end date is in the future
     return !termEnd || termEnd >= congressStart;
@@ -38,7 +40,6 @@ export function isCurrentMember(
     const latestTerm = representative.terms[representative.terms.length - 1];
     if (latestTerm && 'end' in latestTerm) {
       const termEnd = latestTerm.end ? new Date(latestTerm.end) : null;
-      const congressStart = new Date('2025-01-03T00:00:00Z');
 
       // Current if no end date or end date is in the future
       return !termEnd || termEnd >= congressStart;
@@ -49,25 +50,24 @@ export function isCurrentMember(
 }
 
 /**
- * Filter array of representatives to only include current 119th Congress members
+ * Filter array of representatives to only include current members of the
+ * sitting Congress
  */
-export function filterCurrent119thCongress<T extends CongressLegislator | EnhancedRepresentative>(
+export function filterCurrentCongress<T extends CongressLegislator | EnhancedRepresentative>(
   members: T[]
 ): T[] {
   return members.filter(isCurrentMember);
 }
 
 /**
- * Check if a term is for the 119th Congress (2025-2027)
+ * Check if a term belongs to the currently sitting Congress: it starts on
+ * or after the current Congress's convening date and before the next
+ * Congress convenes.
  */
-export function is119thCongressTerm(term: CongressLegislatorTerm): boolean {
+export function isCurrentCongressTerm(term: CongressLegislatorTerm): boolean {
+  const { start, end } = getCongressDateRange(getCurrentCongressNumber());
   const termStart = new Date(term.start);
-  const congress119Start = new Date('2025-01-03T00:00:00Z');
-  const congress119End = new Date('2027-01-03T00:00:00Z');
-
-  // Term is in 119th Congress if it starts exactly on or after Jan 3, 2025
-  // and starts before Jan 3, 2027 (start of 120th Congress)
-  return termStart >= congress119Start && termStart < congress119End;
+  return termStart >= start && termStart < end;
 }
 
 /**
@@ -82,6 +82,8 @@ export function getMemberFilterDebugInfo(
   isCurrentMember: boolean;
   reason: string;
 } {
+  const congressStart = getCongressDateRange(getCurrentCongressNumber()).start;
+
   let name: string;
   let bioguideId: string;
 
@@ -104,7 +106,6 @@ export function getMemberFilterDebugInfo(
       reason = 'Current member (no end date)';
     } else {
       const endDate = new Date(latestTermEnd);
-      const congressStart = new Date('2025-01-03T00:00:00Z');
       reason = endDate >= congressStart ? 'Current member' : `Term ended ${latestTermEnd}`;
     }
   } else if ('terms' in representative && representative.terms && representative.terms.length > 0) {
@@ -115,7 +116,6 @@ export function getMemberFilterDebugInfo(
         reason = 'Current member (no end date)';
       } else {
         const endDate = new Date(latestTermEnd);
-        const congressStart = new Date('2025-01-03T00:00:00Z');
         reason = endDate >= congressStart ? 'Current member' : `Term ended ${latestTermEnd}`;
       }
     }

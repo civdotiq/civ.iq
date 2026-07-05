@@ -6,6 +6,9 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+
+const CURRENT_CONGRESS = getCurrentCongressNumber();
 import useSWR from 'swr';
 import Link from 'next/link';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
@@ -80,7 +83,7 @@ export const BillsTab = React.memo(
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
-    const [selectedCongress, setSelectedCongress] = useState(119);
+    const [selectedCongress, setSelectedCongress] = useState(CURRENT_CONGRESS);
     const [selectedType, setSelectedType] = useState<'all' | 'sponsored' | 'cosponsored'>('all');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
     const [selectedPolicyArea, setSelectedPolicyArea] = useState<string>('all');
@@ -96,7 +99,7 @@ export const BillsTab = React.memo(
       }
       const cleanType = bill.type.toLowerCase().replace(/\./g, '');
       const cleanNumber = bill.number.match(/\d+/)?.[0] || '';
-      return `${bill.congress || '119'}-${cleanType}-${cleanNumber}`;
+      return `${bill.congress || CURRENT_CONGRESS}-${cleanType}-${cleanNumber}`;
     };
 
     if (isLoading) {
@@ -221,14 +224,14 @@ export const BillsTab = React.memo(
         <div className="mb-6 p-4 bg-white space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium text-gray-700">Filter Bills</h3>
-            {(selectedCongress !== 119 ||
+            {(selectedCongress !== CURRENT_CONGRESS ||
               selectedType !== 'all' ||
               selectedStatus !== 'all' ||
               selectedPolicyArea !== 'all' ||
               searchTerm) && (
               <button
                 onClick={() => {
-                  setSelectedCongress(119);
+                  setSelectedCongress(CURRENT_CONGRESS);
                   setSelectedType('all');
                   setSelectedStatus('all');
                   setSelectedPolicyArea('all');
@@ -270,7 +273,7 @@ export const BillsTab = React.memo(
                 }}
                 className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
               >
-                <option value={119}>Current (119th)</option>
+                <option value={CURRENT_CONGRESS}>Current ({CURRENT_CONGRESS}th)</option>
                 <option value={0}>All Congresses</option>
                 {uniqueCongresses.map(congress => (
                   <option key={congress} value={congress}>

@@ -8,6 +8,7 @@
  * Based on May 2025 API release: https://blogs.loc.gov/law/2025/05/introducing-house-roll-call-votes-in-the-congress-gov-api/
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { logger } from '@/lib/logging/logger-edge';
 import { cachedFetch } from '@/lib/cache-edge';
 
@@ -70,7 +71,7 @@ export class CongressRollCallAPI {
    * Get recent House roll call votes
    */
   async getRecentHouseRollCallVotes(
-    congress: number = 119,
+    congress: number = getCurrentCongressNumber(),
     session: number = 1,
     limit: number = 20
   ): Promise<HouseRollCallListResponse> {
@@ -207,7 +208,7 @@ export class CongressRollCallAPI {
    */
   async getMemberVotingHistory(
     bioguideId: string,
-    congress: number = 119,
+    congress: number = getCurrentCongressNumber(),
     session: number = 1,
     limit: number = 20
   ): Promise<

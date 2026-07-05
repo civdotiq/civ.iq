@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { EnhancedRepresentative } from './representative';
 
 export interface Bill {
@@ -275,7 +276,7 @@ export function parseBillNumber(billNumber: string): {
     return {
       type: displayMatch[1].toLowerCase().replace(/\./g, ''),
       number: displayMatch[2],
-      congress: '119', // Default to current congress
+      congress: String(getCurrentCongressNumber()), // Default to current congress
     };
   }
 
@@ -283,7 +284,7 @@ export function parseBillNumber(billNumber: string): {
   return {
     type: 'unknown',
     number: cleanBillNumber,
-    congress: '119',
+    congress: String(getCurrentCongressNumber()),
   };
 }
 

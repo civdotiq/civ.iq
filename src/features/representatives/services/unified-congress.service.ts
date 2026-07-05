@@ -33,7 +33,7 @@ import type {
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
-// Note: Using manual filtering instead of filterCurrent119thCongress to avoid type conflicts
+// Note: Using manual filtering instead of filterCurrentCongress to avoid type conflicts
 
 // Base URLs for congress-legislators data
 const CONGRESS_LEGISLATORS_BASE_URL =

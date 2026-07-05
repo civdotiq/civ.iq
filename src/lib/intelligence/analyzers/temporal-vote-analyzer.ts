@@ -20,6 +20,7 @@
  * Pattern: finance-jurisdiction-analyzer.ts
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
@@ -428,8 +429,18 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   for (const session of [1, 2]) {
     try {
       const sessionVotes = isHouse
-        ? await batchVotingService.getHouseMemberVotes(bioguideId, 119, session, 250)
-        : await batchVotingService.getSenateMemberVotes(bioguideId, 119, session, 250);
+        ? await batchVotingService.getHouseMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            session,
+            250
+          )
+        : await batchVotingService.getSenateMemberVotes(
+            bioguideId,
+            getCurrentCongressNumber(),
+            session,
+            250
+          );
 
       allVotes = allVotes.concat(
         sessionVotes.map(v => ({
@@ -495,7 +506,12 @@ async function computeQuarterlyAlignment(data: FetchedData): Promise<QuarterData
           breakdown = await getHousePartyBreakdown(vote.rollCallNumber, year, data.party);
         } else if (data.chamber === 'Senate' && vote.rollCallNumber) {
           const session = getSessionFromDate(vote.date);
-          breakdown = await getSenatePartyBreakdown(vote.rollCallNumber, 119, session, data.party);
+          breakdown = await getSenatePartyBreakdown(
+            vote.rollCallNumber,
+            getCurrentCongressNumber(),
+            session,
+            data.party
+          );
         }
 
         if (!breakdown?.majorityPosition) return null;

@@ -1,3 +1,4 @@
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { COMMITTEE_INFO } from '@/lib/data/committee-names';
 import { cachedFetch } from '@/lib/cache';
@@ -79,7 +80,7 @@ async function searchBills(query: string, limit: number): Promise<BillResult[]> 
     async () => {
       try {
         if (!process.env.CONGRESS_API_KEY) return [];
-        const congress = process.env.CURRENT_CONGRESS || '119';
+        const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
         const response = await fetch(
           `https://api.congress.gov/v3/bill/${congress}?limit=100&sort=updateDate+desc`,
           {
