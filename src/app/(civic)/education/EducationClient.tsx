@@ -45,8 +45,14 @@ import {
   type AssessmentRubric,
   type C3Standard,
 } from '@/lib/data/education-curriculum';
-import { PrintableWorksheet } from './PrintableWorksheet';
-import { PrintableRubric } from './PrintableRubric';
+import dynamic from 'next/dynamic';
+
+// Print views load only when a teacher actually opens one — they are never
+// part of the initial curriculum-browser chunk.
+const PrintableWorksheet = dynamic(() =>
+  import('./PrintableWorksheet').then(mod => mod.PrintableWorksheet)
+);
+const PrintableRubric = dynamic(() => import('./PrintableRubric').then(mod => mod.PrintableRubric));
 
 const GRADE_LEVEL_COLORS: Record<GradeLevel, { bg: string; text: string; border: string }> = {
   elementary: {

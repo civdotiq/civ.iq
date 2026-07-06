@@ -7,7 +7,25 @@
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { EducationClient } from './EducationClient';
+import dynamic from 'next/dynamic';
+
+// Code-split: EducationClient pulls the full ~115KB curriculum module into
+// the client bundle. Loading it as a deferred chunk lets the server-rendered
+// hero and grade-band cards paint without waiting on it.
+const EducationClient = dynamic(
+  () => import('./EducationClient').then(mod => mod.EducationClient),
+  {
+    loading: () => (
+      <div className="bg-white border-2 border-black p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-gray-200 w-full"></div>
+          <div className="h-64 bg-gray-100 w-full"></div>
+        </div>
+        <p className="text-sm text-gray-500 mt-4">Loading curriculum browser...</p>
+      </div>
+    ),
+  }
+);
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import {
