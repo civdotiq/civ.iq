@@ -403,16 +403,48 @@ export const SENATE_CLASSES = {
 } as const;
 
 /**
+ * Federal general election day for a year: the Tuesday after the first
+ * Monday in November (2 U.S.C. §1, 3 U.S.C. §1). UTC.
+ */
+export function getGeneralElectionDay(year: number): Date {
+  const nov1Weekday = new Date(Date.UTC(year, 10, 1)).getUTCDay();
+  const firstMonday = 1 + ((8 - nov1Weekday) % 7);
+  return new Date(Date.UTC(year, 10, firstMonday + 1));
+}
+
+const UTC_DAY_MS = 24 * 60 * 60 * 1000;
+
+/** True once the year's general election day (UTC) is fully over. */
+function generalElectionHasPassed(year: number, now: Date): boolean {
+  return now.getTime() >= getGeneralElectionDay(year).getTime() + UTC_DAY_MS;
+}
+
+/**
+ * Roll a base election year forward through a 6-year Senate cycle to the
+ * next election that has not yet happened as of `now`.
+ */
+function nextInSenateCycle(baseElectionYear: number, now: Date): number {
+  const currentYear = now.getUTCFullYear();
+  const cyclesSinceBase = Math.max(0, Math.ceil((currentYear - baseElectionYear) / 6));
+  let next = baseElectionYear + cyclesSinceBase * 6;
+  if (next === currentYear && generalElectionHasPassed(next, now)) {
+    next += 6;
+  }
+  return next;
+}
+
+/**
  * Get next election year for a state's Senate seat
  */
-export function getNextSenateElection(stateCode: string, seatClass?: 1 | 2 | 3): number {
-  const currentYear = new Date().getFullYear();
-
+export function getNextSenateElection(
+  stateCode: string,
+  seatClass?: 1 | 2 | 3,
+  now: Date = new Date()
+): number {
   if (seatClass) {
-    // If we know the class, calculate directly
+    // If we know the class, calculate directly from the class anchor year
     const baseYear = seatClass === 1 ? 2024 : seatClass === 2 ? 2026 : 2028;
-    const cyclesSinceBase = Math.ceil((currentYear - baseYear) / 6);
-    return baseYear + cyclesSinceBase * 6;
+    return nextInSenateCycle(baseYear, now);
   }
 
   // If we don't know the class, check which class(es) this state belongs to
@@ -421,22 +453,44 @@ export function getNextSenateElection(stateCode: string, seatClass?: 1 | 2 | 3):
 
   // Cast to readonly string[] for runtime includes check
   if ((SENATE_CLASSES.CLASS_I.states as readonly string[]).includes(upperState)) {
-    const cyclesSince2024 = Math.ceil((currentYear - 2024) / 6);
-    elections.push(2024 + cyclesSince2024 * 6);
+    elections.push(nextInSenateCycle(2024, now));
   }
 
   if ((SENATE_CLASSES.CLASS_II.states as readonly string[]).includes(upperState)) {
-    const cyclesSince2026 = Math.ceil((currentYear - 2026) / 6);
-    elections.push(2026 + cyclesSince2026 * 6);
+    elections.push(nextInSenateCycle(2026, now));
   }
 
   if ((SENATE_CLASSES.CLASS_III.states as readonly string[]).includes(upperState)) {
-    const cyclesSince2028 = Math.ceil((currentYear - 2028) / 6);
-    elections.push(2028 + cyclesSince2028 * 6);
+    elections.push(nextInSenateCycle(2028, now));
   }
 
   // Return the nearest upcoming election
   return Math.min(...elections);
+}
+
+/**
+ * Next election for a Senate seat given its term-end year. Senate terms end
+ * January 3 following the November election, so the seat's election cycle is
+ * anchored at endYear - 1; stale term data rolls forward by 6-year cycles.
+ */
+export function getNextSenateElectionFromTermEnd(
+  termEndYear: number,
+  now: Date = new Date()
+): number {
+  return nextInSenateCycle(termEndYear - 1, now);
+}
+
+/**
+ * Next House election year: the next even year, rolling past election day —
+ * from the Wednesday after a November election, the answer is two years out.
+ */
+export function getNextHouseElection(now: Date = new Date()): number {
+  const currentYear = now.getUTCFullYear();
+  const candidate = currentYear % 2 === 0 ? currentYear : currentYear + 1;
+  if (candidate === currentYear && generalElectionHasPassed(candidate, now)) {
+    return candidate + 2;
+  }
+  return candidate;
 }
 
 // ============================================================================

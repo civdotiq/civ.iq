@@ -14,6 +14,10 @@ import {
   getCurrentCongressSession,
   getCongressDateRange,
   getCongressNumber,
+  getGeneralElectionDay,
+  getNextHouseElection,
+  getNextSenateElection,
+  getNextSenateElectionFromTermEnd,
   CONGRESS_SESSIONS,
 } from '@/lib/data/congressional-constants';
 
@@ -64,5 +68,70 @@ describe('getCongressNumber', () => {
     expect(getCongressNumber(2025)).toBe(119);
     expect(getCongressNumber(2026)).toBe(119);
     expect(getCongressNumber(2027)).toBe(120);
+  });
+});
+
+describe('getGeneralElectionDay', () => {
+  it('returns the Tuesday after the first Monday in November', () => {
+    // Known federal general election days
+    expect(getGeneralElectionDay(2024).toISOString().slice(0, 10)).toBe('2024-11-05');
+    expect(getGeneralElectionDay(2026).toISOString().slice(0, 10)).toBe('2026-11-03');
+    expect(getGeneralElectionDay(2028).toISOString().slice(0, 10)).toBe('2028-11-07');
+    // Nov 1 on a Tuesday pushes the first Monday (and the election) latest
+    expect(getGeneralElectionDay(2022).toISOString().slice(0, 10)).toBe('2022-11-08');
+  });
+});
+
+describe('getNextHouseElection', () => {
+  it('returns the current even year through election day', () => {
+    expect(getNextHouseElection(new Date('2026-07-06T12:00:00Z'))).toBe(2026);
+    expect(getNextHouseElection(new Date('2026-11-03T23:00:00Z'))).toBe(2026);
+  });
+
+  it('rolls two years forward the day after a November election', () => {
+    expect(getNextHouseElection(new Date('2026-11-04T00:00:00Z'))).toBe(2028);
+    expect(getNextHouseElection(new Date('2026-12-31T00:00:00Z'))).toBe(2028);
+  });
+
+  it('returns the next even year during odd years', () => {
+    expect(getNextHouseElection(new Date('2027-01-15T00:00:00Z'))).toBe(2028);
+  });
+});
+
+describe('getNextSenateElection', () => {
+  it('maps each class to its next cycle year from a fixed date', () => {
+    const now = new Date('2026-07-06T12:00:00Z');
+    expect(getNextSenateElection('OH', 1, now)).toBe(2030);
+    expect(getNextSenateElection('GA', 2, now)).toBe(2026);
+    expect(getNextSenateElection('AZ', 3, now)).toBe(2028);
+  });
+
+  it('rolls a class forward once its election has passed', () => {
+    const after2026Election = new Date('2026-11-04T00:00:00Z');
+    expect(getNextSenateElection('GA', 2, after2026Election)).toBe(2032);
+    // Other classes are unaffected
+    expect(getNextSenateElection('OH', 1, after2026Election)).toBe(2030);
+  });
+
+  it('falls back to the nearest class election for the state when class is unknown', () => {
+    // Vermont has Class I and Class III seats: nearest from mid-2026 is 2028
+    expect(getNextSenateElection('VT', undefined, new Date('2026-07-06T12:00:00Z'))).toBe(2028);
+    // Georgia has Class II and Class III seats: nearest is 2026
+    expect(getNextSenateElection('GA', undefined, new Date('2026-07-06T12:00:00Z'))).toBe(2026);
+  });
+});
+
+describe('getNextSenateElectionFromTermEnd', () => {
+  it('anchors the cycle at term end minus one (terms end Jan 3 after the election)', () => {
+    const now = new Date('2026-07-06T12:00:00Z');
+    expect(getNextSenateElectionFromTermEnd(2029, now)).toBe(2028);
+    expect(getNextSenateElectionFromTermEnd(2031, now)).toBe(2030);
+    expect(getNextSenateElectionFromTermEnd(2027, now)).toBe(2026);
+  });
+
+  it('rolls stale term data forward through 6-year cycles', () => {
+    const now = new Date('2026-07-06T12:00:00Z');
+    // Term ended Jan 2025 → seat was up in 2024 → next up in 2030
+    expect(getNextSenateElectionFromTermEnd(2025, now)).toBe(2030);
   });
 });

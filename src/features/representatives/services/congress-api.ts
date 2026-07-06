@@ -3,7 +3,12 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { getCurrentCongressNumber, getCongressDateRange } from '@/lib/data/congressional-constants';
+import {
+  getCurrentCongressNumber,
+  getCongressDateRange,
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 import { unstable_cache as cache } from 'next/cache';
 import type {
   CongressApiMember,
@@ -258,16 +263,14 @@ export function formatCongressMember(member: CongressApiMember): Representative 
     }
   }
 
-  // Determine next election
-  let nextElection = currentYear.toString();
+  // Determine next election. Senate terms end January 3 following the
+  // November election, so the seat's cycle is anchored at endYear - 1;
+  // without an end year the class is unknown — data unavailable, no guess.
+  let nextElection: string | undefined;
   if (chamber === 'House') {
-    // House elections are every 2 years
-    nextElection = currentYear % 2 === 0 ? currentYear.toString() : (currentYear + 1).toString();
-  } else {
-    // Senate terms are 6 years, need to check the specific term
-    if (currentTerm?.endYear) {
-      nextElection = currentTerm.endYear.toString();
-    }
+    nextElection = getNextHouseElection().toString();
+  } else if (currentTerm?.endYear) {
+    nextElection = getNextSenateElectionFromTermEnd(currentTerm.endYear).toString();
   }
 
   // Format the name - Congress API returns it as "Last, First"
@@ -341,7 +344,11 @@ export async function getRepresentativesByLocation(
             endYear: term.endYear?.toString() || 'Current',
           })),
           yearsInOffice: 0, // Will be calculated if needed
-          nextElection: '2026', // Default, will be calculated if needed
+          // Senate terms end Jan 3 after the November election; without an
+          // end year the seat's class is unknown — leave unset, never guess.
+          nextElection: latestTerm?.endYear
+            ? getNextSenateElectionFromTermEnd(latestTerm.endYear).toString()
+            : undefined,
         } as Representative;
       });
 
@@ -404,7 +411,7 @@ export async function getRepresentativesByLocation(
                 endYear: term.endYear?.toString() || 'Current',
               })),
               yearsInOffice: 0,
-              nextElection: '2026',
+              nextElection: getNextHouseElection().toString(),
             };
 
             logger.info('Adding House member', {
@@ -468,7 +475,7 @@ export async function getRepresentativesByLocation(
           phone: enhanced.phone,
           imageUrl: enhanced.imageUrl,
           yearsInOffice: 0, // Will be calculated from terms if needed
-          nextElection: '2026', // Default next election year
+          nextElection: enhanced.nextElection, // Already chamber/class-aware
           terms: enhanced.terms || [],
         }));
 

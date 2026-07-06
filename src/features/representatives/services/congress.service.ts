@@ -22,6 +22,11 @@ import yaml from 'js-yaml';
 import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
 import { filterCurrentCongress, isCurrentCongressTerm } from '@/lib/helpers/congress-validation';
 import { getMemberStatus } from '@/lib/data/congressional-vacancies';
+import {
+  getNextHouseElection,
+  getNextSenateElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 import { getFileCache } from '@/lib/cache/file-cache';
 import fs from 'fs';
 import path from 'path';
@@ -304,8 +309,6 @@ export interface CongressCommitteeMembership {
   thomas?: string;
   committees: Array<{
     thomas_id: string;
-    house_committee_id?: string;
-    senate_committee_id?: string;
     rank?: number;
     party?: string;
     title?: string;
@@ -770,7 +773,9 @@ export async function getEnhancedRepresentative(
             name: committee?.name || membership.thomas_id,
             role: membership.title || 'Member',
             thomas_id: membership.thomas_id,
-            id: membership.house_committee_id || membership.senate_committee_id,
+            // The thomas_id is the site-wide committee URL key; membership
+            // records never carry house/senate_committee_id.
+            id: membership.thomas_id,
           };
         })
         .filter(c => c.name) || [];
@@ -1032,25 +1037,21 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
         // Calculate next election based on chamber and current term
         const calculateNextElection = () => {
           if (currentTerm.type === 'sen') {
-            // Senators serve 6-year terms
-            // Classes rotate: Class I (2030), Class II (2026), Class III (2028)
-            if (currentTerm.class === 1) return '2030';
-            if (currentTerm.class === 2) return '2026';
-            if (currentTerm.class === 3) return '2028';
-            // Fallback: if no class, use term end year
-            const endYear = currentTerm.end?.split('-')[0];
-            return endYear || '2026';
-          } else {
-            // House members serve 2-year terms, all up for election in even years
-            const currentYear = new Date().getFullYear();
-            const nextEvenYear = currentYear % 2 === 0 ? currentYear : currentYear + 1;
-            // If we're past November in an election year, the next election is in 2 years
-            const currentMonth = new Date().getMonth();
-            if (currentYear % 2 === 0 && currentMonth >= 11) {
-              return (nextEvenYear + 2).toString();
+            const seatClass = currentTerm.class;
+            if (seatClass === 1 || seatClass === 2 || seatClass === 3) {
+              return getNextSenateElection(currentTerm.state, seatClass).toString();
             }
-            return nextEvenYear.toString();
+            // No class: derive the cycle from the term end (terms end Jan 3
+            // after the November election), else fall back to the state's
+            // nearest Senate election.
+            const endYear = parseInt(currentTerm.end?.split('-')[0] || '', 10);
+            if (!Number.isNaN(endYear)) {
+              return getNextSenateElectionFromTermEnd(endYear).toString();
+            }
+            return getNextSenateElection(currentTerm.state).toString();
           }
+          // House members serve 2-year terms, all up for election in even years
+          return getNextHouseElection().toString();
         };
 
         // Determine voting status and role (constitutional authority)

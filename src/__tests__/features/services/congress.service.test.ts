@@ -41,7 +41,12 @@ import {
   getFECIds,
   type CongressLegislator,
 } from '@/features/representatives/services/congress.service';
-import { getCurrentCongressNumber, getCongressDateRange } from '@/lib/data/congressional-constants';
+import {
+  getCurrentCongressNumber,
+  getCongressDateRange,
+  getNextHouseElection,
+  getNextSenateElection,
+} from '@/lib/data/congressional-constants';
 
 const mockFileCache = getFileCache() as unknown as { get: jest.Mock; set: jest.Mock };
 
@@ -219,10 +224,10 @@ describe('getEnhancedRepresentative', () => {
     expect(rep?.imageUrl).toBe('/api/representative-photo/A000001');
 
     // Committee names resolved from committees-current.yaml, role from title.
-    // `id` reads house/senate_committee_id off the membership record, which
-    // fetchCommitteeMemberships never populates — it is always undefined.
+    // `id` mirrors thomas_id — the site-wide committee URL key — so schema.org
+    // memberOf URLs and /committee links always resolve.
     expect(rep?.committees).toEqual([
-      { name: 'Committee on the Judiciary', role: 'Chair', thomas_id: 'SSJU', id: undefined },
+      { name: 'Committee on the Judiciary', role: 'Chair', thomas_id: 'SSJU', id: 'SSJU' },
     ]);
 
     expect(rep?.socialMedia?.twitter).toBe('SenAnderson');
@@ -309,13 +314,14 @@ describe('getAllEnhancedRepresentatives', () => {
     expect(senator?.yearsInOffice).toBe(
       Math.round((Date.now() - new Date('2019-01-03').getTime()) / (1000 * 60 * 60 * 24) / 365.25)
     );
-    // Senate class → election year mapping (hardcoded in the service).
-    expect(senator?.nextElection).toBe('2026');
+    // Senate class → election year comes from the shared 6-year-cycle helper
+    // (covered with fixed dates in congressional-constants.test.ts).
+    expect(senator?.nextElection).toBe(getNextSenateElection('CA', 2).toString());
 
     const houseMember = reps.find(r => r.bioguideId === 'B000002');
     // House members are always up in the next even year.
+    expect(houseMember?.nextElection).toBe(getNextHouseElection().toString());
     expect(Number(houseMember?.nextElection) % 2).toBe(0);
-    expect(Number(houseMember?.nextElection)).toBeGreaterThanOrEqual(new Date().getFullYear());
   });
 
   it('returns an empty array when upstream data is unavailable', async () => {

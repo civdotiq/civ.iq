@@ -35,7 +35,12 @@ import {
   type Representative,
 } from '@/features/representatives/services/congress-api';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { getCurrentCongressNumber, getCongressDateRange } from '@/lib/data/congressional-constants';
+import {
+  getCurrentCongressNumber,
+  getCongressDateRange,
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 import type { CongressApiMember } from '@/types/api-responses';
 
 const CURRENT_CONGRESS = getCurrentCongressNumber();
@@ -111,12 +116,12 @@ describe('formatCongressMember', () => {
     expect(rep.chamber).toBe('House');
     expect(rep.district).toBe('11');
     expect(rep.party).toBe('Democratic');
-    // House members: next election is the next even year.
-    const expectedElection = currentYear % 2 === 0 ? currentYear : currentYear + 1;
-    expect(rep.nextElection).toBe(String(expectedElection));
+    // House members: next even-year election that hasn't happened yet
+    // (helper covered with fixed dates in congressional-constants.test.ts).
+    expect(rep.nextElection).toBe(String(getNextHouseElection()));
   });
 
-  it('maps a Senator and takes next election from the term end', () => {
+  it('maps a Senator and anchors next election at term end minus one', () => {
     const rep = formatCongressMember(
       makeApiMember({
         district: undefined,
@@ -128,7 +133,21 @@ describe('formatCongressMember', () => {
 
     expect(rep.chamber).toBe('Senate');
     expect(rep.district).toBeUndefined();
-    expect(rep.nextElection).toBe('2029');
+    // Term ends Jan 2029 → seat is up in November 2028, not 2029.
+    expect(rep.nextElection).toBe(String(getNextSenateElectionFromTermEnd(2029)));
+  });
+
+  it('leaves a Senator without a term end year unset — never guesses', () => {
+    const rep = formatCongressMember(
+      makeApiMember({
+        district: undefined,
+        terms: {
+          item: [{ chamber: 'Senate', congress: CURRENT_CONGRESS, startYear: 2023 }],
+        },
+      })
+    );
+
+    expect(rep.nextElection).toBeUndefined();
   });
 
   it('computes yearsInOffice from the earliest term', () => {
