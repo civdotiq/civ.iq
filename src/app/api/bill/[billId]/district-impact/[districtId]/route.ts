@@ -275,6 +275,8 @@ async function fetchGovernmentSpending(districtId: string): Promise<GovernmentSe
     federalInvestment: {
       totalAnnualSpending: null,
       contractsAndGrants: null,
+      spendingPerCapita: null,
+      population: null,
       majorProjects: [],
       infrastructureInvestment: null,
     },

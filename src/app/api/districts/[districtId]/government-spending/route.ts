@@ -9,6 +9,12 @@ import { govCache } from '@/services/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
 import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
+import {
+  getDistrictSpending,
+  getDistrictAwardCounts,
+  parseDistrictId,
+} from '@/lib/services/spending.service';
+import type { FederalAward } from '@/types/spending';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -70,84 +76,58 @@ const STATE_FIPS: Record<string, string> = {
 
 const CACHE_KEY_PREFIX = 'district-government-spending';
 
-async function fetchUSASpendingData(
-  stateCode: string
-): Promise<Partial<GovernmentServicesProfile['federalInvestment']>> {
+/**
+ * District-scoped federal spending from USASpending.gov (place of
+ * performance, current federal fiscal year to date), via the shared
+ * spending service. null = data unavailable, never a fabricated 0.
+ */
+async function fetchFederalInvestment(
+  districtId: string
+): Promise<GovernmentServicesProfile['federalInvestment']> {
+  const unavailable: GovernmentServicesProfile['federalInvestment'] = {
+    totalAnnualSpending: null,
+    contractsAndGrants: null,
+    spendingPerCapita: null,
+    population: null,
+    majorProjects: [],
+    infrastructureInvestment: null,
+  };
+
+  const parsed = parseDistrictId(districtId);
+  if (!parsed) {
+    logger.warn('Cannot parse district ID for USASpending lookup', { districtId });
+    return unavailable;
+  }
+
   try {
-    // USASpending.gov API for federal spending by state
-    const spendingUrl = `https://api.usaspending.gov/api/v2/spending/state/${stateCode}`;
+    const [spending, counts] = await Promise.all([
+      getDistrictSpending(parsed.state, parsed.district),
+      getDistrictAwardCounts(parsed.state, parsed.district),
+    ]);
 
-    logger.info('Fetching USASpending.gov data', {
-      stateCode,
-      url: spendingUrl,
-    });
+    const majorProjects = [...spending.contracts, ...spending.grants]
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+      .map((award: FederalAward) => ({
+        title: award.recipientName || 'Federal award',
+        amount: award.amount,
+        agency: award.agency,
+        description: award.description,
+      }));
 
-    const response = await fetch(spendingUrl, {
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`USASpending API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.results && data.results.length > 0) {
-      let totalSpending = 0;
-      let contractsCount = 0;
-      let infrastructureSpending = 0;
-
-      data.results.forEach((award: unknown) => {
-        const awardData = award as Record<string, unknown>;
-        const amount = parseFloat(String(awardData.total_obligation)) || 0;
-        totalSpending += amount;
-
-        if (String(awardData.type).includes('Contract')) {
-          contractsCount++;
-        }
-
-        // Infrastructure-related spending keywords
-        const description = String(awardData.description || '').toLowerCase();
-        if (
-          description.includes('infrastructure') ||
-          description.includes('highway') ||
-          description.includes('bridge') ||
-          description.includes('transit')
-        ) {
-          infrastructureSpending += amount;
-        }
-      });
-
-      // Extract major projects from largest awards
-      const majorProjects = data.results
-        .slice(0, 5)
-        .map((award: unknown) => {
-          const awardData = award as Record<string, unknown>;
-          return {
-            title: String(awardData.description || 'Federal Award'),
-            amount: parseFloat(String(awardData.total_obligation)) || 0,
-            agency: String(awardData.awarding_agency_name || 'Federal Agency'),
-            description: String(awardData.description || 'Government investment'),
-          };
-        })
-        .filter((project: { amount: number }) => project.amount > 100000);
-
-      return {
-        totalAnnualSpending: totalSpending,
-        contractsAndGrants: contractsCount,
-        majorProjects,
-        infrastructureInvestment: infrastructureSpending,
-      };
-    }
-
-    logger.warn('USASpending API returned no data', { stateCode });
-    return {};
+    return {
+      totalAnnualSpending: spending.aggregate?.total ?? null,
+      contractsAndGrants: counts ? counts.contracts + counts.grants : null,
+      spendingPerCapita: spending.aggregate?.perCapita ?? null,
+      population: spending.aggregate?.population ?? null,
+      majorProjects,
+      // No honest source: the old value was a keyword heuristic over a
+      // 10-award sample. Pending a PSC/NAICS-coded query.
+      infrastructureInvestment: null,
+    };
   } catch (error) {
-    logger.error('Error fetching USASpending data', error as Error, { stateCode });
-    return {};
+    logger.error('Error fetching district federal investment', error as Error, { districtId });
+    return unavailable;
   }
 }
 
@@ -261,24 +241,18 @@ async function getGovernmentServicesProfile(
     logger.info('Fetching government services profile for district', { districtId, stateCode });
 
     // Fetch data from multiple sources in parallel
-    const [spendingData, billsData, stateContext] = await Promise.all([
-      fetchUSASpendingData(stateCode),
+    const [federalInvestment, billsData, stateContext] = await Promise.all([
+      fetchFederalInvestment(districtId),
       fetchCongressionalBillsData(districtId),
       fetchStateContext(stateCode),
     ]);
 
-    // Generate estimates for missing data
     const socialServicesData = getSocialServicesData();
     const federalFacilitiesData = getFederalFacilitiesData();
 
     // Combine all data sources — use null/[] when APIs fail (no fake data)
     const servicesProfile: GovernmentServicesProfile = {
-      federalInvestment: {
-        totalAnnualSpending: spendingData.totalAnnualSpending ?? null,
-        contractsAndGrants: spendingData.contractsAndGrants ?? null,
-        majorProjects: spendingData.majorProjects || [],
-        infrastructureInvestment: spendingData.infrastructureInvestment ?? null,
-      },
+      federalInvestment,
       socialServices: socialServicesData,
       representation: {
         billsAffectingDistrict: billsData.billsAffectingDistrict || [],
@@ -310,6 +284,8 @@ async function getGovernmentServicesProfile(
       federalInvestment: {
         totalAnnualSpending: null,
         contractsAndGrants: null,
+        spendingPerCapita: null,
+        population: null,
         majorProjects: [],
         infrastructureInvestment: null,
       },
@@ -363,7 +339,9 @@ export async function GET(
           },
           notes: [
             'null values mean data is unavailable from real government sources - never estimated',
-            'Federal spending figures from USASpending.gov are STATEWIDE totals, not district-specific',
+            'Federal spending figures are DISTRICT-scoped (USASpending.gov place of performance), current federal fiscal year to date',
+            'Contracts & grants count covers awards with a place of performance in the district, current fiscal year',
+            'Infrastructure investment unavailable: no honest classification source (pending a PSC/NAICS-coded query)',
             'Congressional bills from enhanced Congress.gov access; no impact classification is available (impactLevel is null)',
             'District-level social services data unavailable - real government APIs needed',
             'Federal facilities data unavailable - real government APIs needed',

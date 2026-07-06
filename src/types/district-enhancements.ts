@@ -60,15 +60,20 @@ export interface ServicesHealthProfile {
 // Government Investment & Services Data Types
 export interface GovernmentServicesProfile {
   federalInvestment: {
-    // null = data unavailable (USASpending fetch failed or returned nothing)
-    totalAnnualSpending: number | null; // Federal dollars (statewide total)
-    contractsAndGrants: number | null; // Number of active contracts/grants
+    // District-scoped USASpending figures (place of performance, current
+    // federal fiscal year to date). null = data unavailable.
+    totalAnnualSpending: number | null; // Federal obligations in the district, current FY to date
+    contractsAndGrants: number | null; // Contracts + grants awarded in the district, current FY
+    spendingPerCapita: number | null; // USASpending-published per-capita for the district
+    population: number | null; // USASpending-published district population
     majorProjects: Array<{
       title: string;
       amount: number;
       agency: string;
       description: string;
     }>;
+    // null: no honest source — the old value was a keyword heuristic over a
+    // 10-award sample, not a measured total. Pending a PSC/NAICS-coded query.
     infrastructureInvestment: number | null;
   };
   socialServices: {

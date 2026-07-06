@@ -35,6 +35,12 @@ jest.mock('@/lib/server-url', () => ({
   getServerBaseUrl: jest.fn(() => 'http://localhost:3000'),
 }));
 
+// Pass-through: the spending service caches via cachedFetch; tests must be
+// driven by the fetch mock, never by a warm cache from a prior test.
+jest.mock('@/lib/cache', () => ({
+  cachedFetch: jest.fn((_key: string, fetchFn: () => Promise<unknown>) => fetchFn()),
+}));
+
 jest.mock('@/lib/data-sources/cms-medicaid-enrollment-service', () => ({
   fetchMedicaidEnrollment: jest.fn().mockResolvedValue(null),
 }));
@@ -143,9 +149,77 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
 
     expect(federalInvestment.totalAnnualSpending).toBeNull();
     expect(federalInvestment.contractsAndGrants).toBeNull();
+    expect(federalInvestment.spendingPerCapita).toBeNull();
+    expect(federalInvestment.population).toBeNull();
     expect(federalInvestment.infrastructureInvestment).toBeNull();
     expect(federalInvestment.majorProjects).toEqual([]);
     expect(representation.appropriationsSecured).toBeNull();
+  });
+
+  it('maps district-scoped USASpending data (geography + award counts) into federalInvestment', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string, init?: RequestInit) => {
+      const u = String(url);
+      if (u.includes('spending_by_geography')) {
+        // Must query the district geo layer with a FIPS-based shape code
+        expect(String(init?.body)).toContain('"geo_layer":"district"');
+        expect(String(init?.body)).toContain('"geo_layer_filters":["4810"]');
+        return mockFetchResponse({
+          results: [
+            {
+              shape_code: '4810',
+              display_name: 'TX-10',
+              aggregated_amount: 3647514226.44,
+              population: 775543,
+              per_capita: 4703.17,
+            },
+          ],
+        });
+      }
+      if (u.includes('spending_by_award_count')) {
+        expect(String(init?.body)).toContain('"district_current":"10"');
+        return mockFetchResponse({
+          results: { contracts: 8268, grants: 1319, loans: 11077, direct_payments: 8133 },
+        });
+      }
+      if (u.includes('spending_by_award')) {
+        return mockFetchResponse({
+          results: [
+            {
+              internal_id: 1,
+              'Award ID': 'W15QKN19C0032',
+              'Recipient Name': 'RDZM, LLC',
+              'Award Amount': 48315012,
+              'Award Type': 'Definitive Contract',
+              'Awarding Agency': 'Department of Defense',
+              'Start Date': '2019-01-01',
+              Description: 'Cartridge production',
+              generated_internal_id: 'CONT_AWD_1',
+            },
+          ],
+        });
+      }
+      return Promise.reject(new Error('unreachable'));
+    });
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/government-spending'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    const { federalInvestment } = body.government;
+    expect(federalInvestment.totalAnnualSpending).toBe(3647514226.44);
+    expect(federalInvestment.spendingPerCapita).toBe(4703.17);
+    expect(federalInvestment.population).toBe(775543);
+    // Contracts + grants only — loans and direct payments are not awards we label as such
+    expect(federalInvestment.contractsAndGrants).toBe(8268 + 1319);
+    expect(federalInvestment.majorProjects[0]).toMatchObject({
+      title: 'RDZM, LLC',
+      amount: 48315012,
+      agency: 'Department of Defense',
+    });
+    // No honest classification source — never fabricated from keyword matching
+    expect(federalInvestment.infrastructureInvestment).toBeNull();
   });
 
   it('never fabricates an impactLevel classification for bills', async () => {

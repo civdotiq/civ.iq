@@ -145,24 +145,39 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
     <div className="bg-white border-2 border-black p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Federal Investment & Services</h3>
 
-      {/* Federal Investment - statewide USASpending totals; hide cards without real data */}
+      {/* Federal Investment - district-scoped USASpending figures; hide cards without real data */}
       {(government.federalInvestment.totalAnnualSpending != null ||
         government.federalInvestment.contractsAndGrants != null ||
+        government.federalInvestment.spendingPerCapita != null ||
         government.federalInvestment.infrastructureInvestment != null ||
         government.federalInvestment.majorProjects.length > 0) && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <DollarSign className="w-5 h-5 mr-2 text-civiq-green" />
+            <DollarSign className="w-5 h-5 mr-2 text-civiq-blue" />
             Federal Investment
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {government.federalInvestment.totalAnnualSpending != null && (
-              <div className="bg-civiq-green/10 p-6">
-                <div className="text-2xl font-bold text-civiq-green">
+              <div className="bg-civiq-blue/10 p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
                   {formatLargeNumber(government.federalInvestment.totalAnnualSpending)}
                 </div>
-                <p className="text-sm text-civiq-green mt-1">Total Annual Spending</p>
-                <p className="text-xs text-civiq-green mt-1">Statewide federal dollars</p>
+                <p className="text-sm text-civiq-blue mt-1">Federal Spending</p>
+                <p className="text-xs text-civiq-blue mt-1">
+                  In this district, current fiscal year to date
+                </p>
+              </div>
+            )}
+
+            {government.federalInvestment.spendingPerCapita != null && (
+              <div className="bg-civiq-blue/10 p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatCurrency(government.federalInvestment.spendingPerCapita)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Per Resident</p>
+                <p className="text-xs text-civiq-blue mt-1">
+                  Federal spending per capita in this district
+                </p>
               </div>
             )}
 
@@ -172,7 +187,9 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                   {formatNumber(government.federalInvestment.contractsAndGrants)}
                 </div>
                 <p className="text-sm text-civiq-blue mt-1">Contracts & Grants</p>
-                <p className="text-xs text-civiq-blue mt-1">Active federal awards, statewide</p>
+                <p className="text-xs text-civiq-blue mt-1">
+                  Awarded in this district, current fiscal year
+                </p>
               </div>
             )}
 

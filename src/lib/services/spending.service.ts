@@ -25,6 +25,61 @@ const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 const CONTRACT_CODES = ['A', 'B', 'C', 'D'];
 const GRANT_CODES = ['02', '03', '04', '05'];
 
+// The spending_by_geography endpoint identifies districts by FIPS-based
+// shape codes (e.g. TX-10 = "4810"), not by state postal codes.
+const STATE_FIPS: Record<string, string> = {
+  AL: '01',
+  AK: '02',
+  AZ: '04',
+  AR: '05',
+  CA: '06',
+  CO: '08',
+  CT: '09',
+  DE: '10',
+  FL: '12',
+  GA: '13',
+  HI: '15',
+  ID: '16',
+  IL: '17',
+  IN: '18',
+  IA: '19',
+  KS: '20',
+  KY: '21',
+  LA: '22',
+  ME: '23',
+  MD: '24',
+  MA: '25',
+  MI: '26',
+  MN: '27',
+  MS: '28',
+  MO: '29',
+  MT: '30',
+  NE: '31',
+  NV: '32',
+  NH: '33',
+  NJ: '34',
+  NM: '35',
+  NY: '36',
+  NC: '37',
+  ND: '38',
+  OH: '39',
+  OK: '40',
+  OR: '41',
+  PA: '42',
+  RI: '44',
+  SC: '45',
+  SD: '46',
+  TN: '47',
+  TX: '48',
+  UT: '49',
+  VT: '50',
+  VA: '51',
+  WA: '53',
+  WV: '54',
+  WI: '55',
+  WY: '56',
+};
+
 /**
  * Parse district ID (e.g., "MI-05", "CA-5", "AK-AL") into state and district number.
  * Returns null for invalid formats.
@@ -112,6 +167,12 @@ async function fetchDistrictAggregate(
 ): Promise<{ total: number; perCapita: number | null; population: number | null } | null> {
   const { startDate, endDate } = currentFederalFiscalYearWindow();
 
+  const stateFips = STATE_FIPS[state];
+  if (!stateFips) {
+    logger.warn('No FIPS code for state in district aggregate lookup', { state });
+    return null;
+  }
+
   try {
     const response = await fetch(`${USASPENDING_API}/search/spending_by_geography/`, {
       method: 'POST',
@@ -122,7 +183,7 @@ async function fetchDistrictAggregate(
       body: JSON.stringify({
         scope: 'place_of_performance',
         geo_layer: 'district',
-        geo_layer_filters: [`${state}${district}`],
+        geo_layer_filters: [`${stateFips}${district}`],
         filters: {
           time_period: [{ start_date: startDate, end_date: endDate }],
         },
@@ -133,10 +194,11 @@ async function fetchDistrictAggregate(
 
     const data = await response.json();
     const result = data.results?.[0];
-    if (!result) return null;
+    // No aggregated amount = data unavailable, not $0 (null-honesty)
+    if (!result || typeof result.aggregated_amount !== 'number') return null;
 
     return {
-      total: result.aggregated_amount ?? 0,
+      total: result.aggregated_amount,
       perCapita: result.per_capita ?? null,
       population: result.population ?? null,
     };
@@ -144,6 +206,63 @@ async function fetchDistrictAggregate(
     logger.error('Error fetching district aggregate', error as Error);
     return null;
   }
+}
+
+/** Award counts for a district in the current fiscal year, by award family */
+export interface DistrictAwardCounts {
+  contracts: number;
+  grants: number;
+}
+
+async function fetchDistrictAwardCounts(
+  state: string,
+  district: string
+): Promise<DistrictAwardCounts | null> {
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
+
+  try {
+    const response = await fetch(`${USASPENDING_API}/search/spending_by_award_count/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+      },
+      body: JSON.stringify({
+        filters: {
+          place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
+          time_period: [{ start_date: startDate, end_date: endDate }],
+        },
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const results = data.results;
+    if (typeof results?.contracts !== 'number' || typeof results?.grants !== 'number') {
+      return null;
+    }
+
+    return { contracts: results.contracts, grants: results.grants };
+  } catch (error) {
+    logger.error('Error fetching district award counts', error as Error);
+    return null;
+  }
+}
+
+/**
+ * Count of contracts and grants awarded in a congressional district in the
+ * current fiscal year. null = data unavailable (never fabricated).
+ * Cached separately from getDistrictSpending so existing cache entries keep
+ * their shape; failed fetches (null) are not served from cache.
+ */
+export async function getDistrictAwardCounts(
+  state: string,
+  district: string
+): Promise<DistrictAwardCounts | null> {
+  const cacheKey = `spending-district-counts-${state}-${district}`;
+
+  return cachedFetch(cacheKey, () => fetchDistrictAwardCounts(state, district), 6 * 60 * 60);
 }
 
 /** Result from getDistrictSpending — same shape the API route returns in its JSON body */
@@ -180,6 +299,7 @@ export async function getDistrictSpending(
 
       return { contracts, grants, aggregate, contractTotal, grantTotal };
     },
-    6 * 60 * 60 * 1000
+    // cachedFetch TTL is in seconds; this was previously 6h * 1000 (~250 days)
+    6 * 60 * 60
   );
 }
