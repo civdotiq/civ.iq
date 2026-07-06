@@ -83,9 +83,8 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     for (const [field, value] of Object.entries(healthcare)) {
       expect({ field, value }).toEqual({ field, value: null });
     }
-    for (const [field, value] of Object.entries(publicHealth)) {
-      expect({ field, value }).toEqual({ field, value: null });
-    }
+    // Whole PLACES section is null when unavailable — never empty fabrications
+    expect(publicHealth).toBeNull();
   });
 
   it('uses Census ASFIN federal revenue (not per-pupil expenditure) for federalEducationFunding', async () => {
@@ -112,7 +111,7 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     expect(body.services.education.collegeEnrollmentRate).toBeNull();
   });
 
-  it('never emits public health or healthcare values (no correct source mapping exists)', async () => {
+  it('emits null healthcare and public health when upstream responses are unusable', async () => {
     global.fetch = jest.fn().mockImplementation(() => mockFetchResponse({ result: [] }));
 
     const response = await getServicesHealth(
@@ -122,10 +121,72 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     const body = await response.json();
 
     expect(body.services.healthcare.hospitalQualityRating).toBeNull();
-    expect(body.services.publicHealth.preventableDiseaseRate).toBeNull();
-    expect(body.services.publicHealth.mentalHealthProviderRatio).toBeNull();
-    expect(body.services.publicHealth.substanceAbusePrograms).toBeNull();
-    expect(body.services.publicHealth.preventiveCareCoverage).toBeNull();
+    expect(body.services.publicHealth).toBeNull();
+  });
+
+  it('presents CDC PLACES prevalence as per-county percentages, never a synthesized district rate', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      const u = String(url);
+      if (u.includes('data.cdc.gov')) {
+        // Crude prevalence only — the route must query CrdPrv
+        expect(u).toContain('datavaluetypeid=CrdPrv');
+        return mockFetchResponse([
+          {
+            locationid: '48453',
+            locationname: 'Travis',
+            measureid: 'DIABETES',
+            data_value: '9.0',
+            low_confidence_limit: '8.5',
+            high_confidence_limit: '9.5',
+            year: '2023',
+          },
+          {
+            locationid: '48021',
+            locationname: 'Bastrop',
+            measureid: 'DIABETES',
+            data_value: '12.4',
+            low_confidence_limit: '11.2',
+            high_confidence_limit: '13.6',
+            year: '2023',
+          },
+          {
+            locationid: '48453',
+            locationname: 'Travis',
+            measureid: 'MHLTH',
+            data_value: '15.9',
+            low_confidence_limit: '15.1',
+            high_confidence_limit: '16.7',
+            year: '2023',
+          },
+        ]);
+      }
+      return Promise.reject(new Error('unreachable'));
+    });
+
+    const response = await getServicesHealth(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/services-health'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    const { publicHealth } = body.services;
+    expect(publicHealth).not.toBeNull();
+    expect(publicHealth.dataYear).toBe('2023');
+
+    const diabetes = publicHealth.measures.find(
+      (m: { measureId: string }) => m.measureId === 'DIABETES'
+    );
+    expect(diabetes.unit).toBe('%');
+    // County values pass through untouched (sorted descending), never summed
+    // across counties or relabeled as per-100k rates
+    expect(diabetes.counties).toEqual([
+      { fips: '48021', name: 'Bastrop', value: 12.4, lowCI: 11.2, highCI: 13.6 },
+      { fips: '48453', name: 'Travis', value: 9.0, lowCI: 8.5, highCI: 9.5 },
+    ]);
+
+    const mhlth = publicHealth.measures.find((m: { measureId: string }) => m.measureId === 'MHLTH');
+    expect(mhlth.counties).toHaveLength(1);
+    expect(mhlth.counties[0].value).toBe(15.9);
   });
 });
 

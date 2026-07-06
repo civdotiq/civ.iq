@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
+import { fetchDistrictPlacesData } from '@/lib/data-sources/cdc-places-service';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -128,19 +129,19 @@ async function fetchEducationData(
   }
 }
 
-function getPublicHealthData(): ServicesHealthProfile['publicHealth'] {
-  // Public health metrics are unavailable until a correct CDC PLACES measure
-  // mapping exists. The previous integration misrepresented PLACES data:
-  // prevalence percentages were summed with a divisor shared across
-  // categories, presented as "per 100,000" rates, and a prevalence measure
-  // was passed off as a provider ratio. Following CLAUDE.md "NO mock data
-  // ever": emit null (= unavailable), never a miscomputed number.
-  return {
-    preventableDiseaseRate: null,
-    mentalHealthProviderRatio: null,
-    substanceAbusePrograms: null, // Requires SAMHSA treatment locator API
-    preventiveCareCoverage: null,
-  };
+/**
+ * CDC PLACES crude prevalence for the counties overlapping the district.
+ * null = data unavailable. Never synthesized into a district number —
+ * PLACES publishes county-level estimates, and they are shown as such.
+ */
+async function fetchPublicHealthData(
+  districtId: string
+): Promise<ServicesHealthProfile['publicHealth']> {
+  const districtPart = districtId.split('-')[1]?.toUpperCase() ?? '';
+  const districtNumber = /^\d+$/.test(districtPart) ? parseInt(districtPart, 10) : 0;
+  const stateCode = districtId.split('-')[0]?.toUpperCase() ?? '';
+
+  return fetchDistrictPlacesData(stateCode, districtNumber);
 }
 
 function getHealthcareData(): ServicesHealthProfile['healthcare'] {
@@ -222,7 +223,7 @@ function getUnavailableProfile(): ServicesHealthProfile {
       teacherToStudentRatio: null,
     },
     healthcare: getHealthcareData(),
-    publicHealth: getPublicHealthData(),
+    publicHealth: null,
   };
 }
 
@@ -245,9 +246,10 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
     logger.info('Fetching services health profile for district', { districtId, stateCode });
 
     // Fetch data from real sources in parallel
-    const [educationApiData, censusEducation] = await Promise.all([
+    const [educationApiData, censusEducation, publicHealth] = await Promise.all([
       fetchEducationData(stateCode),
       fetchCensusEducationFunding(stateCode),
+      fetchPublicHealthData(districtId),
     ]);
 
     // Combine data sources — null when unavailable, never 0 (no fake data)
@@ -261,7 +263,7 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
         teacherToStudentRatio: educationApiData.teacherToStudentRatio ?? null,
       },
       healthcare: getHealthcareData(),
-      publicHealth: getPublicHealthData(),
+      publicHealth,
     };
 
     // Cache the result (Redis + memory fallback; shared across instances)
@@ -307,14 +309,14 @@ export async function GET(
             education: 'Department of Education - https://api.ed.gov/',
             censusAsfin:
               'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
-            cdc: 'Data unavailable - CDC PLACES integration disabled pending correct measure mapping',
+            cdc: 'CDC PLACES County Data - https://data.cdc.gov/resource/swc5-untb',
             healthcare: 'Data unavailable - no real API source',
           },
           notes: [
             'null values mean data is unavailable from real government sources - never estimated',
             'Education data from Department of Education API when available',
             'Federal education funding is the statewide federal revenue to school systems (Census ASFIN survey), not district-specific',
-            'Public health data unavailable - CDC PLACES integration disabled pending correct measure mapping',
+            'Public health figures are CDC PLACES county-level model-based estimates (BRFSS, crude prevalence percentages) for the counties overlapping this district — PLACES does not publish congressional-district figures, so no district number is synthesized',
             'Healthcare data unavailable - real government APIs needed',
           ],
         },

@@ -49,6 +49,16 @@ function formatLargeNumber(num: number): string {
   return formatCurrency(num);
 }
 
+// Compact column headers for the PLACES county table
+const PLACES_SHORT_LABELS: Record<string, string> = {
+  DIABETES: 'Diabetes',
+  MHLTH: 'Mental distress',
+  CHECKUP: 'Checkup',
+  ACCESS2: 'Uninsured',
+  OBESITY: 'Obesity',
+  CSMOKING: 'Smoking',
+};
+
 function getStarRating(rating: number): string {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -134,11 +144,20 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
     services.education.federalEducationFunding != null ||
     services.education.teacherToStudentRatio != null;
 
-  const hasPublicHealthData =
-    services.publicHealth.preventableDiseaseRate != null ||
-    services.publicHealth.mentalHealthProviderRatio != null ||
-    services.publicHealth.substanceAbusePrograms != null ||
-    services.publicHealth.preventiveCareCoverage != null;
+  const publicHealth = services.publicHealth;
+  const hasPublicHealthData = publicHealth != null && publicHealth.measures.length > 0;
+
+  const publicHealthCounties: Array<{ fips: string; name: string }> = [];
+  if (publicHealth) {
+    for (const measure of publicHealth.measures) {
+      for (const county of measure.counties) {
+        if (!publicHealthCounties.some(c => c.fips === county.fips)) {
+          publicHealthCounties.push({ fips: county.fips, name: county.name });
+        }
+      }
+    }
+    publicHealthCounties.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   const hasHealthcareData =
     services.healthcare.hospitalQualityRating != null ||
@@ -325,54 +344,74 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         </div>
       )}
 
-      {/* Public Health - Only show cards with real data */}
-      {hasPublicHealthData && (
+      {/* Public Health — CDC PLACES county-level crude prevalence */}
+      {hasPublicHealthData && publicHealth && (
         <div className="mb-6">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <CheckIcon className="w-5 h-5 mr-2 text-civiq-green" />
+            <CheckIcon className="w-5 h-5 mr-2 text-civiq-blue" />
             Public Health & Prevention
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.publicHealth.preventableDiseaseRate != null && (
-              <div className="bg-civiq-green/10 border-aicher border-civiq-green p-grid-3">
-                <div className="text-2xl font-bold text-civiq-green">
-                  {services.publicHealth.preventableDiseaseRate.toFixed(0)}
+          <p className="text-xs text-gray-500 mb-4">
+            CDC PLACES county estimates{publicHealth.dataYear ? ` (${publicHealth.dataYear})` : ''}{' '}
+            — share of adults, for the {publicHealthCounties.length}{' '}
+            {publicHealthCounties.length === 1 ? 'county' : 'counties'} overlapping this district.
+            PLACES does not publish district-level figures.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {publicHealth.measures.map(measure => {
+              const values = measure.counties.map(c => c.value);
+              const min = Math.min(...values);
+              const max = Math.max(...values);
+              const display =
+                min === max ? formatPercentage(min) : `${min.toFixed(1)}–${max.toFixed(1)}%`;
+              return (
+                <div
+                  key={measure.measureId}
+                  className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3"
+                >
+                  <div className="text-2xl font-bold text-civiq-blue">{display}</div>
+                  <p className="text-sm text-civiq-blue mt-1">{measure.label}</p>
+                  <p className="text-xs text-civiq-blue mt-1">
+                    {measure.counties.length === 1
+                      ? `${measure.counties[0]?.name} County`
+                      : `Range across ${measure.counties.length} counties`}
+                  </p>
                 </div>
-                <p className="text-sm text-civiq-green mt-1">Preventable Disease Rate</p>
-                <p className="text-xs text-civiq-green mt-1">Per 100,000 population</p>
-              </div>
-            )}
-
-            {services.publicHealth.mentalHealthProviderRatio != null && (
-              <div className="bg-teal-50 border-aicher border-teal-600 p-grid-3">
-                <div className="text-2xl font-bold text-teal-900">
-                  {services.publicHealth.mentalHealthProviderRatio.toFixed(1)}
-                </div>
-                <p className="text-sm text-teal-700 mt-1">Mental Health Provider Ratio</p>
-                <p className="text-xs text-teal-600 mt-1">Per 1,000 residents</p>
-              </div>
-            )}
-
-            {services.publicHealth.substanceAbusePrograms != null && (
-              <div className="bg-lime-50 border-aicher border-lime-600 p-grid-3">
-                <div className="text-2xl font-bold text-lime-900">
-                  {services.publicHealth.substanceAbusePrograms}
-                </div>
-                <p className="text-sm text-lime-700 mt-1">Substance Abuse Programs</p>
-                <p className="text-xs text-lime-600 mt-1">Available programs</p>
-              </div>
-            )}
-
-            {services.publicHealth.preventiveCareCoverage != null && (
-              <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
-                <div className="text-2xl font-bold text-emerald-900">
-                  {formatPercentage(services.publicHealth.preventiveCareCoverage)}
-                </div>
-                <p className="text-sm text-emerald-700 mt-1">Preventive Care Coverage</p>
-                <p className="text-xs text-emerald-600 mt-1">Population with access</p>
-              </div>
-            )}
+              );
+            })}
           </div>
+
+          {publicHealthCounties.length > 1 && (
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-sm border-2 border-black">
+                <thead>
+                  <tr className="border-b-2 border-black text-left">
+                    <th className="p-2 font-semibold">County</th>
+                    {publicHealth.measures.map(measure => (
+                      <th key={measure.measureId} className="p-2 font-semibold">
+                        {PLACES_SHORT_LABELS[measure.measureId] ?? measure.measureId}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {publicHealthCounties.map(county => (
+                    <tr key={county.fips} className="border-b border-gray-300">
+                      <td className="p-2">{county.name}</td>
+                      {publicHealth.measures.map(measure => {
+                        const entry = measure.counties.find(c => c.fips === county.fips);
+                        return (
+                          <td key={measure.measureId} className="p-2">
+                            {entry != null ? formatPercentage(entry.value) : '—'}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

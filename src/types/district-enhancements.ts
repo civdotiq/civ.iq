@@ -49,12 +49,28 @@ export interface ServicesHealthProfile {
     medicareProviderCount: number | null;
     healthcareCostIndex: number | null; // Relative to national average
   };
+  // CDC PLACES county-level model-based estimates (BRFSS crude prevalence).
+  // PLACES does not publish congressional-district figures: values are for
+  // the counties overlapping the district (Census CD-county crosswalk) and
+  // are presented per county, never synthesized into a district number.
+  // null = data unavailable. The pre-2026-07 fields (preventableDiseaseRate
+  // "per 100,000", mentalHealthProviderRatio, substanceAbusePrograms) did
+  // not map to anything PLACES publishes and were removed.
   publicHealth: {
-    preventableDiseaseRate: number | null; // Per 100,000 population
-    mentalHealthProviderRatio: number | null;
-    substanceAbusePrograms: number | null;
-    preventiveCareCoverage: number | null; // Percentage
-  };
+    dataYear: string | null; // BRFSS survey year of the PLACES release
+    measures: Array<{
+      measureId: string; // CDC PLACES measure id, e.g. 'DIABETES'
+      label: string;
+      unit: '%';
+      counties: Array<{
+        fips: string;
+        name: string;
+        value: number; // crude prevalence, percent of adults
+        lowCI: number | null;
+        highCI: number | null;
+      }>;
+    }>;
+  } | null;
 }
 
 // Government Investment & Services Data Types

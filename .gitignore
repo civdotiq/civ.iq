@@ -59,7 +59,7 @@ scripts/*.md
 # OS files
 .DS_Store
 Thumbs.db
-data-sources/
+/data-sources/
 
 # Large data files
 scripts/data/
