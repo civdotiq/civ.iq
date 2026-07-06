@@ -19,7 +19,7 @@
 
 import { median, mean, sampleStandardDeviation } from 'simple-statistics';
 
-import type { AnomalyFlag, AnomalyResult } from './types';
+import type { AnomalyFlag, AnomalyResult } from './types.ts';
 
 /** Default threshold for flagging anomalies. 3.5 = very conservative. */
 export const ANOMALY_THRESHOLD = 3.5;

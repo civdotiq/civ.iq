@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { entitiesMatch, normalizeEntity } from '../fec-entity-resolution';
+import { entitiesMatch, normalizeEntity } from '../fec-entity-resolution.ts';
 
 describe('entitiesMatch - abbreviation expansion', () => {
   it('matches J&J to Johnson & Johnson', () => {

@@ -6,14 +6,14 @@
  */
 
 // ── Configuration ────────────────────────────────────────────────────
-export { configure } from './configure';
-export { setLogger, getLogger } from './logger';
-export type { Logger } from './logger';
-export { setCache, getCache } from './cache';
-export type { CacheAdapter } from './cache';
+export { configure } from './configure.ts';
+export { setLogger, getLogger } from './logger.ts';
+export type { Logger } from './logger.ts';
+export { setCache, getCache } from './cache.ts';
+export type { CacheAdapter } from './cache.ts';
 
 // ── Types ────────────────────────────────────────────────────────────
-export type { GovernmentEntityResolution, TickerResolution } from './types';
+export type { GovernmentEntityResolution, TickerResolution } from './types.ts';
 
 // ── Industry Taxonomy ────────────────────────────────────────────────
 export {
@@ -23,8 +23,8 @@ export {
   categorizePACByName,
   categorizeContributionSmart,
   getTopCategories,
-} from './industry-taxonomy';
-export type { IndustryCategory, CategorizedContribution } from './industry-taxonomy';
+} from './industry-taxonomy.ts';
+export type { IndustryCategory, CategorizedContribution } from './industry-taxonomy.ts';
 
 // ── Committee-Agency Map ─────────────────────────────────────────────
 export {
@@ -36,28 +36,28 @@ export {
   getAgenciesForCommittees,
   getCommitteesForAgency,
   getTopicsForCommittees,
-} from './committee-agency-map';
-export type { AgencyInfo, CommitteeMapping } from './committee-agency-map';
+} from './committee-agency-map.ts';
+export type { AgencyInfo, CommitteeMapping } from './committee-agency-map.ts';
 
 // ── Committee Alias Table ────────────────────────────────────────────
 export {
   COMMITTEE_ALIASES,
   AGENCY_ALIASES,
   getAllCommitteeAliasNames,
-} from './committee-alias-table';
+} from './committee-alias-table.ts';
 
 // ── Lobbying Committee Resolver ──────────────────────────────────────
 export {
   resolveGovernmentEntity,
   resolveFilingEntities,
   getResolvedCommittees,
-} from './lobbying-committee-resolver';
+} from './lobbying-committee-resolver.ts';
 
 // ── SIC Sector Map ───────────────────────────────────────────────────
-export { sicToSector, sectorToSicRanges } from './sic-sector-map';
+export { sicToSector, sectorToSicRanges } from './sic-sector-map.ts';
 
 // ── Ticker Industry Resolver ─────────────────────────────────────────
-export { resolveTickerIndustry, resolveTickerIndustries } from './ticker-industry-resolver';
+export { resolveTickerIndustry, resolveTickerIndustries } from './ticker-industry-resolver.ts';
 
 // ── LDA Issue Policy Map ─────────────────────────────────────────────
 export {
@@ -65,7 +65,7 @@ export {
   getLDAIssueLabel,
   getPolicyAreasForLDAIssue,
   getAllLDAIssueCodes,
-} from './lda-issue-policy-map';
+} from './lda-issue-policy-map.ts';
 
 // ── Company Entity Resolution ────────────────────────────────────────
 export {
@@ -75,12 +75,12 @@ export {
   companiesMatch,
   validateTokenOverlap,
   similarityRatio,
-} from './company-entity-resolver';
-export type { ResolvedCompany } from './company-entity-resolver';
+} from './company-entity-resolver.ts';
+export type { ResolvedCompany } from './company-entity-resolver.ts';
 
 // ── Company Alias Table ─────────────────────────────────────────────
-export { COMPANY_ALIAS_TABLE, findCompanyByAlias } from './company-alias-table';
-export type { CompanyAlias } from './company-alias-table';
+export { COMPANY_ALIAS_TABLE, findCompanyByAlias } from './company-alias-table.ts';
+export type { CompanyAlias } from './company-alias-table.ts';
 
 // ── FEC Entity Resolution ────────────────────────────────────────────
 export {
@@ -89,8 +89,8 @@ export {
   deduplicateContributions,
   deduplicateDisbursements,
   standardizeEmployerName,
-} from './fec-entity-resolution';
-export type { StandardizedEntity, AggregatedEntity } from './fec-entity-resolution';
+} from './fec-entity-resolution.ts';
+export type { StandardizedEntity, AggregatedEntity } from './fec-entity-resolution.ts';
 
 // ── Bioguide-FEC Mapping ─────────────────────────────────────────────
 export {
@@ -101,5 +101,5 @@ export {
   getBioguideFromFEC,
   getMappingByFEC,
   getMappingStats,
-} from './bioguide-fec-mapping';
-export type { FECMapping } from './bioguide-fec-mapping';
+} from './bioguide-fec-mapping.ts';
+export type { FECMapping } from './bioguide-fec-mapping.ts';

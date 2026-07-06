@@ -11,9 +11,9 @@ import {
   companiesMatch,
   validateTokenOverlap,
   similarityRatio,
-} from '../company-entity-resolver';
-import { findCompanyByAlias } from '../company-alias-table';
-import { IndustrySector } from '../industry-taxonomy';
+} from '../company-entity-resolver.ts';
+import { findCompanyByAlias } from '../company-alias-table.ts';
+import { IndustrySector } from '../industry-taxonomy.ts';
 
 // ── normalizeCompanyName ────────────────────────────────────────────
 

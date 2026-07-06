@@ -30,7 +30,7 @@ import {
   hasFECMapping,
   getBioguideFromFEC,
   getMappingStats,
-} from '../index';
+} from '../index.ts';
 
 // ── Industry Taxonomy ────────────────────────────────────────────────
 

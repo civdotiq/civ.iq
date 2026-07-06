@@ -98,6 +98,15 @@ jobs:
         working-directory: packages/${{ steps.target.outputs.package }}
         run: npm pack --dry-run
 
+      # Packaging-correctness gate: catches broken exports maps, types
+      # resolution, and ESM/CJS entry mismatches in the packed tarball —
+      # classes of bug the consumer-install smoke below only catches after
+      # publishing. Packages are ESM-only by design, so CJS-require and
+      # node10 findings are ignored via the esm-only profile.
+      - name: Check packaging (arethetypeswrong)
+        working-directory: packages/${{ steps.target.outputs.package }}
+        run: npx --yes @arethetypeswrong/cli@0.18.4 --pack . --profile esm-only
+
       - name: Check version is not already published
         working-directory: packages/${{ steps.target.outputs.package }}
         run: |

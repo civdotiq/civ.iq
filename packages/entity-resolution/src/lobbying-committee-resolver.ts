@@ -16,10 +16,10 @@
  */
 
 import Fuse from 'fuse.js';
-import { ALL_COMMITTEE_MAPPINGS, getCommitteesForAgency } from './committee-agency-map';
-import { COMMITTEE_ALIASES, AGENCY_ALIASES } from './committee-alias-table';
-import type { GovernmentEntityResolution } from './types';
-import { getLogger } from './logger';
+import { ALL_COMMITTEE_MAPPINGS, getCommitteesForAgency } from './committee-agency-map.ts';
+import { COMMITTEE_ALIASES, AGENCY_ALIASES } from './committee-alias-table.ts';
+import type { GovernmentEntityResolution } from './types.ts';
+import { getLogger } from './logger.ts';
 
 // ── Noise Filter ─────────────────────────────────────────────────────
 

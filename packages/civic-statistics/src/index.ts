@@ -20,10 +20,10 @@ export {
   MIN_PAC_RECIPIENTS,
   MIN_RELEVANT_VOTES,
   MIN_PEERS,
-} from './civic-stats';
+} from './civic-stats.ts';
 
-export { detectAnomalies, ANOMALY_THRESHOLD } from './anomaly-detection';
+export { detectAnomalies, ANOMALY_THRESHOLD } from './anomaly-detection.ts';
 
-export type { CorrelationMethod, CorrelationResult } from './civic-stats';
+export type { CorrelationMethod, CorrelationResult } from './civic-stats.ts';
 
-export type { PeerComparison, AnomalyFlag, AnomalyResult } from './types';
+export type { PeerComparison, AnomalyFlag, AnomalyResult } from './types.ts';
