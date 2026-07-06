@@ -223,26 +223,26 @@ async function fetchEconomicProfile(districtId: string): Promise<EconomicProfile
     });
   }
 
-  // Return zero values on failure
+  // All metrics honestly unavailable on failure (null, never 0)
   return {
     employment: {
-      unemploymentRate: 0,
-      laborForceParticipation: 0,
-      jobGrowthRate: 0,
+      unemploymentRate: null,
+      laborForceParticipation: null,
+      jobGrowthRate: null,
       majorIndustries: [],
-      averageWage: 0,
+      averageWage: null,
     },
     infrastructure: {
-      bridgeConditionRating: 0,
-      highwayFunding: 0,
-      broadbandAvailability: 0,
-      publicTransitAccessibility: 0,
+      bridgeConditionRating: null,
+      highwayFunding: null,
+      broadbandAvailability: null,
+      publicTransitAccessibility: null,
     },
     connectivity: {
-      fiberAvailability: 0,
-      averageDownloadSpeed: 0,
-      averageUploadSpeed: 0,
-      digitalDivideIndex: 0,
+      fiberAvailability: null,
+      averageDownloadSpeed: null,
+      averageUploadSpeed: null,
+      digitalDivideIndex: null,
     },
   };
 }

@@ -11,6 +11,7 @@
 
 import { GET as getServicesHealth } from '@/app/api/districts/[districtId]/services-health/route';
 import { GET as getGovernmentSpending } from '@/app/api/districts/[districtId]/government-spending/route';
+import { GET as getEconomicProfile } from '@/app/api/districts/[districtId]/economic-profile/route';
 import { createMockRequest, mockFetchResponse } from '../utils/test-helpers';
 
 jest.mock('@/services/cache', () => ({
@@ -183,5 +184,89 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
     expect(response.status).toBe(200);
     expect(body.government.federalInvestment.totalAnnualSpending).toBeNull();
     expect(body.government.representation.appropriationsSecured).toBeNull();
+  });
+});
+
+describe('/api/districts/[districtId]/economic-profile null integrity', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (govCache.get as jest.Mock).mockResolvedValue(null);
+  });
+
+  function expectAllNull(section: Record<string, unknown>) {
+    for (const [field, value] of Object.entries(section)) {
+      if (field === 'majorIndustries') {
+        expect(value).toEqual([]);
+      } else {
+        expect({ field, value }).toEqual({ field, value: null });
+      }
+    }
+  }
+
+  it('emits null (never 0) for every metric when all upstream APIs fail', async () => {
+    failAllFetches();
+
+    const response = await getEconomicProfile(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/economic-profile'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectAllNull(body.economic.employment);
+    expectAllNull(body.economic.infrastructure);
+    expectAllNull(body.economic.connectivity);
+  });
+
+  it('passes real BLS values through while sourceless metrics stay null', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      const u = String(url);
+      if (u.includes('api.bls.gov')) {
+        // LAUS series: unemployment (003) vs labor force participation (006)
+        const value = u.endsWith('03') ? '4.2' : '63.1';
+        return mockFetchResponse({
+          status: 'REQUEST_SUCCEEDED',
+          Results: { series: [{ data: [{ value }] }] },
+        });
+      }
+      if (u.includes('data.bls.gov/cew')) {
+        const csv = '"area_fips","industry_code","avg_wkly_wage"\n"48000","10","1250"';
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve(csv),
+          json: () => Promise.reject(new Error('CSV response')),
+        } as unknown as Response);
+      }
+      return Promise.reject(new Error('unreachable'));
+    });
+
+    const response = await getEconomicProfile(
+      createMockRequest('http://localhost:3000/api/districts/TX-10/economic-profile'),
+      makeParams('TX-10')
+    );
+    const body = await response.json();
+
+    expect(body.economic.employment.unemploymentRate).toBe(4.2);
+    expect(body.economic.employment.laborForceParticipation).toBe(63.1);
+    expect(body.economic.employment.averageWage).toBe(1250 * 52);
+    // Fields with no honest source stay null even when BLS fetches succeed
+    expect(body.economic.employment.jobGrowthRate).toBeNull();
+    expectAllNull(body.economic.infrastructure);
+    expectAllNull(body.economic.connectivity);
+  });
+
+  it('returns all-null profile (not zeros) for an invalid district id', async () => {
+    failAllFetches();
+
+    const response = await getEconomicProfile(
+      createMockRequest('http://localhost:3000/api/districts/ZZ-01/economic-profile'),
+      makeParams('ZZ-01')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectAllNull(body.economic.employment);
+    expect(govCache.set).not.toHaveBeenCalled();
   });
 });

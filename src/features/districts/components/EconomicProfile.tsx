@@ -20,7 +20,8 @@ interface EconomicData {
     timestamp: string;
     dataSources: {
       bls: string;
-      fcc: string;
+      blsQcew: string;
+      connectivity: string;
       infrastructure: string;
     };
     notes: string[];
@@ -40,9 +41,6 @@ function formatPercentage(value: number): string {
 }
 
 function formatLargeNumber(num: number): string {
-  if (num === 0) {
-    return 'N/A';
-  }
   if (num >= 1000000) {
     return `$${(num / 1000000).toFixed(1)}M`;
   }
@@ -115,81 +113,125 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
 
   const { economic } = data;
 
+  const hasEmploymentData =
+    economic.employment.unemploymentRate != null ||
+    economic.employment.laborForceParticipation != null ||
+    economic.employment.averageWage != null ||
+    economic.employment.jobGrowthRate != null;
+
+  const hasInfrastructureData =
+    economic.infrastructure.bridgeConditionRating != null ||
+    economic.infrastructure.highwayFunding != null ||
+    economic.infrastructure.broadbandAvailability != null ||
+    economic.infrastructure.publicTransitAccessibility != null;
+
+  const hasConnectivityData =
+    economic.connectivity.fiberAvailability != null ||
+    economic.connectivity.averageDownloadSpeed != null ||
+    economic.connectivity.averageUploadSpeed != null ||
+    economic.connectivity.digitalDivideIndex != null;
+
+  // Designed empty state: explain why, never render blank zeros
+  if (!hasEmploymentData && !hasInfrastructureData && !hasConnectivityData) {
+    return (
+      <div className="bg-white border-2 border-black p-8">
+        <h3 className="aicher-heading text-lg text-gray-900 mb-4">
+          Economic & Infrastructure Health
+        </h3>
+        <div className="bg-white border border-gray-300 p-6 text-center">
+          <p className="text-gray-600">No economic data is available for this district.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            The federal sources for these metrics (Bureau of Labor Statistics, FCC) are not
+            currently providing usable data. CIV.IQ shows real government data only — never
+            estimates.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border-2 border-black p-8">
       <h3 className="aicher-heading text-lg text-gray-900 mb-6">
         Economic & Infrastructure Health
       </h3>
 
-      {/* Employment Metrics */}
-      <div className="mb-8">
-        <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-civiq-green" />
-          Employment & Economy
-        </h4>
-        <div className="aicher-grid aicher-grid-3 gap-6">
-          <div className="aicher-card aicher-status-success p-6">
-            <div className="text-2xl font-bold text-civiq-green">
-              {formatPercentage(economic.employment.unemploymentRate)}
-            </div>
-            <p className="text-sm text-civiq-green mt-1">Unemployment Rate</p>
-            <p className="text-xs text-civiq-green mt-1">
-              {economic.employment.unemploymentRate <= 4
-                ? 'Low'
-                : economic.employment.unemploymentRate <= 6
-                  ? 'Moderate'
-                  : 'High'}
-            </p>
-          </div>
-
-          <div className="aicher-card aicher-status-info p-6">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {formatPercentage(economic.employment.laborForceParticipation)}
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">Labor Force Participation</p>
-            <p className="text-xs text-civiq-blue mt-1">Working age population</p>
-          </div>
-
-          <div className="aicher-card aicher-border bg-civiq-blue/10 p-6">
-            <div className="text-2xl font-bold text-civiq-blue">
-              {formatCurrency(economic.employment.averageWage)}
-            </div>
-            <p className="text-sm text-civiq-blue mt-1">Average Wage</p>
-            <p className="text-xs text-civiq-blue mt-1">Annual median income</p>
-          </div>
-        </div>
-
-        {economic.employment.majorIndustries.length > 0 && (
-          <div className="mt-4 p-4 bg-white">
-            <p className="text-sm font-medium text-gray-700 mb-2">Major Industries:</p>
-            <div className="flex flex-wrap gap-2">
-              {economic.employment.majorIndustries.map((industry, index) => (
-                <span key={index} className="px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-sm">
-                  {industry}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Infrastructure Metrics - Only show if any infrastructure data exists */}
-      {(economic.infrastructure.bridgeConditionRating > 0 ||
-        economic.infrastructure.highwayFunding > 0 ||
-        economic.infrastructure.publicTransitAccessibility > 0) && (
+      {/* Employment Metrics - Only show cards with real data */}
+      {hasEmploymentData && (
         <div className="mb-8">
           <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-            <Building className="w-5 h-5 mr-2 text-civiq-red" />
+            <TrendingUp className="w-5 h-5 mr-2 text-civiq-blue" />
+            Employment & Economy
+          </h4>
+          <div className="aicher-grid aicher-grid-3 gap-6">
+            {economic.employment.unemploymentRate != null && (
+              <div className="aicher-card aicher-status-info p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatPercentage(economic.employment.unemploymentRate)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Unemployment Rate</p>
+                <p className="text-xs text-civiq-blue mt-1">
+                  Statewide ·{' '}
+                  {economic.employment.unemploymentRate <= 4
+                    ? 'Low'
+                    : economic.employment.unemploymentRate <= 6
+                      ? 'Moderate'
+                      : 'High'}
+                </p>
+              </div>
+            )}
+
+            {economic.employment.laborForceParticipation != null && (
+              <div className="aicher-card aicher-status-info p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatPercentage(economic.employment.laborForceParticipation)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Labor Force Participation</p>
+                <p className="text-xs text-civiq-blue mt-1">Statewide · working age population</p>
+              </div>
+            )}
+
+            {economic.employment.averageWage != null && (
+              <div className="aicher-card aicher-border bg-civiq-blue/10 p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatCurrency(economic.employment.averageWage)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Average Wage</p>
+                <p className="text-xs text-civiq-blue mt-1">Statewide · annual average</p>
+              </div>
+            )}
+          </div>
+
+          {economic.employment.majorIndustries.length > 0 && (
+            <div className="mt-4 p-4 bg-white">
+              <p className="text-sm font-medium text-gray-700 mb-2">Major Industries:</p>
+              <div className="flex flex-wrap gap-2">
+                {economic.employment.majorIndustries.map((industry, index) => (
+                  <span key={index} className="px-3 py-1 bg-civiq-blue/10 text-civiq-blue text-sm">
+                    {industry}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Infrastructure Metrics - Only show cards with real data */}
+      {hasInfrastructureData && (
+        <div className="mb-8">
+          <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
+            <Building className="w-5 h-5 mr-2 text-gray-700" />
             Infrastructure
           </h4>
           <div className="aicher-grid aicher-grid-3 gap-6">
-            {economic.infrastructure.bridgeConditionRating > 0 && (
-              <div className="aicher-card aicher-status-error p-6">
-                <div className="text-2xl font-bold text-civiq-red">
+            {economic.infrastructure.bridgeConditionRating != null && (
+              <div className="aicher-card aicher-border p-6">
+                <div className="text-2xl font-bold text-gray-900">
                   {economic.infrastructure.bridgeConditionRating}/100
                 </div>
-                <p className="text-sm text-civiq-red mt-1">Bridge Condition Rating</p>
-                <p className="text-xs text-civiq-red mt-1">
+                <p className="text-sm text-gray-700 mt-1">Bridge Condition Rating</p>
+                <p className="text-xs text-gray-600 mt-1">
                   {economic.infrastructure.bridgeConditionRating >= 80
                     ? 'Excellent'
                     : economic.infrastructure.bridgeConditionRating >= 60
@@ -199,58 +241,66 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
               </div>
             )}
 
-            {economic.infrastructure.highwayFunding > 0 && (
-              <div className="aicher-card aicher-border bg-teal-100 p-6">
-                <div className="text-2xl font-bold text-teal-900">
+            {economic.infrastructure.highwayFunding != null && (
+              <div className="aicher-card aicher-border p-6">
+                <div className="text-2xl font-bold text-gray-900">
                   {formatLargeNumber(economic.infrastructure.highwayFunding)}
                 </div>
-                <p className="text-sm text-teal-700 mt-1">Annual Highway Funding</p>
-                <p className="text-xs text-teal-600 mt-1">Federal investment</p>
+                <p className="text-sm text-gray-700 mt-1">Annual Highway Funding</p>
+                <p className="text-xs text-gray-600 mt-1">Federal investment</p>
               </div>
             )}
 
-            {economic.infrastructure.publicTransitAccessibility > 0 && (
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
-                <div className="text-2xl font-bold text-indigo-900">
+            {economic.infrastructure.publicTransitAccessibility != null && (
+              <div className="aicher-card aicher-border p-6">
+                <div className="text-2xl font-bold text-gray-900">
                   {economic.infrastructure.publicTransitAccessibility}/100
                 </div>
-                <p className="text-sm text-indigo-700 mt-1">Transit Accessibility</p>
-                <p className="text-xs text-indigo-600 mt-1">Public transportation access</p>
+                <p className="text-sm text-gray-700 mt-1">Transit Accessibility</p>
+                <p className="text-xs text-gray-600 mt-1">Public transportation access</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Connectivity Metrics - Only show verifiable FCC data */}
-      <div className="mb-6">
-        <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
-          <Wifi className="w-5 h-5 mr-2 text-civiq-blue" />
-          Digital Connectivity
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
-            <div className="text-2xl font-bold text-cyan-900">
-              {formatPercentage(economic.connectivity.fiberAvailability)}
-            </div>
-            <p className="text-sm text-cyan-700 mt-1">Fiber Availability</p>
-          </div>
+      {/* Connectivity Metrics - Only show cards with real data */}
+      {hasConnectivityData && (
+        <div className="mb-6">
+          <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
+            <Wifi className="w-5 h-5 mr-2 text-civiq-blue" />
+            Digital Connectivity
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {economic.connectivity.fiberAvailability != null && (
+              <div className="aicher-card aicher-status-info p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {formatPercentage(economic.connectivity.fiberAvailability)}
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Fiber Availability</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-sky-50 to-sky-100 p-6">
-            <div className="text-2xl font-bold text-sky-900">
-              {economic.connectivity.averageDownloadSpeed} Mbps
-            </div>
-            <p className="text-sm text-sky-700 mt-1">Avg Download Speed</p>
-          </div>
+            {economic.connectivity.averageDownloadSpeed != null && (
+              <div className="aicher-card aicher-status-info p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {economic.connectivity.averageDownloadSpeed} Mbps
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Avg Download Speed</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6">
-            <div className="text-2xl font-bold text-emerald-900">
-              {economic.connectivity.averageUploadSpeed} Mbps
-            </div>
-            <p className="text-sm text-emerald-700 mt-1">Avg Upload Speed</p>
+            {economic.connectivity.averageUploadSpeed != null && (
+              <div className="aicher-card aicher-status-info p-6">
+                <div className="text-2xl font-bold text-civiq-blue">
+                  {economic.connectivity.averageUploadSpeed} Mbps
+                </div>
+                <p className="text-sm text-civiq-blue mt-1">Avg Upload Speed</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Data Sources */}
       <div className="border-t pt-4">
@@ -272,18 +322,11 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
           </div>
           <div>
             <strong>Connectivity:</strong>{' '}
-            <a
-              href={data.metadata.dataSources.fcc}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-civiq-blue hover:text-civiq-blue"
-            >
-              Federal Communications Commission
-            </a>
+            <span className="text-gray-600">{data.metadata.dataSources.connectivity}</span>
           </div>
           <div>
             <strong>Infrastructure:</strong>{' '}
-            <span className="text-civiq-red">{data.metadata.dataSources.infrastructure}</span>
+            <span className="text-gray-600">{data.metadata.dataSources.infrastructure}</span>
           </div>
         </div>
 

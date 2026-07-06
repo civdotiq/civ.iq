@@ -4,25 +4,30 @@
  */
 
 // Economic & Infrastructure Health Data Types
+// All metrics are number | null: null = data unavailable (no real API source
+// or upstream failure); 0 is reserved for a genuine measured zero.
 export interface EconomicProfile {
   employment: {
-    unemploymentRate: number;
-    laborForceParticipation: number;
-    jobGrowthRate: number;
+    unemploymentRate: number | null; // Percentage (BLS LAUS, statewide)
+    laborForceParticipation: number | null; // Percentage (BLS LAUS, statewide)
+    jobGrowthRate: number | null; // Percentage; null = no data source
     majorIndustries: string[];
-    averageWage: number;
+    averageWage: number | null; // Annual dollars (BLS QCEW, statewide)
   };
   infrastructure: {
-    bridgeConditionRating: number; // 0-100 scale
-    highwayFunding: number; // Annual federal funding
-    broadbandAvailability: number; // Percentage with high-speed access
-    publicTransitAccessibility: number; // 0-100 scale
+    // All null = no real API source exists for these metrics
+    bridgeConditionRating: number | null; // 0-100 scale
+    highwayFunding: number | null; // Annual federal funding
+    broadbandAvailability: number | null; // Percentage with high-speed access
+    publicTransitAccessibility: number | null; // 0-100 scale
   };
   connectivity: {
-    fiberAvailability: number; // Percentage with fiber access
-    averageDownloadSpeed: number; // Mbps
-    averageUploadSpeed: number; // Mbps
-    digitalDivideIndex: number; // 0-100, higher = more connected
+    // All null pending a correct FCC Broadband Data Collection integration;
+    // the prior values were formula-derived, not measured
+    fiberAvailability: number | null; // Percentage with fiber access
+    averageDownloadSpeed: number | null; // Mbps
+    averageUploadSpeed: number | null; // Mbps
+    digitalDivideIndex: number | null; // 0-100, higher = more connected
   };
 }
 

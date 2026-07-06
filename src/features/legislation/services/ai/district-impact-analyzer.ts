@@ -118,14 +118,14 @@ ${billSummary}
 
 DISTRICT: ${districtData.districtId}
 
-DISTRICT ECONOMIC PROFILE:
-- Unemployment Rate: ${economic.employment.unemploymentRate}%
-- Labor Force Participation: ${economic.employment.laborForceParticipation}%
-- Average Wage: $${economic.employment.averageWage.toLocaleString()}
+DISTRICT ECONOMIC PROFILE (statewide figures):
+- Unemployment Rate: ${economic.employment.unemploymentRate != null ? `${economic.employment.unemploymentRate}%` : 'Data unavailable'}
+- Labor Force Participation: ${economic.employment.laborForceParticipation != null ? `${economic.employment.laborForceParticipation}%` : 'Data unavailable'}
+- Average Wage: ${economic.employment.averageWage != null ? `$${economic.employment.averageWage.toLocaleString()}` : 'Data unavailable'}
 - Major Industries: ${economic.employment.majorIndustries.join(', ') || 'Data unavailable'}
-- Broadband Availability: ${economic.infrastructure.broadbandAvailability}%
-- Fiber Availability: ${economic.connectivity.fiberAvailability}%
-- Average Download Speed: ${economic.connectivity.averageDownloadSpeed} Mbps
+- Broadband Availability: ${economic.infrastructure.broadbandAvailability != null ? `${economic.infrastructure.broadbandAvailability}%` : 'Data unavailable'}
+- Fiber Availability: ${economic.connectivity.fiberAvailability != null ? `${economic.connectivity.fiberAvailability}%` : 'Data unavailable'}
+- Average Download Speed: ${economic.connectivity.averageDownloadSpeed != null ? `${economic.connectivity.averageDownloadSpeed} Mbps` : 'Data unavailable'}
 
 DISTRICT FEDERAL SPENDING (statewide totals):
 - Total Annual Spending: ${government.federalInvestment.totalAnnualSpending != null ? `$${government.federalInvestment.totalAnnualSpending.toLocaleString()}` : 'Data unavailable'}
@@ -199,7 +199,7 @@ ${PLAIN_LANGUAGE_RULES}
 
     const relevantDistrictData: DistrictImpact['relevantDistrictData'] = [];
 
-    if (economic.employment.unemploymentRate > 0) {
+    if (economic.employment.unemploymentRate != null) {
       relevantDistrictData.push({
         metric: 'Unemployment Rate',
         value: `${economic.employment.unemploymentRate}%`,
@@ -210,7 +210,7 @@ ${PLAIN_LANGUAGE_RULES}
       });
     }
 
-    if (economic.connectivity.fiberAvailability > 0) {
+    if (economic.connectivity.fiberAvailability != null) {
       relevantDistrictData.push({
         metric: 'Broadband Access',
         value: `${economic.connectivity.fiberAvailability}% fiber availability`,
@@ -237,8 +237,15 @@ ${PLAIN_LANGUAGE_RULES}
       districtId: districtData.districtId,
       overallImpact: 'Uncertain',
       summary: `This analysis shows available data for district ${districtData.districtId} in relation to ${billMetadata.number}. AI-powered impact analysis is temporarily unavailable.`,
-      economicImpact: `The district has an unemployment rate of ${economic.employment.unemploymentRate}% and an average wage of $${economic.employment.averageWage.toLocaleString()}.`,
-      infrastructureImpact: `The district has ${economic.connectivity.fiberAvailability}% fiber broadband availability and an average download speed of ${economic.connectivity.averageDownloadSpeed} Mbps.`,
+      economicImpact:
+        economic.employment.unemploymentRate != null && economic.employment.averageWage != null
+          ? `The district's state has an unemployment rate of ${economic.employment.unemploymentRate}% and an average wage of $${economic.employment.averageWage.toLocaleString()}.`
+          : 'Economic data is unavailable for this district.',
+      infrastructureImpact:
+        economic.connectivity.fiberAvailability != null &&
+        economic.connectivity.averageDownloadSpeed != null
+          ? `The district has ${economic.connectivity.fiberAvailability}% fiber broadband availability and an average download speed of ${economic.connectivity.averageDownloadSpeed} Mbps.`
+          : 'Broadband and infrastructure data is unavailable for this district.',
       affectedGroups: [],
       relevantDistrictData,
       confidence: 0.3,
