@@ -1,0 +1,111 @@
+name: Sync Senate Roll-Call Votes
+
+# MR10: senate.gov roll-call XML is Akamai-blocked from cloud IPs (Vercel),
+# but GitHub Actions runners are NOT blocked (verified 2026-07-07). This
+# workflow relays the official XML, unmodified, to the app's authenticated
+# ingest route, which parses it and fills the Redis corpus behind the
+# Record Card's Senate voting baselines. Roll calls are immutable, so each
+# run only fetches votes the server doesn't already have.
+
+on:
+  schedule:
+    # Daily at 08:15 UTC, ahead of the 09:00 UTC Vercel baselines cron.
+    - cron: '15 8 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target app base URL'
+        required: false
+        default: 'https://civdotiq.org'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Mirror Senate votes into the app corpus
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
+        run: npx tsx scripts/sync-senate-votes.ts
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `Scheduled trigger: ${context.eventName}`,
+              `SHA: ${context.sha}`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }

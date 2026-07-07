@@ -11,10 +11,12 @@
  * immutable, so each run only fetches votes not already in cache; the full
  * cold build is ~600 upstream fetches (~2 min), warm runs are seconds.
  *
- * House first (full-Congress coverage), then Senate best-effort — Senate.gov
- * XML is Akamai-blocked from Vercel IPs (MR10), so the Senate build is
- * expected to no-op in prod until the Congress.gov senate-vote endpoints are
- * adopted; the card renders its designed unavailable state meanwhile.
+ * House builds from the Congress.gov-backed corpus. Senate builds from the
+ * mirrored corpus that the sync-senate-votes GitHub Actions workflow pushes
+ * through the ingest route (senate.gov XML is Akamai-blocked from Vercel
+ * IPs — MR10 — so production never fetches it directly). Until the mirror's
+ * first run, the Senate build returns null and the card renders its
+ * designed unavailable state.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -32,7 +34,7 @@ async function runBuilds() {
   try {
     senate = await buildChamberBaselines('Senate');
   } catch (error) {
-    logger.warn('Senate baselines build failed (expected on Vercel — MR10)', { error });
+    logger.warn('Senate baselines build failed', { error });
   }
 
   const summary = {

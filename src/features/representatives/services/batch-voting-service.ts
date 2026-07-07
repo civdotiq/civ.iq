@@ -1335,6 +1335,23 @@ export class BatchVotingService {
   }
 
   /**
+   * Parse a raw senate.gov roll-call XML document into a StandardizedVote.
+   *
+   * Public for the Senate roll-call ingest route (MR10): senate.gov is
+   * Akamai-blocked from cloud IPs, so a GitHub Actions mirror fetches the
+   * official XML and POSTs it to the ingest endpoint — parsing (including
+   * the LIS→bioguide mapping) stays in this one place.
+   */
+  async parseSenateRollCallXML(
+    xmlText: string,
+    congress: number,
+    session: number,
+    voteNumber: number
+  ): Promise<StandardizedVote | null> {
+    return this.parseSenateXML(xmlText, congress, session, voteNumber);
+  }
+
+  /**
    * Get LIS-to-bioguide mapping (cached)
    */
   private async getLisToGuidMapping(): Promise<Map<string, string>> {
