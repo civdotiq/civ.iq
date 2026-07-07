@@ -208,6 +208,58 @@ async function fetchDistrictAggregate(
   }
 }
 
+/**
+ * Statewide federal spending total for the current fiscal year
+ * (place-of-performance, all award types). Powers the senator variant of
+ * the Record Card's "Their office, your money" section. Null-honesty:
+ * no aggregated amount = unavailable, never $0.
+ */
+export async function getStateSpendingTotal(
+  state: string
+): Promise<{ total: number; perCapita: number | null } | null> {
+  // Unlike the district layer (FIPS+district shape codes), the state
+  // geo_layer filters by postal code — FIPS returns empty results.
+  if (!/^[A-Z]{2}$/.test(state)) {
+    logger.warn('Invalid state code in state aggregate lookup', { state });
+    return null;
+  }
+
+  return cachedFetch(
+    `spending-state-total-${state}`,
+    async () => {
+      const { startDate, endDate } = currentFederalFiscalYearWindow();
+
+      const response = await fetch(`${USASPENDING_API}/search/spending_by_geography/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+        },
+        body: JSON.stringify({
+          scope: 'place_of_performance',
+          geo_layer: 'state',
+          geo_layer_filters: [state],
+          filters: {
+            time_period: [{ start_date: startDate, end_date: endDate }],
+          },
+        }),
+      });
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      const result = data.results?.[0];
+      if (!result || typeof result.aggregated_amount !== 'number') return null;
+
+      return {
+        total: result.aggregated_amount,
+        perCapita: result.per_capita ?? null,
+      };
+    },
+    6 * 60 * 60
+  );
+}
+
 /** Award counts for a district in the current fiscal year, by award family */
 export interface DistrictAwardCounts {
   contracts: number;

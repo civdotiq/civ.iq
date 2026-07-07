@@ -408,11 +408,14 @@ export async function fetchRecordSummaryCardData(
   if (districtMoney) {
     stats.push({
       value: fmtMoneyShort(districtMoney.totalSpending),
-      label: 'District federal funds',
-      baseline: `grants + contracts, FY ${districtMoney.fiscalYear}`,
+      label: districtMoney.scope === 'state' ? 'State federal funds' : 'District federal funds',
+      baseline:
+        districtMoney.scope === 'state'
+          ? `statewide, FY ${districtMoney.fiscalYear}`
+          : `grants + contracts, FY ${districtMoney.fiscalYear}`,
     });
   } else if (money && money.inStatePct !== null && money.outOfStatePct !== null) {
-    // Senators (no district-keyed spending): in-state money fills the slot
+    // Fallback when spending data is unavailable: in-state money fills the slot
     stats.push({
       value: fmtPct(money.inStatePct),
       label: 'In-state money',
