@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { RepBriefSummary } from './RepBriefSummary';
 import { AlertSubscribeForm } from '@/components/alerts/AlertSubscribeForm';
+import { BallotCard } from '@/features/record-card/components/BallotCard';
 
 interface RepresentativeLookupFormProps {
   className?: string;
@@ -243,7 +244,12 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
             </p>
           )}
 
-          <div className="space-y-4">
+          {/* Which of these seats are on the next ballot (additive; fails silent) */}
+          {result.representatives.length > 0 && (
+            <BallotCard bioguideIds={result.representatives.map(r => r.bioguideId)} />
+          )}
+
+          <div className="mt-6 space-y-4">
             {result.representatives.map(rep => (
               <RepBriefSummary
                 key={rep.bioguideId}
