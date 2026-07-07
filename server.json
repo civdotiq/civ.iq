@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.civdotiq/civiq",
+  "description": "U.S. civic data for AI agents: representatives, votes, bills, campaign finance, lobbying, district profiles, and cross-domain influence analysis from cited government sources. 47 tools, no API key.",
+  "version": "1.0.0",
+  "websiteUrl": "https://civdotiq.org/mcp",
+  "repository": {
+    "url": "https://github.com/civdotiq/civ.iq",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://civdotiq.org/api/mcp"
+    }
+  ]
+}

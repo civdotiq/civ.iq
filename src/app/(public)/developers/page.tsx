@@ -48,7 +48,7 @@ const INTEGRATION_CARDS = [
   },
   {
     title: 'MCP Server',
-    detail: '48 tools, 9 domains',
+    detail: '47 tools, 9 domains',
     description: 'Connect AI agents to live civic data via the Model Context Protocol.',
     href: '#mcp',
   },
@@ -201,7 +201,7 @@ export default function DevelopersPage() {
             <div className="text-sm text-gray-600 uppercase tracking-wider">API Endpoints</div>
           </div>
           <div className="border-2 border-black p-grid-3">
-            <div className="text-3xl font-bold">54</div>
+            <div className="text-3xl font-bold">47</div>
             <div className="text-sm text-gray-600 uppercase tracking-wider">MCP Tools</div>
           </div>
           <div className="border-2 border-black p-grid-3">
@@ -375,7 +375,12 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
             >
               Model Context Protocol
             </a>
-            . 54 tools across 9 domains, plus resources and prompt templates.
+            . 47 tools across 9 domains, plus resources and prompt templates. For step-by-step
+            instructions in Claude, ChatGPT, and Cursor, see the{' '}
+            <Link href="/mcp" className="text-[#3ea2d4] underline hover:no-underline">
+              setup guide
+            </Link>
+            .
           </p>
 
           <div className="mb-grid-3">
