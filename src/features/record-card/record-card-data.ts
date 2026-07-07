@@ -27,7 +27,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { validateFECMapping } from '@/lib/api/finance-helpers';
-import { getDistrictSpending } from '@/lib/services/spending.service';
+import { getDistrictSpending, getStateSpendingTotal } from '@/lib/services/spending.service';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislationRollup, type LegislationRollup } from './legislation-rollup';
 
@@ -68,8 +68,8 @@ export interface VotingSection {
   /** Roll calls analyzed (the member's personal denominator is stats.appearances). */
   rollCallsAnalyzed: number;
   fullCoverage: boolean;
-  /** e.g. "2026 session" — roll numbering resets each session. */
-  sessionLabel: string;
+  /** e.g. "119th Congress to date". */
+  coverageLabel: string;
   medianMissedPct: number | null;
   /** Median alignment for this member's party. */
   medianPartyAlignmentPct: number | null;
@@ -93,11 +93,14 @@ export interface MoneySection {
 }
 
 export interface DistrictMoneySection {
+  /** 'district' for House members; 'state' (statewide) for senators. */
+  scope: 'district' | 'state';
   totalSpending: number;
   fiscalYear: number;
   /** True when the exact aggregate was unavailable (top-10 sum only). */
   approximate: boolean;
-  districtId: string;
+  /** District id ("MI-06") or state postal code ("MI") per scope. */
+  areaId: string;
 }
 
 export interface KeyVote {
@@ -112,6 +115,19 @@ export interface KeyVote {
   billTitle?: string;
 }
 
+/**
+ * STOCK Act disclosure counts, mirroring the stock-trades tab's semantics:
+ * parsed transactions and unparseable paper filings are never conflated.
+ * Coverage is the House Clerk index for the last 5 years, not one Congress.
+ */
+export interface PtrSection {
+  /** Individual transactions parsed from electronic PTR filings. */
+  transactions: number;
+  /** Paper (scanned) PTR filings that cannot be machine-read. */
+  paperFilings: number;
+  coverageYears: number;
+}
+
 export interface RecordCardData {
   member: RecordCardMember;
   legislation: LegislationRollup | null;
@@ -119,9 +135,8 @@ export interface RecordCardData {
   money: MoneySection | null;
   districtMoney: DistrictMoneySection | null;
   keyVotes: KeyVote[];
-  /** STOCK Act PTR filings this Congress (House Clerk); null = unavailable,
-   *  which is distinct from a true 0 (member filed no PTRs). */
-  ptrTradeCount: number | null;
+  /** null = lookup failed (omit the line); zeros are true absences. */
+  ptr: PtrSection | null;
   generatedAt: string;
 }
 
@@ -179,7 +194,7 @@ async function fetchVotingSection(
     stats,
     rollCallsAnalyzed: baselines.rollCallsAnalyzed,
     fullCoverage: baselines.fullCoverage,
-    sessionLabel: baselines.sessionLabel ?? '',
+    coverageLabel: baselines.coverageLabel ?? '',
     medianMissedPct: baselines.medianMissedPct,
     medianPartyAlignmentPct,
     partyLabel,
@@ -248,10 +263,27 @@ async function fetchDistrictMoneySection(
   district: string | undefined,
   chamber: 'House' | 'Senate'
 ): Promise<DistrictMoneySection | null> {
-  // Senators get state-level framing later (Phase 2 follow-up); the
-  // spending service is district-keyed, so senator cards omit this section
-  // rather than showing a single district's number as statewide.
-  if (chamber !== 'House' || !district) return null;
+  const fiscalYear = new Date().getFullYear();
+
+  // Senators: statewide place-of-performance total (all award types).
+  if (chamber === 'Senate') {
+    try {
+      const stateTotal = await getStateSpendingTotal(state);
+      if (!stateTotal || stateTotal.total <= 0) return null;
+      return {
+        scope: 'state',
+        totalSpending: stateTotal.total,
+        fiscalYear,
+        approximate: false,
+        areaId: state,
+      };
+    } catch (error) {
+      logger.warn('Record card: state spending failed', { state, error });
+      return null;
+    }
+  }
+
+  if (!district) return null;
 
   try {
     const paddedDistrict = district.padStart(2, '0');
@@ -261,10 +293,11 @@ async function fetchDistrictMoneySection(
     if (totalSpending <= 0) return null;
 
     return {
+      scope: 'district',
       totalSpending,
-      fiscalYear: new Date().getFullYear(),
+      fiscalYear,
       approximate: aggregateTotal === null,
-      districtId: `${state}-${paddedDistrict}`,
+      areaId: `${state}-${paddedDistrict}`,
     };
   } catch (error) {
     logger.warn('Record card: district spending failed', { state, district, error });
@@ -312,21 +345,44 @@ async function fetchKeyVotes(
 
 // ── Assembly ─────────────────────────────────────────────────────────
 
-export async function getRecordCardData(bioguideId: string): Promise<RecordCardData | null> {
+/** Seat/ballot framing from term-end date math (election-year convention:
+ *  term ending Jan 2027 → seat on the Nov 2026 ballot). */
+export interface BallotStatus {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
+  nextElectionYear: number | null;
+  onNextBallot: boolean;
+  electionDayLabel: string | null;
+  /** Vacancy-derived status ('active' unless the seat data says otherwise). */
+  status?: string;
+}
+
+/** Lightweight ballot status for one member (powers the your-reps ballot box). */
+export async function getMemberBallotStatus(bioguideId: string): Promise<BallotStatus | null> {
   const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
   if (!rep) return null;
+  const framing = deriveBallotFraming(rep.currentTerm?.end ?? rep.terms?.[0]?.endYear ?? null);
+  return {
+    bioguideId: rep.bioguideId,
+    name: rep.name,
+    party: rep.party,
+    state: rep.state,
+    district: rep.district,
+    chamber: rep.chamber,
+    ...framing,
+    status: rep.status,
+  };
+}
 
-  const currentCongress = getCurrentCongressNumber();
-  const terms = rep.terms ?? [];
-  // Terms are sorted most-recent-first; count only same-chamber terms so a
-  // House-to-Senate member's Senate term number is honest.
-  const chamberTerms = terms.filter(
-    t => !t.chamber || t.chamber.toLowerCase().includes(rep.chamber.toLowerCase())
-  );
-  const inOfficeSince = chamberTerms[chamberTerms.length - 1]?.startYear ?? null;
-  const termNumber = Math.max(1, chamberTerms.length);
-
-  const currentTermEnd = rep.currentTerm?.end ?? terms[0]?.endYear ?? null;
+function deriveBallotFraming(currentTermEnd: string | null | undefined): {
+  nextElectionYear: number | null;
+  onNextBallot: boolean;
+  electionDayLabel: string | null;
+} {
   const endYear = currentTermEnd ? parseInt(String(currentTermEnd).slice(0, 4), 10) : NaN;
   const nextElectionYear = Number.isFinite(endYear) ? endYear - 1 : null;
 
@@ -342,6 +398,27 @@ export async function getRecordCardData(bioguideId: string): Promise<RecordCardD
         timeZone: 'UTC',
       })
     : null;
+
+  return { nextElectionYear, onNextBallot, electionDayLabel };
+}
+
+export async function getRecordCardData(bioguideId: string): Promise<RecordCardData | null> {
+  const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
+  if (!rep) return null;
+
+  const currentCongress = getCurrentCongressNumber();
+  const terms = rep.terms ?? [];
+  // Terms are sorted most-recent-first; count only same-chamber terms so a
+  // House-to-Senate member's Senate term number is honest.
+  const chamberTerms = terms.filter(
+    t => !t.chamber || t.chamber.toLowerCase().includes(rep.chamber.toLowerCase())
+  );
+  const inOfficeSince = chamberTerms[chamberTerms.length - 1]?.startYear ?? null;
+  const termNumber = Math.max(1, chamberTerms.length);
+
+  const { nextElectionYear, onNextBallot, electionDayLabel } = deriveBallotFraming(
+    rep.currentTerm?.end ?? terms[0]?.endYear ?? null
+  );
 
   // The committees array mixes main committees with subcommittee entries
   // whose name is a bare thomas code (e.g. "HSII06" — parent code + 2
@@ -375,13 +452,13 @@ export async function getRecordCardData(bioguideId: string): Promise<RecordCardD
     currentCongress,
   };
 
-  const [legislation, voting, money, districtMoney, keyVotes, ptrTradeCount] = await Promise.all([
+  const [legislation, voting, money, districtMoney, keyVotes, ptr] = await Promise.all([
     getLegislationRollup(rep.bioguideId),
     fetchVotingSection(rep.bioguideId, rep.chamber, rep.party),
     fetchMoneySection(rep.bioguideId, rep.state),
     fetchDistrictMoneySection(rep.state, rep.district, rep.chamber),
     fetchKeyVotes(rep.bioguideId, rep.chamber, currentCongress),
-    fetchPtrTradeCount(rep.bioguideId, rep.chamber),
+    fetchPtrSection(rep.bioguideId, rep.chamber),
   ]);
 
   return {
@@ -391,23 +468,33 @@ export async function getRecordCardData(bioguideId: string): Promise<RecordCardD
     money,
     districtMoney,
     keyVotes,
-    ptrTradeCount,
+    ptr,
     generatedAt: new Date().toISOString(),
   };
 }
 
-/** STOCK Act PTR count (House Clerk disclosures; House members only). */
-async function fetchPtrTradeCount(
+/**
+ * STOCK Act PTR counts (House Clerk disclosures; House members only).
+ * Splits parsed transactions from paper-filing placeholders exactly as the
+ * stock-trades tab does — conflating them inflated Dingell's count to 34
+ * when the parseable number was far lower.
+ */
+async function fetchPtrSection(
   bioguideId: string,
   chamber: 'House' | 'Senate'
-): Promise<number | null> {
+): Promise<PtrSection | null> {
   if (chamber !== 'House') return null;
   try {
     const { houseDisclosureService } = await import('@/lib/data-sources/house-disclosure-service');
     const trades = await houseDisclosureService.getTradesForMember(bioguideId);
-    return trades.length;
+    const paperFilings = trades.filter(t => t.isPaperFiling).length;
+    return {
+      transactions: trades.length - paperFilings,
+      paperFilings,
+      coverageYears: 5,
+    };
   } catch (error) {
-    logger.warn('Record card: PTR count failed', { bioguideId, error });
+    logger.warn('Record card: PTR lookup failed', { bioguideId, error });
     return null;
   }
 }

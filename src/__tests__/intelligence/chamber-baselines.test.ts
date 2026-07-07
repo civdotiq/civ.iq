@@ -78,7 +78,7 @@ function buildRollCalls(count: number): StandardizedVote[] {
 }
 
 describe('computeChamberBaselines', () => {
-  const baselines = computeChamberBaselines(buildRollCalls(25), 'House', 119, true, 2, 2026);
+  const baselines = computeChamberBaselines(buildRollCalls(25), 'House', 119, true);
 
   it('counts appearances, cast, and missed per member', () => {
     const d1 = baselines.members['D1'];
@@ -121,7 +121,7 @@ describe('computeChamberBaselines', () => {
         position: 'Yea',
       });
     }
-    const b = computeChamberBaselines(calls, 'House', 119, true, 2, 2026);
+    const b = computeChamberBaselines(calls, 'House', 119, true);
     expect(b.members['D7']?.appearances).toBe(5);
     expect(b.members['D7']?.missedPct).toBe(0);
     // Below MIN_APPEARANCES_FOR_MEDIAN — excluded from the median sample
@@ -139,8 +139,9 @@ describe('computeChamberBaselines', () => {
   });
 
   it('discloses partial coverage for Senate samples', () => {
-    const b = computeChamberBaselines(buildRollCalls(25), 'Senate', 119, false, 2, 2026);
+    const b = computeChamberBaselines(buildRollCalls(25), 'Senate', 119, false);
     expect(b.fullCoverage).toBe(false);
     expect(b.methodology).toContain('recent sample');
+    expect(b.coverageLabel).toBe('recent sample');
   });
 });

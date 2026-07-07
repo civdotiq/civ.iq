@@ -42,7 +42,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const built = await buildChamberBaselines(chamber);
+    // Optional fetch-budget override (seconds) for local/manual cold fills;
+    // the Vercel cron uses the default, which fits its 300s window.
+    const budgetSeconds = parseInt(searchParams.get('budget') || '', 10);
+    const built = await buildChamberBaselines(chamber, undefined, {
+      fetchBudgetMs: Number.isFinite(budgetSeconds) ? budgetSeconds * 1000 : undefined,
+    });
     if (!built) {
       return NextResponse.json(
         { error: 'Build produced no roll calls — see logs' },

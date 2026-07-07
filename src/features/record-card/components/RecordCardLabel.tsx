@@ -365,7 +365,7 @@ function VotingSectionBlock({ data }: { data: RecordCardData }) {
             <ProvenancePopover
               info={{
                 source: data.member.chamber === 'House' ? 'House Clerk' : 'Senate.gov',
-                asOf: `${v.sessionLabel ? `${v.sessionLabel} roll calls` : 'Roll calls'} through ${fmtDate(v.dataAsOf)}`,
+                asOf: `${v.coverageLabel ? `Roll calls, ${v.coverageLabel}` : `Roll calls`} through ${fmtDate(v.dataAsOf)}`,
                 href: `/representative/${data.member.bioguideId}/votes`,
                 linkLabel: 'Full voting record',
               }}
@@ -509,15 +509,17 @@ function DistrictMoneySection({ data }: { data: RecordCardData }) {
         <>
           <div className={`${ROW} ${GRID2}`}>
             <div className="text-[15px] tracking-[0.025em]">
-              District federal grants + contracts, FY {d.fiscalYear}
+              {d.scope === 'state'
+                ? `${getStateName(d.areaId) ?? d.areaId} federal spending, FY ${d.fiscalYear}`
+                : `District federal grants + contracts, FY ${d.fiscalYear}`}
             </div>
             <Num big>
               <ProvenancePopover
                 info={{
                   source: 'USASpending.gov',
                   asOf: `Fiscal year ${d.fiscalYear} to date`,
-                  href: `/districts/${d.districtId}`,
-                  linkLabel: 'District spending detail',
+                  href: d.scope === 'state' ? `/states/${d.areaId}` : `/districts/${d.areaId}`,
+                  linkLabel: d.scope === 'state' ? 'State detail' : 'District spending detail',
                 }}
               >
                 {fmtMoneyCompact(d.totalSpending)}
@@ -535,7 +537,7 @@ function DistrictMoneySection({ data }: { data: RecordCardData }) {
         <div className={ROW}>
           <div className="text-sm tracking-[0.025em] text-gray-500">
             {isSenate
-              ? 'Statewide federal-spending view for senators is coming; district-keyed data does not apply to a statewide office.'
+              ? 'Statewide federal spending data is unavailable right now — USASpending.gov did not respond.'
               : 'District federal spending data is unavailable right now — USASpending.gov did not respond.'}
           </div>
         </div>
@@ -550,7 +552,7 @@ function DistrictMoneySection({ data }: { data: RecordCardData }) {
 // ── Section E: Key votes ─────────────────────────────────────────────
 
 function KeyVotesSection({ data }: { data: RecordCardData }) {
-  if (data.keyVotes.length === 0) return null;
+  if (data.keyVotes.length === 0 && !data.ptr) return null;
 
   return (
     <div className="px-grid-3 py-grid-1">
@@ -575,10 +577,37 @@ function KeyVotesSection({ data }: { data: RecordCardData }) {
           </p>
         </div>
       ))}
-      {/* Stock-trade counts (data.ptrTradeCount) stay OFF the card until the
-          PTR counting semantics are verified against the stock-trades tab —
-          paper-filing placeholders may inflate the number, and an inflated
-          trade count is exactly the trust failure this card exists to avoid. */}
+      {data.ptr && (
+        <div className="border-t border-gray-300 py-grid-2 text-[13px] tracking-[0.025em] text-gray-600">
+          Stock trades:{' '}
+          {data.ptr.transactions > 0 ? (
+            <>
+              {fmtInt(data.ptr.transactions)} transaction{data.ptr.transactions === 1 ? '' : 's'}{' '}
+              reported in STOCK Act filings, last {data.ptr.coverageYears} years
+            </>
+          ) : (
+            <>no transactions in STOCK Act filings, last {data.ptr.coverageYears} years</>
+          )}
+          {data.ptr.paperFilings > 0 && (
+            <>
+              {' '}
+              (+{fmtInt(data.ptr.paperFilings)} paper filing
+              {data.ptr.paperFilings === 1 ? '' : 's'} not machine-readable)
+            </>
+          )}
+          .{' '}
+          <Link
+            href={`/representative/${data.member.bioguideId}?tab=finance`}
+            className="text-civiq-blue hover:underline"
+          >
+            Filings →
+          </Link>{' '}
+          ·{' '}
+          <Link href="/methodology" className="text-civiq-blue hover:underline">
+            Methodology →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -604,9 +633,20 @@ function CardFooter({ data }: { data: RecordCardData }) {
       <span className="text-gray-900">
         civdotiq.org/representative/{data.member.bioguideId}/record
       </span>{' '}
-      · {/* Points at /methodology until the accuracy-protocol corrections page ships */}
+      ·{' '}
       <Link href="/methodology" className="text-civiq-blue hover:underline">
-        Sources &amp; methodology
+        Methodology
+      </Link>{' '}
+      ·{' '}
+      <Link href="/corrections" className="text-civiq-blue hover:underline">
+        Report an error
+      </Link>{' '}
+      ·{' '}
+      <Link
+        href={`/representative/${data.member.bioguideId}/record/print`}
+        className="text-civiq-blue hover:underline"
+      >
+        Print
       </Link>
     </div>
   );
