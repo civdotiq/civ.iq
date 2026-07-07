@@ -40,6 +40,8 @@ interface StatsReport {
     total: number;
     verified: number;
     pending: number;
+    digestVerified: number;
+    digestPending: number;
     topEntities: Array<{ entity: string; watchers: number }>;
   };
   apiRequests: {
@@ -75,7 +77,15 @@ function lastNDates(n: number): string[] {
 }
 
 async function collectSubscribers(redis: Redis | null): Promise<StatsReport['subscribers']> {
-  const empty = { configured: false, total: 0, verified: 0, pending: 0, topEntities: [] };
+  const empty = {
+    configured: false,
+    total: 0,
+    verified: 0,
+    pending: 0,
+    digestVerified: 0,
+    digestPending: 0,
+    topEntities: [],
+  };
   if (!redis) return empty;
 
   // Subscription values are plain JSON written by RedisCache; @upstash/redis
@@ -102,11 +112,23 @@ async function collectSubscribers(redis: Redis | null): Promise<StatsReport['sub
   }
   topEntities.sort((a, b) => b.watchers - a.watchers);
 
+  let digestVerified = 0;
+  let digestPending = 0;
+  const digestKeys = await redis.keys(`${CACHE_PREFIX}digest:sub:*`);
+  for (const key of digestKeys) {
+    const sub = await redis.get<{ verified?: boolean }>(key);
+    if (!sub) continue;
+    if (sub.verified) digestVerified++;
+    else digestPending++;
+  }
+
   return {
     configured: true,
     total: verified + pending,
     verified,
     pending,
+    digestVerified,
+    digestPending,
     topEntities: topEntities.slice(0, 10),
   };
 }
@@ -211,11 +233,14 @@ function printReport(report: StatsReport): void {
   line('='.repeat(60));
 
   line();
-  line('Alert subscribers');
+  line('Email subscribers');
   if (!report.subscribers.configured) line(notConfigured);
   else {
     line(
-      `  Total: ${report.subscribers.total} (${report.subscribers.verified} verified, ${report.subscribers.pending} pending)`
+      `  Alerts: ${report.subscribers.total} (${report.subscribers.verified} verified, ${report.subscribers.pending} pending)`
+    );
+    line(
+      `  Weekly digest: ${report.subscribers.digestVerified} verified, ${report.subscribers.digestPending} pending`
     );
     for (const { entity, watchers } of report.subscribers.topEntities) {
       line(`    ${entity}: ${watchers} watcher${watchers === 1 ? '' : 's'}`);

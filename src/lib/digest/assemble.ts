@@ -1,0 +1,310 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Weekly digest assembler.
+ *
+ * Composes one DigestIssue for a complete ISO week from existing services:
+ * roll-call votes (Senate corpus + House via Congress.gov), bills that had
+ * floor/committee action, and the featured delegation's new FEC filings.
+ * Only complete weeks assemble — a finished week is immutable, so issues
+ * cache long. Sections that fail upstream are listed in `unavailable` and
+ * render as "data unavailable" — never faked, never silently dropped.
+ */
+
+import { cachedFetch } from '@/lib/cache';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { fecApiService } from '@/lib/fec/fec-api-service';
+import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
+import type { StandardizedVote } from '@/features/representatives/services/batch-voting-service';
+import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
+import logger from '@/lib/logging/simple-logger';
+import { parseWeekId, isCompleteWeek } from './week';
+import type {
+  DigestBill,
+  DigestDelegationMember,
+  DigestFiling,
+  DigestIssue,
+  DigestVote,
+} from './types';
+
+const FEATURED_STATE = 'MI';
+const FEATURED_STATE_NAME = 'Michigan';
+/** Finished weeks are immutable; cache the assembled issue for 30 days. */
+const ISSUE_TTL_SECONDS = 30 * 24 * 60 * 60;
+const MAX_BILLS = 15;
+/** Look further back in the vote list for older archive weeks. */
+const VOTE_LOOKBACK_BASE = 60;
+const VOTE_LOOKBACK_PER_WEEK = 30;
+const VOTE_LOOKBACK_MAX = 250;
+
+const BILL_SLUGS: Record<string, string> = {
+  hr: 'house-bill',
+  s: 'senate-bill',
+  hjres: 'house-joint-resolution',
+  sjres: 'senate-joint-resolution',
+  hconres: 'house-concurrent-resolution',
+  sconres: 'senate-concurrent-resolution',
+  hres: 'house-resolution',
+  sres: 'senate-resolution',
+};
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function weeksAgo(weekStart: Date, now: Date): number {
+  return Math.max(0, Math.floor((now.getTime() - weekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+}
+
+function toDigestVote(vote: StandardizedVote, delegation: DigestDelegationMember[]): DigestVote {
+  const byBioguide = new Map(delegation.map(m => [m.bioguideId, m]));
+  const miPositions = vote.memberVotes
+    .filter(m => m.state === FEATURED_STATE)
+    .map(m => ({
+      bioguideId: m.bioguideId,
+      name: m.name,
+      party: m.party,
+      district: byBioguide.get(m.bioguideId)?.district,
+      position: m.position,
+    }))
+    .sort((a, b) => (a.district ?? '0').localeCompare(b.district ?? '0', 'en', { numeric: true }));
+
+  return {
+    voteId: vote.voteId,
+    chamber: vote.chamber,
+    date: vote.date,
+    question: vote.question,
+    result: vote.result,
+    yeas: vote.totals.yea,
+    nays: vote.totals.nay,
+    bill: vote.bill
+      ? {
+          billId: `${vote.bill.congress}-${vote.bill.type.toLowerCase()}-${vote.bill.number}`,
+          title: vote.bill.title,
+        }
+      : undefined,
+    sourceUrl: vote.sourceUrl,
+    miPositions,
+  };
+}
+
+async function fetchWeekVotes(
+  weekStart: Date,
+  weekEnd: Date,
+  delegation: DigestDelegationMember[]
+): Promise<{ votes: DigestVote[]; failed: boolean }> {
+  const congress = getCurrentCongressNumber(weekStart);
+  const session = weekEnd.getUTCFullYear() % 2 === 1 ? 1 : 2;
+  const lookback = Math.min(
+    VOTE_LOOKBACK_MAX,
+    VOTE_LOOKBACK_BASE + VOTE_LOOKBACK_PER_WEEK * weeksAgo(weekStart, new Date())
+  );
+
+  const [houseResult, senateResult] = await Promise.allSettled([
+    batchVotingService.getHouseChamberRollCalls(congress, session, lookback),
+    batchVotingService.getSenateChamberRollCalls(congress, session, lookback),
+  ]);
+
+  const failed = houseResult.status === 'rejected' && senateResult.status === 'rejected';
+  const all = [
+    ...(houseResult.status === 'fulfilled' ? houseResult.value : []),
+    ...(senateResult.status === 'fulfilled' ? senateResult.value : []),
+  ];
+
+  const votes = all
+    .filter(v => {
+      const t = new Date(v.date).getTime();
+      return t >= weekStart.getTime() && t <= weekEnd.getTime();
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .map(v => toDigestVote(v, delegation));
+
+  return { votes, failed };
+}
+
+interface CongressBillListItem {
+  number: string;
+  title: string;
+  type: string;
+  congress: number;
+  introducedDate?: string;
+  latestAction?: { actionDate?: string; text?: string };
+}
+
+async function fetchWeekBills(
+  weekStart: Date,
+  weekEnd: Date
+): Promise<{ bills: DigestBill[]; failed: boolean }> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) return { bills: [], failed: true };
+
+  const congress = getCurrentCongressNumber(weekStart);
+  try {
+    const url = `https://api.congress.gov/v3/bill/${congress}?limit=250&sort=updateDate+desc&format=json`;
+    const response = await fetch(url, {
+      headers: { 'X-API-Key': apiKey },
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!response.ok) {
+      logger.warn('Digest bills fetch failed', { status: response.status });
+      return { bills: [], failed: true };
+    }
+    const json = (await response.json()) as { bills?: CongressBillListItem[] };
+
+    const startIso = isoDate(weekStart);
+    const endIso = isoDate(weekEnd);
+    const bills = (json.bills ?? [])
+      .filter(b => {
+        const action = b.latestAction?.actionDate;
+        return Boolean(action && action >= startIso && action <= endIso);
+      })
+      .slice(0, MAX_BILLS)
+      .map(b => {
+        const type = b.type.toLowerCase();
+        const slug = BILL_SLUGS[type];
+        return {
+          billId: `${b.congress}-${type}-${b.number}`,
+          congress: b.congress,
+          type: b.type,
+          number: b.number,
+          title: b.title,
+          latestActionDate: b.latestAction?.actionDate ?? '',
+          latestActionText: b.latestAction?.text ?? '',
+          introducedDate: b.introducedDate,
+          congressDotGovUrl: slug
+            ? `https://www.congress.gov/bill/${b.congress}th-congress/${slug}/${b.number}`
+            : undefined,
+        };
+      });
+
+    return { bills, failed: false };
+  } catch (error) {
+    logger.warn('Digest bills fetch threw', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { bills: [], failed: true };
+  }
+}
+
+async function fetchWeekFilings(
+  weekStart: Date,
+  weekEnd: Date,
+  delegation: DigestDelegationMember[]
+): Promise<{ filings: DigestFiling[]; failed: boolean }> {
+  const filings: DigestFiling[] = [];
+  let errors = 0;
+  let attempted = 0;
+
+  for (const member of delegation) {
+    const fecId = getFECIdFromBioguide(member.bioguideId);
+    if (!fecId) continue;
+    attempted++;
+    try {
+      const records = await fecApiService.getFilingsByDateRange(
+        fecId,
+        isoDate(weekStart),
+        isoDate(weekEnd)
+      );
+      for (const record of records) {
+        if (!record.receipt_date) continue;
+        filings.push({
+          fileNumber: record.file_number,
+          committeeId: record.committee_id,
+          committeeName: record.committee_name ?? undefined,
+          bioguideId: member.bioguideId,
+          memberName: member.name,
+          party: member.party,
+          chamber: member.chamber,
+          formType: record.form_type ?? undefined,
+          reportType: record.report_type_full ?? record.report_type ?? undefined,
+          receiptDate: record.receipt_date,
+          coverageStart: record.coverage_start_date ?? undefined,
+          coverageEnd: record.coverage_end_date ?? undefined,
+          totalReceipts: record.total_receipts ?? undefined,
+          totalDisbursements: record.total_disbursements ?? undefined,
+          fecUrl: `https://www.fec.gov/data/filings/?file_number=${record.file_number}`,
+        });
+      }
+    } catch {
+      errors++;
+    }
+  }
+
+  filings.sort((a, b) => b.receiptDate.localeCompare(a.receiptDate));
+  // Failed only when we couldn't reach FEC for anyone we tried.
+  return { filings, failed: attempted > 0 && errors === attempted };
+}
+
+async function fetchDelegation(): Promise<DigestDelegationMember[]> {
+  const reps = await RepresentativesCoreService.getRepresentativesByState(FEATURED_STATE);
+  return reps
+    .map(r => ({
+      bioguideId: r.bioguideId,
+      name: r.name,
+      party: r.party,
+      chamber: r.chamber,
+      district: r.district,
+    }))
+    .sort((a, b) => {
+      if (a.chamber !== b.chamber) return a.chamber === 'Senate' ? -1 : 1;
+      return (a.district ?? '0').localeCompare(b.district ?? '0', 'en', { numeric: true });
+    });
+}
+
+/**
+ * Assemble (or read from cache) the digest issue for a complete ISO week.
+ * Returns null for malformed ids and weeks that haven't finished yet.
+ */
+export async function getDigestIssue(weekId: string): Promise<DigestIssue | null> {
+  const range = parseWeekId(weekId);
+  if (!range || !isCompleteWeek(weekId)) return null;
+
+  return cachedFetch<DigestIssue | null>(
+    `digest:issue:${weekId}`,
+    async () => {
+      const delegation = await fetchDelegation();
+      if (delegation.length === 0) {
+        // Without the delegation there is no issue worth publishing.
+        logger.error('Digest assembly aborted — empty delegation', new Error('no delegation'));
+        return null;
+      }
+
+      const [voteResult, billResult, filingResult] = await Promise.all([
+        fetchWeekVotes(range.start, range.end, delegation),
+        fetchWeekBills(range.start, range.end),
+        fetchWeekFilings(range.start, range.end, delegation),
+      ]);
+
+      const unavailable: DigestIssue['unavailable'] = [];
+      if (voteResult.failed) unavailable.push('votes');
+      if (billResult.failed) unavailable.push('bills');
+      if (filingResult.failed) unavailable.push('filings');
+
+      // A fully-failed issue must not cache for 30 days — null is never
+      // cached by cachedFetch, so the next request retries upstream.
+      if (unavailable.length === 3) {
+        logger.error('Digest assembly failed — all sections unavailable', new Error('all failed'));
+        return null;
+      }
+
+      return {
+        weekId,
+        weekStart: range.start.toISOString(),
+        weekEnd: range.end.toISOString(),
+        state: FEATURED_STATE,
+        stateName: FEATURED_STATE_NAME,
+        delegation,
+        votes: voteResult.votes,
+        bills: billResult.bills,
+        filings: filingResult.filings,
+        unavailable,
+        generatedAt: new Date().toISOString(),
+      };
+    },
+    ISSUE_TTL_SECONDS
+  );
+}

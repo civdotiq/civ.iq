@@ -49,8 +49,8 @@ function fromBase64Url(str: string): Uint8Array {
 export interface TokenPayload {
   /** Email hash */
   sub: string;
-  /** Purpose: 'verify' | 'unsub' | 'manage' */
-  purpose: 'verify' | 'unsub' | 'manage';
+  /** Alert purposes plus the weekly digest's own verify/unsubscribe pair */
+  purpose: 'verify' | 'unsub' | 'manage' | 'digest-verify' | 'digest-unsub';
   /** Issued at (epoch seconds) */
   iat: number;
   /** Expires at (epoch seconds) */

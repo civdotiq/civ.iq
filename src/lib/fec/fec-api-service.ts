@@ -1274,6 +1274,43 @@ export class FECApiService {
   }
 
   /**
+   * List a candidate's filings received within a date window (newest first).
+   * Powers the weekly digest's "new money filings" section.
+   */
+  async getFilingsByDateRange(
+    candidateId: string,
+    minReceiptDate: string,
+    maxReceiptDate: string,
+    perPage: number = 20
+  ): Promise<FECFilingRecord[]> {
+    if (!candidateId || !minReceiptDate || !maxReceiptDate) return [];
+
+    const cacheKey = `fec:filings-range:${candidateId}:${minReceiptDate}:${maxReceiptDate}`;
+    try {
+      const cached = await govCache.get<FECFilingRecord[]>(cacheKey);
+      if (cached && cached.length > 0) return cached;
+
+      const response = await this.makeRequest<FECApiResponse<FECFilingRecord>>(
+        `/filings/?candidate_id=${encodeURIComponent(candidateId)}` +
+          `&min_receipt_date=${minReceiptDate}&max_receipt_date=${maxReceiptDate}` +
+          `&per_page=${perPage}&sort=-receipt_date`
+      );
+      const results = response.results ?? [];
+      if (results.length > 0) {
+        await govCache.set(cacheKey, results, {
+          ttl: 24 * 60 * 60 * 1000,
+          source: 'fec-filings-api',
+          dataType: 'finance',
+        });
+      }
+      return results;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to list filings for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get independent expenditures (Schedule E) supporting or opposing a candidate
    */
   async getIndependentExpenditures(
