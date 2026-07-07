@@ -119,7 +119,7 @@ async function fetchSponsoredLegislation(
   congress: number,
   _limit: number,
   _page: number
-): Promise<{ bills: ProcessedBill[]; total: number }> {
+): Promise<{ bills: ProcessedBill[]; total: number; apiTotal: number }> {
   const allBills: ProcessedBill[] = [];
   let totalCount = 0;
   let currentOffset = 0;
@@ -198,7 +198,7 @@ async function fetchSponsoredLegislation(
     filteredCount: filteredBills.length,
   });
 
-  return { bills: filteredBills, total: filteredBills.length };
+  return { bills: filteredBills, total: filteredBills.length, apiTotal: totalCount };
 }
 
 /**
@@ -212,7 +212,7 @@ async function fetchCosponsoredLegislation(
   _limit: number,
   _page: number,
   fetchAll: boolean = false // New parameter to control full fetch
-): Promise<{ bills: ProcessedBill[]; total: number }> {
+): Promise<{ bills: ProcessedBill[]; total: number; apiTotal: number }> {
   const allBills: ProcessedBill[] = [];
   let totalCount = 0;
   let currentOffset = 0;
@@ -320,7 +320,40 @@ async function fetchCosponsoredLegislation(
     pagesFeched,
   });
 
-  return { bills: filteredBills, total: filteredBills.length };
+  return { bills: filteredBills, total: filteredBills.length, apiTotal: totalCount };
+}
+
+/**
+ * Fetch a member's complete legislation history (all congresses, unfiltered)
+ * for career/current-congress rollups. Passing congress=0 skips client-side
+ * filtering so one fetch serves both splits. Cosponsored fetch is capped at
+ * 20 pages (5,000 bills) — apiTotal preserves the exact all-time count so
+ * callers can detect and disclose truncation.
+ */
+export interface MemberLegislationHistory {
+  sponsored: { bills: ProcessedBill[]; apiTotal: number };
+  cosponsored: { bills: ProcessedBill[]; apiTotal: number };
+}
+
+export type { ProcessedBill };
+
+export async function fetchAllMemberLegislation(
+  bioguideId: string
+): Promise<MemberLegislationHistory> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) {
+    throw new Error('Congress API key not configured');
+  }
+
+  const [sponsored, cosponsored] = await Promise.all([
+    fetchSponsoredLegislation(bioguideId, apiKey, 0, 250, 1),
+    fetchCosponsoredLegislation(bioguideId, apiKey, 0, 250, 1, true),
+  ]);
+
+  return {
+    sponsored: { bills: sponsored.bills, apiTotal: sponsored.apiTotal },
+    cosponsored: { bills: cosponsored.bills, apiTotal: cosponsored.apiTotal },
+  };
 }
 
 /**
