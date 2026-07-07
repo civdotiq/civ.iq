@@ -10,19 +10,22 @@
  *
  * GET /api/mesh/embed/scorecard/A000360
  * GET /api/mesh/embed/district/CA-12
+ * GET /api/mesh/embed/record/D000624   (Incumbent Record Card, mockup 1d)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { renderScorecard, renderDistrictCard } from '@/lib/mesh/protocol/embed';
+import { renderRecordEmbed } from '@/features/record-card/embed';
+import { getRecordCardData } from '@/features/record-card/record-card-data';
 import { hydrateNeighborhood } from '@/lib/graph/hydrator';
 import { buildDistrictProfile } from '@/lib/mesh/district-profile';
 import { ApiErrors } from '@/lib/api/error-responses';
 
 export const revalidate = 3600;
-export const maxDuration = 30;
+export const maxDuration = 60;
 
-const VALID_TYPES = new Set(['scorecard', 'district']);
+const VALID_TYPES = new Set(['scorecard', 'district', 'record']);
 
 export async function GET(
   _request: NextRequest,
@@ -31,12 +34,14 @@ export async function GET(
   const { type, id } = await params;
 
   if (!VALID_TYPES.has(type)) {
-    return ApiErrors.validation('Invalid embed type. Use "scorecard" or "district".');
+    return ApiErrors.validation('Invalid embed type. Use "scorecard", "district", or "record".');
   }
 
   try {
     if (type === 'scorecard') {
       return await handleScorecard(id);
+    } else if (type === 'record') {
+      return await handleRecord(id);
     } else {
       return await handleDistrict(id);
     }
@@ -64,6 +69,25 @@ async function handleScorecard(bioguideId: string): Promise<NextResponse> {
   });
 
   return new NextResponse(html, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=1800',
+      'X-Frame-Options': 'ALLOWALL',
+    },
+  });
+}
+
+async function handleRecord(bioguideId: string): Promise<NextResponse> {
+  if (!/^[A-Za-z]\d{6}$/.test(bioguideId)) {
+    return ApiErrors.validation('Invalid representative ID format. Expected bioguide ID.');
+  }
+
+  const data = await getRecordCardData(bioguideId.toUpperCase());
+  if (!data) {
+    return ApiErrors.notFound('Representative', bioguideId);
+  }
+
+  return new NextResponse(renderRecordEmbed(data), {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=1800',
