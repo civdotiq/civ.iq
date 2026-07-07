@@ -11,9 +11,13 @@
  * lies in the User-Agent, we silently drop the event.
  *
  * Structured logs land wherever the platform is routing stdout; on Vercel
- * they end up in the log drain. A weekly job (scripts/fetch-adoption.ts)
- * also snapshots npm download counts for the three published packages.
+ * they end up in the log drain. Both signals also increment Upstash
+ * counters (adoption-counter.ts) so scripts/stats.ts can summarize them.
+ * A weekly job (scripts/snapshot-adoption.ts) snapshots npm download
+ * counts for the three published packages.
  */
+
+import { incrementMcpInitialize, incrementSdkRequest } from './adoption-counter';
 
 // Match signatures like "@civiq/sdk/0.1.0" anywhere inside a UA string so we
 // can detect SDK usage even when consumers append their own app name.
@@ -123,6 +127,7 @@ export function recordSdkRequest(
     path,
     method,
   });
+  incrementSdkRequest(sig.version);
 }
 
 export function recordMcpInitialize(body: unknown, logger: AdoptionLogger = edgeSafeLogger): void {
@@ -133,4 +138,5 @@ export function recordMcpInitialize(body: unknown, logger: AdoptionLogger = edge
     clientVersion: info.clientInfo.version,
     protocolVersion: info.protocolVersion,
   });
+  incrementMcpInitialize(info.clientInfo.name);
 }

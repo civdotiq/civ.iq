@@ -23,6 +23,7 @@
     "sync:bioguide-fec": "tsx scripts/sync-bioguide-fec.ts",
     "snapshot:adoption": "tsx scripts/snapshot-adoption.ts",
     "start": "next start",
+    "stats": "tsx scripts/stats.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
