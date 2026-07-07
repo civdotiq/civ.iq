@@ -21,6 +21,7 @@ import {
   fetchVoteCardData,
   fetchAlignmentCardData,
   fetchLegislationCardData,
+  fetchRecordSummaryCardData,
 } from '@/features/trading-cards/card-data';
 import { renderCard } from '@/features/trading-cards/og/card-renderer';
 import type { CardType } from '@/features/trading-cards/types';
@@ -29,7 +30,7 @@ import logger from '@/lib/logging/simple-logger';
 export const runtime = 'nodejs';
 export const revalidate = 3600;
 
-const VALID_TYPES: CardType[] = ['profile', 'money', 'vote', 'alignment', 'legislation'];
+const VALID_TYPES: CardType[] = ['profile', 'money', 'vote', 'alignment', 'legislation', 'record'];
 
 /** Fetch representative photo as base64 data URI for Satori embedding */
 async function fetchPhotoBase64(bioguideId: string): Promise<string | undefined> {
@@ -87,6 +88,8 @@ export async function GET(
           return fetchAlignmentCardData(id);
         case 'legislation':
           return fetchLegislationCardData(id);
+        case 'record':
+          return fetchRecordSummaryCardData(id);
       }
     })();
 

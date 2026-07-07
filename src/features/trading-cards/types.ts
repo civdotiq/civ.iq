@@ -10,7 +10,7 @@
  * All data sourced from real government APIs - never fabricated.
  */
 
-export type CardType = 'profile' | 'money' | 'vote' | 'alignment' | 'legislation';
+export type CardType = 'profile' | 'money' | 'vote' | 'alignment' | 'legislation' | 'record';
 
 /** Common fields shared across all card types */
 export interface CardBase {
@@ -74,13 +74,38 @@ export interface LegislationCardData extends CardBase {
   focusAreas: string[];
 }
 
+/** One preformatted headline stat on the record summary card */
+export interface RecordCardStat {
+  value: string;
+  label: string;
+  baseline: string;
+}
+
+/**
+ * Record summary card: the Incumbent Record Card's shareable OG image
+ * (nutrition-label layout). Stats arrive preformatted from the
+ * record-card feature so unavailable sections are simply absent —
+ * never rendered as zeros.
+ */
+export interface RecordSummaryCardData extends CardBase {
+  type: 'record';
+  congress: number;
+  inOfficeSince: string | null;
+  termOrdinalLabel: string;
+  stats: RecordCardStat[];
+  sourcesLabel: string;
+  asOfLabel: string;
+  recordUrl: string;
+}
+
 /** Union of all card data types */
 export type TradingCardData =
   | ProfileCardData
   | MoneyCardData
   | VoteCardData
   | AlignmentCardData
-  | LegislationCardData;
+  | LegislationCardData
+  | RecordSummaryCardData;
 
 /** Props for on-site card components */
 export interface CardComponentProps<T extends TradingCardData> {

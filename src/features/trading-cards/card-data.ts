@@ -327,3 +327,122 @@ function deriveFocusAreas(committees?: Array<{ name: string }>): string[] {
 
   return Array.from(areas);
 }
+
+/**
+ * Fetch record summary card data (Incumbent Record Card OG image).
+ *
+ * Composes from the record-card feature so the image and the canonical
+ * /record page share one data spec. Only sections with real data become
+ * stats — an unavailable section is absent, never a zero.
+ */
+export async function fetchRecordSummaryCardData(
+  bioguideId: string
+): Promise<import('./types').RecordSummaryCardData | null> {
+  const { getRecordCardData, termOrdinal } = await import(
+    '@/features/record-card/record-card-data'
+  );
+  const data = await getRecordCardData(bioguideId);
+  if (!data) return null;
+
+  const { member, legislation, voting, money, districtMoney } = data;
+  const fmtInt = (n: number) => n.toLocaleString('en-US');
+  const fmtMoneyShort = (n: number) =>
+    n >= 1_000_000_000
+      ? `$${(n / 1_000_000_000).toFixed(2)}B`
+      : n >= 1_000_000
+        ? `$${(n / 1_000_000).toFixed(2)}M`
+        : `$${Math.round(n / 1_000)}K`;
+  const fmtPct = (n: number) => `${n.toFixed(1).replace(/\.0$/, '')}%`;
+
+  const stats: import('./types').RecordCardStat[] = [];
+
+  if (legislation) {
+    stats.push({
+      value: fmtInt(legislation.current.enacted),
+      label: 'Enacted into law',
+      baseline: legislation.firstTerm
+        ? `advanced past committee: ${fmtInt(legislation.current.advancedPastCommittee)}`
+        : `career: ${fmtInt(legislation.career.enacted)} · past committee: ${fmtInt(legislation.current.advancedPastCommittee)}`,
+    });
+    stats.push({
+      value: fmtInt(legislation.current.introduced),
+      label: 'Bills introduced',
+      baseline: legislation.firstTerm
+        ? `${fmtInt(legislation.current.cosponsored)} cosponsored (first term)`
+        : `career: ${fmtInt(legislation.career.introduced)} · cosponsored: ${fmtInt(legislation.current.cosponsored)}`,
+    });
+  }
+
+  if (voting) {
+    stats.push({
+      value: `${fmtInt(voting.stats.cast)}/${fmtInt(voting.stats.appearances)}`,
+      label: 'Votes cast',
+      baseline:
+        voting.medianMissedPct !== null
+          ? `${fmtPct(voting.stats.missedPct)} missed · chamber median ${fmtPct(voting.medianMissedPct)}`
+          : `${fmtPct(voting.stats.missedPct)} missed`,
+    });
+    if (voting.stats.partyAlignmentPct !== null && voting.partyLabel) {
+      stats.push({
+        value: fmtPct(voting.stats.partyAlignmentPct),
+        label: 'With party majority',
+        baseline:
+          voting.medianPartyAlignmentPct !== null
+            ? `${member.chamber} ${voting.partyLabel} median ${fmtPct(voting.medianPartyAlignmentPct)}`
+            : 'party-majority votes',
+      });
+    }
+  }
+
+  if (money) {
+    stats.push({
+      value: fmtMoneyShort(money.totalRaised),
+      label: 'Raised this cycle',
+      baseline:
+        money.smallDonorPct !== null && money.pacPct !== null
+          ? `${fmtPct(money.smallDonorPct)} small-donor · ${fmtPct(money.pacPct)} PAC`
+          : `${money.cycle - 1}–${String(money.cycle).slice(2)} cycle`,
+    });
+  }
+
+  if (districtMoney) {
+    stats.push({
+      value: fmtMoneyShort(districtMoney.totalSpending),
+      label: 'District federal funds',
+      baseline: `grants + contracts, FY ${districtMoney.fiscalYear}`,
+    });
+  } else if (money && money.inStatePct !== null && money.outOfStatePct !== null) {
+    // Senators (no district-keyed spending): in-state money fills the slot
+    stats.push({
+      value: fmtPct(money.inStatePct),
+      label: 'In-state money',
+      baseline: `${fmtPct(money.outOfStatePct)} out-of-state`,
+    });
+  }
+
+  if (stats.length === 0) return null;
+
+  const asOfDate = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return {
+    type: 'record',
+    bioguideId: member.bioguideId,
+    name: member.name,
+    party: member.party,
+    state: member.state,
+    district: member.district,
+    chamber: member.chamber,
+    imageUrl: member.imageUrl,
+    congress: member.currentCongress,
+    inOfficeSince: member.inOfficeSince,
+    termOrdinalLabel: termOrdinal(member.termNumber),
+    stats: stats.slice(0, 6),
+    sourcesLabel: `Congress.gov · FEC · USASpending · ${member.chamber === 'House' ? 'House Clerk' : 'Senate.gov'}`,
+    asOfLabel: `as of ${asOfDate}`,
+    recordUrl: `civdotiq.org/representative/${member.bioguideId}/record`,
+  };
+}

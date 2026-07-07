@@ -59,10 +59,9 @@ export async function generateMetadata({
       title,
       description,
       type: 'profile',
-      // Phase 3 replaces this with the dedicated record card image (type=record)
       images: [
         {
-          url: `https://civdotiq.org/api/card/${member.bioguideId}?type=profile`,
+          url: `https://civdotiq.org/api/card/${member.bioguideId}?type=record`,
           width: 1200,
           height: 630,
         },

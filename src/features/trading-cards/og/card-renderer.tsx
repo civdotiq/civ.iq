@@ -18,6 +18,7 @@ import type {
   VoteCardData,
   AlignmentCardData,
   LegislationCardData,
+  RecordSummaryCardData,
 } from '../types';
 import {
   getPartyColor,
@@ -44,7 +45,222 @@ export function renderCard(data: TradingCardData, photoBase64?: string): React.R
       return renderAlignmentCard(data, photoBase64);
     case 'legislation':
       return renderLegislationCard(data, photoBase64);
+    case 'record':
+      return renderRecordCard(data, photoBase64);
   }
+}
+
+/**
+ * Incumbent Record Card OG image (mockup 1c): nutrition-label document.
+ * Left identity rail with a 3px divider, six headline stats each carrying
+ * its baseline, thick black bar, and a baked-in source/as-of footer.
+ * Party color appears ONLY on the party chip.
+ */
+function renderRecordCard(data: RecordSummaryCardData, photoBase64?: string): React.ReactElement {
+  const partyColor = getPartyColor(data.party);
+  const seatLabel =
+    data.chamber === 'House'
+      ? `${data.state}-${(data.district ?? '').padStart(2, '0')}`
+      : `${data.state} — U.S. Senate`;
+
+  return (
+    <div
+      style={{
+        width: 1200,
+        height: 630,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#ffffff',
+        border: '3px solid #000000',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: '#111827',
+      }}
+    >
+      <div style={{ display: 'flex', flex: 1, gap: 32, padding: 32 }}>
+        {/* Left identity rail */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: 296,
+            borderRight: '3px solid #000000',
+            paddingRight: 32,
+          }}
+        >
+          {photoBase64 ? (
+            <img
+              src={photoBase64}
+              alt=""
+              width={160}
+              height={160}
+              style={{ width: 160, height: 160, objectFit: 'cover', border: '2px solid #000000' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                border: '2px solid #000000',
+                backgroundColor: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 64,
+                color: '#9ca3af',
+              }}
+            >
+              {data.name.charAt(0)}
+            </div>
+          )}
+          <div
+            style={{
+              display: 'flex',
+              marginTop: 16,
+              fontSize: 36,
+              fontWeight: 700,
+              lineHeight: 1.1,
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {truncate(data.name, 24)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                backgroundColor: partyColor,
+                color: '#ffffff',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '2px 8px',
+                borderRadius: 2,
+              }}
+            >
+              {data.party}
+            </div>
+            <div style={{ display: 'flex', fontSize: 14, fontWeight: 500 }}>{seatLabel}</div>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              marginTop: 8,
+              fontSize: 14,
+              lineHeight: 1.5,
+              color: '#4b5563',
+            }}
+          >
+            <span>
+              U.S. {data.chamber} · {data.congress}th Congress
+            </span>
+            {data.inOfficeSince && (
+              <span>
+                In office since {data.inOfficeSince} · {data.termOrdinalLabel}
+              </span>
+            )}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              marginTop: 'auto',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Incumbent Record
+          </div>
+        </div>
+
+        {/* Stats grid: 3 columns, up to 2 rows */}
+        <div
+          style={{
+            display: 'flex',
+            flex: 1,
+            flexWrap: 'wrap',
+            alignContent: 'flex-start',
+          }}
+        >
+          {data.stats.map((stat, i) => (
+            <div
+              key={`${stat.label}-${i}`}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '33.33%',
+                paddingRight: 32,
+                paddingTop: 12,
+                paddingBottom: 24,
+                borderTop: '2px solid #000000',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 48,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  letterSpacing: '-0.02em',
+                  color: '#000000',
+                }}
+              >
+                {stat.value}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  marginTop: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#4b5563',
+                }}
+              >
+                {stat.label}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  marginTop: 2,
+                  fontSize: 12,
+                  letterSpacing: '0.025em',
+                  color: '#6b7280',
+                }}
+              >
+                {stat.baseline}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Thick nutrition bar */}
+      <div style={{ display: 'flex', width: '100%', height: 8, backgroundColor: '#000000' }} />
+
+      {/* Source footer — baked into the pixels */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 32px',
+          fontSize: 14,
+          letterSpacing: '0.025em',
+          color: '#4b5563',
+        }}
+      >
+        <span>
+          Sources: {data.sourcesLabel} — {data.asOfLabel}
+        </span>
+        <span style={{ fontWeight: 700, color: '#111827' }}>{data.recordUrl}</span>
+      </div>
+    </div>
+  );
 }
 
 /** Shared card shell wrapping all cards */
