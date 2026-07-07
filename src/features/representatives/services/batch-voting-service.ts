@@ -298,7 +298,7 @@ export interface StandardizedVote {
   processedAt: string;
 }
 
-interface VoteListItem {
+export interface VoteListItem {
   rollCallNumber: number;
   sourceDataURL: string;
   date: string;
@@ -566,6 +566,54 @@ export class BatchVotingService {
    * peer averages). Reuses the shared cache, so cost is amortized across
    * callers that have already loaded member-level views.
    */
+  /**
+   * Number of roll calls in the Congress.gov vote list for a Congress
+   * (both sessions, to date). Cheap — the list is fetched once and cached.
+   * Lets sweep consumers (chamber baselines) measure their own coverage.
+   */
+  async getHouseVoteListCount(
+    congress = getCurrentCongressNumber(),
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2
+  ): Promise<number> {
+    try {
+      const voteList = await this.getHouseVoteList(congress, session, 10000);
+      return voteList.length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * The full Congress.gov vote list for a Congress (both sessions), for
+   * consumers that manage their own fetch pacing and persistence — the
+   * chamber-baselines corpus builder. Read-only metadata; one cached fetch.
+   */
+  async getHouseVoteListItems(
+    congress = getCurrentCongressNumber(),
+    session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
+    limit = 10000
+  ): Promise<VoteListItem[]> {
+    try {
+      return await this.getHouseVoteList(congress, session, limit);
+    } catch (error) {
+      logger.error('Failed to get House vote list items', error as Error, { congress });
+      return [];
+    }
+  }
+
+  /**
+   * Fetch a single House roll call's full member roster, deriving the
+   * session from the vote's own date. For paced corpus builders — no
+   * concurrency limiter here; the CALLER is responsible for staying under
+   * Congress.gov's sustained rate (~80 requests/minute).
+   */
+  async getHouseRollCallDetail(
+    vote: VoteListItem,
+    congress = getCurrentCongressNumber()
+  ): Promise<StandardizedVote | null> {
+    return this.fetchAndParseHouseMembersJSON(vote, congress, this.sessionForVote(vote, 1));
+  }
+
   async getHouseChamberRollCalls(
     congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
@@ -859,6 +907,19 @@ export class BatchVotingService {
    * member — callers get the full memberVotes array so they can
    * compute chamber-wide statistics (party-line alignment, etc.).
    */
+  /**
+   * Derive a House vote's session from its own date. The Congress.gov vote
+   * list spans BOTH sessions of a Congress while roll-call numbering resets
+   * each session, so fetching every roll with the caller's current session
+   * 404s the prior session's votes (they silently dropped from chamber-wide
+   * sweeps before this fix). Session 1 = odd year, session 2 = even year.
+   */
+  private sessionForVote(vote: VoteListItem, fallback: number): number {
+    const year = new Date(vote.date).getFullYear();
+    if (!Number.isFinite(year) || year < 1789) return fallback;
+    return year % 2 === 1 ? 1 : 2;
+  }
+
   private async fetchHouseVotesRaw(
     voteList: VoteListItem[],
     bypassCache = false,
@@ -870,7 +931,8 @@ export class BatchVotingService {
     const uncachedVotes: VoteListItem[] = [];
 
     for (const vote of voteList) {
-      const cacheKey = `house-vote-${congress}-${session}-${vote.rollCallNumber}`;
+      const voteSession = this.sessionForVote(vote, session);
+      const cacheKey = `house-vote-${congress}-${voteSession}-${vote.rollCallNumber}`;
       const cached = bypassCache ? null : this.cache.get<StandardizedVote>(cacheKey);
 
       if (cached) {
@@ -883,7 +945,9 @@ export class BatchVotingService {
     // Step 2: Fetch uncached rosters from Congress.gov JSON /members in parallel.
     // (clerk.house.gov XML is Akamai-blocked from Vercel cloud IPs; MR12.)
     const fetchTasks = uncachedVotes.map(vote =>
-      this.limiter.run(() => this.fetchAndParseHouseMembersJSON(vote, congress, session))
+      this.limiter.run(() =>
+        this.fetchAndParseHouseMembersJSON(vote, congress, this.sessionForVote(vote, session))
+      )
     );
 
     const newVotes = await Promise.allSettled(fetchTasks);
@@ -893,8 +957,8 @@ export class BatchVotingService {
       if (result.status === 'fulfilled' && result.value) {
         successfulVotes.push(result.value);
 
-        // Cache the parsed vote
-        const cacheKey = `house-vote-${congress}-${session}-${result.value.rollCallNumber}`;
+        // Cache the parsed vote under its own session
+        const cacheKey = `house-vote-${congress}-${result.value.session}-${result.value.rollCallNumber}`;
         this.cache.set(cacheKey, result.value);
       } else {
         logger.debug('Failed to fetch House vote members', {
