@@ -312,10 +312,13 @@ async function fetchKeyVotes(
 ): Promise<KeyVote[]> {
   try {
     const session = new Date().getFullYear() % 2 === 1 ? 1 : 2;
+    // Senate reads come from the cheap mirrored corpus, so a deeper window
+    // is free — and needed, since nomination votes (no bill) dominate the
+    // Senate's recent roll calls and would starve the substantive filter.
     const votes =
       chamber === 'House'
         ? await batchVotingService.getHouseMemberVotes(bioguideId, congress, session, 20)
-        : await batchVotingService.getSenateMemberVotes(bioguideId, congress, session, 20);
+        : await batchVotingService.getSenateMemberVotes(bioguideId, congress, session, 60);
 
     // Rule-based selection, no editorial judgment: the member's most recent
     // substantive (Yea/Nay) roll calls attached to a bill, preferring final

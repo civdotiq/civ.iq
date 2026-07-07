@@ -9,6 +9,14 @@
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislatorInfoMap, getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
+import { getRedisCache } from '@/lib/cache/redis-client';
+import { isSenateXmlDisabled } from '@/features/representatives/services/batch-voting-service';
+import {
+  expandRoll,
+  getSenateVoteMenu,
+  rollKey,
+  type CompactRollCall,
+} from '@/features/representatives/services/roll-call-corpus';
 
 // Types for vote data
 export interface UnifiedVoteDetail {
@@ -352,7 +360,107 @@ async function parseHouseVote(
   }
 }
 
-// Parse Senate vote from XML
+/**
+ * Build a Senate vote detail from the mirrored roll-call corpus (MR10) —
+ * used where senate.gov XML is unreachable (Akamai blocks cloud IPs) or
+ * missing. Member positions come from the persisted compact roll (official
+ * XML, relayed by the sync workflow); names/states are hydrated from the
+ * legislator dataset; question/result/title come from the mirrored menu.
+ * Fields the corpus doesn't carry (vote time, document text, amendment,
+ * required majority) are honestly absent.
+ */
+async function senateVoteFromCorpus(
+  voteId: string,
+  congress: string,
+  knownSession?: string
+): Promise<UnifiedVoteDetail | null> {
+  const congressNum = parseInt(congress, 10);
+  const rollNumber = parseInt(voteId, 10);
+  if (!Number.isFinite(congressNum) || !Number.isFinite(rollNumber)) return null;
+
+  try {
+    const redis = getRedisCache();
+
+    let compact: CompactRollCall | null = null;
+    let session = 0;
+    for (const s of sessionsToTry(congress, knownSession)) {
+      compact = await redis.get<CompactRollCall>(rollKey('senate', congressNum, s, rollNumber));
+      if (compact) {
+        session = s;
+        break;
+      }
+    }
+    if (!compact) return null;
+
+    const menu = await getSenateVoteMenu(congressNum);
+    const entry = menu?.sessions[String(session)]?.find(e => e.n === rollNumber);
+
+    const roll = expandRoll(compact, congressNum, 'Senate');
+    const infoMap = await getLegislatorInfoMap();
+
+    const members: SenatorVote[] = roll.memberVotes.map(mv => {
+      const info = infoMap.get(mv.bioguideId);
+      return {
+        id: mv.bioguideId,
+        lisId: '',
+        bioguideId: mv.bioguideId,
+        firstName: info?.firstName ?? '',
+        lastName: info?.lastName ?? '',
+        fullName: info?.fullName ?? mv.bioguideId,
+        state: info?.state ?? '',
+        party: mv.party === 'D' || mv.party === 'R' ? mv.party : 'I',
+        position: mv.position,
+      };
+    });
+    members.sort((a, b) =>
+      a.state !== b.state ? a.state.localeCompare(b.state) : a.lastName.localeCompare(b.lastName)
+    );
+
+    // Menu titles for measures read "Motion to …; <measure title>".
+    const title = entry?.t || entry?.q || 'Senate Vote';
+    const semi = title.indexOf('; ');
+    const billTitle = semi > -1 ? title.slice(semi + 2).trim() : title;
+    const billType = entry?.i
+      .match(/^[A-Za-z.\s]+/)?.[0]
+      ?.replace(/[^A-Za-z]/g, '')
+      .toUpperCase();
+
+    const paddedVoteId = String(rollNumber).padStart(5, '0');
+    const xmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedVoteId}.xml`;
+
+    return {
+      voteId: paddedVoteId,
+      congress,
+      session: String(session),
+      rollNumber,
+      date: compact.date,
+      title,
+      question: entry?.q || '',
+      description: entry?.q || title,
+      result: entry?.r || '',
+      chamber: 'Senate',
+      yeas: roll.totals.yea,
+      nays: roll.totals.nay,
+      present: roll.totals.present,
+      absent: roll.totals.notVoting,
+      totalVotes: members.length,
+      members,
+      bill:
+        entry?.i && billType ? { number: entry.i, title: billTitle, type: billType } : undefined,
+      metadata: {
+        source: 'senate-corpus-mirror',
+        confidence: 'high',
+        processingDate: new Date().toISOString(),
+        xmlUrl,
+      },
+    };
+  } catch (error) {
+    logger.error('Error building Senate vote from corpus', error as Error, { voteId, congress });
+    return null;
+  }
+}
+
+// Parse Senate vote from XML, with the mirrored corpus as fallback
 async function parseSenateVote(
   voteId: string,
   congress: string,
@@ -361,25 +469,29 @@ async function parseSenateVote(
   try {
     const paddedVoteId = voteId.padStart(5, '0');
 
-    // Roll-call numbers restart each session; try the likeliest session first
+    // Roll-call numbers restart each session; try the likeliest session
+    // first. Skipped entirely on Vercel, where senate.gov is Akamai-blocked
+    // (MR10) — the corpus fallback below serves those environments.
     let xmlUrl = '';
     let xmlText: string | null = null;
-    for (const session of sessionsToTry(congress, knownSession)) {
-      xmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedVoteId}.xml`;
-      const response = await fetch(xmlUrl, {
-        headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!response.ok) continue;
-      const body = await response.text();
-      // senate.gov can serve a 200 HTML error page for missing votes
-      if (body.includes('<roll_call_vote')) {
-        xmlText = body;
-        break;
+    if (!isSenateXmlDisabled()) {
+      for (const session of sessionsToTry(congress, knownSession)) {
+        xmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedVoteId}.xml`;
+        const response = await fetch(xmlUrl, {
+          headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!response.ok) continue;
+        const body = await response.text();
+        // senate.gov can serve a 200 HTML error page for missing votes
+        if (body.includes('<roll_call_vote')) {
+          xmlText = body;
+          break;
+        }
       }
     }
 
-    if (!xmlText) return null;
+    if (!xmlText) return senateVoteFromCorpus(voteId, congress, knownSession);
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '@_',

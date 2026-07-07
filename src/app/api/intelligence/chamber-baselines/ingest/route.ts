@@ -37,7 +37,7 @@ import {
   setSenateVoteMenu,
   type SenateMenuEntry,
   type SenateVoteMenu,
-} from '@/lib/intelligence/analyzers/chamber-baselines';
+} from '@/features/representatives/services/roll-call-corpus';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;

@@ -42,6 +42,15 @@ import {
   batchVotingService,
   type StandardizedVote,
 } from '@/features/representatives/services/batch-voting-service';
+import {
+  compactRoll,
+  expandRoll,
+  getSenateVoteMenu,
+  rollKey,
+  READ_BATCH,
+  ROLL_TTL_SECONDS,
+  type CompactRollCall,
+} from '@/features/representatives/services/roll-call-corpus';
 import { computeChamberAlignment, MIN_VOTES_FOR_ALIGNMENT } from './party-line-analyzer';
 
 /** Redis TTL: 24h — new roll calls land daily when in session. */
@@ -229,9 +238,6 @@ export async function getChamberBaselines(
  *  keeps the old blob. */
 const MIN_COVERAGE = 0.9;
 
-/** Batched Redis reads when assembling a corpus. */
-const READ_BATCH = 25;
-
 /** Congress.gov sustains roughly 80 requests/minute before returning 429s;
  *  900ms spacing keeps the corpus fill safely under that. */
 const FETCH_SPACING_MS = 900;
@@ -244,88 +250,6 @@ const BREAKER_RESET_WAIT_MS = 65_000;
  *  595-roll cold corpus fills across ~3 daily runs, then steady-state is
  *  only the handful of new roll calls per day. */
 const DEFAULT_FETCH_BUDGET_MS = 200_000;
-
-/** Roll calls are immutable once cast — keep them 120 days and refresh TTL
- *  on rebuilds so an active Congress never ages out. */
-const ROLL_TTL_SECONDS = 120 * 24 * 60 * 60;
-
-/**
- * Compact persisted form of one roll call — just what baselines need.
- * (~30 bytes/member instead of the full StandardizedVote's ~80.)
- */
-interface CompactRollCall {
-  rollCallNumber: number;
-  session: number;
-  date: string;
-  votes: Array<{ b: string; p: string; v: 'Y' | 'N' | 'P' | 'X' }>;
-}
-
-const POSITION_TO_CODE: Record<string, 'Y' | 'N' | 'P' | 'X'> = {
-  Yea: 'Y',
-  Nay: 'N',
-  Present: 'P',
-  'Not Voting': 'X',
-};
-const CODE_TO_POSITION: Record<
-  'Y' | 'N' | 'P' | 'X',
-  StandardizedVote['memberVotes'][number]['position']
-> = {
-  Y: 'Yea',
-  N: 'Nay',
-  P: 'Present',
-  X: 'Not Voting',
-};
-
-function compactRoll(roll: StandardizedVote): CompactRollCall {
-  return {
-    rollCallNumber: roll.rollCallNumber,
-    session: roll.session,
-    date: roll.date,
-    votes: roll.memberVotes.map(mv => ({
-      b: mv.bioguideId,
-      p: mv.party,
-      v: POSITION_TO_CODE[mv.position] ?? 'X',
-    })),
-  };
-}
-
-/** Rehydrate to the StandardizedVote shape the compute + party-line helpers
- *  consume. Display-only fields we don't persist are left empty. */
-function expandRoll(
-  c: CompactRollCall,
-  congress: number,
-  chamber: 'House' | 'Senate'
-): StandardizedVote {
-  return {
-    voteId: `${chamber.toLowerCase()}-${congress}-${c.session}-${c.rollCallNumber}`,
-    congress,
-    session: c.session,
-    chamber,
-    rollCallNumber: c.rollCallNumber,
-    date: c.date,
-    question: '',
-    result: '',
-    totals: { yea: 0, nay: 0, present: 0, notVoting: 0 },
-    memberVotes: c.votes.map(v => ({
-      bioguideId: v.b,
-      name: '',
-      party: v.p,
-      state: '',
-      position: CODE_TO_POSITION[v.v],
-    })),
-    sourceUrl: '',
-    processedAt: c.date,
-  };
-}
-
-function rollKey(
-  chamber: 'house' | 'senate',
-  congress: number,
-  session: number,
-  rollCallNumber: number
-): string {
-  return `record-card:roll:${chamber}:${congress}:${session}:${rollCallNumber}`;
-}
 
 function sessionForDate(date: string): number {
   const year = new Date(date).getFullYear();
@@ -418,104 +342,11 @@ async function assembleHouseCorpus(
   return { rolls, expected: list.length };
 }
 
-// ── Senate corpus (MR10 mirror) ──────────────────────────────────────
-//
-// senate.gov roll-call XML is Akamai-blocked from cloud IPs, and
-// Congress.gov has no senate-vote JSON endpoint (LoC closed the requests —
-// see PROMPT-MR10). The scheduled sync-senate-votes GitHub Actions workflow
-// runs where senate.gov is reachable, fetches the official vote menu and
-// roll-call XML, and POSTs them to the ingest route, which persists the
-// helpers below. Production never fetches senate.gov itself.
-
-/** One vote-menu entry, mirrored from senate.gov's vote_menu XML. Carries
- *  display metadata (question/result/issue/title) so member-facing vote
- *  lists can also be served from the mirror, not just baselines. */
-export interface SenateMenuEntry {
-  /** Roll-call vote number. */
-  n: number;
-  /** ISO date (script derives it from vote_date + congress_year). */
-  d: string;
-  /** Question, e.g. "On the Nomination". */
-  q: string;
-  /** Result, e.g. "Confirmed". */
-  r: string;
-  /** Issue, e.g. "S.J.Res. 185" or "PN938-2". */
-  i: string;
-  /** Full vote title. */
-  t: string;
-}
-
-export interface SenateVoteMenu {
-  congress: number;
-  /** Session number → menu entries ("1" = odd year, "2" = even year). */
-  sessions: Record<string, SenateMenuEntry[]>;
-  updatedAt: string;
-}
-
-function senateMenuKey(congress: number): string {
-  return `record-card:roll:senate:${congress}:menu`;
-}
-
-export async function getSenateVoteMenu(congress: number): Promise<SenateVoteMenu | null> {
-  try {
-    return await getRedisCache().get<SenateVoteMenu>(senateMenuKey(congress));
-  } catch (error) {
-    logger.warn('Senate vote menu read failed', { congress, error });
-    return null;
-  }
-}
-
-export async function setSenateVoteMenu(menu: SenateVoteMenu): Promise<void> {
-  await getRedisCache().set(senateMenuKey(menu.congress), menu, ROLL_TTL_SECONDS);
-}
-
-/** Menu-listed roll calls not yet in the corpus, per session (batched). */
-export async function listMissingSenateRolls(
-  congress: number,
-  menu: SenateVoteMenu
-): Promise<Record<string, number[]>> {
-  const redis = getRedisCache();
-  const missing: Record<string, number[]> = {};
-
-  for (const [session, entries] of Object.entries(menu.sessions)) {
-    const sessionNum = parseInt(session, 10);
-    const gaps: number[] = [];
-    for (let i = 0; i < entries.length; i += READ_BATCH) {
-      const batch = entries.slice(i, i + READ_BATCH);
-      const present = await Promise.all(
-        batch.map(e => redis.exists(rollKey('senate', congress, sessionNum, e.n)))
-      );
-      present.forEach((exists, j) => {
-        const entry = batch[j];
-        if (entry && !exists) gaps.push(entry.n);
-      });
-    }
-    missing[session] = gaps;
-  }
-
-  return missing;
-}
-
-/** Persist one parsed Senate roll call into the corpus. The caller (ingest
- *  route) is responsible for the memberless-shell gate; dates are
- *  normalized to ISO so newest-roll comparisons stay lexicographic. */
-export async function persistSenateRoll(roll: StandardizedVote): Promise<void> {
-  const parsedDate = new Date(roll.date);
-  const compact = compactRoll({
-    ...roll,
-    date: Number.isNaN(parsedDate.getTime()) ? roll.date : parsedDate.toISOString(),
-  });
-  await getRedisCache().set(
-    rollKey('senate', roll.congress, roll.session, roll.rollCallNumber),
-    compact,
-    ROLL_TTL_SECONDS
-  );
-}
-
 /**
  * Assemble the Senate roll-call corpus: mirrored menu + compact rolls, all
- * from Redis. No upstream fetches — if the mirror hasn't run yet, the
- * corpus is empty and the build honestly declines to cache a blob.
+ * from Redis (see roll-call-corpus.ts for the MR10 mirror architecture).
+ * No upstream fetches — if the mirror hasn't run yet, the corpus is empty
+ * and the build honestly declines to cache a blob.
  */
 async function assembleSenateCorpus(
   congress: number

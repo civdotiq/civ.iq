@@ -12,6 +12,7 @@ import { logger } from '@/lib/logging/logger-edge';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getAllMappings } from '@/lib/data/legislator-mappings';
 import { circuitBreakers } from '@/lib/circuit-breaker';
+import { getSenateCorpusRollCalls } from './roll-call-corpus';
 
 // Connection pooling with HTTP keep-alive for performance optimization
 class HttpClient {
@@ -392,16 +393,17 @@ class CircuitBreaker {
 /**
  * Detect Vercel runtimes where senate.gov XML is Akamai-blocked (MR10).
  *
- * Defense-in-depth: even if a caller forgets to branch on chamber, the
- * Senate XML fetch path returns immediately on Vercel rather than
- * spinning hundreds of 15s timeouts against a CDN that will never serve
- * us. Local dev (no `VERCEL` env) keeps working for verification.
+ * Senate reads are corpus-first (the mirrored Redis corpus filled by the
+ * sync-senate-votes workflow — see roll-call-corpus.ts), so this guard is
+ * only consulted when the corpus is empty. It prevents an unmirrored
+ * Congress from spinning hundreds of 15s timeouts against a CDN that will
+ * never serve us. Local dev (no `VERCEL` env) keeps working live.
  *
  * Override with `DISABLE_SENATE_XML=1` for local repro of the Vercel
  * behavior, or `ALLOW_SENATE_XML=1` to opt back in if the upstream block
  * lifts before code can be redeployed.
  */
-function isSenateXmlDisabled(): boolean {
+export function isSenateXmlDisabled(): boolean {
   if (process.env.ALLOW_SENATE_XML === '1') return false;
   if (process.env.DISABLE_SENATE_XML === '1') return true;
   return Boolean(process.env.VERCEL);
@@ -521,8 +523,25 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
+    // Corpus first (MR10): the mirrored senate.gov corpus in Redis serves
+    // every environment, with menu-derived question/result/bill metadata.
+    // Live XML remains only as a fallback for cold setups where senate.gov
+    // is reachable — it never works on Vercel (Akamai block).
+    try {
+      const corpusRolls = await getSenateCorpusRollCalls(congress, limit * 2);
+      if (corpusRolls.length > 0) {
+        return this.extractMemberVotes(bioguideId, corpusRolls).slice(0, limit);
+      }
+    } catch (error) {
+      logger.warn('Senate corpus read failed — falling back to live XML', {
+        bioguideId,
+        congress,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
     if (isSenateXmlDisabled()) {
-      logger.info('Senate XML fetching disabled — Akamai blocks Vercel cloud IPs (MR10)', {
+      logger.info('Senate corpus empty and XML fetching disabled (MR10) — no Senate votes', {
         bioguideId,
         congress,
         session,
@@ -646,8 +665,19 @@ export class BatchVotingService {
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 50
   ): Promise<StandardizedVote[]> {
+    // Corpus first (MR10) — see getSenateMemberVotes for the rationale.
+    try {
+      const corpusRolls = await getSenateCorpusRollCalls(congress, limit);
+      if (corpusRolls.length > 0) return corpusRolls;
+    } catch (error) {
+      logger.warn('Senate corpus read failed — falling back to live XML', {
+        congress,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
     if (isSenateXmlDisabled()) {
-      logger.info('Senate XML fetching disabled — Akamai blocks Vercel cloud IPs (MR10)', {
+      logger.info('Senate corpus empty and XML fetching disabled (MR10) — no roll calls', {
         congress,
         session,
       });
