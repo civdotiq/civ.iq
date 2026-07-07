@@ -10,7 +10,7 @@
  * oversees. Answers: "Did this legislator trade stocks in sectors
  * their committee regulates?"
  *
- * Supports both House (via House Clerk) and Senate (via Senate Stock Watcher) members.
+ * Supports both House (via House Clerk) and Senate (via Congress Trading Monitor) members.
  *
  * Flow: check cache -> fetch data -> compute statistics -> AI narrative -> cache -> fallback
  * Pattern: CivicAlignmentAnalyzer (src/features/legislation/services/ai/civic-alignment-analyzer.ts)
@@ -134,7 +134,7 @@ async function computeAndCache(
 
   const sc = new SourceCollector();
   sc.add(
-    data.chamber === 'Senate' ? 'Senate Stock Watcher' : 'House Clerk disclosures',
+    data.chamber === 'Senate' ? 'Congress Trading Monitor' : 'House Clerk disclosures',
     '119th Congress',
     data.totalTrades
   );
@@ -166,7 +166,7 @@ async function computeAndCache(
     dataAsOf: freshestDate(...data.resolvedTrades.map(t => t.transactionDate))!,
     methodology:
       `Stock trades from STOCK Act disclosures ` +
-      `(${data.chamber === 'Senate' ? 'Senate Stock Watcher' : 'House Clerk'}) ` +
+      `(${data.chamber === 'Senate' ? 'Congress Trading Monitor' : 'House Clerk'}) ` +
       'matched to committee jurisdiction sectors. ' +
       'Tickers resolved to sectors via SEC EDGAR SIC codes. ' +
       'Expected overlap rate = jurisdiction sectors / 13 total sectors.',

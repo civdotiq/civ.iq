@@ -94,14 +94,15 @@ export const DATA_SOURCES = {
     sourceUrl: 'https://disclosures-clerk.house.gov/',
     reliability: 'high' as const,
   },
-  SENATE_STOCK_WATCHER: {
-    sourceName: 'Senate Stock Watcher',
-    sourceUrl: 'https://github.com/timothycarambat/senate-stock-watcher-data',
+  CONGRESS_TRADING_MONITOR: {
+    sourceName: 'Congress Trading Monitor',
+    sourceUrl: 'https://github.com/kadoa-org/congress-trading-monitor',
     sourceContext: 'Senate Office of Public Records',
     reliability: 'medium' as const,
     disclaimer:
-      'Derived from Senate Office of Public Records electronic financial disclosures. ' +
-      'Senate Stock Watcher is an independent open-source project, not an official government service.',
+      'Derived from Senate Office of Public Records electronic financial disclosures (eFD). ' +
+      'Congress Trading Monitor is an independent open-source project, not an official government service. ' +
+      'Each trade links to its original efdsearch.senate.gov filing.',
   },
 } as const;
 
@@ -270,11 +271,11 @@ export function HouseClerkAttribution(
   return <DataSourceAttribution {...DATA_SOURCES.HOUSE_CLERK} {...props} />;
 }
 
-export function SenateStockWatcherAttribution(
+export function CongressTradingMonitorAttribution(
   props: Omit<
     DataSourceAttributionProps,
     'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext' | 'disclaimer'
   >
 ) {
-  return <DataSourceAttribution {...DATA_SOURCES.SENATE_STOCK_WATCHER} {...props} />;
+  return <DataSourceAttribution {...DATA_SOURCES.CONGRESS_TRADING_MONITOR} {...props} />;
 }

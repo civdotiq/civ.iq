@@ -21,7 +21,7 @@ export const revalidate = 3600;
  * bonds, and other securities a member has personally traded.
  *
  * - House: U.S. House Office of the Clerk
- * - Senate: Senate Stock Watcher (derived from Senate eFD filings)
+ * - Senate: Congress Trading Monitor (derived from Senate eFD filings)
  *
  * @param _request - Next.js request object (unused)
  * @param params - Route parameters containing bioguideId
@@ -104,19 +104,20 @@ export async function GET(
       annualDisclosures,
       member: { bioguideId, name: repData.name, stateDistrict },
       metadata: {
-        dataSource: isSenate ? 'senate-stock-watcher' : 'house-clerk-disclosures',
+        dataSource: isSenate ? 'congress-trading-monitor' : 'house-clerk-disclosures',
         lastUpdated: new Date().toISOString(),
         totalFilings: new Set(trades.map(t => t.filingId)).size,
         coveragePeriod: isSenate
-          ? '2012-2021'
+          ? `2015-${currentYear}`
           : `${currentYear - coverageYears + 1}-${currentYear}`,
         yearsChecked,
         note: isSenate
           ? trades.length > 0
             ? 'Data from STOCK Act Periodic Transaction Reports filed with the Senate Office of Public Records. ' +
-              'Parsed by Senate Stock Watcher, an independent open-source project. ' +
+              'Parsed by Congress Trading Monitor, an independent open-source project; each trade links to its original efdsearch.senate.gov filing. ' +
+              'Electronic filings from 2015 onward; pre-2015 paper filings are not included. ' +
               'Transactions over $1,000 must be disclosed within 45 days.'
-            : 'No STOCK Act financial disclosures found for this Senator in the Senate Stock Watcher dataset. ' +
+            : 'No STOCK Act financial disclosures found for this Senator in the Congress Trading Monitor dataset. ' +
               'This may mean the Senator had no reportable transactions or their filings were not electronically processed.'
           : trades.length > 0
             ? 'Data from STOCK Act Periodic Transaction Reports filed with the U.S. House Office of the Clerk. Transactions over $1,000 must be disclosed within 45 days.'

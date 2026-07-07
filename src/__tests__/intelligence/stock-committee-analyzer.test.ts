@@ -224,7 +224,7 @@ describe('analyzeStockCommittee', () => {
     expect(mockSenateGetTradesForMember).toHaveBeenCalledWith('T000476');
     expect(mockGetTradesForMember).not.toHaveBeenCalled();
     expect(result).not.toBeNull();
-    expect(result!.methodology).toContain('Senate Stock Watcher');
+    expect(result!.methodology).toContain('Congress Trading Monitor');
   });
 
   it('uses chamber-specific peer comparison key for Senate', async () => {

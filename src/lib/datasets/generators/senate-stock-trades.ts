@@ -7,7 +7,7 @@
  * Senate Stock Trades Dataset Generator
  *
  * STOCK Act periodic transaction reports for U.S. Senators.
- * Source: Senate Stock Watcher (pre-parsed from Senate eFD system).
+ * Source: Congress Trading Monitor (pre-parsed from Senate eFD system).
  */
 
 import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
@@ -104,7 +104,7 @@ export async function generateSenateStockTrades(): Promise<DatasetResult> {
       slug: 'senate-stock-trades',
       description:
         'Periodic transaction reports for U.S. Senators under the STOCK Act, including ticker, amount range, transaction type, and filing timeliness.',
-      source: 'Senate Stock Watcher / Senate eFD',
+      source: 'Congress Trading Monitor / Senate eFD',
       sourceUrl: 'https://efdsearch.senate.gov',
       generated: new Date().toISOString(),
       recordCount: data.length,

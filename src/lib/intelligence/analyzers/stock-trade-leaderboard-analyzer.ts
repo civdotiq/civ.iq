@@ -20,6 +20,7 @@ import { mean, median } from 'simple-statistics';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
+import { normalizePartyCode } from '@/lib/data-sources/congress-trades-query';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { StockTrade } from '@/types/stock-trades';
 import type { StockTradeLeaderboardEntry, StockTradeLeaderboardResponse } from '../types';
@@ -108,10 +109,11 @@ export async function buildStockTradeLeaderboard(options?: {
   // 3. Enrich with member data (name, party, state, chamber)
   const enriched = await enrichCandidates(memberStats);
 
-  // 4. Apply filters
+  // 4. Apply filters. Party is normalized because getEnhancedRepresentative
+  // returns full names ("Democrat") while the API filter uses letter codes.
   const filtered = enriched.filter(entry => {
     if (chamber !== 'all' && entry.chamber.toLowerCase() !== chamber) return false;
-    if (party !== 'all' && entry.party !== party) return false;
+    if (party !== 'all' && normalizePartyCode(entry.party) !== party) return false;
     return true;
   });
 

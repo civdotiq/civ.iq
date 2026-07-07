@@ -43,6 +43,16 @@ interface SourceDefinition {
   staleTtlHours: number;
   /** Redis cache key pattern to check for last successful fetch */
   cacheKeyPattern?: string;
+  /**
+   * Optional content-level freshness check (GET probes only).
+   * `extract` pulls the dataset's own last-update timestamp from the
+   * probe response body; if it is older than `maxAgeHours`, the source
+   * is reported as `stale` even though the URL still responds 200.
+   */
+  contentFreshness?: {
+    extract: (body: unknown) => string | null;
+    maxAgeHours: number;
+  };
 }
 
 const DATA_SOURCES: SourceDefinition[] = [
@@ -310,14 +320,23 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'usaspending:*',
   },
   {
-    // Verified: senate-disclosure-service.ts fetches this exact URL
-    name: 'Senate Stock Watcher',
+    // Verified: senate-disclosure-service.ts fetches filers.json + filer/*.json
+    // from this dataset. stats.json is a ~1KB summary carrying generatedAt,
+    // so the probe checks content freshness, not just URL reachability —
+    // the previous source (Senate Stock Watcher) kept returning 200 for
+    // five years after its data froze in March 2021.
+    name: 'Congress Trading Monitor',
     tier: 'standard',
     probeUrl:
-      'https://raw.githubusercontent.com/timothycarambat/senate-stock-watcher-data/master/aggregate/all_transactions_for_senators.json',
-    probeMethod: 'HEAD', // Don't download the full JSON, just check it exists
+      'https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data/stats.json',
     staleTtlHours: 168,
-    cacheKeyPattern: 'senate-disclosures:*',
+    cacheKeyPattern: 'senate-trades:*',
+    contentFreshness: {
+      // Dataset refreshes daily; a week without a refresh means the
+      // upstream project stopped publishing.
+      extract: body => (body as { generatedAt?: string })?.generatedAt ?? null,
+      maxAgeHours: 168,
+    },
   },
   {
     // Verified: house-disclosure-service.ts fetches ZIP at /public_disc/financial-pdfs/{year}FD.ZIP
@@ -448,6 +467,33 @@ async function probeSource(source: SourceDefinition): Promise<SourceResult> {
     const expectedStatus = source.expectedStatus ?? 200;
 
     if (response.status === expectedStatus) {
+      // Content-level freshness: a URL can keep returning 200 while the
+      // dataset behind it silently stops updating.
+      if (source.contentFreshness && method !== 'HEAD') {
+        try {
+          const body = (await response.json()) as unknown;
+          const timestamp = source.contentFreshness.extract(body);
+          const ageHours = timestamp
+            ? (Date.now() - new Date(timestamp).getTime()) / (1000 * 60 * 60)
+            : Number.POSITIVE_INFINITY;
+          if (!timestamp || ageHours > source.contentFreshness.maxAgeHours) {
+            return {
+              name: source.name,
+              tier: source.tier,
+              status: 'stale',
+              responseTimeMs: elapsed,
+              httpStatus: response.status,
+              lastSuccessfulFetch: await getLastSuccessfulFetch(source),
+              error: timestamp
+                ? `Dataset content stale: last updated ${timestamp} (${Math.round(ageHours / 24)} days ago)`
+                : 'Dataset content stale: no update timestamp found in probe response',
+            };
+          }
+        } catch {
+          // Body parse failure — fall through to plain reachability result
+        }
+      }
+
       // Record successful probe in Redis
       await recordSuccessfulProbe(source);
 

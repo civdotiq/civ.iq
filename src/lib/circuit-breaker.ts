@@ -166,8 +166,10 @@ export const circuitBreakers = {
     successThreshold: 2,
   }),
 
+  // Key kept as senateStockWatcher to avoid churning call sites;
+  // the upstream source is now Congress Trading Monitor (Senate eFD).
   senateStockWatcher: new CircuitBreaker({
-    name: 'Senate Stock Watcher',
+    name: 'Congress Trading Monitor',
     failureThreshold: 3,
     recoveryTimeout: 60000, // 1 minute
     monitoringWindow: 300000, // 5 minutes

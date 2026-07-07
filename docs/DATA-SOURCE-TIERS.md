@@ -94,16 +94,16 @@ These power distinct feature sections that users navigate to directly. They have
 
 ### Senate Stock Disclosures
 
-| Property           | Value                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Base URL           | `https://raw.githubusercontent.com/timothycarambat/senate-stock-watcher-data/master/aggregate/all_transactions_for_senators.json` |
-| API key            | None (GitHub-hosted JSON)                                                                                                         |
-| Cache TTL          | 24 hr (bulk + per-member), 7 days (analyzer)                                                                                      |
-| Consumers          | stock-committee analyzer, stock-trade-leaderboard analyzer, stock-trades API route, health check, dataset generator               |
-| Cross-domain joins | Senate trades + committee jurisdiction sectors, trades + SEC EDGAR SIC codes                                                      |
-| Error handling     | Route uses circuit breaker, returns `{ trades: [] }` on failure. Analyzer returns `null` on failure.                              |
+| Property           | Value                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Base URL           | `https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data/` (filers.json + filer/{id}.json) |
+| API key            | None (GitHub-hosted JSON, MIT license, refreshed daily)                                                                  |
+| Cache TTL          | 24 hr (filer index + per-filer), 7 days (analyzer)                                                                       |
+| Consumers          | stock-committee analyzer, stock-trade-leaderboard analyzer, stock-trades API route, health check, dataset generator      |
+| Cross-domain joins | Senate trades + committee jurisdiction sectors, trades + SEC EDGAR SIC codes                                             |
+| Error handling     | Route uses circuit breaker, returns `{ trades: [] }` on failure. Analyzer returns `null` on failure.                     |
 
-**Why Tier 2:** Powers stock trade analysis, a high-interest feature for transparency. Third-party GitHub data source introduces supply chain risk (repo could be deleted).
+**Why Tier 2:** Powers stock trade analysis, a high-interest feature for transparency. Third-party GitHub data source introduces supply chain risk (repo could be deleted or go stale — the previous source, Senate Stock Watcher, froze in March 2021; the health probe now checks the dataset's own `generatedAt` timestamp to catch this). Coverage: electronic eFD filings 2015-present; pre-2015 paper filings excluded. Every trade retains its primary-source efdsearch.senate.gov link.
 
 ### House Stock Disclosures
 

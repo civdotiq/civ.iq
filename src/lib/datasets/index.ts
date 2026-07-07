@@ -197,7 +197,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     name: 'Senate Stock Trades',
     description:
       'STOCK Act periodic transaction reports for U.S. Senators, including ticker, amount range, transaction type, and filing timeliness.',
-    source: 'Senate Stock Watcher / Senate eFD',
+    source: 'Congress Trading Monitor / Senate eFD',
     sourceUrl: 'https://efdsearch.senate.gov',
     approximateRows: '~3,000',
     freshness: 'Updated daily',

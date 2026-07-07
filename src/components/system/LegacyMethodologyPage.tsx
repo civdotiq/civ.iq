@@ -94,7 +94,7 @@ const SOURCE_GROUPS: DataSourceGroup[] = [
     sources: [
       {
         name: 'Senate Stock Disclosures',
-        covers: 'Stock trades by senators, via Senate Stock Watcher',
+        covers: 'Stock trades by senators, via Congress Trading Monitor (Senate eFD)',
         url: 'https://efdsearch.senate.gov',
       },
       {

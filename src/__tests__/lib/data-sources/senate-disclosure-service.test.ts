@@ -6,8 +6,8 @@
 /**
  * Tests for senate-disclosure-service.ts
  *
- * Tests Senate Stock Watcher data fetching, parsing, and mapping to StockTrade type.
- * External network calls are mocked.
+ * Tests Congress Trading Monitor data fetching, parsing, and mapping to
+ * StockTrade type. External network calls are mocked.
  */
 
 jest.mock('@/lib/logging/simple-logger', () => ({
@@ -25,108 +25,186 @@ import { SenateDisclosureService } from '@/lib/data-sources/senate-disclosure-se
 
 // -- Fixtures --
 
-/** Fixture mimicking all_transactions_for_senators.json structure */
-const FIXTURE_SENATORS = [
+/** Fixture mimicking filers.json structure */
+const FIXTURE_FILERS = [
   {
-    first_name: 'Tommy',
-    last_name: 'Tuberville',
-    office: 'Tuberville, Tommy (Senator)',
-    ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/aaaa-bbbb-cccc-dddd/',
-    date_recieved: '03/15/2021',
-    bioguide: 'T000476',
-    transactions: [
-      {
-        transaction_date: '01/20/2021',
-        owner: 'Self',
-        ticker: 'AAPL',
-        asset_description: 'Apple Inc.',
-        asset_type: 'Stock',
-        type: 'Purchase',
-        amount: '$1,001 - $15,000',
-        comment: '--',
-        ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/1111-2222-3333-4444/',
-      },
-      {
-        transaction_date: '02/10/2021',
-        owner: 'Spouse',
-        ticker: 'MSFT',
-        asset_description: 'Microsoft Corporation',
-        asset_type: 'Stock',
-        type: 'Sale (Full)',
-        amount: '$15,001 - $50,000',
-        comment: '--',
-        ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/5555-6666-7777-8888/',
-      },
-      {
-        transaction_date: '03/01/2021',
-        owner: 'Joint',
-        ticker: '--',
-        asset_description: 'Private Equity Fund LP',
-        asset_type: 'Other Securities',
-        type: 'Purchase',
-        amount: '$50,001 - $100,000',
-        comment: 'Additional investment',
-        ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/aaaa-bbbb-cccc-dddd/',
-      },
-    ],
+    id: 'senate_thomash_tuberville',
+    full_name: 'Thomas H Tuberville',
+    branch: 'congress',
+    chamber: 'senate',
+    party: 'R',
+    state: 'AL',
+    office: 'U.S. Senator · AL',
+    photo_url: 'https://unitedstates.github.io/images/congress/225x275/T000476.jpg',
   },
   {
-    first_name: 'Jon',
-    last_name: 'Ossoff',
-    office: 'Ossoff, Jon (Senator)',
-    ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/eeee-ffff-0000-1111/',
-    date_recieved: '06/01/2021',
-    bioguide: 'O000174',
-    transactions: [
-      {
-        transaction_date: '04/15/2021',
-        owner: 'Child',
-        ticker: '<a href="https://finance.yahoo.com/q?s=GOOG" target="_blank">GOOG</a>',
-        asset_description: 'Alphabet Inc. <div class="text-muted"><em>Class C</em></div>',
-        asset_type: 'Stock',
-        type: 'Sale (Partial)',
-        amount: '$100,001 - $250,000',
-        comment: '--',
-        ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/2222-3333-4444-5555/',
-      },
-    ],
+    id: 'senate_jon_ossoff',
+    full_name: 'Jon Ossoff',
+    branch: 'congress',
+    chamber: 'senate',
+    party: 'D',
+    state: 'GA',
+    office: 'U.S. Senator · GA',
+    photo_url: 'https://unitedstates.github.io/images/congress/225x275/O000174.jpg',
   },
   {
-    first_name: 'John',
-    last_name: 'Hickenlooper',
-    office: 'Hickenlooper, John (Senator)',
-    ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/6666-7777-8888-9999/',
-    date_recieved: '02/01/2021',
-    bioguide: 'H001042',
-    transactions: [
-      {
-        transaction_date: '01/05/2021',
-        owner: 'N/A',
-        ticker: '--',
-        asset_description: 'PDF Filing - See Original',
-        asset_type: 'PDF Disclosed Filing',
-        type: 'N/A',
-        amount: 'Unknown',
-        comment: '--',
-        ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/6666-7777-8888-9999/',
-      },
-    ],
+    id: 'senate_john_hickenlooper',
+    full_name: 'John Hickenlooper',
+    branch: 'congress',
+    chamber: 'senate',
+    party: 'D',
+    state: 'CO',
+    office: 'U.S. Senator · CO',
+    photo_url: 'https://unitedstates.github.io/images/congress/225x275/H001042.jpg',
   },
   {
-    first_name: 'Empty',
-    last_name: 'Senator',
-    office: 'Senator, Empty (Senator)',
-    ptr_link: '',
-    date_recieved: '01/01/2021',
-    bioguide: 'E000001',
-    transactions: [],
+    // No photo URL — bioguide unresolvable, must be skipped (never guessed)
+    id: 'senate_a_mystery',
+    full_name: 'A Mystery',
+    branch: 'congress',
+    chamber: 'senate',
+    party: 'R',
+    state: 'TX',
+    office: 'U.S. Senator · TX',
+    photo_url: null,
+  },
+  {
+    // House filer — must be filtered out of the Senate index
+    id: 'house_nancy_pelosi',
+    full_name: 'Nancy Pelosi',
+    branch: 'congress',
+    chamber: 'house',
+    party: 'D',
+    state: 'CA',
+    office: 'U.S. Representative · CA',
+    photo_url: 'https://unitedstates.github.io/images/congress/225x275/P000197.jpg',
   },
 ];
 
-function setupFetchMock(data: unknown = FIXTURE_SENATORS) {
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(data),
+/** Fixture per-filer trade rows (filer/{id}.json) */
+const FIXTURE_FILER_TRADES: Record<string, unknown> = {
+  senate_thomash_tuberville: {
+    filer: FIXTURE_FILERS[0],
+    trades: [
+      {
+        id: 'senate_1111-2222-3333-4444_t0',
+        filing_id: 'senate_1111-2222-3333-4444',
+        transaction_date: '2026-01-20',
+        filing_date: '2026-03-15',
+        owner: 'Self',
+        ticker: 'AAPL',
+        asset_name: 'Apple Inc.',
+        asset_type: 'Stock',
+        transaction_type: 'Purchase',
+        amount_range_label: '$1,001 - $15,000',
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/11111111-2222-3333-4444-555555555555/',
+        filing_type: 'PTR',
+      },
+      {
+        id: 'senate_5555-6666-7777-8888_t0',
+        filing_id: 'senate_5555-6666-7777-8888',
+        transaction_date: '2026-02-10',
+        filing_date: '2026-03-15',
+        owner: 'Spouse',
+        ticker: 'MSFT',
+        asset_name: 'Microsoft Corporation',
+        asset_type: 'Stock',
+        transaction_type: 'Sale (Full)',
+        amount_range_label: '$15,001 - $50,000',
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/55555555-6666-7777-8888-999999999999/',
+        filing_type: 'PTR',
+      },
+      {
+        id: 'senate_aaaa-bbbb-cccc-dddd_t0',
+        filing_id: 'senate_aaaa-bbbb-cccc-dddd',
+        transaction_date: '2026-03-01',
+        filing_date: '2026-03-20',
+        owner: 'Joint',
+        ticker: null,
+        asset_name: 'Private Equity Fund LP',
+        asset_type: 'Other Securities',
+        transaction_type: 'Purchase',
+        amount_range_label: '$50,001 - $100,000',
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/',
+        filing_type: 'PTR',
+      },
+      {
+        // Exact duplicate row ID — must be deduplicated
+        id: 'senate_aaaa-bbbb-cccc-dddd_t0',
+        filing_id: 'senate_aaaa-bbbb-cccc-dddd',
+        transaction_date: '2026-03-01',
+        filing_date: '2026-03-20',
+        owner: 'Joint',
+        ticker: null,
+        asset_name: 'Private Equity Fund LP',
+        asset_type: 'Other Securities',
+        transaction_type: 'Purchase',
+        amount_range_label: '$50,001 - $100,000',
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/',
+        filing_type: 'PTR',
+      },
+    ],
+  },
+  senate_jon_ossoff: {
+    filer: FIXTURE_FILERS[1],
+    trades: [
+      {
+        id: 'senate_2222-3333-4444-5555_t0',
+        filing_id: 'senate_2222-3333-4444-5555',
+        transaction_date: '2026-04-15',
+        filing_date: '2026-06-01',
+        owner: 'Child',
+        ticker: '<a href="https://finance.yahoo.com/q?s=GOOG" target="_blank">GOOG</a>',
+        asset_name: 'Alphabet Inc. <div class="text-muted"><em>Class C</em></div>',
+        asset_type: 'Stock',
+        transaction_type: 'Sale (Partial)',
+        amount_range_label: '$100,001 - $250,000',
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/22222222-3333-4444-5555-666666666666/',
+        filing_type: 'PTR',
+      },
+    ],
+  },
+  senate_john_hickenlooper: {
+    filer: FIXTURE_FILERS[2],
+    trades: [
+      {
+        id: 'senate_6666-7777-8888-9999_t0',
+        filing_id: 'senate_6666-7777-8888-9999',
+        transaction_date: '2026-01-05',
+        filing_date: '2026-02-01',
+        owner: 'N/A',
+        ticker: null,
+        asset_name: 'PDF Filing - See Original',
+        asset_type: 'PDF Disclosed Filing',
+        transaction_type: 'N/A',
+        amount_range_label: null,
+        doc_url:
+          'https://efdsearch.senate.gov/search/view/ptr/66666666-7777-8888-9999-000000000000/',
+        filing_type: 'PTR',
+      },
+    ],
+  },
+};
+
+function setupFetchMock(
+  filers: unknown = FIXTURE_FILERS,
+  filerTrades: Record<string, unknown> = FIXTURE_FILER_TRADES
+) {
+  global.fetch = jest.fn().mockImplementation((url: string) => {
+    if (url.endsWith('/filers.json')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(filers) });
+    }
+    const match = url.match(/\/filer\/([^/]+)\.json$/);
+    const filerId = match?.[1];
+    if (filerId && filerTrades[filerId]) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(filerTrades[filerId]) });
+    }
+    return Promise.resolve({ ok: false, status: 404, statusText: 'Not Found' });
   });
 }
 
@@ -145,7 +223,7 @@ describe('SenateDisclosureService', () => {
 
       expect(trades.length).toBe(3);
       expect(trades[0]!.bioguideId).toBe('T000476');
-      expect(trades[0]!.memberName).toBe('Tommy Tuberville');
+      expect(trades[0]!.memberName).toBe('Thomas H Tuberville');
     });
 
     it('maps transaction fields correctly', async () => {
@@ -158,8 +236,8 @@ describe('SenateDisclosureService', () => {
       expect(aapl!.owner).toBe('Self');
       expect(aapl!.assetDescription).toBe('Apple Inc.');
       expect(aapl!.transactionType).toBe('Purchase');
-      expect(aapl!.transactionDate).toBe('2021-01-20');
-      expect(aapl!.filingDate).toBe('2021-03-15');
+      expect(aapl!.transactionDate).toBe('2026-01-20');
+      expect(aapl!.filingDate).toBe('2026-03-15');
       expect(aapl!.amount).toBe('$1,001 - $15,000');
       expect(aapl!.assetType).toBe('ST');
       expect(aapl!.assetTypeLabel).toBe('Stock');
@@ -177,12 +255,12 @@ describe('SenateDisclosureService', () => {
       setupFetchMock();
       const trades = await service.getTradesForMember('T000476');
 
-      // AAPL: 01/20/2021 → 03/15/2021 = 54 days
+      // AAPL: 2026-01-20 → 2026-03-15 = 54 days
       const aapl = trades.find(t => t.ticker === 'AAPL');
       expect(aapl!.daysToDisclose).toBe(54);
       expect(aapl!.isLateFiling).toBe(true);
 
-      // MSFT: 02/10/2021 → 03/15/2021 = 33 days
+      // MSFT: 2026-02-10 → 2026-03-15 = 33 days
       const msft = trades.find(t => t.ticker === 'MSFT');
       expect(msft!.daysToDisclose).toBe(33);
       expect(msft!.isLateFiling).toBe(false);
@@ -204,7 +282,7 @@ describe('SenateDisclosureService', () => {
       expect(trades[0]!.owner).toBe('Dependent Child');
     });
 
-    it('handles "--" ticker as null', async () => {
+    it('handles null ticker', async () => {
       setupFetchMock();
       const trades = await service.getTradesForMember('T000476');
 
@@ -212,6 +290,15 @@ describe('SenateDisclosureService', () => {
       expect(noTicker).toBeDefined();
       expect(noTicker!.ticker).toBeNull();
       expect(noTicker!.assetType).toBe('OT');
+    });
+
+    it('deduplicates rows with the same dataset ID', async () => {
+      setupFetchMock();
+      const trades = await service.getTradesForMember('T000476');
+
+      // Fixture contains a duplicated Private Equity Fund row
+      const lpTrades = trades.filter(t => t.assetDescription === 'Private Equity Fund LP');
+      expect(lpTrades.length).toBe(1);
     });
 
     it('filters out paper filing entries without tickers', async () => {
@@ -229,9 +316,9 @@ describe('SenateDisclosureService', () => {
       expect(trades).toEqual([]);
     });
 
-    it('returns empty array for senator with no transactions', async () => {
+    it('excludes House filers from the Senate index', async () => {
       setupFetchMock();
-      const trades = await service.getTradesForMember('E000001');
+      const trades = await service.getTradesForMember('P000197');
 
       expect(trades).toEqual([]);
     });
@@ -243,45 +330,40 @@ describe('SenateDisclosureService', () => {
       expect(trades.length).toBe(3);
     });
 
-    it('maps amount "Unknown" to $0 - $0', async () => {
-      setupFetchMock();
-      // Hickenlooper has a PDF filing with amount "Unknown"
-      // But it gets filtered, so let's use a modified fixture
-      const modifiedSenators = [
-        {
-          ...FIXTURE_SENATORS[0],
-          bioguide: 'TEST01',
-          transactions: [
+    it('maps null amount label to $0 - $0', async () => {
+      const filerTrades = {
+        senate_thomash_tuberville: {
+          filer: FIXTURE_FILERS[0],
+          trades: [
             {
-              transaction_date: '01/20/2021',
+              id: 'senate_test_t0',
+              filing_id: 'senate_test',
+              transaction_date: '2026-01-20',
+              filing_date: '2026-02-01',
               owner: 'Self',
               ticker: 'AAPL',
-              asset_description: 'Apple Inc.',
+              asset_name: 'Apple Inc.',
               asset_type: 'Stock',
-              type: 'Purchase',
-              amount: 'Unknown',
-              comment: '--',
-              ptr_link: 'https://efdsearch.senate.gov/search/view/ptr/test/',
+              transaction_type: 'Purchase',
+              amount_range_label: null,
+              doc_url: 'https://efdsearch.senate.gov/search/view/ptr/test/',
+              filing_type: 'PTR',
             },
           ],
         },
-      ];
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(modifiedSenators),
-      });
+      };
+      setupFetchMock(FIXTURE_FILERS, filerTrades);
 
-      const svc = new SenateDisclosureService();
-      const trades = await svc.getTradesForMember('TEST01');
+      const trades = await service.getTradesForMember('T000476');
       expect(trades[0]!.amount).toBe('$0 - $0');
     });
 
-    it('extracts filing ID from ptr_link UUID', async () => {
+    it('extracts filing ID from doc_url UUID', async () => {
       setupFetchMock();
       const trades = await service.getTradesForMember('T000476');
 
       const aapl = trades.find(t => t.ticker === 'AAPL');
-      expect(aapl!.filingId).toBe('1111-2222-3333-4444');
+      expect(aapl!.filingId).toBe('11111111-2222-3333-4444-555555555555');
     });
 
     it('sorts trades by transaction date descending', async () => {
@@ -312,6 +394,28 @@ describe('SenateDisclosureService', () => {
     });
   });
 
+  describe('getAllSenatorTrades', () => {
+    it('returns trades grouped by bioguide ID', async () => {
+      setupFetchMock();
+      const map = await service.getAllSenatorTrades();
+
+      expect(map.get('T000476')?.length).toBe(3);
+      expect(map.get('O000174')?.length).toBe(1);
+      // Hickenlooper's only row is a filtered paper filing → no entry
+      expect(map.has('H001042')).toBe(false);
+    });
+
+    it('skips filers whose trade file fails to load', async () => {
+      const filerTrades = { ...FIXTURE_FILER_TRADES };
+      delete filerTrades['senate_jon_ossoff'];
+      setupFetchMock(FIXTURE_FILERS, filerTrades);
+
+      const map = await service.getAllSenatorTrades();
+      expect(map.get('T000476')?.length).toBe(3);
+      expect(map.has('O000174')).toBe(false);
+    });
+  });
+
   describe('hasMemberData', () => {
     it('returns true for known senator', async () => {
       setupFetchMock();
@@ -321,6 +425,13 @@ describe('SenateDisclosureService', () => {
     it('returns false for unknown senator', async () => {
       setupFetchMock();
       expect(await service.hasMemberData('X999999')).toBe(false);
+    });
+
+    it('returns false for a filer without a resolvable bioguide ID', async () => {
+      setupFetchMock();
+      // 'A Mystery' has no photo_url, so no bioguide mapping exists
+      const map = await service.getAllSenatorTrades();
+      expect([...map.keys()].every(k => /^[A-Z]\d{6}$/.test(k))).toBe(true);
     });
 
     it('returns false on fetch error', async () => {
@@ -338,7 +449,7 @@ describe('SenateDisclosureService', () => {
       });
 
       await expect(service.getTradesForMember('T000476')).rejects.toThrow(
-        'Senate Stock Watcher returned 500'
+        'Congress Trading Monitor returned 500'
       );
     });
   });

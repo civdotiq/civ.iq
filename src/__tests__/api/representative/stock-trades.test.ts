@@ -142,7 +142,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     expect(response.status).toBe(200);
     expect(mockSenateGetTrades).toHaveBeenCalledWith('T000476');
     expect(mockHouseGetTrades).not.toHaveBeenCalled();
-    expect(data.metadata.dataSource).toBe('senate-stock-watcher');
+    expect(data.metadata.dataSource).toBe('congress-trading-monitor');
     expect(data.trades.length).toBe(1);
   });
 
@@ -165,7 +165,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const response = await GET(req, { params });
     const data: StockTradeResponse = await response.json();
 
-    expect(data.metadata.coveragePeriod).toBe('2012-2021');
+    expect(data.metadata.coveragePeriod).toBe(`2015-${new Date().getFullYear()}`);
   });
 
   it('returns Senate-specific note when trades found', async () => {
@@ -177,7 +177,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const data: StockTradeResponse = await response.json();
 
     expect(data.metadata.note).toContain('Senate Office of Public Records');
-    expect(data.metadata.note).toContain('Senate Stock Watcher');
+    expect(data.metadata.note).toContain('Congress Trading Monitor');
   });
 
   it('returns Senate-specific note when no trades found', async () => {
@@ -188,7 +188,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const response = await GET(req, { params });
     const data: StockTradeResponse = await response.json();
 
-    expect(data.metadata.note).toContain('Senate Stock Watcher dataset');
+    expect(data.metadata.note).toContain('Congress Trading Monitor dataset');
   });
 
   it('returns empty trades with House note when House member has no trades', async () => {
