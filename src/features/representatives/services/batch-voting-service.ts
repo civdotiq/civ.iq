@@ -836,14 +836,12 @@ export class BatchVotingService {
           // Continue if there's a next URL or if we haven't fetched all items yet
           hasMore = !!pagination.next || offset + currentPageSize < totalCount;
 
-          // If we've already fetched enough votes for the requested limit, we can stop early
-          if (allVotes.length >= limit * 2) {
-            logger.info('Reached sufficient votes for requested limit', {
-              fetched: allVotes.length,
-              requested: limit,
-            });
-            hasMore = false;
-          }
+          // No early stop: the API returns pages ordered by updateDate (the
+          // sort param is broken, see below), so "enough votes" from early
+          // pages is an arbitrary subset — stopping there made small-limit
+          // callers return stale votes (April rolls as "newest" in July).
+          // Every page must be fetched before the client-side sort below;
+          // the full list is cached under this congress/session key anyway.
         } else {
           // No pagination info means this is likely the last/only page
           hasMore = false;
