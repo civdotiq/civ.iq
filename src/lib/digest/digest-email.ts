@@ -75,7 +75,7 @@ export function digestConfirmationEmail(verifyUrl: string): EmailContent {
 
 export function digestIssueEmail(issue: DigestIssue, unsubscribeUrl: string): EmailContent {
   const siteUrl = getSiteUrl();
-  const issueUrl = `${siteUrl}/digest/${issue.weekId}`;
+  const issueUrl = `${siteUrl}/digest/${issue.state.toLowerCase()}/${issue.weekId}`;
   const range = parseWeekId(issue.weekId);
   const rangeLabel = range ? formatWeekRange(range) : issue.weekId;
   const subject = `This week in Congress — ${rangeLabel}`;

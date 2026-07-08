@@ -224,6 +224,19 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Legacy digest redirect: the digest is now per-state at
+    // /digest/{state}/{week}. Old single-segment /digest/{week} URLs
+    // (week-shaped, e.g. /digest/2026-W26) are indexed and canonical, so
+    // 308 them to the Michigan default rather than 404. State/archive
+    // paths (/digest/mi, /digest/mi/2026-W26) have >1 segment and are
+    // untouched by this single-segment match.
+    const legacyDigest = request.nextUrl.pathname.match(/^\/digest\/(\d{4}-W\d{2})\/?$/i);
+    if (legacyDigest?.[1]) {
+      const redirectUrl = new URL(`/digest/mi/${legacyDigest[1].toUpperCase()}`, request.nextUrl);
+      redirectUrl.search = request.nextUrl.search;
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+
     // Validate request
     const validationResult = validateRequest(request);
     if (!validationResult.isValid) {

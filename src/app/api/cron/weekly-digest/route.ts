@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { createToken } from '@/lib/alerts/token';
 import { sendEmailBatch } from '@/lib/alerts/email-sender';
-import { getDigestIssue } from '@/lib/digest/assemble';
+import { getDigestIssue, DEFAULT_DIGEST_STATE } from '@/lib/digest/assemble';
 import { digestIssueEmail } from '@/lib/digest/digest-email';
 import { latestCompleteWeekId } from '@/lib/digest/week';
 import { listVerifiedDigestSubscribers } from '@/lib/digest/subscription-store';
@@ -38,14 +38,17 @@ export async function GET(request: NextRequest) {
   const weekId = request.nextUrl.searchParams.get('week') ?? latestCompleteWeekId();
   const dryRun = request.nextUrl.searchParams.get('dryRun') === 'true';
 
+  // Email digest is Michigan-only until per-state subscriptions ship
+  // (Phase 3). State is in the key/marker now so that rollout is additive.
+  const state = DEFAULT_DIGEST_STATE;
   const cache = getRedisCache();
-  const sentKey = `digest:sent:${weekId}`;
+  const sentKey = `digest:sent:${state}:${weekId}`;
 
   if (!dryRun && (await cache.exists(sentKey))) {
     return NextResponse.json({ ok: true, weekId, skipped: 'already sent' });
   }
 
-  const issue = await getDigestIssue(weekId);
+  const issue = await getDigestIssue(state, weekId);
   if (!issue) {
     logger.error('[Digest] Cron could not assemble issue', new Error('assembly failed'), {
       weekId,

@@ -72,7 +72,7 @@ export function issueHighlights(votes: DigestVote[], bills: DigestBill[]): Issue
   return highlights;
 }
 
-export interface MiSplit {
+export interface DelegationSplit {
   yeas: number;
   nays: number;
   other: number;
@@ -85,13 +85,13 @@ export interface MiSplit {
  * "Split by party" requires every voting D on one side and every voting
  * R on the other; a single crossover flips the note.
  */
-export function miSplit(vote: DigestVote): MiSplit {
+export function delegationSplit(vote: DigestVote): DelegationSplit {
   let yeas = 0;
   let nays = 0;
   let other = 0;
   const sides = new Map<string, Set<'Yea' | 'Nay'>>();
 
-  for (const member of vote.miPositions) {
+  for (const member of vote.delegationPositions) {
     if (member.position === 'Yea') yeas++;
     else if (member.position === 'Nay') nays++;
     else {

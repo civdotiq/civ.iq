@@ -19,6 +19,7 @@ import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summar
 import { attachVoteMeanings } from './vote-meaning';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { isValidStateCode, getStateName } from '@/lib/data/us-states';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import type { StandardizedVote } from '@/features/representatives/services/batch-voting-service';
@@ -33,8 +34,12 @@ import type {
   DigestVote,
 } from './types';
 
-const FEATURED_STATE = 'MI';
-const FEATURED_STATE_NAME = 'Michigan';
+/**
+ * Canonical default state while the digest is Michigan-first (growth
+ * strategy: MI beachhead before the 50-state wire-service rollout). Used
+ * for the legacy `/digest/{week}` redirect and the email cron.
+ */
+export const DEFAULT_DIGEST_STATE = 'MI';
 /** Finished weeks are immutable; cache the assembled issue for 30 days. */
 const ISSUE_TTL_SECONDS = 30 * 24 * 60 * 60;
 const MAX_BILLS = 15;
@@ -62,10 +67,14 @@ function weeksAgo(weekStart: Date, now: Date): number {
   return Math.max(0, Math.floor((now.getTime() - weekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
 }
 
-function toDigestVote(vote: StandardizedVote, delegation: DigestDelegationMember[]): DigestVote {
+function toDigestVote(
+  vote: StandardizedVote,
+  delegation: DigestDelegationMember[],
+  state: string
+): DigestVote {
   const byBioguide = new Map(delegation.map(m => [m.bioguideId, m]));
-  const miPositions = vote.memberVotes
-    .filter(m => m.state === FEATURED_STATE)
+  const delegationPositions = vote.memberVotes
+    .filter(m => m.state === state)
     .map(m => ({
       bioguideId: m.bioguideId,
       name: m.name,
@@ -90,14 +99,15 @@ function toDigestVote(vote: StandardizedVote, delegation: DigestDelegationMember
         }
       : undefined,
     sourceUrl: vote.sourceUrl,
-    miPositions,
+    delegationPositions,
   };
 }
 
 async function fetchWeekVotes(
   weekStart: Date,
   weekEnd: Date,
-  delegation: DigestDelegationMember[]
+  delegation: DigestDelegationMember[],
+  state: string
 ): Promise<{ votes: DigestVote[]; failed: boolean }> {
   const congress = getCurrentCongressNumber(weekStart);
   const session = weekEnd.getUTCFullYear() % 2 === 1 ? 1 : 2;
@@ -123,7 +133,7 @@ async function fetchWeekVotes(
       return t >= weekStart.getTime() && t <= weekEnd.getTime();
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .map(v => toDigestVote(v, delegation));
+    .map(v => toDigestVote(v, delegation, state));
 
   return { votes, failed };
 }
@@ -273,8 +283,8 @@ async function fetchWeekFilings(
   return { filings, failed: attempted > 0 && errors === attempted };
 }
 
-async function fetchDelegation(): Promise<DigestDelegationMember[]> {
-  const reps = await RepresentativesCoreService.getRepresentativesByState(FEATURED_STATE);
+async function fetchDelegation(state: string): Promise<DigestDelegationMember[]> {
+  const reps = await RepresentativesCoreService.getRepresentativesByState(state);
   return reps
     .map(r => ({
       bioguideId: r.bioguideId,
@@ -290,29 +300,37 @@ async function fetchDelegation(): Promise<DigestDelegationMember[]> {
 }
 
 /**
- * Assemble (or read from cache) the digest issue for a complete ISO week.
- * Returns null for malformed ids and weeks that haven't finished yet.
+ * Assemble (or read from cache) the digest issue for one state and a
+ * complete ISO week. Returns null for invalid state codes, malformed ids,
+ * and weeks that haven't finished yet.
  */
-export async function getDigestIssue(weekId: string): Promise<DigestIssue | null> {
+export async function getDigestIssue(state: string, weekId: string): Promise<DigestIssue | null> {
+  if (!isValidStateCode(state)) return null;
+  const stateCode = state.toUpperCase();
+  const stateName = getStateName(stateCode);
+  if (!stateName) return null;
+
   const range = parseWeekId(weekId);
   if (!range || !isCompleteWeek(weekId)) return null;
 
   return cachedFetch<DigestIssue | null>(
-    // v4: vote meanings now fall back to Congress.gov CRS summaries for
-    // bare-title bills, so previously procedure-only votes gain plain-language
-    // context. Bump on shape/enrichment changes so long-cached issues
-    // regenerate instead of serving the old shape.
-    `digest:issue:v4:${weekId}`,
+    // v5: issues are now per-state (state segment in the key). Vote-meaning
+    // and bill-summary caches stay national — they're shared across every
+    // state, which is what keeps per-state assembly cheap. Bump on
+    // shape/enrichment changes so long-cached issues regenerate.
+    `digest:issue:v5:${stateCode}:${weekId}`,
     async () => {
-      const delegation = await fetchDelegation();
+      const delegation = await fetchDelegation(stateCode);
       if (delegation.length === 0) {
         // Without the delegation there is no issue worth publishing.
-        logger.error('Digest assembly aborted — empty delegation', new Error('no delegation'));
+        logger.error('Digest assembly aborted — empty delegation', new Error('no delegation'), {
+          state: stateCode,
+        });
         return null;
       }
 
       const [voteResult, billResult, filingResult] = await Promise.all([
-        fetchWeekVotes(range.start, range.end, delegation),
+        fetchWeekVotes(range.start, range.end, delegation, stateCode),
         fetchWeekBills(range.start, range.end),
         fetchWeekFilings(range.start, range.end, delegation),
       ]);
@@ -337,8 +355,8 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
         weekId,
         weekStart: range.start.toISOString(),
         weekEnd: range.end.toISOString(),
-        state: FEATURED_STATE,
-        stateName: FEATURED_STATE_NAME,
+        state: stateCode,
+        stateName,
         delegation,
         votes,
         bills: billResult.bills,

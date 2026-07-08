@@ -66,7 +66,7 @@ export default function DigestIndexPage() {
               {weeks.map(range => (
                 <li key={range.weekId} className="border-b border-gray-100 last:border-b-0">
                   <Link
-                    href={`/digest/${range.weekId}`}
+                    href={`/digest/mi/${range.weekId}`}
                     className="flex items-baseline justify-between p-grid-2 hover:bg-gray-50"
                   >
                     <span className="font-medium">{formatWeekRange(range)}</span>

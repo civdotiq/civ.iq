@@ -7,9 +7,9 @@
  * Weekly digest types.
  *
  * A digest issue is a factual, week-scoped compilation: roll-call votes
- * with the Michigan delegation's positions, bills that moved, and new
- * FEC filings from delegation committees. Facts and citations only — no
- * narrative, no scoring (infrastructure, not investigation).
+ * with the featured state delegation's positions, bills that moved, and
+ * new FEC filings from delegation committees. Facts and citations only —
+ * no narrative, no scoring (infrastructure, not investigation).
  */
 
 export interface DigestMemberPosition {
@@ -34,8 +34,8 @@ export interface DigestVote {
     title?: string;
   };
   sourceUrl?: string;
-  /** Michigan delegation positions for this roll call */
-  miPositions: DigestMemberPosition[];
+  /** Featured state's delegation positions for this roll call */
+  delegationPositions: DigestMemberPosition[];
   /**
    * AI plain-language meaning (vote-meaning.ts): what was decided and
    * what each position supported. Absent when generation is
@@ -106,7 +106,7 @@ export interface DigestIssue {
   /** ISO dates for the Monday–Sunday window */
   weekStart: string;
   weekEnd: string;
-  /** Featured state (MI while the digest is Michigan-flavored) */
+  /** Featured state code (e.g. "MI") and full name (e.g. "Michigan") */
   state: string;
   stateName: string;
   delegation: DigestDelegationMember[];

@@ -2,24 +2,25 @@
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  *
- * Weekly digest issue — one complete ISO week of votes (with the Michigan
- * delegation's positions), bills that moved, and new FEC filings.
+ * Weekly digest issue — one complete ISO week of votes (with the featured
+ * state delegation's positions), bills that moved, and new FEC filings.
  */
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { RepLink, BillLink, VoteLink } from '@/components/shared/links/EntityLinks';
 import { getPartyTextClass } from '@/lib/party-colors';
 import { getDigestIssue } from '@/lib/digest/assemble';
 import { parseWeekId, formatWeekRange } from '@/lib/digest/week';
+import { getStateName, isValidStateCode } from '@/lib/data/us-states';
 import {
   voteQuestionContext,
   fecFormContext,
   billActionContext,
   extractBillRefs,
 } from '@/lib/digest/context';
-import { issueHighlights, orderVotes, orderBills, miSplit } from '@/lib/digest/curate';
+import { issueHighlights, orderVotes, orderBills, delegationSplit } from '@/lib/digest/curate';
 import { VoteMarginBar, DelegationBreakdown } from '@/components/digest/DigestVisuals';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
@@ -28,17 +29,19 @@ export const revalidate = 3600;
 export const maxDuration = 60;
 
 interface PageProps {
-  params: Promise<{ week: string }>;
+  params: Promise<{ state: string; week: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { week } = await params;
+  const { state, week } = await params;
   const range = parseWeekId(week);
   const label = range ? formatWeekRange(range) : week;
+  const stateName = getStateName(state) ?? state.toUpperCase();
+  const canonical = `https://civdotiq.org/digest/${state.toLowerCase()}/${week}`;
   return {
-    title: `This week in Congress — ${label} | CIV.IQ weekly digest`,
-    description: `Roll-call votes with every Michigan position, bills that moved, and new FEC filings for ${label}. Public records with citations.`,
-    alternates: { canonical: `https://civdotiq.org/digest/${week}` },
+    title: `This week in Congress — ${label} | ${stateName} | CIV.IQ weekly digest`,
+    description: `Roll-call votes with every ${stateName} position, bills that moved, and new FEC filings for ${label}. Public records with citations.`,
+    alternates: { canonical },
   };
 }
 
@@ -65,10 +68,18 @@ function ResultChip({ result, yeas, nays }: { result: string; yeas: number; nays
   );
 }
 
-function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
+function VoteCard({
+  vote,
+  congress,
+  stateName,
+}: {
+  vote: DigestVote;
+  congress: number;
+  stateName: string;
+}) {
   const questionCtx = voteQuestionContext(vote.question);
   const underlying = extractBillRefs(vote.bill?.title, congress, vote.bill?.billId);
-  const split = miSplit(vote);
+  const split = delegationSplit(vote);
   return (
     <div className="border-2 border-gray-200 bg-white p-grid-2">
       <div className="flex flex-wrap items-center justify-between gap-x-grid-2 gap-y-1">
@@ -121,12 +132,13 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
           ))}
         </p>
       )}
-      {vote.miPositions.length > 0 && (
+      {vote.delegationPositions.length > 0 && (
         <div className="mt-grid-2 border-t border-gray-100 pt-grid-1">
           <p className="text-sm font-semibold text-gray-700">
-            Michigan{split.note ? ` · ${split.note}` : ''}
+            {stateName}
+            {split.note ? ` · ${split.note}` : ''}
           </p>
-          <DelegationBreakdown members={vote.miPositions} />
+          <DelegationBreakdown members={vote.delegationPositions} />
         </div>
       )}
       {vote.sourceUrl && (
@@ -146,22 +158,30 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
 }
 
 /** Procedural votes are subordinate — one dense row, no full card weight. */
-function ProceduralRow({ vote }: { vote: DigestVote }) {
-  const split = miSplit(vote);
+function ProceduralRow({ vote, stateName }: { vote: DigestVote; stateName: string }) {
+  const split = delegationSplit(vote);
   return (
     <div className="flex flex-wrap items-baseline gap-x-grid-2 gap-y-1 border-b border-gray-100 py-grid-1 last:border-b-0">
       <ResultChip result={vote.result} yeas={vote.yeas} nays={vote.nays} />
       <span className="flex-1 text-sm text-gray-700">
         <VoteLink voteId={vote.voteId} label={vote.question} />
       </span>
-      {split.note && <span className="text-xs text-gray-500">Michigan {split.note}</span>}
+      {split.note && (
+        <span className="text-xs text-gray-500">
+          {stateName} {split.note}
+        </span>
+      )}
     </div>
   );
 }
 
 export default async function DigestIssuePage({ params }: PageProps) {
-  const { week } = await params;
-  const issue = await getDigestIssue(week);
+  const { state, week } = await params;
+  if (!isValidStateCode(state)) notFound();
+  // Canonical URLs use a lowercase state code; 308 other casings.
+  if (state !== state.toLowerCase()) permanentRedirect(`/digest/${state.toLowerCase()}/${week}`);
+
+  const issue = await getDigestIssue(state, week);
   if (!issue) notFound();
 
   const range = parseWeekId(issue.weekId);
@@ -194,6 +214,10 @@ export default async function DigestIssuePage({ params }: PageProps) {
           <span className="mx-2">&rsaquo;</span>
           <Link href="/digest" className="hover:text-[#3ea2d4]">
             Weekly digest
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <Link href={`/digest/${issue.state.toLowerCase()}`} className="hover:text-[#3ea2d4]">
+            {issue.stateName}
           </Link>
           <span className="mx-2">&rsaquo;</span>
           <span className="font-medium text-gray-900">{issue.weekId}</span>
@@ -278,7 +302,12 @@ export default async function DigestIssuePage({ params }: PageProps) {
           ) : (
             <div className="mt-grid-2 space-y-grid-2">
               {substantive.map(vote => (
-                <VoteCard key={vote.voteId} vote={vote} congress={congress} />
+                <VoteCard
+                  key={vote.voteId}
+                  vote={vote}
+                  congress={congress}
+                  stateName={issue.stateName}
+                />
               ))}
               {procedural.length > 0 && (
                 <div className="mt-grid-3 border-2 border-gray-200 bg-white p-grid-2">
@@ -292,7 +321,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
                   </p>
                   <div className="mt-grid-1">
                     {procedural.map(vote => (
-                      <ProceduralRow key={vote.voteId} vote={vote} />
+                      <ProceduralRow key={vote.voteId} vote={vote} stateName={issue.stateName} />
                     ))}
                   </div>
                 </div>

@@ -3,7 +3,13 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { issueHighlights, miSplit, billStage, orderBills, orderVotes } from '@/lib/digest/curate';
+import {
+  issueHighlights,
+  delegationSplit,
+  billStage,
+  orderBills,
+  orderVotes,
+} from '@/lib/digest/curate';
 import type { DigestBill, DigestVote } from '@/lib/digest/types';
 
 function vote(overrides: Partial<DigestVote>): DigestVote {
@@ -15,7 +21,7 @@ function vote(overrides: Partial<DigestVote>): DigestVote {
     result: 'Passed',
     yeas: 220,
     nays: 210,
-    miPositions: [],
+    delegationPositions: [],
     ...overrides,
   };
 }
@@ -71,40 +77,40 @@ describe('digest curation', () => {
     });
   });
 
-  describe('miSplit', () => {
+  describe('delegationSplit', () => {
     it('reports a clean party split', () => {
       const v = vote({
-        miPositions: [
+        delegationPositions: [
           position('Republican', 'Yea', 'r1'),
           position('Republican', 'Yea', 'r2'),
           position('Democratic', 'Nay', 'd1'),
           position('Democratic', 'Nay', 'd2'),
         ],
       });
-      expect(miSplit(v)).toEqual({ yeas: 2, nays: 2, other: 0, note: 'split by party' });
+      expect(delegationSplit(v)).toEqual({ yeas: 2, nays: 2, other: 0, note: 'split by party' });
     });
 
     it('reports unanimity and crossovers', () => {
       const unanimous = vote({
-        miPositions: [position('R', 'Yea', 'r1'), position('D', 'Yea', 'd1')],
+        delegationPositions: [position('R', 'Yea', 'r1'), position('D', 'Yea', 'd1')],
       });
-      expect(miSplit(unanimous).note).toBe('unanimous');
+      expect(delegationSplit(unanimous).note).toBe('unanimous');
 
       const crossed = vote({
-        miPositions: [
+        delegationPositions: [
           position('R', 'Yea', 'r1'),
           position('D', 'Nay', 'd1'),
           position('D', 'Yea', 'd2'),
         ],
       });
-      expect(miSplit(crossed).note).toBe('crossed party lines');
+      expect(delegationSplit(crossed).note).toBe('crossed party lines');
     });
 
     it('counts non-voting members separately and stays quiet on tiny samples', () => {
       const v = vote({
-        miPositions: [position('R', 'Not Voting', 'r1'), position('D', 'Yea', 'd1')],
+        delegationPositions: [position('R', 'Not Voting', 'r1'), position('D', 'Yea', 'd1')],
       });
-      expect(miSplit(v)).toEqual({ yeas: 1, nays: 0, other: 1, note: null });
+      expect(delegationSplit(v)).toEqual({ yeas: 1, nays: 0, other: 1, note: null });
     });
   });
 
