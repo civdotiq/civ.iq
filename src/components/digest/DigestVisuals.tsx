@@ -4,15 +4,15 @@
  *
  * Digest data visuals — server components, no interactivity.
  *
- * Both are graphical integrity, not decoration (Tufte): the margin bar
- * makes a vote's decisiveness visible without reading numbers; the
- * delegation strip turns a wall of names into a scannable party pattern.
- * Party color identifies party (the one sanctioned use); fill vs. outline
- * encodes the neutral Yea/Nay dimension.
+ * The margin bar makes a vote's decisiveness visible without reading
+ * numbers (Tufte data-ink). The delegation breakdown answers the reader's
+ * real question — who voted Yea, who Nay, who didn't — by grouping under
+ * plain position labels; party is a secondary cue in the name color, not
+ * the organizing axis.
  */
 
 import Link from 'next/link';
-import { getPartyHexColor } from '@/lib/party-colors';
+import { getPartyTextClass } from '@/lib/party-colors';
 import type { DigestMemberPosition } from '@/lib/digest/types';
 
 /**
@@ -37,51 +37,55 @@ export function VoteMarginBar({ yeas, nays }: { yeas: number; nays: number }) {
   );
 }
 
-const CELL_BASE =
-  'inline-flex items-center border-2 px-1.5 py-0.5 text-xs font-medium leading-none transition-colors';
+function surnameOf(name: string): string {
+  return name.split(' ').slice(-1)[0] ?? name;
+}
 
-function DelegationCell({ member }: { member: DigestMemberPosition }) {
-  const hex = getPartyHexColor(member.party);
-  const voted = member.position === 'Yea' || member.position === 'Nay';
-  const label = `${member.name} (${member.party.charAt(0)}${member.district ? `-${member.district}` : ''}) — ${member.position}`;
-
-  let style: React.CSSProperties;
-  if (member.position === 'Yea') {
-    // Filled: party color background, white text.
-    style = { backgroundColor: hex, borderColor: hex, color: '#fff' };
-  } else if (member.position === 'Nay') {
-    // Outline: party color border and text on white.
-    style = { borderColor: hex, color: hex };
-  } else {
-    // Not voting / present: neutral gray.
-    style = { borderColor: '#d1d5db', color: '#9ca3af' };
-  }
-
-  const surname = member.name.split(' ').slice(-1)[0] ?? member.name;
+function MemberName({ member }: { member: DigestMemberPosition }) {
+  const label = `${member.name} (${member.party.charAt(0)}${member.district ? `-${member.district}` : ''})`;
   return (
     <Link
       href={`/representative/${member.bioguideId}`}
       title={label}
-      aria-label={label}
-      className={`${CELL_BASE} hover:opacity-80 ${voted ? '' : 'line-through'}`}
-      style={style}
+      className={`hover:underline ${getPartyTextClass(member.party)}`}
     >
-      {surname}
+      {surnameOf(member.name)}
     </Link>
   );
 }
 
 /**
- * One cell per delegation member: party color = party, filled = Yea,
- * outline = Nay, struck gray = didn't vote. Every cell links to the member.
+ * The delegation grouped by how they voted — Yea, then Nay, then didn't
+ * vote — each under a plain label. Position is the structure; party shows
+ * only in the name color (red = R, blue = D), so a "crossed party lines"
+ * vote reads at a glance: all-blue names sitting in the Nay row.
+ * Empty groups are omitted (the card header already carries the counts).
  */
-export function DelegationStrip({ members }: { members: DigestMemberPosition[] }) {
+export function DelegationBreakdown({ members }: { members: DigestMemberPosition[] }) {
   if (members.length === 0) return null;
+  const groups = [
+    { label: 'Yea', list: members.filter(m => m.position === 'Yea') },
+    { label: 'Nay', list: members.filter(m => m.position === 'Nay') },
+    {
+      label: 'Not voting',
+      list: members.filter(m => m.position !== 'Yea' && m.position !== 'Nay'),
+    },
+  ].filter(g => g.list.length > 0);
+
   return (
-    <div className="mt-1 flex flex-wrap gap-1">
-      {members.map(m => (
-        <DelegationCell key={m.bioguideId} member={m} />
+    <dl className="mt-1 space-y-1">
+      {groups.map(group => (
+        <div key={group.label} className="flex gap-grid-2 text-sm">
+          <dt className="w-[6.5rem] shrink-0 text-xs font-bold uppercase tracking-[0.05em] text-gray-500">
+            {group.label} ({group.list.length})
+          </dt>
+          <dd className="flex flex-1 flex-wrap gap-x-grid-2 gap-y-0.5">
+            {group.list.map(m => (
+              <MemberName key={m.bioguideId} member={m} />
+            ))}
+          </dd>
+        </div>
       ))}
-    </div>
+    </dl>
   );
 }

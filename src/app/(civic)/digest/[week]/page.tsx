@@ -20,7 +20,7 @@ import {
   extractBillRefs,
 } from '@/lib/digest/context';
 import { issueHighlights, orderVotes, orderBills, miSplit } from '@/lib/digest/curate';
-import { VoteMarginBar, DelegationStrip } from '@/components/digest/DigestVisuals';
+import { VoteMarginBar, DelegationBreakdown } from '@/components/digest/DigestVisuals';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
@@ -124,11 +124,9 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
       {vote.miPositions.length > 0 && (
         <div className="mt-grid-2 border-t border-gray-100 pt-grid-1">
           <p className="text-sm font-semibold text-gray-700">
-            Michigan: {split.yeas} Yea – {split.nays} Nay
-            {split.other > 0 ? `, ${split.other} not voting` : ''}
-            {split.note ? ` · ${split.note}` : ''}
+            Michigan{split.note ? ` · ${split.note}` : ''}
           </p>
-          <DelegationStrip members={vote.miPositions} />
+          <DelegationBreakdown members={vote.miPositions} />
         </div>
       )}
       {vote.sourceUrl && (
@@ -265,17 +263,9 @@ export default async function DigestIssuePage({ params }: PageProps) {
 
         {/* Votes */}
         <section className="mt-grid-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-grid-2">
-            <h2 className="text-xl font-bold tracking-[0.02em]">
-              Roll-call votes, with every {issue.stateName} position
-            </h2>
-            {issue.votes.length > 0 && !issue.unavailable.includes('votes') && (
-              <span className="text-xs text-gray-500">
-                Delegation: <span className="font-semibold text-gray-700">filled = Yea</span>,{' '}
-                <span className="font-semibold text-gray-700">outline = Nay</span>
-              </span>
-            )}
-          </div>
+          <h2 className="text-xl font-bold tracking-[0.02em]">
+            Roll-call votes, with every {issue.stateName} position
+          </h2>
           {issue.unavailable.includes('votes') ? (
             <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
               Vote data is unavailable for this week — the upstream source could not be reached.
