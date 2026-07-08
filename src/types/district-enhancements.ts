@@ -70,6 +70,31 @@ export interface ServicesHealthProfile {
         highCI: number | null;
       }>;
     }>;
+    // Population-weighted DISTRICT estimate aggregated from PLACES census-tract
+    // values (tracts nest inside districts via the Census CD-to-tract crosswalk;
+    // weighted by tract adult population). This is a real district figure, not a
+    // county value. null = below the coverage threshold or no tract data — fall
+    // back to the county table above. See cdc-places-district-estimate.ts.
+    districtEstimate: {
+      dataYear: string | null;
+      method: string; // plain-language methodology note
+      measures: Array<{
+        measureId: string;
+        label: string;
+        unit: '%';
+        value: number | null; // weighted crude prevalence; null below threshold
+        lowCI: number | null; // approximate, pop-weighted mean of tract limits
+        highCI: number | null;
+        coverage: {
+          tractsUsed: number;
+          tractsExcluded: number; // had a value but no usable weight
+          adultPopCovered: number;
+          districtAdultPop: number;
+          pctCovered: number; // 0-1
+        };
+        estimateUnavailableReason?: string;
+      }>;
+    } | null;
   } | null;
 }
 

@@ -59,6 +59,76 @@ const PLACES_SHORT_LABELS: Record<string, string> = {
   CSMOKING: 'Smoking',
 };
 
+type PublicHealthData = NonNullable<ServicesHealthProfile['publicHealth']>;
+
+// County-level PLACES detail: per-measure range cards + a county-by-measure
+// table. Used as the source drill-down beneath the district estimate, and as
+// the primary display when no district estimate meets the coverage threshold.
+function renderCountyTable(
+  publicHealth: PublicHealthData,
+  counties: Array<{ fips: string; name: string }>
+) {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {publicHealth.measures.map(measure => {
+          const values = measure.counties.map(c => c.value);
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const display =
+            min === max ? formatPercentage(min) : `${min.toFixed(1)}–${max.toFixed(1)}%`;
+          return (
+            <div
+              key={measure.measureId}
+              className="bg-gray-50 border-aicher border-gray-400 p-grid-3"
+            >
+              <div className="text-2xl font-bold text-gray-900">{display}</div>
+              <p className="text-sm text-gray-700 mt-1">{measure.label}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {measure.counties.length === 1
+                  ? `${measure.counties[0]?.name} County`
+                  : `Range across ${measure.counties.length} counties`}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {counties.length > 1 && (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm border-2 border-black">
+            <thead>
+              <tr className="border-b-2 border-black text-left">
+                <th className="p-2 font-semibold">County</th>
+                {publicHealth.measures.map(measure => (
+                  <th key={measure.measureId} className="p-2 font-semibold">
+                    {PLACES_SHORT_LABELS[measure.measureId] ?? measure.measureId}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {counties.map(county => (
+                <tr key={county.fips} className="border-b border-gray-300">
+                  <td className="p-2">{county.name}</td>
+                  {publicHealth.measures.map(measure => {
+                    const entry = measure.counties.find(c => c.fips === county.fips);
+                    return (
+                      <td key={measure.measureId} className="p-2">
+                        {entry != null ? formatPercentage(entry.value) : '—'}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
 function getStarRating(rating: number): string {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -145,7 +215,13 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
     services.education.teacherToStudentRatio != null;
 
   const publicHealth = services.publicHealth;
-  const hasPublicHealthData = publicHealth != null && publicHealth.measures.length > 0;
+  const districtEstimate = publicHealth?.districtEstimate ?? null;
+  const estimateMeasures = districtEstimate?.measures.filter(m => m.value != null) ?? [];
+  const hasDistrictEstimate = estimateMeasures.length > 0;
+  const partialEstimateCoverage =
+    districtEstimate != null && districtEstimate.measures.some(m => m.value == null);
+  const hasPublicHealthData =
+    publicHealth != null && (publicHealth.measures.length > 0 || hasDistrictEstimate);
 
   const publicHealthCounties: Array<{ fips: string; name: string }> = [];
   if (publicHealth) {
@@ -344,74 +420,73 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         </div>
       )}
 
-      {/* Public Health — CDC PLACES county-level crude prevalence */}
+      {/* Public Health — CDC PLACES. Lead with the population-weighted district
+          estimate (tract aggregation); county figures are the source drill-down. */}
       {hasPublicHealthData && publicHealth && (
         <div className="mb-6">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
             <CheckIcon className="w-5 h-5 mr-2 text-civiq-blue" />
             Public Health & Prevention
           </h4>
-          <p className="text-xs text-gray-500 mb-4">
-            CDC PLACES county estimates{publicHealth.dataYear ? ` (${publicHealth.dataYear})` : ''}{' '}
-            — share of adults, for the {publicHealthCounties.length}{' '}
-            {publicHealthCounties.length === 1 ? 'county' : 'counties'} overlapping this district.
-            PLACES does not publish district-level figures.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {publicHealth.measures.map(measure => {
-              const values = measure.counties.map(c => c.value);
-              const min = Math.min(...values);
-              const max = Math.max(...values);
-              const display =
-                min === max ? formatPercentage(min) : `${min.toFixed(1)}–${max.toFixed(1)}%`;
-              return (
-                <div
-                  key={measure.measureId}
-                  className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3"
-                >
-                  <div className="text-2xl font-bold text-civiq-blue">{display}</div>
-                  <p className="text-sm text-civiq-blue mt-1">{measure.label}</p>
-                  <p className="text-xs text-civiq-blue mt-1">
-                    {measure.counties.length === 1
-                      ? `${measure.counties[0]?.name} County`
-                      : `Range across ${measure.counties.length} counties`}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
 
-          {publicHealthCounties.length > 1 && (
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full text-sm border-2 border-black">
-                <thead>
-                  <tr className="border-b-2 border-black text-left">
-                    <th className="p-2 font-semibold">County</th>
-                    {publicHealth.measures.map(measure => (
-                      <th key={measure.measureId} className="p-2 font-semibold">
-                        {PLACES_SHORT_LABELS[measure.measureId] ?? measure.measureId}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {publicHealthCounties.map(county => (
-                    <tr key={county.fips} className="border-b border-gray-300">
-                      <td className="p-2">{county.name}</td>
-                      {publicHealth.measures.map(measure => {
-                        const entry = measure.counties.find(c => c.fips === county.fips);
-                        return (
-                          <td key={measure.measureId} className="p-2">
-                            {entry != null ? formatPercentage(entry.value) : '—'}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {hasDistrictEstimate && districtEstimate ? (
+            <>
+              <p className="text-xs text-gray-500 mb-4">
+                District estimate
+                {districtEstimate.dataYear ? ` (${districtEstimate.dataYear})` : ''} — share of
+                adults, as a population-weighted average of CDC PLACES census-tract rates for this
+                district. Confidence range is approximate. County source figures are below.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {estimateMeasures.map(measure => (
+                  <div
+                    key={measure.measureId}
+                    className="bg-civiq-blue/10 border-aicher border-civiq-blue p-grid-3"
+                  >
+                    <div className="text-2xl font-bold text-civiq-blue">
+                      {formatPercentage(measure.value as number)}
+                    </div>
+                    <p className="text-sm text-civiq-blue mt-1">{measure.label}</p>
+                    {measure.lowCI != null && measure.highCI != null && (
+                      <p className="text-xs text-civiq-blue mt-1">
+                        ≈ {measure.lowCI.toFixed(1)}–{measure.highCI.toFixed(1)}% range
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {Math.round(measure.coverage.pctCovered * 100)}% of district covered
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {partialEstimateCoverage && (
+                <p className="text-xs text-amber-700 mt-3">
+                  Some measures are shown only at county level below, where tract coverage falls
+                  under the 80% threshold for a district figure.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-gray-500 mb-4">
+              CDC PLACES county estimates
+              {publicHealth.dataYear ? ` (${publicHealth.dataYear})` : ''} — share of adults, for
+              the {publicHealthCounties.length}{' '}
+              {publicHealthCounties.length === 1 ? 'county' : 'counties'} overlapping this district.
+              A district-level figure is unavailable (tract coverage below the 80% threshold).
+            </p>
           )}
+
+          {publicHealth.measures.length > 0 &&
+            (hasDistrictEstimate ? (
+              <details className="mt-6 group">
+                <summary className="cursor-pointer text-sm font-medium text-civiq-blue">
+                  County source data ({publicHealthCounties.length}{' '}
+                  {publicHealthCounties.length === 1 ? 'county' : 'counties'})
+                </summary>
+                <div className="mt-4">{renderCountyTable(publicHealth, publicHealthCounties)}</div>
+              </details>
+            ) : (
+              <div className="mt-4">{renderCountyTable(publicHealth, publicHealthCounties)}</div>
+            ))}
         </div>
       )}
 

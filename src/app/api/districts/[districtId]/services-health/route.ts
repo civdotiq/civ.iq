@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { fetchDistrictPlacesData } from '@/lib/data-sources/cdc-places-service';
+import { computeDistrictPlacesEstimate } from '@/lib/data-sources/cdc-places-district-estimate';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -141,7 +142,20 @@ async function fetchPublicHealthData(
   const districtNumber = /^\d+$/.test(districtPart) ? parseInt(districtPart, 10) : 0;
   const stateCode = districtId.split('-')[0]?.toUpperCase() ?? '';
 
-  return fetchDistrictPlacesData(stateCode, districtNumber);
+  // County table (provenance / drill-down) + population-weighted district
+  // estimate (tract aggregation), fetched in parallel. Either may be null.
+  const [county, districtEstimate] = await Promise.all([
+    fetchDistrictPlacesData(stateCode, districtNumber),
+    computeDistrictPlacesEstimate(stateCode, districtNumber),
+  ]);
+
+  if (!county && !districtEstimate) return null;
+
+  return {
+    dataYear: county?.dataYear ?? districtEstimate?.dataYear ?? null,
+    measures: county?.measures ?? [],
+    districtEstimate,
+  };
 }
 
 function getHealthcareData(): ServicesHealthProfile['healthcare'] {
@@ -310,13 +324,16 @@ export async function GET(
             censusAsfin:
               'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
             cdc: 'CDC PLACES County Data - https://data.cdc.gov/resource/swc5-untb',
+            cdcTract:
+              'CDC PLACES Census Tract Data - https://data.cdc.gov/resource/cwsq-ngmh (district estimate)',
             healthcare: 'Data unavailable - no real API source',
           },
           notes: [
             'null values mean data is unavailable from real government sources - never estimated',
             'Education data from Department of Education API when available',
             'Federal education funding is the statewide federal revenue to school systems (Census ASFIN survey), not district-specific',
-            'Public health figures are CDC PLACES county-level model-based estimates (BRFSS, crude prevalence percentages) for the counties overlapping this district — PLACES does not publish congressional-district figures, so no district number is synthesized',
+            'Public health county table shows CDC PLACES county-level model-based estimates (BRFSS, crude prevalence percentages) for the counties overlapping this district',
+            'publicHealth.districtEstimate is a population-weighted district figure aggregated from CDC PLACES census-tract crude prevalence (weighted by tract adult population, Census CD-to-tract crosswalk); null when tract coverage is below 80% of district adult population',
             'Healthcare data unavailable - real government APIs needed',
           ],
         },
