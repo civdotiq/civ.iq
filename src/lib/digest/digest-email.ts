@@ -10,7 +10,13 @@
  */
 
 import { formatWeekRange, parseWeekId } from './week';
+import { issueHighlights } from './curate';
 import type { DigestIssue } from './types';
+
+/** Minimal escaping for model-derived text interpolated into email HTML. */
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
@@ -89,6 +95,16 @@ export function digestIssueEmail(issue: DigestIssue, unsubscribeUrl: string): Em
     `<h2 style="font-size:18px;margin-bottom:4px">This week in Congress</h2>`,
     `<p style="color:#6b7280;margin-top:0">${rangeLabel} · ${issue.stateName} delegation focus</p>`,
   ];
+
+  const highlights = issueHighlights(issue.votes, issue.bills);
+  if (highlights.closestVote) {
+    const cv = highlights.closestVote;
+    const line = `Closest vote (${cv.yeas}-${cv.nays}): ${cv.meaning?.decided ?? cv.question}`;
+    textLines.push('', line);
+    htmlParts.push(
+      `<p style="border-left:3px solid #000;padding-left:10px;line-height:1.5"><strong>Closest vote (${cv.yeas}-${cv.nays})</strong> — ${escapeHtml(cv.meaning?.decided ?? cv.question)}</p>`
+    );
+  }
 
   const topVotes = issue.votes.slice(0, 5);
   if (topVotes.length > 0) {

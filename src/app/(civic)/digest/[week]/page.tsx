@@ -19,6 +19,7 @@ import {
   billActionContext,
   extractBillRefs,
 } from '@/lib/digest/context';
+import { issueHighlights, orderVotes, orderBills, miSplit } from '@/lib/digest/curate';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
@@ -58,44 +59,43 @@ function positionAbbrev(position: string): string {
 function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
   const questionCtx = voteQuestionContext(vote.question);
   const underlying = extractBillRefs(vote.bill?.title, congress, vote.bill?.billId);
+  const split = miSplit(vote);
   return (
     <div className="border-2 border-gray-200 bg-white p-grid-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-grid-2">
         <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
           {vote.chamber} · {vote.date.slice(0, 10)}
-          {questionCtx?.kind === 'procedural' && (
-            <span className="ml-2 border border-gray-300 px-1 normal-case tracking-normal text-gray-500">
-              Procedural
-            </span>
-          )}
         </span>
         <span className="text-sm font-semibold">
           {vote.result} ({vote.yeas}-{vote.nays})
         </span>
       </div>
-      <p className="mt-grid-1 text-[15px] font-medium leading-snug">
-        <VoteLink voteId={vote.voteId} label={vote.question} />
-      </p>
       {vote.meaning ? (
-        <div className="mt-1 border-l-2 border-[#3ea2d4] pl-2">
-          <p className="text-sm text-gray-800">{vote.meaning.decided}</p>
-          <p className="mt-0.5 text-sm text-gray-600">
+        <>
+          <p className="mt-grid-1 text-[15px] font-medium leading-snug">{vote.meaning.decided}</p>
+          <p className="mt-1 text-sm text-gray-600">
             <span className="font-mono text-xs font-bold">Y</span> = {vote.meaning.yeaMeant}{' '}
             <span className="ml-2 font-mono text-xs font-bold">N</span> = {vote.meaning.nayMeant}
           </p>
-          <p className="mt-0.5 text-xs text-gray-400">
-            AI summary · as of {vote.meaning.generatedAt.slice(0, 10)} ·{' '}
+          <p className="mt-1 text-xs text-gray-400">
+            <VoteLink voteId={vote.voteId} label={vote.question} /> · AI summary · as of{' '}
+            {vote.meaning.generatedAt.slice(0, 10)} ·{' '}
             <Link href="/corrections" className="underline hover:text-[#3ea2d4]">
               report an error
             </Link>
           </p>
-        </div>
+        </>
       ) : (
-        questionCtx && (
-          <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
-            {questionCtx.text}
+        <>
+          <p className="mt-grid-1 text-[15px] font-medium leading-snug">
+            <VoteLink voteId={vote.voteId} label={vote.question} />
           </p>
-        )
+          {questionCtx && (
+            <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
+              {questionCtx.text}
+            </p>
+          )}
+        </>
       )}
       {vote.bill && (
         <p className="mt-1 text-sm text-gray-600">
@@ -114,27 +114,30 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
         </p>
       )}
       {vote.miPositions.length > 0 && (
-        <div className="mt-grid-2 flex flex-wrap gap-x-grid-2 gap-y-1 border-t border-gray-100 pt-grid-1">
-          {vote.miPositions.map(m => (
-            <span key={m.bioguideId} className="text-sm whitespace-nowrap">
-              <span
-                className={`mr-1 inline-block w-5 text-center font-mono text-xs font-bold ${
-                  m.position === 'Yea'
-                    ? 'text-gray-900'
-                    : m.position === 'Nay'
-                      ? 'text-gray-900'
-                      : 'text-gray-400'
-                }`}
-              >
-                {positionAbbrev(m.position)}
+        <div className="mt-grid-2 border-t border-gray-100 pt-grid-1">
+          <p className="text-sm font-semibold text-gray-700">
+            Michigan: {split.yeas} Yea – {split.nays} Nay
+            {split.other > 0 ? `, ${split.other} not voting` : ''}
+            {split.note ? ` · ${split.note}` : ''}
+          </p>
+          <div className="mt-1 flex flex-wrap gap-x-grid-2 gap-y-1">
+            {vote.miPositions.map(m => (
+              <span key={m.bioguideId} className="text-sm whitespace-nowrap">
+                <span
+                  className={`mr-1 inline-block w-5 text-center font-mono text-xs font-bold ${
+                    m.position === 'Yea' || m.position === 'Nay' ? 'text-gray-900' : 'text-gray-400'
+                  }`}
+                >
+                  {positionAbbrev(m.position)}
+                </span>
+                <RepLink bioguideId={m.bioguideId} name={m.name} />
+                <span className={`ml-1 text-xs ${getPartyTextClass(m.party)}`}>
+                  ({m.party.charAt(0)}
+                  {m.district ? `-${m.district}` : ''})
+                </span>
               </span>
-              <RepLink bioguideId={m.bioguideId} name={m.name} />
-              <span className={`ml-1 text-xs ${getPartyTextClass(m.party)}`}>
-                ({m.party.charAt(0)}
-                {m.district ? `-${m.district}` : ''})
-              </span>
-            </span>
-          ))}
+            ))}
+          </div>
         </div>
       )}
       {vote.sourceUrl && (
@@ -161,8 +164,12 @@ export default async function DigestIssuePage({ params }: PageProps) {
   const range = parseWeekId(issue.weekId);
   const label = range ? formatWeekRange(range) : issue.weekId;
   const congress = getCurrentCongressNumber(new Date(issue.weekStart));
-  const houseVotes = issue.votes.filter(v => v.chamber === 'House');
-  const senateVotes = issue.votes.filter(v => v.chamber === 'Senate');
+  const { substantive, procedural } = orderVotes(issue.votes);
+  const highlights = issueHighlights(issue.votes, issue.bills);
+  const orderedBills = orderBills(issue.bills);
+  const hasHighlights = Boolean(
+    highlights.closestVote || highlights.mostBipartisanVote || highlights.furthestBill
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,6 +199,55 @@ export default async function DigestIssuePage({ params }: PageProps) {
           </p>
         </header>
 
+        {/* At a glance */}
+        {hasHighlights && (
+          <div className="mt-grid-3 border-2 border-black bg-white">
+            <div className="border-b-2 border-black px-grid-2 py-1 text-xs font-bold uppercase tracking-[0.08em]">
+              At a glance
+            </div>
+            <ul className="divide-y divide-gray-100">
+              {highlights.closestVote && (
+                <li className="p-grid-2 text-sm leading-snug">
+                  <span className="font-semibold">
+                    Closest vote ({highlights.closestVote.yeas}-{highlights.closestVote.nays})
+                  </span>{' '}
+                  — {highlights.closestVote.meaning?.decided ?? highlights.closestVote.question}{' '}
+                  <VoteLink
+                    voteId={highlights.closestVote.voteId}
+                    label="Roll call"
+                    className="text-xs"
+                  />
+                </li>
+              )}
+              {highlights.mostBipartisanVote && (
+                <li className="p-grid-2 text-sm leading-snug">
+                  <span className="font-semibold">
+                    Broadest support ({highlights.mostBipartisanVote.yeas}-
+                    {highlights.mostBipartisanVote.nays})
+                  </span>{' '}
+                  —{' '}
+                  {highlights.mostBipartisanVote.meaning?.decided ??
+                    highlights.mostBipartisanVote.question}{' '}
+                  <VoteLink
+                    voteId={highlights.mostBipartisanVote.voteId}
+                    label="Roll call"
+                    className="text-xs"
+                  />
+                </li>
+              )}
+              {highlights.furthestBill && (
+                <li className="p-grid-2 text-sm leading-snug">
+                  <span className="font-semibold">Furthest along</span> —{' '}
+                  <BillLink
+                    billId={highlights.furthestBill.billId}
+                    title={`${highlights.furthestBill.type} ${highlights.furthestBill.number}: ${highlights.furthestBill.title}`}
+                  />
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
         {/* Votes */}
         <section className="mt-grid-4">
           <h2 className="text-xl font-bold tracking-[0.02em]">
@@ -208,22 +264,20 @@ export default async function DigestIssuePage({ params }: PageProps) {
             </p>
           ) : (
             <div className="mt-grid-2 space-y-grid-2">
-              {senateVotes.length > 0 && (
-                <>
-                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
-                    Senate ({senateVotes.length})
-                  </h3>
-                  {senateVotes.map(vote => (
-                    <VoteCard key={vote.voteId} vote={vote} congress={congress} />
-                  ))}
-                </>
-              )}
-              {houseVotes.length > 0 && (
+              {substantive.map(vote => (
+                <VoteCard key={vote.voteId} vote={vote} congress={congress} />
+              ))}
+              {procedural.length > 0 && (
                 <>
                   <h3 className="mt-grid-3 text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
-                    House ({houseVotes.length})
+                    Procedural votes ({procedural.length})
                   </h3>
-                  {houseVotes.map(vote => (
+                  <p className="text-sm text-gray-600">
+                    Votes that move the process along — setting debate terms, ending debate,
+                    approving the record. Positions here often follow party strategy rather than the
+                    underlying issue.
+                  </p>
+                  {procedural.map(vote => (
                     <VoteCard key={vote.voteId} vote={vote} congress={congress} />
                   ))}
                 </>
@@ -246,13 +300,18 @@ export default async function DigestIssuePage({ params }: PageProps) {
           ) : (
             <div className="mt-grid-2 border-2 border-gray-200 bg-white">
               <ul>
-                {issue.bills.map(bill => {
+                {orderedBills.map(bill => {
                   const actionCtx = billActionContext(bill.latestActionText);
                   return (
                     <li
                       key={bill.billId}
                       className="border-b border-gray-100 p-grid-2 last:border-b-0"
                     >
+                      {bill.stage.label && (
+                        <span className="mb-1 inline-block border border-gray-300 px-1 text-[10px] font-bold uppercase tracking-[0.05em] text-gray-500">
+                          {bill.stage.label}
+                        </span>
+                      )}
                       <p className="text-[15px] font-medium leading-snug">
                         <BillLink
                           billId={bill.billId}
