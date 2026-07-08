@@ -40,6 +40,25 @@ import type {
  * for the legacy `/digest/{week}` redirect and the email cron.
  */
 export const DEFAULT_DIGEST_STATE = 'MI';
+/**
+ * States the warming cron pre-assembles each week so a real visitor never
+ * eats the cold ~40s build. Michigan first: it populates the national
+ * vote/bill/meaning caches every other state then reuses, so the rest only
+ * pay their delegation + FEC lookups. This is the deliberate pilot set
+ * (MI + high-population states); widen it as the rollout expands.
+ */
+export const DIGEST_WARM_STATES = [
+  'MI',
+  'CA',
+  'TX',
+  'FL',
+  'NY',
+  'PA',
+  'IL',
+  'OH',
+  'GA',
+  'NC',
+] as const;
 /** Finished weeks are immutable; cache the assembled issue for 30 days. */
 const ISSUE_TTL_SECONDS = 30 * 24 * 60 * 60;
 const MAX_BILLS = 15;
