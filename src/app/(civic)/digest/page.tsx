@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { BillLink, VoteLink } from '@/components/shared/links/EntityLinks';
 import { getCachedDigestIssue } from '@/lib/digest/assemble';
 import { US_STATES } from '@/lib/data/us-states';
-import { issueHighlights } from '@/lib/digest/curate';
+import { issueHighlights, orderVotes } from '@/lib/digest/curate';
 import { latestCompleteWeekId, parseWeekId, formatWeekRange } from '@/lib/digest/week';
 
 export const revalidate = 3600;
@@ -32,7 +32,17 @@ export default async function DigestIndexPage() {
   // Cache-only: the warming cron keeps this populated. Never assembles on
   // the render path — a cold miss simply drops the hero.
   const featured = await getCachedDigestIssue(HIGHLIGHT_SOURCE_STATE, latestWeek);
-  const highlights = featured ? issueHighlights(featured.votes, featured.bills) : null;
+  // Lead with substantive votes (final passage, amendments) rather than
+  // procedural ones (rules, motions to proceed) — a general reader cares
+  // what got decided, not the scheduling. Fall back to all votes only if a
+  // week had no contested substantive vote, so the hero never goes empty
+  // needlessly. Scoped to the hero; issue-page "At a glance" is unchanged.
+  const heroVotes = (() => {
+    if (!featured) return [];
+    const { substantive } = orderVotes(featured.votes);
+    return substantive.some(v => v.yeas > 0 && v.nays > 0) ? substantive : featured.votes;
+  })();
+  const highlights = featured ? issueHighlights(heroVotes, featured.bills) : null;
   const featuredRange = featured ? parseWeekId(featured.weekId) : null;
   const hasHighlights = Boolean(
     highlights?.closestVote || highlights?.mostBipartisanVote || highlights?.furthestBill
