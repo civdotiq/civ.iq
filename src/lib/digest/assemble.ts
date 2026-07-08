@@ -16,7 +16,7 @@
 
 import { cachedFetch } from '@/lib/cache';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
-import { attachVoteMeanings } from './vote-meaning';
+import { attachVoteMeanings, attachCachedVoteMeanings } from './vote-meaning';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { isValidStateCode, getStateName } from '@/lib/data/us-states';
@@ -322,8 +322,21 @@ async function fetchDelegation(state: string): Promise<DigestDelegationMember[]>
  * Assemble (or read from cache) the digest issue for one state and a
  * complete ISO week. Returns null for invalid state codes, malformed ids,
  * and weeks that haven't finished yet.
+ *
+ * The cached base carries no AI vote meanings — generating them means many
+ * LLM calls, which on the render path blows the function timeout (a cold
+ * week was a 504 in production). Instead the base assembles fast (votes,
+ * bills, filings) and meanings are attached afterward: cache-only on the
+ * render path, or generated when `generateMeanings` is set (the crons).
+ * Meanings cache per-voteId for a year and are shared across states, so a
+ * week generated once — by warming or the email cron — reads back instantly
+ * for every state and every later visit.
  */
-export async function getDigestIssue(state: string, weekId: string): Promise<DigestIssue | null> {
+export async function getDigestIssue(
+  state: string,
+  weekId: string,
+  opts: { generateMeanings?: boolean } = {}
+): Promise<DigestIssue | null> {
   if (!isValidStateCode(state)) return null;
   const stateCode = state.toUpperCase();
   const stateName = getStateName(stateCode);
@@ -332,12 +345,12 @@ export async function getDigestIssue(state: string, weekId: string): Promise<Dig
   const range = parseWeekId(weekId);
   if (!range || !isCompleteWeek(weekId)) return null;
 
-  return cachedFetch<DigestIssue | null>(
-    // v5: issues are now per-state (state segment in the key). Vote-meaning
-    // and bill-summary caches stay national — they're shared across every
-    // state, which is what keeps per-state assembly cheap. Bump on
-    // shape/enrichment changes so long-cached issues regenerate.
-    `digest:issue:v5:${stateCode}:${weekId}`,
+  const base = await cachedFetch<DigestIssue | null>(
+    // v6: base issue no longer bakes in AI meanings (attached at read time
+    // from the national per-voteId cache). Vote-meaning and bill-summary
+    // caches stay national — shared across every state, which is what keeps
+    // per-state assembly cheap. Bump on shape changes to regenerate.
+    `digest:issue:v6:${stateCode}:${weekId}`,
     async () => {
       const delegation = await fetchDelegation(stateCode);
       if (delegation.length === 0) {
@@ -366,10 +379,6 @@ export async function getDigestIssue(state: string, weekId: string): Promise<Dig
         return null;
       }
 
-      // Best-effort AI meanings; each roll call generates at most once
-      // (year-long vote-meaning cache), failures leave votes bare.
-      const votes = await attachVoteMeanings(voteResult.votes);
-
       return {
         weekId,
         weekStart: range.start.toISOString(),
@@ -377,7 +386,7 @@ export async function getDigestIssue(state: string, weekId: string): Promise<Dig
         state: stateCode,
         stateName,
         delegation,
-        votes,
+        votes: voteResult.votes,
         bills: billResult.bills,
         filings: filingResult.filings,
         unavailable,
@@ -386,4 +395,14 @@ export async function getDigestIssue(state: string, weekId: string): Promise<Dig
     },
     ISSUE_TTL_SECONDS
   );
+
+  if (!base) return null;
+
+  // Attach meanings outside the base cache: generate (crons) or read-only
+  // (render path). Either way each vote ends up with its cached meaning or
+  // none, and the base issue stays reusable across states.
+  const votes = opts.generateMeanings
+    ? await attachVoteMeanings(base.votes)
+    : await attachCachedVoteMeanings(base.votes);
+  return { ...base, votes };
 }

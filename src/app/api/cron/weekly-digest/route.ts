@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, weekId, skipped: 'already sent' });
   }
 
-  const issue = await getDigestIssue(state, weekId);
+  // Generate meanings here (offline) so the email — and the render path that
+  // reads the same per-voteId cache — get plain-language context.
+  const issue = await getDigestIssue(state, weekId, { generateMeanings: true });
   if (!issue) {
     logger.error('[Digest] Cron could not assemble issue', new Error('assembly failed'), {
       weekId,

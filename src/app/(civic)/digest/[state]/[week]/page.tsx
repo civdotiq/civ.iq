@@ -26,7 +26,10 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
 export const revalidate = 3600;
-export const maxDuration = 60;
+// Base assembly only (votes/bills/filings) — AI meanings are read from cache,
+// never generated here. 120s is headroom for a cold cache on a large-
+// delegation state; warmed weeks return in ~1s.
+export const maxDuration = 120;
 
 interface PageProps {
   params: Promise<{ state: string; week: string }>;

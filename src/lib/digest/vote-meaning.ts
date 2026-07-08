@@ -249,6 +249,33 @@ export async function getVoteMeaning(vote: DigestVote): Promise<VoteMeaning | nu
   }
 }
 
+/**
+ * Cache-only meaning lookup — never generates. Fast enough for the page
+ * render path, where a synchronous LLM call would blow the function
+ * timeout. Generation happens offline in the digest crons.
+ */
+export async function getCachedVoteMeaning(voteId: string): Promise<VoteMeaning | null> {
+  try {
+    const cached = await getRedisCache().get<VoteMeaning>(cacheKey(voteId));
+    return cached ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Attach already-cached meanings; votes without one stay bare and the page
+ * shows the deterministic glossary. Read-only — no generation, no timeout
+ * risk. Use this on the render path; use attachVoteMeanings in crons.
+ */
+export async function attachCachedVoteMeanings(votes: DigestVote[]): Promise<DigestVote[]> {
+  const meanings = await Promise.all(votes.map(v => getCachedVoteMeaning(v.voteId)));
+  return votes.map((vote, i) => {
+    const meaning = meanings[i];
+    return meaning ? { ...vote, meaning } : vote;
+  });
+}
+
 /** Enrich votes with meanings, a few at a time. Failures leave votes bare. */
 export async function attachVoteMeanings(
   votes: DigestVote[],

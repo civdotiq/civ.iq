@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
       continue;
     }
     try {
-      const issue = await getDigestIssue(state, weekId);
+      // Generate meanings here (offline) so the render path only reads cache.
+      const issue = await getDigestIssue(state, weekId, { generateMeanings: true });
       if (issue) warmed.push(state);
       else failed.push(state);
     } catch (error) {
