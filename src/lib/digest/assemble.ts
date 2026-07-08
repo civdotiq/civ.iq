@@ -15,6 +15,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { attachVoteMeanings, attachCachedVoteMeanings } from './vote-meaning';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
@@ -359,6 +360,34 @@ async function fetchDelegation(state: string): Promise<DigestDelegationMember[]>
     });
 }
 
+function issueCacheKey(stateCode: string, weekId: string): string {
+  return `digest:issue:v6:${stateCode}:${weekId}`;
+}
+
+/**
+ * Read an already-assembled issue straight from cache — no upstream
+ * assembly, so it's safe on fast/high-traffic surfaces (the digest index
+ * hero) that must never pay the cold build. Returns null on a cache miss;
+ * the warming cron keeps the featured week populated in production.
+ */
+export async function getCachedDigestIssue(
+  state: string,
+  weekId: string
+): Promise<DigestIssue | null> {
+  if (!isValidStateCode(state)) return null;
+  const stateCode = state.toUpperCase();
+  const range = parseWeekId(weekId);
+  if (!range || !isCompleteWeek(weekId)) return null;
+
+  const base = await getRedisCache()
+    .get<DigestIssue>(issueCacheKey(stateCode, weekId))
+    .catch(() => null);
+  if (!base) return null;
+
+  const votes = await attachCachedVoteMeanings(base.votes);
+  return { ...base, votes };
+}
+
 /**
  * Assemble (or read from cache) the digest issue for one state and a
  * complete ISO week. Returns null for invalid state codes, malformed ids,
@@ -391,7 +420,7 @@ export async function getDigestIssue(
     // from the national per-voteId cache). Vote-meaning and bill-summary
     // caches stay national — shared across every state, which is what keeps
     // per-state assembly cheap. Bump on shape changes to regenerate.
-    `digest:issue:v6:${stateCode}:${weekId}`,
+    issueCacheKey(stateCode, weekId),
     async () => {
       const delegation = await fetchDelegation(stateCode);
       if (delegation.length === 0) {
