@@ -20,6 +20,7 @@ import {
   extractBillRefs,
 } from '@/lib/digest/context';
 import { issueHighlights, orderVotes, orderBills, miSplit } from '@/lib/digest/curate';
+import { VoteMarginBar, DelegationStrip } from '@/components/digest/DigestVisuals';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
@@ -50,10 +51,18 @@ function currencyFmt(value: number | undefined): string | null {
   });
 }
 
-function positionAbbrev(position: string): string {
-  if (position === 'Not Voting') return 'NV';
-  if (position === 'Present') return 'P';
-  return position === 'Yea' ? 'Y' : position === 'Nay' ? 'N' : position;
+/** Result chip: solid for passage, outline for failure. */
+function ResultChip({ result, yeas, nays }: { result: string; yeas: number; nays: number }) {
+  const passed = /pass|agree|adopt/i.test(result) && !/fail|reject/i.test(result);
+  return (
+    <span
+      className={`whitespace-nowrap px-1.5 py-0.5 text-xs font-bold uppercase tracking-[0.05em] ${
+        passed ? 'bg-black text-white' : 'border-2 border-gray-400 text-gray-600'
+      }`}
+    >
+      {result} {yeas}–{nays}
+    </span>
+  );
 }
 
 function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
@@ -62,17 +71,16 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
   const split = miSplit(vote);
   return (
     <div className="border-2 border-gray-200 bg-white p-grid-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-grid-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-grid-2 gap-y-1">
         <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
           {vote.chamber} · {vote.date.slice(0, 10)}
         </span>
-        <span className="text-sm font-semibold">
-          {vote.result} ({vote.yeas}-{vote.nays})
-        </span>
+        <ResultChip result={vote.result} yeas={vote.yeas} nays={vote.nays} />
       </div>
+      <VoteMarginBar yeas={vote.yeas} nays={vote.nays} />
       {vote.meaning ? (
         <>
-          <p className="mt-grid-1 text-[15px] font-medium leading-snug">{vote.meaning.decided}</p>
+          <p className="mt-grid-2 text-[15px] font-medium leading-snug">{vote.meaning.decided}</p>
           <p className="mt-1 text-sm text-gray-600">
             <span className="font-mono text-xs font-bold">Y</span> = {vote.meaning.yeaMeant}{' '}
             <span className="ml-2 font-mono text-xs font-bold">N</span> = {vote.meaning.nayMeant}
@@ -87,7 +95,7 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
         </>
       ) : (
         <>
-          <p className="mt-grid-1 text-[15px] font-medium leading-snug">
+          <p className="mt-grid-2 text-[15px] font-medium leading-snug">
             <VoteLink voteId={vote.voteId} label={vote.question} />
           </p>
           {questionCtx && (
@@ -120,24 +128,7 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
             {split.other > 0 ? `, ${split.other} not voting` : ''}
             {split.note ? ` · ${split.note}` : ''}
           </p>
-          <div className="mt-1 flex flex-wrap gap-x-grid-2 gap-y-1">
-            {vote.miPositions.map(m => (
-              <span key={m.bioguideId} className="text-sm whitespace-nowrap">
-                <span
-                  className={`mr-1 inline-block w-5 text-center font-mono text-xs font-bold ${
-                    m.position === 'Yea' || m.position === 'Nay' ? 'text-gray-900' : 'text-gray-400'
-                  }`}
-                >
-                  {positionAbbrev(m.position)}
-                </span>
-                <RepLink bioguideId={m.bioguideId} name={m.name} />
-                <span className={`ml-1 text-xs ${getPartyTextClass(m.party)}`}>
-                  ({m.party.charAt(0)}
-                  {m.district ? `-${m.district}` : ''})
-                </span>
-              </span>
-            ))}
-          </div>
+          <DelegationStrip members={vote.miPositions} />
         </div>
       )}
       {vote.sourceUrl && (
@@ -156,6 +147,20 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
   );
 }
 
+/** Procedural votes are subordinate — one dense row, no full card weight. */
+function ProceduralRow({ vote }: { vote: DigestVote }) {
+  const split = miSplit(vote);
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-grid-2 gap-y-1 border-b border-gray-100 py-grid-1 last:border-b-0">
+      <ResultChip result={vote.result} yeas={vote.yeas} nays={vote.nays} />
+      <span className="flex-1 text-sm text-gray-700">
+        <VoteLink voteId={vote.voteId} label={vote.question} />
+      </span>
+      {split.note && <span className="text-xs text-gray-500">Michigan {split.note}</span>}
+    </div>
+  );
+}
+
 export default async function DigestIssuePage({ params }: PageProps) {
   const { week } = await params;
   const issue = await getDigestIssue(week);
@@ -166,7 +171,17 @@ export default async function DigestIssuePage({ params }: PageProps) {
   const congress = getCurrentCongressNumber(new Date(issue.weekStart));
   const { substantive, procedural } = orderVotes(issue.votes);
   const highlights = issueHighlights(issue.votes, issue.bills);
-  const orderedBills = orderBills(issue.bills);
+  // Group stage-ordered bills under their stage label so the "how far did
+  // it get" ladder reads as sections instead of one flat list.
+  const billGroups = orderBills(issue.bills).reduce<
+    Array<{ label: string; bills: ReturnType<typeof orderBills> }>
+  >((groups, bill) => {
+    const label = bill.stage.label ?? 'Other action';
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.bills.push(bill);
+    else groups.push({ label, bills: [bill] });
+    return groups;
+  }, []);
   const hasHighlights = Boolean(
     highlights.closestVote || highlights.mostBipartisanVote || highlights.furthestBill
   );
@@ -250,9 +265,17 @@ export default async function DigestIssuePage({ params }: PageProps) {
 
         {/* Votes */}
         <section className="mt-grid-4">
-          <h2 className="text-xl font-bold tracking-[0.02em]">
-            Roll-call votes, with every {issue.stateName} position
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-grid-2">
+            <h2 className="text-xl font-bold tracking-[0.02em]">
+              Roll-call votes, with every {issue.stateName} position
+            </h2>
+            {issue.votes.length > 0 && !issue.unavailable.includes('votes') && (
+              <span className="text-xs text-gray-500">
+                Delegation: <span className="font-semibold text-gray-700">filled = Yea</span>,{' '}
+                <span className="font-semibold text-gray-700">outline = Nay</span>
+              </span>
+            )}
+          </div>
           {issue.unavailable.includes('votes') ? (
             <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
               Vote data is unavailable for this week — the upstream source could not be reached.
@@ -268,19 +291,21 @@ export default async function DigestIssuePage({ params }: PageProps) {
                 <VoteCard key={vote.voteId} vote={vote} congress={congress} />
               ))}
               {procedural.length > 0 && (
-                <>
-                  <h3 className="mt-grid-3 text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
+                <div className="mt-grid-3 border-2 border-gray-200 bg-white p-grid-2">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
                     Procedural votes ({procedural.length})
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-gray-600">
                     Votes that move the process along — setting debate terms, ending debate,
                     approving the record. Positions here often follow party strategy rather than the
                     underlying issue.
                   </p>
-                  {procedural.map(vote => (
-                    <VoteCard key={vote.voteId} vote={vote} congress={congress} />
-                  ))}
-                </>
+                  <div className="mt-grid-1">
+                    {procedural.map(vote => (
+                      <ProceduralRow key={vote.voteId} vote={vote} />
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -298,52 +323,59 @@ export default async function DigestIssuePage({ params }: PageProps) {
               No bills had floor or committee action recorded this week.
             </p>
           ) : (
-            <div className="mt-grid-2 border-2 border-gray-200 bg-white">
-              <ul>
-                {orderedBills.map(bill => {
-                  const actionCtx = billActionContext(bill.latestActionText);
-                  return (
-                    <li
-                      key={bill.billId}
-                      className="border-b border-gray-100 p-grid-2 last:border-b-0"
-                    >
-                      {bill.stage.label && (
-                        <span className="mb-1 inline-block border border-gray-300 px-1 text-[10px] font-bold uppercase tracking-[0.05em] text-gray-500">
-                          {bill.stage.label}
-                        </span>
-                      )}
-                      <p className="text-[15px] font-medium leading-snug">
-                        <BillLink
-                          billId={bill.billId}
-                          title={`${bill.type} ${bill.number}: ${bill.title}`}
-                        />
-                      </p>
-                      {bill.aiSummary && (
-                        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-700">
-                          {bill.aiSummary.whatItDoes}
-                          <span className="block text-xs text-gray-400">
-                            {bill.aiSummary.source === 'ai-generated'
-                              ? 'AI summary'
-                              : 'Congressional summary'}{' '}
-                            · as of {bill.aiSummary.lastUpdated.slice(0, 10)} ·{' '}
-                            <Link href="/corrections" className="hover:text-[#3ea2d4] underline">
-                              report an error
-                            </Link>
-                          </span>
-                        </p>
-                      )}
-                      <p className="mt-1 text-sm text-gray-600">
-                        {bill.latestActionDate}: {bill.latestActionText}
-                      </p>
-                      {actionCtx && (
-                        <p className="mt-0.5 border-l-2 border-gray-200 pl-2 text-sm text-gray-500">
-                          {actionCtx}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+            <div className="mt-grid-2 space-y-grid-3">
+              {billGroups.map(group => (
+                <div key={group.label}>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
+                    {group.label} <span className="text-gray-400">({group.bills.length})</span>
+                  </h3>
+                  <div className="mt-1 border-2 border-gray-200 bg-white">
+                    <ul>
+                      {group.bills.map(bill => {
+                        const actionCtx = billActionContext(bill.latestActionText);
+                        return (
+                          <li
+                            key={bill.billId}
+                            className="border-b border-gray-100 p-grid-2 last:border-b-0"
+                          >
+                            <p className="text-[15px] font-medium leading-snug">
+                              <BillLink
+                                billId={bill.billId}
+                                title={`${bill.type} ${bill.number}: ${bill.title}`}
+                              />
+                            </p>
+                            {bill.aiSummary && (
+                              <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-700">
+                                {bill.aiSummary.whatItDoes}
+                                <span className="block text-xs text-gray-400">
+                                  {bill.aiSummary.source === 'ai-generated'
+                                    ? 'AI summary'
+                                    : 'Congressional summary'}{' '}
+                                  · as of {bill.aiSummary.lastUpdated.slice(0, 10)} ·{' '}
+                                  <Link
+                                    href="/corrections"
+                                    className="hover:text-[#3ea2d4] underline"
+                                  >
+                                    report an error
+                                  </Link>
+                                </span>
+                              </p>
+                            )}
+                            <p className="mt-1 text-sm text-gray-600">
+                              {bill.latestActionDate}: {bill.latestActionText}
+                            </p>
+                            {actionCtx && (
+                              <p className="mt-0.5 border-l-2 border-gray-200 pl-2 text-sm text-gray-500">
+                                {actionCtx}
+                              </p>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>
