@@ -36,6 +36,20 @@ export interface DigestVote {
   sourceUrl?: string;
   /** Michigan delegation positions for this roll call */
   miPositions: DigestMemberPosition[];
+  /**
+   * AI plain-language meaning (vote-meaning.ts): what was decided and
+   * what each position supported. Absent when generation is
+   * unavailable — the page falls back to the deterministic glossary.
+   */
+  meaning?: {
+    decided: string;
+    yeaMeant: string;
+    nayMeant: string;
+    readingLevel: number;
+    confidence: number;
+    source: 'ai-generated';
+    generatedAt: string;
+  };
 }
 
 export interface DigestBill {

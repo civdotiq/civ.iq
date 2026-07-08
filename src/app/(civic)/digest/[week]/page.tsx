@@ -76,10 +76,26 @@ function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
       <p className="mt-grid-1 text-[15px] font-medium leading-snug">
         <VoteLink voteId={vote.voteId} label={vote.question} />
       </p>
-      {questionCtx && (
-        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
-          {questionCtx.text}
-        </p>
+      {vote.meaning ? (
+        <div className="mt-1 border-l-2 border-[#3ea2d4] pl-2">
+          <p className="text-sm text-gray-800">{vote.meaning.decided}</p>
+          <p className="mt-0.5 text-sm text-gray-600">
+            <span className="font-mono text-xs font-bold">Y</span> = {vote.meaning.yeaMeant}{' '}
+            <span className="ml-2 font-mono text-xs font-bold">N</span> = {vote.meaning.nayMeant}
+          </p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            AI summary · as of {vote.meaning.generatedAt.slice(0, 10)} ·{' '}
+            <Link href="/corrections" className="underline hover:text-[#3ea2d4]">
+              report an error
+            </Link>
+          </p>
+        </div>
+      ) : (
+        questionCtx && (
+          <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
+            {questionCtx.text}
+          </p>
+        )
       )}
       {vote.bill && (
         <p className="mt-1 text-sm text-gray-600">

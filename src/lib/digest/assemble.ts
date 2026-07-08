@@ -16,6 +16,7 @@
 
 import { cachedFetch } from '@/lib/cache';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
+import { attachVoteMeanings } from './vote-meaning';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -297,9 +298,10 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
   if (!range || !isCompleteWeek(weekId)) return null;
 
   return cachedFetch<DigestIssue | null>(
-    // v2: issues carry bill aiSummary enrichment; bump on shape changes so
-    // long-cached issues regenerate instead of serving the old shape.
-    `digest:issue:v2:${weekId}`,
+    // v3: issues carry bill aiSummary + vote meaning enrichment; bump on
+    // shape changes so long-cached issues regenerate instead of serving
+    // the old shape.
+    `digest:issue:v3:${weekId}`,
     async () => {
       const delegation = await fetchDelegation();
       if (delegation.length === 0) {
@@ -326,6 +328,10 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
         return null;
       }
 
+      // Best-effort AI meanings; each roll call generates at most once
+      // (year-long vote-meaning cache), failures leave votes bare.
+      const votes = await attachVoteMeanings(voteResult.votes);
+
       return {
         weekId,
         weekStart: range.start.toISOString(),
@@ -333,7 +339,7 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
         state: FEATURED_STATE,
         stateName: FEATURED_STATE_NAME,
         delegation,
-        votes: voteResult.votes,
+        votes,
         bills: billResult.bills,
         filings: filingResult.filings,
         unavailable,
