@@ -15,6 +15,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -181,12 +182,44 @@ async function fetchWeekBills(
         };
       });
 
-    return { bills, failed: false };
+    return { bills: await attachBillSummaries(bills), failed: false };
   } catch (error) {
     logger.warn('Digest bills fetch threw', {
       error: error instanceof Error ? error.message : String(error),
     });
     return { bills: [], failed: true };
+  }
+}
+
+/**
+ * Attach plain-language summaries already cached by the summary pipeline
+ * (keys are the canonical `${congress}-${type}-${number}` billId — verified
+ * against live cache contents 2026-07-07). Read-only: bills without a
+ * cached summary simply carry none — the digest never triggers generation.
+ */
+async function attachBillSummaries(bills: DigestBill[]): Promise<DigestBill[]> {
+  if (bills.length === 0) return bills;
+  try {
+    const cacheIds = bills.map(b => b.billId);
+    const summaries = await BillSummaryCache.getBatchSummaries(cacheIds);
+    return bills.map((bill, i) => {
+      const summary = summaries.get(cacheIds[i] ?? '');
+      if (!summary?.whatItDoes) return bill;
+      return {
+        ...bill,
+        aiSummary: {
+          whatItDoes: summary.whatItDoes,
+          confidence: summary.confidence,
+          source: summary.source,
+          lastUpdated: summary.lastUpdated,
+        },
+      };
+    });
+  } catch (error) {
+    logger.warn('Digest bill summaries unavailable', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return bills;
   }
 }
 
@@ -264,7 +297,9 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
   if (!range || !isCompleteWeek(weekId)) return null;
 
   return cachedFetch<DigestIssue | null>(
-    `digest:issue:${weekId}`,
+    // v2: issues carry bill aiSummary enrichment; bump on shape changes so
+    // long-cached issues regenerate instead of serving the old shape.
+    `digest:issue:v2:${weekId}`,
     async () => {
       const delegation = await fetchDelegation();
       if (delegation.length === 0) {

@@ -48,6 +48,16 @@ export interface DigestBill {
   latestActionText: string;
   introducedDate?: string;
   congressDotGovUrl?: string;
+  /**
+   * Plain-language summary reused from the bill-summarizer cache (never
+   * generated here). Carries the intelligence-layer provenance fields.
+   */
+  aiSummary?: {
+    whatItDoes: string;
+    confidence: number;
+    source: string;
+    lastUpdated: string;
+  };
 }
 
 export interface DigestFiling {

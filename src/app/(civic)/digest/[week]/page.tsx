@@ -13,6 +13,13 @@ import { RepLink, BillLink, VoteLink } from '@/components/shared/links/EntityLin
 import { getPartyTextClass } from '@/lib/party-colors';
 import { getDigestIssue } from '@/lib/digest/assemble';
 import { parseWeekId, formatWeekRange } from '@/lib/digest/week';
+import {
+  voteQuestionContext,
+  fecFormContext,
+  billActionContext,
+  extractBillRefs,
+} from '@/lib/digest/context';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
 export const revalidate = 3600;
@@ -48,12 +55,19 @@ function positionAbbrev(position: string): string {
   return position === 'Yea' ? 'Y' : position === 'Nay' ? 'N' : position;
 }
 
-function VoteCard({ vote }: { vote: DigestVote }) {
+function VoteCard({ vote, congress }: { vote: DigestVote; congress: number }) {
+  const questionCtx = voteQuestionContext(vote.question);
+  const underlying = extractBillRefs(vote.bill?.title, congress, vote.bill?.billId);
   return (
     <div className="border-2 border-gray-200 bg-white p-grid-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-grid-2">
         <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
           {vote.chamber} · {vote.date.slice(0, 10)}
+          {questionCtx?.kind === 'procedural' && (
+            <span className="ml-2 border border-gray-300 px-1 normal-case tracking-normal text-gray-500">
+              Procedural
+            </span>
+          )}
         </span>
         <span className="text-sm font-semibold">
           {vote.result} ({vote.yeas}-{vote.nays})
@@ -62,9 +76,25 @@ function VoteCard({ vote }: { vote: DigestVote }) {
       <p className="mt-grid-1 text-[15px] font-medium leading-snug">
         <VoteLink voteId={vote.voteId} label={vote.question} />
       </p>
+      {questionCtx && (
+        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
+          {questionCtx.text}
+        </p>
+      )}
       {vote.bill && (
         <p className="mt-1 text-sm text-gray-600">
           <BillLink billId={vote.bill.billId} title={vote.bill.title ?? vote.bill.billId} />
+        </p>
+      )}
+      {underlying.length > 0 && (
+        <p className="mt-1 text-sm text-gray-600">
+          Referenced measures:{' '}
+          {underlying.map((ref, i) => (
+            <span key={ref.billId}>
+              {i > 0 && ', '}
+              <BillLink billId={ref.billId} title={ref.label} />
+            </span>
+          ))}
         </p>
       )}
       {vote.miPositions.length > 0 && (
@@ -114,6 +144,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
 
   const range = parseWeekId(issue.weekId);
   const label = range ? formatWeekRange(range) : issue.weekId;
+  const congress = getCurrentCongressNumber(new Date(issue.weekStart));
   const houseVotes = issue.votes.filter(v => v.chamber === 'House');
   const senateVotes = issue.votes.filter(v => v.chamber === 'Senate');
 
@@ -167,7 +198,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
                     Senate ({senateVotes.length})
                   </h3>
                   {senateVotes.map(vote => (
-                    <VoteCard key={vote.voteId} vote={vote} />
+                    <VoteCard key={vote.voteId} vote={vote} congress={congress} />
                   ))}
                 </>
               )}
@@ -177,7 +208,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
                     House ({houseVotes.length})
                   </h3>
                   {houseVotes.map(vote => (
-                    <VoteCard key={vote.voteId} vote={vote} />
+                    <VoteCard key={vote.voteId} vote={vote} congress={congress} />
                   ))}
                 </>
               )}
@@ -199,22 +230,44 @@ export default async function DigestIssuePage({ params }: PageProps) {
           ) : (
             <div className="mt-grid-2 border-2 border-gray-200 bg-white">
               <ul>
-                {issue.bills.map(bill => (
-                  <li
-                    key={bill.billId}
-                    className="border-b border-gray-100 p-grid-2 last:border-b-0"
-                  >
-                    <p className="text-[15px] font-medium leading-snug">
-                      <BillLink
-                        billId={bill.billId}
-                        title={`${bill.type} ${bill.number}: ${bill.title}`}
-                      />
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {bill.latestActionDate}: {bill.latestActionText}
-                    </p>
-                  </li>
-                ))}
+                {issue.bills.map(bill => {
+                  const actionCtx = billActionContext(bill.latestActionText);
+                  return (
+                    <li
+                      key={bill.billId}
+                      className="border-b border-gray-100 p-grid-2 last:border-b-0"
+                    >
+                      <p className="text-[15px] font-medium leading-snug">
+                        <BillLink
+                          billId={bill.billId}
+                          title={`${bill.type} ${bill.number}: ${bill.title}`}
+                        />
+                      </p>
+                      {bill.aiSummary && (
+                        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-700">
+                          {bill.aiSummary.whatItDoes}
+                          <span className="block text-xs text-gray-400">
+                            {bill.aiSummary.source === 'ai-generated'
+                              ? 'AI summary'
+                              : 'Congressional summary'}{' '}
+                            · as of {bill.aiSummary.lastUpdated.slice(0, 10)} ·{' '}
+                            <Link href="/corrections" className="hover:text-[#3ea2d4] underline">
+                              report an error
+                            </Link>
+                          </span>
+                        </p>
+                      )}
+                      <p className="mt-1 text-sm text-gray-600">
+                        {bill.latestActionDate}: {bill.latestActionText}
+                      </p>
+                      {actionCtx && (
+                        <p className="mt-0.5 border-l-2 border-gray-200 pl-2 text-sm text-gray-500">
+                          {actionCtx}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -240,6 +293,7 @@ export default async function DigestIssuePage({ params }: PageProps) {
               <ul>
                 {issue.filings.map(filing => {
                   const receipts = currencyFmt(filing.totalReceipts);
+                  const formCtx = fecFormContext(filing.formType);
                   return (
                     <li
                       key={`${filing.fileNumber}-${filing.bioguideId}`}
@@ -254,6 +308,11 @@ export default async function DigestIssuePage({ params }: PageProps) {
                           {filing.reportType ?? filing.formType ?? 'Filing'}
                         </span>
                       </p>
+                      {formCtx && (
+                        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
+                          {formCtx}
+                        </p>
+                      )}
                       <p className="mt-1 text-sm text-gray-600">
                         Received {filing.receiptDate.slice(0, 10)}
                         {filing.committeeName ? ` · ${filing.committeeName}` : ''}
