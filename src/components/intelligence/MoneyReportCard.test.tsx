@@ -32,10 +32,6 @@ function makeRep(
     voteFinance,
     financeJurisdiction,
     independence,
-    voteFinanceCorrelation: voteFinance.state === 'ready' ? voteFinance.value : null,
-    financeJurisdictionOverlap:
-      financeJurisdiction.state === 'ready' ? financeJurisdiction.value : null,
-    independenceScore: independence.state === 'ready' ? independence.value : null,
   };
 }
 
@@ -206,19 +202,6 @@ describe('MoneyReportCard', () => {
     render(<MoneyReportCard insight={insight} />);
     const labels = screen.getAllByText('Warming analysis…');
     expect(labels.length).toBe(3);
-  });
-
-  it('keeps legacy numeric fields in sync with ready MetricStatus', () => {
-    const rep = makeRep({
-      bioguideId: 'L000001',
-      name: 'Legacy Rep',
-      voteFinance: ready(0.35),
-      financeJurisdiction: ready(0.42),
-      independence: ready(0.65),
-    });
-    expect(rep.voteFinanceCorrelation).toBe(0.35);
-    expect(rep.financeJurisdictionOverlap).toBe(0.42);
-    expect(rep.independenceScore).toBe(0.65);
   });
 
   it('shows empty state when no reps', () => {

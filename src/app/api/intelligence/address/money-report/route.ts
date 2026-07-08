@@ -173,16 +173,16 @@ async function analyzeRepresentative(
   ]);
 
   const errors: InsightError[] = [];
-  const vfError = errorForRejection(vfResult, 'voteFinanceCorrelation', 'vote-finance', bioguideId);
+  const vfError = errorForRejection(vfResult, 'voteFinance', 'vote-finance', bioguideId);
   if (vfError) errors.push(vfError);
   const fjError = errorForRejection(
     fjResult,
-    'financeJurisdictionOverlap',
+    'financeJurisdiction',
     'finance-jurisdiction',
     bioguideId
   );
   if (fjError) errors.push(fjError);
-  const vpError = errorForRejection(vpResult, 'independenceScore', 'vote-prediction', bioguideId);
+  const vpError = errorForRejection(vpResult, 'independence', 'vote-prediction', bioguideId);
   if (vpError) errors.push(vpError);
   const icError = errorForRejection(icResult, 'influenceChainCount', 'influence-chain', bioguideId);
   if (icError) errors.push(icError);
@@ -211,12 +211,6 @@ async function analyzeRepresentative(
     independence,
     influenceChainCount:
       icResult.status === 'fulfilled' ? (icResult.value?.chains?.length ?? 0) : 0,
-    // Legacy fields derived from MetricStatus for downstream consumers (mesh,
-    // scorecard). Removed in MR6 once those consumers read MetricStatus directly.
-    voteFinanceCorrelation: voteFinance.state === 'ready' ? voteFinance.value : null,
-    financeJurisdictionOverlap:
-      financeJurisdiction.state === 'ready' ? financeJurisdiction.value : null,
-    independenceScore: independence.state === 'ready' ? independence.value : null,
   };
 
   return { metrics, errors };
@@ -264,50 +258,35 @@ function toMetricStatus<T>(
   return { state: 'unavailable', reason: 'analyzer-error' };
 }
 
+/** Ready-state numeric value of a metric, else null. */
+function metricValue(status: MetricStatus): number | null {
+  return status.state === 'ready' ? status.value : null;
+}
+
 /**
  * Compute district-level aggregates from per-representative metrics.
  */
 function computeAggregates(reps: RepMoneyMetrics[]): DistrictAggregates {
   const correlations = reps
-    .map(r => r.voteFinanceCorrelation)
+    .map(r => metricValue(r.voteFinance))
     .filter((v): v is number => v !== null);
-  const overlaps = reps.filter(
-    (r): r is RepMoneyMetrics & { financeJurisdictionOverlap: number } =>
-      r.financeJurisdictionOverlap !== null
-  );
-  const independence = reps.filter(
-    (r): r is RepMoneyMetrics & { independenceScore: number } => r.independenceScore !== null
-  );
 
-  const sortedOverlaps = [...overlaps].sort(
-    (a, b) => b.financeJurisdictionOverlap - a.financeJurisdictionOverlap
-  );
-  const sortedIndependence = [...independence].sort(
-    (a, b) => b.independenceScore - a.independenceScore
-  );
+  const overlaps = reps
+    .map(r => ({ name: r.name, value: metricValue(r.financeJurisdiction) }))
+    .filter((o): o is { name: string; value: number } => o.value !== null)
+    .sort((a, b) => b.value - a.value);
+
+  const independence = reps
+    .map(r => ({ name: r.name, value: metricValue(r.independence) }))
+    .filter((o): o is { name: string; value: number } => o.value !== null)
+    .sort((a, b) => b.value - a.value);
 
   return {
     averageCorrelation: correlations.length > 0 ? mean(correlations) : null,
-    highestOverlap: sortedOverlaps[0]
-      ? { name: sortedOverlaps[0].name, value: sortedOverlaps[0].financeJurisdictionOverlap }
-      : null,
-    lowestOverlap:
-      sortedOverlaps.length > 0
-        ? {
-            name: sortedOverlaps[sortedOverlaps.length - 1]!.name,
-            value: sortedOverlaps[sortedOverlaps.length - 1]!.financeJurisdictionOverlap,
-          }
-        : null,
-    mostIndependent: sortedIndependence[0]
-      ? { name: sortedIndependence[0].name, value: sortedIndependence[0].independenceScore }
-      : null,
-    leastIndependent:
-      sortedIndependence.length > 0
-        ? {
-            name: sortedIndependence[sortedIndependence.length - 1]!.name,
-            value: sortedIndependence[sortedIndependence.length - 1]!.independenceScore,
-          }
-        : null,
+    highestOverlap: overlaps[0] ?? null,
+    lowestOverlap: overlaps.length > 0 ? overlaps[overlaps.length - 1]! : null,
+    mostIndependent: independence[0] ?? null,
+    leastIndependent: independence.length > 0 ? independence[independence.length - 1]! : null,
   };
 }
 
@@ -364,14 +343,17 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
   const repSummaries = representatives
     .map(r => {
       const parts: string[] = [`${r.name} (${r.party}-${r.state})`];
-      if (r.voteFinanceCorrelation !== null) {
-        parts.push(`vote-finance correlation: ${(r.voteFinanceCorrelation * 100).toFixed(0)}%`);
+      const voteFinance = metricValue(r.voteFinance);
+      if (voteFinance !== null) {
+        parts.push(`vote-finance correlation: ${(voteFinance * 100).toFixed(0)}%`);
       }
-      if (r.financeJurisdictionOverlap !== null) {
-        parts.push(`jurisdiction overlap: ${(r.financeJurisdictionOverlap * 100).toFixed(0)}%`);
+      const overlap = metricValue(r.financeJurisdiction);
+      if (overlap !== null) {
+        parts.push(`jurisdiction overlap: ${(overlap * 100).toFixed(0)}%`);
       }
-      if (r.independenceScore !== null) {
-        parts.push(`independence score: ${(r.independenceScore * 100).toFixed(0)}%`);
+      const independence = metricValue(r.independence);
+      if (independence !== null) {
+        parts.push(`independence score: ${(independence * 100).toFixed(0)}%`);
       }
       if (r.influenceChainCount > 0) {
         parts.push(`${r.influenceChainCount} influence chains detected`);
@@ -398,9 +380,9 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
   // Compute overall confidence
   const dataPoints = representatives.reduce((count, r) => {
     let c = count;
-    if (r.voteFinanceCorrelation !== null) c++;
-    if (r.financeJurisdictionOverlap !== null) c++;
-    if (r.independenceScore !== null) c++;
+    if (metricValue(r.voteFinance) !== null) c++;
+    if (metricValue(r.financeJurisdiction) !== null) c++;
+    if (metricValue(r.independence) !== null) c++;
     return c;
   }, 0);
   const maxDataPoints = representatives.length * 3;

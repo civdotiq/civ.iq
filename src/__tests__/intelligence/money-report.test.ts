@@ -254,16 +254,13 @@ describe('POST /api/intelligence/address/money-report', () => {
 
     expect(response.status).toBe(200);
     expect(data.representatives).toHaveLength(3);
-    // voteFinanceCorrelation should be null for all reps since the analyzer rejected
+    // voteFinance should be unavailable for all reps since the analyzer rejected
     for (const rep of data.representatives) {
-      expect(rep.voteFinanceCorrelation).toBeNull();
       expect(rep.voteFinance.state).toBe('unavailable');
     }
     // Other analyzers should still have produced values
     for (const rep of data.representatives) {
-      expect(rep.financeJurisdictionOverlap).toBe(0.6);
       expect(rep.financeJurisdiction).toEqual({ state: 'ready', value: 0.6 });
-      expect(rep.independenceScore).toBe(0.3);
       expect(rep.independence).toEqual({ state: 'ready', value: 0.3 });
       expect(rep.influenceChainCount).toBe(3);
     }
@@ -287,7 +284,6 @@ describe('POST /api/intelligence/address/money-report', () => {
         reason:
           'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.',
       });
-      expect(rep.voteFinanceCorrelation).toBeNull();
     }
   });
 
@@ -331,7 +327,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     expect(response.status).toBe(200);
     for (const rep of data.representatives) {
       expect(rep.voteFinance).toEqual({ state: 'ready', value: 0.45 });
-      expect(rep.voteFinanceCorrelation).toBe(0.45);
     }
   });
 
@@ -349,16 +344,14 @@ describe('POST /api/intelligence/address/money-report', () => {
     expect(Array.isArray(data.errors)).toBe(true);
     expect(data.errors.length).toBe(3); // one per rep
     const sample = data.errors[0];
-    expect(sample.metric).toBe('voteFinanceCorrelation');
+    expect(sample.metric).toBe('voteFinance');
     expect(sample.source).toBe('vote-finance');
     expect(sample.type).toBe('upstream_timeout');
     expect(typeof sample.bioguideId).toBe('string');
     expect(typeof sample.message).toBe('string');
     expect(typeof sample.timestamp).toBe('string');
     // Non-rejected analyzers must not contribute errors.
-    expect(data.errors.some((e: { metric: string }) => e.metric === 'independenceScore')).toBe(
-      false
-    );
+    expect(data.errors.some((e: { metric: string }) => e.metric === 'independence')).toBe(false);
   });
 
   it('reflects mixed fulfilled/rejected analyzers in metrics and errors', async () => {
@@ -383,12 +376,12 @@ describe('POST /api/intelligence/address/money-report', () => {
     expect(response.status).toBe(200);
     expect(data.representatives).toHaveLength(1);
     const [rep] = data.representatives;
-    expect(rep.voteFinanceCorrelation).toBeNull();
-    expect(rep.financeJurisdictionOverlap).toBe(0.6);
-    expect(rep.independenceScore).toBe(0.3);
+    expect(rep.voteFinance.state).toBe('unavailable');
+    expect(rep.financeJurisdiction).toEqual({ state: 'ready', value: 0.6 });
+    expect(rep.independence).toEqual({ state: 'ready', value: 0.3 });
     expect(rep.influenceChainCount).toBe(3);
     expect(data.errors).toHaveLength(1);
-    expect(data.errors[0].metric).toBe('voteFinanceCorrelation');
+    expect(data.errors[0].metric).toBe('voteFinance');
     expect(data.errors[0].type).toBe('upstream_error');
     expect(data.errors[0].bioguideId).toBe('B001234');
   });

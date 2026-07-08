@@ -735,12 +735,6 @@ export interface RepMoneyMetrics {
   financeJurisdiction: MetricStatus;
   independence: MetricStatus;
   influenceChainCount: number;
-  // TODO(mr6): remove legacy fields once mesh/scorecard consumers migrate.
-  // Derived from the MetricStatus fields above: value when state === 'ready',
-  // else null. Kept for one release to avoid breaking downstream consumers.
-  voteFinanceCorrelation: number | null;
-  financeJurisdictionOverlap: number | null;
-  independenceScore: number | null;
 }
 
 export interface DistrictAggregates {
