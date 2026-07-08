@@ -253,35 +253,78 @@ async function attachBillSummaries(bills: DigestBill[]): Promise<DigestBill[]> {
   }
 }
 
+/**
+ * Filings are a secondary section, so they must never dominate assembly.
+ * Two guards: fetch in small concurrent waves (a 54-member delegation's
+ * calls sit under the shared 60/min wall, so this is latency- not
+ * rate-bound), and cap each call — normal FEC latency is well under a
+ * second, but a call that hangs to the service's 30s timeout would stall
+ * its whole wave, which is what turned a big-state cold load into ~68s.
+ */
+const FILING_FETCH_CONCURRENCY = 6;
+const FILING_CALL_TIMEOUT_MS = 8000;
+
+/** Resolve to `fallback` if `p` hasn't settled within `ms`; clears its timer. */
+function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    p.then(
+      value => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      }
+    );
+  });
+}
+
 async function fetchWeekFilings(
   weekStart: Date,
   weekEnd: Date,
   delegation: DigestDelegationMember[]
 ): Promise<{ filings: DigestFiling[]; failed: boolean }> {
+  const start = isoDate(weekStart);
+  const end = isoDate(weekEnd);
+  // Only members we can map to an FEC id are worth a call.
+  const targets = delegation.flatMap(member => {
+    const fecId = getFECIdFromBioguide(member.bioguideId);
+    return fecId ? [{ member, fecId }] : [];
+  });
+
   const filings: DigestFiling[] = [];
   let errors = 0;
-  let attempted = 0;
 
-  for (const member of delegation) {
-    const fecId = getFECIdFromBioguide(member.bioguideId);
-    if (!fecId) continue;
-    attempted++;
-    try {
-      const records = await fecApiService.getFilingsByDateRange(
-        fecId,
-        isoDate(weekStart),
-        isoDate(weekEnd)
-      );
-      for (const record of records) {
+  for (let i = 0; i < targets.length; i += FILING_FETCH_CONCURRENCY) {
+    const wave = targets.slice(i, i + FILING_FETCH_CONCURRENCY);
+    const settled = await Promise.all(
+      wave.map(async ({ member, fecId }) => {
+        // null = call errored OR blew the per-call cap; either way, skip it.
+        const records = await withTimeout(
+          fecApiService.getFilingsByDateRange(fecId, start, end).catch(() => null),
+          FILING_CALL_TIMEOUT_MS,
+          null
+        );
+        return records ? { member, records } : null;
+      })
+    );
+    for (const result of settled) {
+      if (!result) {
+        errors++;
+        continue;
+      }
+      for (const record of result.records) {
         if (!record.receipt_date) continue;
         filings.push({
           fileNumber: record.file_number,
           committeeId: record.committee_id,
           committeeName: record.committee_name ?? undefined,
-          bioguideId: member.bioguideId,
-          memberName: member.name,
-          party: member.party,
-          chamber: member.chamber,
+          bioguideId: result.member.bioguideId,
+          memberName: result.member.name,
+          party: result.member.party,
+          chamber: result.member.chamber,
           formType: record.form_type ?? undefined,
           reportType: record.report_type_full ?? record.report_type ?? undefined,
           receiptDate: record.receipt_date,
@@ -292,14 +335,12 @@ async function fetchWeekFilings(
           fecUrl: `https://www.fec.gov/data/filings/?file_number=${record.file_number}`,
         });
       }
-    } catch {
-      errors++;
     }
   }
 
   filings.sort((a, b) => b.receiptDate.localeCompare(a.receiptDate));
   // Failed only when we couldn't reach FEC for anyone we tried.
-  return { filings, failed: attempted > 0 && errors === attempted };
+  return { filings, failed: targets.length > 0 && errors === targets.length };
 }
 
 async function fetchDelegation(state: string): Promise<DigestDelegationMember[]> {
