@@ -19,6 +19,7 @@ import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -483,6 +484,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: isHighPop ? 0.8 : 0.7,
     });
+  }
+
+  // Per-state weekly digest: one archive page per state plus the last
+  // DIGEST_ARCHIVE_WEEKS issue pages. Bounded on purpose — older issues stay
+  // reachable through each state's archive page (which the crawler follows),
+  // so this is a recency window, not the full history. Canonical digest URLs
+  // are lowercase (/digest/{state}/{week}); keep in sync with the route.
+  const DIGEST_ARCHIVE_WEEKS = 12;
+  const digestWeeks = previousWeekIds(latestCompleteWeekId(), DIGEST_ARCHIVE_WEEKS);
+  for (const state of ALL_REGIONS) {
+    const isHighPop = HIGH_POP_STATES.includes(state);
+    const code = state.toLowerCase();
+    entries.push({
+      url: `${BASE_URL}/digest/${code}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: isHighPop ? 0.7 : 0.6,
+    });
+    for (const week of digestWeeks) {
+      entries.push({
+        url: `${BASE_URL}/digest/${code}/${week}`,
+        lastModified: now,
+        changeFrequency: 'monthly',
+        priority: isHighPop ? 0.6 : 0.5,
+      });
+    }
   }
 
   // Congressional district pages
