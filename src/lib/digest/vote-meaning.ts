@@ -18,6 +18,7 @@
  */
 
 import { getRedisCache } from '@/lib/cache/redis-client';
+import { cachedFetch } from '@/lib/cache';
 import { generateAIText } from '@/lib/ai/provider';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
@@ -42,9 +43,67 @@ export interface VoteMeaning {
 const CACHE_TTL = 365 * 24 * 60 * 60; // roll calls never change
 const TARGET_GRADE_LEVEL = 8;
 const MAX_FIELD_LENGTH = 400;
+/** Official summaries change rarely; cache the CRS text for a month. */
+const CRS_SUMMARY_TTL = 30 * 24 * 60 * 60;
+/** Cap CRS text fed to the model — enough substance, bounded prompt cost. */
+const MAX_CRS_SUMMARY_CHARS = 2000;
 
 function cacheKey(voteId: string): string {
   return `vote-meaning:${voteId}`;
+}
+
+/**
+ * Official Congress.gov CRS summary for a digest billId
+ * (`${congress}-${type}-${number}`, e.g. "119-hr-1234"). Latest summary,
+ * HTML stripped. Real government text the model may compress — the verified
+ * input that lets bare act names ("KIDS Act") earn a plain-language meaning
+ * instead of falling through to the procedural glossary. Returns null when
+ * Congress has published no summary yet or on any failure.
+ */
+async function fetchOfficialBillSummary(billId: string): Promise<string | null> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) return null;
+  const match = /^(\d+)-([a-z]+)-(\d+)$/.exec(billId);
+  if (!match) return null;
+  const [, congress, type, number] = match;
+
+  return cachedFetch<string | null>(
+    `bill-crs-summary:${billId}`,
+    async () => {
+      const url = `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/summaries?format=json`;
+      const response = await fetch(url, {
+        headers: {
+          'X-API-Key': apiKey,
+          'User-Agent': 'CIV.IQ/1.0 (civic data platform; civdotiq.org)',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) return null;
+
+      const data = (await response.json()) as { summaries?: Array<{ text?: string }> };
+      const summaries = data.summaries ?? [];
+      if (summaries.length === 0) return null;
+
+      // Latest summary reflects the most recent bill version.
+      const latest = summaries[summaries.length - 1];
+      const plainText = (latest?.text ?? '')
+        .replace(/<[^>]+>/g, ' ')
+        // CRS text carries HTML entities; decode the common ones so the model
+        // reads prose, not markup.
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&sect;/g, 'Section ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (plainText.length < 50) return null;
+      return plainText.slice(0, MAX_CRS_SUMMARY_CHARS);
+    },
+    CRS_SUMMARY_TTL
+  );
 }
 
 function buildPrompt(vote: DigestVote, verifiedSummary: string, simpler: boolean): string {
@@ -159,6 +218,14 @@ export async function getVoteMeaning(vote: DigestVote): Promise<VoteMeaning | nu
     if (vote.bill) {
       const billSummary = await BillSummaryCache.getSummary(vote.bill.billId).catch(() => null);
       if (billSummary?.whatItDoes) verifiedSummary = billSummary.whatItDoes;
+      // No pre-generated summary in cache? Fall back to Congress.gov's own CRS
+      // summary. Bills like "KIDS Act" or "TRIA Program Reauthorization Act"
+      // have bare titles the model can't compress, so without this they'd show
+      // only the procedural glossary. The CRS text is authoritative, so the
+      // anti-fabrication rule holds — the model still only compresses given text.
+      if (!verifiedSummary) {
+        verifiedSummary = (await fetchOfficialBillSummary(vote.bill.billId)) ?? '';
+      }
     }
     if (measureWords < 12 && !verifiedSummary && vote.bill) return null;
 

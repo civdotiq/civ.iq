@@ -298,10 +298,11 @@ export async function getDigestIssue(weekId: string): Promise<DigestIssue | null
   if (!range || !isCompleteWeek(weekId)) return null;
 
   return cachedFetch<DigestIssue | null>(
-    // v3: issues carry bill aiSummary + vote meaning enrichment; bump on
-    // shape changes so long-cached issues regenerate instead of serving
-    // the old shape.
-    `digest:issue:v3:${weekId}`,
+    // v4: vote meanings now fall back to Congress.gov CRS summaries for
+    // bare-title bills, so previously procedure-only votes gain plain-language
+    // context. Bump on shape/enrichment changes so long-cached issues
+    // regenerate instead of serving the old shape.
+    `digest:issue:v4:${weekId}`,
     async () => {
       const delegation = await fetchDelegation();
       if (delegation.length === 0) {
