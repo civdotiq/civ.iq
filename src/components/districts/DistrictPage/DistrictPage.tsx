@@ -26,6 +26,7 @@ import { DemographicsBlock } from './DemographicsBlock';
 import { SeatedRepCard } from './SeatedRepCard';
 import { NeighborsStrip } from './NeighborsStrip';
 import { FederalMoneyTable } from './FederalMoneyTable';
+import { PublicHealthBlock } from './PublicHealthBlock';
 import { ZipGrid } from './ZipGrid';
 import { districtDisplayLabel, isoToReadable, parseDistrictId, stateLongName } from './data';
 import type {
@@ -35,6 +36,11 @@ import type {
   NeighborsResponse,
   ZipsResponse,
 } from './types';
+import type { ServicesHealthProfile } from '@/types/district-enhancements';
+
+interface ServicesHealthResponse {
+  services: ServicesHealthProfile;
+}
 
 const fetcher = async <T,>(url: string): Promise<T | null> => {
   const res = await fetch(url);
@@ -77,6 +83,16 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
     { revalidateOnFocus: false }
   );
 
+  const {
+    data: servicesHealth,
+    isLoading: healthLoading,
+    error: healthError,
+  } = useSWR<ServicesHealthResponse | null>(
+    fetchKey ? `/api/districts/${fetchKey}/services-health` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
+
   if (!parsed) {
     return (
       <div
@@ -111,6 +127,10 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
   const totalSpending = fedInvestment?.totalAnnualSpending ?? 0;
   const contractsAndGrants = fedInvestment?.contractsAndGrants ?? 0;
   const projects = fedInvestment?.majorProjects ?? [];
+
+  const publicHealth = servicesHealth?.services?.publicHealth ?? null;
+  const healthEstimate = publicHealth?.districtEstimate ?? null;
+  const countyMeasures = publicHealth?.measures ?? null;
   const dataAsOf =
     details?.metadata?.timestamp ??
     spending?.metadata?.timestamp ??
@@ -214,6 +234,16 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
           projects={projects}
           loading={spendingLoading}
           failed={!!spendingError}
+        />
+      </div>
+
+      {/* PUBLIC HEALTH — CDC PLACES district estimate */}
+      <div style={{ marginBottom: 32 }}>
+        <PublicHealthBlock
+          estimate={healthEstimate}
+          countyMeasures={countyMeasures}
+          loading={healthLoading}
+          failed={!!healthError}
         />
       </div>
 
