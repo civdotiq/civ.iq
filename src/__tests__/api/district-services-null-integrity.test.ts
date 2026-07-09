@@ -243,6 +243,20 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
         });
       }
       if (u.includes('spending_by_award')) {
+        // Infrastructure contract query (PSC Y+Z) — distinct single-page total.
+        if (String(init?.body).includes('psc_codes')) {
+          return mockFetchResponse({
+            results: [{ 'Award ID': 'PSC_1', 'Award Amount': 12000000 }],
+            page_metadata: { hasNext: false },
+          });
+        }
+        // Infrastructure grant query (DOT/EPA-SRF assistance listings).
+        if (String(init?.body).includes('program_numbers')) {
+          return mockFetchResponse({
+            results: [{ 'Award ID': 'GRANT_1', 'Award Amount': 3000000 }],
+            page_metadata: { hasNext: false },
+          });
+        }
         return mockFetchResponse({
           results: [
             {
@@ -279,8 +293,10 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
       amount: 48315012,
       agency: 'Department of Defense',
     });
-    // No honest classification source — never fabricated from keyword matching
-    expect(federalInvestment.infrastructureInvestment).toBeNull();
+    // Infrastructure obligations = PSC Y+Z contract total (12M) + DOT/EPA-SRF
+    // grant total (3M), from the documented INFRASTRUCTURE_CODE_SET — a real,
+    // labeled figure, not a keyword heuristic.
+    expect(federalInvestment.infrastructureInvestment).toBe(12000000 + 3000000);
   });
 
   it('never fabricates an impactLevel classification for bills', async () => {

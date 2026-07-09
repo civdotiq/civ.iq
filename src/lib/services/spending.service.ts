@@ -209,6 +209,199 @@ async function fetchDistrictAggregate(
 }
 
 /**
+ * Documented, auditable code set defining "infrastructure" for the district
+ * infrastructure obligation figure. Kept as a named constant so the definition
+ * is transparent and one-line-editable — never a fuzzy keyword match.
+ *
+ * Contract dimension: PSC (Product/Service Code) families Y and Z. NAICS and PSC
+ * describe the SAME procurement universe (every contract carries both), so we
+ * pick ONE — PSC, because it describes what the money bought/built:
+ *   Y = Construction of Structures and Facilities
+ *   Z = Maintenance, Repair, and Alteration of Real Property
+ * Grant dimension (disjoint from contracts): DOT + EPA State Revolving Fund
+ * assistance listings. Energy (81.xxx) is intentionally excluded from v1 — most
+ * 81.xxx listings are R&D, not built infrastructure.
+ */
+export const INFRASTRUCTURE_CODE_SET = {
+  pscFamilies: ['Y', 'Z'] as const,
+  grantCfda: ['20.106', '20.205', '20.500', '20.507', '66.458', '66.468'] as const,
+  label:
+    'Federal construction & infrastructure obligations — procurement for construction and ' +
+    'real-property work (PSC Y & Z) plus DOT/EPA-SRF infrastructure grants ' +
+    '(assistance listings 20.106/20.205/20.500/20.507, 66.458, 66.468). Place of performance ' +
+    'in this district, current fiscal year to date. Source: USASpending.gov.',
+};
+
+const INFRA_MAX_PAGES = 20; // 100/page — bounds a pathological district; cap is logged
+
+/**
+ * Sum Award Amount over a district's awards matching a code filter, current FY,
+ * by paging spending_by_award. Both infrastructure dimensions use this endpoint:
+ * it reliably honors psc_codes and program_numbers, whereas code-filtered
+ * spending_by_geography queries intermittently time out (502/504). Any page
+ * failure returns null (an incomplete sum would understate the total) — never a
+ * misleading partial or 0. The page cap is logged (no silent caps).
+ */
+async function sumDistrictAwardObligations(
+  state: string,
+  district: string,
+  awardTypeCodes: string[],
+  codeFilter: Record<string, unknown>,
+  dimension: string
+): Promise<number | null> {
+  const { startDate, endDate } = currentFederalFiscalYearWindow();
+  let total = 0;
+
+  for (let page = 1; page <= INFRA_MAX_PAGES; page++) {
+    try {
+      const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+        },
+        body: JSON.stringify({
+          subawards: false,
+          limit: 100,
+          page,
+          fields: ['Award ID', 'Award Amount'],
+          sort: 'Award Amount',
+          order: 'desc',
+          filters: {
+            place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
+            time_period: [{ start_date: startDate, end_date: endDate }],
+            award_type_codes: awardTypeCodes,
+            ...codeFilter,
+          },
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
+
+      if (!response.ok) {
+        logger.warn('Infrastructure award page failed', {
+          state,
+          district,
+          dimension,
+          page,
+          status: response.status,
+        });
+        return null;
+      }
+
+      const data = await response.json();
+      const results: Array<Record<string, unknown>> = data.results ?? [];
+      for (const r of results) {
+        const amount = Number(r['Award Amount']);
+        if (Number.isFinite(amount)) total += amount;
+      }
+
+      const hasNext = data.page_metadata?.hasNext ?? false;
+      if (!hasNext || results.length === 0) return total;
+
+      if (page === INFRA_MAX_PAGES) {
+        logger.warn('Infrastructure paging hit page cap; total may be understated', {
+          state,
+          district,
+          dimension,
+          pages: INFRA_MAX_PAGES,
+        });
+      }
+    } catch (error) {
+      logger.error('Error summing infrastructure award obligations', error as Error, {
+        state,
+        district,
+        dimension,
+        page,
+      });
+      return null;
+    }
+  }
+  return total;
+}
+
+/** Contract-side infrastructure obligations: PSC Y+Z procurement. */
+function fetchInfrastructureContractObligations(
+  state: string,
+  district: string
+): Promise<number | null> {
+  return sumDistrictAwardObligations(
+    state,
+    district,
+    CONTRACT_CODES,
+    { psc_codes: { require: INFRASTRUCTURE_CODE_SET.pscFamilies.map(f => ['Service', f]) } },
+    'contract'
+  );
+}
+
+/** Grant-side infrastructure obligations: DOT + EPA-SRF assistance listings. */
+function fetchInfrastructureGrantObligations(
+  state: string,
+  district: string
+): Promise<number | null> {
+  return sumDistrictAwardObligations(
+    state,
+    district,
+    GRANT_CODES,
+    { program_numbers: [...INFRASTRUCTURE_CODE_SET.grantCfda] },
+    'grant'
+  );
+}
+
+/** District infrastructure obligations, split by dimension. */
+export interface DistrictInfrastructureSpending {
+  /** contract + grant obligations; null when queried but none found (see reason). */
+  total: number | null;
+  contractObligations: number | null; // PSC Y+Z
+  grantObligations: number | null; // DOT/EPA-SRF assistance listings
+  codeSetLabel: string;
+  reason?: string; // present when total is null
+}
+
+/**
+ * Federal construction & infrastructure obligations for a district, current FY
+ * to date, from the documented INFRASTRUCTURE_CODE_SET. Returns null (not
+ * cached, retried) when a code family fails; returns an object with total null +
+ * reason when the query succeeds but finds nothing. Cached 6h on success.
+ */
+export async function getDistrictInfrastructureSpending(
+  state: string,
+  district: string
+): Promise<DistrictInfrastructureSpending | null> {
+  const cacheKey = `spending-district-infra-${state}-${district}`;
+
+  return cachedFetch(
+    cacheKey,
+    async () => {
+      const [contractObligations, grantObligations] = await Promise.all([
+        fetchInfrastructureContractObligations(state, district),
+        fetchInfrastructureGrantObligations(state, district),
+      ]);
+
+      // Either family failing means the combined total would be incomplete —
+      // return null (unavailable, retried) rather than a misleading partial sum.
+      if (contractObligations === null || grantObligations === null) return null;
+
+      const sum = contractObligations + grantObligations;
+      const base = {
+        contractObligations,
+        grantObligations,
+        codeSetLabel: INFRASTRUCTURE_CODE_SET.label,
+      };
+      if (sum <= 0) {
+        return {
+          ...base,
+          total: null,
+          reason:
+            'Queried USASpending; no matching construction or infrastructure obligations for the current fiscal year to date',
+        };
+      }
+      return { ...base, total: sum };
+    },
+    6 * 60 * 60
+  );
+}
+
+/**
  * Statewide federal spending total for the current fiscal year
  * (place-of-performance, all award types). Powers the senator variant of
  * the Record Card's "Their office, your money" section. Null-honesty:

@@ -12,6 +12,7 @@ import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population
 import {
   getDistrictSpending,
   getDistrictAwardCounts,
+  getDistrictInfrastructureSpending,
   parseDistrictId,
 } from '@/lib/services/spending.service';
 import type { FederalAward } from '@/types/spending';
@@ -100,9 +101,10 @@ async function fetchFederalInvestment(
   }
 
   try {
-    const [spending, counts] = await Promise.all([
+    const [spending, counts, infrastructure] = await Promise.all([
       getDistrictSpending(parsed.state, parsed.district),
       getDistrictAwardCounts(parsed.state, parsed.district),
+      getDistrictInfrastructureSpending(parsed.state, parsed.district),
     ]);
 
     const majorProjects = [...spending.contracts, ...spending.grants]
@@ -121,9 +123,10 @@ async function fetchFederalInvestment(
       spendingPerCapita: spending.aggregate?.perCapita ?? null,
       population: spending.aggregate?.population ?? null,
       majorProjects,
-      // No honest source: the old value was a keyword heuristic over a
-      // 10-award sample. Pending a PSC/NAICS-coded query.
-      infrastructureInvestment: null,
+      // Construction & infrastructure obligations from the documented
+      // INFRASTRUCTURE_CODE_SET (PSC Y+Z contracts + DOT/EPA-SRF grants).
+      // null = queried-but-none or upstream unavailable (see service).
+      infrastructureInvestment: infrastructure?.total ?? null,
     };
   } catch (error) {
     logger.error('Error fetching district federal investment', error as Error, { districtId });
@@ -341,7 +344,7 @@ export async function GET(
             'null values mean data is unavailable from real government sources - never estimated',
             'Federal spending figures are DISTRICT-scoped (USASpending.gov place of performance), current federal fiscal year to date',
             'Contracts & grants count covers awards with a place of performance in the district, current fiscal year',
-            'Infrastructure investment unavailable: no honest classification source (pending a PSC/NAICS-coded query)',
+            'Infrastructure investment = federal construction & infrastructure obligations from a documented code set: procurement for construction and real-property work (PSC Y & Z) plus DOT/EPA-SRF infrastructure grants (assistance listings 20.106/20.205/20.500/20.507, 66.458, 66.468), place of performance in district, current FY to date; null = none found or upstream unavailable',
             'Congressional bills from enhanced Congress.gov access; no impact classification is available (impactLevel is null)',
             'District-level social services data unavailable - real government APIs needed',
             'Federal facilities data unavailable - real government APIs needed',
