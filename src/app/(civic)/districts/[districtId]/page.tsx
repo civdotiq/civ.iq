@@ -21,6 +21,7 @@ import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import { EconomicIndicatorsSection } from '@/features/districts/components/EconomicIndicatorsSection';
 import { CommunityProfileSection } from '@/features/districts/components/CommunityProfileSection';
 import { HousingAffordabilitySection } from '@/features/districts/components/HousingAffordabilitySection';
+import ServicesHealthProfile from '@/features/districts/components/ServicesHealthProfile';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -319,6 +320,9 @@ export default function DistrictPage() {
 
             {/* Housing Affordability */}
             <HousingAffordabilitySection districtId={districtId} />
+
+            {/* Education, Healthcare & Public Health (CDC PLACES district estimate) */}
+            <ServicesHealthProfile districtId={districtId} />
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />
