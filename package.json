@@ -34,6 +34,7 @@
     "test:unit:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:smoke": "RUN_SMOKE_TESTS=1 jest --testPathPatterns=smoke.integration --runInBand --testTimeout=60000",
+    "test:llm-eval": "tsx scripts/llm-eval.ts",
     "smoke:embedding": "tsx scripts/smoke-embedding-pipeline.ts",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:e2e": "playwright test",

@@ -4,9 +4,18 @@
  */
 
 /**
- * Narrative Quality Validation Tests
+ * Narrative Quality Validation Tests (DETERMINISTIC)
  *
- * Validates that intelligence analyzer narratives meet quality standards:
+ * Validates the reading-level and causation VALIDATORS against static fixture
+ * strings. Fast, offline, no model calls — safe for `validate:all`.
+ *
+ * The complementary LIVE eval, which calls the real model (BillSummarizer →
+ * Gemini) and asserts real generated prose meets the guarantees, lives in
+ * `scripts/llm-eval.ts` and runs out-of-band via `npm run test:llm-eval`.
+ * It is a node-side tsx script, not a jest test, because a live network call
+ * needs Node's fetch/streams, which the jest jsdom environment does not provide.
+ *
+ * Quality standards checked here:
  * - Reading level ≤ 8th grade (Flesch-Kincaid)
  * - No causation claims (uses "pattern", "correlation", not "caused", "influenced")
  * - Length within bounds
