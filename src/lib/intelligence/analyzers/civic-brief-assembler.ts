@@ -16,6 +16,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
 import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
@@ -57,6 +58,19 @@ import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 
 /** Redis cache TTL: 24 hours */
 const CACHE_TTL = 24 * 60 * 60;
+
+/**
+ * AI summary reading-level guard, mirroring the analyzer narrative retry in
+ * shared.ts (`generateInsightNarrative`). All AI prose must meet the federal
+ * Plain Language target (Flesch-Kincaid ≤ 8); regenerate up to
+ * `MAX_SUMMARY_RETRIES` times, then fall back to the statistical summary. The
+ * whole loop is time-boxed by `NARRATIVE_TIMEOUT_MS` so a slow or repeatedly
+ * over-grade model degrades to the fallback instead of eating the 55s brief
+ * compute budget.
+ */
+const MAX_SUMMARY_RETRIES = 3;
+const TARGET_READING_LEVEL = 8;
+const NARRATIVE_TIMEOUT_MS = 12_000;
 
 const DISCLAIMER =
   'This brief synthesizes public government data. Campaign contributions and lobbying ' +
@@ -501,7 +515,11 @@ function assembleOversight(
 
 // ── AI Summary Generation ────────────────────────────────────────────
 
-async function generateBriefSummary(
+// Exported for the live causation eval (`scripts/causation-eval.ts`), which
+// feeds fixtured inputs so the real LLM prompt path runs without live
+// vote/finance fetches. The function also rewrites `patterns[].headline/detail`
+// in place from the AI response, so the eval scans those too. Not public API.
+export async function generateBriefSummary(
   identity: BriefIdentity,
   funding: BriefFunding,
   voting: BriefVoting,
@@ -510,50 +528,93 @@ async function generateBriefSummary(
 ): Promise<{ summary: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const fallbackSummary = buildFallbackSummary(identity, funding, voting, patterns);
 
+  const systemPrompt =
+    `You write civic intelligence briefs for CIV.IQ, a nonpartisan platform that helps citizens understand their elected representatives. Your audience is everyday voters, not policy analysts. Write the way a local newspaper reporter would explain things to a neighbor. ` +
+    PLAIN_LANGUAGE_SYSTEM_PROMPT;
+  const userPrompt = buildAIPrompt(identity, funding, voting, oversight, patterns);
+
+  // Time-box the whole validate-and-retry loop so a slow or persistently
+  // over-grade model degrades to the statistical fallback rather than eating
+  // the brief's 55s compute budget.
   try {
-    const systemPrompt =
-      `You write civic intelligence briefs for CIV.IQ, a nonpartisan platform that helps citizens understand their elected representatives. Your audience is everyday voters, not policy analysts. Write the way a local newspaper reporter would explain things to a neighbor. ` +
-      PLAIN_LANGUAGE_SYSTEM_PROMPT;
-
-    const userPrompt = buildAIPrompt(identity, funding, voting, oversight, patterns);
-
-    const response = await generateAIText(systemPrompt, userPrompt, {
-      temperature: 0.3,
-      maxTokens: 2000,
-    });
-
-    if (!response) return { summary: fallbackSummary, source: 'statistical-fallback' };
-
-    // Parse JSON response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { summary: fallbackSummary, source: 'statistical-fallback' };
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    const aiSummary = parsed.summary;
-
-    if (typeof aiSummary === 'string' && aiSummary.length > 20) {
-      // Also update pattern narratives from AI if provided
-      if (Array.isArray(parsed.patterns)) {
-        for (const aiPattern of parsed.patterns) {
-          const match = patterns.find(p => p.type === aiPattern.type);
-          if (match && typeof aiPattern.headline === 'string') {
-            match.headline = aiPattern.headline;
-          }
-          if (match && typeof aiPattern.detail === 'string') {
-            match.detail = aiPattern.detail;
-          }
-        }
-      }
-      return { summary: aiSummary, source: 'ai-generated' };
-    }
-
-    return { summary: fallbackSummary, source: 'statistical-fallback' };
+    return await withTimeout(
+      generateValidatedSummary(systemPrompt, userPrompt, patterns, fallbackSummary),
+      NARRATIVE_TIMEOUT_MS,
+      'CivicBriefSummary'
+    );
   } catch (error) {
     logger.warn('[CivicBrief] AI summary failed, using fallback', {
       error: (error as Error).message,
     });
     return { summary: fallbackSummary, source: 'statistical-fallback' };
   }
+}
+
+/**
+ * Call the model, parse the JSON brief, and accept it only when the summary
+ * meets the reading-level target. Retries up to `MAX_SUMMARY_RETRIES`, then
+ * returns the pre-built statistical fallback. AI pattern rewrites are applied
+ * only when they also meet the target, so one dense pattern never regresses the
+ * readability of an otherwise-good brief.
+ */
+async function generateValidatedSummary(
+  systemPrompt: string,
+  userPrompt: string,
+  patterns: BriefPattern[],
+  fallbackSummary: string
+): Promise<{ summary: string; source: 'ai-generated' | 'statistical-fallback' }> {
+  for (let attempt = 0; attempt < MAX_SUMMARY_RETRIES; attempt++) {
+    try {
+      const response = await generateAIText(systemPrompt, userPrompt, {
+        temperature: 0.3,
+        maxTokens: 2000,
+      });
+      if (!response) continue;
+
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) continue;
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const aiSummary = parsed.summary;
+      if (typeof aiSummary !== 'string' || aiSummary.length <= 20) continue;
+
+      // Reading-level gate on the primary voter-facing prose. Fail → regenerate.
+      if (!ReadingLevelValidator.meetsTarget(aiSummary, TARGET_READING_LEVEL)) {
+        logger.warn('[CivicBrief] Summary failed reading level', { attempt: attempt + 1 });
+        continue;
+      }
+
+      // Apply AI pattern rewrites, but only when they clear the reading level
+      // too; otherwise keep the deterministic (already-plain) pattern narrative.
+      if (Array.isArray(parsed.patterns)) {
+        for (const aiPattern of parsed.patterns) {
+          const match = patterns.find(p => p.type === aiPattern?.type);
+          if (!match) continue;
+          if (
+            typeof aiPattern.headline === 'string' &&
+            ReadingLevelValidator.meetsTarget(aiPattern.headline, TARGET_READING_LEVEL)
+          ) {
+            match.headline = aiPattern.headline;
+          }
+          if (
+            typeof aiPattern.detail === 'string' &&
+            ReadingLevelValidator.meetsTarget(aiPattern.detail, TARGET_READING_LEVEL)
+          ) {
+            match.detail = aiPattern.detail;
+          }
+        }
+      }
+
+      return { summary: aiSummary, source: 'ai-generated' };
+    } catch (error) {
+      logger.warn('[CivicBrief] AI summary attempt failed', {
+        attempt: attempt + 1,
+        error: (error as Error).message,
+      });
+    }
+  }
+
+  return { summary: fallbackSummary, source: 'statistical-fallback' };
 }
 
 function buildAIPrompt(

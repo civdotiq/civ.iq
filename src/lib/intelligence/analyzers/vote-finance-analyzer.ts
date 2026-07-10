@@ -264,7 +264,10 @@ async function computeAndCache(bioguideId: string, cacheKey: string): Promise<Vo
 
 // ── Data Fetching ────────────────────────────────────────────────────
 
-interface VoteWithIndustries {
+// Exported for the live causation eval (`scripts/causation-eval.ts`), which
+// feeds fixtured inputs to `generateNarrative` so the real LLM prompt path
+// runs without live vote/finance fetches. Not part of the analyzer's public API.
+export interface VoteWithIndustries {
   billId: string;
   billTitle: string;
   position: string;
@@ -272,7 +275,7 @@ interface VoteWithIndustries {
   sectors: IndustrySector[];
 }
 
-interface FetchedData {
+export interface FetchedData {
   name: string;
   party: string;
   state: string;
@@ -471,7 +474,8 @@ async function classifyVoteIndustries(rawVotes: RawVote[]): Promise<VoteWithIndu
 
 // ── Statistical Computation ──────────────────────────────────────────
 
-interface ComputedStats {
+// Exported for the live causation eval (see `VoteWithIndustries` note above).
+export interface ComputedStats {
   correlations: IndustryCorrelation[];
   overallCorrelation: number | null;
   overallAlignment: number;
@@ -644,7 +648,10 @@ async function computePeerComparison(
 
 // ── AI Narrative Generation ──────────────────────────────────────────
 
-async function generateNarrative(
+// Exported for the live causation eval (see `VoteWithIndustries` note above).
+// This is the real LLM narrative path — fixtured inputs let the eval assert the
+// generated prose avoids causation language without any live data fetch.
+export async function generateNarrative(
   data: FetchedData,
   stats: ComputedStats,
   peer: PeerComparison | null
