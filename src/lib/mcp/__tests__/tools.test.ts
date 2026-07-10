@@ -4,10 +4,16 @@
  */
 
 /**
- * MCP Tool Registration Tests
+ * MCP surface tests
  *
- * Verifies that all tools register correctly with proper schemas
- * and that the server initialization completes without errors.
+ * Connects a real MCP client to the server over an in-memory transport and
+ * asserts the actual advertised surface — tool count, annotations, prompts,
+ * resource templates — instead of a hardcoded list that can silently drift
+ * from what registers (the previous version of this file claimed 53 tools
+ * while the live server exposed 47).
+ *
+ * No tools/call here: handlers hit live government APIs, which unit tests
+ * must not do.
  */
 
 // Mock AI provider to avoid eventsource-parser import issue in test env
@@ -23,93 +29,88 @@ jest.mock('@/features/legislation/services/ai/bill-summary-cache', () => ({
 }));
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { initializeMcpServer } from '../server';
 
-describe('MCP Server', () => {
-  let server: McpServer;
+const EXPECTED_TOOL_COUNT = 47;
+const EXPECTED_PROMPT_COUNT = 6;
+const EXPECTED_RESOURCE_TEMPLATE_COUNT = 7;
 
-  beforeEach(() => {
-    server = new McpServer({ name: 'civiq-test', version: '1.0.0' });
+async function connectedClient(): Promise<Client> {
+  const server = new McpServer({ name: 'civiq-test', version: '1.0.0' });
+  await initializeMcpServer(server);
+
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const client = new Client({ name: 'civiq-test-client', version: '1.0.0' });
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  return client;
+}
+
+describe('MCP server surface', () => {
+  let client: Client;
+
+  beforeAll(async () => {
+    client = await connectedClient();
   });
 
-  it('initializes without errors', async () => {
-    await expect(initializeMcpServer(server)).resolves.not.toThrow();
+  afterAll(async () => {
+    await client.close();
   });
 
-  it('registers all 53 tools', async () => {
-    await initializeMcpServer(server);
+  it(`advertises exactly ${EXPECTED_TOOL_COUNT} tools`, async () => {
+    const { tools } = await client.listTools();
+    expect(tools).toHaveLength(EXPECTED_TOOL_COUNT);
+  });
 
-    const expectedTools = [
+  it('every tool carries title, description, and read-only annotations', async () => {
+    const { tools } = await client.listTools();
+    for (const tool of tools) {
+      expect(tool.title ?? tool.annotations?.title).toBeTruthy();
+      expect(tool.description).toBeTruthy();
+      // OpenAI app review requires retrieval tools to be marked read-only.
+      expect(tool.annotations?.readOnlyHint).toBe(true);
+      expect(tool.annotations?.openWorldHint).toBe(true);
+    }
+  });
+
+  it('core tools are present under their published names', async () => {
+    const { tools } = await client.listTools();
+    const names = new Set(tools.map(t => t.name));
+    for (const required of [
       'lookup_representatives',
-      'list_state_delegation',
       'get_representative_profile',
-      'compare_legislators',
-      'search_legislation',
-      'get_bill_details',
       'get_voting_history',
-      'get_vote_record',
+      'search_legislation',
       'get_campaign_finance',
       'search_lobbying',
-      'get_federal_spending',
-      'analyze_vote_prediction',
-      'get_influence_chain',
-      'get_committee_info',
-      'get_federal_register',
-      'get_district_info',
-      'search_epa_facilities',
-      'get_district_environmental_profile',
-      'analyze_environmental_influence',
-      'search_fema_disasters',
-      'get_district_disaster_history',
-      // Sprint 2: FBI + CFPB + HUD
-      'search_crime_statistics',
-      'get_state_public_safety_profile',
-      'search_consumer_complaints',
-      'get_district_consumer_complaints',
-      'analyze_consumer_protection_influence',
-      'get_housing_affordability',
-      'get_district_housing_profile',
-      // Sprint 3: FDA + CMS
-      'search_fda_recalls',
-      'search_fda_adverse_events',
-      'analyze_pharma_regulatory_influence',
-      'search_healthcare_providers',
-      'get_district_healthcare_profile',
-      // Sprint 4: NHTSA + Open Payments
-      'search_vehicle_recalls',
-      'search_vehicle_complaints',
-      'search_open_payments',
-      'get_district_pharma_payments',
-      'analyze_health_industry_influence',
-      // Sprint 5: EIA + College Scorecard + NIH + NOAA
-      'get_state_energy_profile',
-      'analyze_energy_policy_influence',
-      'search_colleges',
-      'get_district_education_profile',
-      'search_nih_grants',
-      'get_district_research_profile',
-      'get_climate_data',
-      'get_state_climate_profile',
-      // Sprint 6: FDIC + Treasury + Cross-domain Intelligence
-      'search_fdic_institutions',
-      'get_district_banking_profile',
-      'get_federal_fiscal_data',
-      'get_federal_debt_context',
       'analyze_district_comprehensive',
-      'analyze_industry_regulatory_landscape',
-      'analyze_policy_area_ecosystem',
-    ];
-
-    // The fact that initializeMcpServer completes successfully means all tools registered
-    expect(expectedTools.length).toBe(53);
+    ]) {
+      expect(names).toContain(required);
+    }
   });
-});
 
-describe('MCP Tool Schemas', () => {
-  it('all tool groups register without schema errors', async () => {
-    const server = new McpServer({ name: 'civiq-test', version: '1.0.0' });
-    await initializeMcpServer(server);
-    // If registration succeeds with zod schemas, all schemas are valid
-    expect(true).toBe(true);
+  it('every tool input schema is an object with described properties', async () => {
+    const { tools } = await client.listTools();
+    for (const tool of tools) {
+      expect(tool.inputSchema.type).toBe('object');
+      const properties = (tool.inputSchema.properties ?? {}) as Record<
+        string,
+        { description?: string }
+      >;
+      for (const [param, schema] of Object.entries(properties)) {
+        expect(`${tool.name}.${param}: ${schema.description ?? ''}`).not.toBe(
+          `${tool.name}.${param}: `
+        );
+      }
+    }
+  });
+
+  it(`advertises ${EXPECTED_PROMPT_COUNT} prompts and ${EXPECTED_RESOURCE_TEMPLATE_COUNT} resource templates`, async () => {
+    const { prompts } = await client.listPrompts();
+    expect(prompts).toHaveLength(EXPECTED_PROMPT_COUNT);
+
+    const { resourceTemplates } = await client.listResourceTemplates();
+    expect(resourceTemplates).toHaveLength(EXPECTED_RESOURCE_TEMPLATE_COUNT);
   });
 });

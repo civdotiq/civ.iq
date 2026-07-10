@@ -8,20 +8,26 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 
 export function registerFinanceTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'get_campaign_finance',
-    'Get FEC campaign finance data for a legislator including total raised/spent, PAC contributions, and industry breakdown.',
     {
-      bioguideId: z.string().describe('Congress bioguide identifier'),
-      cycle: z
-        .number()
-        .int()
-        .min(1990)
-        .max(2030)
-        .optional()
-        .describe('Election cycle year, default current'),
+      title: 'Campaign finance summary',
+      description:
+        'Get FEC campaign finance data for a legislator including total raised/spent, PAC contributions, and industry breakdown.',
+      inputSchema: {
+        bioguideId: z.string().describe('Congress bioguide identifier'),
+        cycle: z
+          .number()
+          .int()
+          .min(1990)
+          .max(2030)
+          .optional()
+          .describe('Election cycle year, default current'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideId, cycle }) => {
       try {
@@ -54,7 +60,7 @@ export function registerFinanceTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(summary, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(summary) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -64,18 +70,23 @@ export function registerFinanceTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'search_lobbying',
-    'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes.',
     {
-      year: z
-        .number()
-        .int()
-        .min(1990)
-        .max(2030)
-        .optional()
-        .describe('Filing year, default current'),
-      quarter: z.number().min(1).max(4).optional().describe('Quarter (1-4), default most recent'),
+      title: 'Lobbying filings search',
+      description:
+        'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes.',
+      inputSchema: {
+        year: z
+          .number()
+          .int()
+          .min(1990)
+          .max(2030)
+          .optional()
+          .describe('Filing year, default current'),
+        quarter: z.number().min(1).max(4).optional().describe('Quarter (1-4), default most recent'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ year, quarter }) => {
       try {
@@ -85,7 +96,7 @@ export function registerFinanceTools(server: McpServer): void {
         const filings = await senateLobbyingAPI.fetchFilingsByQuarter(filingYear, filingQuarter);
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(filings.slice(0, 50), null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(filings.slice(0, 50)) }],
         };
       } catch (error) {
         return {
@@ -96,12 +107,17 @@ export function registerFinanceTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_federal_spending',
-    'Get federal contracts and grants for a congressional district from USASpending.gov.',
     {
-      state: z.string().describe('Two-letter state code (e.g., MI)'),
-      district: z.string().optional().describe('District number (e.g., 05)'),
+      title: 'Federal spending lookup',
+      description:
+        'Get federal contracts and grants for a congressional district from USASpending.gov.',
+      inputSchema: {
+        state: z.string().describe('Two-letter state code (e.g., MI)'),
+        district: z.string().optional().describe('District number (e.g., 05)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, district }) => {
       try {
@@ -154,7 +170,7 @@ export function registerFinanceTools(server: McpServer): void {
 
         const data = await response.json();
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(data.results ?? [], null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(data.results ?? []) }],
         };
       } catch (error) {
         return {

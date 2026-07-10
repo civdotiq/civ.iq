@@ -8,25 +8,31 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerLegislationTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'search_legislation',
-    'Search for bills in Congress. Returns bill ID, title, sponsor, status, and policy area. Note: Congress.gov does not support keyword search — results are sorted by most recent activity. Filter by subject or sponsor after retrieval.',
     {
-      congress: z
-        .number()
-        .int()
-        .min(1)
-        .max(getCurrentCongressNumber() + 1)
-        .optional()
-        .describe('Congress number (defaults to the current Congress)'),
-      type: z
-        .enum(['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'])
-        .optional()
-        .describe('Bill type filter'),
-      limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
+      title: 'Bill search',
+      description:
+        'Search for bills in Congress. Returns bill ID, title, sponsor, status, and policy area. Note: Congress.gov does not support keyword search — results are sorted by most recent activity. Filter by subject or sponsor after retrieval.',
+      inputSchema: {
+        congress: z
+          .number()
+          .int()
+          .min(1)
+          .max(getCurrentCongressNumber() + 1)
+          .optional()
+          .describe('Congress number (defaults to the current Congress)'),
+        type: z
+          .enum(['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'])
+          .optional()
+          .describe('Bill type filter'),
+        limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ congress, type, limit }) => {
       try {
@@ -76,7 +82,7 @@ export function registerLegislationTools(server: McpServer): void {
           updateDate: b.updateDate,
         }));
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(bills, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(bills) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -86,15 +92,20 @@ export function registerLegislationTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_bill_details',
-    'Get detailed information about a specific bill including sponsor, cosponsors, committees, actions, and policy area.',
     {
-      billId: z
-        .string()
-        .describe(
-          'Bill identifier in congress-type-number format (e.g., "119-hr-1" for H.R.1 in 119th Congress)'
-        ),
+      title: 'Bill details',
+      description:
+        'Get detailed information about a specific bill including sponsor, cosponsors, committees, actions, and policy area.',
+      inputSchema: {
+        billId: z
+          .string()
+          .describe(
+            'Bill identifier in congress-type-number format (e.g., "119-hr-1" for H.R.1 in 119th Congress)'
+          ),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ billId }) => {
       try {
@@ -111,7 +122,7 @@ export function registerLegislationTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(bill, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(bill) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -121,13 +132,24 @@ export function registerLegislationTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_voting_history',
-    "Get a legislator's recent voting record. Returns vote ID, bill info, position, result, and date.",
     {
-      bioguideId: z.string().describe('Congress bioguide identifier'),
-      chamber: z.enum(['House', 'Senate']).describe('Chamber of the legislator'),
-      limit: z.number().int().min(1).max(50).optional().describe('Max votes to return, default 20'),
+      title: 'Voting history',
+      description:
+        "Get a legislator's recent voting record. Returns vote ID, bill info, position, result, and date.",
+      inputSchema: {
+        bioguideId: z.string().describe('Congress bioguide identifier'),
+        chamber: z.enum(['House', 'Senate']).describe('Chamber of the legislator'),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(50)
+          .optional()
+          .describe('Max votes to return, default 20'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideId, chamber, limit }) => {
       try {
@@ -147,7 +169,7 @@ export function registerLegislationTools(server: McpServer): void {
                 maxVotes
               );
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(votes, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(votes) }] };
       } catch (error) {
         logger.warn('[MCP] get_voting_history failed', {
           bioguideId,
@@ -161,25 +183,30 @@ export function registerLegislationTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_vote_record',
-    'Get details about a specific House roll call vote including all member positions. Note: only House votes are available via this tool.',
     {
-      congress: z
-        .number()
-        .int()
-        .min(1)
-        .max(120)
-        .optional()
-        .describe('Congress number, default 119'),
-      session: z
-        .number()
-        .int()
-        .min(1)
-        .max(2)
-        .optional()
-        .describe('Session number, default current'),
-      rollCallNumber: z.number().describe('Roll call number'),
+      title: 'House roll call vote',
+      description:
+        'Get details about a specific House roll call vote including all member positions. Note: only House votes are available via this tool.',
+      inputSchema: {
+        congress: z
+          .number()
+          .int()
+          .min(1)
+          .max(120)
+          .optional()
+          .describe('Congress number, default 119'),
+        session: z
+          .number()
+          .int()
+          .min(1)
+          .max(2)
+          .optional()
+          .describe('Session number, default current'),
+        rollCallNumber: z.number().describe('Roll call number'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ congress, session, rollCallNumber }) => {
       try {
@@ -218,7 +245,7 @@ export function registerLegislationTools(server: McpServer): void {
         }
 
         const data = await response.json();
-        return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

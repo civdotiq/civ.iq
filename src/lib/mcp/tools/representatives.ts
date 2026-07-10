@@ -8,23 +8,29 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerRepresentativeTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'lookup_representatives',
-    'Find federal legislators by full street address (most accurate) or by state. A full address resolves the exact congressional district via Census Geocoder. Returns bioguideId, name, party, state, district, chamber.',
     {
-      street: z
-        .string()
-        .describe('Street address (e.g., "123 Main St") — required for district-level lookup'),
-      city: z.string().describe('City name'),
-      state: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
-      zip: z
-        .string()
-        .regex(/^\d{5}$/)
-        .optional()
-        .describe('5-digit ZIP code — improves geocoding accuracy'),
+      title: 'Representative lookup by address',
+      description:
+        'Find federal legislators by full street address (most accurate) or by state. A full address resolves the exact congressional district via Census Geocoder. Returns bioguideId, name, party, state, district, chamber.',
+      inputSchema: {
+        street: z
+          .string()
+          .describe('Street address (e.g., "123 Main St") — required for district-level lookup'),
+        city: z.string().describe('City name'),
+        state: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
+        zip: z
+          .string()
+          .regex(/^\d{5}$/)
+          .optional()
+          .describe('5-digit ZIP code — improves geocoding accuracy'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ street, city, state, zip }) => {
       try {
@@ -64,15 +70,11 @@ export function registerRepresentativeTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify(
-                {
-                  method: 'address_geocode',
-                  district: `${stateUpper}-${districtNum}`,
-                  representatives: reps.map(formatRep),
-                },
-                null,
-                2
-              ),
+              text: JSON.stringify({
+                method: 'address_geocode',
+                district: `${stateUpper}-${districtNum}`,
+                representatives: reps.map(formatRep),
+              }),
             },
           ],
         };
@@ -86,11 +88,16 @@ export function registerRepresentativeTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'list_state_delegation',
-    'List all federal legislators for a state (both senators and all House representatives).',
     {
-      state: z.string().describe('Two-letter state code (e.g., MI)'),
+      title: 'State delegation list',
+      description:
+        'List all federal legislators for a state (both senators and all House representatives).',
+      inputSchema: {
+        state: z.string().describe('Two-letter state code (e.g., MI)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state }) => {
       try {
@@ -101,15 +108,11 @@ export function registerRepresentativeTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify(
-                {
-                  state: state.toUpperCase(),
-                  total: reps.length,
-                  representatives: reps.map(formatRep),
-                },
-                null,
-                2
-              ),
+              text: JSON.stringify({
+                state: state.toUpperCase(),
+                total: reps.length,
+                representatives: reps.map(formatRep),
+              }),
             },
           ],
         };
@@ -123,11 +126,16 @@ export function registerRepresentativeTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_representative_profile',
-    'Get detailed profile for a specific legislator including committees, social media, biography, and contact info.',
     {
-      bioguideId: z.string().describe('Congress bioguide identifier (e.g., P000197)'),
+      title: 'Legislator profile',
+      description:
+        'Get detailed profile for a specific legislator including committees, social media, biography, and contact info.',
+      inputSchema: {
+        bioguideId: z.string().describe('Congress bioguide identifier (e.g., P000197)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideId }) => {
       try {
@@ -144,7 +152,7 @@ export function registerRepresentativeTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(rep, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(rep) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -154,15 +162,20 @@ export function registerRepresentativeTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'compare_legislators',
-    'Compare multiple legislators side-by-side. Returns profiles for each bioguideId.',
     {
-      bioguideIds: z
-        .array(z.string())
-        .min(2)
-        .max(10)
-        .describe('Array of bioguide identifiers to compare'),
+      title: 'Legislator comparison',
+      description:
+        'Compare multiple legislators side-by-side. Returns profiles for each bioguideId.',
+      inputSchema: {
+        bioguideIds: z
+          .array(z.string())
+          .min(2)
+          .max(10)
+          .describe('Array of bioguide identifiers to compare'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideIds }) => {
       try {
@@ -173,7 +186,7 @@ export function registerRepresentativeTools(server: McpServer): void {
           })
         );
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profiles, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profiles) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

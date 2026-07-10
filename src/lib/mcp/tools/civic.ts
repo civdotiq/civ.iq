@@ -6,15 +6,21 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 
 export function registerCivicTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'get_committee_info',
-    'Get detailed information about a congressional committee including members, jurisdiction, and subcommittees.',
     {
-      committeeId: z
-        .string()
-        .describe('Committee identifier (e.g., HSIF for House Energy & Commerce)'),
+      title: 'Committee details',
+      description:
+        'Get detailed information about a congressional committee including members, jurisdiction, and subcommittees.',
+      inputSchema: {
+        committeeId: z
+          .string()
+          .describe('Committee identifier (e.g., HSIF for House Energy & Commerce)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ committeeId }) => {
       try {
@@ -26,7 +32,7 @@ export function registerCivicTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(committee, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(committee) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -36,20 +42,27 @@ export function registerCivicTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_federal_register',
-    'Search Federal Register for rules, proposed rules, notices, and executive orders.',
     {
-      query: z.string().optional().describe('Search term'),
-      type: z
-        .enum(['rule', 'proposed_rule', 'notice', 'presidential_document'])
-        .optional()
-        .describe('Document type'),
-      agency: z
-        .string()
-        .optional()
-        .describe('Agency slug (e.g., "environmental-protection-agency", "department-of-defense")'),
-      limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
+      title: 'Federal Register search',
+      description:
+        'Search Federal Register for rules, proposed rules, notices, and executive orders.',
+      inputSchema: {
+        query: z.string().optional().describe('Search term'),
+        type: z
+          .enum(['rule', 'proposed_rule', 'notice', 'presidential_document'])
+          .optional()
+          .describe('Document type'),
+        agency: z
+          .string()
+          .optional()
+          .describe(
+            'Agency slug (e.g., "environmental-protection-agency", "department-of-defense")'
+          ),
+        limit: z.number().int().min(1).max(50).optional().describe('Max results, default 20'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ query, type, agency, limit }) => {
       try {
@@ -84,7 +97,7 @@ export function registerCivicTools(server: McpServer): void {
           htmlUrl: doc.html_url,
         }));
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(results) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -94,12 +107,17 @@ export function registerCivicTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_district_info',
-    'Get comprehensive information about a congressional district including demographics, economics, and representative.',
     {
-      stateCode: z.string().describe('Two-letter state code (e.g., MI)'),
-      districtNumber: z.string().describe('District number (e.g., 07)'),
+      title: 'District profile',
+      description:
+        'Get comprehensive information about a congressional district including demographics, economics, and representative.',
+      inputSchema: {
+        stateCode: z.string().describe('Two-letter state code (e.g., MI)'),
+        districtNumber: z.string().describe('District number (e.g., 07)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -119,7 +137,7 @@ export function registerCivicTools(server: McpServer): void {
         }
 
         const data = await response.json();
-        return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

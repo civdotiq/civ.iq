@@ -42,21 +42,27 @@ import { entitiesMatch } from '@civiq/entity-resolution';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerSafetyTools(server: McpServer): void {
   // ── Tier 1: FEMA disaster declaration search ───────────────────
-  server.tool(
+  server.registerTool(
     'search_fema_disasters',
-    'Search FEMA disaster declarations by state, year, or type (DR=Major Disaster, EM=Emergency, FM=Fire Management). Returns declaration number, dates, programs, and designated areas.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
-      year: z.number().int().min(1953).max(2030).optional().describe('Fiscal year declared'),
-      type: z
-        .enum(['DR', 'EM', 'FM'])
-        .optional()
-        .describe('Declaration type: DR (Major Disaster), EM (Emergency), FM (Fire Management)'),
-      limit: z.number().int().min(1).max(200).optional().describe('Max results (default 50)'),
+      title: 'FEMA disaster search',
+      description:
+        'Search FEMA disaster declarations by state, year, or type (DR=Major Disaster, EM=Emergency, FM=Fire Management). Returns declaration number, dates, programs, and designated areas.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
+        year: z.number().int().min(1953).max(2030).optional().describe('Fiscal year declared'),
+        type: z
+          .enum(['DR', 'EM', 'FM'])
+          .optional()
+          .describe('Declaration type: DR (Major Disaster), EM (Emergency), FM (Fire Management)'),
+        limit: z.number().int().min(1).max(200).optional().describe('Max results (default 50)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, year, type, limit }) => {
       try {
@@ -78,7 +84,7 @@ export function registerSafetyTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(disasters, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(disasters) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -89,19 +95,29 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District disaster history ──────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_disaster_history',
-    'Disaster history for a congressional district: FEMA declarations, recurring hazard types, total assistance amounts. Cross-references with USASpending disaster relief in the district.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., FL)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
-      yearsBack: z
-        .number()
-        .int()
-        .min(1)
-        .max(30)
-        .optional()
-        .describe('Years of history (default 10)'),
+      title: 'District disaster history',
+      description:
+        'Disaster history for a congressional district: FEMA declarations, recurring hazard types, total assistance amounts. Cross-references with USASpending disaster relief in the district.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., FL)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+        yearsBack: z
+          .number()
+          .int()
+          .min(1)
+          .max(30)
+          .optional()
+          .describe('Years of history (default 10)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber, yearsBack }) => {
       try {
@@ -275,7 +291,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(history, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(history) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -286,18 +302,23 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 1: FBI crime statistics search ─────────────────────────
-  server.tool(
+  server.registerTool(
     'search_crime_statistics',
-    'FBI UCR crime statistics by state and offense type. Returns actual counts, rates per 100,000, clearances, and national comparison. Offense types: violent-crime, property-crime, HOM, RPE, ROB, ASS, BUR, LAR, MVT, ARS.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
-      year: z
-        .number()
-        .int()
-        .min(1985)
-        .max(2030)
-        .optional()
-        .describe('Year (default: most recent available)'),
+      title: 'Crime statistics search',
+      description:
+        'FBI UCR crime statistics by state and offense type. Returns actual counts, rates per 100,000, clearances, and national comparison. Offense types: violent-crime, property-crime, HOM, RPE, ROB, ASS, BUR, LAR, MVT, ARS.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
+        year: z
+          .number()
+          .int()
+          .min(1985)
+          .max(2030)
+          .optional()
+          .describe('Year (default: most recent available)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, year }) => {
       try {
@@ -314,7 +335,7 @@ export function registerSafetyTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(stats, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(stats) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -325,18 +346,23 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 2: State public safety profile ─────────────────────────
-  server.tool(
+  server.registerTool(
     'get_state_public_safety_profile',
-    "State crime trends with national comparison, Judiciary committee memberships from the state's congressional delegation, and relevant policy area context for criminal justice legislation.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
-      yearsBack: z
-        .number()
-        .int()
-        .min(1)
-        .max(20)
-        .optional()
-        .describe('Years of trend data (default 5)'),
+      title: 'State public safety profile',
+      description:
+        "State crime trends with national comparison, Judiciary committee memberships from the state's congressional delegation, and relevant policy area context for criminal justice legislation.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+        yearsBack: z
+          .number()
+          .int()
+          .min(1)
+          .max(20)
+          .optional()
+          .describe('Years of trend data (default 5)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, yearsBack }) => {
       try {
@@ -392,7 +418,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -403,24 +429,29 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 1: CFPB consumer complaint search ──────────────────────
-  server.tool(
+  server.registerTool(
     'search_consumer_complaints',
-    'Search CFPB consumer complaints by company, product, state, or date range. Returns complaint details including issue, response, and timeliness.',
     {
-      company: z.string().optional().describe('Company name to filter by'),
-      product: z.string().optional().describe('Product type (e.g., "Credit reporting")'),
-      state: z.string().length(2).optional().describe('Two-letter state code'),
-      dateFrom: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/)
-        .optional()
-        .describe('Start date (YYYY-MM-DD)'),
-      dateTo: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/)
-        .optional()
-        .describe('End date (YYYY-MM-DD)'),
-      size: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      title: 'Consumer complaint search',
+      description:
+        'Search CFPB consumer complaints by company, product, state, or date range. Returns complaint details including issue, response, and timeliness.',
+      inputSchema: {
+        company: z.string().optional().describe('Company name to filter by'),
+        product: z.string().optional().describe('Product type (e.g., "Credit reporting")'),
+        state: z.string().length(2).optional().describe('Two-letter state code'),
+        dateFrom: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Start date (YYYY-MM-DD)'),
+        dateTo: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('End date (YYYY-MM-DD)'),
+        size: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ company, product, state, dateFrom, dateTo, size }) => {
       try {
@@ -448,7 +479,7 @@ export function registerSafetyTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify({ total: result.total, complaints: result.complaints }, null, 2),
+              text: JSON.stringify({ total: result.total, complaints: result.complaints }),
             },
           ],
         };
@@ -462,12 +493,22 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District consumer complaints ────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_consumer_complaints',
-    'Consumer complaints aggregated by congressional district using ZIP-district mapping. Shows top complained-about companies, products, and issues for a district.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., PA)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District consumer complaints',
+      description:
+        'Consumer complaints aggregated by congressional district using ZIP-district mapping. Shows top complained-about companies, products, and issues for a district.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., PA)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -516,7 +557,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -527,12 +568,22 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 3: Consumer protection influence analysis ──────────────
-  server.tool(
+  server.registerTool(
     'analyze_consumer_protection_influence',
-    'Cross-reference top complained-about companies in a state with lobbying registrants (entity resolution fuzzy match) and campaign contributions to the district representative. Checks rep votes on Finance-related legislation. Shows correlations only — not causation.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., IL)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'Consumer protection influence',
+      description:
+        'Cross-reference top complained-about companies in a state with lobbying registrants (entity resolution fuzzy match) and campaign contributions to the district representative. Checks rep votes on Finance-related legislation. Shows correlations only — not causation.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., IL)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -686,7 +737,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -697,14 +748,19 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 1: HUD housing affordability ───────────────────────────
-  server.tool(
+  server.registerTool(
     'get_housing_affordability',
-    'HUD Fair Market Rents and income limits by county FIPS code. Returns rental rates by bedroom count and income thresholds (very low, extremely low, low) by household size.',
     {
-      countyFips: z
-        .string()
-        .regex(/^\d{5,10}$/)
-        .describe('County FIPS code (e.g., 06037 for Los Angeles County)'),
+      title: 'Housing affordability data',
+      description:
+        'HUD Fair Market Rents and income limits by county FIPS code. Returns rental rates by bedroom count and income thresholds (very low, extremely low, low) by household size.',
+      inputSchema: {
+        countyFips: z
+          .string()
+          .regex(/^\d{5,10}$/)
+          .describe('County FIPS code (e.g., 06037 for Los Angeles County)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ countyFips }) => {
       try {
@@ -734,7 +790,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -745,12 +801,22 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District housing profile ────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_housing_profile',
-    "Housing affordability profile for a congressional district: HUD Fair Market Rents and income limits for district counties, representative's Housing committee membership, and relevant housing policy context.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., NY)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District housing profile',
+      description:
+        "Housing affordability profile for a congressional district: HUD Fair Market Rents and income limits for district counties, representative's Housing committee membership, and relevant housing policy context.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., NY)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -828,7 +894,7 @@ export function registerSafetyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -839,13 +905,18 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 1: NHTSA vehicle recall search ─────────────────────────
-  server.tool(
+  server.registerTool(
     'search_vehicle_recalls',
-    'Search NHTSA vehicle recalls by make, model, and/or year. Returns campaign number, affected component, safety summary, consequence, remedy, and whether to park the vehicle immediately.',
     {
-      make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
-      model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
-      year: z.number().int().min(1966).max(2030).optional().describe('Model year'),
+      title: 'Vehicle recall search',
+      description:
+        'Search NHTSA vehicle recalls by make, model, and/or year. Returns campaign number, affected component, safety summary, consequence, remedy, and whether to park the vehicle immediately.',
+      inputSchema: {
+        make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
+        model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
+        year: z.number().int().min(1966).max(2030).optional().describe('Model year'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ make, model, year }) => {
       try {
@@ -874,7 +945,7 @@ export function registerSafetyTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(recalls, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(recalls) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -885,16 +956,21 @@ export function registerSafetyTools(server: McpServer): void {
   );
 
   // ── Tier 1: NHTSA vehicle complaint search ──────────────────────
-  server.tool(
+  server.registerTool(
     'search_vehicle_complaints',
-    'Search NHTSA consumer complaints about vehicles by make, model, and/or component. Returns incident details including injuries, deaths, crashes, fires, and complaint summary.',
     {
-      make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
-      model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
-      component: z
-        .string()
-        .optional()
-        .describe('Vehicle component (e.g., STEERING, BRAKES, AIR BAGS)'),
+      title: 'Vehicle complaint search',
+      description:
+        'Search NHTSA consumer complaints about vehicles by make, model, and/or component. Returns incident details including injuries, deaths, crashes, fires, and complaint summary.',
+      inputSchema: {
+        make: z.string().optional().describe('Vehicle make (e.g., Ford, Toyota)'),
+        model: z.string().optional().describe('Vehicle model (e.g., F-150, Camry)'),
+        component: z
+          .string()
+          .optional()
+          .describe('Vehicle component (e.g., STEERING, BRAKES, AIR BAGS)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ make, model, component }) => {
       try {
@@ -924,7 +1000,7 @@ export function registerSafetyTools(server: McpServer): void {
         }
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(complaints, null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(complaints) }],
         };
       } catch (error) {
         return {

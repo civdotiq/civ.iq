@@ -16,6 +16,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 /** Fetch recent health-related bills directly from Congress.gov API */
@@ -44,16 +45,21 @@ async function fetchHealthBills(limit: number): Promise<unknown[]> {
 
 export function registerHealthTools(server: McpServer): void {
   // ── Tier 1: CMS healthcare provider search ────────────────────
-  server.tool(
+  server.registerTool(
     'search_healthcare_providers',
-    'Search CMS hospitals and nursing homes by state with quality ratings. Returns overall star ratings, safety/mortality comparisons for hospitals, and inspection/staffing ratings for nursing homes.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
-      city: z.string().optional().describe('City name to filter results'),
-      type: z
-        .enum(['hospital', 'nursing_home', 'both'])
-        .optional()
-        .describe('Provider type (default: both)'),
+      title: 'Healthcare provider search',
+      description:
+        'Search CMS hospitals and nursing homes by state with quality ratings. Returns overall star ratings, safety/mortality comparisons for hospitals, and inspection/staffing ratings for nursing homes.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
+        city: z.string().optional().describe('City name to filter results'),
+        type: z
+          .enum(['hospital', 'nursing_home', 'both'])
+          .optional()
+          .describe('Provider type (default: both)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, city, type }) => {
       try {
@@ -87,7 +93,7 @@ export function registerHealthTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify({ total: totalCount, ...results }, null, 2),
+              text: JSON.stringify({ total: totalCount, ...results }),
             },
           ],
         };
@@ -101,12 +107,22 @@ export function registerHealthTools(server: McpServer): void {
   );
 
   // ── Tier 2: District healthcare profile ───────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_healthcare_profile',
-    "Healthcare infrastructure for a congressional district: CMS hospitals and nursing homes with quality ratings, representative's Health committee membership, and pending health legislation context.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District healthcare profile',
+      description:
+        "Healthcare infrastructure for a congressional district: CMS hospitals and nursing homes with quality ratings, representative's Health committee membership, and pending health legislation context.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -287,7 +303,7 @@ export function registerHealthTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

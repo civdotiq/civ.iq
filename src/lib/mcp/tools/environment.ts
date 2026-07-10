@@ -25,22 +25,28 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { sicToSector } from '@civiq/entity-resolution';
 import { getCommitteesForAgency } from '@/lib/connections/committee-agency-map';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerEnvironmentTools(server: McpServer): void {
   // ── Tier 1: Raw EPA facility search ────────────────────────────
-  server.tool(
+  server.registerTool(
     'search_epa_facilities',
-    'Search EPA-regulated facilities by state, ZIP, or SIC code. Returns facility name, address, compliance status, violations, and penalties.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
-      zip: z
-        .string()
-        .regex(/^\d{5}$/)
-        .optional()
-        .describe('5-digit ZIP code'),
-      sicCode: z.string().optional().describe('4-digit SIC code to filter by industry'),
-      limit: z.number().int().min(1).max(100).optional().describe('Max results (default 20)'),
+      title: 'EPA facility search',
+      description:
+        'Search EPA-regulated facilities by state, ZIP, or SIC code. Returns facility name, address, compliance status, violations, and penalties.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., CA)'),
+        zip: z
+          .string()
+          .regex(/^\d{5}$/)
+          .optional()
+          .describe('5-digit ZIP code'),
+        sicCode: z.string().optional().describe('4-digit SIC code to filter by industry'),
+        limit: z.number().int().min(1).max(100).optional().describe('Max results (default 20)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, zip, sicCode, limit }) => {
       try {
@@ -62,7 +68,7 @@ export function registerEnvironmentTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(facilities, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(facilities) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -73,12 +79,22 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // ── Tier 2: District environmental profile ─────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_environmental_profile',
-    'Environmental profile for a congressional district: regulated facilities, active violations, Superfund sites, toxic releases. Includes serving representative.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District environmental profile',
+      description:
+        'Environmental profile for a congressional district: regulated facilities, active violations, Superfund sites, toxic releases. Includes serving representative.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -164,7 +180,7 @@ export function registerEnvironmentTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -175,12 +191,22 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // ── Tier 3: Environmental influence analysis ───────────────────
-  server.tool(
+  server.registerTool(
     'analyze_environmental_influence',
-    'Cross-reference EPA violations in a district with lobbying and campaign finance. Maps facility SIC codes to sectors, finds lobbying in those sectors by the district rep, checks EPA-oversight committee membership overlap, and identifies environmental legislation votes.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., OH)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'Environmental influence analysis',
+      description:
+        'Cross-reference EPA violations in a district with lobbying and campaign finance. Maps facility SIC codes to sectors, finds lobbying in those sectors by the district rep, checks EPA-oversight committee membership overlap, and identifies environmental legislation votes.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., OH)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -294,7 +320,7 @@ export function registerEnvironmentTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -305,11 +331,16 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // ── Tier 1: NOAA climate data ───────────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_climate_data',
-    'NOAA climate normals for a state: average temperature, min/max temperatures, precipitation, and snowfall from 30-year normal period. Requires NOAA_TOKEN.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., CO)'),
+      title: 'State climate normals',
+      description:
+        'NOAA climate normals for a state: average temperature, min/max temperatures, precipitation, and snowfall from 30-year normal period. Requires NOAA_TOKEN.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., CO)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state }) => {
       try {
@@ -326,7 +357,7 @@ export function registerEnvironmentTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(normals, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(normals) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -337,18 +368,23 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // ── Tier 2: State climate profile ───────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_state_climate_profile',
-    "Climate profile for a state: NOAA climate normals, severe weather event history, and the state delegation's Environment committee membership for climate policy context.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., FL)'),
-      year: z
-        .number()
-        .int()
-        .min(2000)
-        .max(2030)
-        .optional()
-        .describe('Year for severe weather events (default: last year)'),
+      title: 'State climate profile',
+      description:
+        "Climate profile for a state: NOAA climate normals, severe weather event history, and the state delegation's Environment committee membership for climate policy context.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., FL)'),
+        year: z
+          .number()
+          .int()
+          .min(2000)
+          .max(2030)
+          .optional()
+          .describe('Year for severe weather events (default: last year)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, year }) => {
       try {
@@ -433,7 +469,7 @@ export function registerEnvironmentTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

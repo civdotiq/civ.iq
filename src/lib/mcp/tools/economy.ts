@@ -40,6 +40,7 @@ import { entitiesMatch } from '@civiq/entity-resolution';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 /** Fetch recent energy-related bills directly from Congress.gov API */
@@ -68,11 +69,16 @@ async function fetchEnergyBills(limit: number): Promise<unknown[]> {
 
 export function registerEconomyTools(server: McpServer): void {
   // ── Tier 1: EIA state energy profile ────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_state_energy_profile',
-    'State energy profile from EIA: total consumption, production, electricity generation, renewable percentage, and top energy sources. Returns production mix and trends.',
     {
-      state: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+      title: 'State energy profile',
+      description:
+        'State energy profile from EIA: total consumption, production, electricity generation, renewable percentage, and top energy sources. Returns production mix and trends.',
+      inputSchema: {
+        state: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state }) => {
       try {
@@ -89,7 +95,7 @@ export function registerEconomyTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -100,12 +106,22 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 3: Energy policy influence analysis ────────────────────
-  server.tool(
+  server.registerTool(
     'analyze_energy_policy_influence',
-    'Cross-reference state energy profile with energy sector lobbying registrants (entity resolution fuzzy match), Energy/Commerce committee membership, campaign contributions, and energy legislation votes. Shows correlations only — not causation.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'Energy policy influence',
+      description:
+        'Cross-reference state energy profile with energy sector lobbying registrants (entity resolution fuzzy match), Energy/Commerce committee membership, campaign contributions, and energy legislation votes. Shows correlations only — not causation.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., TX)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -250,7 +266,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -261,13 +277,18 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 1: College Scorecard search ────────────────────────────
-  server.tool(
+  server.registerTool(
     'search_colleges',
-    'Search College Scorecard for higher education institutions by state and/or name. Returns admission rate, graduation rate, average net price, median earnings, median debt, and size.',
     {
-      state: z.string().length(2).optional().describe('Two-letter state code (e.g., MA)'),
-      name: z.string().optional().describe('Institution name (partial match)'),
-      limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      title: 'College search',
+      description:
+        'Search College Scorecard for higher education institutions by state and/or name. Returns admission rate, graduation rate, average net price, median earnings, median debt, and size.',
+      inputSchema: {
+        state: z.string().length(2).optional().describe('Two-letter state code (e.g., MA)'),
+        name: z.string().optional().describe('Institution name (partial match)'),
+        limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, name, limit }) => {
       try {
@@ -301,7 +322,7 @@ export function registerEconomyTools(server: McpServer): void {
         }
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(institutions, null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(institutions) }],
         };
       } catch (error) {
         return {
@@ -313,12 +334,22 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District education profile ──────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_education_profile',
-    "Higher education landscape for a congressional district: colleges/universities by state with outcomes data, representative's Education committee membership, and relevant education policy context.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., OH)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District education profile',
+      description:
+        "Higher education landscape for a congressional district: colleges/universities by state with outcomes data, representative's Education committee membership, and relevant education policy context.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., OH)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -435,7 +466,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -446,14 +477,19 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 1: NIH grant search ────────────────────────────────────
-  server.tool(
+  server.registerTool(
     'search_nih_grants',
-    'Search NIH-funded research grants by state, institution, or topic. Returns project title, principal investigator, award amount, NIH institute, and organization.',
     {
-      state: z.string().length(2).optional().describe('Two-letter state code (e.g., MD)'),
-      institution: z.string().optional().describe('Research institution name'),
-      topic: z.string().optional().describe('Research topic or keyword'),
-      limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      title: 'NIH grant search',
+      description:
+        'Search NIH-funded research grants by state, institution, or topic. Returns project title, principal investigator, award amount, NIH institute, and organization.',
+      inputSchema: {
+        state: z.string().length(2).optional().describe('Two-letter state code (e.g., MD)'),
+        institution: z.string().optional().describe('Research institution name'),
+        topic: z.string().optional().describe('Research topic or keyword'),
+        limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, institution, topic, limit }) => {
       try {
@@ -487,7 +523,7 @@ export function registerEconomyTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(grants, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(grants) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -498,12 +534,22 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District research profile ───────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_research_profile',
-    "NIH-funded research in a congressional district: grants by state, top institutions, top-funded topics, total award amounts, and representative's Science/Health committee membership.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., MA)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District research profile',
+      description:
+        "NIH-funded research in a congressional district: grants by state, top institutions, top-funded topics, total award amounts, and representative's Science/Health committee membership.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., MA)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -607,7 +653,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -618,14 +664,19 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 1: FDIC institution search ─────────────────────────────
-  server.tool(
+  server.registerTool(
     'search_fdic_institutions',
-    'Search FDIC-insured banks and financial institutions by state, name, or city. Returns total assets, deposits, number of offices, charter class, and regulator.',
     {
-      state: z.string().length(2).optional().describe('Two-letter state code (e.g., NY)'),
-      name: z.string().optional().describe('Institution name (partial match)'),
-      city: z.string().optional().describe('City name'),
-      limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      title: 'FDIC institution search',
+      description:
+        'Search FDIC-insured banks and financial institutions by state, name, or city. Returns total assets, deposits, number of offices, charter class, and regulator.',
+      inputSchema: {
+        state: z.string().length(2).optional().describe('Two-letter state code (e.g., NY)'),
+        name: z.string().optional().describe('Institution name (partial match)'),
+        city: z.string().optional().describe('City name'),
+        limit: z.number().int().min(1).max(100).optional().describe('Max results (default 25)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ state, name, city, limit }) => {
       try {
@@ -657,7 +708,7 @@ export function registerEconomyTools(server: McpServer): void {
         }
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(institutions, null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(institutions) }],
         };
       } catch (error) {
         return {
@@ -669,12 +720,22 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 2: District banking profile ────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_district_banking_profile',
-    "Banking landscape for a congressional district: FDIC-insured institutions, total deposits/assets, recent bank failures, and representative's Banking/Financial Services committee membership.",
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., GA)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District banking profile',
+      description:
+        "Banking landscape for a congressional district: FDIC-insured institutions, total deposits/assets, recent bank failures, and representative's Banking/Financial Services committee membership.",
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., GA)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -758,7 +819,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(profile, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(profile) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -769,17 +830,22 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 1: Federal fiscal data ─────────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_federal_fiscal_data',
-    'Federal fiscal overview from Treasury: national debt, monthly revenue by category, and spending by category. Returns current figures and fiscal year totals.',
     {
-      year: z
-        .number()
-        .int()
-        .min(2000)
-        .max(2030)
-        .optional()
-        .describe('Fiscal year for revenue/spending (default: current year)'),
+      title: 'Federal fiscal data',
+      description:
+        'Federal fiscal overview from Treasury: national debt, monthly revenue by category, and spending by category. Returns current figures and fiscal year totals.',
+      inputSchema: {
+        year: z
+          .number()
+          .int()
+          .min(2000)
+          .max(2030)
+          .optional()
+          .describe('Fiscal year for revenue/spending (default: current year)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ year }) => {
       try {
@@ -807,7 +873,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -818,10 +884,15 @@ export function registerEconomyTools(server: McpServer): void {
   );
 
   // ── Tier 1: Federal debt context ────────────────────────────────
-  server.tool(
+  server.registerTool(
     'get_federal_debt_context',
-    'Current federal debt with context: total public debt outstanding, debt held by public vs intragovernmental holdings, and record date. Useful for fiscal policy discussions.',
-    {},
+    {
+      title: 'Federal debt context',
+      description:
+        'Current federal debt with context: total public debt outstanding, debt held by public vs intragovernmental holdings, and record date. Useful for fiscal policy discussions.',
+      inputSchema: {},
+      annotations: READ_ONLY_EXTERNAL,
+    },
     async () => {
       try {
         const debt = await treasuryFiscalService.getFederalDebt();
@@ -845,7 +916,7 @@ export function registerEconomyTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(context, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(context) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],

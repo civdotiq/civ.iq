@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'Privacy policy',
+  description:
+    'CIV.IQ privacy policy: no accounts, no tracking, no data sale. What little data the platform handles and how.',
+  alternates: { canonical: 'https://civdotiq.org/privacy' },
+};
 
 export default function PrivacyPage() {
   return (

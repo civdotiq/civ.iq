@@ -22,14 +22,20 @@ import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import { getCommitteesForAgency } from '@civiq/entity-resolution';
 import { entitiesMatch } from '@civiq/entity-resolution';
+import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerIntelligenceTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'analyze_vote_prediction',
-    'ML-based vote prediction analysis. Returns independence score (how often a legislator votes against their donor-predicted position), SHAP factors, and notable deviations.',
     {
-      bioguideId: z.string().describe('Congress bioguide identifier'),
+      title: 'Vote prediction analysis',
+      description:
+        'ML-based vote prediction analysis. Returns independence score (how often a legislator votes against their donor-predicted position), SHAP factors, and notable deviations.',
+      inputSchema: {
+        bioguideId: z.string().describe('Congress bioguide identifier'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideId }) => {
       try {
@@ -46,7 +52,7 @@ export function registerIntelligenceTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(insight, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(insight) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -56,11 +62,16 @@ export function registerIntelligenceTools(server: McpServer): void {
     }
   );
 
-  server.tool(
+  server.registerTool(
     'get_influence_chain',
-    'Trace lobbying money through contributions, committee assignments, and votes for a legislator. Shows the path from lobbying org to legislative outcome.',
     {
-      bioguideId: z.string().describe('Congress bioguide identifier'),
+      title: 'Influence chain trace',
+      description:
+        'Trace lobbying money through contributions, committee assignments, and votes for a legislator. Shows the path from lobbying org to legislative outcome.',
+      inputSchema: {
+        bioguideId: z.string().describe('Congress bioguide identifier'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ bioguideId }) => {
       try {
@@ -77,7 +88,7 @@ export function registerIntelligenceTools(server: McpServer): void {
           };
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(insight, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(insight) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -88,12 +99,22 @@ export function registerIntelligenceTools(server: McpServer): void {
   );
 
   // ── Tier 3: Comprehensive district analysis ─────────────────────
-  server.tool(
+  server.registerTool(
     'analyze_district_comprehensive',
-    'Full cross-domain district profile: environment (EPA), safety (FEMA, CFPB), health (CMS, Open Payments), economy (EIA, education, research, banking) combined with representative info. Returns a unified view across all data domains.',
     {
-      stateCode: z.string().length(2).describe('Two-letter state code (e.g., PA)'),
-      districtNumber: z.number().int().min(0).max(53).describe('District number (0 for at-large)'),
+      title: 'District cross-domain profile',
+      description:
+        'District representative info combined with STATE-level context across domains: environment (EPA), safety (FEMA, CFPB), health (CMS), economy (EIA, education, research, banking). Domain counts are statewide aggregates — these sources do not publish district-level rollups.',
+      inputSchema: {
+        stateCode: z.string().length(2).describe('Two-letter state code (e.g., PA)'),
+        districtNumber: z
+          .number()
+          .int()
+          .min(0)
+          .max(53)
+          .describe('District number (0 for at-large)'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ stateCode, districtNumber }) => {
       try {
@@ -113,11 +134,15 @@ export function registerIntelligenceTools(server: McpServer): void {
           };
         }
 
-        // Get representative
+        // Get representative. Rep data stores districts unpadded ("1", not
+        // "01"); at-large seats may be "0" or undefined (same convention as
+        // lookup_representatives).
         const allReps = await RepresentativesCoreService.getAllRepresentatives();
-        const districtRep = allReps.find(
-          r => r.state === state && r.district === districtStr && r.chamber === 'House'
-        );
+        const districtRep = allReps.find(r => {
+          if (r.state !== state || r.chamber !== 'House') return false;
+          if (districtNumber === 0) return r.district === '0' || !r.district;
+          return r.district === String(districtNumber);
+        });
 
         // Parallel data fetches across all domains
         const [
@@ -152,29 +177,35 @@ export function registerIntelligenceTools(server: McpServer): void {
                 committees: (districtRep.committees ?? []).map(c => c.name),
               }
             : null,
-          environment: {
-            epaFacilities: epaFacilities.length,
-            facilitiesWithViolations: epaFacilities.filter(f => f.sncFlag === 'Y').length,
-          },
-          health: {
-            hospitals: hospitals.length,
-            nursingHomes: nursingHomes.length,
-          },
-          safety: {
-            recentDisasters: disasters.length,
-            consumerComplaints: complaints?.total ?? 0,
-          },
-          economy: {
-            energy: energyProfile
-              ? {
-                  renewablePercentage: energyProfile.renewablePercentage,
-                  topSources: energyProfile.topSources.slice(0, 3),
-                }
-              : null,
-            higherEducation: colleges.length,
-            nihGrants: nihGrants.length,
-            nihTotalFunding: nihGrants.reduce((s, g) => s + g.awardAmount, 0),
-            fdicInstitutions: banks.length,
+          // These sources publish state-level data only; labeling them as
+          // district figures would overstate precision.
+          stateContext: {
+            scope: 'state' as const,
+            note: `Figures below are ${state} statewide aggregates, not ${state}-${districtStr} district values.`,
+            environment: {
+              epaFacilities: epaFacilities.length,
+              facilitiesWithViolations: epaFacilities.filter(f => f.sncFlag === 'Y').length,
+            },
+            health: {
+              hospitals: hospitals.length,
+              nursingHomes: nursingHomes.length,
+            },
+            safety: {
+              recentDisasters: disasters.length,
+              consumerComplaints: complaints?.total ?? 0,
+            },
+            economy: {
+              energy: energyProfile
+                ? {
+                    renewablePercentage: energyProfile.renewablePercentage,
+                    topSources: energyProfile.topSources.slice(0, 3),
+                  }
+                : null,
+              higherEducation: colleges.length,
+              nihGrants: nihGrants.length,
+              nihTotalFunding: nihGrants.reduce((s, g) => s + g.awardAmount, 0),
+              fdicInstitutions: banks.length,
+            },
           },
           metadata: {
             generatedAt: new Date().toISOString(),
@@ -194,7 +225,7 @@ export function registerIntelligenceTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -205,20 +236,25 @@ export function registerIntelligenceTools(server: McpServer): void {
   );
 
   // ── Tier 3: Industry regulatory landscape ───────────────────────
-  server.tool(
+  server.registerTool(
     'analyze_industry_regulatory_landscape',
-    'For a given industry sector: all regulatory actions (EPA, FDA, NHTSA), lobbying filings, campaign contributions, and committee jurisdiction. Maps sector to agencies and oversight committees.',
     {
-      sector: z
-        .string()
-        .describe(
-          'Industry sector (e.g., Health, Energy, Finance, Defense, Transportation, Agribusiness)'
-        ),
-      stateCode: z
-        .string()
-        .length(2)
-        .optional()
-        .describe('Optional state filter for regulatory actions'),
+      title: 'Industry regulatory landscape',
+      description:
+        'For a given industry sector: all regulatory actions (EPA, FDA, NHTSA), lobbying filings, campaign contributions, and committee jurisdiction. Maps sector to agencies and oversight committees.',
+      inputSchema: {
+        sector: z
+          .string()
+          .describe(
+            'Industry sector (e.g., Health, Energy, Finance, Defense, Transportation, Agribusiness)'
+          ),
+        stateCode: z
+          .string()
+          .length(2)
+          .optional()
+          .describe('Optional state filter for regulatory actions'),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ sector, stateCode }) => {
       try {
@@ -304,7 +340,7 @@ export function registerIntelligenceTools(server: McpServer): void {
           },
         };
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(analysis) }] };
       } catch (error) {
         return {
           content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
@@ -315,15 +351,20 @@ export function registerIntelligenceTools(server: McpServer): void {
   );
 
   // ── Tier 3: Policy area ecosystem ───────────────────────────────
-  server.tool(
+  server.registerTool(
     'analyze_policy_area_ecosystem',
-    'For a Congress.gov policy area: related agencies, industry sectors, lobbying activity, committee oversight, and Federal Register keywords. Uses policy-area-map as the cross-domain join hub.',
     {
-      policyArea: z
-        .string()
-        .describe(
-          'Congress.gov policy area (e.g., "Health", "Energy", "Finance and Financial Sector")'
-        ),
+      title: 'Policy area ecosystem',
+      description:
+        'For a Congress.gov policy area: related agencies, industry sectors, lobbying activity, committee oversight, and Federal Register keywords. Uses policy-area-map as the cross-domain join hub.',
+      inputSchema: {
+        policyArea: z
+          .string()
+          .describe(
+            'Congress.gov policy area (e.g., "Health", "Energy", "Finance and Financial Sector")'
+          ),
+      },
+      annotations: READ_ONLY_EXTERNAL,
     },
     async ({ policyArea }) => {
       try {
@@ -411,7 +452,7 @@ export function registerIntelligenceTools(server: McpServer): void {
         };
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(ecosystem, null, 2) }],
+          content: [{ type: 'text' as const, text: JSON.stringify(ecosystem) }],
         };
       } catch (error) {
         return {
