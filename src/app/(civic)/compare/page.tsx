@@ -137,6 +137,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/compare?a=${bioguideA}&b=${bioguideB}` },
     openGraph: {
       title,
       description,

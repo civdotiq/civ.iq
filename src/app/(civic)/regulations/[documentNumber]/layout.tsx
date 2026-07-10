@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 
   return {
     title: `Regulation ${documentNumber}`,
+    alternates: { canonical: `https://civdotiq.org/regulations/${documentNumber}` },
     description: `Federal Register document ${documentNumber}. View full text, agency details, and comment period information.`,
     openGraph: {
       title: `Regulation ${documentNumber} | CIV.IQ`,

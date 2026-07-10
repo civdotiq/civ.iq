@@ -28,6 +28,7 @@ import {
   sectorToIndustrySlug,
 } from '@/components/topics/IssueTopicPage/data';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
+import { slugifyPolicyArea } from '@/lib/questions/question-registry';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -249,6 +250,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/topics/${slugifyPolicyArea(policyArea)}` },
     openGraph: {
       title,
       description,

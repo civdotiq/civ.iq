@@ -12,6 +12,7 @@ import { BreadcrumbSchema, WebAPISchema, SoftwareSourceCodeSchema } from '@/comp
 import { DATASET_REGISTRY } from '@/lib/datasets';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'Developers — Free Civic Data API, MCP Server, SDK & Bulk Data',
   description:
     'Build with CIV.IQ: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',

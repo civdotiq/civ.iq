@@ -20,6 +20,7 @@ import { BreadcrumbsWithContext } from '@/components/shared/navigation/Breadcrum
 import { RecordCardLabel } from '@/features/record-card/components/RecordCardLabel';
 import { getRecordCardData } from '@/features/record-card/record-card-data';
 import { getStateName } from '@/lib/data/us-states';
+import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: hourly, matching the profile page
@@ -79,8 +80,40 @@ export default async function RecordCardPage({
   const data = await getData(bioguideId);
   const { member } = data;
 
+  const role = member.chamber === 'Senate' ? 'Senator' : 'Representative';
+  const canonicalUrl = `https://civdotiq.org/representative/${member.bioguideId}/record`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <ProfilePageSchema
+        url={canonicalUrl}
+        person={{
+          name: member.name,
+          jobTitle: `${role} - ${member.state}${member.district ? ` District ${member.district}` : ''}`,
+          description: `${member.name}'s congressional record from government sources: bills, votes, campaign money, and district federal funding.`,
+          image: member.imageUrl,
+          affiliation: member.party,
+          sameAs: [`https://bioguide.congress.gov/search/bio/${member.bioguideId}`],
+          worksFor: {
+            name:
+              member.chamber === 'Senate'
+                ? 'United States Senate'
+                : 'United States House of Representatives',
+            url: member.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
+          },
+        }}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Representatives', url: 'https://civdotiq.org/representatives' },
+          {
+            name: member.name,
+            url: `https://civdotiq.org/representative/${member.bioguideId}`,
+          },
+          { name: 'Record card', url: canonicalUrl },
+        ]}
+      />
       <div className="mx-auto max-w-[828px] px-grid-2 py-grid-3 md:px-grid-3">
         <BreadcrumbsWithContext
           items={[

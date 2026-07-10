@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/your-reps/money-report' },
   title: 'Money Report Card — Your Representatives',
   description:
     'See how campaign money correlates with voting patterns for all your congressional representatives.',

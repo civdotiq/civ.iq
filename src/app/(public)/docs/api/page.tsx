@@ -11,6 +11,7 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema, WebAPISchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/docs/api' },
   title: 'API Reference',
   description:
     'Documentation for the CIV.IQ Public API v1. Open REST endpoints for U.S. government data. No API key required.',

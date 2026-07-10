@@ -37,6 +37,7 @@ import {
 } from '@/lib/data/education-curriculum';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/education' },
   title: 'Civic Education | K-12 Curriculum Using Real Government Data',
   description:
     '21 standards-aligned civics lessons for K-12 educators. Teach government structure, legislation, campaign finance, and data literacy using real data from Congress.gov, the FEC, and Census Bureau.',

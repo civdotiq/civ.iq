@@ -18,7 +18,8 @@ import { latestCompleteWeekId, parseWeekId, formatWeekRange } from '@/lib/digest
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Weekly digest — votes, bills & money filings | CIV.IQ',
+  // Root layout's title template appends "| CIV.IQ" — don't repeat the brand.
+  title: 'Weekly digest — votes, bills & money filings',
   description:
     "This week's congressional roll-call votes, bills that moved, and new FEC filings — tracked through any state's federal delegation. Public records with citations.",
   alternates: { canonical: 'https://civdotiq.org/digest' },

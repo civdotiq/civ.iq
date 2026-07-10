@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/justice' },
   title: 'Criminal Justice Legislation & Policy',
   description:
     'Track criminal justice legislation in Congress. Policing reform, sentencing reform, courts, civil rights, prison reform, and gun violence prevention bills and the committees that shape justice policy.',

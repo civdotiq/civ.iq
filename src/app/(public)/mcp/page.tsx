@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/mcp' },
   title: 'Use CIV.IQ in Claude & ChatGPT — Civic Data MCP Server',
   description:
     'Connect Claude, ChatGPT, Claude Code, or Cursor to live U.S. government data. One URL, no API key: representatives, votes, bills, campaign finance, and district data with citations.',

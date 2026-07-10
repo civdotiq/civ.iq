@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/economy' },
   title: 'Economy & Jobs Legislation',
   description:
     'Track economic legislation in Congress. Tax policy, employment, trade, small business, and financial regulation bills and the committees that shape economic policy.',

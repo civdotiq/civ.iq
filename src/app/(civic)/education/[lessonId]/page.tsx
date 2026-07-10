@@ -109,6 +109,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/education/${lesson.id.toLowerCase()}` },
     keywords: [
       lesson.title,
       `${gradeInfo.label.toLowerCase()} civics lesson`,

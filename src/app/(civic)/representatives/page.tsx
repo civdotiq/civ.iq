@@ -16,6 +16,7 @@ import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/representatives' },
   title: 'Representatives',
   description:
     'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',

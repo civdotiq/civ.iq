@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/alerts/status' },
   title: 'Alert Status - CIV.IQ',
   robots: { index: false, follow: false },
 };

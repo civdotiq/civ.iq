@@ -15,6 +15,7 @@ import {
   parseWeekId,
   formatWeekRange,
 } from '@/lib/digest/week';
+import { CollectionPageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const revalidate = 3600;
 
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { state } = await params;
   const stateName = getStateName(state) ?? state.toUpperCase();
   return {
-    title: `${stateName} weekly digest — votes, bills & money filings | CIV.IQ`,
+    // Root layout's title template appends "| CIV.IQ" — don't repeat the brand.
+    title: `${stateName} weekly digest — votes, bills & money filings`,
     description: `Every week: congressional roll-call votes with each ${stateName} member's position, bills that moved, and new FEC filings from the delegation. Public records with citations.`,
     alternates: { canonical: `https://civdotiq.org/digest/${state.toLowerCase()}` },
   };
@@ -47,8 +49,26 @@ export default async function DigestStateArchivePage({ params }: PageProps) {
     .map(parseWeekId)
     .filter((r): r is NonNullable<typeof r> => r !== null);
 
+  const canonicalUrl = `https://civdotiq.org/digest/${code}`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <CollectionPageSchema
+        name={`${stateName} weekly digest`}
+        description={`Weekly congressional digest for ${stateName}: roll-call votes with every member's position, bills that moved, and new FEC filings from the delegation.`}
+        url={canonicalUrl}
+        hasPart={weeks.map(range => ({
+          name: `This week in Congress — ${formatWeekRange(range)}`,
+          url: `${canonicalUrl}/${range.weekId}`,
+        }))}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Weekly digest', url: 'https://civdotiq.org/digest' },
+          { name: stateName, url: canonicalUrl },
+        ]}
+      />
       <div className="mx-auto max-w-[828px] px-grid-2 py-grid-3 md:px-grid-3">
         <nav className="mb-grid-3 text-sm text-gray-500">
           <Link href="/" className="hover:text-[#3ea2d4]">

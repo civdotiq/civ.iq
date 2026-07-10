@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/environment' },
   title: 'Environment & Climate Legislation',
   description:
     'Track environmental legislation in Congress. Climate change, clean energy, conservation, water quality, air quality bills and the committees that shape environmental policy.',

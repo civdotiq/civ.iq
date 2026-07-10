@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { billId } = await params;
   return {
     title: `Bill ${billId.toUpperCase()}`,
+    alternates: { canonical: `https://civdotiq.org/embed/bill/${billId.toLowerCase()}` },
   };
 }
 

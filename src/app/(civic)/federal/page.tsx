@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/federal' },
   title: 'Federal Government',
   description:
     'Explore federal government data: representatives, legislation, spending, regulations, elections, and more. All sourced from official government APIs.',

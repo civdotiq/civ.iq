@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/technology' },
   title: 'Technology & Privacy Legislation',
   description:
     'Track technology legislation in Congress. Big tech regulation, data privacy, artificial intelligence, cybersecurity, social media, and broadband access bills and the committees that shape tech policy.',

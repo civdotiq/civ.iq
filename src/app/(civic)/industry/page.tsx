@@ -9,6 +9,7 @@ import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/compon
 import { SectorListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/industry' },
   title: 'Industries',
   description:
     'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',

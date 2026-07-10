@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import styles from './page.module.css';
+
+// The homepage is the only page whose canonical is the bare origin; the root
+// layout deliberately sets none (see src/app/layout.tsx alternates comment).
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org' },
+};
 
 const civiqMark = (
   <svg

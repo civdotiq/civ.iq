@@ -253,6 +253,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/pacs/${upperId}` },
     openGraph: {
       title,
       description,

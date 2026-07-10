@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/education' },
   title: 'Education Legislation & Policy',
   description:
     'Track education legislation in Congress. K-12, higher education, student loans, early childhood, special education bills and the committees that shape education policy.',

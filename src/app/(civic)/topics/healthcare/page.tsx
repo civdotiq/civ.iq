@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/healthcare' },
   title: 'Healthcare Legislation & Policy',
   description:
     'Track healthcare legislation in Congress. Medicare, Medicaid, ACA, drug pricing, public health bills, and the committees that shape health policy.',

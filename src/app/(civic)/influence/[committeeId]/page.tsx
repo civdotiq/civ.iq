@@ -316,6 +316,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     return {
       title,
       description,
+      alternates: { canonical: `https://civdotiq.org/influence/${committeeId}` },
       openGraph: {
         title,
         description,

@@ -22,6 +22,7 @@ import {
 } from '@/lib/digest/context';
 import { issueHighlights, orderVotes, orderBills, delegationSplit } from '@/lib/digest/curate';
 import { VoteMarginBar, DelegationBreakdown } from '@/components/digest/DigestVisuals';
+import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import type { DigestVote } from '@/lib/digest/types';
 
@@ -42,7 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const stateName = getStateName(state) ?? state.toUpperCase();
   const canonical = `https://civdotiq.org/digest/${state.toLowerCase()}/${week}`;
   return {
-    title: `This week in Congress — ${label} | ${stateName} | CIV.IQ weekly digest`,
+    // Root layout's title template appends "| CIV.IQ" — don't repeat the brand.
+    title: `This week in Congress — ${label} | ${stateName} weekly digest`,
     description: `Roll-call votes with every ${stateName} position, bills that moved, and new FEC filings for ${label}. Public records with citations.`,
     alternates: { canonical },
   };
@@ -207,282 +209,308 @@ export default async function DigestIssuePage({ params }: PageProps) {
     highlights.closestVote || highlights.mostBipartisanVote || highlights.furthestBill
   );
 
+  const canonicalUrl = `https://civdotiq.org/digest/${issue.state.toLowerCase()}/${issue.weekId}`;
+  // An issue covers Monday–Sunday; the Sunday end date is its publication date.
+  const datePublished = (range ? range.end : new Date(issue.weekStart)).toISOString().slice(0, 10);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-[828px] px-grid-2 py-grid-3 md:px-grid-3">
-        <nav className="mb-grid-3 text-sm text-gray-500">
-          <Link href="/" className="hover:text-[#3ea2d4]">
-            Home
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <Link href="/digest" className="hover:text-[#3ea2d4]">
-            Weekly digest
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <Link href={`/digest/${issue.state.toLowerCase()}`} className="hover:text-[#3ea2d4]">
-            {issue.stateName}
-          </Link>
-          <span className="mx-2">&rsaquo;</span>
-          <span className="font-medium text-gray-900">{issue.weekId}</span>
-        </nav>
+    <>
+      <ArticleSchema
+        headline={`This week in Congress — ${label} | ${issue.stateName} weekly digest`}
+        description={`Roll-call votes with every ${issue.stateName} position, bills that moved, and new FEC filings for ${label}. Public records with citations.`}
+        url={canonicalUrl}
+        datePublished={datePublished}
+        about={{ name: issue.stateName, type: 'AdministrativeArea' }}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Weekly digest', url: 'https://civdotiq.org/digest' },
+          {
+            name: issue.stateName,
+            url: `https://civdotiq.org/digest/${issue.state.toLowerCase()}`,
+          },
+          { name: label, url: canonicalUrl },
+        ]}
+      />
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-[828px] px-grid-2 py-grid-3 md:px-grid-3">
+          <nav className="mb-grid-3 text-sm text-gray-500">
+            <Link href="/" className="hover:text-[#3ea2d4]">
+              Home
+            </Link>
+            <span className="mx-2">&rsaquo;</span>
+            <Link href="/digest" className="hover:text-[#3ea2d4]">
+              Weekly digest
+            </Link>
+            <span className="mx-2">&rsaquo;</span>
+            <Link href={`/digest/${issue.state.toLowerCase()}`} className="hover:text-[#3ea2d4]">
+              {issue.stateName}
+            </Link>
+            <span className="mx-2">&rsaquo;</span>
+            <span className="font-medium text-gray-900">{issue.weekId}</span>
+          </nav>
 
-        <header className="border-[3px] border-black bg-white p-grid-3">
-          <div className="text-xs font-bold uppercase tracking-[0.08em]">This week in Congress</div>
-          <h1 className="mt-grid-1 text-[28px] font-bold leading-[1.1] tracking-[0.02em]">
-            {label}
-          </h1>
-          <p className="mt-grid-1 text-sm text-gray-600">
-            {issue.votes.length} roll-call vote{issue.votes.length === 1 ? '' : 's'} ·{' '}
-            {issue.bills.length} bill{issue.bills.length === 1 ? '' : 's'} moved ·{' '}
-            {issue.filings.length} new {issue.stateName} filing
-            {issue.filings.length === 1 ? '' : 's'}
-          </p>
-        </header>
-
-        {/* At a glance */}
-        {hasHighlights && (
-          <div className="mt-grid-3 border-2 border-black bg-white">
-            <div className="border-b-2 border-black px-grid-2 py-1 text-xs font-bold uppercase tracking-[0.08em]">
-              At a glance
+          <header className="border-[3px] border-black bg-white p-grid-3">
+            <div className="text-xs font-bold uppercase tracking-[0.08em]">
+              This week in Congress
             </div>
-            <ul className="divide-y divide-gray-100">
-              {highlights.closestVote && (
-                <li className="p-grid-2 text-sm leading-snug">
-                  <span className="font-semibold">
-                    Closest vote ({highlights.closestVote.yeas}-{highlights.closestVote.nays})
-                  </span>{' '}
-                  — {highlights.closestVote.meaning?.decided ?? highlights.closestVote.question}{' '}
-                  <VoteLink
-                    voteId={highlights.closestVote.voteId}
-                    label="Roll call"
-                    className="text-xs"
-                  />
-                </li>
-              )}
-              {highlights.mostBipartisanVote && (
-                <li className="p-grid-2 text-sm leading-snug">
-                  <span className="font-semibold">
-                    Broadest support ({highlights.mostBipartisanVote.yeas}-
-                    {highlights.mostBipartisanVote.nays})
-                  </span>{' '}
-                  —{' '}
-                  {highlights.mostBipartisanVote.meaning?.decided ??
-                    highlights.mostBipartisanVote.question}{' '}
-                  <VoteLink
-                    voteId={highlights.mostBipartisanVote.voteId}
-                    label="Roll call"
-                    className="text-xs"
-                  />
-                </li>
-              )}
-              {highlights.furthestBill && (
-                <li className="p-grid-2 text-sm leading-snug">
-                  <span className="font-semibold">Furthest along</span> —{' '}
-                  <BillLink
-                    billId={highlights.furthestBill.billId}
-                    title={`${highlights.furthestBill.type} ${highlights.furthestBill.number}: ${highlights.furthestBill.title}`}
-                  />
-                </li>
-              )}
-            </ul>
-          </div>
-        )}
+            <h1 className="mt-grid-1 text-[28px] font-bold leading-[1.1] tracking-[0.02em]">
+              {label}
+            </h1>
+            <p className="mt-grid-1 text-sm text-gray-600">
+              {issue.votes.length} roll-call vote{issue.votes.length === 1 ? '' : 's'} ·{' '}
+              {issue.bills.length} bill{issue.bills.length === 1 ? '' : 's'} moved ·{' '}
+              {issue.filings.length} new {issue.stateName} filing
+              {issue.filings.length === 1 ? '' : 's'}
+            </p>
+          </header>
 
-        {/* Votes */}
-        <section className="mt-grid-4">
-          <h2 className="text-xl font-bold tracking-[0.02em]">
-            Roll-call votes, with every {issue.stateName} position
-          </h2>
-          {issue.unavailable.includes('votes') ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              Vote data is unavailable for this week — the upstream source could not be reached.
-            </p>
-          ) : issue.votes.length === 0 ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              No roll-call votes were held this week. Congress was likely in recess or in committee
-              work periods.
-            </p>
-          ) : (
-            <div className="mt-grid-2 space-y-grid-2">
-              {substantive.map(vote => (
-                <VoteCard
-                  key={vote.voteId}
-                  vote={vote}
-                  congress={congress}
-                  stateName={issue.stateName}
-                />
-              ))}
-              {procedural.length > 0 && (
-                <div className="mt-grid-3 border-2 border-gray-200 bg-white p-grid-2">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
-                    Procedural votes ({procedural.length})
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Votes that move the process along — setting debate terms, ending debate,
-                    approving the record. Positions here often follow party strategy rather than the
-                    underlying issue.
-                  </p>
-                  <div className="mt-grid-1">
-                    {procedural.map(vote => (
-                      <ProceduralRow key={vote.voteId} vote={vote} stateName={issue.stateName} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        {/* Bills */}
-        <section className="mt-grid-4">
-          <h2 className="text-xl font-bold tracking-[0.02em]">Bills that moved</h2>
-          {issue.unavailable.includes('bills') ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              Bill data is unavailable for this week — the upstream source could not be reached.
-            </p>
-          ) : issue.bills.length === 0 ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              No bills had floor or committee action recorded this week.
-            </p>
-          ) : (
-            <div className="mt-grid-2 space-y-grid-3">
-              {billGroups.map(group => (
-                <div key={group.label}>
-                  <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
-                    {group.label} <span className="text-gray-400">({group.bills.length})</span>
-                  </h3>
-                  <div className="mt-1 border-2 border-gray-200 bg-white">
-                    <ul>
-                      {group.bills.map(bill => {
-                        const actionCtx = billActionContext(bill.latestActionText);
-                        return (
-                          <li
-                            key={bill.billId}
-                            className="border-b border-gray-100 p-grid-2 last:border-b-0"
-                          >
-                            <p className="text-[15px] font-medium leading-snug">
-                              <BillLink
-                                billId={bill.billId}
-                                title={`${bill.type} ${bill.number}: ${bill.title}`}
-                              />
-                            </p>
-                            {bill.aiSummary && (
-                              <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-700">
-                                {bill.aiSummary.whatItDoes}
-                                <span className="block text-xs text-gray-400">
-                                  {bill.aiSummary.source === 'ai-generated'
-                                    ? 'AI summary'
-                                    : 'Congressional summary'}{' '}
-                                  · as of {bill.aiSummary.lastUpdated.slice(0, 10)} ·{' '}
-                                  <Link
-                                    href="/corrections"
-                                    className="hover:text-[#3ea2d4] underline"
-                                  >
-                                    report an error
-                                  </Link>
-                                </span>
-                              </p>
-                            )}
-                            <p className="mt-1 text-sm text-gray-600">
-                              {bill.latestActionDate}: {bill.latestActionText}
-                            </p>
-                            {actionCtx && (
-                              <p className="mt-0.5 border-l-2 border-gray-200 pl-2 text-sm text-gray-500">
-                                {actionCtx}
-                              </p>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Filings */}
-        <section className="mt-grid-4">
-          <h2 className="text-xl font-bold tracking-[0.02em]">
-            New money filings — {issue.stateName} delegation
-          </h2>
-          {issue.unavailable.includes('filings') ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              FEC filing data is unavailable for this week — the upstream source could not be
-              reached.
-            </p>
-          ) : issue.filings.length === 0 ? (
-            <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
-              No new FEC filings were received from {issue.stateName} delegation committees this
-              week.
-            </p>
-          ) : (
-            <div className="mt-grid-2 border-2 border-gray-200 bg-white">
-              <ul>
-                {issue.filings.map(filing => {
-                  const receipts = currencyFmt(filing.totalReceipts);
-                  const formCtx = fecFormContext(filing.formType);
-                  return (
-                    <li
-                      key={`${filing.fileNumber}-${filing.bioguideId}`}
-                      className="border-b border-gray-100 p-grid-2 last:border-b-0"
-                    >
-                      <p className="text-[15px] font-medium">
-                        <RepLink bioguideId={filing.bioguideId} name={filing.memberName} />
-                        <span className={`ml-1 text-xs ${getPartyTextClass(filing.party)}`}>
-                          ({filing.party.charAt(0)})
-                        </span>
-                        <span className="ml-2 text-sm font-normal text-gray-600">
-                          {filing.reportType ?? filing.formType ?? 'Filing'}
-                        </span>
-                      </p>
-                      {formCtx && (
-                        <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
-                          {formCtx}
-                        </p>
-                      )}
-                      <p className="mt-1 text-sm text-gray-600">
-                        Received {filing.receiptDate.slice(0, 10)}
-                        {filing.committeeName ? ` · ${filing.committeeName}` : ''}
-                        {receipts ? ` · ${receipts} receipts` : ''}
-                        {' · '}
-                        <Link
-                          href={`/finance/filings/${filing.fileNumber}`}
-                          className="text-[#3ea2d4] underline hover:no-underline"
-                        >
-                          filing detail
-                        </Link>
-                        {' · '}
-                        <a
-                          href={filing.fecUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#3ea2d4] underline hover:no-underline"
-                        >
-                          FEC record
-                        </a>
-                      </p>
-                    </li>
-                  );
-                })}
+          {/* At a glance */}
+          {hasHighlights && (
+            <div className="mt-grid-3 border-2 border-black bg-white">
+              <div className="border-b-2 border-black px-grid-2 py-1 text-xs font-bold uppercase tracking-[0.08em]">
+                At a glance
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {highlights.closestVote && (
+                  <li className="p-grid-2 text-sm leading-snug">
+                    <span className="font-semibold">
+                      Closest vote ({highlights.closestVote.yeas}-{highlights.closestVote.nays})
+                    </span>{' '}
+                    — {highlights.closestVote.meaning?.decided ?? highlights.closestVote.question}{' '}
+                    <VoteLink
+                      voteId={highlights.closestVote.voteId}
+                      label="Roll call"
+                      className="text-xs"
+                    />
+                  </li>
+                )}
+                {highlights.mostBipartisanVote && (
+                  <li className="p-grid-2 text-sm leading-snug">
+                    <span className="font-semibold">
+                      Broadest support ({highlights.mostBipartisanVote.yeas}-
+                      {highlights.mostBipartisanVote.nays})
+                    </span>{' '}
+                    —{' '}
+                    {highlights.mostBipartisanVote.meaning?.decided ??
+                      highlights.mostBipartisanVote.question}{' '}
+                    <VoteLink
+                      voteId={highlights.mostBipartisanVote.voteId}
+                      label="Roll call"
+                      className="text-xs"
+                    />
+                  </li>
+                )}
+                {highlights.furthestBill && (
+                  <li className="p-grid-2 text-sm leading-snug">
+                    <span className="font-semibold">Furthest along</span> —{' '}
+                    <BillLink
+                      billId={highlights.furthestBill.billId}
+                      title={`${highlights.furthestBill.type} ${highlights.furthestBill.number}: ${highlights.furthestBill.title}`}
+                    />
+                  </li>
+                )}
               </ul>
             </div>
           )}
-        </section>
 
-        {/* Sources */}
-        <footer className="mt-grid-4 border-t-2 border-gray-200 pt-grid-2 text-xs text-gray-500">
-          <p>
-            Sources: Congress.gov, U.S. Senate roll-call records, House Clerk, Federal Election
-            Commission. Compiled {issue.generatedAt.slice(0, 10)}. Something look wrong?{' '}
-            <Link href="/corrections" className="text-[#3ea2d4] underline hover:no-underline">
-              Report an error
-            </Link>
-            .
-          </p>
-        </footer>
+          {/* Votes */}
+          <section className="mt-grid-4">
+            <h2 className="text-xl font-bold tracking-[0.02em]">
+              Roll-call votes, with every {issue.stateName} position
+            </h2>
+            {issue.unavailable.includes('votes') ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                Vote data is unavailable for this week — the upstream source could not be reached.
+              </p>
+            ) : issue.votes.length === 0 ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                No roll-call votes were held this week. Congress was likely in recess or in
+                committee work periods.
+              </p>
+            ) : (
+              <div className="mt-grid-2 space-y-grid-2">
+                {substantive.map(vote => (
+                  <VoteCard
+                    key={vote.voteId}
+                    vote={vote}
+                    congress={congress}
+                    stateName={issue.stateName}
+                  />
+                ))}
+                {procedural.length > 0 && (
+                  <div className="mt-grid-3 border-2 border-gray-200 bg-white p-grid-2">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
+                      Procedural votes ({procedural.length})
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Votes that move the process along — setting debate terms, ending debate,
+                      approving the record. Positions here often follow party strategy rather than
+                      the underlying issue.
+                    </p>
+                    <div className="mt-grid-1">
+                      {procedural.map(vote => (
+                        <ProceduralRow key={vote.voteId} vote={vote} stateName={issue.stateName} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Bills */}
+          <section className="mt-grid-4">
+            <h2 className="text-xl font-bold tracking-[0.02em]">Bills that moved</h2>
+            {issue.unavailable.includes('bills') ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                Bill data is unavailable for this week — the upstream source could not be reached.
+              </p>
+            ) : issue.bills.length === 0 ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                No bills had floor or committee action recorded this week.
+              </p>
+            ) : (
+              <div className="mt-grid-2 space-y-grid-3">
+                {billGroups.map(group => (
+                  <div key={group.label}>
+                    <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
+                      {group.label} <span className="text-gray-400">({group.bills.length})</span>
+                    </h3>
+                    <div className="mt-1 border-2 border-gray-200 bg-white">
+                      <ul>
+                        {group.bills.map(bill => {
+                          const actionCtx = billActionContext(bill.latestActionText);
+                          return (
+                            <li
+                              key={bill.billId}
+                              className="border-b border-gray-100 p-grid-2 last:border-b-0"
+                            >
+                              <p className="text-[15px] font-medium leading-snug">
+                                <BillLink
+                                  billId={bill.billId}
+                                  title={`${bill.type} ${bill.number}: ${bill.title}`}
+                                />
+                              </p>
+                              {bill.aiSummary && (
+                                <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-700">
+                                  {bill.aiSummary.whatItDoes}
+                                  <span className="block text-xs text-gray-400">
+                                    {bill.aiSummary.source === 'ai-generated'
+                                      ? 'AI summary'
+                                      : 'Congressional summary'}{' '}
+                                    · as of {bill.aiSummary.lastUpdated.slice(0, 10)} ·{' '}
+                                    <Link
+                                      href="/corrections"
+                                      className="hover:text-[#3ea2d4] underline"
+                                    >
+                                      report an error
+                                    </Link>
+                                  </span>
+                                </p>
+                              )}
+                              <p className="mt-1 text-sm text-gray-600">
+                                {bill.latestActionDate}: {bill.latestActionText}
+                              </p>
+                              {actionCtx && (
+                                <p className="mt-0.5 border-l-2 border-gray-200 pl-2 text-sm text-gray-500">
+                                  {actionCtx}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Filings */}
+          <section className="mt-grid-4">
+            <h2 className="text-xl font-bold tracking-[0.02em]">
+              New money filings — {issue.stateName} delegation
+            </h2>
+            {issue.unavailable.includes('filings') ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                FEC filing data is unavailable for this week — the upstream source could not be
+                reached.
+              </p>
+            ) : issue.filings.length === 0 ? (
+              <p className="mt-grid-2 border-2 border-gray-200 bg-white p-grid-3 text-sm text-gray-600">
+                No new FEC filings were received from {issue.stateName} delegation committees this
+                week.
+              </p>
+            ) : (
+              <div className="mt-grid-2 border-2 border-gray-200 bg-white">
+                <ul>
+                  {issue.filings.map(filing => {
+                    const receipts = currencyFmt(filing.totalReceipts);
+                    const formCtx = fecFormContext(filing.formType);
+                    return (
+                      <li
+                        key={`${filing.fileNumber}-${filing.bioguideId}`}
+                        className="border-b border-gray-100 p-grid-2 last:border-b-0"
+                      >
+                        <p className="text-[15px] font-medium">
+                          <RepLink bioguideId={filing.bioguideId} name={filing.memberName} />
+                          <span className={`ml-1 text-xs ${getPartyTextClass(filing.party)}`}>
+                            ({filing.party.charAt(0)})
+                          </span>
+                          <span className="ml-2 text-sm font-normal text-gray-600">
+                            {filing.reportType ?? filing.formType ?? 'Filing'}
+                          </span>
+                        </p>
+                        {formCtx && (
+                          <p className="mt-1 border-l-2 border-gray-200 pl-2 text-sm text-gray-600">
+                            {formCtx}
+                          </p>
+                        )}
+                        <p className="mt-1 text-sm text-gray-600">
+                          Received {filing.receiptDate.slice(0, 10)}
+                          {filing.committeeName ? ` · ${filing.committeeName}` : ''}
+                          {receipts ? ` · ${receipts} receipts` : ''}
+                          {' · '}
+                          <Link
+                            href={`/finance/filings/${filing.fileNumber}`}
+                            className="text-[#3ea2d4] underline hover:no-underline"
+                          >
+                            filing detail
+                          </Link>
+                          {' · '}
+                          <a
+                            href={filing.fecUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#3ea2d4] underline hover:no-underline"
+                          >
+                            FEC record
+                          </a>
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </section>
+
+          {/* Sources */}
+          <footer className="mt-grid-4 border-t-2 border-gray-200 pt-grid-2 text-xs text-gray-500">
+            <p>
+              Sources: Congress.gov, U.S. Senate roll-call records, House Clerk, Federal Election
+              Commission. Compiled {issue.generatedAt.slice(0, 10)}. Something look wrong?{' '}
+              <Link href="/corrections" className="text-[#3ea2d4] underline hover:no-underline">
+                Report an error
+              </Link>
+              .
+            </p>
+          </footer>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

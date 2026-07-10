@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { getStateName } from '@/lib/data/us-states';
-import { AdministrativeAreaSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { AdministrativeAreaSchema } from '@/components/seo/JsonLd';
 
 // Parse district ID - supports multiple formats:
 // - Hyphenated: "MI-12", "CA-04", "AK-AL" (canonical format)
@@ -101,13 +101,8 @@ export default async function DistrictLayout({
         mainEntityOfPage={`https://civdotiq.org/districts/${feedDistrictId}`}
         containedInPlace={stateName}
       />
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://civdotiq.org' },
-          { name: 'Districts', url: 'https://civdotiq.org/districts' },
-          { name: areaName, url: `https://civdotiq.org/districts/${feedDistrictId}` },
-        ]}
-      />
+      {/* BreadcrumbList lives in DistrictPage (4-item trail incl. state) —
+          a second, shorter trail here would conflict with it. */}
       {children}
     </>
   );

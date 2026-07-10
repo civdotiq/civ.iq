@@ -182,6 +182,9 @@ export async function generateMetadata({
       const chamberName = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
       return {
         title: `${legislator.name} - ${chamberName} | ${state.toUpperCase()}`,
+        alternates: {
+          canonical: `https://civdotiq.org/representative/state/${state.toLowerCase()}/${legislatorId}`,
+        },
         description: `View detailed information about ${legislator.name}, ${chamberName} for ${state.toUpperCase()} District ${legislator.district}`,
         openGraph: {
           title: `${legislator.name} - ${chamberName} | CIV.IQ`,

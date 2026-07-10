@@ -42,7 +42,8 @@ export async function generateMetadata({
   const data = await getData(bioguideId);
   return {
     title: `${data.member.name} — Incumbent Record Card (print)`,
-    robots: { index: false, follow: false },
+    robots: { index: false, follow: true },
+    alternates: { canonical: `https://civdotiq.org/representative/${bioguideId}/record` },
   };
 }
 

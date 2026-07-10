@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/infrastructure' },
   title: 'Infrastructure Legislation & Policy',
   description:
     'Track infrastructure legislation in Congress. Transportation, broadband, water systems, energy grid, aviation, and the committees that shape infrastructure policy.',

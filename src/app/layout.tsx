@@ -73,7 +73,9 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://civdotiq.org',
+    // No site-wide canonical: pages declare their own. A root canonical here
+    // inherits into every page without an `alternates` override and marks
+    // them all as duplicates of the homepage.
     types: {
       'application/atom+xml': '/feeds/bills',
     },

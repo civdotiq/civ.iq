@@ -17,6 +17,7 @@ import {
 import { CongressStatsBox } from './CongressStatsBox';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/congress' },
   title: 'United States Congress | Senators, Representatives & Committees',
   description:
     'Complete guide to the 119th United States Congress. Find all 100 Senators, 435 Representatives, and congressional committees. Track legislation, votes, and more.',

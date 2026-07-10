@@ -133,6 +133,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
   return {
     title: `${state.toUpperCase()} ${chamberName} Committees`,
+    alternates: {
+      canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/committees`,
+    },
     description: `Browse committees in the ${legislatureName}. View committee leadership, membership rosters, and jurisdiction information.`,
     openGraph: {
       title: `${state.toUpperCase()} ${chamberName} Committees`,

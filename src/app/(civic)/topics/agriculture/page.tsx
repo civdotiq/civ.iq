@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/agriculture' },
   title: 'Agriculture Legislation & Policy',
   description:
     'Track agriculture legislation in Congress. Farm policy, food safety, rural development, nutrition programs, conservation, and forestry bills and the committees that shape agricultural policy.',

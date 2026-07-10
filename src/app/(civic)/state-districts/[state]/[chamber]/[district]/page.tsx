@@ -56,6 +56,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${stateName} ${chamberName} District ${district} - CIV.IQ`,
     description: `View information about ${stateName} ${chamberName} District ${district}, including representatives and demographics.`,
+    alternates: {
+      canonical: `https://civdotiq.org/state-districts/${state.toLowerCase()}/${validChamber}/${district}`,
+    },
   };
 }
 

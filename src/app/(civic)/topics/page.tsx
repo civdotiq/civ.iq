@@ -16,6 +16,7 @@ import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/compon
 import { TopicListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics' },
   title: 'Legislative Topics - Policy Areas & Issues',
   description:
     'Explore legislative topics including healthcare, economy, education, environment, and more. Find related bills, committees, and representatives for each policy area.',

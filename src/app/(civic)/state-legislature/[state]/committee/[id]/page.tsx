@@ -100,6 +100,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${committee.name} | ${state.toUpperCase()} Legislature`,
+    alternates: {
+      canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/committee/${id}`,
+    },
     description: `View committee membership, leadership, and information for ${committee.name} in the ${state.toUpperCase()} state legislature. See full roster, party composition, and more.`,
     openGraph: {
       title: committee.name,

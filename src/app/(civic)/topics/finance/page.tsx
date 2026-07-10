@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/finance' },
   title: 'Banking & Finance Legislation',
   description:
     'Track banking and finance legislation in Congress. Banking regulation, consumer protection, housing policy, securities, cryptocurrency, and insurance bills and the committees that shape financial policy.',

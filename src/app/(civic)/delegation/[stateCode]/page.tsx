@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${stateName} Congressional Delegation`,
+    alternates: { canonical: `https://civdotiq.org/delegation/${stateCode.toUpperCase()}` },
     description: `View all U.S. Senators and Representatives from ${stateName}. Complete federal delegation with contact information and committee assignments.`,
     openGraph: {
       title: `${stateName} Congressional Delegation | CIV.IQ`,

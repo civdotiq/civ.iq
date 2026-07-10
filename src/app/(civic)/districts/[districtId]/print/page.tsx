@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `Civic Pack — ${upper}`,
     description: `Printable civic information pack for congressional district ${upper}.`,
-    robots: { index: false, follow: false },
+    robots: { index: false, follow: true },
+    alternates: { canonical: `https://civdotiq.org/districts/${upper}` },
   };
 }
 

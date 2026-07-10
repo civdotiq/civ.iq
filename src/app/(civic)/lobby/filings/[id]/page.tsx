@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: LobbyFilingPageProps): Promis
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/lobby/filings/${id}` },
     openGraph: {
       title,
       description,

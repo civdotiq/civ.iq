@@ -448,6 +448,8 @@ interface LegislationSchemaProps {
   legislationType?: string;
   url?: string;
   mainEntityOfPage?: string;
+  /** Governing body's area. Defaults to the United States; state bills pass their state. */
+  jurisdiction?: { name: string; type?: 'State' | 'Country' };
 }
 
 /**
@@ -465,6 +467,7 @@ export function LegislationSchema({
   legislationType,
   url,
   mainEntityOfPage,
+  jurisdiction,
 }: LegislationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -472,8 +475,8 @@ export function LegislationSchema({
     name,
     legislationIdentifier,
     legislationJurisdiction: {
-      '@type': 'Country',
-      name: 'United States of America',
+      '@type': jurisdiction?.type ?? 'Country',
+      name: jurisdiction?.name ?? 'United States of America',
     },
   };
 
@@ -954,19 +957,25 @@ export function ItemListSchema({ name, description, url, items, itemType }: Item
     '@type': 'ItemList',
     name,
     numberOfItems: items.length,
+    // A ListItem carries either a bare name/url or a nested typed `item`,
+    // never both — Google's validator warns on the redundant combination.
     itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
       position: item.position ?? index + 1,
-      name: item.name,
-      url: item.url,
-      ...(item.image && { image: item.image }),
-      ...(itemType && {
-        item: {
-          '@type': itemType,
-          name: item.name,
-          url: item.url,
-        },
-      }),
+      ...(itemType
+        ? {
+            item: {
+              '@type': itemType,
+              name: item.name,
+              url: item.url,
+              ...(item.image && { image: item.image }),
+            },
+          }
+        : {
+            name: item.name,
+            url: item.url,
+            ...(item.image && { image: item.image }),
+          }),
     })),
   };
 
@@ -1013,6 +1022,53 @@ export function CollectionPageSchema({
       name: part.name,
       url: part.url,
     }));
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface ArticleSchemaProps {
+  headline: string;
+  description: string;
+  url: string;
+  /** ISO 8601 date (YYYY-MM-DD) — the freshness signal AI search engines read. */
+  datePublished: string;
+  dateModified?: string;
+  /** Subject entity, e.g. the featured state on a digest issue. */
+  about?: { name: string; type?: 'AdministrativeArea' | 'Thing' };
+}
+
+/**
+ * Article schema for dated, issue-style pages (weekly digest issues).
+ * Author and publisher reference the global Organization node by @id.
+ */
+export function ArticleSchema({
+  headline,
+  description,
+  url,
+  datePublished,
+  dateModified,
+  about,
+}: ArticleSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': url,
+    headline,
+    description,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    datePublished,
+    author: { '@id': 'https://civdotiq.org/#organization' },
+    publisher: { '@id': 'https://civdotiq.org/#organization' },
+    isPartOf: { '@type': 'WebSite', '@id': 'https://civdotiq.org/#website' },
+  };
+
+  if (dateModified) schema.dateModified = dateModified;
+  if (about) {
+    schema.about = { '@type': about.type ?? 'Thing', name: about.name };
   }
 
   return (

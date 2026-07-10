@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/defense' },
   title: 'Defense & Military Legislation',
   description:
     'Track defense legislation in Congress. NDAA, military personnel, veterans benefits, defense procurement, nuclear security, and the committees that shape defense policy.',

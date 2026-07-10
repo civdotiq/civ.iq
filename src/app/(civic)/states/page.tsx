@@ -16,6 +16,7 @@ import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/compon
 import { StateListingPage } from '@/components/search/SearchVariants';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/states' },
   title: 'U.S. States - All 50 State Legislatures',
   description:
     'Complete guide to all 50 U.S. state legislatures. Find your state senators, state representatives, bills, committees, and voting records. Real government data from OpenStates.',

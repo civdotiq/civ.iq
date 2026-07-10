@@ -53,6 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/glossary/${termToSlug(glossaryTerm.term)}` },
     keywords: [
       glossaryTerm.term,
       `what is ${glossaryTerm.term.toLowerCase()}`,

@@ -410,27 +410,10 @@ export default async function RepresentativeProfilePage({
     representative.name = `${representative.firstName} ${representative.lastName}`;
   }
 
-  if (useHybridPreview) {
-    return (
-      <ErrorBoundary>
-        <ChunkLoadErrorBoundary>
-          <ProfileHybrid representative={representative} />
-        </ChunkLoadErrorBoundary>
-      </ErrorBoundary>
-    );
-  }
-
-  // Debug logging removed - was causing RSC serialization issues
-
-  // Breadcrumb navigation with preserved search context
-  const breadcrumbItems = [
-    { label: 'Search', href: '/' },
-    { label: 'Your Representatives', href: '/results', preserveSearch: true },
-    { label: representative.name, href: '#' },
-  ];
-
-  // Build social media links for schema
-  const sameAs: string[] = [];
+  // Build identity links for schema. The Congressional Bioguide entry is the
+  // authoritative government identifier — it anchors knowledge-graph
+  // reconciliation, so it leads regardless of which social links exist.
+  const sameAs: string[] = [`https://bioguide.congress.gov/search/bio/${bioguideId}`];
   if (representative.socialMedia?.twitter) {
     sameAs.push(`https://twitter.com/${representative.socialMedia.twitter}`);
   }
@@ -446,6 +429,65 @@ export default async function RepresentativeProfilePage({
     name: c.name,
     url: c.id ? `https://civdotiq.org/committee/${c.id}` : undefined,
   }));
+
+  // Structured data renders in BOTH the hybrid and classic branches — the
+  // hybrid preview must never silently drop the page's schema.
+  const structuredData = (
+    <>
+      <ProfilePageSchema
+        url={`https://civdotiq.org/representative/${bioguideId}`}
+        person={{
+          name: representative.name,
+          jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
+          description: `${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`,
+          image: representative.imageUrl,
+          worksFor: {
+            name:
+              representative.chamber === 'Senate'
+                ? 'United States Senate'
+                : 'United States House of Representatives',
+            url: representative.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
+          },
+          memberOf,
+          sameAs,
+          affiliation: representative.party,
+          birthDate: representative.bio?.birthday,
+          knowsAbout: representative.committees?.map(c => c.name),
+        }}
+      />
+      <SpeakableSchema
+        url={`https://civdotiq.org/representative/${bioguideId}`}
+        cssSelectors={['[data-speakable="rep-facts"]', '[data-speakable="rep-summary"]']}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Representatives', url: 'https://civdotiq.org/results' },
+          { name: representative.name, url: `https://civdotiq.org/representative/${bioguideId}` },
+        ]}
+      />
+    </>
+  );
+
+  if (useHybridPreview) {
+    return (
+      <>
+        {structuredData}
+        <ErrorBoundary>
+          <ChunkLoadErrorBoundary>
+            <ProfileHybrid representative={representative} />
+          </ChunkLoadErrorBoundary>
+        </ErrorBoundary>
+      </>
+    );
+  }
+
+  // Breadcrumb navigation with preserved search context
+  const breadcrumbItems = [
+    { label: 'Search', href: '/' },
+    { label: 'Your Representatives', href: '/results', preserveSearch: true },
+    { label: representative.name, href: '#' },
+  ];
 
   // Build committee links for contextual footer
   const committeeLinks: CommitteeLink[] = (representative.committees || [])
@@ -464,38 +506,7 @@ export default async function RepresentativeProfilePage({
   return (
     <>
       {/* Structured Data for SEO */}
-      <ProfilePageSchema
-        url={`https://civdotiq.org/representative/${bioguideId}`}
-        person={{
-          name: representative.name,
-          jobTitle: `${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`,
-          description: `${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`,
-          image: representative.imageUrl,
-          worksFor: {
-            name:
-              representative.chamber === 'Senate'
-                ? 'United States Senate'
-                : 'United States House of Representatives',
-            url: representative.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
-          },
-          memberOf,
-          sameAs: sameAs.length > 0 ? sameAs : undefined,
-          affiliation: representative.party,
-          birthDate: representative.bio?.birthday,
-          knowsAbout: representative.committees?.map(c => c.name),
-        }}
-      />
-      <SpeakableSchema
-        url={`https://civdotiq.org/representative/${bioguideId}`}
-        cssSelectors={['[data-speakable="rep-facts"]', '[data-speakable="rep-summary"]']}
-      />
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://civdotiq.org' },
-          { name: 'Representatives', url: 'https://civdotiq.org/results' },
-          { name: representative.name, url: `https://civdotiq.org/representative/${bioguideId}` },
-        ]}
-      />
+      {structuredData}
 
       <div className="density-default">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">

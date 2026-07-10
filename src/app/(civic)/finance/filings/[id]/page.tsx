@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: FECFilingPageProps): Promise<
   return {
     title,
     description,
+    alternates: { canonical: `https://civdotiq.org/finance/filings/${data.fileNumber}` },
     openGraph: {
       title,
       description,

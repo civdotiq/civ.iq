@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/immigration' },
   title: 'Immigration Legislation & Policy',
   description:
     'Track immigration legislation in Congress. Border security, legal immigration, asylum, workforce visas, citizenship, and the committees that shape immigration policy.',

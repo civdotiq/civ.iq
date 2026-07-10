@@ -19,6 +19,9 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   return {
     title: `${billId.toUpperCase()} — ${stateName} Bill`,
     description: `Details, sponsors, and status for ${billId.toUpperCase()} in the ${stateName} state legislature.`,
+    alternates: {
+      canonical: `https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`,
+    },
     openGraph: {
       title: `${billId.toUpperCase()} — ${stateName} Bill | CIV.IQ`,
       description: `Details, sponsors, and status for ${billId.toUpperCase()} in the ${stateName} state legislature.`,
@@ -36,9 +39,10 @@ export default async function StateBillLayout({ children, params }: LayoutProps)
   return (
     <>
       <LegislationSchema
-        name={billId.toUpperCase()}
+        name={`${billId.toUpperCase()} — ${stateName} bill`}
         legislationIdentifier={billId.toUpperCase()}
         url={`https://civdotiq.org/state-bills/${state}/${billId}`}
+        jurisdiction={{ name: stateName, type: 'State' }}
       />
       <BreadcrumbSchema
         items={[

@@ -13,6 +13,7 @@ import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/compon
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/committees' },
   title: 'Congressional Committees',
   description:
     'Browse all House, Senate, and Joint committees in the U.S. Congress. Explore their jurisdictions, leadership, and responsibilities.',

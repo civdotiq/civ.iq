@@ -10,6 +10,7 @@ import { GlossaryClient } from './GlossaryClient';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/glossary' },
   title: 'Civic Glossary',
   description:
     'Definitions for civic and legislative terms. Understand congressional procedures, campaign finance, and government structure.',

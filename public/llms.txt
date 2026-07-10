@@ -20,7 +20,7 @@ CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google 
 
 ## Coverage Honesty
 
-The canonical coverage matrix is published at `https://civdotiq.org/docs/COVERAGE.md` (also in repo at `docs/COVERAGE.md`). Every join-based API response carries a `dataQuality` field (`complete | partial | empty | unavailable`) so consumers can distinguish "no data exists" from "upstream source unavailable." Routes never return silent empty arrays in place of an error.
+The canonical coverage matrix is published at https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md (in repo at `docs/COVERAGE.md`). Every join-based API response carries a `dataQuality` field (`complete | partial | empty | unavailable`) so consumers can distinguish "no data exists" from "upstream source unavailable." Routes never return silent empty arrays in place of an error.
 
 ## API Access
 

@@ -16,6 +16,7 @@ import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd'
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://civdotiq.org/topics/foreign-policy' },
   title: 'Foreign Policy Legislation',
   description:
     'Track foreign policy legislation in Congress. International relations, treaties, foreign aid, sanctions, diplomacy, and international organization bills and the committees that shape U.S. foreign policy.',
