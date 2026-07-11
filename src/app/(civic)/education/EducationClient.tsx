@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   BookOpen,
   Clock,
@@ -54,11 +55,13 @@ const PrintableWorksheet = dynamic(() =>
 );
 const PrintableRubric = dynamic(() => import('./PrintableRubric').then(mod => mod.PrintableRubric));
 
+// Non-partisan grade-band palette: amber / interactive blue / gray-black.
+// Party colors (red, Democrat blue) and retired green are never used for UI grouping.
 const GRADE_LEVEL_COLORS: Record<GradeLevel, { bg: string; text: string; border: string }> = {
   elementary: {
-    bg: 'bg-civiq-green/10',
-    text: 'text-civiq-green',
-    border: 'border-civiq-green/30',
+    bg: 'bg-amber-600/10',
+    text: 'text-amber-600',
+    border: 'border-amber-600/30',
   },
   middle: {
     bg: 'bg-civiq-blue/10',
@@ -66,9 +69,9 @@ const GRADE_LEVEL_COLORS: Record<GradeLevel, { bg: string; text: string; border:
     border: 'border-civiq-blue/30',
   },
   high: {
-    bg: 'bg-civiq-red/10',
-    text: 'text-civiq-red',
-    border: 'border-civiq-red/30',
+    bg: 'bg-gray-900/10',
+    text: 'text-gray-900',
+    border: 'border-gray-900/30',
   },
 };
 
@@ -366,58 +369,63 @@ function LessonCard({
 
   return (
     <div className="bg-white border-2 border-black">
-      {/* Header - Always visible */}
-      <button
-        onClick={onToggle}
-        className="w-full text-left p-4 flex items-start justify-between gap-4 hover:bg-gray-50 transition-colors"
-        aria-expanded={isExpanded}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className={`text-sm font-mono ${colors.text}`}>{lesson.id}</span>
-            <h3 className="text-lg font-semibold text-gray-900">{lesson.title}</h3>
-            <span
-              className={`px-2 py-0.5 text-xs font-medium border ${colors.bg} ${colors.text} ${colors.border}`}
-            >
-              {LESSON_TOPICS[lesson.topic]}
-            </span>
-          </div>
-          <p className={`text-gray-600 ${isExpanded ? '' : 'line-clamp-2'}`}>{lesson.overview}</p>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {lesson.duration}
-            </span>
-            <span className="flex items-center gap-1">
-              <Target className="w-4 h-4" />
-              {lesson.objectives.length} objectives
-            </span>
-            <span className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              {lesson.activities.length} activities
-            </span>
-            {c3Standards.length > 0 && (
-              <span className="flex items-center gap-1">
-                <CheckSquare className="w-4 h-4" />
-                {c3Standards.length} C3 standards
-              </span>
-            )}
-            <Link
-              href={`/education/${lesson.id.toLowerCase()}`}
-              className="flex items-center gap-1 text-civiq-blue hover:underline"
-              onClick={e => e.stopPropagation()}
-            >
-              Full Lesson
-              <ExternalLink className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-        <ChevronRight
-          className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
-            isExpanded ? 'rotate-90' : ''
-          }`}
+      {/* Header - Always visible. The expand button stretches under the whole
+          header; the "Full Lesson" link is a sibling layered above it so a link
+          is never nested inside a button. */}
+      <div className="relative hover:bg-gray-50 transition-colors">
+        <button
+          onClick={onToggle}
+          className="absolute inset-0 w-full"
+          aria-expanded={isExpanded}
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} lesson: ${lesson.title}`}
         />
-      </button>
+        <div className="relative pointer-events-none w-full text-left p-4 flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className={`text-sm font-mono ${colors.text}`}>{lesson.id}</span>
+              <h3 className="text-lg font-semibold text-gray-900">{lesson.title}</h3>
+              <span
+                className={`px-2 py-0.5 text-xs font-medium border ${colors.bg} ${colors.text} ${colors.border}`}
+              >
+                {LESSON_TOPICS[lesson.topic]}
+              </span>
+            </div>
+            <p className={`text-gray-600 ${isExpanded ? '' : 'line-clamp-2'}`}>{lesson.overview}</p>
+            <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {lesson.duration}
+              </span>
+              <span className="flex items-center gap-1">
+                <Target className="w-4 h-4" />
+                {lesson.objectives.length} objectives
+              </span>
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                {lesson.activities.length} activities
+              </span>
+              {c3Standards.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <CheckSquare className="w-4 h-4" />
+                  {c3Standards.length} C3 standards
+                </span>
+              )}
+              <Link
+                href={`/education/${lesson.id.toLowerCase()}`}
+                className="pointer-events-auto flex items-center gap-1 text-civiq-blue hover:underline"
+              >
+                Full Lesson
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+          <ChevronRight
+            className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+              isExpanded ? 'rotate-90' : ''
+            }`}
+          />
+        </div>
+      </div>
 
       {/* Expanded Content */}
       {isExpanded && (
@@ -503,13 +511,7 @@ function LessonCard({
             </h4>
             <div className="flex flex-wrap gap-2">
               {lesson.vocabulary.map(word => (
-                <Link
-                  key={word}
-                  href={`/glossary?search=${encodeURIComponent(word)}`}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm hover:bg-civiq-blue/10 hover:text-civiq-blue transition-colors"
-                >
-                  {word}
-                </Link>
+                <VocabTag key={word} word={word} />
               ))}
             </div>
           </div>
@@ -676,6 +678,47 @@ function LessonCard({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Vocabulary tag — links to the glossary entry only when the term actually
+ * exists (case-insensitive), otherwise renders plain styled text.
+ * The ~51KB glossary is loaded lazily (same pattern as GlossaryLink) so it
+ * stays out of the curriculum-browser chunk.
+ */
+function VocabTag({ word }: { word: string }) {
+  const [slug, setSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { getTermByName } = await import('@/lib/data/civic-glossary');
+        const match = getTermByName(word);
+        if (!cancelled && match) {
+          setSlug(match.term.toLowerCase().replace(/\s+/g, '-'));
+        }
+      } catch {
+        // Glossary chunk failed to load — keep plain text
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [word]);
+
+  if (!slug) {
+    return <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm">{word}</span>;
+  }
+
+  return (
+    <Link
+      href={`/glossary/${slug}`}
+      className="px-3 py-1 bg-gray-100 text-gray-700 text-sm hover:bg-civiq-blue/10 hover:text-civiq-blue transition-colors"
+    >
+      {word}
+    </Link>
   );
 }
 
@@ -895,19 +938,27 @@ function WorksheetScrollEffect({
   worksheetId: string;
   onScrollComplete: () => void;
 }) {
-  // Use setTimeout to ensure the DOM has updated after tab switch
-  setTimeout(() => {
-    const element = document.getElementById(`worksheet-${worksheetId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Highlight the worksheet briefly
-      element.classList.add('ring-2', 'ring-civiq-blue', 'ring-offset-2');
-      setTimeout(() => {
-        element.classList.remove('ring-2', 'ring-civiq-blue', 'ring-offset-2');
-      }, 2000);
-    }
-    onScrollComplete();
-  }, 100);
+  useEffect(() => {
+    // Delay so the DOM has updated after the tab switch
+    const scrollTimer = setTimeout(() => {
+      const element = document.getElementById(`worksheet-${worksheetId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the worksheet briefly. This timer intentionally outlives the
+        // component (it unmounts right after onScrollComplete) — it only removes
+        // classes from an element that stays mounted.
+        element.classList.add('ring-2', 'ring-civiq-blue', 'ring-offset-2');
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-civiq-blue', 'ring-offset-2');
+        }, 2000);
+      }
+      onScrollComplete();
+    }, 100);
+
+    return () => {
+      clearTimeout(scrollTimer);
+    };
+  }, [worksheetId, onScrollComplete]);
 
   return null;
 }
@@ -919,6 +970,8 @@ interface PrintLessonModalProps {
 }
 
 function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap({ isActive: true, onClose, containerRef: dialogRef });
   const c3Standards = getC3StandardsByLesson(lesson.id);
 
   const handlePrint = () => {
@@ -926,11 +979,19 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
   };
 
   return (
-    <div className="print-lesson-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="print-lesson-title"
+      className="print-lesson-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible"
+    >
       <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none border-2 border-black print:border-0 print:w-full">
         {/* Modal Header - Hidden when printing */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
-          <h2 className="text-lg font-semibold">Print Lesson Plan</h2>
+          <h2 id="print-lesson-title" className="text-lg font-semibold">
+            Print Lesson Plan
+          </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
@@ -950,7 +1011,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
         </div>
 
         {/* Printable Content */}
-        <div className="p-8 print:p-6 font-['Inter',system-ui,sans-serif] text-[11pt] leading-[1.4] text-[#1a1a1a]">
+        <div className="p-8 print:p-6 text-[11pt] leading-[1.4] text-[#1a1a1a]">
           {/* Header with CIV.IQ branding */}
           <header className="grid grid-cols-[1fr_auto] items-start gap-4 pb-4 border-b-2 border-black mb-6">
             <div>
@@ -969,7 +1030,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
             </div>
             <div className="text-right text-[9pt] text-[#4a4a4a]">
               <div className="font-semibold text-[14pt] tracking-tight">
-                CIV<span className="text-[#1976d2]">.</span>IQ
+                CIV<span className="text-[#3ea2d4]">.</span>IQ
               </div>
               <div>civdotiq.org</div>
             </div>
@@ -1021,7 +1082,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
               <ul className="space-y-2 text-[10pt]">
                 {lesson.objectives.map(obj => (
                   <li key={obj.id} className="flex items-start gap-2">
-                    <span className="text-[#0a9338] font-bold">+</span>
+                    <span className="text-[#3ea2d4] font-bold">+</span>
                     <span>{obj.text}</span>
                   </li>
                 ))}
@@ -1106,7 +1167,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
                   </div>
                   <p className="text-[9pt] text-[#4a4a4a]">{activity.description}</p>
                   {activity.civiqPath && (
-                    <p className="text-[8pt] text-[#1976d2] mt-1">
+                    <p className="text-[8pt] text-[#3ea2d4] mt-1">
                       CIV.IQ: {activity.civiqFeature} → {activity.civiqPath}
                     </p>
                   )}
@@ -1154,7 +1215,7 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
               <ul className="space-y-1 text-[10pt]">
                 {lesson.extensions.map((ext, index) => (
                   <li key={index} className="flex items-start gap-2 text-[#4a4a4a]">
-                    <span className="text-[#1976d2]">+</span>
+                    <span className="text-[#3ea2d4]">+</span>
                     {ext}
                   </li>
                 ))}

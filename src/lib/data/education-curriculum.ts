@@ -1,7 +1,7 @@
 /**
  * Education Curriculum - K-12 Civics lessons for educators
  * Teaching civics with real government data from CIV.IQ
- * Copyright (c) 2019-2025 Mark Sandford
+ * Copyright (c) 2019-2026 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  *
  * Standards Alignment: NCSS C3 Framework
@@ -133,15 +133,18 @@ const ELEMENTARY_LESSONS: Lesson[] = [
     duration: '30-40 minutes',
     essentialQuestion: 'Who helps make decisions for our community at the national level?',
     overview:
-      'Students discover who their elected representatives are at the federal level by exploring their congressional district using their ZIP code.',
+      "Students discover who their elected representatives are at the federal level by looking up their congressional district with the school's address.",
     objectives: [
       { id: 'E1-1', text: 'Define what a representative does', standard: 'D2.Civ.3.K-2' },
       {
         id: 'E1-2',
-        text: 'Use their ZIP code to find their federal representatives on CIV.IQ',
+        text: 'Use the school address to find their federal representatives on CIV.IQ',
         standard: 'D2.Civ.1.K-2',
       },
-      { id: 'E1-3', text: 'Name their 2 senators and 1 House representative' },
+      {
+        id: 'E1-3',
+        text: 'Name the members of Congress who represent them (typically 2 senators and 1 House representative)',
+      },
       { id: 'E1-4', text: 'Identify the political party of each representative' },
     ],
     vocabulary: ['Representative', 'Senator', 'Congress', 'District', 'Elected', 'Party'],
@@ -149,7 +152,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       'Computer/tablet with internet access',
       'Projector for demonstration',
       'Worksheet E1: My Representatives',
-      'Classroom ZIP code written on board',
+      'School street address written on board',
     ],
     procedure: [
       {
@@ -169,7 +172,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
           'Display CIV.IQ homepage on projector',
           'Point to address search box',
           'Enter school address together',
-          'Results page appears with 3 representatives',
+          'Results page appears — typically three representatives (two senators and one House member)',
           'Walk through each: "This is one of our Senators. Senators represent our whole STATE."',
           '"This is our other Senator. Every state has exactly TWO senators."',
           '"This is our Representative. They represent our DISTRICT."',
@@ -232,8 +235,9 @@ const ELEMENTARY_LESSONS: Lesson[] = [
     ],
     teacherNotes: [
       'For K-1, consider doing the worksheet as a whole class activity',
-      'If students have different home ZIP codes, they can look up their own',
-      'Some ZIP codes span multiple districts — use the classroom ZIP for consistency',
+      "Use the school's street address for the lookup so the whole class sees the same district — ZIP codes alone can return the wrong district because ZIP boundaries do not match district lines",
+      'Students can also look up their home address with a family member — some may live in a different district than the school',
+      'Students in DC, Puerto Rico, and U.S. territories will see a non-voting delegate (or Resident Commissioner for Puerto Rico) and no senators — this is a good discussion point about representation',
     ],
     printableId: 'worksheet-E1',
     c3Standards: ['D2.Civ.3.K-2', 'D2.Civ.1.K-2'],
@@ -251,13 +255,13 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       {
         id: 'E2-1',
         text: 'Describe at least 3 responsibilities of a federal representative',
-        standard: 'D2.Civ.1.3-5',
+        standard: 'D2.Civ.1.K-2',
       },
       { id: 'E2-2', text: "Navigate to a representative's profile on CIV.IQ" },
       {
         id: 'E2-3',
         text: 'Identify the committees a representative serves on',
-        standard: 'D2.Civ.6.K-2',
+        standard: 'D2.Civ.6.3-5',
       },
       { id: 'E2-4', text: 'Explain why representatives work on different topics' },
     ],
@@ -333,7 +337,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       'Compare: Do all representatives work on the same things?',
     ],
     printableId: 'worksheet-E2',
-    c3Standards: ['D2.Civ.1.3-5', 'D2.Civ.6.K-2'],
+    c3Standards: ['D2.Civ.1.K-2', 'D2.Civ.6.3-5'],
   },
   {
     id: 'E3',
@@ -353,7 +357,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       {
         id: 'E3-2',
         text: 'Locate their district on the CIV.IQ interactive map',
-        standard: 'D2.Civ.4.3-5',
+        standard: 'D2.Civ.5.3-5',
       },
       { id: 'E3-3', text: 'Identify at least 2 neighboring districts' },
       { id: 'E3-4', text: 'Explain why district boundaries determine representation' },
@@ -448,7 +452,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
     ],
     teacherNotes: ['Key takeaway: WHERE you live determines WHO represents you'],
     printableId: 'worksheet-E3',
-    c3Standards: ['D2.Geo.1.3-5', 'D2.Civ.4.3-5'],
+    c3Standards: ['D2.Geo.1.3-5', 'D2.Civ.5.3-5'],
   },
   {
     id: 'E4',
@@ -463,7 +467,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
       {
         id: 'E4-1',
         text: 'Define "bill" and explain where bills come from',
-        standard: 'D2.Civ.6.3-5',
+        standard: 'D2.Civ.4.3-5',
       },
       { id: 'E4-2', text: "Navigate to a representative's sponsored bills on CIV.IQ" },
       {
@@ -534,7 +538,7 @@ const ELEMENTARY_LESSONS: Lesson[] = [
     assessment:
       'Students can describe at least 4 steps in the process of how a bill becomes a law.',
     printableId: 'worksheet-E4',
-    c3Standards: ['D2.Civ.6.3-5', 'D2.Civ.12.3-5'],
+    c3Standards: ['D2.Civ.4.3-5', 'D2.Civ.12.3-5'],
   },
   {
     id: 'E5',
@@ -830,7 +834,7 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
         phase: 'Opening',
         duration: '10 minutes',
         instructions: [
-          'Statistics: Of ~10,000 bills introduced each Congress, only about 300-500 become law',
+          'Statistics: Roughly 15,000 or more bills and joint resolutions are introduced each Congress, and fewer than 3% become law. The 118th Congress enacted about 274 public laws; the 117th enacted 362.',
           'Question: Why do you think so few bills pass?',
           'Preview the 7 stages: Introduction → Committee referral → Committee action → Floor debate → Second chamber → Conference → Presidential action',
         ],
@@ -1049,7 +1053,7 @@ const MIDDLE_SCHOOL_LESSONS: Lesson[] = [
         duration: '10 minutes',
         instructions: [
           'Question: What does it cost to run for Congress?',
-          'Average costs (2024 cycle): House race ~$2-3M, Senate ~$15-20M, competitive seats much higher',
+          'Average costs for winning campaigns, most recent completed cycle (2024): House ~$2-3M, Senate ~$14-15M — competitive seats cost much more',
           'Discussion: Where does that money come from?',
           'Vocabulary introduction: individual contributions, PAC, campaign committee',
         ],
@@ -1804,7 +1808,7 @@ const HIGH_SCHOOL_LESSONS: Lesson[] = [
         duration: '20 minutes',
         type: 'exploration',
         civiqFeature: 'Representatives',
-        civiqPath: '/representatives/all',
+        civiqPath: '/representatives',
       },
       {
         title: 'Your District Analysis',
@@ -2307,7 +2311,7 @@ export const WORKSHEETS: Worksheet[] = [
       { label: 'State', type: 'text' },
       { label: 'District Number', type: 'text' },
       { label: 'Representative Name', type: 'text' },
-      { label: 'Sketch your district shape (mark school with ⭐)', type: 'drawing' },
+      { label: 'Sketch your district shape (mark your school location)', type: 'drawing' },
       { label: 'Neighboring District #1', type: 'text' },
       { label: 'Represented by', type: 'text' },
       { label: 'Neighboring District #2', type: 'text' },
@@ -2980,7 +2984,7 @@ export const C3_STANDARDS: C3Standard[] = [
   {
     code: 'D2.Civ.1.K-2',
     dimension: 'Civics',
-    description: 'Explain what governments are and some of their functions.',
+    description: 'Describe roles and responsibilities of people in authority.',
     lessons: ['E1', 'E2'],
   },
   {
@@ -2992,14 +2996,23 @@ export const C3_STANDARDS: C3Standard[] = [
   {
     code: 'D2.Civ.4.3-5',
     dimension: 'Civics',
-    description: 'Explain how government derives its power from the people.',
+    description:
+      'Explain how groups of people make rules to create responsibilities and protect freedoms.',
+    lessons: ['E4'],
+  },
+  {
+    code: 'D2.Civ.5.3-5',
+    dimension: 'Civics',
+    description:
+      'Explain the origins, functions, and structure of different systems of government, including those created by the U.S. and state constitutions.',
     lessons: ['E3'],
   },
   {
     code: 'D2.Civ.6.3-5',
     dimension: 'Civics',
-    description: 'Explain how people influence others through communication and persuasion.',
-    lessons: ['E4'],
+    description:
+      'Describe ways in which people benefit from and are challenged by working together, including through government, workplaces, voluntary organizations, and families.',
+    lessons: ['E2'],
   },
   {
     code: 'D2.Civ.9.3-5',
@@ -3054,7 +3067,8 @@ export const C3_STANDARDS: C3Standard[] = [
   {
     code: 'D2.Civ.13.6-8',
     dimension: 'Civics',
-    description: 'Analyze the impact of citizens and groups on government policy.',
+    description:
+      'Analyze the purposes, implementation, and consequences of public policies in multiple settings.',
     lessons: ['M4'],
   },
   {
@@ -3080,7 +3094,8 @@ export const C3_STANDARDS: C3Standard[] = [
   {
     code: 'D2.Civ.8.9-12',
     dimension: 'Civics',
-    description: 'Evaluate multiple perspectives on government policies at all levels.',
+    description:
+      'Evaluate social and political systems in different contexts, times, and places, that promote civic virtues and enact democratic principles.',
     lessons: ['H5'],
   },
   {

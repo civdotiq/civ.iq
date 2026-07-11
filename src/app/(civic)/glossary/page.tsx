@@ -4,6 +4,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { GlossaryClient } from './GlossaryClient';
@@ -51,7 +52,14 @@ export default function GlossaryPage() {
             Definitions for civic and legislative terms used throughout CIV.IQ
           </p>
 
-          <GlossaryClient />
+          {/* GlossaryClient uses useSearchParams, which requires a Suspense boundary */}
+          <Suspense
+            fallback={
+              <div className="text-center py-12 text-sm text-gray-500">Loading glossary...</div>
+            }
+          >
+            <GlossaryClient />
+          </Suspense>
 
           {/* Footer Note */}
           <div className="mt-8 p-4 bg-civiq-blue/10 border-2 border-civiq-blue/20">

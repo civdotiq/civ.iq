@@ -39,8 +39,7 @@ import {
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/education' },
   title: 'Civic Education | K-12 Curriculum Using Real Government Data',
-  description:
-    '21 standards-aligned civics lessons for K-12 educators. Teach government structure, legislation, campaign finance, and data literacy using real data from Congress.gov, the FEC, and Census Bureau.',
+  description: `${EDUCATION_CURRICULUM.length} standards-aligned civics lessons for K-12 educators. Teach government structure, legislation, campaign finance, and data literacy using real data from Congress.gov, the FEC, and Census Bureau.`,
   keywords: [
     'civic education',
     'civics curriculum',
@@ -55,17 +54,18 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: 'Civic Education - CIV.IQ',
-    description:
-      '21 standards-aligned civics lessons using real government data for K-12 classrooms.',
+    description: `${EDUCATION_CURRICULUM.length} standards-aligned civics lessons using real government data for K-12 classrooms.`,
     type: 'website',
   },
 };
 
+// Non-partisan grade-band palette: amber / interactive blue / gray-black.
+// Party colors (red, Democrat blue) and retired green are never used for UI grouping.
 const GRADE_BAND_COLORS: Record<GradeLevel, { bg: string; text: string; border: string }> = {
   elementary: {
-    bg: 'bg-civiq-green/10',
-    text: 'text-civiq-green',
-    border: 'border-civiq-green',
+    bg: 'bg-amber-600/10',
+    text: 'text-amber-600',
+    border: 'border-amber-600',
   },
   middle: {
     bg: 'bg-civiq-blue/10',
@@ -73,19 +73,19 @@ const GRADE_BAND_COLORS: Record<GradeLevel, { bg: string; text: string; border: 
     border: 'border-civiq-blue',
   },
   high: {
-    bg: 'bg-civiq-red/10',
-    text: 'text-civiq-red',
-    border: 'border-civiq-red',
+    bg: 'bg-gray-900/10',
+    text: 'text-gray-900',
+    border: 'border-gray-900',
   },
 };
 
 const TOPIC_COLORS: Record<string, string> = {
   'government-structure': 'bg-gray-200 text-gray-800',
   'legislative-process': 'bg-civiq-blue/10 text-civiq-blue',
-  representatives: 'bg-civiq-green/10 text-civiq-green',
+  representatives: 'bg-amber-600/10 text-amber-600',
   'campaign-finance': 'bg-gray-100 text-gray-600',
   elections: 'bg-civiq-blue/10 text-civiq-blue',
-  'civic-participation': 'bg-civiq-red/10 text-civiq-red',
+  'civic-participation': 'bg-gray-900/10 text-gray-900',
   'state-government': 'bg-teal-100 text-teal-800',
   'data-literacy': 'bg-indigo-100 text-indigo-800',
   demographics: 'bg-pink-100 text-pink-800',
@@ -104,7 +104,7 @@ export default function EducationPage() {
       />
       <CollectionPageSchema
         name="Civic Education Curriculum"
-        description="21 standards-aligned civics lessons for K-12 educators using real government data."
+        description={`${EDUCATION_CURRICULUM.length} standards-aligned civics lessons for K-12 educators using real government data.`}
         url="https://civdotiq.org/education"
         hasPart={EDUCATION_CURRICULUM.map(l => ({
           name: l.title,
@@ -191,7 +191,7 @@ export default function EducationPage() {
             </h2>
             <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-700">
               <div>
-                <span className="font-bold text-civiq-green">K-5: Awareness</span>
+                <span className="font-bold text-amber-600">K-5: Awareness</span>
                 <p className="mt-1">
                   Students discover who represents them, what representatives do, and how to contact
                   them. Concrete, personal, local.
@@ -205,7 +205,7 @@ export default function EducationPage() {
                 </p>
               </div>
               <div>
-                <span className="font-bold text-civiq-red">9-12: Independent Research</span>
+                <span className="font-bold text-gray-900">9-12: Independent Research</span>
                 <p className="mt-1">
                   Students design and execute original civic research using public data. Evidence-
                   based argument, data literacy, critical evaluation.

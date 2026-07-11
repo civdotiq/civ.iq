@@ -23,9 +23,17 @@ export async function generateStaticParams() {
   }));
 }
 
-// Helper to convert slug to term lookup
+// Helper to convert slug to term lookup.
+// The route param arrives percent-encoded (e.g. "501%28c%29%284%29" for "501(c)(4)"),
+// so decode it before matching against generated slugs.
 function slugToTerm(slug: string): GlossaryTerm | undefined {
-  const normalizedSlug = slug.toLowerCase();
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug);
+  } catch {
+    // Malformed percent-encoding: fall back to the raw slug
+  }
+  const normalizedSlug = decoded.toLowerCase();
   return CIVIC_GLOSSARY.find(t => t.term.toLowerCase().replace(/\s+/g, '-') === normalizedSlug);
 }
 
@@ -47,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Term Not Found' };
   }
 
-  const title = `What is a ${glossaryTerm.term}? Definition & Explanation`;
+  const title = `What does "${glossaryTerm.term}" mean? Definition & Explanation`;
   const description = `${glossaryTerm.definition.slice(0, 155)}...`;
 
   return {
@@ -91,14 +99,14 @@ export default async function GlossaryTermPage({ params }: PageProps) {
   // Build FAQ for schema
   const faqItems = [
     {
-      question: `What is a ${glossaryTerm.term.toLowerCase()}?`,
+      question: `What does "${glossaryTerm.term}" mean?`,
       answer: glossaryTerm.definition,
     },
   ];
 
   if (glossaryTerm.example) {
     faqItems.push({
-      question: `Can you give an example of a ${glossaryTerm.term.toLowerCase()}?`,
+      question: `Can you give an example of "${glossaryTerm.term}"?`,
       answer: glossaryTerm.example,
     });
   }

@@ -42,6 +42,17 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
     window.print();
   };
 
+  // Score bands derive from the criteria count (4 points per criterion), so
+  // rubrics with any number of criteria score correctly (e.g. 5 criteria = /20).
+  const criteriaCount = rubric.criteria.length;
+  const maxScore = criteriaCount * 4;
+  const scoreBands = [
+    { label: 'Exemplary', range: `${criteriaCount * 3 + 1}-${criteriaCount * 4}` },
+    { label: 'Proficient', range: `${criteriaCount * 2 + 1}-${criteriaCount * 3}` },
+    { label: 'Developing', range: `${criteriaCount + 1}-${criteriaCount * 2}` },
+    { label: 'Beginning', range: `1-${criteriaCount}` },
+  ];
+
   return (
     <div
       ref={dialogRef}
@@ -74,7 +85,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
         </div>
 
         {/* Printable Rubric Content */}
-        <div className="p-8 print:p-6 font-['Inter',system-ui,sans-serif] text-[11pt] leading-[1.4] text-[#1a1a1a]">
+        <div className="p-8 print:p-6 text-[11pt] leading-[1.4] text-[#1a1a1a]">
           {/* Rubric Header */}
           <header className="grid grid-cols-[1fr_auto] items-start gap-4 pb-4 border-b-2 border-black mb-6">
             <div>
@@ -90,7 +101,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
             </div>
             <div className="text-right text-[9pt] text-[#4a4a4a]">
               <div className="font-semibold text-[14pt] tracking-tight">
-                CIV<span className="text-[#1976d2]">.</span>IQ
+                CIV<span className="text-[#3ea2d4]">.</span>IQ
               </div>
               <div>civdotiq.org</div>
             </div>
@@ -100,7 +111,7 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
           <div className="grid grid-cols-3 gap-6 mb-6 text-[9pt]">
             <StudentInfoField label="Student Name" />
             <StudentInfoField label="Date" />
-            <StudentInfoField label="Total Score" suffix="/ 16" />
+            <StudentInfoField label="Total Score" suffix={`/ ${maxScore}`} />
           </div>
 
           {/* Instructions */}
@@ -159,22 +170,12 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
 
           {/* Scoring Guide */}
           <div className="mt-6 grid grid-cols-4 gap-4 text-[8pt]">
-            <div className="border-2 border-black p-2 text-center">
-              <div className="font-semibold">Exemplary</div>
-              <div className="text-[12pt] font-bold">13-16</div>
-            </div>
-            <div className="border-2 border-black p-2 text-center">
-              <div className="font-semibold">Proficient</div>
-              <div className="text-[12pt] font-bold">9-12</div>
-            </div>
-            <div className="border-2 border-black p-2 text-center">
-              <div className="font-semibold">Developing</div>
-              <div className="text-[12pt] font-bold">5-8</div>
-            </div>
-            <div className="border-2 border-black p-2 text-center">
-              <div className="font-semibold">Beginning</div>
-              <div className="text-[12pt] font-bold">1-4</div>
-            </div>
+            {scoreBands.map(band => (
+              <div key={band.label} className="border-2 border-black p-2 text-center">
+                <div className="font-semibold">{band.label}</div>
+                <div className="text-[12pt] font-bold">{band.range}</div>
+              </div>
+            ))}
           </div>
 
           {/* Teacher Notes Section */}
@@ -201,7 +202,8 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
           </footer>
         </div>
 
-        {/* Print-specific styles */}
+        {/* Print-specific styles. Isolation of the rubric from the rest of the
+            page is handled centrally in globals.css via the visibility pattern. */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -211,41 +213,9 @@ export function PrintableRubric({ rubric, gradeLevel, onClose }: PrintableRubric
                   margin: 0.4in;
                 }
 
-                /* Hide everything except the printable rubric */
-                body > *:not(.print-rubric-root),
-                header,
-                nav,
-                footer:not(.rubric-footer),
-                aside,
-                .no-print,
-                [data-radix-portal],
-                [role="navigation"] {
-                  display: none !important;
-                }
-
-                /* Reset body styles for print */
                 body {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
-                  background: white !important;
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-
-                /* Make the modal fill the page */
-                .print-rubric-root {
-                  position: static !important;
-                  background: white !important;
-                  padding: 0 !important;
-                  margin: 0 !important;
-                  display: block !important;
-                }
-
-                .print-rubric-root > div {
-                  box-shadow: none !important;
-                  margin: 0 !important;
-                  max-width: none !important;
-                  width: 100% !important;
                 }
 
                 /* Prevent table rows from breaking across pages */

@@ -18,23 +18,25 @@ import {
   EDUCATION_CURRICULUM,
   LESSON_TOPICS,
   GRADE_LEVEL_INFO,
-  getLessonById,
+  getLessonBySlug,
+  getAdjacentLessons,
   getC3StandardsByLesson,
-  type Lesson,
   type GradeLevel,
 } from '@/lib/data/education-curriculum';
+import { getTermByName } from '@/lib/data/civic-glossary';
 import { PrintButton } from './PrintButton';
 
-// Grade-level color utilities
+// Grade-level color utilities — non-partisan palette (amber / interactive blue /
+// gray-black). Party colors and retired green are never used for grade bands.
 const GRADE_COLORS: Record<
   GradeLevel,
   { bg: string; text: string; border: string; accent: string }
 > = {
   elementary: {
-    bg: 'bg-[#0a9338]/10',
-    text: 'text-[#0a9338]',
-    border: 'border-[#0a9338]',
-    accent: '#0a9338',
+    bg: 'bg-[#d97706]/10',
+    text: 'text-[#d97706]',
+    border: 'border-[#d97706]',
+    accent: '#d97706',
   },
   middle: {
     bg: 'bg-[#3ea2d4]/10',
@@ -43,10 +45,10 @@ const GRADE_COLORS: Record<
     accent: '#3ea2d4',
   },
   high: {
-    bg: 'bg-[#e11d07]/10',
-    text: 'text-[#e11d07]',
-    border: 'border-[#e11d07]',
-    accent: '#e11d07',
+    bg: 'bg-[#171717]/10',
+    text: 'text-[#171717]',
+    border: 'border-[#171717]',
+    accent: '#171717',
   },
 };
 
@@ -58,30 +60,7 @@ function durationToISO(duration: string): string {
   return `PT${minutes}M`;
 }
 
-// Resolve a URL slug to a lesson (case-insensitive match on lesson ID)
-function getLessonBySlug(slug: string): Lesson | undefined {
-  const normalized = slug.toUpperCase();
-  return EDUCATION_CURRICULUM.find(l => l.id === normalized);
-}
-
-// Get adjacent lessons within the same grade band
-function getAdjacentLessons(lessonId: string): {
-  prev: Lesson | undefined;
-  next: Lesson | undefined;
-} {
-  const lesson = getLessonById(lessonId);
-  if (!lesson) return { prev: undefined, next: undefined };
-
-  const sameBand = EDUCATION_CURRICULUM.filter(l => l.gradeLevel === lesson.gradeLevel);
-  const idx = sameBand.findIndex(l => l.id === lessonId);
-
-  return {
-    prev: idx > 0 ? sameBand[idx - 1] : undefined,
-    next: idx < sameBand.length - 1 ? sameBand[idx + 1] : undefined,
-  };
-}
-
-// Generate static params for all 18 lessons
+// Generate static params for all lessons
 export async function generateStaticParams() {
   return EDUCATION_CURRICULUM.map(lesson => ({
     lessonId: lesson.id.toLowerCase(),
@@ -300,15 +279,26 @@ export default async function LessonPage({ params }: PageProps) {
                 Vocabulary
               </h2>
               <div className="flex flex-wrap gap-2">
-                {lesson.vocabulary.map(term => (
-                  <Link
-                    key={term}
-                    href={`/glossary/${term.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="px-3 py-1 text-sm border-2 border-gray-200 bg-white hover:border-[#3ea2d4] hover:text-[#3ea2d4] transition-colors"
-                  >
-                    {term}
-                  </Link>
-                ))}
+                {lesson.vocabulary.map(term => {
+                  // Only link terms that actually exist in the glossary (case-insensitive)
+                  const glossaryTerm = getTermByName(term);
+                  return glossaryTerm ? (
+                    <Link
+                      key={term}
+                      href={`/glossary/${glossaryTerm.term.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="px-3 py-1 text-sm border-2 border-gray-200 bg-white hover:border-[#3ea2d4] hover:text-[#3ea2d4] transition-colors"
+                    >
+                      {term}
+                    </Link>
+                  ) : (
+                    <span
+                      key={term}
+                      className="px-3 py-1 text-sm border-2 border-gray-200 bg-white text-gray-700"
+                    >
+                      {term}
+                    </span>
+                  );
+                })}
               </div>
             </section>
           </div>

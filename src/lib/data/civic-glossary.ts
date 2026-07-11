@@ -46,8 +46,29 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'A proposed law presented to Congress for consideration. Bills can originate in either the House or Senate, except revenue bills which must start in the House.',
     category: 'legislative-process',
-    relatedTerms: ['Resolution', 'Act', 'Law'],
+    relatedTerms: ['Resolution', 'Act', 'Sponsor'],
     example: 'H.R. 1234 is a bill introduced in the House of Representatives.',
+  },
+  {
+    term: 'Sponsor',
+    definition:
+      'The member of Congress who introduces a bill and serves as its lead advocate. Every bill has exactly one sponsor.',
+    category: 'legislative-process',
+    relatedTerms: ['Bill', 'Cosponsor', 'Hopper'],
+  },
+  {
+    term: 'Cosponsor',
+    definition:
+      'A member of Congress who formally adds their name in support of a bill introduced by another member. A bill can have many cosponsors.',
+    category: 'legislative-process',
+    relatedTerms: ['Sponsor', 'Bill'],
+  },
+  {
+    term: 'Act',
+    definition:
+      'Legislation that has passed Congress. Once signed by the President, or enacted over a veto, an act becomes a public law.',
+    category: 'legislative-process',
+    relatedTerms: ['Bill', 'Public Law', 'Veto'],
   },
   {
     term: 'Resolution',
@@ -55,6 +76,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A formal expression of opinion or intent by one or both chambers. Unlike bills, simple resolutions do not have the force of law.',
     category: 'legislative-process',
     relatedTerms: ['Joint Resolution', 'Concurrent Resolution', 'Simple Resolution'],
+  },
+  {
+    term: 'Simple Resolution',
+    definition:
+      'A measure passed by only one chamber to handle its own business, such as chamber rules or expressing an opinion. It does not go to the President and does not have the force of law.',
+    category: 'legislative-process',
+    relatedTerms: ['Resolution', 'Concurrent Resolution', 'Joint Resolution'],
   },
   {
     term: 'Joint Resolution',
@@ -71,16 +99,23 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     relatedTerms: ['Substitute Amendment', 'Markup'],
   },
   {
+    term: 'Substitute Amendment',
+    definition:
+      'An amendment that replaces the entire text of a bill, or of another amendment, with new language.',
+    category: 'legislative-process',
+    relatedTerms: ['Amendment', 'Markup'],
+  },
+  {
     term: 'Markup',
     definition:
       'The process by which a congressional committee debates, amends, and rewrites proposed legislation.',
     category: 'legislative-process',
-    relatedTerms: ['Amendment', 'Committee'],
+    relatedTerms: ['Amendment', 'Standing Committee'],
   },
   {
     term: 'Cloture',
     definition:
-      'A Senate procedure to end debate on a bill and bring it to a vote. Requires 60 votes (three-fifths of the Senate) to invoke.',
+      'A Senate procedure to end debate and bring a measure to a vote. Requires 60 votes for legislation. Nominations need only a simple majority, after rule changes in 2013 (most nominations) and 2017 (Supreme Court).',
     category: 'legislative-process',
     relatedTerms: ['Filibuster', 'Senate'],
   },
@@ -101,14 +136,14 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Override',
     definition:
-      'The process by which Congress can reject a presidential veto. Requires a two-thirds majority vote in both the House and Senate.',
+      'The process by which Congress enacts a bill despite a presidential veto. Requires a two-thirds majority vote in both the House and Senate.',
     category: 'legislative-process',
-    relatedTerms: ['Veto'],
+    relatedTerms: ['Veto', 'Veto Override'],
   },
   {
     term: 'Pocket Veto',
     definition:
-      'An indirect veto that occurs when the President does not sign a bill and Congress adjourns within 10 days of passing it.',
+      'An indirect veto. It occurs when the President does not sign a bill and Congress adjourns within 10 days (Sundays excepted) of the bill being presented to the President.',
     category: 'legislative-process',
     relatedTerms: ['Veto'],
   },
@@ -201,7 +236,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Delegate',
     definition:
-      'A non-voting member of the House representing a U.S. territory (Puerto Rico, Guam, Virgin Islands, American Samoa, Northern Mariana Islands) or Washington D.C.',
+      'A non-voting member of the House representing Washington D.C., Guam, the U.S. Virgin Islands, American Samoa, or the Northern Mariana Islands. Puerto Rico is represented by a Resident Commissioner instead.',
     category: 'congress',
     relatedTerms: ['Representative', 'Resident Commissioner'],
   },
@@ -221,6 +256,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'committees',
     relatedTerms: ['Select Committee', 'Joint Committee', 'Subcommittee'],
     example: 'The House Ways and Means Committee is a standing committee.',
+  },
+  {
+    term: 'Jurisdiction',
+    definition:
+      'The policy areas a committee is responsible for. A bill is referred to the committee whose jurisdiction covers its subject.',
+    category: 'committees',
+    relatedTerms: ['Standing Committee', 'Referral', 'Subcommittee'],
   },
   {
     term: 'Select Committee',
@@ -271,6 +313,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A formal meeting where a committee gathers information from witnesses through testimony. May be legislative, oversight, or investigative.',
     category: 'committees',
     relatedTerms: ['Testimony', 'Markup'],
+  },
+  {
+    term: 'Testimony',
+    definition:
+      'Statements given by witnesses at a committee hearing. Testimony can be spoken, written, or both, and becomes part of the public record.',
+    category: 'committees',
+    relatedTerms: ['Hearing', 'Standing Committee'],
   },
 
   // Voting
@@ -360,10 +409,23 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     relatedTerms: ['Redistricting', 'Census'],
   },
   {
+    term: 'Census',
+    definition:
+      'The count of every person living in the United States, taken every 10 years as required by the Constitution. Its results determine how House seats are divided among the states.',
+    category: 'elections',
+    relatedTerms: ['Apportionment', 'Redistricting', 'Congressional District'],
+  },
+  {
     term: 'Incumbent',
     definition: 'A person currently holding an elected office who is seeking re-election.',
     category: 'elections',
     relatedTerms: ['Challenger'],
+  },
+  {
+    term: 'Challenger',
+    definition: 'A candidate who runs against the person currently holding an elected office.',
+    category: 'elections',
+    relatedTerms: ['Incumbent', 'General Election', 'Primary Election'],
   },
 
   // Executive
@@ -379,7 +441,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'The group of senior appointed officials who head the executive departments and advise the President.',
     category: 'executive',
-    relatedTerms: ['Executive Department', 'Secretary'],
+    relatedTerms: ['Executive Department', 'Confirmation'],
   },
   {
     term: 'Executive Department',
@@ -405,6 +467,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     relatedTerms: ['Federal Court', 'Chief Justice'],
   },
   {
+    term: 'Chief Justice',
+    definition:
+      'The head of the U.S. Supreme Court and the federal judiciary. The Chief Justice presides over the Court and over presidential impeachment trials in the Senate.',
+    category: 'judiciary',
+    relatedTerms: ['Supreme Court', 'Impeachment', 'Federal Court'],
+  },
+  {
     term: 'Federal Court',
     definition:
       'A court established by the federal government to hear cases involving federal law, the Constitution, or disputes between states.',
@@ -416,7 +485,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'The power of courts to determine whether laws and government actions are constitutional. Established in Marbury v. Madison (1803).',
     category: 'judiciary',
-    relatedTerms: ['Supreme Court', 'Unconstitutional'],
+    relatedTerms: ['Supreme Court', 'Federal Court'],
   },
   {
     term: 'Amicus Brief',
@@ -483,7 +552,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'Federal Election Commission. The independent agency that enforces campaign finance laws for federal elections.',
     category: 'campaign-finance',
-    relatedTerms: ['PAC', 'Campaign Finance'],
+    relatedTerms: ['PAC', 'Contribution Limit'],
   },
   {
     term: 'Hard Money',
@@ -504,7 +573,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'The practice of collecting multiple individual contributions and presenting them together to a candidate or party.',
     category: 'campaign-finance',
-    relatedTerms: ['Campaign Finance'],
+    relatedTerms: ['PAC', 'Contribution Limit'],
   },
 
   // Campaign Finance (new)
@@ -539,7 +608,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Contribution Limit',
     definition:
-      'The maximum amount an individual, PAC, or party can contribute to a candidate or political committee per election cycle, as set by the FEC.',
+      'The maximum amount an individual, PAC, or party can give to a candidate or political committee per election. The primary and general elections count separately. For 2025-2026, an individual may give $3,500 per election to a candidate. Limits are set by law and adjusted for inflation by the FEC.',
     category: 'campaign-finance',
     relatedTerms: ['FEC', 'Hard Money', 'PAC'],
   },
@@ -592,14 +661,6 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'campaign-finance',
     relatedTerms: ['Lobbyist'],
   },
-  {
-    term: 'Earmark',
-    definition:
-      'A provision in legislation directing funds to a specific project, program, or organization, typically requested by a member of Congress for their district or state.',
-    category: 'campaign-finance',
-    relatedTerms: ['Appropriation'],
-  },
-
   // Legislative Process (new)
   {
     term: 'Reconciliation',
@@ -709,7 +770,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Nuclear Option',
     definition:
-      'A Senate procedure that changes the rules to allow a simple majority to end debate, bypassing the 60-vote cloture requirement. Used for judicial nominations since 2013.',
+      'A Senate procedure that changes the rules to allow a simple majority to end debate, bypassing the 60-vote cloture requirement. Used in 2013 for executive-branch and lower-court nominations, and extended to Supreme Court nominations in 2017.',
     category: 'legislative-process',
     relatedTerms: ['Cloture', 'Filibuster'],
   },
@@ -806,6 +867,34 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'congress',
     relatedTerms: ['Lame Duck Session', 'Congress'],
   },
+  {
+    term: 'Impeachment',
+    definition:
+      'The process for charging and removing federal officials, including the President. The House impeaches by a majority vote. The Senate then holds a trial, where a two-thirds vote is needed to convict and remove the official from office.',
+    category: 'congress',
+    relatedTerms: ['House of Representatives', 'Senate', 'Supermajority'],
+  },
+  {
+    term: 'Confirmation',
+    definition:
+      "The Senate's power to approve or reject presidential nominations, known as advice and consent. Nominations now need only a simple majority, after rule changes in 2013 (most nominations) and 2017 (Supreme Court).",
+    category: 'congress',
+    relatedTerms: ['Senate', 'Nuclear Option', 'Cloture'],
+  },
+  {
+    term: 'STOCK Act',
+    definition:
+      'A 2012 law requiring members of Congress to report their stock trades within 45 days. It also bars members from trading on inside information learned through their official work.',
+    category: 'congress',
+    relatedTerms: ['Financial Disclosure', 'Congress'],
+  },
+  {
+    term: 'Financial Disclosure',
+    definition:
+      'Annual public reports that members of Congress must file listing their assets, liabilities, and outside income.',
+    category: 'congress',
+    relatedTerms: ['STOCK Act', 'Congress'],
+  },
 
   // Voting (new)
   {
@@ -825,7 +914,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Veto Override',
     definition:
-      'A vote by Congress to enact a bill despite a presidential veto. Requires a two-thirds supermajority in both the House and Senate.',
+      'A vote by Congress to enact a bill despite a presidential veto. Requires a two-thirds majority vote in both the House and Senate.',
     category: 'voting',
     relatedTerms: ['Veto', 'Override'],
   },
@@ -839,14 +928,14 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Teller Vote',
     definition:
-      'A vote in which members walk past designated tellers who count them. Rarely used in modern congressional proceedings.',
+      'A historical voting method in which members walked past designated tellers who counted them. The House eliminated teller voting from its rules in 1993; it is no longer used.',
     category: 'voting',
     relatedTerms: ['Division Vote', 'Voice Vote'],
   },
   {
     term: 'Motion to Recommit',
     definition:
-      "A procedural motion to send a bill back to committee, typically with instructions. The minority party's last chance to amend or kill a bill.",
+      "A procedural motion in the House to send a bill back to committee just before final passage. Historically the minority party's tool. The House abolished the practice of adding instructions to the motion in 2021.",
     category: 'voting',
     relatedTerms: ['Standing Committee', 'Amendment'],
   },
@@ -862,7 +951,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     definition:
       'A voting threshold greater than a simple majority, such as two-thirds (to override a veto) or three-fifths (to invoke cloture in the Senate).',
     category: 'voting',
-    relatedTerms: ['Cloture', 'Veto Override', 'Quorum'],
+    relatedTerms: ['Cloture', 'Veto Override', 'Nuclear Option'],
   },
 
   // Elections (new)
@@ -876,7 +965,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Ranked Choice Voting',
     definition:
-      'An electoral system where voters rank candidates by preference. If no candidate wins a majority, the lowest-ranked candidate is eliminated and their votes redistributed.',
+      'An electoral system where voters rank candidates by preference. If no candidate wins a majority, the candidate with the fewest first-choice votes is eliminated and their votes are redistributed.',
     category: 'elections',
     relatedTerms: ['General Election', 'Primary Election'],
   },
@@ -1134,7 +1223,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Interstate Compact',
     definition:
-      'A formal agreement between two or more states, authorized by Congress, to address shared issues like water rights, transportation, or elections.',
+      'A formal agreement between two or more states to address shared issues like water rights, transportation, or elections. Congressional consent is required only for compacts that increase state power relative to the federal government; many operate without it.',
     category: 'state-government',
     relatedTerms: ['State Legislature'],
   },
@@ -1255,7 +1344,7 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Congressional Review Act',
     definition:
-      "A 1996 law that allows Congress to overturn federal regulations by passing a joint resolution of disapproval within 60 legislative days of the rule's publication.",
+      "A 1996 law that lets Congress vote to overturn a federal regulation by passing a joint resolution of disapproval within 60 legislative days of the rule's publication. To take effect, the resolution must also be signed by the President or pass over a veto.",
     category: 'regulatory',
     relatedTerms: ['Joint Resolution', 'Final Rule'],
   },
@@ -1351,6 +1440,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'The total amount of money the federal government owes to creditors, accumulated over time from annual deficits.',
     category: 'budget',
     relatedTerms: ['Deficit', 'Debt Ceiling'],
+  },
+  {
+    term: 'Earmark',
+    definition:
+      'A provision in legislation directing funds to a specific project, program, or organization, typically requested by a member of Congress for their district or state.',
+    category: 'budget',
+    relatedTerms: ['Appropriation', 'Discretionary Spending'],
   },
 ];
 

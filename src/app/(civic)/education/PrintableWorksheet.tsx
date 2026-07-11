@@ -78,7 +78,7 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
         </div>
 
         {/* Printable Worksheet Content */}
-        <div className="p-8 print:p-6 font-['Inter',system-ui,sans-serif] text-[11pt] leading-[1.4] text-[#1a1a1a]">
+        <div className="p-8 print:p-6 text-[11pt] leading-[1.4] text-[#1a1a1a]">
           {/* Worksheet Header */}
           <header className="grid grid-cols-[1fr_auto] items-start gap-4 pb-4 border-b-2 border-black mb-6">
             <div>
@@ -96,7 +96,7 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
             </div>
             <div className="text-right text-[9pt] text-[#4a4a4a]">
               <div className="font-semibold text-[14pt] tracking-tight">
-                CIV<span className="text-[#1976d2]">.</span>IQ
+                CIV<span className="text-[#3ea2d4]">.</span>IQ
               </div>
               <div>civdotiq.org</div>
             </div>
@@ -134,7 +134,8 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
         </div>
       </div>
 
-      {/* Print-specific styles */}
+      {/* Print-specific styles. Isolation of the worksheet from the rest of the
+          page is handled centrally in globals.css via the visibility pattern. */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -144,41 +145,9 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
                 margin: 0.5in;
               }
 
-              /* Hide everything except the printable worksheet */
-              body > *:not(.print-worksheet-root),
-              header,
-              nav,
-              footer:not(.worksheet-footer),
-              aside,
-              .no-print,
-              [data-radix-portal],
-              [role="navigation"] {
-                display: none !important;
-              }
-
-              /* Reset body styles for print */
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                background: white !important;
-                margin: 0 !important;
-                padding: 0 !important;
-              }
-
-              /* Make the modal fill the page */
-              .print-worksheet-root {
-                position: static !important;
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                display: block !important;
-              }
-
-              .print-worksheet-root > div {
-                box-shadow: none !important;
-                margin: 0 !important;
-                max-width: none !important;
-                width: 100% !important;
               }
             }
           `,

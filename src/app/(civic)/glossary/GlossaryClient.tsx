@@ -7,6 +7,8 @@
 'use client';
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Search, BookOpen, ChevronDown } from 'lucide-react';
 import {
   CIVIC_GLOSSARY,
@@ -15,31 +17,101 @@ import {
   type GlossaryCategory,
 } from '@/lib/data/civic-glossary';
 
-// Color mapping for categories
-const CATEGORY_COLORS: Record<GlossaryCategory, { bg: string; text: string; border: string }> = {
+// Same slug transformation used by /glossary/[term]/page.tsx, sitemap.ts, and GlossaryLink.tsx
+function termToSlug(term: string): string {
+  return term.toLowerCase().replace(/\s+/g, '-');
+}
+
+// Color mapping for categories. Party colors (civiq-red, civiq-green) are banned here —
+// categories are UI chrome, not party identification. All class strings are static so
+// Tailwind JIT can see them (never build class names dynamically).
+const CATEGORY_COLORS: Record<
+  GlossaryCategory,
+  { bg: string; text: string; border: string; hoverBg: string; hoverText: string }
+> = {
   'legislative-process': {
     bg: 'bg-civiq-blue/10',
     text: 'text-civiq-blue',
     border: 'border-civiq-blue/30',
+    hoverBg: 'hover:bg-civiq-blue/10',
+    hoverText: 'hover:text-civiq-blue',
   },
-  congress: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
-  elections: { bg: 'bg-civiq-red/10', text: 'text-civiq-red', border: 'border-civiq-red/30' },
-  committees: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  voting: { bg: 'bg-civiq-green/10', text: 'text-civiq-green', border: 'border-civiq-green/30' },
-  executive: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  judiciary: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
-  'state-government': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+  congress: {
+    bg: 'bg-indigo-50',
+    text: 'text-indigo-700',
+    border: 'border-indigo-200',
+    hoverBg: 'hover:bg-indigo-50',
+    hoverText: 'hover:text-indigo-700',
+  },
+  elections: {
+    bg: 'bg-sky-50',
+    text: 'text-sky-700',
+    border: 'border-sky-200',
+    hoverBg: 'hover:bg-sky-50',
+    hoverText: 'hover:text-sky-700',
+  },
+  committees: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    hoverText: 'hover:text-amber-700',
+  },
+  voting: {
+    bg: 'bg-cyan-50',
+    text: 'text-cyan-700',
+    border: 'border-cyan-200',
+    hoverBg: 'hover:bg-cyan-50',
+    hoverText: 'hover:text-cyan-700',
+  },
+  executive: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    hoverText: 'hover:text-amber-700',
+  },
+  judiciary: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-700',
+    border: 'border-slate-300',
+    hoverBg: 'hover:bg-slate-100',
+    hoverText: 'hover:text-slate-700',
+  },
+  'state-government': {
+    bg: 'bg-teal-50',
+    text: 'text-teal-700',
+    border: 'border-teal-200',
+    hoverBg: 'hover:bg-teal-50',
+    hoverText: 'hover:text-teal-700',
+  },
   'campaign-finance': {
     bg: 'bg-emerald-50',
     text: 'text-emerald-700',
     border: 'border-emerald-200',
+    hoverBg: 'hover:bg-emerald-50',
+    hoverText: 'hover:text-emerald-700',
   },
-  regulatory: { bg: 'bg-civiq-red/10', text: 'text-civiq-red', border: 'border-civiq-red' },
-  budget: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  regulatory: {
+    bg: 'bg-orange-50',
+    text: 'text-orange-700',
+    border: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-50',
+    hoverText: 'hover:text-orange-700',
+  },
+  budget: {
+    bg: 'bg-violet-50',
+    text: 'text-violet-700',
+    border: 'border-violet-200',
+    hoverBg: 'hover:bg-violet-50',
+    hoverText: 'hover:text-violet-700',
+  },
 };
 
 export function GlossaryClient() {
-  const [searchQuery, setSearchQuery] = useState('');
+  // Education pages link to /glossary?search=<word>; seed the search box from the URL.
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') ?? '');
   const [selectedCategory, setSelectedCategory] = useState<GlossaryCategory | 'all'>('all');
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [activeLetterFromScroll, setActiveLetterFromScroll] = useState<string>('A');
@@ -175,7 +247,7 @@ export function GlossaryClient() {
             className={`px-3 py-1.5 text-sm font-medium border transition-colors ${
               selectedCategory === cat
                 ? `${CATEGORY_COLORS[cat].bg} ${CATEGORY_COLORS[cat].text} ${CATEGORY_COLORS[cat].border} border-2`
-                : `bg-white text-gray-600 border-gray-200 hover:${CATEGORY_COLORS[cat].bg} hover:${CATEGORY_COLORS[cat].text}`
+                : `bg-white text-gray-600 border-gray-200 ${CATEGORY_COLORS[cat].hoverBg} ${CATEGORY_COLORS[cat].hoverText}`
             }`}
           >
             {GLOSSARY_CATEGORIES[cat]} ({categoryCount[cat] || 0})
@@ -339,7 +411,7 @@ function TermRow({ term, isExpanded, onToggle, onRelatedClick }: TermRowProps) {
           )}
 
           {term.relatedTerms && term.relatedTerms.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap mb-3">
               <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Related
               </span>
@@ -369,6 +441,14 @@ function TermRow({ term, isExpanded, onToggle, onRelatedClick }: TermRowProps) {
               })}
             </div>
           )}
+
+          {/* Link to the dedicated term page */}
+          <Link
+            href={`/glossary/${termToSlug(term.term)}`}
+            className="inline-block px-3 py-1.5 text-sm font-medium text-civiq-blue border-2 border-civiq-blue/30 hover:border-civiq-blue transition-colors"
+          >
+            Full definition →
+          </Link>
         </div>
       )}
     </div>
