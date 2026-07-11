@@ -321,6 +321,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'committees',
     relatedTerms: ['Hearing', 'Standing Committee'],
   },
+  {
+    term: 'Committee',
+    definition:
+      'A smaller group of members that studies bills in one policy area. Committees hold hearings and vote on whether bills move forward. They can be standing, select, or joint.',
+    category: 'committees',
+    relatedTerms: ['Standing Committee', 'Select Committee', 'Joint Committee', 'Subcommittee'],
+  },
 
   // Voting
   {
@@ -661,6 +668,13 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'campaign-finance',
     relatedTerms: ['Lobbyist'],
   },
+  {
+    term: 'Contribution',
+    definition:
+      'Money given to a campaign or political committee. Federal law limits how much a person can give. Gifts above $200 are itemized by name in FEC reports.',
+    category: 'campaign-finance',
+    relatedTerms: ['Contribution Limit', 'FEC', 'Disclosure'],
+  },
   // Legislative Process (new)
   {
     term: 'Reconciliation',
@@ -773,6 +787,20 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A Senate procedure that changes the rules to allow a simple majority to end debate, bypassing the 60-vote cloture requirement. Used in 2013 for executive-branch and lower-court nominations, and extended to Supreme Court nominations in 2017.',
     category: 'legislative-process',
     relatedTerms: ['Cloture', 'Filibuster'],
+  },
+  {
+    term: 'Committee Referral',
+    definition:
+      'The step where a new bill is sent to the committee or committees that handle its subject. Referral happens right after a bill is introduced.',
+    category: 'legislative-process',
+    relatedTerms: ['Referral', 'Committee', 'Jurisdiction'],
+  },
+  {
+    term: 'Floor Debate',
+    definition:
+      'The stage where the full chamber discusses a bill before voting on it. Rules set who may speak and for how long.',
+    category: 'legislative-process',
+    relatedTerms: ['Floor', 'Amendment', 'Roll Call Vote'],
   },
 
   // Congress (new)
@@ -895,6 +923,55 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
     category: 'congress',
     relatedTerms: ['STOCK Act', 'Congress'],
   },
+  {
+    term: 'District',
+    definition:
+      'The area a member of Congress represents. The House has 435 districts, each with one representative. District lines are redrawn after each census.',
+    category: 'congress',
+    relatedTerms: ['Congressional District', 'Representative', 'Redistricting', 'Constituent'],
+  },
+  {
+    term: 'Constituent',
+    definition:
+      "A person who lives in an elected official's district or state. Members of Congress serve and answer to their constituents.",
+    category: 'congress',
+    relatedTerms: ['District', 'Representative', 'Senator'],
+  },
+  {
+    term: 'Speaker',
+    definition:
+      'The Speaker of the House. The Speaker presides over the House and is elected by its members. The Speaker is second in the line of presidential succession, after the Vice President.',
+    category: 'congress',
+    relatedTerms: ['Speaker of the House', 'House of Representatives', 'Majority Party'],
+  },
+  {
+    term: 'Majority Party',
+    definition:
+      'The party with the most seats in a chamber. It picks the committee chairs and controls the agenda.',
+    category: 'congress',
+    relatedTerms: ['Minority Party', 'Majority Leader', 'Committee Chair'],
+  },
+  {
+    term: 'Minority Party',
+    definition:
+      'The party with fewer seats in a chamber. Its senior members on each committee serve as ranking members.',
+    category: 'congress',
+    relatedTerms: ['Majority Party', 'Minority Leader', 'Ranking Member'],
+  },
+  {
+    term: 'Descriptive Representation',
+    definition:
+      'When elected officials share the demographics of the people they represent, such as race, gender, or background.',
+    category: 'congress',
+    relatedTerms: ['Substantive Representation', 'Representative', 'Constituent'],
+  },
+  {
+    term: 'Substantive Representation',
+    definition:
+      "When officials act on their constituents' interests and policy views, whatever the officials' own background.",
+    category: 'congress',
+    relatedTerms: ['Descriptive Representation', 'Representative', 'Constituent'],
+  },
 
   // Voting (new)
   {
@@ -952,6 +1029,40 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A voting threshold greater than a simple majority, such as two-thirds (to override a veto) or three-fifths (to invoke cloture in the Senate).',
     category: 'voting',
     relatedTerms: ['Cloture', 'Veto Override', 'Nuclear Option'],
+  },
+  {
+    term: 'Yea',
+    definition:
+      "A vote in favor of a bill or motion. Roll call records show each member's position as Yea, Nay, Present, or Not Voting.",
+    category: 'voting',
+    relatedTerms: ['Nay', 'Present', 'Roll Call Vote'],
+  },
+  {
+    term: 'Nay',
+    definition: 'A vote against a bill or motion. The opposite of a Yea vote on a roll call.',
+    category: 'voting',
+    relatedTerms: ['Yea', 'Present', 'Roll Call Vote'],
+  },
+  {
+    term: 'Present',
+    definition:
+      'A recorded position that means the member attended but did not vote yes or no. It counts for attendance, not for or against the measure.',
+    category: 'voting',
+    relatedTerms: ['Yea', 'Nay', 'Not Voting'],
+  },
+  {
+    term: 'Not Voting',
+    definition:
+      'Shown when a member did not cast a vote on a roll call. Common reasons include illness, travel, or a conflict of interest.',
+    category: 'voting',
+    relatedTerms: ['Present', 'Yea', 'Roll Call Vote'],
+  },
+  {
+    term: 'Party Unity',
+    definition:
+      'A measure of how often a member votes with most of their own party. CIV.IQ shows this score on representative profiles.',
+    category: 'voting',
+    relatedTerms: ['Party-Line Vote', 'Bipartisan', 'Party'],
   },
 
   // Elections (new)
@@ -1038,6 +1149,20 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A state where the two major political parties have similar levels of support and the outcome of elections is uncertain.',
     category: 'elections',
     relatedTerms: ['Electoral College', 'General Election'],
+  },
+  {
+    term: 'Party',
+    definition:
+      'A political party. It is a group that organizes candidates and voters around shared goals. Democrats and Republicans are the two major U.S. parties.',
+    category: 'elections',
+    relatedTerms: ['Majority Party', 'Minority Party', 'Primary Election'],
+  },
+  {
+    term: 'Term Limits',
+    definition:
+      'Legal caps on how many terms an official may serve. Members of Congress have no term limits. The 22nd Amendment limits presidents to two terms. Many states set term limits for governors and state legislators.',
+    category: 'elections',
+    relatedTerms: ['Term Limit', 'Incumbent', 'Congress'],
   },
 
   // Executive (new)
@@ -1282,6 +1407,41 @@ export const CIVIC_GLOSSARY: GlossaryTerm[] = [
       'A legal restriction on the number of terms an elected official may serve. Many states impose term limits on governors and state legislators.',
     category: 'state-government',
     relatedTerms: ['Governor', 'State Legislature'],
+  },
+  {
+    term: 'Federalism',
+    definition:
+      'The system that divides power between the national government and the states. Each level has its own powers, and some powers are shared.',
+    category: 'state-government',
+    relatedTerms: ['Reserved Powers', 'Concurrent Powers', 'Preemption'],
+  },
+  {
+    term: 'Reserved Powers',
+    definition:
+      'Powers kept by the states. Under the 10th Amendment, powers not given to the federal government, and not denied to the states, belong to the states or the people.',
+    category: 'state-government',
+    relatedTerms: ['Federalism', 'Concurrent Powers'],
+  },
+  {
+    term: 'Concurrent Powers',
+    definition:
+      'Powers shared by the federal government and the states. Both can tax, borrow money, and build roads.',
+    category: 'state-government',
+    relatedTerms: ['Federalism', 'Reserved Powers'],
+  },
+  {
+    term: 'Citizen Legislature',
+    definition:
+      'A state legislature whose members serve part time. Sessions are short and staffs are small, so most members hold other jobs. Contrast with full-time, professional legislatures.',
+    category: 'state-government',
+    relatedTerms: ['State Legislature', 'General Assembly', 'Term Limit'],
+  },
+  {
+    term: 'Laboratories of Democracy',
+    definition:
+      'The idea that states can test new policies before the whole nation adopts them. Justice Louis Brandeis described states this way in a 1932 dissent.',
+    category: 'state-government',
+    relatedTerms: ['Federalism', 'State Legislature', 'Ballot Initiative'],
   },
 
   // Regulatory (new category)
