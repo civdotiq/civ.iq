@@ -25,6 +25,10 @@ function getRedisClient(): Redis | null {
   redisClient = new Redis({
     url,
     token,
+    // Not the SDK's 'no-store' default: a no-store fetch inside an ISR render
+    // throws app-static-to-dynamic-error. Upstash commands are POSTs, which
+    // Next's data cache never stores, so 'default' stays uncached in practice.
+    cache: 'default',
   });
 
   return redisClient;

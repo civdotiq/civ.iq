@@ -64,7 +64,12 @@ function getRedis(): Redis | null {
   redisChecked = true;
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     try {
-      redis = Redis.fromEnv();
+      // cache: 'default' (not the SDK's 'no-store' default) — a no-store fetch
+      // inside an ISR render throws app-static-to-dynamic-error (500'd every
+      // record card 2026-07-12). Upstash commands are POSTs, which Next's
+      // data cache never stores, so 'default' is safe: uncached in practice,
+      // invisible to the static/dynamic tracker.
+      redis = Redis.fromEnv({ cache: 'default' });
     } catch (error) {
       logger.warn('[FEC RL] Redis unavailable — rate limiter disabled (fail-open)', {
         error: (error as Error).message,

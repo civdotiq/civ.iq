@@ -29,7 +29,9 @@ function getRedis(): Redis | null {
   if (!url || !token) return null;
 
   try {
-    redis = new Redis({ url, token });
+    // cache: 'default' — the SDK's 'no-store' default breaks ISR renders
+    // (app-static-to-dynamic-error); POSTs are never data-cached anyway.
+    redis = new Redis({ url, token, cache: 'default' });
     return redis;
   } catch {
     return null;
