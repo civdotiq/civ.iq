@@ -1,0 +1,99 @@
+name: Warm Record Card Pages
+
+# Record Card pages (/representative/{id}/record) are ISR-cached, but the
+# ISR cache starts empty on every deploy and a cold render takes 12-40s of
+# section computation. With stale-while-revalidate, only the FIRST request
+# per URL per deploy blocks — so this sweep pre-renders all 536 cards from
+# a GitHub runner after each production push (and daily as a catch-all),
+# ensuring no citizen or crawler ever eats the cold build.
+#
+# Vercel crons can't do this: 536 pages x ~15s is ~2 compute-hours, far
+# past the 300s function ceiling. A runner curling the public URLs warms
+# the same ISR cache with zero app code.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Daily at 06:30 UTC as a catch-all (e.g. cache evictions, failed runs).
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target app base URL'
+        required: false
+        default: 'https://civdotiq.org'
+      concurrency:
+        description: 'Parallel requests (keep low: renders hit FEC/Congress.gov)'
+        required: false
+        default: '4'
+
+concurrency:
+  # A new push supersedes an in-flight warm of the previous deployment.
+  group: warm-record-cards
+  cancel-in-progress: true
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      issues: write
+    steps:
+      - name: Wait for Vercel deploy to go live
+        # Push-triggered runs race the Vercel build (~5-10 min for this app).
+        # Warming the outgoing deployment is wasted work, so give the new
+        # one time to promote. Scheduled/manual runs skip the wait.
+        if: github.event_name == 'push'
+        run: sleep 720
+
+      - name: Sweep record card URLs
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
+          PARALLEL: ${{ inputs.concurrency || '4' }}
+        run: |
+          set -uo pipefail
+
+          # The sitemap is the source of truth for which record cards exist.
+          curl -sf --retry 3 "$BASE_URL/sitemap.xml" \
+            | grep -o '<loc>[^<]*/record</loc>' \
+            | sed 's/<[^>]*>//g' > urls.txt
+
+          total=$(wc -l < urls.txt | tr -d ' ')
+          if [ "$total" -lt 400 ]; then
+            echo "::error::Sitemap yielded only $total record URLs (expected ~536) — aborting"
+            exit 1
+          fi
+          echo "Warming $total record cards with concurrency $PARALLEL"
+
+          # Cold renders can take 40s+; allow 120s each, one retry.
+          # xargs -P keeps a steady window without hammering upstream APIs.
+          xargs -P "$PARALLEL" -n 1 -I {} sh -c '
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 --retry 1 "{}")
+            if [ "$code" != "200" ]; then echo "FAIL $code {}"; fi
+          ' < urls.txt > failures.txt || true
+
+          failed=$(wc -l < failures.txt | tr -d ' ')
+          echo "Done: $((total - failed))/$total warmed"
+          if [ "$failed" -gt 0 ]; then
+            head -20 failures.txt
+          fi
+          # Tolerate stragglers (member 404s after departures, transient
+          # upstream timeouts) but fail loudly if warming broadly broke.
+          if [ "$failed" -gt $((total / 10)) ]; then
+            echo "::error::$failed of $total record cards failed to warm"
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Record card warming failed (run ${context.runId})`,
+              body: `The warm-record-cards workflow failed. Cold visitors are eating 12-40s renders until this is fixed.\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['ops'],
+            });
