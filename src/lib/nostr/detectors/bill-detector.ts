@@ -28,6 +28,48 @@ export function parseBillNumber(billNumber: string): { billType: string; billNum
   return { billType, billNum: match[2]! };
 }
 
+/**
+ * Resolve type + number from a Congress.gov list item. The list API returns
+ * `number` as bare digits ("877") with the prefix in the separate `type`
+ * field ("HR") — the combined "H.R. 877" form only appears in other feeds,
+ * so parseBillNumber is the fallback, not the primary path.
+ */
+export function resolveBillNumber(
+  bill: CongressBill
+): { billType: string; billNum: string } | null {
+  if (bill.type && /^\d+$/.test(bill.number)) {
+    return { billType: bill.type.toLowerCase(), billNum: bill.number };
+  }
+  return parseBillNumber(bill.number);
+}
+
+const BILL_TYPE_DISPLAY: Record<string, string> = {
+  hr: 'H.R.',
+  s: 'S.',
+  hres: 'H.Res.',
+  sres: 'S.Res.',
+  hjres: 'H.J.Res.',
+  sjres: 'S.J.Res.',
+  hconres: 'H.Con.Res.',
+  sconres: 'S.Con.Res.',
+};
+
+/** Format for display, e.g. ("hr", "877") -> "H.R. 877" */
+export function formatBillNumber(billType: string, billNum: string): string {
+  return `${BILL_TYPE_DISPLAY[billType] ?? billType.toUpperCase()} ${billNum}`;
+}
+
+/**
+ * The list is sorted by updateDate, so metadata refreshes resurface bills
+ * whose latest action is months old. Only actions this recent are news.
+ */
+const MAX_ACTION_AGE_DAYS = 7;
+
+export function isRecentAction(actionDate: string): boolean {
+  const age = Date.now() - new Date(actionDate).getTime();
+  return age >= 0 ? age <= MAX_ACTION_AGE_DAYS * 24 * 60 * 60 * 1000 : true;
+}
+
 /** Fetch recent bills from Congress.gov API */
 export async function fetchRecentBills(congress: string): Promise<CongressBill[]> {
   const congressApiKey = process.env.CONGRESS_API_KEY;
@@ -72,7 +114,7 @@ export function buildBillActionEvent(
     type: 'bill-action',
     id: `${billId}-action-${actionDate}`,
     timestamp: Math.floor(new Date(actionDate).getTime() / 1000),
-    title: `${bill.number}: ${actionText}`,
+    title: `${formatBillNumber(billType, billNum)}: ${actionText}`,
     summary: `${bill.title} — ${actionText}`,
     tags: ['legislation', bill.originChamber?.toLowerCase() || 'congress'],
     source: {
@@ -109,8 +151,8 @@ export function buildBillIntroducedEvent(
     type: 'bill-introduced',
     id: `${billId}-introduced`,
     timestamp: Math.floor(new Date(introducedDate).getTime() / 1000),
-    title: `New Bill: ${bill.number} — ${bill.title}`,
-    summary: `${bill.number} introduced in the ${bill.originChamber || 'Congress'}: ${bill.title}`,
+    title: `New Bill: ${formatBillNumber(billType, billNum)} — ${bill.title}`,
+    summary: `${formatBillNumber(billType, billNum)} introduced in the ${bill.originChamber || 'Congress'}: ${bill.title}`,
     tags: ['legislation', 'new-bill', bill.originChamber?.toLowerCase() || 'congress'],
     source: {
       url:
@@ -137,13 +179,17 @@ export async function detectBillEvents(): Promise<CivicEvent[]> {
     });
 
     for (const bill of bills) {
-      const parsed = parseBillNumber(bill.number);
+      const parsed = resolveBillNumber(bill);
       if (!parsed) continue;
 
       const { billType, billNum } = parsed;
       const billId = `${billType}${billNum}-${bill.congress}`;
 
-      if (bill.latestAction?.actionDate && bill.latestAction?.text) {
+      if (
+        bill.latestAction?.actionDate &&
+        bill.latestAction?.text &&
+        isRecentAction(bill.latestAction.actionDate)
+      ) {
         const actionDedupKey = `${nostrConfig.dedupPrefix}${billId}-action-${bill.latestAction.actionDate}`;
         const actionAlreadyPublished = await cache.exists(actionDedupKey);
 

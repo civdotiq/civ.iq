@@ -11,6 +11,7 @@ export { detectHearingEvents } from './hearing-detector';
 export type {
   CongressBill,
   CongressApiResponse,
-  CongressVote,
-  CongressVoteApiResponse,
+  HouseRollCallVoteDetail,
+  HouseVoteListResponse,
+  HouseVoteDetailResponse,
 } from './types';

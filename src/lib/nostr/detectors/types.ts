@@ -25,24 +25,32 @@ export interface CongressApiResponse {
   bills?: CongressBill[];
 }
 
-export interface CongressVote {
+export interface HouseRollCallVoteDetail {
   congress: number;
-  chamber: string;
-  number: number;
-  date: string;
-  question: string;
+  sessionNumber: number;
+  rollCallNumber: number;
+  startDate: string;
   result: string;
-  url: string;
-  total?: {
-    yea: number;
-    nay: number;
-    not_voting: number;
-    present: number;
-  };
+  voteQuestion?: string;
+  legislationType?: string;
+  legislationNumber?: string;
+  legislationUrl?: string;
+  sourceDataURL?: string;
+  votePartyTotal?: Array<{
+    yeaTotal: number;
+    nayTotal: number;
+    presentTotal: number;
+    notVotingTotal: number;
+  }>;
 }
 
-export interface CongressVoteApiResponse {
-  votes?: CongressVote[];
+export interface HouseVoteListResponse {
+  houseRollCallVotes?: unknown[];
+  pagination?: { count: number };
+}
+
+export interface HouseVoteDetailResponse {
+  houseRollCallVote?: HouseRollCallVoteDetail;
 }
 
 export const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';

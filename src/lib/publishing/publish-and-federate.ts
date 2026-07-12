@@ -38,11 +38,21 @@ import logger from '@/lib/logging/simple-logger';
 export interface PublishResult {
   eventsPublished: number;
   eventsFailed: number;
+  eventsDeferred: number;
   activityPubAdded: number;
   activityPubDelivered: number;
   alertEventsPublished: number;
   correctionsPublished: number;
   relayResults: RelayPublishResult[];
+}
+
+export interface PublishOptions {
+  /**
+   * Epoch ms after which no further events are published. Deferred events
+   * have no dedup entry, so the next run picks them up — this trades a
+   * one-day delay for never being killed mid-run by the function timeout.
+   */
+  deadline?: number;
 }
 
 /** Compute a content hash for change detection */
@@ -53,19 +63,29 @@ export function computeContentHash(data: unknown): string {
 /** Sign, publish to Nostr relays, and federate to ActivityPub */
 export async function publishAndFederate(
   events: CivicEvent[],
-  privateKey: Uint8Array
+  privateKey: Uint8Array,
+  options?: PublishOptions
 ): Promise<PublishResult> {
   const cache = getRedisCache();
   const pubkey = getPublicKey(privateKey);
   const relayResults: RelayPublishResult[] = [];
   let eventsPublished = 0;
   let eventsFailed = 0;
+  let eventsDeferred = 0;
   let activityPubAdded = 0;
   let activityPubDelivered = 0;
   let alertEventsPublished = 0;
   let correctionsPublished = 0;
 
   for (const event of events) {
+    if (options?.deadline && Date.now() >= options.deadline) {
+      eventsDeferred = events.length - eventsPublished - eventsFailed;
+      logger.warn('Publish deadline reached, deferring remaining events to next run', {
+        eventsDeferred,
+        operation: 'nostr_publisher',
+      });
+      break;
+    }
     try {
       // If this is a correction, retract the original first
       if (event._correction) {
@@ -119,8 +139,11 @@ export async function publishAndFederate(
         await cache.set(dedupKey, dedupEntry, nostrConfig.dedupTTL);
         eventsPublished++;
 
-        // Dual publish: Kind 1 alert for social timeline visibility
-        if (nostrConfig.enableDualPublish) {
+        // Kind 1 alert and ActivityPub federation are independent of each
+        // other — run them concurrently to keep per-event wall time down.
+        // (Outbox index writes stay serialized: one event at a time here.)
+        const alertTask = (async () => {
+          if (!nostrConfig.enableDualPublish) return;
           try {
             const alertEvent = createSignedAlertEvent(event, privateKey, signedEvent.id, pubkey);
             await publishToRelays(alertEvent);
@@ -132,27 +155,30 @@ export async function publishAndFederate(
               operation: 'nostr_publisher',
             });
           }
-        }
+        })();
 
-        // Also add to ActivityPub outbox
-        try {
-          const alreadyExists = await isInOutbox(note.id);
-          const activity = alreadyExists ? wrapInUpdate(note) : wrapInCreate(note);
+        const federateTask = (async () => {
+          try {
+            const alreadyExists = await isInOutbox(note.id);
+            const activity = alreadyExists ? wrapInUpdate(note) : wrapInCreate(note);
 
-          if (!alreadyExists) {
-            await addToOutbox(activity as ReturnType<typeof wrapInCreate>);
+            if (!alreadyExists) {
+              await addToOutbox(activity as ReturnType<typeof wrapInCreate>);
+            }
+            activityPubAdded++;
+
+            // Deliver to follower inboxes
+            const delivery = await deliverToFollowers(activity);
+            activityPubDelivered += delivery.delivered;
+          } catch (apError) {
+            logger.error('Failed to add event to ActivityPub outbox', apError as Error, {
+              eventId: event.id,
+              operation: 'nostr_publisher',
+            });
           }
-          activityPubAdded++;
+        })();
 
-          // Deliver to follower inboxes
-          const delivery = await deliverToFollowers(activity);
-          activityPubDelivered += delivery.delivered;
-        } catch (apError) {
-          logger.error('Failed to add event to ActivityPub outbox', apError as Error, {
-            eventId: event.id,
-            operation: 'nostr_publisher',
-          });
-        }
+        await Promise.all([alertTask, federateTask]);
 
         logger.info(`Published civic event to Nostr`, {
           eventType: event.type,
@@ -183,6 +209,7 @@ export async function publishAndFederate(
   return {
     eventsPublished,
     eventsFailed,
+    eventsDeferred,
     activityPubAdded,
     activityPubDelivered,
     alertEventsPublished,

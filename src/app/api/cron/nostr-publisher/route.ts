@@ -64,6 +64,14 @@ interface DetectionResult {
   stateStaleness: StateStalenessInfo[];
 }
 
+/**
+ * Budget for the sequential 15-state OpenStates sweep. The detector checks
+ * this deadline between states and returns partial results, so a degraded
+ * OpenStates costs some states that day instead of the whole run (which is
+ * what killed publishing when unbounded calls blew the 300s maxDuration).
+ */
+const STATE_DETECTION_BUDGET_MS = 120000;
+
 /** Detect all new civic events from government APIs */
 async function detectNewEvents(): Promise<DetectionResult> {
   const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents, stateResult] =
@@ -73,7 +81,7 @@ async function detectNewEvents(): Promise<DetectionResult> {
       withDetectionTimeout(detectExecutiveOrderEvents, 'executive-orders'),
       withDetectionTimeout(detectCommentPeriodEvents, 'comment-periods'),
       withDetectionTimeout(detectHearingEvents, 'hearings'),
-      detectStateEventsWithStaleness().catch(err => {
+      detectStateEventsWithStaleness(Date.now() + STATE_DETECTION_BUDGET_MS).catch(err => {
         logger.error('State event detection failed', err as Error, {
           operation: 'nostr_publisher',
         });
@@ -151,14 +159,17 @@ export async function POST(request: NextRequest) {
       operation: 'nostr_publisher',
     });
 
-    // Sign, publish, and federate
-    const result = await publishAndFederate(events, keypair.privateKey);
+    // Sign, publish, and federate. Deadline leaves headroom under the 300s
+    // maxDuration; events cut off by it have no dedup entry and publish next run.
+    const result = await publishAndFederate(events, keypair.privateKey, {
+      deadline: startTime + 240000,
+    });
 
     const totalTime = Date.now() - startTime;
     const summary: NostrPublishRun = {
       eventsDetected: events.length,
       eventsPublished: result.eventsPublished,
-      eventsSkipped: 0,
+      eventsSkipped: result.eventsDeferred,
       eventsFailed: result.eventsFailed,
       activityPubAdded: result.activityPubAdded,
       activityPubDelivered: result.activityPubDelivered,

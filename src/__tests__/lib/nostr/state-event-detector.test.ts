@@ -26,6 +26,10 @@ global.fetch = mockFetch;
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 
+/** Detection only publishes recent activity, so fixture dates are relative */
+const daysAgo = (n: number): string =>
+  new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!;
+
 const mockBill = {
   id: 'ocd-bill/test-123',
   identifier: 'SB 100',
@@ -37,8 +41,13 @@ const mockBill = {
   sponsorships: [{ name: 'Sen. Smith', primary: true }],
   actions: [
     {
+      description: 'Introduced',
+      date: daysAgo(5),
+      classification: ['introduction'],
+    },
+    {
       description: 'Referred to Committee on Education',
-      date: '2025-02-01',
+      date: daysAgo(1),
       classification: ['referral-committee'],
     },
   ],
@@ -46,7 +55,7 @@ const mockBill = {
     {
       id: 'ocd-vote/vote-456',
       motion_text: 'Do Pass',
-      start_date: '2025-02-15',
+      start_date: daysAgo(2),
       result: 'pass',
       counts: [
         { option: 'yes', value: 30 },
@@ -54,12 +63,12 @@ const mockBill = {
       ],
     },
   ],
-  first_action_date: '2025-01-15',
-  latest_action_date: '2025-02-01',
+  first_action_date: daysAgo(5),
+  latest_action_date: daysAgo(1),
   latest_action_description: 'Referred to Committee on Education',
   openstates_url: 'https://openstates.org/ca/bills/2025/SB100/',
-  created_at: '2025-01-15T00:00:00Z',
-  updated_at: '2025-02-01T00:00:00Z',
+  created_at: `${daysAgo(5)}T00:00:00Z`,
+  updated_at: `${daysAgo(1)}T00:00:00Z`,
 };
 
 describe('State Event Detector', () => {
@@ -156,7 +165,41 @@ describe('State Event Detector', () => {
 
     const introEvent = events.find((e: { type: string }) => e.type === 'state-bill-introduced');
     expect(introEvent?.id).toMatch(/^state-bill-intro-/);
+    expect(introEvent?.id).not.toContain(' ');
     expect(introEvent?.source.api).toBe('openstates.org');
+  });
+
+  test('filters out stale activity (first-run backlog guard)', async () => {
+    const staleBill = {
+      ...mockBill,
+      actions: [mockBill.actions[0]],
+      votes: [{ ...mockBill.votes[0], start_date: '2025-01-20' }],
+      first_action_date: '2025-01-08',
+      latest_action_date: '2025-02-01',
+    };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ results: [staleBill], pagination: { total_items: 1 } }),
+    });
+
+    const { detectStateEvents } = require('@/lib/nostr/state-event-detector');
+    const events = await detectStateEvents();
+
+    expect(events).toHaveLength(0);
+  });
+
+  test('stops before remaining states once the deadline passes', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ results: [mockBill], pagination: { total_items: 1 } }),
+    });
+
+    const { detectStateEventsWithStaleness } = require('@/lib/nostr/state-event-detector');
+    const result = await detectStateEventsWithStaleness(Date.now() - 1);
+
+    expect(result.events).toHaveLength(0);
+    expect(result.staleness).toHaveLength(0);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   test('handles API errors gracefully per state', async () => {

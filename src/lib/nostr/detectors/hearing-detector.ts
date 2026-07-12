@@ -22,6 +22,19 @@ export function parseChamberFromDocClass(docClass: string): 'House' | 'Senate' |
   return 'Joint';
 }
 
+/**
+ * The collections query filters by lastModified, which resurfaces packages
+ * from past congresses whenever GovInfo touches their metadata. Only newly
+ * issued transcripts are news. Kept under the 30-day dedup TTL so an expired
+ * dedup entry can't let a still-in-window package publish twice.
+ */
+const MAX_ISSUED_AGE_DAYS = 14;
+
+export function isRecentlyIssued(dateIssued: string): boolean {
+  const age = Date.now() - new Date(dateIssued).getTime();
+  return age >= 0 ? age <= MAX_ISSUED_AGE_DAYS * 24 * 60 * 60 * 1000 : true;
+}
+
 /** Detect new hearing events from GovInfo API */
 export async function detectHearingEvents(): Promise<CivicEvent[]> {
   const govInfoApiKey = process.env.GOVINFO_API_KEY ?? 'DEMO_KEY';
@@ -33,7 +46,8 @@ export async function detectHearingEvents(): Promise<CivicEvent[]> {
     startDate.setDate(startDate.getDate() - 30);
     const startDateStr = startDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-    const url = `${GOVINFO_API}/collections/CHRG/${startDateStr}?pageSize=20`;
+    // offsetMark is mandatory since GovInfo retired offset pagination
+    const url = `${GOVINFO_API}/collections/CHRG/${startDateStr}?pageSize=20&offsetMark=*`;
     const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
@@ -50,12 +64,15 @@ export async function detectHearingEvents(): Promise<CivicEvent[]> {
     }
 
     const data: GovInfoCollectionResponse = await response.json();
+    const packages = data.packages ?? [];
 
-    logger.info(`Fetched ${data.packages.length} hearings for Nostr publishing`, {
+    logger.info(`Fetched ${packages.length} hearings for Nostr publishing`, {
       operation: 'nostr_publisher',
     });
 
-    for (const pkg of data.packages) {
+    for (const pkg of packages) {
+      if (!pkg.dateIssued || !isRecentlyIssued(pkg.dateIssued)) continue;
+
       const dedupKey = `${nostrConfig.dedupPrefix}hearing-${pkg.packageId}`;
       const alreadyPublished = await cache.exists(dedupKey);
 

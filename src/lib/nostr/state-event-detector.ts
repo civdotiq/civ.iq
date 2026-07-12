@@ -62,13 +62,16 @@ async function fetchStateBills(state: string, limit = 20): Promise<OpenStatesV3B
   const apiKey = process.env.OPENSTATES_API_KEY;
   if (!apiKey) return [];
 
-  const url = `${OPENSTATES_BASE}/bills?jurisdiction=${state}&per_page=${Math.min(limit, 20)}&sort=latest_action_date&include=sponsorships&include=actions&include=votes`;
+  const url = `${OPENSTATES_BASE}/bills?jurisdiction=${state}&per_page=${Math.min(limit, 20)}&sort=latest_action_desc&include=sponsorships&include=actions&include=votes`;
 
+  // OpenStates can hang or 504 for 60s+ when degraded; without a timeout,
+  // 15 sequential state calls can eat the whole cron budget.
   const response = await fetch(url, {
     headers: {
       'X-API-KEY': apiKey,
       'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
     },
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!response.ok) {
@@ -82,6 +85,24 @@ async function fetchStateBills(state: string, limit = 20): Promise<OpenStatesV3B
 /** Get chamber string from OpenStates organization classification */
 function getStateChamber(bill: OpenStatesV3Bill): 'upper' | 'lower' {
   return bill.from_organization?.classification === 'upper' ? 'upper' : 'lower';
+}
+
+/**
+ * Only publish activity this recent. Without this, the first run (and any
+ * run after dedup TTL expiry) floods the feed with every action OpenStates
+ * returns — over 1,600 events, most of them months old.
+ */
+const MAX_EVENT_AGE_DAYS = 7;
+
+export function isFreshStateActivity(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const age = Date.now() - new Date(dateStr).getTime();
+  return age >= 0 ? age <= MAX_EVENT_AGE_DAYS * 24 * 60 * 60 * 1000 : true;
+}
+
+/** Bill identifiers like "AB 181" contain spaces; event ids become URLs (AP note ids), so strip them. */
+function idSafeIdentifier(identifier: string): string {
+  return identifier.replace(/\s+/g, '');
 }
 
 /** Get primary sponsor name */
@@ -108,7 +129,7 @@ function buildStateBillIntroduced(bill: OpenStatesV3Bill, state: string): CivicE
   const stateName = bill.jurisdiction.name;
   return {
     type: 'state-bill-introduced',
-    id: `state-bill-intro-${state}-${bill.identifier}-${bill.session}`,
+    id: `state-bill-intro-${state}-${idSafeIdentifier(bill.identifier)}-${bill.session}`,
     timestamp: Math.floor(new Date(data.introducedDate).getTime() / 1000),
     title: `${stateName}: ${bill.identifier} — ${bill.title}`,
     summary: `${bill.identifier} introduced in ${stateName} ${chamber === 'upper' ? 'Senate' : 'House'}: ${bill.title}`,
@@ -141,7 +162,7 @@ function buildStateBillAction(
   const stateName = bill.jurisdiction.name;
   return {
     type: 'state-bill-action',
-    id: `state-bill-action-${state}-${bill.identifier}-${action.date}`,
+    id: `state-bill-action-${state}-${idSafeIdentifier(bill.identifier)}-${action.date}`,
     timestamp: Math.floor(new Date(action.date).getTime() / 1000),
     title: `${stateName} ${bill.identifier}: ${action.description}`,
     summary: `${bill.title} — ${action.description}`,
@@ -239,8 +260,17 @@ export interface StateEventsWithStaleness {
   staleness: StateStalenessInfo[];
 }
 
-/** Detect state legislature events with staleness monitoring */
-export async function detectStateEventsWithStaleness(): Promise<StateEventsWithStaleness> {
+/**
+ * Detect state legislature events with staleness monitoring.
+ *
+ * @param deadline Epoch ms; when set, remaining states are skipped once it
+ * passes. OpenStates can be slow (60s+ gateway timeouts when degraded), and
+ * 15 unbounded sequential calls previously ate the cron's entire 300s budget
+ * and killed the run before anything published. Partial results beat none.
+ */
+export async function detectStateEventsWithStaleness(
+  deadline?: number
+): Promise<StateEventsWithStaleness> {
   if (!process.env.OPENSTATES_API_KEY) {
     logger.info('OpenStates API key not configured, skipping state events', {
       operation: 'nostr_publisher',
@@ -254,6 +284,14 @@ export async function detectStateEventsWithStaleness(): Promise<StateEventsWithS
   const states = nostrConfig.enabledStates;
 
   for (const state of states) {
+    if (deadline && Date.now() >= deadline) {
+      logger.warn('State detection deadline reached, skipping remaining states', {
+        statesCompleted: staleness.length,
+        statesTotal: states.length,
+        operation: 'nostr_publisher',
+      });
+      break;
+    }
     try {
       const bills = await fetchStateBills(state);
 
@@ -266,30 +304,34 @@ export async function detectStateEventsWithStaleness(): Promise<StateEventsWithS
       });
 
       for (const bill of bills) {
-        if (bill.first_action_date) {
-          const introId = `state-bill-intro-${state}-${bill.identifier}-${bill.session}`;
-          const introDedupKey = `${nostrConfig.dedupPrefix}${introId}`;
-          const introPublished = await cache.exists(introDedupKey);
+        if (bill.first_action_date && isFreshStateActivity(bill.first_action_date)) {
+          const introEvent = buildStateBillIntroduced(bill, state);
+          const introDedupKey = `${nostrConfig.dedupPrefix}${introEvent.id}`;
 
-          if (!introPublished) {
-            events.push(buildStateBillIntroduced(bill, state));
+          if (!(await cache.exists(introDedupKey))) {
+            events.push(introEvent);
           }
         }
 
-        if (bill.latest_action_date && bill.latest_action_description) {
-          const actionId = `state-bill-action-${state}-${bill.identifier}-${bill.latest_action_date}`;
-          const actionDedupKey = `${nostrConfig.dedupPrefix}${actionId}`;
-          const actionPublished = await cache.exists(actionDedupKey);
+        if (
+          bill.latest_action_date &&
+          bill.latest_action_description &&
+          isFreshStateActivity(bill.latest_action_date)
+        ) {
+          // OpenStates returns actions oldest-first; the latest is last
+          const latestAction = bill.actions[bill.actions.length - 1];
+          if (latestAction) {
+            const actionEvent = buildStateBillAction(bill, latestAction, state);
+            const actionDedupKey = `${nostrConfig.dedupPrefix}${actionEvent.id}`;
 
-          if (!actionPublished) {
-            const latestAction = bill.actions[0];
-            if (latestAction) {
-              events.push(buildStateBillAction(bill, latestAction, state));
+            if (!(await cache.exists(actionDedupKey))) {
+              events.push(actionEvent);
             }
           }
         }
 
         for (const vote of bill.votes) {
+          if (!isFreshStateActivity(vote.start_date)) continue;
           const voteIdSuffix = vote.id.split('/').pop() ?? vote.id;
           const voteEventId = `state-vote-${state}-${voteIdSuffix}`;
           const voteDedupKey = `${nostrConfig.dedupPrefix}${voteEventId}`;
@@ -312,73 +354,6 @@ export async function detectStateEventsWithStaleness(): Promise<StateEventsWithS
 }
 
 /** Detect state legislature events across enabled states */
-export async function detectStateEvents(): Promise<CivicEvent[]> {
-  if (!process.env.OPENSTATES_API_KEY) {
-    logger.info('OpenStates API key not configured, skipping state events', {
-      operation: 'nostr_publisher',
-    });
-    return [];
-  }
-
-  const cache = getRedisCache();
-  const events: CivicEvent[] = [];
-  const states = nostrConfig.enabledStates;
-
-  // Process states sequentially to avoid rate limiting
-  for (const state of states) {
-    try {
-      const bills = await fetchStateBills(state);
-
-      logger.info(`Fetched ${bills.length} state bills for ${state.toUpperCase()}`, {
-        state,
-        operation: 'nostr_publisher',
-      });
-
-      for (const bill of bills) {
-        // Check for new bill introductions
-        if (bill.first_action_date) {
-          const introId = `state-bill-intro-${state}-${bill.identifier}-${bill.session}`;
-          const introDedupKey = `${nostrConfig.dedupPrefix}${introId}`;
-          const introPublished = await cache.exists(introDedupKey);
-
-          if (!introPublished) {
-            events.push(buildStateBillIntroduced(bill, state));
-          }
-        }
-
-        // Check for recent actions (latest only to avoid flooding)
-        if (bill.latest_action_date && bill.latest_action_description) {
-          const actionId = `state-bill-action-${state}-${bill.identifier}-${bill.latest_action_date}`;
-          const actionDedupKey = `${nostrConfig.dedupPrefix}${actionId}`;
-          const actionPublished = await cache.exists(actionDedupKey);
-
-          if (!actionPublished) {
-            const latestAction = bill.actions[0];
-            if (latestAction) {
-              events.push(buildStateBillAction(bill, latestAction, state));
-            }
-          }
-        }
-
-        // Check for votes
-        for (const vote of bill.votes) {
-          const voteIdSuffix = vote.id.split('/').pop() ?? vote.id;
-          const voteEventId = `state-vote-${state}-${voteIdSuffix}`;
-          const voteDedupKey = `${nostrConfig.dedupPrefix}${voteEventId}`;
-          const votePublished = await cache.exists(voteDedupKey);
-
-          if (!votePublished) {
-            events.push(buildStateVote(bill, vote, state));
-          }
-        }
-      }
-    } catch (error) {
-      logger.error(`Failed to detect state events for ${state.toUpperCase()}`, error as Error, {
-        state,
-        operation: 'nostr_publisher',
-      });
-    }
-  }
-
-  return events;
+export async function detectStateEvents(deadline?: number): Promise<CivicEvent[]> {
+  return (await detectStateEventsWithStaleness(deadline)).events;
 }

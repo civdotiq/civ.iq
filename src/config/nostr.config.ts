@@ -26,9 +26,11 @@ export const nostrConfig = {
           'wss://nostr-pub.wellorder.net',
         ],
 
-  // Publishing thresholds
+  // Publishing thresholds. publishTimeout bounds the SLOWEST relay per
+  // publish (healthy relays answer in <1s), so it is effectively per-event
+  // wall time — every event must fit under the cron's 300s maxDuration.
   minRelaySuccess: 3,
-  publishTimeout: 5000,
+  publishTimeout: 3500,
 
   // NIP-23: Long-form content (parameterized replaceable)
   eventKind: 30023 as const,
