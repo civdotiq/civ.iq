@@ -50,6 +50,7 @@ const federalGroups: NavItemGroup[] = [
     label: 'Legislation & Policy',
     items: [
       { name: 'Legislation', href: '/legislation' },
+      { name: 'Weekly Digest', href: '/digest' },
       { name: 'Regulations', href: '/regulations' },
       { name: 'Executive Orders', href: '/executive-orders' },
       { name: 'Comment Periods', href: '/comment-periods' },

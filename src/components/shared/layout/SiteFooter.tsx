@@ -43,6 +43,11 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </Link>
               </li>
               <li>
+                <Link href="/digest" className={linkClass}>
+                  Weekly digest
+                </Link>
+              </li>
+              <li>
                 <Link href="/education" className={linkClass}>
                   Education
                 </Link>

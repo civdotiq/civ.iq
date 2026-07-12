@@ -159,6 +159,11 @@ export function StateOverview({ data }: StateOverviewProps) {
               Delegation →
             </CqButton>
           </Link>
+          <Link href={`/digest/${stateCode.toLowerCase()}`} style={{ textDecoration: 'none' }}>
+            <CqButton variant="secondary" size="sm">
+              Weekly digest →
+            </CqButton>
+          </Link>
         </div>
       </div>
 

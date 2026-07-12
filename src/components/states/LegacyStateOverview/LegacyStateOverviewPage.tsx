@@ -430,6 +430,14 @@ function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: s
       >
         View {stateName} congressional delegation
       </Link>
+
+      {/* Link to the state's weekly digest */}
+      <Link
+        href={`/digest/${stateCode.toLowerCase()}`}
+        className="block border-2 border-[#3ea2d4] text-[#3ea2d4] type-sm text-center font-bold py-3 hover:bg-[#3ea2d4] hover:text-white transition-colors"
+      >
+        Read the {stateName} weekly digest
+      </Link>
     </div>
   );
 }
