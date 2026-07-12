@@ -13,6 +13,12 @@ import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
 export const runtime = 'nodejs';
 export const revalidate = 3600;
 
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<Array<{ bioguideId: string }>> {
+  return [];
+}
+
 export default async function RepresentativeVotingRecordPage({
   params,
 }: {

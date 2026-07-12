@@ -19,6 +19,12 @@ import { CollectionPageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd'
 
 export const revalidate = 3600;
 
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<Array<{ state: string }>> {
+  return [];
+}
+
 const ARCHIVE_WEEKS = 12;
 
 interface PageProps {

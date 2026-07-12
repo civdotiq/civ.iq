@@ -32,6 +32,12 @@ export const revalidate = 3600;
 // delegation state; warmed weeks return in ~1s.
 export const maxDuration = 120;
 
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<Array<{ state: string; week: string }>> {
+  return [];
+}
+
 interface PageProps {
   params: Promise<{ state: string; week: string }>;
 }
