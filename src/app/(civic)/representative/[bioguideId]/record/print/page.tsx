@@ -26,6 +26,12 @@ import { getStateName } from '@/lib/data/us-states';
 export const runtime = 'nodejs';
 export const revalidate = 3600;
 
+// Same as the record page: an empty generateStaticParams activates on-demand
+// ISR so `revalidate` is honored instead of rendering per-request.
+export async function generateStaticParams(): Promise<Array<{ bioguideId: string }>> {
+  return [];
+}
+
 const getData = cache(async (bioguideId: string) => {
   if (!bioguideId || !/^[A-Za-z]\d{6}$/.test(bioguideId)) notFound();
   const data = await getRecordCardData(bioguideId);

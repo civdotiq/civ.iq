@@ -25,6 +25,13 @@ import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: hourly, matching the profile page
 
+// Without generateStaticParams a dynamic-segment route is rendered per-request
+// and `revalidate` is ignored. An empty list keeps builds free of external API
+// calls; every bioguideId renders on demand, then serves from the ISR cache.
+export async function generateStaticParams(): Promise<Array<{ bioguideId: string }>> {
+  return [];
+}
+
 // generateMetadata and the page body share one composition per request
 const getData = cache(async (bioguideId: string) => {
   if (!bioguideId || !/^[A-Za-z]\d{6}$/.test(bioguideId)) notFound();
