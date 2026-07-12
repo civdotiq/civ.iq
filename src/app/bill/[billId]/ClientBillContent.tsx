@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { sanitizeBillHtml } from '@/utils/sanitize';
 import Link from 'next/link';
-import { RepLink } from '@/components/shared/links/EntityLinks';
+import { PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
 import {
   ExternalLink,
   Calendar,
@@ -370,9 +370,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               {bill.policyArea && (
                 <div className="mb-4">
                   <span className="text-sm font-medium text-gray-600">Policy Area: </span>
-                  <span className="inline-flex items-center px-3 py-1 bg-civiq-blue/10 text-civiq-blue font-medium text-sm border border-civiq-blue/20">
-                    {bill.policyArea}
-                  </span>
+                  <PolicyAreaLink
+                    policyArea={bill.policyArea}
+                    className="inline-flex items-center px-3 py-1 bg-civiq-blue/10 font-medium text-sm border border-civiq-blue/20"
+                  />
                 </div>
               )}
 

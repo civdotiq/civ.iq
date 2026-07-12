@@ -9,7 +9,7 @@ import React from 'react';
 import useSWR from 'swr';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
-import { displaySector } from '@/lib/mesh/sector-display';
+import { SectorLink } from '@/components/shared/links/EntityLinks';
 
 interface FinanceData {
   totalRaised: number;
@@ -370,9 +370,7 @@ export function FinanceTab({
               <div className="space-y-3">
                 {industryData?.topIndustries?.slice(0, 5).map((industry, index: number) => (
                   <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">
-                      {displaySector(industry.industry)}
-                    </span>
+                    <SectorLink sector={industry.industry} className="text-sm" />
                     <span className="text-sm font-medium">{formatCurrency(industry.amount)}</span>
                   </div>
                 ))}

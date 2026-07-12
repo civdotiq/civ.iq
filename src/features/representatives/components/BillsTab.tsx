@@ -11,6 +11,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 const CURRENT_CONGRESS = getCurrentCongressNumber();
 import useSWR from 'swr';
 import Link from 'next/link';
+import { PolicyAreaLink } from '@/components/shared/links/EntityLinks';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 
 interface Bill {
@@ -515,7 +516,10 @@ export const BillsTab = React.memo(
                     {bill.type || 'Type: Unknown'}
                   </span>
                   {bill.policyArea && (
-                    <span className="text-xs bg-civiq-green/10 px-3 py-1.5">{bill.policyArea}</span>
+                    <PolicyAreaLink
+                      policyArea={bill.policyArea}
+                      className="text-xs bg-civiq-green/10 px-3 py-1.5"
+                    />
                   )}
                   <span className="text-xs bg-gray-100 px-3 py-1.5">
                     {bill.status || 'Status: Unknown'}

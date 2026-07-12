@@ -6,6 +6,7 @@ import type { CivicAlignmentReport } from '@/types/ai';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 import { displaySector } from '@/lib/mesh/sector-display';
+import { SectorLink } from '@/components/shared/links/EntityLinks';
 
 interface CivicAlignmentTabProps {
   bioguideId: string;
@@ -127,9 +128,7 @@ function DonorProfileSection({ donors }: { donors: CivicAlignmentReport['donorPr
       <div className="space-y-2">
         {topDonors.map((donor, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="w-32 text-sm text-gray-700 truncate">
-              {displaySector(donor.sector)}
-            </span>
+            <SectorLink sector={donor.sector} className="w-32 text-sm truncate" />
             <div
               className="flex-1 bg-gray-200 h-5"
               role="progressbar"

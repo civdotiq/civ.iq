@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { displaySector } from '@/lib/mesh/sector-display';
 import { parseBillSlug } from '@/lib/data/route-slugs';
+import { slugifyPolicyArea } from '@/lib/questions/question-registry';
 
 const linkClass = 'text-[#3ea2d4] hover:underline';
 
@@ -106,6 +107,27 @@ export function SectorLink({ sector, label, className }: SectorLinkProps) {
       className={`${linkClass} ${className ?? ''}`}
     >
       {displaySector(sector)}
+    </Link>
+  );
+}
+
+interface PolicyAreaLinkProps {
+  policyArea: string | null | undefined;
+  className?: string;
+}
+
+/**
+ * Links a Congress.gov policy area (e.g. "Armed Forces and National Security")
+ * to its topic-bills question page — every policy area has one.
+ */
+export function PolicyAreaLink({ policyArea, className }: PolicyAreaLinkProps) {
+  if (!policyArea) return null;
+  return (
+    <Link
+      href={`/ask/topic-bills/${slugifyPolicyArea(policyArea)}`}
+      className={`${linkClass} ${className ?? ''}`}
+    >
+      {policyArea}
     </Link>
   );
 }
