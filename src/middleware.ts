@@ -304,8 +304,20 @@ export async function middleware(request: NextRequest) {
     // Detect embed routes (allow iframing)
     const isEmbedRoute = request.nextUrl.pathname.startsWith('/embed/');
 
+    // Share-card OG rewrite: /representative/{id}?card=... is served by the
+    // dynamic /share route (card-specific social metadata) so the canonical
+    // profile URL can stay ISR-cached. Rewrite, not redirect — shared links
+    // keep their URL and crawlers see the card-specific OG tags.
+    const isProfileShareCard =
+      request.nextUrl.searchParams.has('card') &&
+      /^\/representative\/[A-Za-z]\d{6}$/.test(request.nextUrl.pathname);
+
     // Create response with security headers
-    const response = NextResponse.next();
+    const response = isProfileShareCard
+      ? NextResponse.rewrite(
+          new URL(`${request.nextUrl.pathname}/share${request.nextUrl.search}`, request.nextUrl)
+        )
+      : NextResponse.next();
 
     // Add security headers
     Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {

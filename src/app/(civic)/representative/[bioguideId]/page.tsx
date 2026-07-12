@@ -3,13 +3,11 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { ProfilePageSchema, SpeakableSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
@@ -21,10 +19,20 @@ import {
   getSenateVacancy,
   formatVacancyMessage,
 } from '@/lib/data/congressional-vacancies';
-import { ProfileHybrid } from '@/components/officials/ProfileHybrid';
+import {
+  buildProfileMetadata,
+  getProfileRepresentative as getRepresentativeData,
+  type RepresentativeDetails,
+} from '@/features/representatives/profile-metadata';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600; // ISR: revalidate every hour
+
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<Array<{ bioguideId: string }>> {
+  return [];
+}
 
 // Dynamic imports for the profile layouts to reduce initial bundle size
 const ProfileRedesign = dynamicImport(
@@ -49,117 +57,6 @@ const ProfileRedesign = dynamicImport(
     ),
   }
 );
-
-const SimpleRepresentativeProfile = dynamicImport(
-  () =>
-    import('@/features/representatives/components/SimpleRepresentativeProfile').then(mod => ({
-      default: mod.SimpleRepresentativeProfile,
-    })),
-  {
-    loading: () => (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-grid-2 md:px-grid-4 py-grid-3">
-          <div className="animate-pulse">
-            <div className="h-32 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
-            <div className="h-16 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-grid-4">
-              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
-              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-  }
-);
-
-interface RepresentativeDetails {
-  bioguideId: string;
-  name: string;
-  firstName: string;
-  lastName: string;
-  party: string;
-  state: string;
-  district?: string;
-  chamber: 'House' | 'Senate';
-  title: string;
-  votingMember: boolean;
-  role: 'Representative' | 'Senator' | 'Delegate' | 'Resident Commissioner';
-  phone?: string;
-  email?: string;
-  website?: string;
-  imageUrl?: string;
-  terms: Array<{
-    congress: string;
-    startYear: string;
-    endYear: string;
-  }>;
-  committees?: Array<{
-    name: string;
-    role?: string;
-    thomas_id?: string;
-    id?: string;
-  }>;
-  fullName?: {
-    first: string;
-    middle?: string;
-    last: string;
-    suffix?: string;
-    nickname?: string;
-    official?: string;
-  };
-  bio?: {
-    birthday?: string;
-    gender?: 'M' | 'F';
-    religion?: string;
-  };
-  currentTerm?: {
-    start: string;
-    end: string;
-    office?: string;
-    phone?: string;
-    address?: string;
-    website?: string;
-    contactForm?: string;
-    rssUrl?: string;
-    stateRank?: 'junior' | 'senior';
-    class?: number;
-  };
-  socialMedia?: {
-    twitter?: string;
-    facebook?: string;
-    youtube?: string;
-    instagram?: string;
-    mastodon?: string;
-  };
-  status?: 'active' | 'pending_resignation' | 'resigned' | 'expelled' | 'deceased' | 'retired';
-  statusDetail?: string;
-  statusEffectiveDate?: string | null;
-}
-
-// Server-side data fetching with direct service import (no HTTP networking).
-// Wrapped in React cache() so generateMetadata and the page body share a
-// single fetch per request instead of running the full pipeline twice.
-const getRepresentativeData = cache(async function getRepresentativeData(
-  bioguideId: string
-): Promise<RepresentativeDetails> {
-  try {
-    if (!bioguideId || typeof bioguideId !== 'string') {
-      notFound();
-    }
-
-    // Direct service call - no HTTP networking during SSR
-    const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
-
-    if (!enhancedData) {
-      notFound();
-    }
-
-    return enhancedData;
-  } catch {
-    notFound();
-  }
-});
 
 /**
  * Server-rendered key facts block for AI citation readiness.
@@ -362,10 +259,8 @@ function MemberStatusBanner({ representative }: { representative: Representative
 // Main Server Component - renders immediately with SSR data
 export default async function RepresentativeProfilePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ bioguideId: string }>;
-  searchParams: Promise<{ v?: string }>;
 }) {
   let bioguideId: string;
 
@@ -379,13 +274,6 @@ export default async function RepresentativeProfilePage({
   } catch {
     notFound();
   }
-
-  const { v } = await searchParams;
-  // `?v=new` previews the ProfileHybrid experiment; `?v=classic` restores the
-  // tabbed dashboard layout. Default is the redesigned overview (ProfileRedesign).
-  // The old NEXT_PUBLIC_CIVIQ_V env auto-preview is retired so dev matches prod.
-  const useHybridPreview = v === 'new';
-  const useClassicLayout = v === 'classic';
 
   // Server-side: fetch representative data only (summary loads client-side via SWR
   // to avoid blocking render on slow vote/finance API calls)
@@ -469,19 +357,6 @@ export default async function RepresentativeProfilePage({
     </>
   );
 
-  if (useHybridPreview) {
-    return (
-      <>
-        {structuredData}
-        <ErrorBoundary>
-          <ChunkLoadErrorBoundary>
-            <ProfileHybrid representative={representative} />
-          </ChunkLoadErrorBoundary>
-        </ErrorBoundary>
-      </>
-    );
-  }
-
   // Breadcrumb navigation with preserved search context
   const breadcrumbItems = [
     { label: 'Search', href: '/' },
@@ -535,11 +410,7 @@ export default async function RepresentativeProfilePage({
 
         <ErrorBoundary>
           <ChunkLoadErrorBoundary>
-            {useClassicLayout ? (
-              <SimpleRepresentativeProfile representative={representative} />
-            ) : (
-              <ProfileRedesign representative={representative} />
-            )}
+            <ProfileRedesign representative={representative} />
           </ChunkLoadErrorBoundary>
         </ErrorBoundary>
 
@@ -572,71 +443,9 @@ export default async function RepresentativeProfilePage({
   );
 }
 
-const VALID_CARD_TYPES = ['profile', 'money', 'vote', 'alignment', 'legislation'] as const;
-
-export async function generateMetadata({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ bioguideId: string }>;
-  searchParams: Promise<{ card?: string; billId?: string }>;
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ bioguideId: string }> }) {
   const { bioguideId } = await params;
-  const resolvedSearchParams = await searchParams;
-
-  try {
-    // Fetch representative data for rich metadata
-    const representative = await getRepresentativeData(bioguideId);
-
-    const title = `${representative.name} (${representative.party}-${representative.state})`;
-    const chamberLabel = representative.chamber === 'Senate' ? 'Senator' : 'Representative';
-    const districtLabel = representative.district ? `, District ${representative.district}` : '';
-    const committeeNote = representative.committees?.length
-      ? `. Serves on ${representative.committees.length} committee${representative.committees.length === 1 ? '' : 's'}`
-      : '';
-    const description = `${representative.party} ${chamberLabel} ${representative.name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
-    const url = `https://civdotiq.org/representative/${bioguideId}`;
-
-    // Build OG image URL - default to profile card, override with specific card type
-    const cardType = resolvedSearchParams.card;
-    const isValidCard =
-      cardType && VALID_CARD_TYPES.includes(cardType as (typeof VALID_CARD_TYPES)[number]);
-    const effectiveCardType = isValidCard ? cardType : 'profile';
-    let ogImageUrl = `https://civdotiq.org/api/card/${bioguideId}?type=${effectiveCardType}`;
-    if (effectiveCardType === 'vote' && resolvedSearchParams.billId) {
-      ogImageUrl += `&billId=${encodeURIComponent(resolvedSearchParams.billId)}`;
-    }
-
-    return {
-      title,
-      description,
-      alternates: {
-        canonical: url,
-        types: {
-          'application/atom+xml': `/api/feed/member/${bioguideId}`,
-        },
-      },
-      openGraph: {
-        title: `${representative.name} - Federal ${representative.role}`,
-        description,
-        url,
-        siteName: 'CIV.IQ',
-        type: 'profile',
-        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
-      },
-      twitter: {
-        card: 'summary_large_image' as const,
-        title,
-        description,
-        site: '@civdotiq',
-        images: [ogImageUrl],
-      },
-    };
-  } catch {
-    // Fallback metadata if representative data fetch fails
-    return {
-      title: `Representative ${bioguideId}`,
-      description: `View detailed information about federal representative ${bioguideId}`,
-    };
-  }
+  // Card-specific OG variants (?card=/?billId=) are served by the dynamic
+  // /share route via middleware rewrite — this ISR route stays query-free.
+  return buildProfileMetadata(bioguideId);
 }

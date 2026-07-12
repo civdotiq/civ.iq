@@ -63,9 +63,14 @@ export const revalidate = 3600;
 // seconds; this ceiling is only load-bearing for the cold path.
 export const maxDuration = 150;
 
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<Array<{ slug: string; entityId: string }>> {
+  return [];
+}
+
 interface PageProps {
   params: Promise<{ slug: string; entityId: string }>;
-  searchParams: Promise<{ v?: string }>;
 }
 
 /**
@@ -303,12 +308,13 @@ function computeConfidence(
   }
 }
 
-export default async function QuestionPage({ params, searchParams }: PageProps) {
+export default async function QuestionPage({ params }: PageProps) {
   const { slug, entityId } = await params;
-  const { v } = await searchParams;
-  const isPreviewEnv =
+  // The ?v=new URL preview is retired so this route can be ISR-cached
+  // (query strings are invisible to the ISR cache). The redesign remains
+  // previewable in dev via NEXT_PUBLIC_CIVIQ_V=new.
+  const useRedesign =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
-  const useRedesign = v === 'new' || isPreviewEnv;
 
   const template = getTemplate(slug);
   if (!template) notFound();
