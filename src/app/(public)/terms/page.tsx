@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'Terms of service',
+  description:
+    'CIV.IQ terms of service: free public access to congressional data from official government sources, with no accounts and no tracking.',
+  alternates: { canonical: 'https://civdotiq.org/terms' },
+};
 
 export default function TermsPage() {
   return (

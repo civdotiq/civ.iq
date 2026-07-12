@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+  title: 'Disclaimer',
+  description:
+    'CIV.IQ disclaimer: data comes directly from official government sources and is presented without partisan interpretation. Accuracy limits and how to report errors.',
+  alternates: { canonical: 'https://civdotiq.org/disclaimer' },
+};
 
 export default function DisclaimerPage() {
   return (

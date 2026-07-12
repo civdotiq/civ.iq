@@ -203,6 +203,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: isSenator ? 0.95 : isHighPopState ? 0.9 : 0.85,
           });
+
+          // Incumbent Record Card
+          entries.push({
+            url: `${BASE_URL}/representative/${rep.bioguideId}/record`,
+            lastModified: now,
+            changeFrequency: 'weekly',
+            priority: isSenator ? 0.9 : isHighPopState ? 0.85 : 0.8,
+          });
         }
       }
 

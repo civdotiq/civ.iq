@@ -3,8 +3,16 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import type { Metadata } from 'next';
 import { SearchResults } from '@/components/search/SearchResults';
 import { LegacySearchPage } from './LegacySearchPage';
+
+export const metadata: Metadata = {
+  title: 'Search',
+  description:
+    'Search members of Congress, bills, votes, committees, and campaign finance data from official government sources.',
+  robots: { index: false, follow: true },
+};
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; v?: string; type?: string }>;
