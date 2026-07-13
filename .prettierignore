@@ -1,0 +1,6 @@
+# Generated LDA lobbying corpus — committed minified by the lda-corpus-mirror
+# workflow (and scripts/sync-lda-corpus.ts). Prettier would pretty-print it,
+# ballooning ~4MB → ~7MB (past the repo threshold) and diverging from what the
+# GitHub Action commits. Keep it minified.
+data/lda-aggregates.json
+data/lda-aggregates.meta.json
