@@ -423,7 +423,7 @@ export function AboutHybrid() {
         >
           Full matrix:{' '}
           <a
-            href="https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+            href="https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'var(--civiq-blue-active)' }}
@@ -565,12 +565,12 @@ export function AboutHybrid() {
           {' '}
           Source code:{' '}
           <a
-            href="https://github.com/civic-intel-hub/civic-intel-hub"
+            href="https://github.com/civdotiq/civ.iq"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'var(--civiq-blue-active)' }}
           >
-            github.com/civic-intel-hub
+            github.com/civdotiq/civ.iq
           </a>
           {' · MIT-licensed'}.
         </CqDisclaimer>

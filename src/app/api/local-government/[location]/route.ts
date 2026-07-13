@@ -44,7 +44,7 @@ interface LocalGovernmentResponse {
   };
 }
 
-const COVERAGE_DOC_URL = 'https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md';
+const COVERAGE_DOC_URL = 'https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md';
 
 function buildPilotCityLinks(): PilotCityLink[] {
   return getPilotCitySummaries().map(city => ({

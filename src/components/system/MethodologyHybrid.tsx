@@ -696,12 +696,12 @@ export function MethodologyHybrid() {
           {' '}
           This document is itself versioned. Open-source at{' '}
           <a
-            href="https://github.com/civic-intel-hub/civic-intel-hub"
+            href="https://github.com/civdotiq/civ.iq"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'var(--civiq-blue-active)' }}
           >
-            github.com/civic-intel-hub
+            github.com/civdotiq/civ.iq
           </a>
           .
         </CqDisclaimer>

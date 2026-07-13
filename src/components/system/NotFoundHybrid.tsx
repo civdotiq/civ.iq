@@ -302,7 +302,7 @@ export function NotFoundHybrid() {
       >
         If you reached this page from another site, the source link is broken. Report it via{' '}
         <a
-          href="https://github.com/civic-intel-hub/civic-intel-hub/issues"
+          href="https://github.com/civdotiq/civ.iq/issues"
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: 'var(--civiq-blue-active)' }}

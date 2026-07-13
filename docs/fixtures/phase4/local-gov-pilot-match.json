@@ -78,6 +78,6 @@
     "dataSource": "legistar.com",
     "lastUpdated": "2026-04-16T21:30:54.336Z",
     "note": "Boston, MA is a CIV.IQ pilot city. Fetch council data from /api/city/boston/council. This catch-all route does not return officials directly.",
-    "coverageDoc": "https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+    "coverageDoc": "https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md"
   }
 }

@@ -663,7 +663,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                   Federal campaign finance data (FEC) is available on federal representative
                   profiles. For the canonical coverage matrix, see{' '}
                   <a
-                    href="https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+                    href="https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-civiq-blue hover:underline"

@@ -134,7 +134,7 @@ export function LegacyAboutPage() {
             <div className="text-sm text-gray-500 mt-grid-2">
               Full matrix:{' '}
               <a
-                href="https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+                href="https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-civiq-blue hover:underline"

@@ -76,6 +76,6 @@
     "dataSource": "civiq:local-government",
     "lastUpdated": "2026-04-16T21:31:02.162Z",
     "note": "CIV.IQ does not have local-government data for this location. There is no national local-government API; coverage is limited to a pilot list of cities. See pilotCities in this response, or docs/COVERAGE.md.",
-    "coverageDoc": "https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md"
+    "coverageDoc": "https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md"
   }
 }

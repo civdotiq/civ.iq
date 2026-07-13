@@ -685,7 +685,7 @@ export function LegacyMethodologyPage() {
             This page was last updated April 2026. CIV.IQ is open-source civic infrastructure. Our
             methods improve as research advances. For questions about our methodology, see our{' '}
             <a
-              href="https://github.com/civic-intel-hub/civic-intel-hub"
+              href="https://github.com/civdotiq/civ.iq"
               className="text-[#3ea2d4] hover:underline"
               target="_blank"
               rel="noopener noreferrer"

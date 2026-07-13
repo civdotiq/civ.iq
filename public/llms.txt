@@ -20,7 +20,7 @@ CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google 
 
 ## Coverage Honesty
 
-The canonical coverage matrix is published at https://github.com/civdotiq/civic-intel-hub/blob/main/docs/COVERAGE.md (in repo at `docs/COVERAGE.md`). Every join-based API response carries a `dataQuality` field (`complete | partial | empty | unavailable`) so consumers can distinguish "no data exists" from "upstream source unavailable." Routes never return silent empty arrays in place of an error.
+The canonical coverage matrix is published at https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md (in repo at `docs/COVERAGE.md`). Every join-based API response carries a `dataQuality` field (`complete | partial | empty | unavailable`) so consumers can distinguish "no data exists" from "upstream source unavailable." Routes never return silent empty arrays in place of an error.
 
 ## API Access
 
@@ -69,7 +69,7 @@ CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
 
 - Full API docs: [llms-full.txt](/llms-full.txt)
 - OpenAPI 3.0 spec: [openapi.json](/openapi.json)
-- API reference: [docs/API_REFERENCE.md](https://github.com/civdotiq/civic-intel-hub/blob/main/docs/API_REFERENCE.md)
+- API reference: [docs/API_REFERENCE.md](https://github.com/civdotiq/civ.iq/blob/main/docs/API_REFERENCE.md)
 
 ## Data Sources
 
@@ -85,4 +85,4 @@ All data comes from official government sources:
 
 ## License
 
-MIT. Open source at github.com/civdotiq/civic-intel-hub
+MIT. Open source at github.com/civdotiq/civ.iq

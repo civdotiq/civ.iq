@@ -152,7 +152,7 @@ export default function DevelopersPage() {
         name="CIV.IQ"
         description="Open-source civic intelligence platform providing access to federal and state government data through REST API, MCP server, TypeScript SDK, Atom feeds, and embeddable widgets."
         url="https://civdotiq.org/developers"
-        codeRepository="https://github.com/civdotiq/civic-intel-hub"
+        codeRepository="https://github.com/civdotiq/civ.iq"
         programmingLanguage={['TypeScript', 'React', 'Next.js']}
         runtimePlatform="Node.js"
       />
