@@ -397,4 +397,73 @@ describe('LobbyingTab', () => {
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText(/sample of recent filings, not a complete tally/)).toBeInTheDocument();
   });
+
+  it('renders corpus-backed per-committee totals with a peer baseline', () => {
+    const data = {
+      ...makeLobbyingData(),
+      corpusLobbying: {
+        quarters: ['2025-Q1', '2025-Q2'],
+        generatedAt: '2026-07-13T00:00:00.000Z',
+        committees: [
+          {
+            committeeCode: 'HSIF',
+            committeeName: 'Energy and Commerce',
+            windowTotal: 60_000_000,
+            quarterly: [
+              { quarter: '2025-Q1', total: 30_000_000 },
+              { quarter: '2025-Q2', total: 30_000_000 },
+            ],
+            peer: { medianTotal: 30_000_000, ratioToMedian: 2 },
+            topIssues: [{ code: 'HCR', label: 'Health Issues', count: 40 }],
+          },
+        ],
+      },
+    };
+    setupSWR(
+      { data, error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText('Lobbying spending by committee')).toBeInTheDocument();
+    expect(screen.getByText('$60.0M')).toBeInTheDocument();
+    expect(screen.getByText(/2.0× the median committee/)).toBeInTheDocument();
+    // Methodology makes the not-summed-across-committees caveat explicit
+    expect(screen.getByText(/not summed across\s+committees/)).toBeInTheDocument();
+  });
+
+  it('shows corpus totals even when the live sample has no companies', () => {
+    const data = {
+      representative: { name: 'Jane Smith', committees: ['Finance'] },
+      metadata: { coveragePeriod: 'Last 2 years' },
+      lobbyingData: {
+        totalRelevantSpending: 0,
+        affectedCommittees: 0,
+        topCompanies: [],
+        committeeBreakdown: [],
+      },
+      corpusLobbying: {
+        quarters: ['2025-Q1'],
+        generatedAt: '2026-07-13T00:00:00.000Z',
+        committees: [
+          {
+            committeeCode: 'SSFI',
+            committeeName: 'Finance',
+            windowTotal: 100_000_000,
+            quarterly: [{ quarter: '2025-Q1', total: 100_000_000 }],
+            peer: { medianTotal: 50_000_000, ratioToMedian: 2 },
+            topIssues: [],
+          },
+        ],
+      },
+    };
+    setupSWR(
+      { data, error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // Not the empty state — corpus section renders
+    expect(screen.queryByText(/No lobbying data found/)).not.toBeInTheDocument();
+    expect(screen.getByText('Lobbying spending by committee')).toBeInTheDocument();
+    expect(screen.getByText('$100.0M')).toBeInTheDocument();
+  });
 });

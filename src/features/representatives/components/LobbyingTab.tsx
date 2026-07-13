@@ -55,6 +55,18 @@ interface LobbyingResponse {
       industryBreakdown: IndustryBreakdown[];
     };
   };
+  corpusLobbying?: {
+    quarters: string[];
+    generatedAt: string;
+    committees: Array<{
+      committeeCode: string;
+      committeeName: string;
+      windowTotal: number;
+      quarterly: Array<{ quarter: string; total: number }>;
+      peer: { medianTotal: number; ratioToMedian: number };
+      topIssues: Array<{ code: string; label: string; count: number }>;
+    }>;
+  };
   dataQuality?: 'complete' | 'partial' | 'empty' | 'unavailable';
   metadata?: {
     coveragePeriod: string;
@@ -92,6 +104,88 @@ function StatBox({ value, label }: { value: string; label: string }) {
 
 function LobbyingLoadingState() {
   return <LoadingState message="Loading lobbying data..." />;
+}
+
+function shortQuarter(q: string): string {
+  const [year, quarter] = q.split('-');
+  return `${quarter} '${year?.slice(2) ?? ''}`;
+}
+
+type CorpusLobbying = NonNullable<LobbyingResponse['corpusLobbying']>;
+
+/**
+ * Corpus-backed per-committee totals from the complete Senate LDA corpus (not
+ * the ~0.1% live sample). Totals only — top-orgs stay in the sample section
+ * below until entity resolution lands. Totals are per committee, never summed
+ * across committees (a filing naming several committees counts toward each).
+ */
+function CorpusLobbyingSection({ corpus }: { corpus: CorpusLobbying }) {
+  const firstQuarter = corpus.quarters[0];
+  const lastQuarter = corpus.quarters[corpus.quarters.length - 1];
+
+  return (
+    <div>
+      <h3 className="aicher-heading type-lg text-gray-900 mb-1">Lobbying spending by committee</h3>
+      <p className="type-xs text-gray-500 mb-4">
+        Total reported spending on Senate LDA filings that disclose each committee, across the
+        complete corpus{firstQuarter && lastQuarter ? ` (${firstQuarter} to ${lastQuarter})` : ''}.
+        A filing naming several committees counts toward each, so totals are not summed across
+        committees.
+      </p>
+      <div className="space-y-3">
+        {corpus.committees.map(c => {
+          const maxQuarter = Math.max(...c.quarterly.map(q => q.total), 1);
+          const pctOfMedian = c.peer.ratioToMedian;
+          return (
+            <div key={c.committeeCode} className="border-2 border-gray-200 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <span className="type-sm font-medium text-gray-900">{c.committeeName}</span>
+                <span className="type-lg font-semibold text-gray-900 aicher-heading-wide flex-shrink-0">
+                  {formatCompact(c.windowTotal)}
+                </span>
+              </div>
+              <p className="type-xs text-gray-500 mt-0.5">
+                {pctOfMedian >= 1
+                  ? `${pctOfMedian.toFixed(1)}× the median committee (${formatCompact(c.peer.medianTotal)})`
+                  : `${Math.round(pctOfMedian * 100)}% of the median committee (${formatCompact(c.peer.medianTotal)})`}
+              </p>
+              {c.quarterly.length > 0 && (
+                <div className="flex items-end gap-1 mt-3" style={{ height: 64 }}>
+                  {c.quarterly.map(q => (
+                    <div key={q.quarter} className="flex-1 flex flex-col items-center min-w-0">
+                      <div className="w-full flex items-end justify-center" style={{ height: 40 }}>
+                        <div
+                          className="w-full bg-[#3ea2d4]"
+                          style={{
+                            height: `${Math.max((q.total / maxQuarter) * 100, q.total > 0 ? 4 : 0)}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="type-xs text-gray-400 aicher-heading mt-1 truncate max-w-full">
+                        {shortQuarter(q.quarter)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {c.topIssues.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {c.topIssues.slice(0, 5).map(issue => (
+                    <span
+                      key={issue.code}
+                      className="border-2 border-gray-200 px-2 py-0.5 type-xs aicher-heading text-gray-600"
+                    >
+                      {issue.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
@@ -134,10 +228,12 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
   const lobbying = lobbyingData?.lobbyingData;
   const repName = lobbyingData?.representative?.name;
   const coveragePeriod = lobbyingData?.metadata?.coveragePeriod;
+  const corpus = lobbyingData?.corpusLobbying;
+  const hasCorpus = (corpus?.committees.length ?? 0) > 0;
   const hasLobbyingData = lobbying && (lobbying.topCompanies?.length ?? 0) > 0;
   const hasChains = chainData?.chains && chainData.chains.length > 0;
 
-  if (!hasLobbyingData && !hasChains) {
+  if (!hasLobbyingData && !hasChains && !hasCorpus) {
     const note = lobbyingData?.metadata?.note;
     return (
       <div className="border-2 border-gray-200 p-6 text-center">
@@ -160,7 +256,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Intro disclaimer — matches FinanceTab, VotingTab, BillsTab pattern */}
+      {/* Corpus-backed per-committee totals (complete corpus) come first as the
+          primary, accurate figures; the sample sections below are clearly scoped. */}
+      {hasCorpus && corpus && <CorpusLobbyingSection corpus={corpus} />}
+
+      {/* Intro disclaimer — scopes the sample-based sections that follow */}
       <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
         Organizations from recent lobbying filings related to
         {repName ? ` ${repName}'s` : " this representative's"} committee assignments

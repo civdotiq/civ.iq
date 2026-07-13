@@ -8,6 +8,31 @@ import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
+import { getCommitteeCorpusTotals, getCorpusMeta } from '@/lib/data-sources/lda-corpus/load';
+
+/**
+ * Map a committee name to its code by bidirectional substring match against
+ * ALL_COMMITTEE_MAPPINGS. Punctuation is stripped first so Congress.gov names
+ * like "Committee on Veterans' Affairs" match the mapping "Veterans Affairs".
+ * Kept local to avoid importing the analyzer barrel, which pulls in the AI SDK
+ * (heavy, and breaks route imports in jsdom tests).
+ */
+function normalizeCommittee(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function committeeCodeForName(name: string): string | undefined {
+  const norm = normalizeCommittee(name);
+  return ALL_COMMITTEE_MAPPINGS.find(m => {
+    const mNorm = normalizeCommittee(m.committeeName);
+    return norm.includes(mNorm) || mNorm.includes(norm);
+  })?.committeeCode;
+}
 import {
   fetchWithSourceStatus,
   computeDataQuality,
@@ -53,6 +78,21 @@ interface RepresentativeLobbyingResponse {
       }>;
     };
   };
+  // Corpus-backed per-committee totals (complete Senate LDA corpus, not the
+  // ~0.1% live sample above). Totals only — top-orgs stay sample-based until
+  // entity resolution lands (PLAN-lobbying-corpus-2026-07.md Phase 2 follow-up).
+  corpusLobbying?: {
+    quarters: string[];
+    generatedAt: string;
+    committees: Array<{
+      committeeCode: string;
+      committeeName: string;
+      windowTotal: number;
+      quarterly: Array<{ quarter: string; total: number }>;
+      peer: { medianTotal: number; ratioToMedian: number };
+      topIssues: Array<{ code: string; label: string; count: number }>;
+    }>;
+  };
   dataQuality: DataQuality;
   sourceStatus: SourceStatus[];
   metadata: {
@@ -61,6 +101,44 @@ interface RepresentativeLobbyingResponse {
     coveragePeriod: string;
     note: string;
   };
+}
+
+/**
+ * Corpus-backed per-committee lobbying totals for a rep's committees. Maps each
+ * committee name to its code, dedupes, and looks up the complete-corpus totals.
+ * Returns undefined when the corpus is unavailable or none of the rep's
+ * committees are represented — the sample-based sections still render.
+ */
+async function buildCorpusLobbying(
+  committeeNames: string[]
+): Promise<RepresentativeLobbyingResponse['corpusLobbying']> {
+  const meta = await getCorpusMeta();
+  if (!meta) return undefined;
+
+  const seenCodes = new Set<string>();
+  const committees: NonNullable<RepresentativeLobbyingResponse['corpusLobbying']>['committees'] =
+    [];
+
+  for (const name of committeeNames) {
+    const code = committeeCodeForName(name);
+    if (!code || seenCodes.has(code)) continue;
+    seenCodes.add(code);
+
+    const totals = await getCommitteeCorpusTotals(code);
+    if (!totals) continue;
+    committees.push({
+      committeeCode: totals.committeeCode,
+      committeeName: totals.committeeName,
+      windowTotal: totals.windowTotal,
+      quarterly: totals.quarterly,
+      peer: totals.peer,
+      topIssues: totals.topIssues,
+    });
+  }
+
+  if (committees.length === 0) return undefined;
+  committees.sort((a, b) => b.windowTotal - a.windowTotal);
+  return { quarters: meta.quarters, generatedAt: meta.generatedAt, committees };
 }
 
 const EMPTY_LOBBYING_DATA = {
@@ -355,9 +433,12 @@ export async function GET(
         ? "No lobbying activity found related to this representative's committee assignments."
         : "Lobbying data shows corporate spending on issues related to representative's committee assignments. Data sourced from Senate Lobbying Disclosure Act database.";
 
+  const corpusLobbying = await buildCorpusLobbying(committees);
+
   const response: RepresentativeLobbyingResponse = {
     representative: { bioguideId, name: repData.name, committees },
     lobbyingData: lobbyingData ?? EMPTY_LOBBYING_DATA,
+    ...(corpusLobbying ? { corpusLobbying } : {}),
     dataQuality,
     sourceStatus: allStatuses,
     metadata: {
