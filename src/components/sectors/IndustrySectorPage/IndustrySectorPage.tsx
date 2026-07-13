@@ -256,7 +256,7 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
               ['Total to legislators', formatCompactDollars(totalDonations)],
               ['To Democrats', formatCompactDollars(partyTotals?.d ?? 0)],
               ['To Republicans', formatCompactDollars(partyTotals?.r ?? 0)],
-              ['Lobbying spend', formatCompactDollars(orgs?.metrics.totalLobbyingSpending ?? 0)],
+              ['Lobbying registrants', String(orgs?.metrics.activeLobbyingOrgCount ?? 0)],
               ['Bills tracked', String(connections?.recentBills.length ?? 0)],
             ].map(([k, v], i) => (
               <li
@@ -290,10 +290,12 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           borderBottom: '2px solid var(--ink)',
         }}
       >
+        {/* Sector-wide lobbying spend stat removed: it aggregated a small sample of
+            recent LDA filings (PLAN-lobbying-corpus-2026-07.md Phase 0) */}
         {[
           {
             key: 'cycle-contribs',
@@ -303,13 +305,6 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
               ? `${leaderboard.entries.length} legislator${leaderboard.entries.length === 1 ? '' : 's'} included`
               : 'Loading…',
             color: 'blue' as const,
-          },
-          {
-            key: 'lobby-spend',
-            label: 'Lobbying spend',
-            value: formatCompactDollars(orgs?.metrics.totalLobbyingSpending ?? 0),
-            caption: 'Senate LDA filings',
-            color: 'ink' as const,
           },
           {
             key: 'active-pacs',
@@ -322,7 +317,7 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
             key: 'lobby-orgs',
             label: 'Lobbying orgs',
             value: String(orgs?.metrics.activeLobbyingOrgCount ?? 0),
-            caption: 'Registrants on LDA filings',
+            caption: 'Registrants in recent LDA filings',
             color: 'ink' as const,
           },
           {

@@ -6,7 +6,7 @@
 /**
  * CommitteeLobbyingAnswer — pod renderer for the committee-lobbying question.
  *
- * Pods: Top lobbying organizations, Spending by issue, Bill matches, Sources.
+ * Pods: Top lobbying organizations, Activity by issue, Bill matches, Sources.
  * Server component. Data from lobbying-pipeline-analyzer.
  */
 
@@ -21,19 +21,14 @@ interface CommitteeLobbyingAnswerProps {
   jurisdiction?: string;
 }
 
-function formatAmount(n: number): string {
-  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
-  return `$${n.toLocaleString()}`;
-}
-
+// Dollar totals are intentionally not rendered on this card: the committee
+// analyzer aggregates a ~0.1% sample of LDA filings (fetchRecentFilings pulls
+// one un-paginated page per quarter), so summed amounts are misleading. Counts
+// stay. Restore corpus-backed totals in Phase 2 (PLAN-lobbying-corpus-2026-07.md).
 function TopOrgsPod({
   organizations,
-  totalSpending,
 }: {
   organizations: LobbyingPipelineInsight['topOrganizations'];
-  totalSpending: number;
 }) {
   if (!organizations.length) {
     return (
@@ -50,23 +45,19 @@ function TopOrgsPod({
     <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
       <h2 className="type-sm font-semibold text-black mb-3">Top lobbying organizations</h2>
       <div className="mb-3">
-        <p className="type-xs text-gray-500">Total lobbying spending mentioning this committee</p>
-        <p className="type-xl font-semibold text-black">{formatAmount(totalSpending)}</p>
-        <p className="type-xs text-gray-400">{organizations.length} organizations</p>
+        <p className="type-xl font-semibold text-black">{organizations.length}</p>
+        <p className="type-xs text-gray-500">
+          organizations in recent filings mentioning this committee (a sample, not a complete tally)
+        </p>
       </div>
       <ul className="divide-y divide-gray-200">
         {organizations.slice(0, 10).map(org => (
           <li key={org.name} className="py-2 first:pt-0 last:pb-0">
-            <div className="flex justify-between items-baseline gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="type-sm text-black truncate">{org.name}</p>
-                <p className="type-xs text-gray-500 mt-0.5">
-                  {org.filingCount} {org.filingCount === 1 ? 'filing' : 'filings'}
-                </p>
-              </div>
-              <span className="type-sm font-medium text-black shrink-0">
-                {formatAmount(org.totalSpending)}
-              </span>
+            <div className="min-w-0">
+              <p className="type-sm text-black truncate">{org.name}</p>
+              <p className="type-xs text-gray-500 mt-0.5">
+                {org.filingCount} {org.filingCount === 1 ? 'filing' : 'filings'}
+              </p>
             </div>
           </li>
         ))}
@@ -75,7 +66,7 @@ function TopOrgsPod({
   );
 }
 
-function SpendingByIssuePod({
+function ActivityByIssuePod({
   issueAlignments,
 }: {
   issueAlignments: LobbyingPipelineInsight['issueAlignments'];
@@ -83,39 +74,42 @@ function SpendingByIssuePod({
   if (!issueAlignments.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6">
-        <h2 className="type-sm font-semibold text-black mb-3">Spending by issue</h2>
+        <h2 className="type-sm font-semibold text-black mb-3">Activity by issue</h2>
         <p className="type-sm text-gray-500">Issue breakdown is not available.</p>
       </div>
     );
   }
 
-  const maxSpending = issueAlignments[0]?.lobbyingSpending ?? 1;
+  // Rank issues by organization count rather than sample-based dollar spend.
+  const ranked = [...issueAlignments].sort((a, b) => b.organizationCount - a.organizationCount);
+  const maxOrgs = ranked[0]?.organizationCount ?? 1;
 
   return (
     <div className="border-2 border-black bg-white p-4 sm:p-6">
-      <h2 className="type-sm font-semibold text-black mb-3">Spending by issue</h2>
+      <h2 className="type-sm font-semibold text-black mb-3">Activity by issue</h2>
       <ul className="space-y-3">
-        {issueAlignments.slice(0, 7).map(alignment => (
+        {ranked.slice(0, 7).map(alignment => (
           <li key={alignment.issueCode}>
             <div className="flex justify-between items-baseline mb-1">
               <span className="type-sm text-gray-900 truncate mr-2">{alignment.issueLabel}</span>
               <span className="type-xs font-medium text-gray-600 shrink-0">
-                {formatAmount(alignment.lobbyingSpending)}
+                {alignment.organizationCount} {alignment.organizationCount === 1 ? 'org' : 'orgs'}
               </span>
             </div>
             <div className="h-2 bg-gray-100 border border-gray-200">
               <div
                 className="h-full bg-gray-400"
                 style={{
-                  width: `${Math.round((alignment.lobbyingSpending / maxSpending) * 100)}%`,
+                  width: `${Math.round((alignment.organizationCount / maxOrgs) * 100)}%`,
                 }}
               />
             </div>
-            <p className="type-xs text-gray-400 mt-0.5">
-              {alignment.organizationCount} {alignment.organizationCount === 1 ? 'org' : 'orgs'}
-              {alignment.matchedBills.length > 0 &&
-                ` · ${alignment.matchedBills.length} related ${alignment.matchedBills.length === 1 ? 'bill' : 'bills'}`}
-            </p>
+            {alignment.matchedBills.length > 0 && (
+              <p className="type-xs text-gray-400 mt-0.5">
+                {alignment.matchedBills.length} related{' '}
+                {alignment.matchedBills.length === 1 ? 'bill' : 'bills'}
+              </p>
+            )}
           </li>
         ))}
       </ul>
@@ -325,11 +319,8 @@ export function CommitteeLobbyingAnswer({
 
   return (
     <>
-      <TopOrgsPod
-        organizations={lobbying.topOrganizations}
-        totalSpending={lobbying.totalSpending}
-      />
-      <SpendingByIssuePod issueAlignments={lobbying.issueAlignments} />
+      <TopOrgsPod organizations={lobbying.topOrganizations} />
+      <ActivityByIssuePod issueAlignments={lobbying.issueAlignments} />
       <BillMatchesPod issueAlignments={lobbying.issueAlignments} />
       <DisclaimerPod disclaimer={lobbying.disclaimer} />
     </>

@@ -285,7 +285,7 @@ export function IssueTopicPage({
           bill may appear under multiple topics. Industry contributions reflect cached vote-finance
           insights computed from individual representative profiles.
           {orgs?.metrics
-            ? ` Lobby roll-up: ${formatCompactDollars(orgs.metrics.totalLobbyingSpending)} across ${orgs.metrics.activeLobbyingOrgCount} registrants.`
+            ? ` Lobby roll-up: ${orgs.metrics.activeLobbyingOrgCount} registrants in recent filings.`
             : ''}
           {/* Slug echo for QA traceability */}
           <span style={{ display: 'none' }}>{slug}</span>

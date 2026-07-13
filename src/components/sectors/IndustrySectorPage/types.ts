@@ -55,8 +55,9 @@ export interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
+  // totalLobbyingSpending also exists in the response but is intentionally not
+  // rendered — it aggregates a small sample of recent LDA filings
   metrics: {
-    totalLobbyingSpending: number;
     activePACCount: number;
     activeLobbyingOrgCount: number;
   };

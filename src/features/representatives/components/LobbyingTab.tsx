@@ -28,15 +28,8 @@ interface LobbyingCompany {
 
 interface CommitteeBreakdownItem {
   committee: string;
-  totalSpending: number;
   companyCount: number;
   topIssues: string[];
-}
-
-interface QuarterlyTrend {
-  quarter: string;
-  year: number;
-  spending: number;
 }
 
 interface IndustryBreakdown {
@@ -45,18 +38,20 @@ interface IndustryBreakdown {
   percentage: number;
 }
 
+// totalRelevantSpending and quarterlyTrend exist in the API response but are
+// intentionally not rendered: they aggregate a ~0.1% sample of LDA filings,
+// so the dollar totals are misleading. Restore only when corpus-backed
+// (PLAN-lobbying-corpus-2026-07.md Phase 2).
 interface LobbyingResponse {
   representative?: {
     name: string;
     committees: string[];
   };
   lobbyingData: {
-    totalRelevantSpending: number;
     affectedCommittees: number;
     topCompanies: LobbyingCompany[];
     committeeBreakdown: CommitteeBreakdownItem[];
     summary?: {
-      quarterlyTrend: QuarterlyTrend[];
       industryBreakdown: IndustryBreakdown[];
     };
   };
@@ -139,8 +134,7 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
   const lobbying = lobbyingData?.lobbyingData;
   const repName = lobbyingData?.representative?.name;
   const coveragePeriod = lobbyingData?.metadata?.coveragePeriod;
-  const hasLobbyingData =
-    lobbying && ((lobbying.topCompanies?.length ?? 0) > 0 || lobbying.totalRelevantSpending > 0);
+  const hasLobbyingData = lobbying && (lobbying.topCompanies?.length ?? 0) > 0;
   const hasChains = chainData?.chains && chainData.chains.length > 0;
 
   if (!hasLobbyingData && !hasChains) {
@@ -168,10 +162,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
     <div className="space-y-6">
       {/* Intro disclaimer — matches FinanceTab, VotingTab, BillsTab pattern */}
       <p className="text-sm text-gray-500 mb-grid-3 border-l-2 border-gray-200 pl-grid-2">
-        Shows which organizations filed lobbying disclosures related to
+        Organizations from recent lobbying filings related to
         {repName ? ` ${repName}'s` : " this representative's"} committee assignments
-        {coveragePeriod ? ` (${coveragePeriod.toLowerCase()})` : ''}. Filing a disclosure does not
-        mean money changed hands or votes were affected.{' '}
+        {coveragePeriod ? ` (${coveragePeriod.toLowerCase()})` : ''}. This is a sample of recent
+        filings, not a complete tally of all lobbying. Filing a disclosure does not mean money
+        changed hands or votes were affected.{' '}
         <a
           href="https://lda.senate.gov/filings/public/filing/search/"
           target="_blank"
@@ -182,98 +177,55 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
         </a>
       </p>
 
-      {/* Summary stats */}
+      {/* Summary stats — counts only; sample-based dollar totals are withheld */}
       {hasLobbyingData && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <StatBox
-            value={formatCompact(lobbying.totalRelevantSpending)}
-            label="Total lobbying spending"
+            value={String(lobbying.topCompanies.length)}
+            label="Organizations in recent filings"
           />
-          <StatBox value={String(lobbying.topCompanies.length)} label="Organizations lobbying" />
           <StatBox value={String(lobbying.affectedCommittees)} label="Committees targeted" />
         </div>
       )}
 
-      {/* Spending Overview */}
+      {/* Issue Areas — filing counts, not dollars. The quarterly dollar trend was
+          removed along with the total: both aggregated a ~0.1% filing sample. */}
       {hasLobbyingData &&
         lobbying.summary &&
         (() => {
-          const { quarterlyTrend, industryBreakdown } = lobbying.summary;
-          const hasQuarterly = quarterlyTrend.some(q => q.spending > 0);
+          const { industryBreakdown } = lobbying.summary;
           const hasIndustry =
             industryBreakdown.length > 1 ||
             (industryBreakdown.length === 1 && industryBreakdown[0]?.industry !== 'Other');
 
-          if (!hasQuarterly && !hasIndustry) return null;
+          if (!hasIndustry) return null;
 
-          const maxQuarterSpending = Math.max(...quarterlyTrend.map(q => q.spending), 1);
           const maxIndustryPct = Math.max(...industryBreakdown.map(i => i.percentage), 1);
 
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {hasQuarterly ? (
-                <div className="border-2 border-gray-200 p-3">
-                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Quarterly Trend</h4>
-                  <div className="flex items-end gap-1" style={{ height: 96 }}>
-                    {quarterlyTrend.map((q, i) => (
-                      <div
-                        key={`${q.quarter}-${q.year}`}
-                        className="flex-1 flex flex-col items-center min-w-0"
-                      >
-                        <div
-                          className="w-full flex items-end justify-center"
-                          style={{ height: 56 }}
-                        >
-                          <div
-                            className="w-full bg-[#3ea2d4]"
-                            style={{
-                              height: `${Math.max((q.spending / maxQuarterSpending) * 100, q.spending > 0 ? 4 : 0)}%`,
-                              minHeight: q.spending > 0 ? 2 : 0,
-                            }}
-                          />
-                        </div>
-                        <span className="type-xs text-gray-400 aicher-heading mt-1">
-                          {q.quarter}
-                        </span>
-                        <span className="type-xs text-gray-500 truncate max-w-full">
-                          {formatCompact(q.spending)}
-                        </span>
-                        <span className="type-xs text-gray-400">
-                          {i === 0 || q.quarter === 'Q1' ? String(q.year) : ' '}
-                        </span>
-                      </div>
-                    ))}
+            <div className="border-2 border-gray-200 p-3">
+              <h4 className="aicher-heading type-sm text-gray-900 mb-3">Issue Areas</h4>
+              <p className="type-xs text-gray-500 mb-3">
+                By number of filings mentioning each issue
+              </p>
+              <div className="space-y-2">
+                {industryBreakdown.slice(0, 5).map(ind => (
+                  <div key={ind.industry}>
+                    <div className="flex items-center justify-between mb-1">
+                      <SectorLink sector={ind.industry} className="type-xs" />
+                      <span className="type-xs text-gray-500 aicher-heading-wide">
+                        {ind.filingCount} {ind.filingCount === 1 ? 'filing' : 'filings'} (
+                        {ind.percentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div
+                      className="h-1 bg-[#3ea2d4]"
+                      style={{ width: `${(ind.percentage / maxIndustryPct) * 100}%` }}
+                      role="presentation"
+                    />
                   </div>
-                </div>
-              ) : (
-                <div />
-              )}
-              {hasIndustry && (
-                <div className="border-2 border-gray-200 p-3">
-                  <h4 className="aicher-heading type-sm text-gray-900 mb-3">Issue Areas</h4>
-                  <p className="type-xs text-gray-500 mb-3">
-                    By number of filings mentioning each issue
-                  </p>
-                  <div className="space-y-2">
-                    {industryBreakdown.slice(0, 5).map(ind => (
-                      <div key={ind.industry}>
-                        <div className="flex items-center justify-between mb-1">
-                          <SectorLink sector={ind.industry} className="type-xs" />
-                          <span className="type-xs text-gray-500 aicher-heading-wide">
-                            {ind.filingCount} {ind.filingCount === 1 ? 'filing' : 'filings'} (
-                            {ind.percentage.toFixed(0)}%)
-                          </span>
-                        </div>
-                        <div
-                          className="h-1 bg-[#3ea2d4]"
-                          style={{ width: `${(ind.percentage / maxIndustryPct) * 100}%` }}
-                          role="presentation"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           );
         })()}
@@ -400,54 +352,37 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
           );
         })()}
 
-      {/* Committee Breakdown */}
-      {hasLobbyingData &&
-        lobbying.committeeBreakdown.length > 0 &&
-        (() => {
-          const maxCommitteeSpending = lobbying.committeeBreakdown[0]?.totalSpending ?? 1;
-
-          return (
-            <div>
-              <h3 className="aicher-heading type-lg text-gray-900 mb-4">Committee Breakdown</h3>
-              <div className="space-y-3">
-                {lobbying.committeeBreakdown.map(cb => (
-                  <div key={cb.committee} className="border-2 border-gray-200 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <span className="type-sm font-medium text-gray-900">{cb.committee}</span>
-                        <span className="type-xs text-gray-400 ml-2">
-                          {cb.companyCount} org{cb.companyCount !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <span className="type-sm font-medium text-gray-900 aicher-heading-wide flex-shrink-0">
-                        {formatCompact(cb.totalSpending)}
+      {/* Committee Breakdown — org counts and issues only; per-committee dollar
+          totals are withheld for the same sample-coverage reason as the overall total */}
+      {hasLobbyingData && lobbying.committeeBreakdown.length > 0 && (
+        <div>
+          <h3 className="aicher-heading type-lg text-gray-900 mb-4">Committee Breakdown</h3>
+          <div className="space-y-3">
+            {lobbying.committeeBreakdown.map(cb => (
+              <div key={cb.committee} className="border-2 border-gray-200 p-3">
+                <div className="min-w-0">
+                  <span className="type-sm font-medium text-gray-900">{cb.committee}</span>
+                  <span className="type-xs text-gray-400 ml-2">
+                    {cb.companyCount} org{cb.companyCount !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {cb.topIssues.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {cb.topIssues.map(issue => (
+                      <span
+                        key={issue}
+                        className="border-2 border-gray-200 px-2 py-0.5 type-xs aicher-heading text-gray-600"
+                      >
+                        {issue}
                       </span>
-                    </div>
-                    {cb.totalSpending > 0 && (
-                      <div
-                        className="h-1 bg-[#3ea2d4] mt-2"
-                        style={{ width: `${(cb.totalSpending / maxCommitteeSpending) * 100}%` }}
-                        role="presentation"
-                      />
-                    )}
-                    {cb.topIssues.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {cb.topIssues.map(issue => (
-                          <span
-                            key={issue}
-                            className="border-2 border-gray-200 px-2 py-0.5 type-xs aicher-heading text-gray-600"
-                          >
-                            {issue}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          );
-        })()}
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Narrative + disclaimer from influence chain insight */}
       {hasChains && (

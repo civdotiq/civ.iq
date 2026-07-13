@@ -27,7 +27,9 @@ function getHeadline(data: BillIntelligenceInsight): {
 } {
   const sponsorPct = data.sponsorAnalysis?.sectorDonationPercentage ?? 0;
   const cosponsorPct = data.cosponsorSummary.avgSectorDonationPercentage;
-  const hasLobbying = data.relatedLobbyingSpending > 0;
+  // Gate on org count, not summed spend: relatedLobbyingSpending aggregates a
+  // ~0.1% LDA filing sample, so the dollar figure is misleading and not shown.
+  const hasLobbying = data.relatedLobbyingOrgs > 0;
   const sponsorName = data.sponsorAnalysis?.name ?? 'the sponsor';
   const hasVote = !!data.voteOutcome;
   const onCommittee = data.sponsorCommitteeConnection?.connected;
@@ -75,12 +77,11 @@ function getHeadline(data: BillIntelligenceInsight): {
     };
   }
 
-  // Notable: significant lobbying on related committees
+  // Notable: lobbying activity on related committees
   if (hasLobbying) {
-    const amt = formatDollars(data.relatedLobbyingSpending);
     const orgDetail = data.topLobbyingOrgs?.length ? `, led by ${data.topLobbyingOrgs[0]}` : '';
     return {
-      text: `No notable funding connection between the sponsor and related industries. ${data.relatedLobbyingOrgs} organizations spent ${amt} lobbying related committees${orgDetail}.`,
+      text: `No notable funding connection between the sponsor and related industries. ${data.relatedLobbyingOrgs} organizations filed lobbying disclosures on related committees${orgDetail}.`,
       notable: true,
     };
   }
@@ -137,7 +138,9 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
   const headline = getHeadline(data);
   const sponsorPct = data.sponsorAnalysis?.sectorDonationPercentage ?? 0;
   const cosponsorPct = data.cosponsorSummary.avgSectorDonationPercentage;
-  const hasLobbying = data.relatedLobbyingSpending > 0;
+  // Gate on org count, not summed spend: relatedLobbyingSpending aggregates a
+  // ~0.1% LDA filing sample, so the dollar figure is misleading and not shown.
+  const hasLobbying = data.relatedLobbyingOrgs > 0;
   const showDetails = headline.notable;
 
   return (
@@ -202,10 +205,11 @@ export function BillIntelligenceSection({ billId }: BillIntelligenceSectionProps
             {hasLobbying && (
               <div>
                 <div className="aicher-heading type-2xl text-gray-900">
-                  {formatDollars(data.relatedLobbyingSpending)}
+                  {data.relatedLobbyingOrgs}
                 </div>
                 <div className="type-xs text-gray-500">
-                  lobbying by {data.relatedLobbyingOrgs} organizations on related committees
+                  organizations filed lobbying disclosures on related committees (from recent
+                  filings)
                 </div>
               </div>
             )}

@@ -124,16 +124,18 @@ describe('LobbyingTab', () => {
     mockUseSWR.mockReset();
   });
 
-  it('renders summary stats with data', () => {
+  it('renders count-based summary stats and withholds the sample-based dollar total', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(screen.getByText('$5.0M')).toBeInTheDocument();
-    expect(screen.getByText('Total lobbying spending')).toBeInTheDocument();
-    expect(screen.getByText('Organizations lobbying')).toBeInTheDocument();
+    expect(screen.getByText('Organizations in recent filings')).toBeInTheDocument();
     expect(screen.getByText('Committees targeted')).toBeInTheDocument();
+    // The API still returns totalRelevantSpending ($5.0M) but the sample-based
+    // aggregate must not be rendered (PLAN-lobbying-corpus-2026-07.md Phase 0)
+    expect(screen.queryByText('Total lobbying spending')).not.toBeInTheDocument();
+    expect(screen.queryByText('$5.0M')).not.toBeInTheDocument();
   });
 
   it('renders MoneyFlowChain components for chains', () => {
@@ -215,7 +217,7 @@ describe('LobbyingTab', () => {
     expect(screen.getByText('Top Organizations')).toBeInTheDocument();
   });
 
-  it('renders committee breakdown', () => {
+  it('renders committee breakdown without per-committee dollar totals', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },
       { data: undefined, error: undefined, isLoading: false }
@@ -223,6 +225,8 @@ describe('LobbyingTab', () => {
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.getByText('Energy and Commerce')).toBeInTheDocument();
     expect(screen.getByText('Committee Breakdown')).toBeInTheDocument();
+    // Fixture committee totalSpending is $3.0M — must not render (sample-based)
+    expect(screen.queryByText('$3.0M')).not.toBeInTheDocument();
   });
 
   it('does not crash when chain data is an error-shaped object without chains', () => {
@@ -238,7 +242,7 @@ describe('LobbyingTab', () => {
     // Should render without throwing
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     // Lobbying data still renders
-    expect(screen.getByText('$5.0M')).toBeInTheDocument();
+    expect(screen.getByText('Top Organizations')).toBeInTheDocument();
     // No "Follow the Money" section since chains are absent
     expect(screen.queryByText('Follow the Money')).not.toBeInTheDocument();
   });
@@ -298,15 +302,14 @@ describe('LobbyingTab', () => {
     expect(climateTag.className).toContain('border-2');
   });
 
-  it('renders quarterly trend when summary data present', () => {
+  it('does not render the quarterly dollar trend even when the API returns it', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(screen.getByText('Quarterly Trend')).toBeInTheDocument();
-    expect(screen.getByText('Q1')).toBeInTheDocument();
-    expect(screen.getByText('Q4')).toBeInTheDocument();
+    expect(screen.queryByText('Quarterly Trend')).not.toBeInTheDocument();
+    expect(screen.queryByText('Q1')).not.toBeInTheDocument();
   });
 
   it('renders industry breakdown when summary data present', () => {
@@ -360,10 +363,10 @@ describe('LobbyingTab', () => {
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    // Quarterly trend should still show since Q1 has spending
-    expect(screen.getByText('Quarterly Trend')).toBeInTheDocument();
-    // Industry breakdown should be hidden since it's just "Other"
-    expect(screen.queryByText('Industry Breakdown')).not.toBeInTheDocument();
+    // Issue areas hidden since the breakdown is just "Other"; the quarterly
+    // dollar trend never renders anymore
+    expect(screen.queryByText('Issue Areas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Quarterly Trend')).not.toBeInTheDocument();
   });
 
   it('hides spending overview when summary is empty', () => {
@@ -383,6 +386,15 @@ describe('LobbyingTab', () => {
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
     expect(screen.queryByText('Quarterly Trend')).not.toBeInTheDocument();
-    expect(screen.queryByText('Industry Breakdown')).not.toBeInTheDocument();
+    expect(screen.queryByText('Issue Areas')).not.toBeInTheDocument();
+  });
+
+  it('frames the intro copy as a sample of recent filings', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    expect(screen.getByText(/sample of recent filings, not a complete tally/)).toBeInTheDocument();
   });
 });

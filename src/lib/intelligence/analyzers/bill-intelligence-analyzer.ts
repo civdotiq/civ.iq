@@ -602,9 +602,11 @@ async function generateNarrative(
       ? `Among ${cosponsorSummary.analyzedCosponsors} analyzed cosponsors (of ${cosponsorSummary.totalCosponsors} total), the average sector-related contribution percentage was ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}%.`
       : `Cosponsor contribution data is not available.`;
 
+  // Dollar amount omitted: lobbyingSpending sums a ~0.1% LDA filing sample
+  // (fetchFilingsByQuarter), so the figure is misleading (PLAN-lobbying-corpus-2026-07.md).
   const lobbyingInfo =
-    lobbyingSpending > 0
-      ? `${lobbyingOrgs} organizations spent $${lobbyingSpending.toLocaleString()} lobbying the committees this bill was referred to.`
+    lobbyingOrgs > 0
+      ? `${lobbyingOrgs} organizations filed lobbying disclosures on the committees this bill was referred to.`
       : '';
 
   // Build structured story facts block from enrichment data
@@ -727,7 +729,7 @@ function buildStatisticalNarrative(
   sectors: IndustrySector[],
   sponsor: MemberSectorResult | null,
   cosponsorSummary: BillIntelligenceInsight['cosponsorSummary'],
-  lobbyingSpending: number,
+  _lobbyingSpending: number,
   lobbyingOrgs: number,
   storyContext: StoryContext,
   sponsorCommitteeConnection?: BillIntelligenceInsight['sponsorCommitteeConnection'],
@@ -759,14 +761,14 @@ function buildStatisticalNarrative(
     );
   }
 
-  // Lobbying with org names
-  if (lobbyingSpending > 0) {
+  // Lobbying with org names — dollar omitted (sample-based, see fetchFilingsByQuarter)
+  if (lobbyingOrgs > 0) {
     const orgDetail =
       storyContext.topLobbyingOrgNames.length > 0
         ? `, led by ${storyContext.topLobbyingOrgNames[0]}`
         : '';
     parts.push(
-      `${lobbyingOrgs} organizations spent $${lobbyingSpending.toLocaleString()} lobbying related committees${orgDetail}.`
+      `${lobbyingOrgs} organizations filed lobbying disclosures on related committees${orgDetail}.`
     );
   }
 

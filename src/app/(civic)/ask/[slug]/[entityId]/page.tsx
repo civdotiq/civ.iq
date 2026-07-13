@@ -151,13 +151,10 @@ function buildFaqAnswer(
     }
     case 'committee-lobbying': {
       const orgCount = data.committeLobbying?.lobbying?.organizationCount;
-      const totalSpending = data.committeLobbying?.lobbying?.totalSpending;
-      if (orgCount && totalSpending) {
-        const amount =
-          totalSpending >= 1_000_000
-            ? `$${(totalSpending / 1_000_000).toFixed(1)}M`
-            : `$${(totalSpending / 1_000).toFixed(0)}K`;
-        return `${orgCount} organizations spent ${amount} on lobbying that mentions the ${repName}.`;
+      if (orgCount) {
+        // Dollar totals omitted: the committee analyzer aggregates a ~0.1% LDA
+        // filing sample, so summed amounts are misleading (PLAN-lobbying-corpus-2026-07.md).
+        return `${orgCount} organizations filed lobbying disclosures that mention the ${repName}.`;
       }
       return `Lobbying data for the ${repName} is sourced from Senate LDA disclosures.`;
     }

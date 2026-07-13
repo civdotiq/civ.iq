@@ -51,8 +51,9 @@ interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
+  // totalLobbyingSpending also exists in the response but is intentionally not
+  // rendered — it aggregates a small sample of recent LDA filings
   metrics: {
-    totalLobbyingSpending: number;
     activePACCount: number;
     activeLobbyingOrgCount: number;
   };
@@ -148,8 +149,10 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
           </p>
         )}
 
+        {/* Sector-wide lobbying dollar totals are withheld: they aggregate a small
+            sample of recent LDA filings (PLAN-lobbying-corpus-2026-07.md Phase 0) */}
         {orgsData?.metrics && (
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div>
               <span className="text-xs tracking-wider text-gray-500 uppercase">Active PACs</span>
               <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -160,19 +163,6 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
               <span className="text-xs tracking-wider text-gray-500 uppercase">Lobbying orgs</span>
               <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {orgsData.metrics.activeLobbyingOrgCount}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs tracking-wider text-gray-500 uppercase">
-                Lobbying spending
-              </span>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                $
-                {orgsData.metrics.totalLobbyingSpending >= 1_000_000
-                  ? `${(orgsData.metrics.totalLobbyingSpending / 1_000_000).toFixed(1)}M`
-                  : orgsData.metrics.totalLobbyingSpending >= 1_000
-                    ? `${(orgsData.metrics.totalLobbyingSpending / 1_000).toFixed(0)}K`
-                    : orgsData.metrics.totalLobbyingSpending.toLocaleString()}
               </p>
             </div>
           </div>
@@ -241,8 +231,9 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
                 Major organizations
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                These are the largest political action committees and lobbying organizations active
-                in {displayName.toLowerCase()}, based on public FEC and Senate disclosure filings.
+                Political action committees and lobbying organizations active in{' '}
+                {displayName.toLowerCase()}, from recent public FEC and Senate disclosure filings.
+                Amounts reflect spending reported on those filings, not sector-wide totals.
               </p>
 
               {orgsData.topPACs.length > 0 && (

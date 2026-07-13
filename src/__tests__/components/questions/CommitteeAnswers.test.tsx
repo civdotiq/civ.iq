@@ -410,8 +410,13 @@ describe('CommitteeLobbyingAnswer', () => {
     expect(screen.getByText('Top lobbying organizations')).toBeInTheDocument();
     expect(screen.getByText('Acme Industries Inc')).toBeInTheDocument();
     expect(screen.getByText('Beta Corporation')).toBeInTheDocument();
-    expect(screen.getByText('Spending by issue')).toBeInTheDocument();
+    expect(screen.getByText('Activity by issue')).toBeInTheDocument();
     expect(screen.getByText('Related bills')).toBeInTheDocument();
+    // Sample-based dollar totals must not render (PLAN-lobbying-corpus-2026-07.md Phase 0b)
+    expect(screen.queryByText(/\$12\.5M/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Total lobbying spending mentioning this committee')
+    ).not.toBeInTheDocument();
   });
 
   it('renders a rich fallback when lobbying insight is null (common path)', () => {
