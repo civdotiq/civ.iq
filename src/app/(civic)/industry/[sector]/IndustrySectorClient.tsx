@@ -51,11 +51,17 @@ interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
-  // totalLobbyingSpending also exists in the response but is intentionally not
-  // rendered — it aggregates a small sample of recent LDA filings
+  // metrics.totalLobbyingSpending is a small sample and not rendered; use
+  // corpusLobbying below for the real per-sector total.
   metrics: {
     activePACCount: number;
     activeLobbyingOrgCount: number;
+  };
+  corpusLobbying?: {
+    windowTotal: number;
+    quarters: string[];
+    quarterly: Array<{ quarter: string; total: number }>;
+    byIssue: Array<{ code: string; label: string; windowTotal: number }>;
   };
   metadata: {
     generatedAt: string;
@@ -149,10 +155,23 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
           </p>
         )}
 
-        {/* Sector-wide lobbying dollar totals are withheld: they aggregate a small
-            sample of recent LDA filings (PLAN-lobbying-corpus-2026-07.md Phase 0) */}
+        {/* Lobbying spend is corpus-backed (complete Senate LDA corpus, across
+            the corpus window); the sample-based figure removed in Phase 0b is
+            never rendered. */}
         {orgsData?.metrics && (
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div
+            className={`grid ${orgsData.corpusLobbying ? 'grid-cols-3' : 'grid-cols-2'} gap-4 pt-4 border-t border-gray-200 dark:border-gray-700`}
+          >
+            {orgsData.corpusLobbying && (
+              <div>
+                <span className="text-xs tracking-wider text-gray-500 uppercase">
+                  Lobbying spend
+                </span>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {formatCorpusDollars(orgsData.corpusLobbying.windowTotal)}
+                </p>
+              </div>
+            )}
             <div>
               <span className="text-xs tracking-wider text-gray-500 uppercase">Active PACs</span>
               <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -422,6 +441,11 @@ function formatPenalty(amount: number): string {
   if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
   if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
   return `$${amount.toLocaleString()}`;
+}
+
+/** Compact dollar format for corpus-backed lobbying totals. */
+function formatCorpusDollars(amount: number): string {
+  return formatPenalty(amount);
 }
 
 function EnforcementLandscape({

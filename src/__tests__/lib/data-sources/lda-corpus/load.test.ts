@@ -7,6 +7,7 @@ import { readFile } from 'node:fs/promises';
 import {
   getCommitteeCorpusTotals,
   getCorpusMeta,
+  getSectorCorpusTotals,
   __resetCorpusCache,
 } from '@/lib/data-sources/lda-corpus/load';
 import type { LdaAggregates } from '@/lib/data-sources/lda-corpus/types';
@@ -38,7 +39,35 @@ const FIXTURE: LdaAggregates = {
     cq('SSAS', '2025-Q1', 5_000_000),
     cq('SSAS', '2025-Q2', 5_000_000),
   ],
-  issues: [],
+  issues: [
+    {
+      code: 'DEF',
+      label: 'Defense',
+      quarter: '2025-Q1',
+      total: 8_000_000,
+      filingCount: 5,
+      orgCount: 5,
+      topOrgs: [],
+    },
+    {
+      code: 'DEF',
+      label: 'Defense',
+      quarter: '2025-Q2',
+      total: 2_000_000,
+      filingCount: 3,
+      orgCount: 3,
+      topOrgs: [],
+    },
+    {
+      code: 'HOM',
+      label: 'Homeland Security',
+      quarter: '2025-Q1',
+      total: 1_000_000,
+      filingCount: 2,
+      orgCount: 2,
+      topOrgs: [],
+    },
+  ],
   national: [],
   meta: {
     totalFilingsFetched: 100,
@@ -87,5 +116,26 @@ describe('lda-corpus loader', () => {
     const meta = await getCorpusMeta();
     expect(meta!.quarters).toEqual(['2025-Q1', '2025-Q2']);
     expect(meta!.latestFilingPosted).toBe('2026-07-13T00:00:00-04:00');
+  });
+
+  it('sums sector totals across its issue codes with a per-issue breakdown', async () => {
+    mockReadFile.mockResolvedValue(JSON.stringify(FIXTURE));
+    const totals = await getSectorCorpusTotals(['DEF', 'HOM']);
+    expect(totals).not.toBeNull();
+    // DEF: 8M + 2M = 10M; HOM: 1M → window 11M
+    expect(totals!.windowTotal).toBe(11_000_000);
+    // Quarterly: Q1 = 8M + 1M = 9M, Q2 = 2M
+    expect(totals!.quarterly).toEqual([
+      { quarter: '2025-Q1', total: 9_000_000 },
+      { quarter: '2025-Q2', total: 2_000_000 },
+    ]);
+    // byIssue sorted by total desc: DEF (10M) then HOM (1M)
+    expect(totals!.byIssue.map(i => i.code)).toEqual(['DEF', 'HOM']);
+    expect(totals!.byIssue[0]!.windowTotal).toBe(10_000_000);
+  });
+
+  it('returns null when none of the sector codes appear in the corpus', async () => {
+    mockReadFile.mockResolvedValue(JSON.stringify(FIXTURE));
+    expect(await getSectorCorpusTotals(['TAX', 'HCR'])).toBeNull();
   });
 });

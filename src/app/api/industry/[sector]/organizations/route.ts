@@ -21,6 +21,7 @@ import {
 } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
+import { getSectorCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,14 @@ interface IndustryOrganizationsResponse {
     totalLobbyingSpending: number;
     activePACCount: number;
     activeLobbyingOrgCount: number;
+  };
+  // Corpus-backed lobbying totals for the sector's issue areas (complete Senate
+  // LDA corpus, not the sample that feeds topLobbyingOrgs/totalLobbyingSpending).
+  corpusLobbying?: {
+    windowTotal: number;
+    quarters: string[];
+    quarterly: Array<{ quarter: string; total: number }>;
+    byIssue: Array<{ code: string; label: string; windowTotal: number }>;
   };
   metadata: {
     generatedAt: string;
@@ -195,6 +204,8 @@ export async function GET(
           0
         );
 
+        const corpusTotals = await getSectorCorpusTotals(getSectorIssueCodes(sector));
+
         return {
           topPACs,
           topLobbyingOrgs,
@@ -203,6 +214,16 @@ export async function GET(
             activePACCount: topPACs.length,
             activeLobbyingOrgCount: lobbyingMap.size,
           },
+          ...(corpusTotals
+            ? {
+                corpusLobbying: {
+                  windowTotal: corpusTotals.windowTotal,
+                  quarters: corpusTotals.quarters,
+                  quarterly: corpusTotals.quarterly,
+                  byIssue: corpusTotals.byIssue,
+                },
+              }
+            : {}),
           metadata: {
             generatedAt: new Date().toISOString(),
             dataSources,

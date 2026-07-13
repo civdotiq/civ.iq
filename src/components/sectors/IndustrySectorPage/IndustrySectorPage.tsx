@@ -286,17 +286,12 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
         </aside>
       </div>
 
-      {/* Headline stats */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-          borderBottom: '2px solid var(--ink)',
-        }}
-      >
-        {/* Sector-wide lobbying spend stat removed: it aggregated a small sample of
-            recent LDA filings (PLAN-lobbying-corpus-2026-07.md Phase 0) */}
-        {[
+      {/* Headline stats. Lobbying spend is corpus-backed (complete Senate LDA
+          corpus) and only shown when available; the sample-based figure removed
+          in Phase 0b is never rendered. */}
+      {(() => {
+        const corpusSpend = orgs?.corpusLobbying;
+        const stats = [
           {
             key: 'cycle-contribs',
             label: 'Cycle contributions',
@@ -306,6 +301,17 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
               : 'Loading…',
             color: 'blue' as const,
           },
+          ...(corpusSpend
+            ? [
+                {
+                  key: 'lobby-spend',
+                  label: 'Lobbying spend',
+                  value: formatCompactDollars(corpusSpend.windowTotal),
+                  caption: `LDA issue areas · ${corpusSpend.quarters[0]}–${corpusSpend.quarters[corpusSpend.quarters.length - 1]}`,
+                  color: 'ink' as const,
+                },
+              ]
+            : []),
           {
             key: 'active-pacs',
             label: 'Active PACs',
@@ -329,18 +335,35 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
               : 'Loading…',
             color: 'ink' as const,
           },
-        ].map((s, i) => (
+        ];
+        return (
           <div
-            key={s.key}
             style={{
-              padding: '20px 18px',
-              borderLeft: i === 0 ? 0 : '1px solid var(--line)',
+              display: 'grid',
+              gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))`,
+              borderBottom: '2px solid var(--ink)',
             }}
           >
-            <CqStat label={s.label} value={s.value} caption={s.caption} color={s.color} size={28} />
+            {stats.map((s, i) => (
+              <div
+                key={s.key}
+                style={{
+                  padding: '20px 18px',
+                  borderLeft: i === 0 ? 0 : '1px solid var(--line)',
+                }}
+              >
+                <CqStat
+                  label={s.label}
+                  value={s.value}
+                  caption={s.caption}
+                  color={s.color}
+                  size={28}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
 
       {/* Party split bar */}
       <section style={{ marginTop: 28 }}>

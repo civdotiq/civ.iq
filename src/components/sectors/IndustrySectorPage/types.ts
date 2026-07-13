@@ -55,11 +55,18 @@ export interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
-  // totalLobbyingSpending also exists in the response but is intentionally not
-  // rendered — it aggregates a small sample of recent LDA filings
+  // metrics.totalLobbyingSpending also exists but is a small sample and not
+  // rendered; use corpusLobbying below for the real per-sector total.
   metrics: {
     activePACCount: number;
     activeLobbyingOrgCount: number;
+  };
+  // Corpus-backed lobbying totals for the sector's issue areas (complete corpus).
+  corpusLobbying?: {
+    windowTotal: number;
+    quarters: string[];
+    quarterly: Array<{ quarter: string; total: number }>;
+    byIssue: Array<{ code: string; label: string; windowTotal: number }>;
   };
   metadata: {
     generatedAt: string;

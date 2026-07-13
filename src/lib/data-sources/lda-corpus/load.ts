@@ -17,7 +17,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { CommitteeQuarterAgg, LdaAggregates } from './types';
+import type { CommitteeQuarterAgg, IssueQuarterAgg, LdaAggregates } from './types';
 
 interface CorpusIndex {
   aggregates: LdaAggregates;
@@ -27,6 +27,8 @@ interface CorpusIndex {
   committeeWindowTotal: Map<string, number>;
   /** Median committee window total, for peer baselines. */
   peerMedianTotal: number;
+  /** LDA issue code → its quarter rows, oldest quarter first. */
+  byIssue: Map<string, IssueQuarterAgg[]>;
 }
 
 // undefined = not yet loaded; null = corpus unavailable.
@@ -54,11 +56,19 @@ function buildIndex(aggregates: LdaAggregates): CorpusIndex {
       rows.reduce((sum, r) => sum + r.total, 0)
     );
   }
+  const byIssue = new Map<string, IssueQuarterAgg[]>();
+  for (const row of aggregates.issues) {
+    const rows = byIssue.get(row.code) ?? [];
+    rows.push(row);
+    byIssue.set(row.code, rows);
+  }
+  for (const rows of byIssue.values()) rows.sort((a, b) => a.quarter.localeCompare(b.quarter));
   return {
     aggregates,
     byCommittee,
     committeeWindowTotal,
     peerMedianTotal: median([...committeeWindowTotal.values()]),
+    byIssue,
   };
 }
 
@@ -106,6 +116,54 @@ export async function getCommitteeCorpusTotals(
       medianTotal: idx.peerMedianTotal,
       ratioToMedian: idx.peerMedianTotal > 0 ? windowTotal / idx.peerMedianTotal : 0,
     },
+  };
+}
+
+export interface SectorCorpusTotals {
+  /** Sum across the sector's issue codes and quarters. Filings citing several of
+   *  the sector's issues count once per issue, so this is spending on filings
+   *  touching the sector's issue areas, not a deduped partition. */
+  windowTotal: number;
+  quarterly: Array<{ quarter: string; total: number }>;
+  byIssue: Array<{ code: string; label: string; windowTotal: number }>;
+  quarters: string[];
+}
+
+/**
+ * Corpus-backed lobbying totals for a sector, given its LDA issue codes
+ * (map a sector to codes with getSectorIssueCodes). Returns null if the corpus
+ * is unavailable or none of the codes appear in it.
+ */
+export async function getSectorCorpusTotals(
+  issueCodes: string[]
+): Promise<SectorCorpusTotals | null> {
+  const idx = await loadIndex();
+  if (!idx) return null;
+
+  const quarterTotals = new Map<string, number>();
+  const byIssue: SectorCorpusTotals['byIssue'] = [];
+  for (const code of issueCodes) {
+    const rows = idx.byIssue.get(code);
+    if (!rows || rows.length === 0) continue;
+    let issueTotal = 0;
+    for (const r of rows) {
+      quarterTotals.set(r.quarter, (quarterTotals.get(r.quarter) ?? 0) + r.total);
+      issueTotal += r.total;
+    }
+    byIssue.push({ code, label: rows[0]!.label, windowTotal: issueTotal });
+  }
+  if (byIssue.length === 0) return null;
+
+  byIssue.sort((a, b) => b.windowTotal - a.windowTotal);
+  const quarterly = idx.aggregates.quarters.map(q => ({
+    quarter: q,
+    total: quarterTotals.get(q) ?? 0,
+  }));
+  return {
+    windowTotal: [...quarterTotals.values()].reduce((a, b) => a + b, 0),
+    quarterly,
+    byIssue,
+    quarters: idx.aggregates.quarters,
   };
 }
 
