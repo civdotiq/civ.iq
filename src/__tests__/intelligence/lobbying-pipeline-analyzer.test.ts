@@ -23,6 +23,15 @@ jest.mock('@/lib/cache/redis-client', () => ({
   }),
 }));
 
+// Corpus loader — default unavailable so the analyzer uses the sample + cached
+// peer path (the historical behavior these tests cover). One test overrides it.
+const mockGetCommitteeCorpusTotals = jest.fn().mockResolvedValue(null);
+const mockGetAllCommitteeWindowTotals = jest.fn().mockResolvedValue(null);
+jest.mock('@/lib/data-sources/lda-corpus/load', () => ({
+  getCommitteeCorpusTotals: (...args: unknown[]) => mockGetCommitteeCorpusTotals(...args),
+  getAllCommitteeWindowTotals: (...args: unknown[]) => mockGetAllCommitteeWindowTotals(...args),
+}));
+
 jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -188,13 +197,36 @@ describe('analyzeLobbyingPipeline', () => {
     }
   });
 
-  it('uses mget for peer comparison', async () => {
+  it('uses mget for peer comparison when the corpus is unavailable', async () => {
     mockRedisMget.mockResolvedValue([100000, 200000, 300000, 150000, 250000]);
 
     const result = await analyzeLobbyingPipeline('HSEN');
 
     expect(result).not.toBeNull();
     expect(mockRedisMget).toHaveBeenCalled();
+  });
+
+  it('prefers the corpus total and corpus peers over the sample when available', async () => {
+    mockGetCommitteeCorpusTotals.mockResolvedValueOnce({ windowTotal: 6_000_000_000 });
+    mockGetAllCommitteeWindowTotals.mockResolvedValueOnce(
+      new Map([
+        ['HSEN', 6_000_000_000],
+        ['HSAG', 1_000_000_000],
+        ['HSWM', 4_000_000_000],
+        ['HSBA', 3_000_000_000],
+        ['HSJU', 800_000_000],
+        ['HSAS', 2_000_000_000],
+      ])
+    );
+
+    const result = await analyzeLobbyingPipeline('HSEN');
+
+    expect(result).not.toBeNull();
+    // Corpus total replaces the sample-derived figure
+    expect(result!.totalSpending).toBe(6_000_000_000);
+    // Peer ranking comes from the corpus, not the cached sample scores
+    expect(mockRedisMget).not.toHaveBeenCalled();
+    expect(result!.peerComparison).not.toBeNull();
   });
 
   it('includes InsightBase fields', async () => {

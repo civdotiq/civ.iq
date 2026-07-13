@@ -218,6 +218,16 @@ export async function getSectorCorpusTotals(
   };
 }
 
+/**
+ * All committee window totals (committeeCode → summed spend), or null if the
+ * corpus is unavailable. For peer rankings across committees.
+ */
+export async function getAllCommitteeWindowTotals(): Promise<Map<string, number> | null> {
+  const idx = await loadIndex();
+  if (!idx) return null;
+  return new Map(idx.committeeWindowTotal);
+}
+
 /** Corpus metadata (quarters covered, freshness) or null if unavailable. */
 export async function getCorpusMeta(): Promise<Pick<
   LdaAggregates,

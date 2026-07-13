@@ -38,6 +38,8 @@ const nextConfig = {
     '/api/industry/[sector]/organizations': ['./data/lda-aggregates.json'],
     // The committee ask-page reads it for corpus-backed committee totals.
     '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json'],
+    // The committee intelligence route's analyzer ranks peers off the corpus.
+    '/api/intelligence/committee/[committeeId]': ['./data/lda-aggregates.json'],
   },
   // Remove console logs in production for better performance
   compiler: {

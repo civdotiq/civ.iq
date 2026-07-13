@@ -39,6 +39,10 @@ import {
 import { senateLobbyingAPI, type LobbyingFiling } from '@/lib/data-sources/senate-lobbying-api';
 import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
+  getCommitteeCorpusTotals,
+  getAllCommitteeWindowTotals,
+} from '@/lib/data-sources/lda-corpus/load';
+import {
   resolveFilingEntities,
   getResolvedCommittees,
 } from '../entity-resolution/lobbying-committee-resolver';
@@ -123,6 +127,12 @@ async function computeAndCache(
 
   // 4. Compute statistics
   const stats = await computeStatistics(data);
+
+  // 4b. Prefer the complete corpus total over the ~0.1% sample for the dollar
+  // figure that drives peer ranking, the signal, and caching. The sample still
+  // supplies top organizations, issue alignments, and bill matches.
+  const corpusTotal = (await getCommitteeCorpusTotals(committeeCode))?.windowTotal ?? null;
+  if (corpusTotal !== null) stats.totalSpending = corpusTotal;
 
   // 5. Peer comparison
   const peer = await computePeerComparison(committeeCode, stats.totalSpending, committeeMapping);
@@ -544,18 +554,26 @@ async function computePeerComparison(
   const sameChamber = ALL_COMMITTEE_MAPPINGS.filter(
     m => m.chamber === chamber && m.committeeCode !== committeeCode
   );
+  if (sameChamber.length < MIN_PEERS) return null;
 
+  // Prefer the complete corpus: every committee has an accurate window total, so
+  // the ranking is stable and available, unlike the cached ~0.1% sample scores.
+  const corpusTotals = await getAllCommitteeWindowTotals();
+  if (corpusTotals) {
+    const peerScores = sameChamber
+      .map(p => corpusTotals.get(p.committeeCode))
+      .filter((v): v is number => typeof v === 'number');
+    if (peerScores.length >= MIN_PEERS) {
+      return peerComparison(totalSpending, peerScores, `${chamber} committees`);
+    }
+  }
+
+  // Fallback: cached sample scores from prior analyzer runs.
   try {
     const peerCacheKeys = sameChamber.map(p => lobbyingScoreCacheKey(p.committeeCode));
-    if (peerCacheKeys.length < MIN_PEERS) return null;
-
     const values = await getRedisCache().mget<number>(peerCacheKeys);
     const peerScores = values.filter((v): v is number => v !== null && typeof v === 'number');
-
-    if (peerScores.length < MIN_PEERS) {
-      return null;
-    }
-
+    if (peerScores.length < MIN_PEERS) return null;
     return peerComparison(totalSpending, peerScores, `${chamber} committees`);
   } catch {
     return null;
