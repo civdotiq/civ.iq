@@ -27,6 +27,11 @@ const nextConfig = {
       './models/**/*',
       './node_modules/onnxruntime-web/**/*',
     ],
+    // The LDA corpus status route and the health freshness canary read this
+    // sidecar at runtime; the tracer won't infer the fs read, so ship it with
+    // those functions explicitly.
+    '/api/lda/**': ['./data/lda-aggregates.meta.json'],
+    '/api/health': ['./data/lda-aggregates.meta.json'],
   },
   // Remove console logs in production for better performance
   compiler: {

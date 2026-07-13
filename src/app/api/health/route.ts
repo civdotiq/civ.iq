@@ -10,6 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 
@@ -606,6 +608,50 @@ function skippedResult(source: SourceDefinition): SourceResult {
   };
 }
 
+/** Corpus is regenerated weekly; two missed runs (14 days) is a real stall. */
+const LDA_CORPUS_STALE_HOURS = 336;
+
+/**
+ * Content-freshness canary for the committed LDA corpus. Reads the meta sidecar
+ * directly (no self-HTTP) so it works in dev and prod: reports `down` when the
+ * corpus was never generated and `stale` when the weekly mirror has stopped
+ * refreshing it. Probes content freshness, not reachability (Nostr-audit lesson).
+ */
+async function checkLdaCorpus(): Promise<SourceResult> {
+  const start = Date.now();
+  const base: Pick<SourceResult, 'name' | 'tier' | 'httpStatus'> = {
+    name: 'LDA Corpus',
+    tier: 'standard',
+    httpStatus: null,
+  };
+  try {
+    const raw = await readFile(join(process.cwd(), 'data/lda-aggregates.meta.json'), 'utf8');
+    const meta = JSON.parse(raw) as { generatedAt?: string; latestFilingPosted?: string | null };
+    const generatedAt = meta.generatedAt ?? null;
+    const ageHours = generatedAt
+      ? (Date.now() - new Date(generatedAt).getTime()) / (1000 * 60 * 60)
+      : Number.POSITIVE_INFINITY;
+    const stale = ageHours > LDA_CORPUS_STALE_HOURS;
+    return {
+      ...base,
+      status: stale ? 'stale' : 'ok',
+      responseTimeMs: Date.now() - start,
+      lastSuccessfulFetch: generatedAt,
+      error: stale
+        ? `Corpus stale: last generated ${generatedAt} (${Math.round(ageHours / 24)} days ago)`
+        : null,
+    };
+  } catch {
+    return {
+      ...base,
+      status: 'down',
+      responseTimeMs: Date.now() - start,
+      lastSuccessfulFetch: null,
+      error: 'LDA corpus not generated — run the lda-corpus-mirror workflow',
+    };
+  }
+}
+
 // ── Overall Health ──────────────────────────────────────────────────
 
 type OverallHealth = 'healthy' | 'degraded' | 'critical';
@@ -661,7 +707,8 @@ export async function GET(_request: NextRequest) {
       skippedResult(s)
     );
 
-    const allResults = [...probeResults, ...skippedResults];
+    const ldaCorpusResult = await checkLdaCorpus();
+    const allResults = [...probeResults, ...skippedResults, ldaCorpusResult];
 
     // Redis status
     const redis = getRedisCache();

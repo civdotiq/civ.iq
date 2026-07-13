@@ -1,0 +1,127 @@
+name: Mirror LDA Lobbying Corpus
+
+# The app's request-time code fetches only the first API page (~25 of ~28,000
+# filings/quarter — a ~0.1% sample), so its lobbying dollar totals are
+# meaningless. There is no live bulk dump for recent quarters
+# (soprweb.senate.gov stops at 2022 Q1), so this workflow pages the Senate LDA
+# REST API in full off the serverless request path, aggregates it, and commits
+# data/lda-aggregates.json for the app to read (Phase 2). Requires the free
+# registered key LDA_API_KEY (repository secret) to lift the anonymous rate
+# limit — see PLAN-lobbying-corpus-2026-07.md.
+
+on:
+  schedule:
+    # Weekly, Monday 07:30 UTC. Quarterly filings post continuously; a weekly
+    # refresh keeps the corpus current without hammering the API.
+    - cron: '30 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      quarters:
+        description: 'Number of quarters to mirror'
+        required: false
+        default: '8'
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # Full 8-quarter mirror pages ~9,000 requests at ~120/min; allow headroom.
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Mirror the LDA corpus into data/lda-aggregates.json
+        env:
+          LDA_API_KEY: ${{ secrets.LDA_API_KEY }}
+        run: npx tsx scripts/sync-lda-corpus.ts --quarters ${{ inputs.quarters || '8' }}
+
+      - name: Commit updated aggregates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/lda-aggregates.json; then
+            echo "No change to data/lda-aggregates.json"
+          else
+            git add data/lda-aggregates.json
+            git commit -m "chore(lobbying): refresh LDA corpus aggregates [skip ci]"
+            git push
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `A common cause is a missing or revoked LDA_API_KEY secret.`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }
