@@ -79,6 +79,8 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 | Regulations.gov            | Public comments on proposed rules                           |
 | Census TIGER/Line          | Congressional and state district boundaries                 |
 
+The table lists the primary sources. Additional federal agency datasets — CDC PLACES, CMS, Medicaid, FEMA, FBI UCR, FDIC, VA, Treasury, CFPB, NHTSA, College Scorecard, and more — power district and intelligence features, for **26 live government data sources** in total. The canonical, continuously verified list is [docs/COVERAGE.md](docs/COVERAGE.md).
+
 No data is fabricated, scraped, or generated.
 
 ## Setup
