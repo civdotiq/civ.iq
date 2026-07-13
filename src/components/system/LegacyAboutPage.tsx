@@ -78,7 +78,7 @@ export function LegacyAboutPage() {
           </div>
 
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">18</div>
+            <div className="text-3xl font-bold text-black mb-grid-1">26</div>
             <h2 className="text-lg font-semibold text-black mb-grid-2">Government Data Sources</h2>
             <p className="text-gray-600 text-sm">
               Congress.gov, FEC, Census Bureau, Federal Register, Senate lobbying disclosures,

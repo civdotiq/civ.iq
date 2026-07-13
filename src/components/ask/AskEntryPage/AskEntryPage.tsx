@@ -167,7 +167,7 @@ export function AskEntryPage({ initialQuery = '', asof }: AskEntryPageProps) {
       crumbs={['Ask', 'Reference Q&A']}
       crumbRight={
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg3)' }}>
-          Indexed {today} · 19 sources
+          Indexed {today} · 26 sources
         </span>
       }
     >
