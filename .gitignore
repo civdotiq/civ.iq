@@ -43,12 +43,20 @@ next-env.d.ts
 .claude/
 CLAUDE.md
 
-# Private strategy & grant documents
+# Private working docs — plans, prompts, briefs, notes, audits (local-only)
 GRANT-*.md
 2026_funding_opportunities.md
 STRATEGY-*.md
-PLAN-ml-*.md
-PLAN-next-*.md
+PLAN-*.md
+PROMPT-*.md
+PROMPTS-*.md
+BRIEF-*.md
+NOTE-*.md
+FIX-*.md
+*_AUDIT_*.md
+*-AUDIT-*.md
+AUDIT-*.md
+GEO-ANALYSIS.md
 
 # Stray docs in scripts
 scripts/*.md

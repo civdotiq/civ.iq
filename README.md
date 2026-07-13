@@ -53,7 +53,7 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 | ------------------------------------------------------ | --------------------------------------------------------------- |
 | [OpenAPI spec](public/openapi.json)                    | 39 paths, 29 schemas — generate clients in any language         |
 | [@civiq/sdk](packages/sdk)                             | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
-| [MCP server](/api/mcp)                                 | 16 tools for AI assistants (Claude, Cursor, etc.)               |
+| [MCP server](/api/mcp)                                 | 47 tools for AI assistants (Claude, Cursor, etc.)               |
 | [Atom feeds](/api/feed/bills/latest)                   | RSS-compatible feeds for bills, members, districts, committees  |
 | [Embeddable widgets](https://civdotiq.org/open/embeds) | Drop-in HTML for legislator cards, district lookup, bill status |
 | [llms.txt](public/llms.txt)                            | AI-discoverable documentation                                   |
@@ -190,61 +190,17 @@ Three packages are extracted as standalone npm workspace packages:
 ## Commands
 
 ```bash
-# Development
-npm run dev                          # Dev server at localhost:3000
-npm run build                        # Production build
-npm run lint                         # ESLint
-npm run lint:fix                     # ESLint with auto-fix
-npm run type-check                   # TypeScript strict check
-npm run type-check:watch             # TypeScript watch mode
-
-# Testing
-npm test                             # Run all tests (Jest)
-npm run test:watch                   # Watch mode (Vitest)
-npm run test:coverage                # Coverage report
-npm run test:ci                      # CI mode with coverage
-npm run test:e2e                     # Playwright end-to-end tests
-npm run test:e2e:ui                  # Playwright with UI
-npm run test:e2e:headed              # Playwright in headed browser
-
-# Validation
-npm run validate:all                 # lint + type-check + test + build
-npm run validate:production          # Production API validation
-npm run validate:production:critical # Critical-only production checks
-npm run validate:production:parallel # Parallel production validation
-npm run diagnose:apis                # Test API connectivity
-
-# Performance
-npm run perf:benchmark               # Run performance benchmarks
-npm run perf:analyze                 # Bundle analysis build
-npm run perf:baseline                # Save benchmark as baseline
-npm run test:performance             # Performance test suite
-npm run test:performance:quick       # Quick performance baseline
-npm run test:load                    # Load testing
-npm run test:redis                   # Redis performance test
-
-# Data & ML
-npm run collect:training-data        # Collect ML training data
-npm run generate:embeddings          # Generate sector embedding vectors
-npm run seed-data                    # Seed Congress data
-npm run process-census               # Process Census data
-npm run process-district-boundaries  # Process district GeoJSON/PMTiles
-npm run process:state-districts      # Process state legislative districts
-npm run process:mobile-pmtiles       # Generate mobile-optimized PMTiles
-npm run validate-mappings            # Validate ZIP-to-district mappings
-npm run validate-districts           # Validate district data
-
-# Security
-npm run security:audit               # npm audit (moderate level)
-npm run security:full                # Full security scan
-npm run security:emergency           # Emergency vulnerability fix
-
-# Utilities
-npm run analyze                      # Next.js bundle analyzer
-npm run clean                        # Remove .next and node_modules
-npm run clean:install                # Clean + reinstall
-npm run flatten                      # Flatten codebase to XML
+npm run dev            # Dev server at localhost:3000
+npm run build          # Production build
+npm run lint           # ESLint
+npm run type-check     # TypeScript strict check
+npm test               # Run all tests (Jest)
+npm run test:e2e       # Playwright end-to-end tests
+npm run validate:all   # lint + type-check + test + build
+npm run diagnose:apis  # Test API connectivity
 ```
+
+Additional scripts for performance benchmarking, data/ML processing, and security scanning are defined in [`package.json`](package.json).
 
 ## Contributing
 
