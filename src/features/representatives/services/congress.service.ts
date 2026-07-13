@@ -28,6 +28,7 @@ import {
   getNextSenateElectionFromTermEnd,
 } from '@/lib/data/congressional-constants';
 import { getFileCache } from '@/lib/cache/file-cache';
+import { getCommitteeName } from '@/lib/data/committee-names';
 import fs from 'fs';
 import path from 'path';
 
@@ -770,7 +771,10 @@ export async function getEnhancedRepresentative(
         ?.map(membership => {
           const committee = committees.find(c => c.thomas_id === membership.thomas_id);
           return {
-            name: committee?.name || membership.thomas_id,
+            // Subcommittees are absent from the parent-committee roster, so fall
+            // back to the thomas_id → name map rather than showing the raw code
+            // (e.g. "SSEV09" → "Subcommittee on Clean Air, Climate, ...").
+            name: committee?.name || getCommitteeName(membership.thomas_id),
             role: membership.title || 'Member',
             thomas_id: membership.thomas_id,
             // The thomas_id is the site-wide committee URL key; membership
