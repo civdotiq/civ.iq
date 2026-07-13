@@ -36,6 +36,8 @@ const nextConfig = {
     '/api/representative/[bioguideId]/lobbying': ['./data/lda-aggregates.json'],
     // The industry organizations route reads it for per-sector issue totals.
     '/api/industry/[sector]/organizations': ['./data/lda-aggregates.json'],
+    // The committee ask-page reads it for corpus-backed committee totals.
+    '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json'],
   },
   // Remove console logs in production for better performance
   compiler: {

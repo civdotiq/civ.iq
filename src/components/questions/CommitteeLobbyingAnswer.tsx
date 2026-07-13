@@ -12,19 +12,81 @@
 
 import Link from 'next/link';
 import type { LobbyingPipelineInsight } from '@/lib/intelligence/types';
+import type { CommitteeCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
 
 interface CommitteeLobbyingAnswerProps {
   lobbying: LobbyingPipelineInsight | null;
+  /** Corpus-backed committee totals (complete Senate LDA corpus); null if absent. */
+  corpus?: CommitteeCorpusTotals | null;
   committeeId: string;
   committeeName: string;
   chamber: 'House' | 'Senate' | 'Joint';
   jurisdiction?: string;
 }
 
-// Dollar totals are intentionally not rendered on this card: the committee
-// analyzer aggregates a ~0.1% sample of LDA filings (fetchRecentFilings pulls
-// one un-paginated page per quarter), so summed amounts are misleading. Counts
-// stay. Restore corpus-backed totals in Phase 2 (PLAN-lobbying-corpus-2026-07.md).
+function shortQuarter(q: string): string {
+  const [year, quarter] = q.split('-');
+  return `${quarter} '${year?.slice(2) ?? ''}`;
+}
+
+function formatAmount(n: number): string {
+  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toLocaleString()}`;
+}
+
+/**
+ * Corpus-backed committee total (complete Senate LDA corpus). Restores the
+ * dollar figure Phase 0b withheld — that total came from a ~0.1% sample; this
+ * one is the full corpus, with a peer baseline and a quarterly trend.
+ */
+function CorpusTotalPod({ corpus }: { corpus: CommitteeCorpusTotals }) {
+  const ratio = corpus.peer.ratioToMedian;
+  const maxQuarter = Math.max(...corpus.quarterly.map(q => q.total), 1);
+  const first = corpus.quarterly[0]?.quarter;
+  const last = corpus.quarterly[corpus.quarterly.length - 1]?.quarter;
+  return (
+    <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
+      <h2 className="type-sm font-semibold text-black mb-1">
+        Lobbying spending disclosing this committee
+      </h2>
+      <p className="type-xs text-gray-400 mb-3">
+        Complete Senate LDA corpus{first && last ? ` · ${first}–${last}` : ''} · a filing naming
+        several committees counts toward each
+      </p>
+      <p className="type-2xl font-semibold text-black">{formatAmount(corpus.windowTotal)}</p>
+      <p className="type-xs text-gray-500 mt-1">
+        {ratio >= 1
+          ? `${ratio.toFixed(1)}× the median committee (${formatAmount(corpus.peer.medianTotal)})`
+          : `${Math.round(ratio * 100)}% of the median committee (${formatAmount(corpus.peer.medianTotal)})`}
+      </p>
+      {corpus.quarterly.length > 0 && (
+        <div className="flex items-end gap-1 mt-4" style={{ height: 72 }}>
+          {corpus.quarterly.map(q => (
+            <div key={q.quarter} className="flex-1 flex flex-col items-center min-w-0">
+              <div className="w-full flex items-end justify-center" style={{ height: 48 }}>
+                <div
+                  className="w-full bg-[#3ea2d4]"
+                  style={{
+                    height: `${Math.max((q.total / maxQuarter) * 100, q.total > 0 ? 4 : 0)}%`,
+                  }}
+                />
+              </div>
+              <span className="type-xs text-gray-400 aicher-heading mt-1 truncate max-w-full">
+                {shortQuarter(q.quarter)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Sample-based dollar totals are not rendered on the sample pods below: the
+// committee analyzer aggregates a ~0.1% sample of LDA filings, so summed amounts
+// are misleading. Counts stay; the corpus total above carries the real dollars.
 function TopOrgsPod({
   organizations,
 }: {
@@ -298,14 +360,20 @@ function FallbackSourcesPod() {
 
 export function CommitteeLobbyingAnswer({
   lobbying,
+  corpus,
   committeeId,
   committeeName,
   chamber,
   jurisdiction,
 }: CommitteeLobbyingAnswerProps) {
+  // The corpus total shows whenever the corpus has this committee — including
+  // the common case where the sample-based insight is unavailable.
+  const corpusPod = corpus ? <CorpusTotalPod corpus={corpus} /> : null;
+
   if (!lobbying) {
     return (
       <>
+        {corpusPod}
         <LobbyingUnavailablePod
           committeeName={committeeName}
           chamber={chamber}
@@ -319,6 +387,7 @@ export function CommitteeLobbyingAnswer({
 
   return (
     <>
+      {corpusPod}
       <TopOrgsPod organizations={lobbying.topOrganizations} />
       <ActivityByIssuePod issueAlignments={lobbying.issueAlignments} />
       <BillMatchesPod issueAlignments={lobbying.issueAlignments} />

@@ -54,6 +54,7 @@ import { TopicBillsAnswer } from '@/components/questions/TopicBillsAnswer';
 import { CommitteeMembersAnswer } from '@/components/questions/CommitteeMembersAnswer';
 import { CommitteeActivityAnswer } from '@/components/questions/CommitteeActivityAnswer';
 import { CommitteeLobbyingAnswer } from '@/components/questions/CommitteeLobbyingAnswer';
+import { getCommitteeCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
 import { AskResultPage, type AskEntity } from '@/components/ask/AskResultPage';
 
 export const revalidate = 3600;
@@ -391,6 +392,7 @@ export default async function QuestionPage({ params }: PageProps) {
     let committeeMembers: CommitteeMembersData | undefined;
     let committeeActivity: CommitteeActivityData | undefined;
     let committeLobbying: CommitteeLobbyingData | undefined;
+    let committeeCorpus: Awaited<ReturnType<typeof getCommitteeCorpusTotals>> = null;
 
     switch (slug) {
       case 'committee-members':
@@ -400,7 +402,10 @@ export default async function QuestionPage({ params }: PageProps) {
         committeeActivity = await fetchCommitteeActivityData(entityId, committee.chamber);
         break;
       case 'committee-lobbying':
-        committeLobbying = await fetchCommitteeLobbyingData(entityId);
+        [committeLobbying, committeeCorpus] = await Promise.all([
+          fetchCommitteeLobbyingData(entityId),
+          getCommitteeCorpusTotals(entityId),
+        ]);
         break;
       default:
         notFound();
@@ -428,6 +433,7 @@ export default async function QuestionPage({ params }: PageProps) {
         {slug === 'committee-lobbying' && (
           <CommitteeLobbyingAnswer
             lobbying={committeLobbying?.lobbying ?? null}
+            corpus={committeeCorpus}
             committeeId={entityId}
             committeeName={committee.name}
             chamber={committee.chamber}

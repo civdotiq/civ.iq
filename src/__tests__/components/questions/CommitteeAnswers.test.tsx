@@ -465,4 +465,32 @@ describe('CommitteeLobbyingAnswer', () => {
     expect(screen.getByText('Lobbying analysis unavailable')).toBeInTheDocument();
     expect(screen.queryByText('Committee jurisdiction')).not.toBeInTheDocument();
   });
+
+  it('renders the corpus-backed total even when the sample insight is null', () => {
+    render(
+      <CommitteeLobbyingAnswer
+        lobbying={null}
+        corpus={{
+          committeeCode: 'SSFI',
+          committeeName: 'Finance',
+          windowTotal: 6_420_000_000,
+          quarterly: [
+            { quarter: '2025-Q1', total: 800_000_000 },
+            { quarter: '2025-Q2', total: 820_000_000 },
+          ],
+          topIssues: [],
+          topOrgs: [],
+          peer: { medianTotal: 2_330_000_000, ratioToMedian: 2.75 },
+        }}
+        committeeId="SSFI"
+        committeeName="Senate Committee on Finance"
+        chamber="Senate"
+      />
+    );
+    expect(screen.getByText('Lobbying spending disclosing this committee')).toBeInTheDocument();
+    expect(screen.getByText('$6.4B')).toBeInTheDocument();
+    expect(screen.getByText(/2.8× the median committee/)).toBeInTheDocument();
+    // The sample "unavailable" pod still shows below the corpus total
+    expect(screen.getByText('Lobbying analysis unavailable')).toBeInTheDocument();
+  });
 });
