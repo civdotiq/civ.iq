@@ -151,8 +151,15 @@ describe('buildAggregates', () => {
   });
 
   it('caps top organizations per bucket at 50', () => {
+    // Distinct client NAMES (orgs are keyed by canonical name, not client.id).
     const filings = Array.from({ length: 60 }, (_, i) =>
-      compact({ filingUuid: `f${i}`, clientId: `c${i}`, issueCodes: ['TAX'], amount: 1000 + i })
+      compact({
+        filingUuid: `f${i}`,
+        clientId: `c${i}`,
+        clientName: `Distinct Client ${i} Inc`,
+        issueCodes: ['TAX'],
+        amount: 1000 + i,
+      })
     );
     const agg = buildAggregates(filings, generatedAt);
     const finance = agg.committees.find(c => c.committeeCode === 'SSFI')!;
@@ -160,5 +167,40 @@ describe('buildAggregates', () => {
     expect(finance.topOrgs).toHaveLength(50);
     // Highest amount first
     expect(finance.topOrgs[0]!.amount).toBe(1059);
+  });
+
+  it('merges a client filed under suffix/punctuation variants into one org', () => {
+    // Same real org, three name variants across firms (the Amazon pattern).
+    const filings = [
+      compact({
+        filingUuid: 'a',
+        registrantId: '10',
+        clientName: 'Globex Corp',
+        issueCodes: ['TAX'],
+        amount: 100_000,
+      }),
+      compact({
+        filingUuid: 'b',
+        registrantId: '11',
+        clientName: 'GLOBEX CORPORATION',
+        issueCodes: ['TAX'],
+        amount: 200_000,
+      }),
+      compact({
+        filingUuid: 'c',
+        registrantId: '12',
+        clientName: 'Globex Corp, Inc.',
+        issueCodes: ['TAX'],
+        amount: 50_000,
+      }),
+    ];
+    const agg = buildAggregates(filings, generatedAt);
+    const finance = agg.committees.find(c => c.committeeCode === 'SSFI')!;
+    expect(finance.orgCount).toBe(1);
+    expect(finance.topOrgs).toHaveLength(1);
+    expect(finance.topOrgs[0]!.amount).toBe(350_000);
+    expect(finance.topOrgs[0]!.filings).toBe(3);
+    // Spans multiple registrant ids → no single lobby link
+    expect(finance.topOrgs[0]!.registrantId).toBeNull();
   });
 });

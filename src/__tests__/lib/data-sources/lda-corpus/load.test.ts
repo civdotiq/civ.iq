@@ -15,7 +15,17 @@ import type { LdaAggregates } from '@/lib/data-sources/lda-corpus/types';
 jest.mock('node:fs/promises', () => ({ readFile: jest.fn() }));
 const mockReadFile = readFile as jest.MockedFunction<typeof readFile>;
 
-function cq(committeeCode: string, quarter: string, total: number) {
+function cq(
+  committeeCode: string,
+  quarter: string,
+  total: number,
+  topOrgs: Array<{
+    name: string;
+    registrantId: string | null;
+    amount: number;
+    filings: number;
+  }> = []
+) {
   return {
     committeeCode,
     committeeName: committeeCode === 'SSFI' ? 'Finance' : 'Armed Services',
@@ -23,7 +33,7 @@ function cq(committeeCode: string, quarter: string, total: number) {
     total,
     filingCount: 10,
     orgCount: 8,
-    topOrgs: [],
+    topOrgs,
     topIssues: [{ code: 'TAX', label: 'Taxation', count: 5 }],
   };
 }
@@ -34,8 +44,14 @@ const FIXTURE: LdaAggregates = {
   methodology: 'test',
   latestFilingPosted: '2026-07-13T00:00:00-04:00',
   committees: [
-    cq('SSFI', '2025-Q1', 30_000_000),
-    cq('SSFI', '2025-Q2', 20_000_000),
+    cq('SSFI', '2025-Q1', 30_000_000, [
+      { name: 'ACME CORP', registrantId: '5', amount: 3_000_000, filings: 1 },
+      { name: 'GLOBEX', registrantId: '9', amount: 1_000_000, filings: 1 },
+    ]),
+    cq('SSFI', '2025-Q2', 20_000_000, [
+      // Same org, a suffix variant → merges across quarters into one ACME entry.
+      { name: 'ACME CORP INC', registrantId: '5', amount: 2_000_000, filings: 1 },
+    ]),
     cq('SSAS', '2025-Q1', 5_000_000),
     cq('SSAS', '2025-Q2', 5_000_000),
   ],
@@ -103,6 +119,17 @@ describe('lda-corpus loader', () => {
   it('returns null for a committee absent from the corpus', async () => {
     mockReadFile.mockResolvedValue(JSON.stringify(FIXTURE));
     expect(await getCommitteeCorpusTotals('HSAP')).toBeNull();
+  });
+
+  it('merges committee top-orgs across quarters by canonical name', async () => {
+    mockReadFile.mockResolvedValue(JSON.stringify(FIXTURE));
+    const totals = await getCommitteeCorpusTotals('SSFI');
+    // ACME appears in both quarters under two variants → one merged entry ($5M).
+    expect(totals!.topOrgs).toHaveLength(2);
+    expect(totals!.topOrgs[0]!.amount).toBe(5_000_000);
+    expect(totals!.topOrgs[0]!.filings).toBe(2);
+    expect(totals!.topOrgs[0]!.registrantId).toBe('5');
+    expect(totals!.topOrgs[1]!.name).toBe('GLOBEX');
   });
 
   it('returns null gracefully when the corpus file is missing', async () => {

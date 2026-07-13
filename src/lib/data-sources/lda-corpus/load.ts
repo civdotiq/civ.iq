@@ -17,7 +17,50 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { CommitteeQuarterAgg, IssueQuarterAgg, LdaAggregates } from './types';
+import { normalizeCompanyName } from '@civiq/entity-resolution';
+import type { CommitteeQuarterAgg, IssueQuarterAgg, LdaAggregates, OrgAgg } from './types';
+
+const TOP_ORGS = 15;
+
+/**
+ * Merge per-quarter (or per-issue) top-org lists into one ranked list. Orgs are
+ * re-keyed by canonical company name so a client that appears across quarters
+ * (or across a sector's issue codes) is summed once, not repeated. The link is
+ * kept only when the org resolves to a single registrant.
+ */
+function mergeTopOrgs(lists: OrgAgg[][], limit = TOP_ORGS): OrgAgg[] {
+  const map = new Map<
+    string,
+    { variants: Map<string, number>; registrantIds: Set<string>; amount: number; filings: number }
+  >();
+  for (const list of lists) {
+    for (const o of list) {
+      const key = normalizeCompanyName(o.name) || o.name.trim().toUpperCase();
+      const acc = map.get(key) ?? {
+        variants: new Map<string, number>(),
+        registrantIds: new Set<string>(),
+        amount: 0,
+        filings: 0,
+      };
+      acc.amount += o.amount;
+      acc.filings += o.filings;
+      acc.variants.set(o.name, (acc.variants.get(o.name) ?? 0) + 1);
+      if (o.registrantId) acc.registrantIds.add(o.registrantId);
+      map.set(key, acc);
+    }
+  }
+  return Array.from(map.values())
+    .sort((a, b) => b.amount - a.amount || b.filings - a.filings)
+    .slice(0, limit)
+    .map(a => ({
+      name: [...a.variants.entries()].sort(
+        (x, y) => y[1] - x[1] || y[0].length - x[0].length
+      )[0]![0],
+      registrantId: a.registrantIds.size === 1 ? [...a.registrantIds][0]! : null,
+      amount: a.amount,
+      filings: a.filings,
+    }));
+}
 
 interface CorpusIndex {
   aggregates: LdaAggregates;
@@ -90,6 +133,8 @@ export interface CommitteeCorpusTotals {
   windowTotal: number;
   quarterly: Array<{ quarter: string; total: number }>;
   topIssues: CommitteeQuarterAgg['topIssues'];
+  /** Top organizations across the window, merged by canonical company name. */
+  topOrgs: OrgAgg[];
   /** Peer baseline: this committee's window total vs the median committee's. */
   peer: { medianTotal: number; ratioToMedian: number };
 }
@@ -112,6 +157,7 @@ export async function getCommitteeCorpusTotals(
     windowTotal,
     quarterly: rows.map(r => ({ quarter: r.quarter, total: r.total })),
     topIssues,
+    topOrgs: mergeTopOrgs(rows.map(r => r.topOrgs)),
     peer: {
       medianTotal: idx.peerMedianTotal,
       ratioToMedian: idx.peerMedianTotal > 0 ? windowTotal / idx.peerMedianTotal : 0,
@@ -126,6 +172,8 @@ export interface SectorCorpusTotals {
   windowTotal: number;
   quarterly: Array<{ quarter: string; total: number }>;
   byIssue: Array<{ code: string; label: string; windowTotal: number }>;
+  /** Top organizations across the sector's issue codes, merged by canonical name. */
+  topOrgs: OrgAgg[];
   quarters: string[];
 }
 
@@ -142,6 +190,7 @@ export async function getSectorCorpusTotals(
 
   const quarterTotals = new Map<string, number>();
   const byIssue: SectorCorpusTotals['byIssue'] = [];
+  const orgLists: OrgAgg[][] = [];
   for (const code of issueCodes) {
     const rows = idx.byIssue.get(code);
     if (!rows || rows.length === 0) continue;
@@ -149,6 +198,7 @@ export async function getSectorCorpusTotals(
     for (const r of rows) {
       quarterTotals.set(r.quarter, (quarterTotals.get(r.quarter) ?? 0) + r.total);
       issueTotal += r.total;
+      orgLists.push(r.topOrgs);
     }
     byIssue.push({ code, label: rows[0]!.label, windowTotal: issueTotal });
   }
@@ -163,6 +213,7 @@ export async function getSectorCorpusTotals(
     windowTotal: [...quarterTotals.values()].reduce((a, b) => a + b, 0),
     quarterly,
     byIssue,
+    topOrgs: mergeTopOrgs(orgLists),
     quarters: idx.aggregates.quarters,
   };
 }

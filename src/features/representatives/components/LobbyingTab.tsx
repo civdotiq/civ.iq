@@ -65,6 +65,12 @@ interface LobbyingResponse {
       quarterly: Array<{ quarter: string; total: number }>;
       peer: { medianTotal: number; ratioToMedian: number };
       topIssues: Array<{ code: string; label: string; count: number }>;
+      topOrgs: Array<{
+        name: string;
+        registrantId: string | null;
+        amount: number;
+        filings: number;
+      }>;
     }>;
   };
   dataQuality?: 'complete' | 'partial' | 'empty' | 'unavailable';
@@ -178,6 +184,30 @@ function CorpusLobbyingSection({ corpus }: { corpus: CorpusLobbying }) {
                       {issue.label}
                     </span>
                   ))}
+                </div>
+              )}
+              {(c.topOrgs?.length ?? 0) > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="type-xs text-gray-400 aicher-heading-wide mb-2">
+                    Top organizations
+                  </p>
+                  <div className="space-y-1">
+                    {c.topOrgs.slice(0, 5).map(org => (
+                      <div
+                        key={org.name}
+                        className="flex items-baseline justify-between gap-3 type-xs"
+                      >
+                        <LobbyLink
+                          registrantId={org.registrantId}
+                          name={org.name}
+                          className="text-gray-700 break-words min-w-0"
+                        />
+                        <span className="text-gray-500 aicher-heading-wide flex-shrink-0">
+                          {formatCompact(org.amount)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

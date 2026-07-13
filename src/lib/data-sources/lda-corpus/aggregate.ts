@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { getLDAIssueLabel } from '@civiq/entity-resolution';
+import { getLDAIssueLabel, normalizeCompanyName } from '@civiq/entity-resolution';
 import { dedupeAmendments } from './dedupe';
 import { resolveFilingCommittees } from './committee-match';
 import type {
@@ -19,27 +19,49 @@ import type {
 const TOP_ORGS = 50;
 const TOP_ISSUES = 10;
 
-/** Mutable accumulator keyed by client (organization) within a bucket. */
+/**
+ * Mutable accumulator for one organization within a bucket. Keyed by the
+ * canonical company name, not LDA client.id: client.id is per firm-relationship,
+ * so a client that hires several firms has many ids (Amazon had 14 in one
+ * quarter). normalizeCompanyName merges the suffix/punctuation variants safely
+ * (it keeps genuinely distinct names apart, e.g. CVS Health vs CVS Pharmacy).
+ * Residual splits remain (an org's "Services" arm may stay separate) — that is
+ * acceptable and never a wrong merge.
+ */
 interface OrgAcc {
-  name: string;
-  registrantId: string | null;
+  /** Raw name variants seen, with counts; the most frequent becomes the label. */
+  variants: Map<string, number>;
+  /** Distinct registrant ids; a link is kept only when the org has exactly one. */
+  registrantIds: Set<string>;
   amount: number;
   filings: number;
 }
 
+function orgKey(clientName: string): string {
+  return normalizeCompanyName(clientName) || clientName.trim().toUpperCase();
+}
+
 function accumulateOrg(map: Map<string, OrgAcc>, f: CompactFiling): void {
-  const acc = map.get(f.clientId);
+  const key = orgKey(f.clientName);
+  const acc = map.get(key);
   if (acc) {
     acc.amount += f.amount;
     acc.filings += 1;
+    acc.variants.set(f.clientName, (acc.variants.get(f.clientName) ?? 0) + 1);
+    if (f.registrantId) acc.registrantIds.add(f.registrantId);
   } else {
-    map.set(f.clientId, {
-      name: f.clientName,
-      registrantId: f.registrantId || null,
+    map.set(key, {
+      variants: new Map([[f.clientName, 1]]),
+      registrantIds: new Set(f.registrantId ? [f.registrantId] : []),
       amount: f.amount,
       filings: 1,
     });
   }
+}
+
+/** Most frequently seen raw name variant, ties broken by longer (more specific) name. */
+function displayName(variants: Map<string, number>): string {
+  return [...variants.entries()].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]![0];
 }
 
 function topOrgs(map: Map<string, OrgAcc>): OrgAgg[] {
@@ -47,8 +69,10 @@ function topOrgs(map: Map<string, OrgAcc>): OrgAgg[] {
     .sort((a, b) => b.amount - a.amount || b.filings - a.filings)
     .slice(0, TOP_ORGS)
     .map(o => ({
-      name: o.name,
-      registrantId: o.registrantId,
+      name: displayName(o.variants),
+      // Link only when unambiguous — merged multi-firm clients have several
+      // registrant ids and no single meaningful lobby profile to link to.
+      registrantId: o.registrantIds.size === 1 ? [...o.registrantIds][0]! : null,
       amount: o.amount,
       filings: o.filings,
     }));

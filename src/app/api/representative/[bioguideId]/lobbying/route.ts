@@ -91,6 +91,12 @@ interface RepresentativeLobbyingResponse {
       quarterly: Array<{ quarter: string; total: number }>;
       peer: { medianTotal: number; ratioToMedian: number };
       topIssues: Array<{ code: string; label: string; count: number }>;
+      topOrgs: Array<{
+        name: string;
+        registrantId: string | null;
+        amount: number;
+        filings: number;
+      }>;
     }>;
   };
   dataQuality: DataQuality;
@@ -133,6 +139,7 @@ async function buildCorpusLobbying(
       quarterly: totals.quarterly,
       peer: totals.peer,
       topIssues: totals.topIssues,
+      topOrgs: totals.topOrgs,
     });
   }
 

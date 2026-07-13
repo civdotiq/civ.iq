@@ -102,16 +102,28 @@ export function combinedContributors(
   limit = 8
 ): ContributorRow[] {
   if (!orgs) return [];
-  const rows: ContributorRow[] = [];
-  for (const lobby of orgs.topLobbyingOrgs) {
-    rows.push({
-      kind: 'lobby',
-      registrantId: lobby.registrantId,
-      name: lobby.name,
-      amount: lobby.totalSpending,
-      sublabel: `Lobbying · ${lobby.filingCount} filing${lobby.filingCount === 1 ? '' : 's'}`,
-    });
-  }
+  // Prefer the complete corpus (merged by canonical company name) over the
+  // ~0.1% live sample when it is available.
+  const source = orgs.corpusLobbying?.topOrgs
+    ? orgs.corpusLobbying.topOrgs.map(o => ({
+        registrantId: o.registrantId,
+        name: o.name,
+        amount: o.amount,
+        filings: o.filings,
+      }))
+    : orgs.topLobbyingOrgs.map(o => ({
+        registrantId: o.registrantId as string | null,
+        name: o.name,
+        amount: o.totalSpending,
+        filings: o.filingCount,
+      }));
+  const rows: ContributorRow[] = source.map(o => ({
+    kind: 'lobby',
+    registrantId: o.registrantId,
+    name: o.name,
+    amount: o.amount,
+    sublabel: `Lobbying · ${o.filings} filing${o.filings === 1 ? '' : 's'}`,
+  }));
   return rows.sort((a, b) => b.amount - a.amount).slice(0, limit);
 }
 

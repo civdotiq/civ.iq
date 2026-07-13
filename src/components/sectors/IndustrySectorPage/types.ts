@@ -67,6 +67,7 @@ export interface IndustryOrganizationsResponse {
     quarters: string[];
     quarterly: Array<{ quarter: string; total: number }>;
     byIssue: Array<{ code: string; label: string; windowTotal: number }>;
+    topOrgs: Array<{ name: string; registrantId: string | null; amount: number; filings: number }>;
   };
   metadata: {
     generatedAt: string;
@@ -103,7 +104,8 @@ export interface IndustryConnectionsResponse {
 export type LeaderboardEntry = SectorLeaderboardResponse['entries'][number];
 export type ContributorRow = {
   kind: 'lobby';
-  registrantId: string;
+  // null when a corpus-merged org spans multiple registrants (no single link).
+  registrantId: string | null;
   name: string;
   amount: number;
   sublabel: string;

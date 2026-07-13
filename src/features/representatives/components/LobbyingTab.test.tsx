@@ -415,6 +415,20 @@ describe('LobbyingTab', () => {
             ],
             peer: { medianTotal: 30_000_000, ratioToMedian: 2 },
             topIssues: [{ code: 'HCR', label: 'Health Issues', count: 40 }],
+            topOrgs: [
+              {
+                name: 'US CHAMBER OF COMMERCE',
+                registrantId: '301',
+                amount: 12_000_000,
+                filings: 8,
+              },
+              {
+                name: 'MERGED MULTI-FIRM CLIENT',
+                registrantId: null,
+                amount: 5_000_000,
+                filings: 6,
+              },
+            ],
           },
         ],
       },
@@ -427,6 +441,10 @@ describe('LobbyingTab', () => {
     expect(screen.getByText('Lobbying spending by committee')).toBeInTheDocument();
     expect(screen.getByText('$60.0M')).toBeInTheDocument();
     expect(screen.getByText(/2.0× the median committee/)).toBeInTheDocument();
+    // Corpus top orgs render; the self-filer links, the merged org does not
+    const chamber = screen.getByText('US CHAMBER OF COMMERCE');
+    expect(chamber.closest('a')).toHaveAttribute('href', '/lobby/301');
+    expect(screen.getByText('MERGED MULTI-FIRM CLIENT').closest('a')).toBeNull();
     // Methodology makes the not-summed-across-committees caveat explicit
     expect(screen.getByText(/not summed across\s+committees/)).toBeInTheDocument();
   });

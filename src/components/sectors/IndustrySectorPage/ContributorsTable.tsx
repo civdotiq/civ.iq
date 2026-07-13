@@ -46,24 +46,21 @@ export function ContributorsTable({ rows, loading = false }: ContributorsTablePr
         ))}
       </div>
       {rows.map((row, i) => {
-        const key = `lobby:${row.registrantId}`;
+        const key = `lobby:${row.registrantId ?? row.name}`;
         const pct = (row.amount / max) * 100;
-        return (
-          <Link
-            key={key}
-            href={rowHref(row)}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: COLUMNS,
-              gap: 12,
-              padding: '8px 0',
-              borderBottom: '1px solid var(--line)',
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'var(--fg1)',
-              minHeight: 36,
-            }}
-          >
+        const rowStyle = {
+          display: 'grid',
+          gridTemplateColumns: COLUMNS,
+          gap: 12,
+          padding: '8px 0',
+          borderBottom: '1px solid var(--line)',
+          alignItems: 'center',
+          textDecoration: 'none',
+          color: 'var(--fg1)',
+          minHeight: 36,
+        } as const;
+        const inner = (
+          <>
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -128,7 +125,17 @@ export function ContributorsTable({ rows, loading = false }: ContributorsTablePr
             <CqChip variant="info" filled={false} size="sm">
               Lobby
             </CqChip>
+          </>
+        );
+        // Merged multi-firm orgs have no single registrant → render un-linked.
+        return row.registrantId ? (
+          <Link key={key} href={rowHref(row)} style={rowStyle}>
+            {inner}
           </Link>
+        ) : (
+          <div key={key} style={rowStyle}>
+            {inner}
+          </div>
         );
       })}
     </div>

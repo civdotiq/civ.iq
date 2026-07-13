@@ -49,6 +49,7 @@ interface IndustryOrganizationsResponse {
     quarters: string[];
     quarterly: Array<{ quarter: string; total: number }>;
     byIssue: Array<{ code: string; label: string; windowTotal: number }>;
+    topOrgs: Array<{ name: string; registrantId: string | null; amount: number; filings: number }>;
   };
   metadata: {
     generatedAt: string;
@@ -221,6 +222,7 @@ export async function GET(
                   quarters: corpusTotals.quarters,
                   quarterly: corpusTotals.quarterly,
                   byIssue: corpusTotals.byIssue,
+                  topOrgs: corpusTotals.topOrgs,
                 },
               }
             : {}),
