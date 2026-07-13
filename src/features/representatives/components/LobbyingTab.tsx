@@ -214,11 +214,11 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
               {hasQuarterly ? (
                 <div className="border-2 border-gray-200 p-3">
                   <h4 className="aicher-heading type-sm text-gray-900 mb-3">Quarterly Trend</h4>
-                  <div className="flex items-end gap-1" style={{ height: 80 }}>
-                    {quarterlyTrend.map(q => (
+                  <div className="flex items-end gap-1" style={{ height: 96 }}>
+                    {quarterlyTrend.map((q, i) => (
                       <div
                         key={`${q.quarter}-${q.year}`}
-                        className="flex-1 flex flex-col items-center"
+                        className="flex-1 flex flex-col items-center min-w-0"
                       >
                         <div
                           className="w-full flex items-end justify-center"
@@ -235,12 +235,14 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
                         <span className="type-xs text-gray-400 aicher-heading mt-1">
                           {q.quarter}
                         </span>
-                        <span className="type-xs text-gray-500">{formatCompact(q.spending)}</span>
+                        <span className="type-xs text-gray-500 truncate max-w-full">
+                          {formatCompact(q.spending)}
+                        </span>
+                        <span className="type-xs text-gray-400">
+                          {i === 0 || q.quarter === 'Q1' ? String(q.year) : ' '}
+                        </span>
                       </div>
                     ))}
-                  </div>
-                  <div className="type-xs text-gray-400 mt-2 text-center">
-                    {quarterlyTrend[0]?.year}
                   </div>
                 </div>
               ) : (

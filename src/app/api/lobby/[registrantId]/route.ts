@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import type { RawLDAFiling } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   getLDAIssueLabel,
   getPolicyAreasForLDAIssue,
@@ -435,7 +436,7 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
   // Total spending
   let totalSpending = 0;
   for (const f of filings) {
-    totalSpending += Math.max(parseFloat(f.income ?? '0') || 0, parseFloat(f.expenses ?? '0') || 0);
+    totalSpending += reportedRawFilingAmount(f);
   }
 
   // Unique lobbyists
@@ -451,7 +452,7 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
   // Yearly spending
   const yearMap = new Map<number, { spending: number; count: number }>();
   for (const f of filings) {
-    const amount = Math.max(parseFloat(f.income ?? '0') || 0, parseFloat(f.expenses ?? '0') || 0);
+    const amount = reportedRawFilingAmount(f);
     const existing = yearMap.get(f.filing_year) ?? { spending: 0, count: 0 };
     existing.spending += amount;
     existing.count += 1;

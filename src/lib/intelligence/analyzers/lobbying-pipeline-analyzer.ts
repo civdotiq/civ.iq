@@ -37,6 +37,7 @@ import {
   type CommitteeMapping,
 } from '@/lib/connections/committee-agency-map';
 import { senateLobbyingAPI, type LobbyingFiling } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   resolveFilingEntities,
   getResolvedCommittees,
@@ -279,7 +280,7 @@ async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
   for (const filing of matchedFilings) {
     const orgName = filing.client.name;
     const existing = orgMap.get(orgName) ?? { spending: 0, filingCount: 0, issueCodes: new Set() };
-    existing.spending += filing.income || 0;
+    existing.spending += reportedFilingAmount(filing);
     existing.filingCount += 1;
     // Track registrant ID for self-lobbying orgs (registrant === client)
     if (
@@ -318,7 +319,7 @@ async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
   for (const filing of matchedFilings) {
     for (const issue of filing.issues) {
       const existing = issueMap.get(issue.code) ?? { spending: 0, orgs: new Set() };
-      existing.spending += filing.income || 0;
+      existing.spending += reportedFilingAmount(filing);
       existing.orgs.add(filing.client.name);
       issueMap.set(issue.code, existing);
     }

@@ -20,6 +20,7 @@ import {
   getPolicyAreasForLDAIssue,
 } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
+import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,9 +158,7 @@ export async function GET(
           for (const filings of allFilingResults) {
             for (const filing of filings) {
               const regId = filing.registrant.id;
-              const income = parseFloat(filing.income ?? '0') || 0;
-              const expenses = parseFloat(filing.expenses ?? '0') || 0;
-              const spending = Math.max(income, expenses);
+              const spending = reportedRawFilingAmount(filing);
 
               const existing = lobbyingMap.get(regId);
               if (existing) {

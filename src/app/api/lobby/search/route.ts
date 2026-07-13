@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { getLDAIssueLabel } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
+import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -52,10 +53,7 @@ export async function GET(request: NextRequest) {
         const issueCodes = new Set<string>();
 
         for (const f of filings) {
-          totalSpending += Math.max(
-            parseFloat(f.income ?? '0') || 0,
-            parseFloat(f.expenses ?? '0') || 0
-          );
+          totalSpending += reportedRawFilingAmount(f);
           for (const activity of f.lobbying_activities ?? []) {
             if (activity.general_issue_code) {
               issueCodes.add(activity.general_issue_code);

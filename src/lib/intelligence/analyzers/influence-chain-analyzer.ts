@@ -23,6 +23,7 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   resolveFilingEntities,
   getResolvedCommittees,
@@ -416,7 +417,7 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
       const selfRegistrantId = isSelfLobby ? filing.registrant.id : undefined;
 
       if (existing) {
-        existing.totalSpending += filing.income ?? 0;
+        existing.totalSpending += reportedFilingAmount(filing);
         existing.filingCount += 1;
         if (selfRegistrantId && !existing.registrantId) {
           existing.registrantId = selfRegistrantId;
@@ -432,7 +433,7 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
         orgMap.set(orgName, {
           name: orgName,
           registrantId: selfRegistrantId,
-          totalSpending: filing.income ?? 0,
+          totalSpending: reportedFilingAmount(filing),
           filingCount: 1,
           issueCodes: filing.issues.map(i => i.code),
           directCommitteeMatch: directMatch,

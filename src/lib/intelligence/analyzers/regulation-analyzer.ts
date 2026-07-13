@@ -37,6 +37,7 @@ import {
 import { searchAgencyRules } from '@/lib/data-sources/federal-register-service';
 import { regulationsGovService } from '@/lib/data-sources/regulations-gov-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   resolveFilingEntities,
   getResolvedCommittees,
@@ -283,7 +284,7 @@ async function findLobbyingCommentOverlap(
     const mentionsTarget = resolvedCommittees.some(c => committeeCodes.includes(c.committeeCode));
     if (mentionsTarget) {
       const orgName = filing.client.name;
-      lobbyingOrgs.set(orgName, (lobbyingOrgs.get(orgName) ?? 0) + (filing.income || 0));
+      lobbyingOrgs.set(orgName, (lobbyingOrgs.get(orgName) ?? 0) + reportedFilingAmount(filing));
     }
   }
 

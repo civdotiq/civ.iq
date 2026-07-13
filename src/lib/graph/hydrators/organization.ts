@@ -15,6 +15,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import { getCurrentElectionCycle } from '@/lib/intelligence/analyzers/shared';
 import {
   resolveFilingEntities,
@@ -182,13 +183,10 @@ async function hydrateLobbyingFilings(
       }
     >();
 
-    const totalSpending = rawFilings.reduce(
-      (sum, f) => sum + parseFloat(f.income ?? f.expenses ?? '0'),
-      0
-    );
+    const totalSpending = rawFilings.reduce((sum, f) => sum + reportedRawFilingAmount(f), 0);
 
     for (const filing of rawFilings) {
-      const filingAmount = parseFloat(filing.income ?? filing.expenses ?? '0');
+      const filingAmount = reportedRawFilingAmount(filing);
       const activities = filing.lobbying_activities ?? [];
 
       // Tier 1: Try entity resolution from government_entities nested in activities

@@ -271,7 +271,10 @@ export async function GET(
             };
           });
 
+          // Trend over the full fetched window (last year + current year up to
+          // the current quarter) — must stay in sync with fetchRecentFilings.
           const currentYear = new Date().getFullYear();
+          const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
           const quarterLabels = [
             'first_quarter',
             'second_quarter',
@@ -279,16 +282,20 @@ export async function GET(
             'fourth_quarter',
           ];
           const quarterlyTrend = [];
-          for (let q = 1; q <= 4; q++) {
-            const quarterSpending = uniqueFilings
-              .filter(f => f.year === currentYear - 1 && f.quarter === quarterLabels[q - 1])
-              .reduce((sum, f) => sum + f.amount, 0);
+          for (const year of [currentYear - 1, currentYear]) {
+            for (let q = 1; q <= 4; q++) {
+              if (year === currentYear && q > currentQuarter) continue;
 
-            quarterlyTrend.push({
-              quarter: `Q${q}`,
-              year: currentYear - 1,
-              spending: quarterSpending,
-            });
+              const quarterSpending = uniqueFilings
+                .filter(f => f.year === year && f.quarter === quarterLabels[q - 1])
+                .reduce((sum, f) => sum + f.amount, 0);
+
+              quarterlyTrend.push({
+                quarter: `Q${q}`,
+                year,
+                spending: quarterSpending,
+              });
+            }
           }
 
           // Industry breakdown by filing count, not dollars

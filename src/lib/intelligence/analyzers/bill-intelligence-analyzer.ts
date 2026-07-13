@@ -26,6 +26,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { analyzeLobbyingPipeline } from './lobbying-pipeline-analyzer';
 import { computeBillLobbyingSimilarity } from '../embeddings/bill-lobbying-similarity';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   getCurrentElectionCycle,
   findCommitteeMapping,
@@ -562,7 +563,7 @@ async function fetchLobbyingSimilarity(billId: string, billTitle: string, _polic
         client: f.client.name,
         registrant: f.registrant.name,
         specificIssues: Array.isArray(f.specific_issues) ? f.specific_issues : [],
-        income: f.income ?? 0,
+        income: reportedFilingAmount(f),
         period: `${f.filingPeriod} ${f.filingYear}`,
       }));
 

@@ -6,8 +6,12 @@
 import { cachedFetch } from '@/lib/cache';
 import { embedText } from '@/lib/intelligence/embeddings/embedding-classifier';
 import { cosineSimilarity } from '@/lib/intelligence/embeddings/cosine-similarity';
-import { getAllLDAIssueCodes, getLDAIssueLabel } from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
+import {
+  getAllLDAIssueCodes,
+  getLDAIssueLabel,
+} from '@/lib/intelligence/entity-resolution/lda-issue-policy-map';
 import logger from '@/lib/logging/simple-logger';
+import { reportedFilingAmount } from './lda-filing-amounts';
 
 export interface LobbyingFiling {
   id: string;
@@ -136,51 +140,157 @@ export interface CommitteeLobbyingData {
  */
 const COMMITTEE_KEYWORDS: Record<string, string[]> = {
   // --- Both chambers (short keys match subcommittee names too) ---
-  'Agriculture': ['agriculture', 'farm', 'crop', 'livestock', 'food', 'rural', 'usda', 'nutrition', 'forestry'],
-  'Appropriations': ['appropriation', 'funding', 'discretionary spending', 'omnibus'],
-  'Armed Services': ['defense', 'military', 'armed forces', 'pentagon', 'dod', 'national security', 'weapons'],
-  'Budget': ['budget', 'fiscal policy', 'deficit', 'reconciliation', 'cbo', 'debt ceiling'],
-  'Judiciary': ['justice', 'court', 'legal', 'immigration', 'patent', 'antitrust', 'constitutional', 'crime', 'doj'],
-  'Veterans': ['veteran', 'va hospital', 'gi bill', 'military service', 'disabled veteran'],
-  'Energy': ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities'],
-  'Commerce': ['commerce', 'trade', 'business', 'manufacturing', 'retail', 'consumer'],
-  'Environment': ['environment', 'climate', 'pollution', 'epa', 'clean air', 'clean water', 'superfund'],
-  'Labor': ['labor', 'employment', 'worker', 'union', 'workplace', 'osha', 'pension'],
-  'Education': ['education', 'student', 'school', 'higher education', 'workforce'],
-  'Healthcare': ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma'],
+  Agriculture: [
+    'agriculture',
+    'farm',
+    'crop',
+    'livestock',
+    'food',
+    'rural',
+    'usda',
+    'nutrition',
+    'forestry',
+  ],
+  Appropriations: ['appropriation', 'funding', 'discretionary spending', 'omnibus'],
+  'Armed Services': [
+    'defense',
+    'military',
+    'armed forces',
+    'pentagon',
+    'dod',
+    'national security',
+    'weapons',
+  ],
+  Budget: ['budget', 'fiscal policy', 'deficit', 'reconciliation', 'cbo', 'debt ceiling'],
+  Judiciary: [
+    'justice',
+    'court',
+    'legal',
+    'immigration',
+    'patent',
+    'antitrust',
+    'constitutional',
+    'crime',
+    'doj',
+  ],
+  Veterans: ['veteran', 'va hospital', 'gi bill', 'military service', 'disabled veteran'],
+  Energy: ['energy', 'oil', 'gas', 'renewable', 'nuclear', 'electric', 'utilities'],
+  Commerce: ['commerce', 'trade', 'business', 'manufacturing', 'retail', 'consumer'],
+  Environment: [
+    'environment',
+    'climate',
+    'pollution',
+    'epa',
+    'clean air',
+    'clean water',
+    'superfund',
+  ],
+  Labor: ['labor', 'employment', 'worker', 'union', 'workplace', 'osha', 'pension'],
+  Education: ['education', 'student', 'school', 'higher education', 'workforce'],
+  Healthcare: ['health', 'medical', 'medicare', 'medicaid', 'hospital', 'drug', 'pharma'],
 
   // --- Senate-specific (long keys for precise full-committee matching) ---
-  'Banking': ['banking', 'financial', 'securities', 'insurance', 'credit', 'mortgage', 'housing', 'hud', 'urban'],
-  'Commerce, Science': ['telecom', 'fcc', 'consumer protection', 'technology', 'internet', 'space', 'nasa', 'science'],
+  Banking: [
+    'banking',
+    'financial',
+    'securities',
+    'insurance',
+    'credit',
+    'mortgage',
+    'housing',
+    'hud',
+    'urban',
+  ],
+  'Commerce, Science': [
+    'telecom',
+    'fcc',
+    'consumer protection',
+    'technology',
+    'internet',
+    'space',
+    'nasa',
+    'science',
+  ],
   'Energy and Natural Resources': ['mining', 'public lands', 'forest', 'national park'],
   'Environment and Public Works': ['infrastructure', 'highway'],
-  'Finance': ['tax', 'revenue', 'irs', 'customs', 'tariff', 'social security', 'trade agreement'],
-  'Foreign Relations': ['foreign', 'international', 'embassy', 'treaty', 'diplomatic', 'state department', 'usaid', 'sanctions'],
+  Finance: ['tax', 'revenue', 'irs', 'customs', 'tariff', 'social security', 'trade agreement'],
+  'Foreign Relations': [
+    'foreign',
+    'international',
+    'embassy',
+    'treaty',
+    'diplomatic',
+    'state department',
+    'usaid',
+    'sanctions',
+  ],
   'Health, Education, Labor': [],
   'Homeland Security': ['homeland security', 'dhs', 'fema', 'border', 'cybersecurity', 'tsa'],
   'Indian Affairs': ['tribal', 'native american', 'indian', 'indigenous', 'reservation'],
-  'Intelligence': ['intelligence', 'surveillance', 'cia', 'nsa', 'classified', 'counterterrorism', 'fisa'],
+  Intelligence: [
+    'intelligence',
+    'surveillance',
+    'cia',
+    'nsa',
+    'classified',
+    'counterterrorism',
+    'fisa',
+  ],
   'Rules and Administration': ['election', 'campaign', 'senate rules', 'fec', 'ballot', 'voting'],
   'Small Business': ['small business', 'sba', 'entrepreneur', 'startup'],
-  'Ethics': ['ethics', 'conflict of interest', 'financial disclosure'],
-  'Aging': ['aging', 'elderly', 'senior citizen', 'medicare', 'medicaid', 'social security', 'retirement', 'pension', 'long-term care'],
+  Ethics: ['ethics', 'conflict of interest', 'financial disclosure'],
+  Aging: [
+    'aging',
+    'elderly',
+    'senior citizen',
+    'medicare',
+    'medicaid',
+    'social security',
+    'retirement',
+    'pension',
+    'long-term care',
+  ],
 
   // --- Subcommittee-specific keys (calibration 2026-04-16: embedding tier
   // misses these because the closest LDA labels score below the 0.40
   // threshold). Adding narrow keys keeps coverage even when embeddings work,
   // and is the only path that works when the pipeline is unavailable.
-  'Conservation': ['conservation', 'public lands', 'wildlife', 'wilderness', 'national park', 'natural resources'],
-  'Forestry': ['forest', 'forestry', 'timber', 'wildfire', 'logging'],
+  Conservation: [
+    'conservation',
+    'public lands',
+    'wildlife',
+    'wilderness',
+    'national park',
+    'natural resources',
+  ],
+  Forestry: ['forest', 'forestry', 'timber', 'wildfire', 'logging'],
 
   // --- House-specific ---
   'Education and the Workforce': ['job training'],
   'Energy and Commerce': ['broadband'],
   'Financial Services': ['fintech', 'cryptocurrency'],
   'Foreign Affairs': [],
-  'Natural Resources': ['natural resources', 'ocean', 'fisheries', 'water rights', 'endangered species'],
-  'Oversight': ['oversight', 'accountability', 'government reform', 'inspector general', 'gao'],
+  'Natural Resources': [
+    'natural resources',
+    'ocean',
+    'fisheries',
+    'water rights',
+    'endangered species',
+  ],
+  Oversight: ['oversight', 'accountability', 'government reform', 'inspector general', 'gao'],
   'Science, Space': ['nasa', 'nsf', 'research', 'nist', 'stem'],
-  'Transportation': ['transportation', 'highway', 'aviation', 'railroad', 'shipping', 'faa', 'dot', 'pipeline', 'coast guard', 'maritime'],
+  Transportation: [
+    'transportation',
+    'highway',
+    'aviation',
+    'railroad',
+    'shipping',
+    'faa',
+    'dot',
+    'pipeline',
+    'coast guard',
+    'maritime',
+  ],
   'Ways and Means': [],
   'House Administration': ['house administration', 'library of congress', 'smithsonian'],
 };
@@ -194,9 +304,10 @@ const COMMITTEE_KEYWORDS: Record<string, string[]> = {
  * embedText() calls down to 1.
  */
 let ldaLabelEmbeddingsCache: Array<{ code: string; embedding: Float32Array }> | null = null;
-let ldaLabelEmbeddingsPromise: Promise<
-  Array<{ code: string; embedding: Float32Array }> | null
-> | null = null;
+let ldaLabelEmbeddingsPromise: Promise<Array<{
+  code: string;
+  embedding: Float32Array;
+}> | null> | null = null;
 
 async function getLDALabelEmbeddings(): Promise<Array<{
   code: string;
@@ -208,7 +319,7 @@ async function getLDALabelEmbeddings(): Promise<Array<{
   ldaLabelEmbeddingsPromise = (async () => {
     const codes = getAllLDAIssueCodes();
     const embeddings = await Promise.all(
-      codes.map(async (code) => {
+      codes.map(async code => {
         const embedding = await embedText(getLDAIssueLabel(code));
         return embedding ? { code, embedding } : null;
       })
@@ -279,7 +390,7 @@ export class SenateLobbyingAPI {
 
           const response = await fetch(url, {
             headers: {
-              'Accept': 'application/json',
+              Accept: 'application/json',
               'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
             },
           });
@@ -289,7 +400,7 @@ export class SenateLobbyingAPI {
           }
 
           const data = await response.json();
-          
+
           if (!data || !Array.isArray(data.results)) {
             logger.warn('Unexpected Senate LDA API response format', { data });
             return [];
@@ -324,7 +435,7 @@ export class SenateLobbyingAPI {
     const currentYear = new Date().getFullYear();
     const quarters = [1, 2, 3, 4];
     const years = [currentYear - 1, currentYear]; // Last 2 years
-    
+
     const allFilings: LobbyingFiling[] = [];
 
     for (const year of years) {
@@ -518,22 +629,25 @@ export class SenateLobbyingAPI {
     const committeeData: CommitteeLobbyingData[] = [];
 
     for (const committee of committees) {
-      const { filings: relevantFilings, method, confidence } =
-        await this.matchFilingsToCommittee(committee, allFilings);
+      const {
+        filings: relevantFilings,
+        method,
+        confidence,
+      } = await this.matchFilingsToCommittee(committee, allFilings);
 
       if (relevantFilings.length > 0) {
         const totalSpending = relevantFilings.reduce(
-          (sum, filing) => sum + (filing.income || 0),
+          (sum, filing) => sum + reportedFilingAmount(filing),
           0
         );
-        const uniqueCompanies = new Set(relevantFilings.map((filing) => filing.client.name));
+        const uniqueCompanies = new Set(relevantFilings.map(filing => filing.client.name));
 
-        const filings = relevantFilings.map((filing) => ({
+        const filings = relevantFilings.map(filing => ({
           id: filing.id,
           company: filing.client.name,
           registrantId: filing.registrant.id,
-          amount: filing.income || 0,
-          issues: Array.isArray(filing.issues) ? filing.issues.map((i) => i.description) : [],
+          amount: reportedFilingAmount(filing),
+          issues: Array.isArray(filing.issues) ? filing.issues.map(i => i.description) : [],
           quarter: filing.filingPeriod,
           year: filing.filingYear,
         }));
@@ -601,17 +715,14 @@ export class SenateLobbyingAPI {
     };
   }
 
-  private filterFilingsByKeywords(
-    filings: LobbyingFiling[],
-    keywords: string[]
-  ): LobbyingFiling[] {
-    return filings.filter((filing) => {
+  private filterFilingsByKeywords(filings: LobbyingFiling[], keywords: string[]): LobbyingFiling[] {
+    return filings.filter(filing => {
       const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
       const generalIssues = Array.isArray(filing.issues)
-        ? filing.issues.map((issue) => issue.description || '')
+        ? filing.issues.map(issue => issue.description || '')
         : [];
       const allIssues = [...specificIssues, ...generalIssues].join(' ').toLowerCase();
-      return keywords.some((keyword) => allIssues.includes(keyword));
+      return keywords.some(keyword => allIssues.includes(keyword));
     });
   }
 
@@ -651,17 +762,17 @@ export class SenateLobbyingAPI {
         code,
         similarity: cosineSimilarity(committeeEmbedding, embedding),
       }))
-      .filter((m) => m.similarity >= SIMILARITY_THRESHOLD)
+      .filter(m => m.similarity >= SIMILARITY_THRESHOLD)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, MAX_MATCHED_CODES);
 
     if (matchedCodes.length === 0) return null;
 
     // Filter filings by the matched issue codes
-    const codeSet = new Set(matchedCodes.map((m) => m.code));
-    const matched = allFilings.filter((filing) => {
+    const codeSet = new Set(matchedCodes.map(m => m.code));
+    const matched = allFilings.filter(filing => {
       if (!Array.isArray(filing.issues)) return false;
-      return filing.issues.some((issue) => codeSet.has(issue.code));
+      return filing.issues.some(issue => codeSet.has(issue.code));
     });
 
     if (matched.length === 0) return null;
@@ -671,7 +782,7 @@ export class SenateLobbyingAPI {
 
     logger.info('[SenateLDA] Embedding-matched committee via LDA issue codes', {
       committee,
-      matchedCodes: matchedCodes.map((m) => m.code),
+      matchedCodes: matchedCodes.map(m => m.code),
       matchedFilings: matched.length,
       avgSimilarity: avgSimilarity.toFixed(3),
     });
@@ -700,22 +811,32 @@ export class SenateLobbyingAPI {
       const recentFilings = await this.fetchFilingsByQuarter(currentYear, currentQuarter - 1 || 4);
       const allFilings = await this.fetchRecentFilings();
 
-      const totalSpending = allFilings.reduce((sum, filing) => sum + (filing.income || 0), 0);
-      const recentSpending = recentFilings.reduce((sum, filing) => sum + (filing.income || 0), 0);
+      const totalSpending = allFilings.reduce(
+        (sum, filing) => sum + reportedFilingAmount(filing),
+        0
+      );
+      const recentSpending = recentFilings.reduce(
+        (sum, filing) => sum + reportedFilingAmount(filing),
+        0
+      );
 
       // Group by industry (simplified - would need better industry classification)
       const industrySpending: Record<string, number> = {};
       allFilings.forEach(filing => {
         const clientName = filing.client.name.toLowerCase();
         let industry = 'Other';
-        
-        if (clientName.includes('pharma') || clientName.includes('health')) industry = 'Healthcare';
-        else if (clientName.includes('tech') || clientName.includes('soft')) industry = 'Technology';
-        else if (clientName.includes('oil') || clientName.includes('energy')) industry = 'Energy';
-        else if (clientName.includes('bank') || clientName.includes('financial')) industry = 'Finance';
-        else if (clientName.includes('defense') || clientName.includes('aerospace')) industry = 'Defense';
 
-        industrySpending[industry] = (industrySpending[industry] || 0) + (filing.income || 0);
+        if (clientName.includes('pharma') || clientName.includes('health')) industry = 'Healthcare';
+        else if (clientName.includes('tech') || clientName.includes('soft'))
+          industry = 'Technology';
+        else if (clientName.includes('oil') || clientName.includes('energy')) industry = 'Energy';
+        else if (clientName.includes('bank') || clientName.includes('financial'))
+          industry = 'Finance';
+        else if (clientName.includes('defense') || clientName.includes('aerospace'))
+          industry = 'Defense';
+
+        industrySpending[industry] =
+          (industrySpending[industry] || 0) + reportedFilingAmount(filing);
       });
 
       const topIndustries = Object.entries(industrySpending)
