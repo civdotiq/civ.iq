@@ -133,14 +133,14 @@ async function computeAndCache(
     }
 
     regulationNodes.push({
-      docketId: `${agency.slug}-${doc.regulation_id_number ?? doc.document_number}`,
+      docketId: `${agency.slug}-${doc.regulation_id_numbers?.[0] ?? doc.document_number}`,
       agency: agency.name,
       agencySlug: agency.slug,
       title: doc.title,
       type: docType,
       status,
       publicationDate: doc.publication_date,
-      rin: doc.regulation_id_number ?? null,
+      rin: doc.regulation_id_numbers?.[0] ?? null,
       commentCount: 0,
       linkMethod: 'committee_agency',
       linkConfidence: LINK_CONFIDENCE.regulationLink,

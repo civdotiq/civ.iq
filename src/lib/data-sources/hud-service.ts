@@ -62,6 +62,36 @@ function parseIncomeLimits(raw: Record<string, number> | undefined): HudIncomeLi
   };
 }
 
+/** Median of positive values, rounded. Returns 0 when no positive values. */
+function median(nums: number[]): number {
+  const arr = nums.filter(n => n > 0).sort((a, b) => a - b);
+  if (arr.length === 0) return 0;
+  const mid = Math.floor(arr.length / 2);
+  return arr.length % 2 === 0 ? Math.round((arr[mid - 1]! + arr[mid]!) / 2) : arr[mid]!;
+}
+
+interface HudStateFmrEntry {
+  Efficiency?: number;
+  'One-Bedroom'?: number;
+  'Two-Bedroom'?: number;
+  'Three-Bedroom'?: number;
+  'Four-Bedroom'?: number;
+}
+
+interface HudStateFmrResponse {
+  data?: { counties?: HudStateFmrEntry[]; metroareas?: HudStateFmrEntry[]; year?: number };
+}
+
+interface HudStateIlResponse {
+  data?: {
+    median_income?: number;
+    very_low?: Record<string, number>;
+    low?: Record<string, number>;
+    extremely_low?: Record<string, number>;
+    year?: number;
+  };
+}
+
 export class HudService {
   /**
    * Get Fair Market Rents for a county by FIPS code.
@@ -158,6 +188,107 @@ export class HudService {
       );
     } catch (error) {
       logger.error('HudService.getIncomeLimits failed', error as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Get statewide Fair Market Rents via HUD's statedata endpoint, returned as
+   * the median across the state's counties and metro areas. Used when only a
+   * state (not a county/metro) is known. Returns null if the token is missing.
+   */
+  async getStateFairMarketRents(stateCode: string): Promise<HudFairMarketRent | null> {
+    const token = getApiToken();
+    if (!token) {
+      logger.warn('HUD_API_TOKEN not configured');
+      return null;
+    }
+
+    const state = stateCode.toUpperCase();
+    const cacheKey = `hud-fmr-state:${state}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const url = `${BASE_URL}/fmr/statedata/${encodeURIComponent(state)}`;
+          logger.info('HUD FMR statewide fetch', { state });
+
+          const response = await rateLimitedFetch(url, token);
+          if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error(`HUD FMR statedata API returned ${response.status}`);
+          }
+
+          const raw: HudStateFmrResponse = await response.json();
+          const entries = [...(raw.data?.counties ?? []), ...(raw.data?.metroareas ?? [])];
+          if (entries.length === 0) return null;
+
+          return {
+            countyName: `${state} (statewide median)`,
+            metroName: null,
+            metroStatus: 'Statewide',
+            year: raw.data?.year ?? new Date().getFullYear(),
+            efficiency: median(entries.map(e => e.Efficiency ?? 0)),
+            oneBedroom: median(entries.map(e => e['One-Bedroom'] ?? 0)),
+            twoBedroom: median(entries.map(e => e['Two-Bedroom'] ?? 0)),
+            threeBedroom: median(entries.map(e => e['Three-Bedroom'] ?? 0)),
+            fourBedroom: median(entries.map(e => e['Four-Bedroom'] ?? 0)),
+          };
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('HudService.getStateFairMarketRents failed', error as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Get statewide income limits via HUD's statedata endpoint (a single
+   * statewide aggregate). Returns null if the token is missing.
+   */
+  async getStateIncomeLimits(stateCode: string): Promise<HudIncomeLimit | null> {
+    const token = getApiToken();
+    if (!token) {
+      logger.warn('HUD_API_TOKEN not configured');
+      return null;
+    }
+
+    const state = stateCode.toUpperCase();
+    const cacheKey = `hud-il-state:${state}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const url = `${BASE_URL}/il/statedata/${encodeURIComponent(state)}`;
+          logger.info('HUD income limits statewide fetch', { state });
+
+          const response = await rateLimitedFetch(url, token);
+          if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error(`HUD IL statedata API returned ${response.status}`);
+          }
+
+          const raw: HudStateIlResponse = await response.json();
+          const d = raw.data;
+          if (!d) return null;
+
+          return {
+            countyName: `${state} (statewide)`,
+            metroName: null,
+            year: d.year ?? new Date().getFullYear(),
+            medianIncome: d.median_income ?? 0,
+            veryLow: parseIncomeLimits(d.very_low),
+            extremelyLow: parseIncomeLimits(d.extremely_low),
+            low: parseIncomeLimits(d.low),
+          };
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('HudService.getStateIncomeLimits failed', error as Error);
       return null;
     }
   }

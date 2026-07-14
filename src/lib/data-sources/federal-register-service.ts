@@ -67,7 +67,7 @@ export async function getDocumentMetadata(
           'comments_close_on',
           'effective_on',
           'executive_order_number',
-          'regulation_id_number',
+          'regulation_id_numbers',
         ];
 
         const params = new URLSearchParams();
@@ -230,7 +230,7 @@ const FR_FIELDS = [
   'comment_url',
   'comments_close_on',
   'effective_on',
-  'regulation_id_number',
+  'regulation_id_numbers',
 ];
 
 /**
@@ -375,7 +375,7 @@ export async function findRegulationsForBill(
         const agency = doc.agencies?.[0];
         if (!agency) continue;
 
-        const docketId = `${agency.slug}-${doc.regulation_id_number ?? doc.document_number}`;
+        const docketId = `${agency.slug}-${doc.regulation_id_numbers?.[0] ?? doc.document_number}`;
         if (seenDockets.has(docketId)) continue;
         seenDockets.add(docketId);
 
@@ -387,7 +387,7 @@ export async function findRegulationsForBill(
           type: docType,
           status: inferStatusFromDoc(doc),
           publicationDate: doc.publication_date,
-          rin: doc.regulation_id_number ?? null,
+          rin: doc.regulation_id_numbers?.[0] ?? null,
           commentCount: 0, // Would need Regulations.gov query to get this
           linkMethod: 'rin',
           linkConfidence: 0.95,
@@ -443,7 +443,7 @@ export async function findRegulationsForBill(
         const matchesKeyword = keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
         if (!matchesKeyword && keywords.length > 0) continue;
 
-        const docketId = `${agency.slug}-${doc.regulation_id_number ?? doc.document_number}`;
+        const docketId = `${agency.slug}-${doc.regulation_id_numbers?.[0] ?? doc.document_number}`;
         if (seenDockets.has(docketId)) continue;
         seenDockets.add(docketId);
 
@@ -455,7 +455,7 @@ export async function findRegulationsForBill(
           type: docType,
           status: inferStatusFromDoc(doc),
           publicationDate: doc.publication_date,
-          rin: doc.regulation_id_number ?? null,
+          rin: doc.regulation_id_numbers?.[0] ?? null,
           commentCount: 0,
           linkMethod: 'committee_agency',
           linkConfidence: 0.8,

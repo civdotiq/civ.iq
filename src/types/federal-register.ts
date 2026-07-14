@@ -168,7 +168,7 @@ export interface FederalRegisterAPIDocument {
   comment_url?: string;
   comments_close_on?: string;
   effective_on?: string;
-  regulation_id_number?: string;
+  regulation_id_numbers?: string[];
   body_html_url?: string;
   raw_text_url?: string;
   agencies: Array<{

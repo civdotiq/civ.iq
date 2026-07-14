@@ -99,16 +99,15 @@ export async function GET(
       return NextResponse.json({ error: 'Unknown state code' }, { status: 400 });
     }
 
-    // Use state-level FIPS + "001" as default county (statewide data)
-    // HUD API accepts state FIPS for statewide fair market rents
-    const countyFips = `${fips}001`;
-
+    // HUD FMR/IL are county/metro-level; a district resolves only to a state,
+    // so present honest statewide figures via HUD's statedata endpoints.
+    // (`fips` is validated above to reject non-state codes.)
     const [fairMarketRents, incomeLimits] = await Promise.all([
-      hudService.getFairMarketRents(countyFips).catch(e => {
+      hudService.getStateFairMarketRents(state).catch(e => {
         logger.error('HUD FMR fetch failed', e as Error, { districtId });
         return null;
       }),
-      hudService.getIncomeLimits(countyFips).catch(e => {
+      hudService.getStateIncomeLimits(state).catch(e => {
         logger.error('HUD income limits fetch failed', e as Error, { districtId });
         return null;
       }),
