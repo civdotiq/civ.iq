@@ -23,6 +23,9 @@ const OPTIONAL_ENV_VARS = [
   'REDIS_HOST',
   'REDIS_PASSWORD',
   'OPENAI_API_KEY',
+  // IndexNow instant-indexing key. Must match public/<key>.txt. Unset = the
+  // publish pipeline skips IndexNow submission. See src/lib/publishing/indexnow.ts.
+  'INDEXNOW_KEY',
 ] as const;
 
 export function validateEnvironment(): EnvValidationResult {

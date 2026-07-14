@@ -32,6 +32,8 @@ import {
   removeFromOutbox,
 } from '@/lib/activitypub/outbox';
 import { deliverToFollowers } from '@/lib/activitypub/delivery';
+import { submitToIndexNow, eventToCanonicalPath } from '@/lib/publishing/indexnow';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { CivicEvent, RelayPublishResult, DedupEntry } from '@/types/nostr';
 import logger from '@/lib/logging/simple-logger';
 
@@ -76,6 +78,9 @@ export async function publishAndFederate(
   let activityPubDelivered = 0;
   let alertEventsPublished = 0;
   let correctionsPublished = 0;
+  // Canonical civ.iq paths for successfully published events, submitted to
+  // IndexNow in one batch after the loop.
+  const indexNowPaths: string[] = [];
 
   for (const event of events) {
     if (options?.deadline && Date.now() >= options.deadline) {
@@ -138,6 +143,12 @@ export async function publishAndFederate(
         };
         await cache.set(dedupKey, dedupEntry, nostrConfig.dedupTTL);
         eventsPublished++;
+
+        // Queue the canonical civ.iq URL for IndexNow (skips event types with
+        // no indexable detail page). Corrections re-publish here too, so an
+        // updated page is re-submitted.
+        const indexNowPath = eventToCanonicalPath(event);
+        if (indexNowPath) indexNowPaths.push(indexNowPath);
 
         // Kind 1 alert and ActivityPub federation are independent of each
         // other — run them concurrently to keep per-event wall time down.
@@ -204,6 +215,13 @@ export async function publishAndFederate(
         operation: 'nostr_publisher',
       });
     }
+  }
+
+  // Push freshly published URLs to IndexNow (Bing/Yandex/Seznam/Naver) in a
+  // single batch. Non-fatal and gated on INDEXNOW_KEY — a no-op until set.
+  if (indexNowPaths.length > 0) {
+    const baseUrl = getServerBaseUrl();
+    await submitToIndexNow(indexNowPaths.map(path => `${baseUrl}${path}`));
   }
 
   return {
