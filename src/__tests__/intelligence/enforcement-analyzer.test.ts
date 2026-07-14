@@ -185,7 +185,10 @@ describe('analyzeEnforcement', () => {
     expect(result?.dataAsOf).toBeTruthy();
     expect(result?.lastAnalyzedAt).toBeTruthy();
     expect(result?.methodology).toContain('EPA ECHO');
-    expect(result?.methodology).toContain('OSHA');
+    // Only EPA cases were mocked — OSHA contributed nothing and must not be
+    // cited in the methodology or listed as a source (provenance honesty).
+    expect(result?.methodology).not.toContain('OSHA');
+    expect(result?.sources.some(s => s.name.includes('OSHA'))).toBe(false);
     expect(result?.source).toMatch(/^(ai-generated|statistical-fallback)$/);
   });
 

@@ -19,10 +19,7 @@ import type {
   FederalRegisterAPIResponse,
   PreambleTextStats,
 } from '@/types/federal-register';
-import {
-  getAgenciesForCommittee,
-  type AgencyInfo,
-} from '@civiq/entity-resolution';
+import { getAgenciesForCommittee, type AgencyInfo } from '@civiq/entity-resolution';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import type { RegulationNode } from '@/lib/intelligence/types';
 
@@ -38,8 +35,10 @@ export const MIN_WORDS_FOR_EXTRACTION = 100;
 
 const SECTION_PATTERN = /(?:^|\n)\s*(?:(?:I{1,3}|IV|VI{0,3}|IX|X{0,3})\.|Section\s+\d+)/gi;
 const DOLLAR_PATTERN = /\$[\d,]+(?:\.\d+)?(?:\s*(?:billion|million|thousand|trillion))?/gi;
-const DATE_PATTERN = /(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}/gi;
-const ENTITY_PATTERN = /(?:Department|Agency|Bureau|Commission|Administration|Authority|Office|Board)\s+(?:of\s+)?(?:[A-Z][a-z]+\s*)+/g;
+const DATE_PATTERN =
+  /(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}/gi;
+const ENTITY_PATTERN =
+  /(?:Department|Agency|Bureau|Commission|Administration|Authority|Office|Board)\s+(?:of\s+)?(?:[A-Z][a-z]+\s*)+/g;
 
 /**
  * Fetch a single document's metadata including body URLs.
@@ -120,7 +119,7 @@ export async function getPreambleText(
     return await cachedFetch(
       cacheKey,
       async () => {
-        const metadata = doc ?? await getDocumentMetadata(documentNumber);
+        const metadata = doc ?? (await getDocumentMetadata(documentNumber));
         if (!metadata) return null;
 
         // Try raw text first (cleanest), then HTML (strip tags)
@@ -239,7 +238,7 @@ const FR_FIELDS = [
  */
 export async function searchAgencyRules(
   agencySlug: string,
-  opts?: { dateFrom?: string; dateTo?: string; type?: 'Rule' | 'Proposed Rule' }
+  opts?: { dateFrom?: string; dateTo?: string; type?: 'RULE' | 'PRORULE' }
 ): Promise<FederalRegisterAPIDocument[]> {
   const cacheKey = `fr-agency-rules:${agencySlug}:${opts?.dateFrom ?? ''}:${opts?.dateTo ?? ''}:${opts?.type ?? ''}`;
 
@@ -248,15 +247,17 @@ export async function searchAgencyRules(
       cacheKey,
       async () => {
         const params = new URLSearchParams({
-          'per_page': '50',
-          'order': 'newest',
+          per_page: '50',
+          order: 'newest',
           'conditions[agencies][]': agencySlug,
         });
 
-        const docType = opts?.type ?? 'Rule';
+        // The FR API filters on short type codes (RULE / PRORULE), not the
+        // human-readable labels — 'Rule' matches zero documents.
+        const docType = opts?.type ?? 'RULE';
         params.set('conditions[type][]', docType);
         if (!opts?.type) {
-          params.append('conditions[type][]', 'Proposed Rule');
+          params.append('conditions[type][]', 'PRORULE');
         }
 
         if (opts?.dateFrom) {
@@ -308,7 +309,7 @@ export async function getDocumentsByRIN(rin: string): Promise<FederalRegisterAPI
       cacheKey,
       async () => {
         const params = new URLSearchParams({
-          'per_page': '20',
+          per_page: '20',
           'conditions[regulation_id_number]': rin,
         });
 
@@ -369,7 +370,8 @@ export async function findRegulationsForBill(
     try {
       const rinDocs = await getDocumentsByRIN(rin);
       for (const doc of rinDocs) {
-        const docType = doc.type === 'Proposed Rule' ? 'proposed_rule' as const : 'final_rule' as const;
+        const docType =
+          doc.type === 'Proposed Rule' ? ('proposed_rule' as const) : ('final_rule' as const);
         const agency = doc.agencies?.[0];
         if (!agency) continue;
 
@@ -428,7 +430,8 @@ export async function findRegulationsForBill(
       const agencyDocs = await searchAgencyRules(slug, { dateFrom });
 
       for (const doc of agencyDocs) {
-        const docType = doc.type === 'Proposed Rule' ? 'proposed_rule' as const : 'final_rule' as const;
+        const docType =
+          doc.type === 'Proposed Rule' ? ('proposed_rule' as const) : ('final_rule' as const);
         const agency = doc.agencies?.[0];
         if (!agency) continue;
 
@@ -455,7 +458,7 @@ export async function findRegulationsForBill(
           rin: doc.regulation_id_number ?? null,
           commentCount: 0,
           linkMethod: 'committee_agency',
-          linkConfidence: 0.80,
+          linkConfidence: 0.8,
         });
       }
     } catch {
@@ -469,9 +472,7 @@ export async function findRegulationsForBill(
 /**
  * Infer rule status from Federal Register document metadata.
  */
-function inferStatusFromDoc(
-  doc: FederalRegisterAPIDocument
-): RegulationNode['status'] {
+function inferStatusFromDoc(doc: FederalRegisterAPIDocument): RegulationNode['status'] {
   if (doc.effective_on) {
     const effectiveDate = new Date(doc.effective_on);
     if (effectiveDate <= new Date()) return 'effective';

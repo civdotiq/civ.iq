@@ -110,19 +110,16 @@ export async function getDistrictBoundary(
     const layer = chamber === 'upper' ? LAYER_SLDU : LAYER_SLDL;
     const districtPadded = district.padStart(3, '0');
 
-    // Build ArcGIS REST query
+    // Build ArcGIS REST query. The 2024 TIGERweb Legislative layers expose the
+    // district-code fields as SLDU (upper) / SLDL (lower) — the older SLDUST /
+    // SLDLST names no longer exist and return HTTP 400.
+    const districtField = chamber === 'lower' ? 'SLDL' : 'SLDU';
     const queryParams = new URLSearchParams({
-      where: `STATE='${stateFips}' AND SLDUST='${districtPadded}'`,
-      outFields: 'NAME,GEOID,STATE,SLDUST,FUNCSTAT',
+      where: `STATE='${stateFips}' AND ${districtField}='${districtPadded}'`,
+      outFields: `NAME,GEOID,STATE,${districtField},FUNCSTAT`,
       f: 'geojson',
       outSR: '4326',
     });
-
-    // Use correct field name per layer
-    if (chamber === 'lower') {
-      queryParams.set('where', `STATE='${stateFips}' AND SLDLST='${districtPadded}'`);
-      queryParams.set('outFields', 'NAME,GEOID,STATE,SLDLST,FUNCSTAT');
-    }
 
     const url = `${TIGERWEB_BASE}/${layer}/query?${queryParams}`;
 

@@ -93,6 +93,9 @@ describe('searchAgencyRules', () => {
     expect(results[0]?.title).toBe('Clean Air Standards Update');
     const calledUrl = mockFetch.mock.calls[0]?.[0] as string;
     expect(calledUrl).toContain('environmental-protection-agency');
+    // FR API requires short type codes, not 'Rule' / 'Proposed Rule' labels.
+    expect(decodeURIComponent(calledUrl)).toContain('conditions[type][]=RULE');
+    expect(decodeURIComponent(calledUrl)).toContain('conditions[type][]=PRORULE');
   });
 
   it('returns empty on API error', async () => {
@@ -207,7 +210,7 @@ describe('findRegulationsForBill', () => {
     expect(results.length).toBeGreaterThanOrEqual(1);
     const committeeResult = results.find(r => r.linkMethod === 'committee_agency');
     expect(committeeResult).toBeDefined();
-    expect(committeeResult?.linkConfidence).toBe(0.80);
+    expect(committeeResult?.linkConfidence).toBe(0.8);
     expect(committeeResult?.agencySlug).toBe('environmental-protection-agency');
   });
 
@@ -245,11 +248,7 @@ describe('findRegulationsForBill', () => {
       json: async () => ({ count: 0, results: [] }),
     });
 
-    const results = await findRegulationsForBill(
-      'Unrelated Bill',
-      'Congress',
-      ['Foreign Affairs']
-    );
+    const results = await findRegulationsForBill('Unrelated Bill', 'Congress', ['Foreign Affairs']);
 
     expect(results).toEqual([]);
   });

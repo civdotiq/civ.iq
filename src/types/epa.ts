@@ -94,6 +94,9 @@ export interface ToxicRelease {
 export interface EchoSearchResponse {
   Results: {
     Message: string;
+    // Present instead of QueryID when ECHO rejects a query (e.g. the queryset
+    // row limit is exceeded by an over-broad, state-only search).
+    Error?: string;
     QueryRows: string;
     QueryID: string;
     CAARows?: string;

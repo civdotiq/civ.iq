@@ -126,22 +126,22 @@ async function computeAndCache(
   // 6. Generate narrative
   const { narrative, source } = await generateNarrative(scope, stats, peer);
 
+  // Only cite an agency as a source when it actually contributed actions — a
+  // dark agency (e.g. OSHA with DOL_API_KEY unset) must not be listed as a
+  // source or claimed in the methodology when it returned nothing.
+  const agencyCount = (agency: string) => stats.byAgency.find(a => a.agency === agency)?.count ?? 0;
+
   const sc = new SourceCollector();
-  sc.add(
-    'EPA ECHO',
-    'Recent enforcement actions',
-    stats.byAgency.find(a => a.agency === 'EPA')?.count
-  );
-  sc.add(
-    'OSHA inspections',
-    'Recent inspections',
-    stats.byAgency.find(a => a.agency === 'OSHA')?.count
-  );
-  sc.add(
-    'CFPB complaints',
-    'Recent complaints',
-    stats.byAgency.find(a => a.agency === 'CFPB')?.count
-  );
+  if (agencyCount('EPA') > 0) sc.add('EPA ECHO', 'Recent enforcement actions', agencyCount('EPA'));
+  if (agencyCount('OSHA') > 0)
+    sc.add('OSHA inspections', 'Recent inspections', agencyCount('OSHA'));
+  if (agencyCount('CFPB') > 0) sc.add('CFPB complaints', 'Recent complaints', agencyCount('CFPB'));
+
+  const contributingAgencies = [
+    agencyCount('EPA') > 0 ? 'EPA ECHO' : null,
+    agencyCount('OSHA') > 0 ? 'OSHA inspections (DOL API)' : null,
+    agencyCount('CFPB') > 0 ? 'CFPB complaints' : null,
+  ].filter((a): a is string => a !== null);
 
   const insight: EnforcementInsight = {
     scope,
@@ -165,7 +165,7 @@ async function computeAndCache(
     confidenceMethod: 'computed',
     dataAsOf: freshestDate(...actions.map(a => a.date))!,
     methodology:
-      'Enforcement actions aggregated from EPA ECHO, OSHA inspections (DOL API), and CFPB complaints. ' +
+      `Enforcement actions aggregated from ${contributingAgencies.join(', ')}. ` +
       'Organizations matched across agencies via entity resolution. ' +
       'SIC codes normalized to 13-sector industry model.',
     disclaimer: DISCLAIMER,

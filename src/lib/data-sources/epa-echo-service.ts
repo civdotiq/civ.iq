@@ -98,11 +98,15 @@ export class EpaEchoService {
           const searchParams = new URLSearchParams({
             output: 'JSON',
             p_st: state.toUpperCase(),
-            p_act: 'Y', // Active facilities only (avoids queryset limit exceeded error)
+            p_act: 'Y', // Active facilities only
             responseset: String(Math.min(limit, 100)),
           });
           if (zip) searchParams.set('p_zip', zip);
           if (sicCode) searchParams.set('p_sic', sicCode);
+          // A state-only search returns hundreds of thousands of rows and ECHO
+          // rejects it with a queryset-limit error. When no ZIP/SIC narrows the
+          // query, restrict to major facilities to stay under the limit.
+          if (!zip && !sicCode) searchParams.set('p_maj', 'Y');
 
           const searchUrl = `${ECHO_BASE}/echo_rest_services.get_facilities?${searchParams}`;
           logger.info('EPA ECHO facility search', { state, zip, sicCode });
@@ -113,8 +117,14 @@ export class EpaEchoService {
           }
 
           const searchData: EchoSearchResponse = await searchResponse.json();
+          if (searchData.Results?.QueryRows === '0') return [];
           const qid = searchData.Results?.QueryID;
-          if (!qid || searchData.Results?.QueryRows === '0') return [];
+          if (!qid) {
+            // ECHO returns HTTP 200 with an error message (not results) when a
+            // query is rejected — surface it instead of masking it as "0".
+            const echoError = searchData.Results?.Error ?? searchData.Results?.Message;
+            throw new Error(`ECHO search returned no QueryID${echoError ? `: ${echoError}` : ''}`);
+          }
 
           // Step 2: Fetch facility data using QID
           const qidParams = new URLSearchParams({
@@ -455,11 +465,12 @@ export class EpaEchoService {
             for (const quarter of source.Quarters ?? []) {
               quarters.push({
                 quarter: quarter.YearQuarter ?? '',
-                status: quarter.Status === 'V'
-                  ? 'in_violation'
-                  : quarter.Status === 'C'
-                    ? 'in_compliance'
-                    : 'unknown',
+                status:
+                  quarter.Status === 'V'
+                    ? 'in_violation'
+                    : quarter.Status === 'C'
+                      ? 'in_compliance'
+                      : 'unknown',
                 programArea: source.ProgramArea ?? '',
               });
             }

@@ -57,7 +57,8 @@ function transformGrant(raw: RawNihProject): NihGrant {
     organizationCity: raw.organization?.org_city ?? '',
     organizationState: raw.organization?.org_state ?? '',
     department: raw.organization?.department ?? null,
-    principalInvestigator: contactPi?.full_name ?? raw.principal_investigators?.[0]?.full_name ?? '',
+    principalInvestigator:
+      contactPi?.full_name ?? raw.principal_investigators?.[0]?.full_name ?? '',
     awardAmount: raw.award_amount ?? 0,
     fundingMechanism: raw.activity_code ?? null,
     nihInstitute: primaryFunding?.abbreviation ?? null,
@@ -72,11 +73,17 @@ function transformProjectDetails(raw: RawNihProject): NihProjectDetails {
   return {
     ...base,
     spendingCategories: raw.spending_categories_desc
-      ? raw.spending_categories_desc.split(';').map(s => s.trim()).filter(Boolean)
+      ? raw.spending_categories_desc
+          .split(';')
+          .map(s => s.trim())
+          .filter(Boolean)
       : [],
     publicHealthRelevance: raw.phr_text ?? null,
     terms: raw.terms
-      ? raw.terms.split(';').map(s => s.trim()).filter(Boolean)
+      ? raw.terms
+          .split(';')
+          .map(s => s.trim())
+          .filter(Boolean)
       : [],
     totalCost: raw.total_cost ?? null,
     totalCostSubProjects: raw.total_cost_sub_projects ?? null,
@@ -105,11 +112,13 @@ export class NihReporterService {
             include_active_projects: true,
           };
 
+          // NIH RePORTER v2 expects org_states / org_names as plain string
+          // arrays; object arrays ({ value, operator }) return HTTP 400.
           if (state) {
-            criteria.org_states = [{ value: state.toUpperCase() }];
+            criteria.org_states = [state.toUpperCase()];
           }
           if (institution) {
-            criteria.org_names = [{ value: institution, operator: 'contains' }];
+            criteria.org_names = [institution];
           }
           if (topic) {
             criteria.advanced_text_search = {
