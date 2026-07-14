@@ -888,7 +888,16 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
   };
 
   if (person.description) personData.description = person.description;
-  if (person.image) personData.image = person.image;
+  // Emit an absolute image URL — validators (Rich Results, schema.org) flag
+  // relative paths, and crawlers resolve them inconsistently. Resolve against
+  // the page's own absolute `url` so relative proxy paths become fully-qualified.
+  if (person.image) {
+    try {
+      personData.image = new URL(person.image, url).toString();
+    } catch {
+      personData.image = person.image;
+    }
+  }
   if (person.birthDate) personData.birthDate = person.birthDate;
 
   if (person.affiliation) {

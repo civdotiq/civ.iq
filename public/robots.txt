@@ -1,14 +1,17 @@
 User-agent: *
 Allow: /
+Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
 User-agent: Googlebot-Image
 Allow: /photos/
+Allow: /api/representative-photo/
 
 User-agent: GPTBot
 Allow: /
+Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
@@ -18,18 +21,28 @@ Allow: /
 
 User-agent: ClaudeBot
 Allow: /
+Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
 User-agent: PerplexityBot
 Allow: /
+Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
 User-agent: Applebot-Extended
 Allow: /
+Allow: /api/representative-photo/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Google-Extended
+Allow: /
+Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
