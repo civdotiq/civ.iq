@@ -82,6 +82,17 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL('https://civdotiq.org'),
   category: 'government',
+  // Search-engine dashboard verification. Tokens come from the respective
+  // dashboards and are injected via env vars — never hardcoded. Unset = the
+  // meta tag is simply omitted (crawling is unaffected; you just lose the
+  // dashboard). Google: GOOGLE_SITE_VERIFICATION (Search Console). Bing:
+  // BING_SITE_VERIFICATION (Webmaster Tools -> msvalidate.01).
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } }
+      : {}),
+  },
 };
 
 export const viewport: Viewport = {

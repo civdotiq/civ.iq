@@ -25,7 +25,16 @@ const OPTIONAL_ENV_VARS = [
   'OPENAI_API_KEY',
   // IndexNow instant-indexing key. Must match public/<key>.txt. Unset = the
   // publish pipeline skips IndexNow submission. See src/lib/publishing/indexnow.ts.
+  // Current key file: public/b82c413d219e019562f72dbf922e41ac.txt
   'INDEXNOW_KEY',
+  // Google Search Console file/meta verification token. Rendered into
+  // <meta name="google-site-verification"> via metadata.verification in
+  // src/app/layout.tsx. Unset = no Search Console dashboard (crawling unaffected).
+  'GOOGLE_SITE_VERIFICATION',
+  // Bing Webmaster Tools verification token (the msvalidate.01 value). Rendered
+  // via metadata.verification.other in src/app/layout.tsx. Independent of
+  // IndexNow — the key file above is IndexNow's own ownership proof.
+  'BING_SITE_VERIFICATION',
 ] as const;
 
 export function validateEnvironment(): EnvValidationResult {
