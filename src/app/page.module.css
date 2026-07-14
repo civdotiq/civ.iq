@@ -149,90 +149,50 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* ============ QUICK START ============ */
-.qs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 36px;
-  max-width: 900px;
-  margin: 0 auto;
-  position: relative;
+/* ============ EXAMPLE PROFILES ============ */
+.examples {
+  max-width: 760px;
+  margin: -8px auto 0;
+  padding: 0 24px;
+  text-align: center;
 }
-.qs::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--line);
-}
-.qsCol h4 {
+.examplesLabel {
+  display: block;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin: 0 0 10px;
+  margin-bottom: 12px;
 }
-.qsBox {
-  border: 1px solid var(--line);
-  padding: 16px 18px;
-  margin-bottom: 10px;
-  background: #fff;
+.examplesRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.qsBox h5 {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin: 0 0 4px;
-}
-.qsBox p {
-  font-size: 12px;
-  color: var(--ink-3);
-  margin: 0;
-}
-.qsItem {
+.exampleItem {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 2px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  margin-top: 8px;
   background: #fff;
   text-decoration: none;
   color: inherit;
+  text-align: left;
   transition: border-color var(--duration) var(--timing);
 }
-.qsItem:hover {
+.exampleItem:hover {
   border-color: var(--blue);
   text-decoration: none;
 }
-.qsName {
+.exampleName {
   font-weight: 700;
   font-size: 13px;
 }
-.qsRole {
+.exampleRole {
   font-size: 12px;
   color: var(--ink-3);
-  font-variant-numeric: tabular-nums lining-nums;
-}
-.qsSelect {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  background: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--ink-3);
-  margin-top: 8px;
-  border-radius: 3px;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%237A7E88' d='M0 0h10L5 6z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
 }
 
 /* ============ ASK ============ */
@@ -297,12 +257,8 @@
   .cards {
     grid-template-columns: 1fr;
   }
-  .qs {
+  .examplesRow {
     grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .qs::before {
-    display: none;
   }
   .askGrid {
     grid-template-columns: 1fr;
