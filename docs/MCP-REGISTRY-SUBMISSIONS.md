@@ -6,12 +6,12 @@ Each submission is a one-time action; verified 2026-07-07.
 
 ## Status
 
-| Registry                                                 | Status                        | Method                  |
-| -------------------------------------------------------- | ----------------------------- | ----------------------- |
-| Official MCP Registry (registry.modelcontextprotocol.io) | Submitted 2026-07-15 (active) | `mcp-publisher` CLI     |
-| Smithery (smithery.ai)                                   | Not submitted                 | Web, GitHub sign-in     |
-| PulseMCP (pulsemcp.com)                                  | Not submitted                 | Web form                |
-| mcp.so                                                   | Not submitted                 | Web form / GitHub issue |
+| Registry                                                 | Status                             | Method                  |
+| -------------------------------------------------------- | ---------------------------------- | ----------------------- |
+| Official MCP Registry (registry.modelcontextprotocol.io) | Submitted 2026-07-15 (active)      | `mcp-publisher` CLI     |
+| Smithery (smithery.ai)                                   | Live 2026-07-15 (verified, 86/100) | Web, GitHub sign-in     |
+| PulseMCP (pulsemcp.com)                                  | Not submitted                      | Web form                |
+| mcp.so                                                   | Not submitted                      | Web form / GitHub issue |
 
 ## 1. Official MCP Registry
 
