@@ -219,9 +219,19 @@ export async function publishAndFederate(
 
   // Push freshly published URLs to IndexNow (Bing/Yandex/Seznam/Naver) in a
   // single batch. Non-fatal and gated on INDEXNOW_KEY — a no-op until set.
+  // The submit fn logs accepted/rejected internally; log the skip reasons here
+  // (no_key, non_canonical_host, no_urls) so a dropped env var leaves a trail
+  // instead of looking identical to "nothing new to publish".
   if (indexNowPaths.length > 0) {
     const baseUrl = getServerBaseUrl();
-    await submitToIndexNow(indexNowPaths.map(path => `${baseUrl}${path}`));
+    const indexNowResult = await submitToIndexNow(indexNowPaths.map(path => `${baseUrl}${path}`));
+    if (indexNowResult.skipped) {
+      logger.info('IndexNow submission skipped', {
+        reason: indexNowResult.reason,
+        candidates: indexNowPaths.length,
+        operation: 'indexnow_publisher',
+      });
+    }
   }
 
   return {
