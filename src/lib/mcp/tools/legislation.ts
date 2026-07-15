@@ -7,6 +7,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { searchBillsByKeyword } from '@/lib/services/bill-search.service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
@@ -17,8 +18,14 @@ export function registerLegislationTools(server: McpServer): void {
     {
       title: 'Bill search',
       description:
-        'Search for bills in Congress. Returns bill ID, title, sponsor, status, and policy area. Note: Congress.gov does not support keyword search — results are sorted by most recent activity. Filter by subject or sponsor after retrieval.',
+        'Search for bills in Congress. Provide `query` for full-text keyword/topic search (e.g. "broadband", "veterans healthcare") via GovInfo\'s full-text bill index; results include a congress-type-number id you can pass to get_bill_details. Without `query`, returns the most recently updated bills (optionally filtered by type).',
       inputSchema: {
+        query: z
+          .string()
+          .optional()
+          .describe(
+            'Keyword or topic to full-text search bill text (e.g. "broadband"). Omit to list most recent bills.'
+          ),
         congress: z
           .number()
           .int()
@@ -34,8 +41,20 @@ export function registerLegislationTools(server: McpServer): void {
       },
       annotations: READ_ONLY_EXTERNAL,
     },
-    async ({ congress, type, limit }) => {
+    async ({ query, congress, type, limit }) => {
       try {
+        // Keyword/topic path: Congress.gov can't full-text search, so route
+        // through GovInfo's BILLS full-text index (real data, mapped back to
+        // congress-type-number ids).
+        if (query && query.trim()) {
+          const results = await searchBillsByKeyword(query, {
+            congress,
+            type,
+            limit: limit ?? 20,
+          });
+          return { content: [{ type: 'text' as const, text: JSON.stringify(results) }] };
+        }
+
         const apiKey = process.env.CONGRESS_API_KEY;
         if (!apiKey) {
           return {
