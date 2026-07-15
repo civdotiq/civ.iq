@@ -682,51 +682,38 @@ export async function getRepresentativeSummary(bioguideId: string) {
   }
 
   try {
-    // Execute minimal requests for summary data including votes count
-    const [billsSummary, financeSummary, votesSummary] = await Promise.allSettled([
-      getBillsSummary(bioguideId),
+    // Bills + votes come from the canonical Incumbent Record data so this
+    // summary (KeyStatsBar, trading cards) agrees with the /record page. The
+    // old paths were wrong: getBillsSummary returned 0 for members who had
+    // sponsored bills, and the vote count was a page-capped fetch (limit 20 →
+    // "20" instead of the true total). getRecordCardData computes both
+    // efficiently (cached, corpus-backed), which also removes the multi-second
+    // per-vote XML fetch this used to do. Finance stays on the batch path —
+    // it carries spent/cashOnHand the record data doesn't expose.
+    const { getRecordCardData } = await import('@/features/record-card/record-card-data');
+    const [recordResult, financeSummary] = await Promise.allSettled([
+      getRecordCardData(bioguideId),
       executeBatchRequest({
         bioguideId,
         endpoints: ['finance'],
         options: { finance: { summaryOnly: true } },
       }),
-      executeBatchRequest({
-        bioguideId,
-        endpoints: ['votes'],
-        // Keep limit low for summary — fetching hundreds of votes just
-        // for a count causes multi-second hangs (each Senate vote is a
-        // separate XML fetch). The user sees the full count when they
-        // drill into the Voting tab.
-        options: { votes: { limit: 20 } },
-      }),
     ]);
 
-    // Extract the data KeyStatsBar needs
-    const billsData = billsSummary.status === 'fulfilled' ? billsSummary.value : null;
+    const record = recordResult.status === 'fulfilled' ? recordResult.value : null;
     const financeData =
       financeSummary.status === 'fulfilled' && financeSummary.value.success
         ? financeSummary.value.data.finance
         : null;
-    const votesData =
-      votesSummary.status === 'fulfilled' && votesSummary.value.success
-        ? votesSummary.value.data.votes
-        : null;
 
     const result = {
-      billsSponsored:
-        (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
-          ?.totalSponsored ??
-        (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
-          ?.currentCongress?.count ??
-        0,
-      billsCosponsored: (billsData as { cosponsoredCount?: number })?.cosponsoredCount ?? 0,
-      totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
+      billsSponsored: record?.legislation?.current.introduced ?? 0,
+      billsCosponsored: record?.legislation?.current.cosponsored ?? 0,
+      totalRaised:
+        record?.money?.totalRaised ?? (financeData as { totalRaised?: number })?.totalRaised ?? 0,
       totalSpent: (financeData as { totalSpent?: number })?.totalSpent ?? 0,
       cashOnHand: (financeData as { cashOnHand?: number })?.cashOnHand ?? 0,
-      votesParticipated:
-        (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
-        (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
-        0,
+      votesParticipated: record?.voting?.stats.cast,
       financeCycle: (financeData as { metadata?: { matchedCycle?: number } })?.metadata
         ?.matchedCycle,
       lastUpdated: new Date().toISOString(),
