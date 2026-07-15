@@ -45,24 +45,23 @@ export async function fetchProfileCardData(bioguideId: string): Promise<ProfileC
     const rep = await getEnhancedRepresentative(bioguideId);
     if (!rep) return null;
 
-    // Fetch summary data from batch endpoint internally
+    // Source stats from the canonical Incumbent Record data so the profile
+    // card agrees with the legislation and record cards. The old batch-summary
+    // endpoint returned stale zeros (e.g. 0 bills / 20 votes for a member with
+    // 80 introduced and 588 cast). Sections absent from the record data stay
+    // undefined → the card renders "--", never a fabricated zero.
     let billsSponsored: number | undefined;
     let totalRaised: number | undefined;
     let votesParticipated: number | undefined;
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-      const res = await fetch(`${baseUrl}/api/representative/${bioguideId}/batch?summary=true`);
-      if (res.ok) {
-        const summary = await res.json();
-        if (summary.success) {
-          billsSponsored = summary.data?.billsSponsored;
-          totalRaised = summary.data?.totalRaised;
-          votesParticipated = summary.data?.votesParticipated;
-        }
-      }
+      const { getRecordCardData } = await import('@/features/record-card/record-card-data');
+      const record = await getRecordCardData(bioguideId);
+      billsSponsored = record?.legislation?.current.introduced;
+      votesParticipated = record?.voting?.stats.cast;
+      totalRaised = record?.money?.totalRaised;
     } catch {
-      logger.warn('Failed to fetch summary for profile card', { bioguideId });
+      logger.warn('Failed to load record data for profile card', { bioguideId });
     }
 
     return {
