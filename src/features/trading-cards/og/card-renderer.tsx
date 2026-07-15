@@ -263,22 +263,41 @@ function renderRecordCard(data: RecordSummaryCardData, photoBase64?: string): Re
   );
 }
 
-/** Shared card shell wrapping all cards */
+/** Source-line text per card type, shown in the footer. */
+const CARD_SOURCES: Record<string, string> = {
+  profile: 'Congress.gov · FEC',
+  money: 'FEC',
+  vote: 'Congress.gov · House Clerk',
+  alignment: 'Congress.gov',
+  legislation: 'Congress.gov',
+  record: 'Congress.gov · FEC · USASpending',
+};
+
+/**
+ * Shared card shell — link-preview design language: eyebrow row, centered
+ * hero (name + party chip + photo), a ticker-style stat row above a
+ * party-color accent bar, and a sources/CTA footer. Matches the site OG card
+ * and the Incumbent Record card.
+ */
 function CardShell({
   data,
   photoBase64,
   stats,
   cardTypeLabel,
+  sourceLabel,
 }: {
   data: TradingCardData;
   photoBase64?: string;
   stats: React.ReactElement;
   cardTypeLabel?: string;
+  sourceLabel?: string;
 }): React.ReactElement {
   const partyColor = getPartyColor(data.party);
   const partyAbbrev = getPartyAbbrev(data.party);
   const location = getLocationLabel(data.state, data.district);
   const label = cardTypeLabel || getCardTypeLabel(data.type);
+  const roleLabel = data.chamber === 'Senate' ? 'Senator' : 'Representative';
+  const sources = sourceLabel || CARD_SOURCES[data.type] || 'Official government sources';
 
   return (
     <div
@@ -288,95 +307,108 @@ function CardShell({
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#ffffff',
-        border: '2px solid #000000',
+        border: '3px solid #000000',
         fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: '#111827',
       }}
     >
-      {/* Party color accent bar */}
-      <div style={{ width: '100%', height: 8, backgroundColor: partyColor, display: 'flex' }} />
-
-      {/* Header: card type, name, photo, CIV.IQ */}
+      {/* Eyebrow */}
       <div
         style={{
           display: 'flex',
-          flexDirection: 'row',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          padding: '32px 48px 0 48px',
+          alignItems: 'center',
+          padding: '32px 48px 0',
         }}
       >
-        {/* Left: card type + name */}
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#6b7280',
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          civdotiq.org
+        </span>
+      </div>
+
+      {/* Hero: name + party/role/location + photo */}
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 32,
+          padding: '20px 48px 0',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
           <div
             style={{
-              fontSize: 14,
-              fontWeight: 700,
-              letterSpacing: '0.15em',
-              color: partyColor,
-              marginBottom: 12,
-            }}
-          >
-            {label}
-          </div>
-          <div
-            style={{
-              fontSize: 42,
-              fontWeight: 700,
-              color: '#000000',
-              lineHeight: 1.1,
-              marginBottom: 8,
-            }}
-          >
-            {truncate(data.name, 28)}
-          </div>
-          <div
-            style={{
-              fontSize: 20,
-              color: '#666666',
               display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              fontSize: 54,
+              fontWeight: 700,
+              lineHeight: 1.05,
+              letterSpacing: '-0.02em',
             }}
           >
-            <span style={{ color: partyColor, fontWeight: 600 }}>{partyAbbrev}</span>
-            <span>{data.chamber === 'Senate' ? 'Senator' : 'Representative'}</span>
-            <span style={{ color: '#999999' }}>{location}</span>
+            {truncate(data.name, 26)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
+            <div
+              style={{
+                display: 'flex',
+                backgroundColor: partyColor,
+                color: '#ffffff',
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '3px 10px',
+                borderRadius: 2,
+              }}
+            >
+              {partyAbbrev}
+            </div>
+            <span style={{ display: 'flex', fontSize: 20, color: '#4b5563' }}>
+              {roleLabel} · {location}
+            </span>
           </div>
         </div>
 
-        {/* Photo */}
         {photoBase64 ? (
-          <div
-            style={{
-              width: 120,
-              height: 150,
-              border: '2px solid #000000',
-              overflow: 'hidden',
-              display: 'flex',
-              marginLeft: 24,
-            }}
-          >
-            <img
-              src={photoBase64}
-              alt=""
-              width={120}
-              height={150}
-              style={{ objectFit: 'cover', width: 120, height: 150 }}
-            />
-          </div>
+          <img
+            src={photoBase64}
+            alt=""
+            width={132}
+            height={165}
+            style={{ width: 132, height: 165, objectFit: 'cover', border: '2px solid #000000' }}
+          />
         ) : (
           <div
             style={{
-              width: 120,
-              height: 150,
-              border: '2px solid #cccccc',
-              backgroundColor: '#f0f0f0',
+              width: 132,
+              height: 165,
+              border: '2px solid #000000',
+              backgroundColor: '#f3f4f6',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginLeft: 24,
-              fontSize: 48,
-              color: '#cccccc',
+              fontSize: 56,
+              color: '#9ca3af',
             }}
           >
             {data.name.charAt(0)}
@@ -384,56 +416,32 @@ function CardShell({
         )}
       </div>
 
-      {/* Divider */}
-      <div
-        style={{
-          margin: '24px 48px',
-          height: 2,
-          backgroundColor: '#e5e7eb',
-          display: 'flex',
-        }}
-      />
+      {/* Stats (card-type specific), sitting just above the accent bar */}
+      <div style={{ display: 'flex', padding: '24px 48px 28px' }}>{stats}</div>
 
-      {/* Stats section (card-type specific) */}
-      <div
-        style={{
-          display: 'flex',
-          flex: 1,
-          padding: '0 48px',
-        }}
-      >
-        {stats}
-      </div>
+      {/* Party accent bar */}
+      <div style={{ display: 'flex', width: '100%', height: 8, backgroundColor: partyColor }} />
 
-      {/* Footer divider */}
-      <div
-        style={{
-          margin: '0 48px',
-          height: 2,
-          backgroundColor: '#e5e7eb',
-          display: 'flex',
-        }}
-      />
-
-      {/* Footer */}
+      {/* Footer: sources + CTA */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 48px',
+          fontSize: 14,
+          letterSpacing: '0.025em',
+          color: '#4b5563',
         }}
       >
-        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.05em', color: '#000000' }}>
-          civdotiq.org
-        </div>
-        <div style={{ fontSize: 14, color: '#999999' }}>Real government data</div>
+        <span>Sources: {sources}</span>
+        <span style={{ fontWeight: 700, color: '#111827' }}>Look up your representative →</span>
       </div>
     </div>
   );
 }
 
-/** Stat block for the stats row */
+/** Stat block — ticker style: baseline rule, big number, uppercase label. */
 function StatBlock({
   value,
   label,
@@ -444,25 +452,36 @@ function StatBlock({
   color?: string;
 }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        borderTop: '2px solid #000000',
+        paddingTop: 12,
+      }}
+    >
       <div
         style={{
-          fontSize: 48,
+          display: 'flex',
+          fontSize: 44,
           fontWeight: 700,
-          color: color || '#000000',
-          lineHeight: 1.1,
-          marginBottom: 4,
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
+          color: color || '#111827',
         }}
       >
         {value}
       </div>
       <div
         style={{
-          fontSize: 13,
-          fontWeight: 600,
-          letterSpacing: '0.1em',
-          color: '#999999',
+          display: 'flex',
+          marginTop: 8,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.08em',
           textTransform: 'uppercase',
+          color: '#4b5563',
         }}
       >
         {label}
@@ -505,24 +524,26 @@ function renderMoneyCard(data: MoneyCardData, photoBase64?: string): React.React
       <StatBlock value={formatPercent(data.individualPercent)} label="Individuals" />
       <StatBlock value={formatPercent(data.pacPercent)} label="PACs" />
       {data.topIndustry ? (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: '#000000',
-              lineHeight: 1.2,
-              marginBottom: 4,
-            }}
-          >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            borderTop: '2px solid #000000',
+            paddingTop: 12,
+          }}
+        >
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 700, lineHeight: 1.1 }}>
             {truncate(data.topIndustry, 20)}
           </div>
           <div
             style={{
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              color: '#999999',
+              display: 'flex',
+              marginTop: 8,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              color: '#4b5563',
               textTransform: 'uppercase',
             }}
           >
@@ -545,7 +566,7 @@ function renderVoteCard(data: VoteCardData, photoBase64?: string): React.ReactEl
   const stats = (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 16 }}>
       {/* Bill title */}
-      <div style={{ fontSize: 20, color: '#333333', lineHeight: 1.3 }}>
+      <div style={{ display: 'flex', fontSize: 20, color: '#4b5563', lineHeight: 1.3 }}>
         {truncate(data.billTitle, 80)}
       </div>
       {/* Position + vote totals */}
@@ -611,24 +632,26 @@ function renderLegislationCard(
       <StatBlock value={formatNumber(data.billsSponsored)} label="Bills Sponsored" />
       <StatBlock value={formatNumber(data.billsEnacted)} label="Became Law" color="#0a9338" />
       {data.focusAreas.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 2 }}>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: '#000000',
-              lineHeight: 1.3,
-              marginBottom: 4,
-            }}
-          >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 2,
+            borderTop: '2px solid #000000',
+            paddingTop: 12,
+          }}
+        >
+          <div style={{ display: 'flex', fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>
             {data.focusAreas.slice(0, 3).join(', ')}
           </div>
           <div
             style={{
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              color: '#999999',
+              display: 'flex',
+              marginTop: 8,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              color: '#4b5563',
               textTransform: 'uppercase',
             }}
           >
