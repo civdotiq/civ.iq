@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
-import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { circuitBreakers } from '@/lib/circuit-breaker';
@@ -64,21 +64,19 @@ export async function GET(
     const isSenate = repData.chamber === 'Senate';
 
     const currentYear = new Date().getFullYear();
-    const coverageYears = 5;
 
     // Fetch stock trades and annual disclosures in parallel — they're
     // independent requests, so there's no reason to wait on one before
     // starting the other.
     const [trades, annualDisclosures] = await Promise.all([
-      isSenate
-        ? circuitBreakers.senateStockWatcher.execute(async () => {
-            const senateTrades = await senateDisclosureService.getTradesForMember(bioguideId);
-            // Backfill stateDistrict on Senate trades (not in source data)
-            return senateTrades.map(t => ({ ...t, stateDistrict }));
-          })
-        : circuitBreakers.houseClerk.execute(async () => {
-            return houseDisclosureService.getTradesForMember(bioguideId);
-          }),
+      circuitBreakers.senateStockWatcher.execute(async () => {
+        // Both chambers now come from Congress Trading Monitor, which does not
+        // carry stateDistrict — backfill it from the representative record.
+        const ctmTrades = isSenate
+          ? await congressTradingMonitor.getTradesForMember(bioguideId)
+          : await congressTradingMonitor.getTradesForRepresentative(bioguideId);
+        return ctmTrades.map(t => ({ ...t, stateDistrict }));
+      }),
       // Annual financial disclosures (House only — every member files these)
       isSenate
         ? Promise.resolve([])
@@ -95,33 +93,28 @@ export async function GET(
             }),
     ]);
 
-    const yearsChecked = isSenate
-      ? []
-      : Array.from({ length: coverageYears }, (_, i) => currentYear - i).sort();
+    // Trades now come from Congress Trading Monitor (2015-present) for both
+    // chambers, so there is no per-year PDF scan window to report.
+    const primarySource = isSenate ? 'efdsearch.senate.gov' : 'the U.S. House Office of the Clerk';
 
     const response: StockTradeResponse = {
       trades,
       annualDisclosures,
       member: { bioguideId, name: repData.name, stateDistrict },
       metadata: {
-        dataSource: isSenate ? 'congress-trading-monitor' : 'house-clerk-disclosures',
+        dataSource: 'congress-trading-monitor',
         lastUpdated: new Date().toISOString(),
         totalFilings: new Set(trades.map(t => t.filingId)).size,
-        coveragePeriod: isSenate
-          ? `2015-${currentYear}`
-          : `${currentYear - coverageYears + 1}-${currentYear}`,
-        yearsChecked,
-        note: isSenate
-          ? trades.length > 0
-            ? 'Data from STOCK Act Periodic Transaction Reports filed with the Senate Office of Public Records. ' +
-              'Parsed by Congress Trading Monitor, an independent open-source project; each trade links to its original efdsearch.senate.gov filing. ' +
-              'Electronic filings from 2015 onward; pre-2015 paper filings are not included. ' +
-              'Transactions over $1,000 must be disclosed within 45 days.'
-            : 'No STOCK Act financial disclosures found for this Senator in the Congress Trading Monitor dataset. ' +
-              'This may mean the Senator had no reportable transactions or their filings were not electronically processed.'
-          : trades.length > 0
-            ? 'Data from STOCK Act Periodic Transaction Reports filed with the U.S. House Office of the Clerk. Transactions over $1,000 must be disclosed within 45 days.'
-            : 'No Periodic Transaction Reports found. This representative has not disclosed securities transactions over $1,000 in the years checked.',
+        coveragePeriod: `2015-${currentYear}`,
+        yearsChecked: [],
+        note:
+          trades.length > 0
+            ? `Data from STOCK Act Periodic Transaction Reports parsed by Congress Trading Monitor, ` +
+              `an independent open-source project; each trade links to its original ${primarySource} filing. ` +
+              `Electronic filings from 2015 onward; pre-2015 paper filings are not included. ` +
+              `Transactions over $1,000 must be disclosed within 45 days.`
+            : `No STOCK Act Periodic Transaction Reports found for this member in the Congress Trading Monitor dataset. ` +
+              `This may mean they had no reportable transactions or their filings were not electronically processed.`,
       },
     };
 

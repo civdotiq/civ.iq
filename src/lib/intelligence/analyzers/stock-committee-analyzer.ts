@@ -20,8 +20,7 @@ import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
-import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import { resolveTickerIndustries } from '@/lib/intelligence/entity-resolution/ticker-industry-resolver';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getTopicsForCommittee } from '@/lib/connections/committee-agency-map';
@@ -240,8 +239,8 @@ async function fetchData(bioguideId: string): Promise<FetchedData | null> {
   try {
     allTrades =
       chamber === 'Senate'
-        ? await senateDisclosureService.getTradesForMember(bioguideId)
-        : await houseDisclosureService.getTradesForMember(bioguideId);
+        ? await congressTradingMonitor.getTradesForMember(bioguideId)
+        : await congressTradingMonitor.getTradesForRepresentative(bioguideId);
   } catch {
     logger.warn('[StockCommittee] Trade fetch failed', { bioguideId, chamber });
     return null;

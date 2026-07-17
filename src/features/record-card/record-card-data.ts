@@ -488,13 +488,14 @@ async function fetchPtrSection(
 ): Promise<PtrSection | null> {
   if (chamber !== 'House') return null;
   try {
-    const { houseDisclosureService } = await import('@/lib/data-sources/house-disclosure-service');
-    const trades = await houseDisclosureService.getTradesForMember(bioguideId);
+    const { congressTradingMonitor } = await import('@/lib/data-sources/senate-disclosure-service');
+    const trades = await congressTradingMonitor.getTradesForRepresentative(bioguideId);
     const paperFilings = trades.filter(t => t.isPaperFiling).length;
     return {
       transactions: trades.length - paperFilings,
       paperFilings,
-      coverageYears: 5,
+      // CTM covers electronic filings from 2015 to present, not a 5-year window.
+      coverageYears: new Date().getFullYear() - 2015 + 1,
     };
   } catch (error) {
     logger.warn('Record card: PTR lookup failed', { bioguideId, error });

@@ -4,25 +4,41 @@
  */
 
 /**
- * Senate Financial Disclosure Service
+ * Congress Trading Monitor Service
  *
- * Fetches pre-parsed STOCK Act Periodic Transaction Reports (PTRs)
- * for U.S. Senators from the Congress Trading Monitor open dataset
- * (MIT-licensed, refreshed daily from the Senate eFD system).
+ * Fetches pre-parsed STOCK Act Periodic Transaction Reports (PTRs) for
+ * members of Congress from the Congress Trading Monitor open dataset
+ * (MIT-licensed, refreshed daily). Serves BOTH chambers: Senate records
+ * derive from the Senate eFD system, House records from the House Clerk.
  *
  * Replaced Senate Stock Watcher 2026-07: that dataset's last commit was
- * 2021-03-16, silently freezing Senate coverage at early 2021. Congress
- * Trading Monitor covers electronic eFD filings from 2015 to present;
- * pre-2015 paper filings are not included. Every trade retains its
- * primary-source efdsearch.senate.gov document link.
+ * 2021-03-16, silently freezing Senate coverage at early 2021. Replaced
+ * the in-house House Clerk PDF parser 2026-07: CTM parses the same House
+ * filings daily at scale, so we consume its pre-parsed output instead of
+ * running a brittle PDF pipeline. CTM covers electronic filings from 2015
+ * to present; pre-2015 paper filings are not included. Every trade retains
+ * its primary-source document link (efdsearch.senate.gov or
+ * disclosures-clerk.house.gov).
+ *
+ * Note: CTM is cross-branch — it also carries OGE executive-branch filers.
+ * We filter strictly on `filer.chamber` ('senate' | 'house'); never widen
+ * this to include non-Congress filers.
+ *
+ * The historical export name `senateDisclosureService` is kept as an alias
+ * for back-compat; new House call sites should use `congressTradingMonitor`.
  *
  * @see {@link https://github.com/kadoa-org/congress-trading-monitor}
  * @see {@link https://efdsearch.senate.gov}
+ * @see {@link https://disclosures-clerk.house.gov}
  */
 
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { ASSET_TYPE_CODES } from '@/types/stock-trades';
 import type { StockTrade } from '@/types/stock-trades';
+
+/** Chamber discriminator for Congress Trading Monitor filer records */
+type Chamber = 'senate' | 'house';
 
 const BASE_URL =
   'https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data';
@@ -148,19 +164,26 @@ function computeDaysToDisclose(transactionDate: string, filingDate: string): num
 }
 
 /**
- * Map a Senate owner string to the StockTrade owner format.
+ * Map a Congress Trading Monitor owner value to the StockTrade owner format.
+ * Senate records use free text ("Joint"); House records use 2-letter codes
+ * ("JT"). Both normalize to the same word form.
  */
 function mapOwner(owner: string): string {
-  switch (owner) {
-    case 'Self':
+  switch (owner.toUpperCase()) {
+    case 'SELF':
+    case 'SE':
       return 'Self';
-    case 'Spouse':
+    case 'SPOUSE':
+    case 'SP':
       return 'Spouse';
-    case 'Joint':
+    case 'JOINT':
+    case 'JT':
       return 'Joint';
-    case 'Child':
+    case 'CHILD':
+    case 'DC':
       return 'Dependent Child';
     case 'N/A':
+    case '':
     default:
       return 'Self';
   }
@@ -187,16 +210,19 @@ function mapTransactionType(type: string): string {
 
 export class SenateDisclosureService {
   /**
-   * Fetch the Senate filer index keyed by bioguide ID.
+   * Fetch the filer index for one chamber, keyed by bioguide ID.
    * The bioguide ID is extracted from each filer's unitedstates.github.io
    * photo URL; filers without one are skipped (never guessed by name).
+   * The `chamber` filter also excludes CTM's OGE executive-branch filers.
    * Cached for 24 hours.
    */
-  private async fetchSenateFilerIndex(): Promise<Record<string, CtmFiler>> {
+  private async fetchFilerIndex(chamber: Chamber): Promise<Record<string, CtmFiler>> {
+    // Namespace kept as `senate-trades:` for continuity with the health-probe
+    // cacheKeyPattern; the per-chamber suffix keeps House and Senate separate.
     return cachedFetch(
-      'senate-trades:filer-index',
+      `senate-trades:filer-index:${chamber}`,
       async () => {
-        logger.info('Fetching Congress Trading Monitor filer index');
+        logger.info('Fetching Congress Trading Monitor filer index', { chamber });
 
         const response = await fetch(`${BASE_URL}/filers.json`, {
           headers: { 'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)' },
@@ -213,11 +239,12 @@ export class SenateDisclosureService {
         let skipped = 0;
 
         for (const filer of filers) {
-          if (filer.chamber !== 'senate') continue;
+          if (filer.chamber !== chamber) continue;
           const bioguideId = extractBioguideFromPhotoUrl(filer.photo_url);
           if (!bioguideId) {
             skipped++;
-            logger.warn('Senate filer has no resolvable bioguide ID, skipping', {
+            logger.warn('Congress Trading Monitor filer has no resolvable bioguide ID, skipping', {
+              chamber,
               filerId: filer.id,
               name: filer.full_name,
             });
@@ -226,8 +253,9 @@ export class SenateDisclosureService {
           index[bioguideId] = filer;
         }
 
-        logger.info('Built Senate filer index', {
-          senators: Object.keys(index).length,
+        logger.info('Built Congress Trading Monitor filer index', {
+          chamber,
+          members: Object.keys(index).length,
           skipped,
         });
 
@@ -270,8 +298,14 @@ export class SenateDisclosureService {
     const ticker = rawTicker === '--' || rawTicker === '' ? null : rawTicker;
     const assetDescription = stripHtml(txn.asset_name ?? '');
     const assetTypeRaw = txn.asset_type ?? '';
-    const assetType = SENATE_ASSET_TYPE_MAP[assetTypeRaw] ?? 'OT';
-    const assetTypeLabel = SENATE_ASSET_LABEL_MAP[assetTypeRaw] ?? (assetTypeRaw || 'Other');
+    // House CTM records already use canonical 2-letter codes (ST, OP, OT);
+    // Senate records use free text ("Stock"). Pass native codes through,
+    // otherwise map the free-text label to a code.
+    const isNativeCode = assetTypeRaw in ASSET_TYPE_CODES;
+    const assetType = isNativeCode ? assetTypeRaw : (SENATE_ASSET_TYPE_MAP[assetTypeRaw] ?? 'OT');
+    const assetTypeLabel = isNativeCode
+      ? (ASSET_TYPE_CODES[assetType] ?? assetType)
+      : (SENATE_ASSET_LABEL_MAP[assetTypeRaw] ?? (assetTypeRaw || 'Other'));
     const isPaperFiling = assetTypeRaw === 'PDF Disclosed Filing' || txn.transaction_type === 'N/A';
 
     const transactionDate = parseDate(txn.transaction_date);
@@ -321,15 +355,18 @@ export class SenateDisclosureService {
   }
 
   /**
-   * Get all stock trades for a specific Senator by bioguide ID.
+   * Get all stock trades for one member (either chamber) by bioguide ID.
    */
-  async getTradesForMember(bioguideId: string): Promise<StockTrade[]> {
-    const index = await this.fetchSenateFilerIndex();
+  private async getTradesForMemberInChamber(
+    bioguideId: string,
+    chamber: Chamber
+  ): Promise<StockTrade[]> {
+    const index = await this.fetchFilerIndex(chamber);
     const normalizedId = bioguideId.toUpperCase();
     const filer = index[normalizedId];
 
     if (!filer) {
-      logger.info('No Congress Trading Monitor data for member', { bioguideId });
+      logger.info('No Congress Trading Monitor data for member', { bioguideId, chamber });
       return [];
     }
 
@@ -338,12 +375,26 @@ export class SenateDisclosureService {
   }
 
   /**
-   * Get all senator trades grouped by bioguide ID.
+   * Get all stock trades for a specific Senator by bioguide ID.
+   */
+  async getTradesForMember(bioguideId: string): Promise<StockTrade[]> {
+    return this.getTradesForMemberInChamber(bioguideId, 'senate');
+  }
+
+  /**
+   * Get all stock trades for a specific Representative by bioguide ID.
+   */
+  async getTradesForRepresentative(bioguideId: string): Promise<StockTrade[]> {
+    return this.getTradesForMemberInChamber(bioguideId, 'house');
+  }
+
+  /**
+   * Get all trades for one chamber grouped by bioguide ID.
    * Fetches per-filer files with bounded concurrency; each file is
    * individually cached, so repeat calls are cheap.
    */
-  async getAllSenatorTrades(): Promise<Map<string, StockTrade[]>> {
-    const index = await this.fetchSenateFilerIndex();
+  private async getAllTradesForChamber(chamber: Chamber): Promise<Map<string, StockTrade[]>> {
+    const index = await this.fetchFilerIndex(chamber);
     const entries = Object.entries(index);
     const result = new Map<string, StockTrade[]>();
 
@@ -372,11 +423,25 @@ export class SenateDisclosureService {
   }
 
   /**
-   * Check if a bioguide ID has data in the Congress Trading Monitor dataset.
+   * Get all senator trades grouped by bioguide ID.
+   */
+  async getAllSenatorTrades(): Promise<Map<string, StockTrade[]>> {
+    return this.getAllTradesForChamber('senate');
+  }
+
+  /**
+   * Get all representative trades grouped by bioguide ID.
+   */
+  async getAllRepresentativeTrades(): Promise<Map<string, StockTrade[]>> {
+    return this.getAllTradesForChamber('house');
+  }
+
+  /**
+   * Check if a bioguide ID has Senate data in the Congress Trading Monitor dataset.
    */
   async hasMemberData(bioguideId: string): Promise<boolean> {
     try {
-      const index = await this.fetchSenateFilerIndex();
+      const index = await this.fetchFilerIndex('senate');
       return bioguideId.toUpperCase() in index;
     } catch {
       return false;
@@ -384,4 +449,11 @@ export class SenateDisclosureService {
   }
 }
 
-export const senateDisclosureService = new SenateDisclosureService();
+/**
+ * Congress Trading Monitor client for both chambers. Prefer this name at new
+ * call sites; `senateDisclosureService` is kept as a back-compat alias.
+ */
+export const congressTradingMonitor = new SenateDisclosureService();
+
+/** @deprecated Use {@link congressTradingMonitor}. Kept for existing Senate call sites. */
+export const senateDisclosureService = congressTradingMonitor;

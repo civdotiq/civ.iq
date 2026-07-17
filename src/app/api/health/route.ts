@@ -323,10 +323,11 @@ const DATA_SOURCES: SourceDefinition[] = [
   },
   {
     // Verified: senate-disclosure-service.ts fetches filers.json + filer/*.json
-    // from this dataset. stats.json is a ~1KB summary carrying generatedAt,
-    // so the probe checks content freshness, not just URL reachability —
-    // the previous source (Senate Stock Watcher) kept returning 200 for
-    // five years after its data froze in March 2021.
+    // from this dataset for BOTH chambers (Senate + House trades, 2026-07).
+    // stats.json is a ~1KB summary carrying generatedAt, so the probe checks
+    // content freshness, not just URL reachability — the previous source
+    // (Senate Stock Watcher) kept returning 200 for five years after its data
+    // froze in March 2021.
     name: 'Congress Trading Monitor',
     tier: 'standard',
     probeUrl:
@@ -342,8 +343,10 @@ const DATA_SOURCES: SourceDefinition[] = [
   },
   {
     // Verified: house-disclosure-service.ts fetches ZIP at /public_disc/financial-pdfs/{year}FD.ZIP
-    // Use HEAD to check file exists without downloading the ZIP
-    name: 'House Disclosures',
+    // for annual financial disclosures ('A' filings). House *trades* now come
+    // from Congress Trading Monitor (probed above). Use HEAD to check the file
+    // exists without downloading the ZIP.
+    name: 'House Annual Disclosures',
     tier: 'standard',
     probeUrl: `https://disclosures-clerk.house.gov/public_disc/financial-pdfs/${new Date().getFullYear()}FD.ZIP`,
     probeMethod: 'HEAD',

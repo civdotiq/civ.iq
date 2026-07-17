@@ -7,19 +7,19 @@
  * Stock Trade Leaderboard Analyzer
  *
  * Builds a leaderboard ranking members of Congress by stock trading activity.
- * Aggregates from cached trade data: Senate bulk dataset + House per-member caches.
+ * Aggregates from the Congress Trading Monitor bulk dataset (both chambers).
  *
  * Supports ranking by: trade count, estimated value, or late filing count.
  * Supports filtering by chamber (house/senate) and party (D/R/I).
  *
- * Flow: check cache → load Senate bulk + scan House caches → aggregate → rank → cache → return
+ * Flow: check cache → load Senate + House bulk → aggregate → rank → cache → return
  * Pattern: sector-leaderboard-analyzer.ts
  */
 
 import { mean, median } from 'simple-statistics';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import { normalizePartyCode } from '@/lib/data-sources/congress-trades-query';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { StockTrade } from '@/types/stock-trades';
@@ -199,7 +199,7 @@ async function loadAllMemberStats(): Promise<MemberTradeStats[]> {
 
   // Load Senate trades from bulk dataset (single cached API call)
   try {
-    const senateTradesMap = await senateDisclosureService.getAllSenatorTrades();
+    const senateTradesMap = await congressTradingMonitor.getAllSenatorTrades();
     for (const [bioguideId, trades] of senateTradesMap) {
       const memberStat = computeStats(bioguideId, trades);
       if (memberStat.tradeCount > 0) {
@@ -215,33 +215,23 @@ async function loadAllMemberStats(): Promise<MemberTradeStats[]> {
     });
   }
 
-  // Load House trades from Redis cache
+  // Load House trades from the same Congress Trading Monitor bulk dataset
   try {
-    const houseKeys = await getRedisCache().keys('stock-trades:*');
-    if (houseKeys.length > 0) {
-      const values = await getRedisCache().mget<StockTrade[]>(houseKeys);
+    const houseTradesMap = await congressTradingMonitor.getAllRepresentativeTrades();
+    for (const [bioguideId, trades] of houseTradesMap) {
+      // Skip if we already have this member from Senate
+      if (stats.some(s => s.bioguideId === bioguideId)) continue;
 
-      for (let i = 0; i < houseKeys.length; i++) {
-        const trades = values[i];
-        if (!trades || !Array.isArray(trades) || trades.length === 0) continue;
-
-        // Extract bioguideId from the cache key
-        const bioguideId = houseKeys[i]!.replace('stock-trades:', '');
-        // Skip if we already have this member from Senate
-        if (stats.some(s => s.bioguideId === bioguideId)) continue;
-
-        const memberStat = computeStats(bioguideId, trades);
-        if (memberStat.tradeCount > 0) {
-          stats.push(memberStat);
-        }
+      const memberStat = computeStats(bioguideId, trades);
+      if (memberStat.tradeCount > 0) {
+        stats.push(memberStat);
       }
-
-      logger.info('[StockTradeLeaderboard] Loaded House cached data', {
-        cachedMembers: houseKeys.length,
-      });
     }
+    logger.info('[StockTradeLeaderboard] Loaded House data', {
+      representativesWithTrades: houseTradesMap.size,
+    });
   } catch (error) {
-    logger.warn('[StockTradeLeaderboard] Failed to load House cached data', {
+    logger.warn('[StockTradeLeaderboard] Failed to load House data', {
       error: (error as Error).message,
     });
   }

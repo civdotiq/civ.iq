@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { secEdgarService } from '@/lib/data-sources/sec-edgar-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { houseDisclosureService } from '@/lib/data-sources/house-disclosure-service';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import logger from '@/lib/logging/simple-logger';
 import type { SecFilingsResponse } from '@/types/sec-edgar';
 
@@ -48,7 +48,7 @@ export async function GET(
     if (tickerParam) {
       tickers = [tickerParam.toUpperCase()];
     } else if (repData.chamber === 'House') {
-      const trades = await houseDisclosureService.getTradesForMember(bioguideId);
+      const trades = await congressTradingMonitor.getTradesForRepresentative(bioguideId);
       const uniqueTickers = new Set(
         trades.map(t => t.ticker).filter((t): t is string => t !== null && t.length > 0)
       );

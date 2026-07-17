@@ -50,19 +50,18 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: (...args: unknown[]) => mockGetEnhancedRepresentative(...args),
 }));
 
-const mockGetTradesForMember = jest.fn();
-jest.mock('@/lib/data-sources/house-disclosure-service', () => ({
-  houseDisclosureService: {
-    getTradesForMember: (...args: unknown[]) => mockGetTradesForMember(...args),
-  },
-}));
-
+// Both chambers now source trades from the Congress Trading Monitor:
+// Senate via getTradesForMember, House via getTradesForRepresentative.
 const mockSenateGetTradesForMember = jest.fn();
-jest.mock('@/lib/data-sources/senate-disclosure-service', () => ({
-  senateDisclosureService: {
+const mockHouseGetTradesForRepresentative = jest.fn();
+jest.mock('@/lib/data-sources/senate-disclosure-service', () => {
+  const ctm = {
     getTradesForMember: (...args: unknown[]) => mockSenateGetTradesForMember(...args),
-  },
-}));
+    getTradesForRepresentative: (...args: unknown[]) =>
+      mockHouseGetTradesForRepresentative(...args),
+  };
+  return { congressTradingMonitor: ctm, senateDisclosureService: ctm };
+});
 
 const mockResolveTickerIndustries = jest.fn();
 jest.mock('@/lib/intelligence/entity-resolution/ticker-industry-resolver', () => ({
@@ -201,7 +200,7 @@ describe('analyzeStockCommittee', () => {
     mockRedisKeys.mockResolvedValue([]);
     mockRedisMget.mockResolvedValue([]);
     mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
-    mockGetTradesForMember.mockResolvedValue(mockTrades);
+    mockHouseGetTradesForRepresentative.mockResolvedValue(mockTrades);
     mockSenateGetTradesForMember.mockResolvedValue(mockTrades);
     mockResolveTickerIndustries.mockResolvedValue(buildResolutionMap());
   });
@@ -212,7 +211,7 @@ describe('analyzeStockCommittee', () => {
 
     const result = await analyzeStockCommittee('P000197');
     expect(result).toEqual(cached);
-    expect(mockGetTradesForMember).not.toHaveBeenCalled();
+    expect(mockHouseGetTradesForRepresentative).not.toHaveBeenCalled();
   });
 
   it('fetches trades from Senate service for Senate members', async () => {
@@ -222,7 +221,7 @@ describe('analyzeStockCommittee', () => {
     const result = await analyzeStockCommittee('T000476');
 
     expect(mockSenateGetTradesForMember).toHaveBeenCalledWith('T000476');
-    expect(mockGetTradesForMember).not.toHaveBeenCalled();
+    expect(mockHouseGetTradesForRepresentative).not.toHaveBeenCalled();
     expect(result).not.toBeNull();
     expect(result!.methodology).toContain('Congress Trading Monitor');
   });
@@ -244,6 +243,9 @@ describe('analyzeStockCommittee', () => {
   it('uses batch ticker resolution', async () => {
     await analyzeStockCommittee('P000197');
 
+    // House members source trades via the Congress Trading Monitor House endpoint
+    expect(mockHouseGetTradesForRepresentative).toHaveBeenCalledWith('P000197');
+    expect(mockSenateGetTradesForMember).not.toHaveBeenCalled();
     expect(mockResolveTickerIndustries).toHaveBeenCalledWith(
       expect.arrayContaining(['AAPL', 'MSFT', 'JNJ', 'XOM'])
     );
@@ -271,7 +273,7 @@ describe('analyzeStockCommittee', () => {
   });
 
   it('returns null when fewer than MIN_TRADES_STOCK trades', async () => {
-    mockGetTradesForMember.mockResolvedValue([mockTrades[0]!]);
+    mockHouseGetTradesForRepresentative.mockResolvedValue([mockTrades[0]!]);
 
     const result = await analyzeStockCommittee('P000197');
     expect(result).toBeNull();

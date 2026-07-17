@@ -12,17 +12,16 @@
  *
  * Data paths (same corpus the stock-trade leaderboard analyzer reads):
  * - Senate: Congress Trading Monitor bulk load (per-filer files, 24h cached)
- * - House: Redis corpus at `stock-trades:{bioguideId}`, populated by the
- *   daily stock-trade-parser cron from House Clerk PTR PDFs
+ * - House: Congress Trading Monitor bulk load (per-filer files, 24h cached).
+ *   Replaced the Redis PTR corpus + House Clerk PDF parser 2026-07.
  *
  * Party/state come from an enrichment map cached 24h; members that cannot
  * be resolved are excluded from party filters rather than guessed.
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
-import { senateDisclosureService } from '@/lib/data-sources/senate-disclosure-service';
+import { congressTradingMonitor } from '@/lib/data-sources/senate-disclosure-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { StockTrade } from '@/types/stock-trades';
 
@@ -133,7 +132,7 @@ async function loadAllMemberTrades(): Promise<{
   let houseMembersLoaded = 0;
 
   try {
-    const senateMap = await senateDisclosureService.getAllSenatorTrades();
+    const senateMap = await congressTradingMonitor.getAllSenatorTrades();
     for (const [bioguideId, trades] of senateMap) {
       members.push({ bioguideId, chamber: 'Senate', trades });
     }
@@ -145,22 +144,15 @@ async function loadAllMemberTrades(): Promise<{
   }
 
   try {
-    const houseKeys = await getRedisCache().keys('stock-trades:*');
-    // The corpus keys are exactly stock-trades:{bioguideId}; ignore anything else
-    const memberKeys = houseKeys.filter(k => /^stock-trades:[A-Z]\d{6}$/i.test(k));
-    if (memberKeys.length > 0) {
-      const values = await getRedisCache().mget<StockTrade[]>(memberKeys);
-      for (let i = 0; i < memberKeys.length; i++) {
-        const trades = values[i];
-        if (!trades || !Array.isArray(trades) || trades.length === 0) continue;
-        const bioguideId = memberKeys[i]!.replace('stock-trades:', '').toUpperCase();
-        if (members.some(m => m.bioguideId === bioguideId)) continue;
-        members.push({ bioguideId, chamber: 'House', trades });
-        houseMembersLoaded++;
-      }
+    const houseMap = await congressTradingMonitor.getAllRepresentativeTrades();
+    for (const [bioguideId, trades] of houseMap) {
+      // A member should never appear in both chambers, but guard anyway
+      if (members.some(m => m.bioguideId === bioguideId)) continue;
+      members.push({ bioguideId, chamber: 'House', trades });
+      houseMembersLoaded++;
     }
   } catch (error) {
-    logger.warn('[TradesQuery] Failed to load House trades from cache', {
+    logger.warn('[TradesQuery] Failed to load House trades', {
       error: (error as Error).message,
     });
   }

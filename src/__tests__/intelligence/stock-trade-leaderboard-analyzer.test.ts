@@ -29,11 +29,14 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 }));
 
 const mockGetAllSenatorTrades = jest.fn();
-jest.mock('@/lib/data-sources/senate-disclosure-service', () => ({
-  senateDisclosureService: {
+const mockGetAllRepresentativeTrades = jest.fn();
+jest.mock('@/lib/data-sources/senate-disclosure-service', () => {
+  const ctm = {
     getAllSenatorTrades: (...args: unknown[]) => mockGetAllSenatorTrades(...args),
-  },
-}));
+    getAllRepresentativeTrades: (...args: unknown[]) => mockGetAllRepresentativeTrades(...args),
+  };
+  return { congressTradingMonitor: ctm, senateDisclosureService: ctm };
+});
 
 const mockGetEnhancedRepresentative = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
@@ -112,6 +115,7 @@ describe('buildStockTradeLeaderboard', () => {
     mockRedisKeys.mockResolvedValue([]);
     mockRedisMget.mockResolvedValue([]);
     mockGetAllSenatorTrades.mockResolvedValue(new Map());
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map());
     setupRepMock();
   });
 
@@ -132,12 +136,12 @@ describe('buildStockTradeLeaderboard', () => {
 
     expect(result).toEqual(cached);
     expect(mockGetAllSenatorTrades).not.toHaveBeenCalled();
-    expect(mockRedisKeys).not.toHaveBeenCalled();
+    expect(mockGetAllRepresentativeTrades).not.toHaveBeenCalled();
   });
 
   it('returns null when no trade data is available', async () => {
     mockGetAllSenatorTrades.mockResolvedValue(new Map());
-    mockRedisKeys.mockResolvedValue([]);
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map());
 
     const result = await buildStockTradeLeaderboard();
 
@@ -151,8 +155,7 @@ describe('buildStockTradeLeaderboard', () => {
     mockGetAllSenatorTrades.mockResolvedValue(senateTrades);
 
     const houseTrades = makeTradesForMember('H000001', 15);
-    mockRedisKeys.mockResolvedValue(['stock-trades:H000001']);
-    mockRedisMget.mockResolvedValue([houseTrades]);
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map([['H000001', houseTrades]]));
 
     const result = await buildStockTradeLeaderboard();
 
@@ -210,8 +213,7 @@ describe('buildStockTradeLeaderboard', () => {
     mockGetAllSenatorTrades.mockResolvedValue(senateTrades);
 
     const houseTrades = makeTradesForMember('H000001', 15);
-    mockRedisKeys.mockResolvedValue(['stock-trades:H000001']);
-    mockRedisMget.mockResolvedValue([houseTrades]);
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map([['H000001', houseTrades]]));
 
     const result = await buildStockTradeLeaderboard({ chamber: 'house' });
 
@@ -242,8 +244,7 @@ describe('buildStockTradeLeaderboard', () => {
     mockGetAllSenatorTrades.mockResolvedValue(senateTrades);
 
     const houseTrades = makeTradesForMember('H000001', 15);
-    mockRedisKeys.mockResolvedValue(['stock-trades:H000001']);
-    mockRedisMget.mockResolvedValue([houseTrades]);
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map([['H000001', houseTrades]]));
 
     const result = await buildStockTradeLeaderboard({ limit: 2 });
 
@@ -260,8 +261,7 @@ describe('buildStockTradeLeaderboard', () => {
     mockGetAllSenatorTrades.mockResolvedValue(senateTrades);
 
     const houseTrades = makeTradesForMember('H000001', 15);
-    mockRedisKeys.mockResolvedValue(['stock-trades:H000001']);
-    mockRedisMget.mockResolvedValue([houseTrades]);
+    mockGetAllRepresentativeTrades.mockResolvedValue(new Map([['H000001', houseTrades]]));
 
     const result = await buildStockTradeLeaderboard();
 
@@ -301,15 +301,16 @@ describe('buildStockTradeLeaderboard', () => {
     expect(result!.dataAvailability.membersWithData).toBe(1);
   });
 
-  it('does not duplicate members present in both Senate and House caches', async () => {
-    // Same bioguideId in Senate data and House cache
+  it('does not duplicate members present in both Senate and House data', async () => {
+    // Same bioguideId in Senate data and House data
     const senateTrades = new Map<string, StockTrade[]>();
     senateTrades.set('S000001', makeTradesForMember('S000001', 20));
     mockGetAllSenatorTrades.mockResolvedValue(senateTrades);
 
-    // House cache also has S000001 (shouldn't happen in practice, but test dedup)
-    mockRedisKeys.mockResolvedValue(['stock-trades:S000001']);
-    mockRedisMget.mockResolvedValue([makeTradesForMember('S000001', 5)]);
+    // House data also has S000001 (shouldn't happen in practice, but test dedup)
+    mockGetAllRepresentativeTrades.mockResolvedValue(
+      new Map([['S000001', makeTradesForMember('S000001', 5)]])
+    );
 
     const result = await buildStockTradeLeaderboard();
 

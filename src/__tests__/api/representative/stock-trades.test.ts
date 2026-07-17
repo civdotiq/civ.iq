@@ -13,21 +13,25 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-const mockHouseGetTrades = jest.fn();
+// House trades now come from the Congress Trading Monitor
+// (getTradesForRepresentative); the House Clerk service only supplies annual
+// disclosures. Senate trades come from CTM's getTradesForMember.
 const mockHouseGetAnnualDisclosures = jest.fn().mockResolvedValue([]);
 jest.mock('@/lib/data-sources/house-disclosure-service', () => ({
   houseDisclosureService: {
-    getTradesForMember: (...args: unknown[]) => mockHouseGetTrades(...args),
     getAnnualDisclosuresForMember: (...args: unknown[]) => mockHouseGetAnnualDisclosures(...args),
   },
 }));
 
 const mockSenateGetTrades = jest.fn();
-jest.mock('@/lib/data-sources/senate-disclosure-service', () => ({
-  senateDisclosureService: {
+const mockHouseGetTrades = jest.fn();
+jest.mock('@/lib/data-sources/senate-disclosure-service', () => {
+  const ctm = {
     getTradesForMember: (...args: unknown[]) => mockSenateGetTrades(...args),
-  },
-}));
+    getTradesForRepresentative: (...args: unknown[]) => mockHouseGetTrades(...args),
+  };
+  return { congressTradingMonitor: ctm, senateDisclosureService: ctm };
+});
 
 const mockGetEnhancedRepresentative = jest.fn();
 jest.mock('@/features/representatives/services/congress.service', () => ({
@@ -116,7 +120,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     expect(response.status).toBe(404);
   });
 
-  it('routes to House disclosure service for House members', async () => {
+  it('routes House members to the Congress Trading Monitor House endpoint', async () => {
     const { req, params } = createRequest('P000197');
     mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
     mockHouseGetTrades.mockResolvedValue([mockTrade]);
@@ -127,7 +131,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     expect(response.status).toBe(200);
     expect(mockHouseGetTrades).toHaveBeenCalledWith('P000197');
     expect(mockSenateGetTrades).not.toHaveBeenCalled();
-    expect(data.metadata.dataSource).toBe('house-clerk-disclosures');
+    expect(data.metadata.dataSource).toBe('congress-trading-monitor');
     expect(data.trades.length).toBe(1);
   });
 
@@ -176,7 +180,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const response = await GET(req, { params });
     const data: StockTradeResponse = await response.json();
 
-    expect(data.metadata.note).toContain('Senate Office of Public Records');
+    expect(data.metadata.note).toContain('efdsearch.senate.gov');
     expect(data.metadata.note).toContain('Congress Trading Monitor');
   });
 
@@ -216,7 +220,7 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     expect(data.metadata.dataSource).toBe('service-error');
   });
 
-  it('includes yearsChecked for House members', async () => {
+  it('reports an empty yearsChecked window (trades now come from CTM, not a PDF scan)', async () => {
     const { req, params } = createRequest('P000197');
     mockGetEnhancedRepresentative.mockResolvedValue(mockHouseRep);
     mockHouseGetTrades.mockResolvedValue([]);
@@ -224,10 +228,10 @@ describe('GET /api/representative/[bioguideId]/stock-trades', () => {
     const response = await GET(req, { params });
     const data: StockTradeResponse = await response.json();
 
-    expect(data.metadata.yearsChecked).toBeDefined();
-    expect(data.metadata.yearsChecked.length).toBe(5);
-    const sorted = [...data.metadata.yearsChecked].sort((a, b) => a - b);
-    expect(data.metadata.yearsChecked).toEqual(sorted);
+    // House trades are sourced from the Congress Trading Monitor (2015-present),
+    // so there is no per-year PDF scan window to report.
+    expect(data.metadata.yearsChecked).toEqual([]);
+    expect(data.metadata.coveragePeriod).toBe(`2015-${new Date().getFullYear()}`);
   });
 
   it('includes annualDisclosures in response', async () => {

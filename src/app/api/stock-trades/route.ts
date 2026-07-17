@@ -95,13 +95,13 @@ export async function GET(request: NextRequest) {
               'Congress Trading Monitor (Senate eFD, electronic filings 2015-present); ' +
               `${result.sources.senateMembersLoaded} senators loaded`,
             house:
-              'House Clerk PTR filings parsed by the daily stock-trade-parser cron; ' +
-              `${result.sources.houseMembersLoaded} representatives loaded from the corpus`,
+              'Congress Trading Monitor (House Clerk filings, electronic filings 2015-present); ' +
+              `${result.sources.houseMembersLoaded} representatives loaded`,
           },
           note:
-            'House coverage reflects filings the daily parser has processed so far; ' +
-            'it is not a complete historical archive. Members whose party could not be ' +
-            'resolved are excluded from party-filtered results.',
+            'Both chambers are sourced from Congress Trading Monitor (electronic filings ' +
+            '2015-present); pre-2015 paper filings are not included. Members whose party ' +
+            'could not be resolved are excluded from party-filtered results.',
         },
       },
       {

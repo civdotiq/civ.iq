@@ -85,10 +85,6 @@
       "schedule": "0 10 * * *"
     },
     {
-      "path": "/api/cron/stock-trade-parser",
-      "schedule": "0 12 * * *"
-    },
-    {
       "path": "/api/cron/dataset-generator",
       "schedule": "0 7 * * *"
     },
