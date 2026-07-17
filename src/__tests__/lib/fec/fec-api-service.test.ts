@@ -28,7 +28,12 @@ jest.mock('@/lib/data/pac-acronyms', () => ({
 
 process.env.FEC_API_KEY = 'test-key';
 
-import { classifyPACType, FECApiService } from '@/lib/fec/fec-api-service';
+import {
+  classifyPACType,
+  FecCircuitBreaker,
+  fecCircuitBreaker,
+  FECApiService,
+} from '@/lib/fec/fec-api-service';
 
 type FetchMock = jest.Mock<Promise<Response>, [RequestInfo | URL, RequestInit?]>;
 
@@ -298,6 +303,171 @@ describe('fec-api-service', () => {
       expect(result.coverage.fetched).toBe(0);
       expect(result.coverage.estimatedTotal).toBe(0);
       expect(result.coverage.coveragePercent).toBe(0);
+    });
+  });
+
+  describe('FecCircuitBreaker', () => {
+    // Injectable clock keeps every assertion deterministic — no fake timers.
+    function makeClock(start = 0) {
+      const clock = { t: start };
+      return { now: () => clock.t, advance: (ms: number) => (clock.t += ms), clock };
+    }
+
+    const THRESHOLD = 5;
+    const COOLDOWN = 30_000;
+
+    it('stays CLOSED and admits requests below the failure threshold', () => {
+      const { now } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD - 1; i++) breaker.onFailure(true);
+      expect(breaker.getState()).toBe('CLOSED');
+      expect(breaker.beforeRequest().allowed).toBe(true);
+    });
+
+    it('trips OPEN after N consecutive qualifying failures and then fails fast', () => {
+      const { now } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      expect(breaker.getState()).toBe('OPEN');
+      // Fail fast: no probe admitted while cooldown is unspent.
+      expect(breaker.beforeRequest()).toEqual({ allowed: false, probe: false });
+    });
+
+    it('does NOT trip on 429 or 4xx (non-qualifying) failures', () => {
+      const { now } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD * 4; i++) breaker.onFailure(false); // 429 / 404 / 422
+      expect(breaker.getState()).toBe('CLOSED');
+      expect(breaker.beforeRequest().allowed).toBe(true);
+    });
+
+    it('a success resets the consecutive-failure counter', () => {
+      const { now } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      breaker.onFailure(true);
+      breaker.onFailure(true);
+      breaker.onFailure(true);
+      breaker.onSuccess(); // reset
+      breaker.onFailure(true);
+      breaker.onFailure(true);
+      expect(breaker.getState()).toBe('CLOSED'); // only 2 since reset, below threshold
+    });
+
+    it('admits a single HALF_OPEN probe once the cooldown elapses', () => {
+      const { now, advance } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      expect(breaker.beforeRequest().allowed).toBe(false); // still OPEN
+
+      advance(COOLDOWN);
+      const probe = breaker.beforeRequest();
+      expect(probe).toEqual({ allowed: true, probe: true });
+      expect(breaker.getState()).toBe('HALF_OPEN');
+      // A second concurrent request is held while the probe is in flight.
+      expect(breaker.beforeRequest().allowed).toBe(false);
+    });
+
+    it('closes and resets when the HALF_OPEN probe succeeds', () => {
+      const { now, advance } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      advance(COOLDOWN);
+      breaker.beforeRequest(); // -> HALF_OPEN probe
+      breaker.onSuccess();
+      expect(breaker.getState()).toBe('CLOSED');
+      // Counter was reset: a fresh streak must reach the full threshold again.
+      for (let i = 0; i < THRESHOLD - 1; i++) breaker.onFailure(true);
+      expect(breaker.getState()).toBe('CLOSED');
+    });
+
+    it('re-opens when the HALF_OPEN probe fails', () => {
+      const { now, advance } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      advance(COOLDOWN);
+      breaker.beforeRequest(); // -> HALF_OPEN probe
+      breaker.onFailure(true); // probe fails
+      expect(breaker.getState()).toBe('OPEN');
+      expect(breaker.beforeRequest().allowed).toBe(false); // cooldown restarted
+    });
+
+    it('closes on a non-qualifying HALF_OPEN outcome (server is alive)', () => {
+      const { now, advance } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      advance(COOLDOWN);
+      breaker.beforeRequest(); // -> HALF_OPEN probe
+      breaker.onFailure(false); // e.g. 404 — FEC responded, it is up
+      expect(breaker.getState()).toBe('CLOSED');
+    });
+
+    it('releaseProbe hands a probe back to OPEN without judging health', () => {
+      const { now, advance } = makeClock();
+      const breaker = new FecCircuitBreaker(THRESHOLD, COOLDOWN, now);
+      for (let i = 0; i < THRESHOLD; i++) breaker.onFailure(true);
+      advance(COOLDOWN);
+      breaker.beforeRequest(); // -> HALF_OPEN probe
+      breaker.releaseProbe();
+      expect(breaker.getState()).toBe('OPEN');
+      // Cooldown already elapsed, so the next request re-probes immediately.
+      expect(breaker.beforeRequest()).toEqual({ allowed: true, probe: true });
+    });
+  });
+
+  describe('makeRequest circuit-breaker integration (module singleton)', () => {
+    afterEach(() => {
+      fecCircuitBreaker.reset();
+      jest.restoreAllMocks();
+    });
+
+    // Trip the shared singleton the same way a real outage would.
+    function tripSingleton() {
+      for (let i = 0; i < 5; i++) fecCircuitBreaker.onFailure(true);
+      expect(fecCircuitBreaker.getState()).toBe('OPEN');
+    }
+
+    it('OPEN breaker fails fast without hitting the network and degrades to []', async () => {
+      tripSingleton();
+      const fetchMock = jest.fn();
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const service = new FECApiService();
+      // getIndependentExpenditures swallows FEC errors and returns [].
+      const result = await service.getIndependentExpenditures('H0XX00000', 2024);
+
+      expect(result).toEqual([]);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('OPEN breaker fails fast for throwing callers too (no fetch)', async () => {
+      tripSingleton();
+      const fetchMock = jest.fn();
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const service = new FECApiService();
+      // getCandidateInfo re-throws; an OPEN breaker throws before any fetch.
+      await expect(service.getCandidateInfo('H0XX00000')).rejects.toThrow(/circuit breaker OPEN/i);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('CLOSED breaker is a no-op on the happy path', async () => {
+      fecCircuitBreaker.reset();
+      const fetchMock = mockFetchResponses([
+        {
+          body: {
+            api_version: '1.0',
+            pagination: { page: 1, pages: 1, per_page: 1, count: 1 },
+            results: [{ candidate_id: 'H0XX00000', name: 'DOE, JANE' }],
+          },
+        },
+      ]);
+
+      const service = new FECApiService();
+      const info = await service.getCandidateInfo('H0XX00000');
+
+      expect(info).toEqual({ candidate_id: 'H0XX00000', name: 'DOE, JANE' });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fecCircuitBreaker.getState()).toBe('CLOSED');
     });
   });
 });

@@ -237,6 +237,140 @@ class FECApiError extends Error {
 }
 
 /**
+ * Circuit breaker states.
+ * CLOSED    — normal operation; requests flow through.
+ * OPEN      — FEC judged down; fail fast without touching the network.
+ * HALF_OPEN — cooldown elapsed; admit a single probe to test recovery.
+ */
+type BreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+
+/**
+ * Process-local circuit breaker for the FEC HTTP client.
+ *
+ * During an FEC outage every request would otherwise walk the full
+ * exponential-backoff ladder before failing, blowing tight caller budgets
+ * (e.g. the 55s analyzer timeout) for no benefit. Once enough consecutive
+ * server/network failures accumulate the breaker OPENs and subsequent calls
+ * fail fast, degrading callers to their existing empty / `Data unavailable`
+ * fallbacks instantly instead of after four sleeps.
+ *
+ * Only genuine upstream-health failures count toward tripping: 5xx responses,
+ * timeouts and network errors. HTTP 429 (rate limiting — owned by
+ * fec-rate-limiter and the 429/backoff path) and 4xx like 404/422 ("no data
+ * for this query") are expected/transient and NEVER trip the breaker. This
+ * composes with, rather than fights, the fail-open rate limiter.
+ *
+ * State is process-local (module singleton). The clock is injectable so unit
+ * tests stay deterministic without fake timers.
+ */
+export class FecCircuitBreaker {
+  private state: BreakerState = 'CLOSED';
+  private consecutiveFailures = 0;
+  private openedAt = 0;
+
+  constructor(
+    private readonly failureThreshold = 5,
+    private readonly cooldownMs = 30_000,
+    private readonly now: () => number = Date.now
+  ) {}
+
+  /**
+   * Gate a request. An OPEN breaker whose cooldown has elapsed transitions to
+   * HALF_OPEN and admits exactly one probe (`probe: true`); further requests
+   * are rejected until that probe resolves via onSuccess/onFailure/releaseProbe.
+   */
+  beforeRequest(): { allowed: boolean; probe: boolean } {
+    if (this.state === 'OPEN') {
+      if (this.now() - this.openedAt >= this.cooldownMs) {
+        this.transition('OPEN', 'HALF_OPEN');
+        return { allowed: true, probe: true };
+      }
+      return { allowed: false, probe: false };
+    }
+    if (this.state === 'HALF_OPEN') {
+      // A probe is already in flight — hold everyone else at the gate.
+      return { allowed: false, probe: false };
+    }
+    return { allowed: true, probe: false }; // CLOSED
+  }
+
+  /** Record a successful (2xx) response: reset the counter and, if probing, close. */
+  onSuccess(): void {
+    this.consecutiveFailures = 0;
+    if (this.state === 'HALF_OPEN') {
+      this.transition('HALF_OPEN', 'CLOSED');
+    }
+  }
+
+  /**
+   * Record a terminal non-2xx outcome.
+   * `qualifying` = true for 5xx / timeout / network (counts toward tripping);
+   * false for 429 / 4xx (server is alive — never trips, never resets).
+   */
+  onFailure(qualifying: boolean): void {
+    if (!qualifying) {
+      // Server responded (429/404/422): it is alive. If we were probing that is
+      // enough to close; otherwise leave the failure counter untouched.
+      if (this.state === 'HALF_OPEN') {
+        this.consecutiveFailures = 0;
+        this.transition('HALF_OPEN', 'CLOSED');
+      }
+      return;
+    }
+
+    this.consecutiveFailures++;
+    if (this.state === 'HALF_OPEN') {
+      // Probe failed — straight back to OPEN for another cooldown.
+      this.openedAt = this.now();
+      this.transition('HALF_OPEN', 'OPEN');
+      return;
+    }
+    if (this.state === 'CLOSED' && this.consecutiveFailures >= this.failureThreshold) {
+      this.openedAt = this.now();
+      this.transition('CLOSED', 'OPEN');
+    }
+  }
+
+  /**
+   * Hand a half-open probe back without judging FEC health (used when the call
+   * is throttled by the rate limiter before it ever reaches the network).
+   * Returns to OPEN keeping the elapsed cooldown so the next request re-probes.
+   */
+  releaseProbe(): void {
+    if (this.state === 'HALF_OPEN') {
+      this.state = 'OPEN';
+    }
+  }
+
+  /** Current state — for tests and observability. */
+  getState(): BreakerState {
+    return this.state;
+  }
+
+  /** Reset to a pristine CLOSED state (test hygiene). */
+  reset(): void {
+    this.state = 'CLOSED';
+    this.consecutiveFailures = 0;
+    this.openedAt = 0;
+  }
+
+  private transition(from: BreakerState, to: BreakerState): void {
+    this.state = to;
+    const label = `[FEC API] Circuit breaker ${from} → ${to}`;
+    if (to === 'OPEN') {
+      logger.warn(
+        `${label} — failing fast for ${this.cooldownMs}ms after ${this.consecutiveFailures} consecutive server/network failures`
+      );
+    } else {
+      logger.info(label);
+    }
+  }
+}
+
+/** Process-local singleton guarding all outbound FEC HTTP. */
+export const fecCircuitBreaker = new FecCircuitBreaker();
+
+/**
  * FEC committee designation code → human label.
  * Use when the API omits `designation_full`.
  * Reference: https://www.fec.gov/campaign-finance-data/committee-type-code-descriptions/
@@ -319,11 +453,28 @@ export class FECApiService {
   private async makeRequest<T>(endpoint: string, maxRetries: number = 3): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
+    // Circuit breaker: once FEC is judged down (5xx/timeout/network), fail fast
+    // instead of walking the full backoff ladder. Gated before the rate-limiter
+    // reservation so an OPEN breaker costs nothing. Throws the same FECApiError
+    // callers already catch, so an OPEN breaker degrades to their existing
+    // empty / null / "Data unavailable" fallbacks — never a crash.
+    const gate = fecCircuitBreaker.beforeRequest();
+    if (!gate.allowed) {
+      throw new FECApiError(
+        'FEC circuit breaker OPEN — upstream unavailable, failing fast',
+        503,
+        endpoint
+      );
+    }
+
     // Pre-flight: live calls always pass; cron calls yield once the minute's
     // shared budget is spent, leaving FEC quota for real users.
     const priority = getFecPriority();
     const reservation = await reserveFecCall(priority);
     if (!reservation.allowed) {
+      // A cron budget throttle says nothing about FEC's health — hand any
+      // half-open probe back so another request can still test recovery.
+      if (gate.probe) fecCircuitBreaker.releaseProbe();
       throw new FECApiError(
         `FEC budget reserved for live traffic — cron call throttled (${reservation.count}/${reservation.ceiling} this minute)`,
         429,
@@ -331,6 +482,32 @@ export class FECApiService {
       );
     }
 
+    try {
+      const result = await this.executeRequestWithRetries<T>(url, endpoint, maxRetries);
+      fecCircuitBreaker.onSuccess();
+      return result;
+    } catch (error) {
+      // Only server/network failures (5xx or transport error → status 0) count
+      // toward tripping. 429 (rate limit) and 4xx (no data) are expected and
+      // must NOT trip the breaker.
+      const status = error instanceof FECApiError ? error.status : 0;
+      const qualifying = status === 0 || status >= 500;
+      fecCircuitBreaker.onFailure(qualifying);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute a single FEC request with the exponential-backoff retry ladder.
+   * Returns the parsed body on success or throws FECApiError. Circuit-breaker
+   * bookkeeping lives in the caller (makeRequest) so it observes one terminal
+   * outcome per logical request, not one per retry attempt.
+   */
+  private async executeRequestWithRetries<T>(
+    url: string,
+    endpoint: string,
+    maxRetries: number
+  ): Promise<T> {
     // Backoff ceiling. Callers run under tight budgets (e.g. the 55s analyzer
     // timeout); a single honored `Retry-After: 30` could blow that on its own.
     // Cap exponential backoff here, and fail fast (below) when the server asks
