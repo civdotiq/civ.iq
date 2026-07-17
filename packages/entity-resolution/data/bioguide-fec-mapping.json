@@ -1469,6 +1469,22 @@
     "office": "H",
     "lastUpdated": "2025-09-18"
   },
+  "G000594": {
+    "fecId": "H0TX35015",
+    "name": "GONZALES, ERNEST",
+    "state": "TX",
+    "district": "23",
+    "office": "H",
+    "lastUpdated": "2026-07-17"
+  },
+  "G000596": {
+    "fecId": "H0GA06192",
+    "name": "GREENE, MARJORIE",
+    "state": "GA",
+    "district": "14",
+    "office": "H",
+    "lastUpdated": "2026-07-17"
+  },
   "G000597": {
     "fecId": "H0NY02234",
     "name": "GARBARINO, ANDREW",
@@ -2216,6 +2232,14 @@
     "office": "S",
     "lastUpdated": "2025-09-18"
   },
+  "L000578": {
+    "fecId": "H2CA02142",
+    "name": "LAMALFA, DOUG",
+    "state": "CA",
+    "district": "01",
+    "office": "H",
+    "lastUpdated": "2026-07-17"
+  },
   "L000582": {
     "fecId": "H4CA33119",
     "name": "LIEU, TED",
@@ -2504,6 +2528,13 @@
     "district": "06",
     "office": "H",
     "lastUpdated": "2025-09-18"
+  },
+  "M001190": {
+    "fecId": "S2OK00186",
+    "name": "MULLIN, MARKWAYNE",
+    "state": "OK",
+    "office": "S",
+    "lastUpdated": "2026-07-17"
   },
   "M001194": {
     "fecId": "H4MI04126",
@@ -3487,6 +3518,14 @@
     "office": "H",
     "lastUpdated": "2025-09-18"
   },
+  "S001193": {
+    "fecId": "H2CA15094",
+    "name": "SWALWELL, ERIC",
+    "state": "CA",
+    "district": "14",
+    "office": "H",
+    "lastUpdated": "2026-07-17"
+  },
   "S001194": {
     "fecId": "S4HI00136",
     "name": "SCHATZ, BRIAN",
@@ -3555,6 +3594,14 @@
     "district": "05",
     "office": "H",
     "lastUpdated": "2025-09-18"
+  },
+  "S001207": {
+    "fecId": "H8NJ11142",
+    "name": "SHERRILL, MIKIE",
+    "state": "NJ",
+    "district": "11",
+    "office": "H",
+    "lastUpdated": "2026-07-17"
   },
   "S001208": {
     "fecId": "S4MI00470",

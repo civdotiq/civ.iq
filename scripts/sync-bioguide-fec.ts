@@ -94,6 +94,19 @@ async function fetchLegislatorsYaml(): Promise<string> {
   return res.text();
 }
 
+/**
+ * Verified FEC candidate IDs for current members whose congress-legislators
+ * `ids.fec` array is missing or stale upstream. Each was confirmed against the
+ * FEC `/candidates/search/` endpoint (name + state + district + recent
+ * election_years) on 2026-07-17. Applied with the HIGHEST precedence so it
+ * corrects stale upstream IDs too — e.g. Mullin, whose YAML still lists only his
+ * defunct House ID (H2OK02083) after moving to the Senate. Remove an entry once
+ * the upstream YAML carries the correct current-office ID.
+ */
+export const MANUAL_FEC_OVERRIDES: Record<string, string> = {
+  M001190: 'S2OK00186', // Markwayne Mullin, OK-Sen (YAML has only stale House H2OK02083)
+};
+
 export function buildMappingFromLegislators(
   legislators: Legislator[],
   now: Date = new Date()
@@ -110,8 +123,9 @@ export function buildMappingFromLegislators(
     const bioguideId = legislator.id?.bioguide;
     if (!bioguideId) continue;
 
-    const fecIds = legislator.id.fec;
-    if (!fecIds || fecIds.length === 0) {
+    const overrideFecId = MANUAL_FEC_OVERRIDES[bioguideId];
+    const fecIds = legislator.id.fec ?? [];
+    if (fecIds.length === 0 && !overrideFecId) {
       skippedNoFec++;
       continue;
     }
@@ -129,7 +143,8 @@ export function buildMappingFromLegislators(
       id => typeof id === 'string' && id.startsWith(office) && FEC_ID_FORMAT.test(id)
     );
     const firstValid = fecIds.find(id => typeof id === 'string' && FEC_ID_FORMAT.test(id));
-    const fecId = officeMatch ?? firstValid;
+    // Manual override wins over upstream IDs so a stale current-office ID is corrected.
+    const fecId = overrideFecId ?? officeMatch ?? firstValid;
 
     if (!fecId || !FEC_ID_FORMAT.test(fecId)) {
       // Surface the raw first entry so maintainers can see which upstream
