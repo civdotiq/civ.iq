@@ -25,6 +25,7 @@ import {
   IndustrySector,
   categorizeContributionSmart,
 } from '@/lib/fec/industry-taxonomy';
+import { getTopIndustrySectorsFromAggregates } from '@/lib/fec/finance-aggregator';
 import { ZIP_TO_DISTRICT_MAP_119TH } from '@/lib/data/zip-district-mapping-119th';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
@@ -316,7 +317,16 @@ interface ComprehensiveFinanceResponse {
     cycle: number;
     lastUpdated: string;
     cacheHit: boolean;
+    // Size of the raw contribution sample used for per-donor sections
+    // (top contributors, district/ZIP analysis, recent contributions).
     sampleSize: number;
+    // Provenance of the industry breakdown: 'aggregate' = exact FEC by_employer/
+    // by_occupation totals across ALL contributions; 'sample' = fallback derived
+    // from the 250-row contribution sample.
+    industriesBasedOn: 'aggregate' | 'sample';
+    // Provenance of the geographic breakdown: 'aggregate' = exact FEC by_state
+    // totals; 'sample' = fallback derived from the contribution sample.
+    geographyBasedOn: 'aggregate' | 'sample';
   };
 }
 
@@ -327,11 +337,23 @@ export async function GET(
   const { bioguideId } = await params;
   const startTime = Date.now();
 
-  try {
-    logger.info('[Comprehensive Finance API] Called', { bioguideId });
+  // Cycle selector: the tab's other panels (funding sources, expenditures) are
+  // already cycle-aware, so the headline/industry/geography data must respect
+  // the same param instead of being pinned to a single cycle. Mirrors the
+  // validation used by the sibling finance routes.
+  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || 2024;
+  if (cycle < 1980 || cycle > 2030) {
+    return NextResponse.json(
+      { error: 'cycle must be a year between 1980 and 2030' },
+      { status: 400 }
+    );
+  }
 
-    // Check unified cache first
-    const cacheKey = FinanceCacheKeys.comprehensive(bioguideId);
+  try {
+    logger.info('[Comprehensive Finance API] Called', { bioguideId, cycle });
+
+    // Check unified cache first (keyed per cycle)
+    const cacheKey = FinanceCacheKeys.comprehensive(bioguideId, cycle);
     const cached = await govCache.get<ComprehensiveFinanceResponse>(cacheKey);
 
     if (cached) {
@@ -348,7 +370,7 @@ export async function GET(
     // Check FEC mapping
     const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json(EmptyFinanceResponses.comprehensive(bioguideId));
+      return NextResponse.json(EmptyFinanceResponses.comprehensive(bioguideId, undefined, cycle));
     }
 
     // PERFORMANCE OPTIMIZATION: Fetch all FEC data in parallel
@@ -363,13 +385,22 @@ export async function GET(
       principalCommitteeId,
       pacContributions,
       independentExpenditures,
+      byState,
+      byEmployer,
+      byOccupation,
     ] = await Promise.all([
-      fecApiService.getFinancialSummary(fecMapping.fecId, 2024),
-      fecApiService.getSampleContributions(fecMapping.fecId, 2024, 250),
-      fecApiService.getIndividualContributionsWithEmployer(fecMapping.fecId, 2024, 200),
-      fecApiService.getPrincipalCommitteeId(fecMapping.fecId, 2024),
-      fecApiService.getPACContributions(fecMapping.fecId, 2024),
-      fecApiService.getIndependentExpenditures(fecMapping.fecId, 2024),
+      fecApiService.getFinancialSummary(fecMapping.fecId, cycle),
+      fecApiService.getSampleContributions(fecMapping.fecId, cycle, 250),
+      fecApiService.getIndividualContributionsWithEmployer(fecMapping.fecId, cycle, 200),
+      fecApiService.getPrincipalCommitteeId(fecMapping.fecId, cycle),
+      fecApiService.getPACContributions(fecMapping.fecId, cycle),
+      fecApiService.getIndependentExpenditures(fecMapping.fecId, cycle),
+      // EXACT aggregates across ALL contributions (not the 250-row sample) for
+      // the industry + geographic breakdowns. Internally reuse the committee
+      // cache, so parallelizing here is safe.
+      fecApiService.getContributionsByState(fecMapping.fecId, cycle),
+      fecApiService.getContributionsByEmployer(fecMapping.fecId, cycle, 100),
+      fecApiService.getContributionsByOccupation(fecMapping.fecId, cycle, 100),
     ]);
 
     logger.info('[Comprehensive Finance API] Parallel fetch complete', {
@@ -379,10 +410,15 @@ export async function GET(
       hasPrincipalCommittee: !!principalCommitteeId,
       pacContributionsCount: pacContributions.length,
       independentExpendituresCount: independentExpenditures.length,
+      byStateRows: byState.length,
+      byEmployerRows: byEmployer.length,
+      byOccupationRows: byOccupation.length,
     });
 
     if (!financialSummary) {
-      return NextResponse.json(EmptyFinanceResponses.comprehensive(bioguideId, fecMapping.fecId));
+      return NextResponse.json(
+        EmptyFinanceResponses.comprehensive(bioguideId, fecMapping.fecId, cycle)
+      );
     }
 
     // Process contributors
@@ -489,7 +525,7 @@ export async function GET(
     const topContributors = individualContributors.slice(0, 50).map(contributor => ({
       ...contributor,
       fecTransparencyLink: principalCommitteeId
-        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&contributor_name=${encodeURIComponent(contributor.name)}`
+        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${principalCommitteeId}&contributor_name=${encodeURIComponent(contributor.name)}`
         : `https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=${encodeURIComponent(contributor.name)}&candidate_id=${fecMapping.fecId}`,
     }));
 
@@ -499,21 +535,49 @@ export async function GET(
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
 
-    // Format industries using OpenSecrets-inspired taxonomy system
-    // Combine individual contributions (better employer data) with all contributions (PAC names)
-    const combinedForIndustry = [...individualContributionsForIndustry, ...contributions];
-    const topCategorizedIndustries = getTopCategories(combinedForIndustry, 10);
-    const topIndustries = topCategorizedIndustries.map(cat => ({
-      sector: cat.sector,
-      category: cat.category,
-      industry: `${cat.sector}: ${cat.category}`, // Display name
-      amount: cat.totalAmount,
-      percentage: cat.percentage,
-      contributionCount: cat.contributionCount,
-      fecVerifyLink: principalCommitteeId
-        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&min_amount=1`
-        : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&min_amount=1`,
-    }));
+    // Format industries. PREFERRED path: FEC's pre-aggregated by_employer +
+    // by_occupation endpoints give EXACT sector totals across ALL contributions.
+    // FALLBACK (older filer / no principal committee / FEC hiccup → empty
+    // aggregates): the OpenSecrets-inspired taxonomy over the 250-row sample.
+    const fecVerifyLink = principalCommitteeId
+      ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${principalCommitteeId}&min_amount=1`
+      : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=${cycle}&candidate_id=${fecMapping.fecId}&min_amount=1`;
+
+    const aggregateIndustries = getTopIndustrySectorsFromAggregates(byEmployer, byOccupation, 10);
+    let industriesBasedOn: 'aggregate' | 'sample';
+    let topIndustries: ComprehensiveFinanceResponse['industries']['topIndustries'];
+
+    if (aggregateIndustries.length > 0) {
+      industriesBasedOn = 'aggregate';
+      topIndustries = aggregateIndustries.map(cat => ({
+        sector: cat.sector,
+        category: cat.category,
+        industry: `${cat.sector}: ${cat.category}`, // Display name
+        amount: cat.amount,
+        percentage: cat.percentage,
+        contributionCount: cat.contributionCount,
+        fecVerifyLink,
+      }));
+    } else {
+      industriesBasedOn = 'sample';
+      // Combine individual contributions (better employer data) with all contributions (PAC names)
+      const combinedForIndustry = [...individualContributionsForIndustry, ...contributions];
+      const topCategorizedIndustries = getTopCategories(combinedForIndustry, 10);
+      topIndustries = topCategorizedIndustries.map(cat => ({
+        sector: cat.sector,
+        category: cat.category,
+        industry: `${cat.sector}: ${cat.category}`, // Display name
+        amount: cat.totalAmount,
+        percentage: cat.percentage,
+        contributionCount: cat.contributionCount,
+        fecVerifyLink,
+      }));
+    }
+
+    logger.info('[Comprehensive Finance API] Industry breakdown built', {
+      industriesBasedOn,
+      topIndustriesCount: topIndustries.length,
+    });
 
     // Process PAC contributions by type (pacContributions & independentExpenditures already fetched in parallel above)
     const pacByType = {
@@ -613,32 +677,59 @@ export async function GET(
       independentExpenditures: independentExpenditures.length,
     });
 
-    // Calculate geographic breakdown
-    const stateMap = new Map<string, { amount: number; count: number }>();
-    let totalGeographic = 0;
+    // Calculate geographic breakdown.
+    // PREFERRED path: FEC's pre-aggregated by_state endpoint gives EXACT totals
+    // across ALL contributions. FALLBACK (empty aggregate): derive from the
+    // 250-row sample so the section never regresses to empty.
+    let geographyBasedOn: 'aggregate' | 'sample';
+    let topStates: NonNullable<ComprehensiveFinanceResponse['geographic']>['topStates'];
 
-    contributions.forEach(contrib => {
-      if (contrib.contributor_state) {
-        const state = contrib.contributor_state.trim().toUpperCase();
-        const amount = contrib.contribution_receipt_amount || 0;
-        const existing = stateMap.get(state) || { amount: 0, count: 0 };
-        stateMap.set(state, {
-          amount: existing.amount + amount,
-          count: existing.count + 1,
-        });
-        totalGeographic += amount;
-      }
+    if (byState.length > 0) {
+      geographyBasedOn = 'aggregate';
+      const totalStateAmount = byState.reduce((sum, r) => sum + (r.total || 0), 0);
+      topStates = byState
+        .filter(r => (r.total || 0) > 0 && (r.state || '').trim() !== '')
+        .map(r => ({
+          state: r.state.toUpperCase(),
+          amount: r.total,
+          percentage: totalStateAmount > 0 ? (r.total / totalStateAmount) * 100 : 0,
+          contributionCount: r.count,
+        }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 10);
+    } else {
+      geographyBasedOn = 'sample';
+      const stateMap = new Map<string, { amount: number; count: number }>();
+      let totalGeographic = 0;
+
+      contributions.forEach(contrib => {
+        if (contrib.contributor_state) {
+          const state = contrib.contributor_state.trim().toUpperCase();
+          const amount = contrib.contribution_receipt_amount || 0;
+          const existing = stateMap.get(state) || { amount: 0, count: 0 };
+          stateMap.set(state, {
+            amount: existing.amount + amount,
+            count: existing.count + 1,
+          });
+          totalGeographic += amount;
+        }
+      });
+
+      topStates = Array.from(stateMap.entries())
+        .map(([state, data]) => ({
+          state,
+          amount: data.amount,
+          percentage: totalGeographic > 0 ? (data.amount / totalGeographic) * 100 : 0,
+          contributionCount: data.count,
+        }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 10);
+    }
+
+    logger.info('[Comprehensive Finance API] Geographic breakdown built', {
+      geographyBasedOn,
+      topStatesCount: topStates.length,
     });
-
-    const topStates = Array.from(stateMap.entries())
-      .map(([state, data]) => ({
-        state,
-        amount: data.amount,
-        percentage: totalGeographic > 0 ? (data.amount / totalGeographic) * 100 : 0,
-        contributionCount: data.count,
-      }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
 
     // Get recent contributions (last 20)
     const recentContribs = contributions
@@ -785,8 +876,8 @@ export async function GET(
         percentage: totalOrgAmount > 0 ? (data.totalAmount / totalOrgAmount) * 100 : 0,
         employees: data.employees.size,
         fecVerifyLink: principalCommitteeId
-          ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&contributor_employer=${encodeURIComponent(normalizedName)}`
-          : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&contributor_employer=${encodeURIComponent(normalizedName)}`,
+          ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${principalCommitteeId}&contributor_employer=${encodeURIComponent(normalizedName)}`
+          : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=${cycle}&candidate_id=${fecMapping.fecId}&contributor_employer=${encodeURIComponent(normalizedName)}`,
       }))
       .sort((a, b) => b.totalAmount - a.totalAmount)
       .slice(0, 20); // Top 20 organizations
@@ -1233,10 +1324,12 @@ export async function GET(
       districtAnalysis,
       metadata: {
         bioguideId,
-        cycle: 2024,
+        cycle,
         lastUpdated: new Date().toISOString(),
         cacheHit: false,
         sampleSize: contributions.length,
+        industriesBasedOn,
+        geographyBasedOn,
       },
     };
 

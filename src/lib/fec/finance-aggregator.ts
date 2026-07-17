@@ -454,6 +454,133 @@ function isInformativeEmployer(employer: string): boolean {
  * partitions of the same underlying contributions; the cross-tab is not
  * available. Step 2 is therefore an approximation, not an exact recovery.
  */
+/**
+ * A single categorized slice of the aggregate contributions, tagged with both
+ * its sector and category so different consumers can key on whichever they need.
+ */
+interface AggregateIndustryAttribution {
+  sector: IndustrySector;
+  category: string;
+  /** Employer name, or "(via occupation: X)" for occupation-recovered signal. */
+  label: string;
+  amount: number;
+  count: number;
+}
+
+interface AggregateIndustryAttributionResult {
+  attributions: AggregateIndustryAttribution[];
+  /** Non-informative-employer dollars with no recoverable attribution. */
+  residualAmount: number;
+  residualCount: number;
+  /** Total contribution count across all by_employer rows. */
+  totalContributionCount: number;
+  /** Contributions attributed to a real industry (informative employer + recovered occupation). */
+  attributedContributionCount: number;
+}
+
+/**
+ * Shared attribution engine for FEC's pre-aggregated by_employer + by_occupation
+ * endpoints. Implements the attribution policy documented on
+ * {@link processIndustryFromAggregates}: informative-employer rows are
+ * categorized directly, the non-informative-employer residual is partially
+ * recovered via the proportional occupation "extra signal" heuristic, and the
+ * leftover residual is returned for the caller to bucket. Both breakdown
+ * builders share this so the residual math lives in exactly one place.
+ */
+function attributeIndustriesFromAggregates(
+  byEmployer: Array<{ employer: string; total: number; count: number }>,
+  byOccupation: Array<{ occupation: string; total: number; count: number }>
+): AggregateIndustryAttributionResult {
+  const attributions: AggregateIndustryAttribution[] = [];
+
+  let totalContributionCount = 0;
+  let informativeEmployerTotal = 0;
+  let informativeEmployerCount = 0;
+  let nonInformativeEmployerTotal = 0;
+  let nonInformativeEmployerCount = 0;
+
+  for (const row of byEmployer) {
+    const amount = row.total || 0;
+    const count = row.count || 0;
+    totalContributionCount += count;
+    if (amount <= 0) continue;
+
+    const employer = row.employer || '';
+    if (isInformativeEmployer(employer)) {
+      informativeEmployerTotal += amount;
+      informativeEmployerCount += count;
+      const result = categorizeContribution(employer, '');
+      attributions.push({
+        sector: result.sector,
+        category: result.category,
+        label: employer,
+        amount,
+        count,
+      });
+    } else {
+      nonInformativeEmployerTotal += amount;
+      nonInformativeEmployerCount += count;
+    }
+  }
+
+  let informativeOccupationTotal = 0;
+  const informativeOccupationRows: Array<{
+    sector: IndustrySector;
+    category: string;
+    label: string;
+    total: number;
+    count: number;
+  }> = [];
+
+  for (const row of byOccupation) {
+    const amount = row.total || 0;
+    if (amount <= 0) continue;
+    const occupation = (row.occupation || '').trim();
+    if (!occupation) continue;
+    const result = categorizeContribution('', occupation);
+    if (result.sector === IndustrySector.OTHER) continue;
+    informativeOccupationTotal += amount;
+    informativeOccupationRows.push({
+      sector: result.sector,
+      category: result.category,
+      label: `(via occupation: ${occupation})`,
+      total: amount,
+      count: row.count || 0,
+    });
+  }
+
+  const extraOccupationSignal = Math.max(
+    0,
+    Math.min(nonInformativeEmployerTotal, informativeOccupationTotal - informativeEmployerTotal)
+  );
+
+  let occupationAttributedCount = 0;
+  if (extraOccupationSignal > 0 && informativeOccupationTotal > 0) {
+    const scale = extraOccupationSignal / informativeOccupationTotal;
+    for (const row of informativeOccupationRows) {
+      const attributedAmount = row.total * scale;
+      const attributedCount = Math.round(row.count * scale);
+      if (attributedAmount <= 0) continue;
+      attributions.push({
+        sector: row.sector,
+        category: row.category,
+        label: row.label,
+        amount: attributedAmount,
+        count: attributedCount,
+      });
+      occupationAttributedCount += attributedCount;
+    }
+  }
+
+  return {
+    attributions,
+    residualAmount: Math.max(0, nonInformativeEmployerTotal - extraOccupationSignal),
+    residualCount: Math.max(0, nonInformativeEmployerCount - occupationAttributedCount),
+    totalContributionCount,
+    attributedContributionCount: informativeEmployerCount + occupationAttributedCount,
+  };
+}
+
 function processIndustryFromAggregates(
   byEmployer: Array<{ employer: string; total: number; count: number }>,
   byOccupation: Array<{ occupation: string; total: number; count: number }>,
@@ -476,74 +603,19 @@ function processIndustryFromAggregates(
     sub.count += count;
   };
 
-  let totalContributions = 0;
-  let informativeEmployerTotal = 0;
-  let informativeEmployerCount = 0;
-  let nonInformativeEmployerTotal = 0;
-  let nonInformativeEmployerCount = 0;
+  const {
+    attributions,
+    residualAmount,
+    residualCount,
+    totalContributionCount,
+    attributedContributionCount,
+  } = attributeIndustriesFromAggregates(byEmployer, byOccupation);
 
-  for (const row of byEmployer) {
-    const amount = row.total || 0;
-    const count = row.count || 0;
-    totalContributions += count;
-    if (amount <= 0) continue;
-
-    const employer = row.employer || '';
-    if (isInformativeEmployer(employer)) {
-      informativeEmployerTotal += amount;
-      informativeEmployerCount += count;
-      const result = categorizeContribution(employer, '');
-      const industryKey = result.sector === IndustrySector.OTHER ? result.category : result.sector;
-      addToIndustry(industryKey, employer, amount, count);
-    } else {
-      nonInformativeEmployerTotal += amount;
-      nonInformativeEmployerCount += count;
-    }
+  for (const a of attributions) {
+    const industryKey = a.sector === IndustrySector.OTHER ? a.category : a.sector;
+    addToIndustry(industryKey, a.label, a.amount, a.count);
   }
 
-  let informativeOccupationTotal = 0;
-  const informativeOccupationRows: Array<{
-    industryKey: string;
-    label: string;
-    total: number;
-    count: number;
-  }> = [];
-
-  for (const row of byOccupation) {
-    const amount = row.total || 0;
-    if (amount <= 0) continue;
-    const occupation = (row.occupation || '').trim();
-    if (!occupation) continue;
-    const result = categorizeContribution('', occupation);
-    if (result.sector === IndustrySector.OTHER) continue;
-    informativeOccupationTotal += amount;
-    informativeOccupationRows.push({
-      industryKey: result.sector,
-      label: `(via occupation: ${occupation})`,
-      total: amount,
-      count: row.count || 0,
-    });
-  }
-
-  const extraOccupationSignal = Math.max(
-    0,
-    Math.min(nonInformativeEmployerTotal, informativeOccupationTotal - informativeEmployerTotal)
-  );
-
-  let occupationAttributedCount = 0;
-  if (extraOccupationSignal > 0 && informativeOccupationTotal > 0) {
-    const scale = extraOccupationSignal / informativeOccupationTotal;
-    for (const row of informativeOccupationRows) {
-      const attributedAmount = row.total * scale;
-      const attributedCount = Math.round(row.count * scale);
-      if (attributedAmount <= 0) continue;
-      addToIndustry(row.industryKey, row.label, attributedAmount, attributedCount);
-      occupationAttributedCount += attributedCount;
-    }
-  }
-
-  const residualAmount = Math.max(0, nonInformativeEmployerTotal - extraOccupationSignal);
-  const residualCount = Math.max(0, nonInformativeEmployerCount - occupationAttributedCount);
   if (residualAmount > 0) {
     addToIndustry('Unaffiliated / Non-employed', 'Unknown Employer', residualAmount, residualCount);
   }
@@ -561,15 +633,75 @@ function processIndustryFromAggregates(
     }))
     .sort((a, b) => b.amount - a.amount);
 
-  const attributedContributions = informativeEmployerCount + occupationAttributedCount;
   const quality: DataQuality['industry'] = {
-    totalContributionsAnalyzed: totalContributions,
-    contributionsWithEmployer: attributedContributions,
+    totalContributionsAnalyzed: totalContributionCount,
+    contributionsWithEmployer: attributedContributionCount,
     completenessPercentage:
-      totalContributions > 0 ? (attributedContributions / totalContributions) * 100 : 0,
+      totalContributionCount > 0 ? (attributedContributionCount / totalContributionCount) * 100 : 0,
   };
 
   return { breakdown, quality };
+}
+
+/**
+ * Sector/category industry breakdown from FEC's pre-aggregated by_employer +
+ * by_occupation endpoints — the aggregate-exact analogue of `getTopCategories`
+ * (which samples raw Schedule A). Returns the top-N sector:category buckets by
+ * dollar amount, with percentage taken over ALL categorized dollars (including
+ * the recovered residual) so the shares are honest.
+ *
+ * Shares the residual/occupation-recovery math with the internal
+ * `processIndustryFromAggregates` via `attributeIndustriesFromAggregates`.
+ */
+export function getTopIndustrySectorsFromAggregates(
+  byEmployer: Array<{ employer: string; total: number; count: number }>,
+  byOccupation: Array<{ occupation: string; total: number; count: number }>,
+  topN: number
+): Array<{
+  sector: string;
+  category: string;
+  amount: number;
+  percentage: number;
+  contributionCount: number;
+}> {
+  const { attributions, residualAmount, residualCount } = attributeIndustriesFromAggregates(
+    byEmployer,
+    byOccupation
+  );
+
+  const buckets = new Map<
+    string,
+    { sector: string; category: string; amount: number; count: number }
+  >();
+
+  const add = (sector: string, category: string, amount: number, count: number): void => {
+    if (amount <= 0) return;
+    const key = `${sector}|${category}`;
+    const bucket = buckets.get(key) ?? { sector, category, amount: 0, count: 0 };
+    bucket.amount += amount;
+    bucket.count += count;
+    buckets.set(key, bucket);
+  };
+
+  for (const a of attributions) {
+    add(a.sector, a.category, a.amount, a.count);
+  }
+  if (residualAmount > 0) {
+    add('Unaffiliated / Non-employed', 'Non-employed', residualAmount, residualCount);
+  }
+
+  const totalAmount = Array.from(buckets.values()).reduce((sum, b) => sum + b.amount, 0);
+
+  return Array.from(buckets.values())
+    .map(b => ({
+      sector: b.sector,
+      category: b.category,
+      amount: b.amount,
+      percentage: totalAmount > 0 ? (b.amount / totalAmount) * 100 : 0,
+      contributionCount: b.count,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, topN);
 }
 
 /**
