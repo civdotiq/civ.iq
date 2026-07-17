@@ -159,7 +159,9 @@ export function TopContributors({ contributors, loading = false, cycle }: TopCon
           <strong>Total Contributors:</strong> {contributors.length} unique donors
         </div>
         <div className="mt-2 text-xs text-neutral-600">
-          Data aggregated from FEC individual contribution records
+          Based on a sample of the most recent individual contributions reported to the FEC — not
+          the complete donor history. Industry and geographic totals elsewhere on this tab use
+          FEC&rsquo;s exact aggregates across all contributions.
         </div>
       </div>
     </div>

@@ -270,18 +270,23 @@ export function CampaignFinanceVisualizer({
   const [selectedCycle, setSelectedCycle] = useState<number | null>(null);
 
   // Fetch election cycles
-  const { data: cyclesData } = useSWR(
+  const { data: cyclesData, error: cyclesError } = useSWR(
     _bioguideId ? `/api/representative/${_bioguideId}/election-cycles` : null,
     (url: string) => fetch(url).then(r => r.json()),
     { revalidateOnFocus: false, dedupingInterval: 300000 }
   );
 
-  // Set default cycle from API response
+  // Resolve the active cycle exactly once. Prefer the API's most-recent cycle;
+  // if the cycles lookup resolves without a usable default (or fails), fall back
+  // to the current cycle so the cycle-gated fetches below never stall on null.
   useEffect(() => {
-    if (cyclesData?.defaultCycle && selectedCycle === null) {
+    if (selectedCycle !== null) return;
+    if (cyclesData?.defaultCycle) {
       setSelectedCycle(cyclesData.defaultCycle);
+    } else if (cyclesData || cyclesError) {
+      setSelectedCycle(2024);
     }
-  }, [cyclesData, selectedCycle]);
+  }, [cyclesData, cyclesError, selectedCycle]);
 
   // Fetch funding sources (cycle-aware)
   const { data: fundingSourcesData } = useSWR(
@@ -305,13 +310,14 @@ export function CampaignFinanceVisualizer({
   const chartHeight300 = useResponsiveChartHeight(300, 250);
   const chartHeight400 = useResponsiveChartHeight(400, 280);
 
-  // Fetch comprehensive finance data
+  // Fetch comprehensive finance data (cycle-aware)
   useEffect(() => {
-    if (_bioguideId) {
+    // Wait for the active cycle to resolve, then fetch once for that cycle.
+    // Gating on a non-null cycle avoids an initial cycle-less request followed
+    // by a duplicate once the selector resolves.
+    if (_bioguideId && selectedCycle !== null) {
       setIsLoadingComprehensive(true);
-      fetch(
-        `/api/representative/${_bioguideId}/finance/comprehensive${selectedCycle ? `?cycle=${selectedCycle}` : ''}`
-      )
+      fetch(`/api/representative/${_bioguideId}/finance/comprehensive?cycle=${selectedCycle}`)
         .then(response => {
           if (!response.ok) throw new Error('Failed to fetch comprehensive data');
           return response.json();
@@ -374,7 +380,7 @@ export function CampaignFinanceVisualizer({
           setIsLoadingComprehensive(false);
         });
     }
-  }, [_bioguideId, initialFinanceData, selectedCycle]);
+  }, [_bioguideId, selectedCycle, initialFinanceData]);
 
   // Use comprehensive data if available, otherwise fall back to initial data
   const financeData = comprehensiveData || initialFinanceData;
