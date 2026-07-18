@@ -303,6 +303,41 @@ describe('scoreFecMatch', () => {
     const { breakdown } = scoreFecMatch(member, fec);
     expect(breakdown.office).toBe(0);
   });
+
+  it('credits a nickname that appears among the FEC given names (Tony vs Ernest Anthony Tony II)', () => {
+    const gonzales: CongressMember = {
+      bioguideId: 'G000594',
+      name: 'Gonzales, Tony',
+      state: 'TX',
+      chamber: 'House',
+      party: 'Republican',
+    };
+    const fec: FECCandidateSearchResult = {
+      candidate_id: 'H0TX35015',
+      name: 'GONZALES, ERNEST ANTHONY TONY II', // legal name; "TONY" is a non-leading token
+      state: 'TX',
+      party: 'REP',
+      office: 'H',
+    };
+    const { score, breakdown } = scoreFecMatch(gonzales, fec);
+    expect(breakdown.firstName).toBeCloseTo(0.15, 5);
+    // 0.4 last + 0.15 first + 0.1 state + 0.2 office + 0.1 party = 0.95 → clears 0.9 auto-apply
+    expect(score).toBeCloseTo(0.95, 5);
+  });
+
+  it('gives only partial credit when first names share an initial but differ (stays in review)', () => {
+    const fec: FECCandidateSearchResult = {
+      candidate_id: 'H0CA00001',
+      name: 'DOE, JOHN', // member is JANE — same last name and initial, different person
+      state: 'CA',
+      party: 'DEM',
+      office: 'H',
+    };
+    const { score, breakdown } = scoreFecMatch(member, fec);
+    expect(breakdown.firstName).toBeCloseTo(0.05, 5);
+    // 0.4 + 0.05 + 0.1 + 0.2 + 0.1 = 0.85 → below the auto-apply threshold
+    expect(score).toBeLessThan(0.9);
+  });
 });
 
 describe('pickBestFecMatch', () => {
@@ -386,6 +421,34 @@ describe('proposeFallbackMappings', () => {
     expect(proposals[0]!.confidence).toBeCloseTo(1.0, 5);
     expect(base.N000001?.fecId).toBe('H0CA00001');
     expect(base.N000001?.district).toBe('01');
+  });
+
+  it('auto-applies a nickname match where the first name is a non-leading FEC token', async () => {
+    const gonzales: CongressMember = {
+      bioguideId: 'G000594',
+      name: 'Gonzales, Tony',
+      state: 'TX',
+      district: '23',
+      chamber: 'House',
+      party: 'Republican',
+    };
+    const base: MappingFile = {};
+    const search = jest.fn().mockResolvedValue([
+      {
+        candidate_id: 'H0TX35015',
+        name: 'GONZALES, ERNEST ANTHONY TONY II',
+        state: 'TX',
+        party: 'REP',
+        office: 'H',
+        last_file_date: '2026-01-01',
+      },
+    ]);
+
+    const proposals = await proposeFallbackMappings(base, [gonzales], search, fixedNow);
+
+    expect(proposals[0]!.autoApplied).toBe(true);
+    expect(base.G000594?.fecId).toBe('H0TX35015');
+    expect(base.G000594?.district).toBe('23');
   });
 
   it('flags low-confidence matches without writing to the mapping', async () => {

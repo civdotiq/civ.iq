@@ -365,6 +365,16 @@ function splitLastFirst(name: string): { last: string; first: string } {
 }
 
 /**
+ * All normalized given-name tokens (everything after the comma). FEC records the
+ * full legal name — e.g. "GONZALES, ERNEST ANTHONY TONY II" — so a member's
+ * common first name ("Tony") often appears here as a non-leading token.
+ */
+function givenNameTokens(name: string): string[] {
+  const firstRest = name.split(',')[1] ?? '';
+  return normalizeName(firstRest).split(/\s+/).filter(Boolean);
+}
+
+/**
  * Score an FEC candidate against a Congress.gov member. Returns a value in
  * [0, 1] plus a per-feature breakdown for transparency in the review output.
  */
@@ -378,8 +388,26 @@ export function scoreFecMatch(
   const breakdown: Record<string, number> = {};
 
   breakdown.lastName = memberParts.last && memberParts.last === fecParts.last ? 0.4 : 0;
-  breakdown.firstName =
-    memberParts.first && fecParts.first && memberParts.first === fecParts.first ? 0.2 : 0;
+
+  // First name is the weakest identifier: FEC frequently records a legal first
+  // name, middle names, or a suffix where Congress.gov uses a nickname
+  // (e.g. "Tony" vs "ERNEST ANTHONY TONY II"). Grade it instead of demanding an
+  // exact leading-token match, so an otherwise-perfect match (last + state +
+  // office + party = 0.8) is no longer capped just under the 0.9 auto-apply
+  // threshold. Exact match keeps its full weight; a name that only shares an
+  // initial stays below the threshold so ambiguous matches still go to review.
+  if (!memberParts.first) {
+    breakdown.firstName = 0;
+  } else if (memberParts.first === fecParts.first) {
+    breakdown.firstName = 0.2; // exact primary given-name match
+  } else if (givenNameTokens(fec.name).includes(memberParts.first)) {
+    breakdown.firstName = 0.15; // member's name appears among FEC given names (nickname/middle)
+  } else if (fecParts.first && memberParts.first[0] === fecParts.first[0]) {
+    breakdown.firstName = 0.05; // initials agree only — insufficient to auto-apply alone
+  } else {
+    breakdown.firstName = 0;
+  }
+
   breakdown.state = member.state && member.state === fec.state ? 0.1 : 0;
 
   const expectedOffice = member.chamber === 'Senate' ? 'S' : 'H';
