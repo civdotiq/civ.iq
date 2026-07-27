@@ -217,6 +217,26 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   default: { requests: 600, windowMs: 60000 },
 };
 
+// API routes that serve cacheable static assets rather than data, and are
+// therefore exempt from rate limiting.
+//
+// The limiter runs in middleware, which on Vercel executes *before* the CDN
+// is consulted. A route whose responses the CDN already serves still burns
+// one Upstash command per request — measured against production 2026-07-27,
+// four consecutive requests to a single portrait returned
+// `x-vercel-cache: HIT` while `x-ratelimit-remaining` fell 597 -> 594. The
+// origin function never ran; the Redis command was pure cost.
+//
+// /api/representative-photo was 65% of all API traffic (4,569 of 6,994
+// sampled requests). It proxies public-domain federal portraits under
+// 17 U.S.C. § 105, holds no secrets, hits no metered upstream on the common
+// path, and is CDN-cached for a week. Rate limiting it protected nothing and
+// was the single largest remaining consumer of Upstash commands.
+//
+// Add a prefix here only if the same three things hold: the response is
+// public, CDN-cacheable, and cheap to regenerate.
+const UNMETERED_ASSET_ROUTES = ['/api/representative-photo/'];
+
 export async function middleware(request: NextRequest) {
   const startTime = Date.now();
 
@@ -309,8 +329,15 @@ export async function middleware(request: NextRequest) {
     // otherwise serve without waking a function. Rate limiting exists to
     // protect the API surface; page routes are static or ISR and are already
     // covered by Vercel's platform-level DDoS mitigation.
+    //
+    // Unmetered asset routes are exempt for the same reason. See
+    // UNMETERED_ASSET_ROUTES above.
     const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
-    const rateLimitResult = isApiRoute ? await checkRateLimit(request, clientInfo.ip) : null;
+    const isUnmetered = UNMETERED_ASSET_ROUTES.some(prefix =>
+      request.nextUrl.pathname.startsWith(prefix)
+    );
+    const rateLimitResult =
+      isApiRoute && !isUnmetered ? await checkRateLimit(request, clientInfo.ip) : null;
     if (rateLimitResult && !rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded', {
         url: request.url,
