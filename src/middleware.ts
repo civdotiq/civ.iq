@@ -61,6 +61,22 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
   if (!redisInstance) return null;
 
   try {
+    // NOTE: `analytics` is deliberately left off every limiter below.
+    //
+    // Setting `analytics: true` makes @upstash/ratelimit fire an extra
+    // ZINCRBY alongside the sliding-window EVAL on *every* check, doubling
+    // the Redis command count — and commands are what Upstash bills for.
+    //
+    // Worse, the sets it writes are never cleaned up. @upstash/ratelimit
+    // v2.0.7 passes `retention: '90d'` to @upstash/core-analytics, but
+    // v0.0.10 of that package has no EXPIRE call anywhere: `ingest()` is a
+    // bare zincrby. So each hourly `@upstash/ratelimit:events:*` bucket
+    // persists forever, holding one sorted-set member per distinct
+    // identifier seen. Before the identifier was narrowed to (IP, route
+    // class), that was one member per (IP, URL) pair.
+    //
+    // Nothing in this codebase reads the ratelimit analytics dashboard, so
+    // this was pure cost. Re-enable only alongside a retention story.
     ratelimiters = new Map([
       // Public API v1: 60 requests per minute (open endpoints, stricter limit)
       [
@@ -69,7 +85,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(60, '1 m'),
           prefix: 'ratelimit:v1',
-          analytics: true,
         }),
       ],
       // Public feeds: 60 requests per minute
@@ -79,7 +94,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(60, '1 m'),
           prefix: 'ratelimit:feed',
-          analytics: true,
         }),
       ],
       // Internal API surface: 600 requests per minute.
@@ -99,7 +113,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(600, '1 m'),
           prefix: 'ratelimit:api',
-          analytics: true,
         }),
       ],
       // Representatives endpoints: 240 requests per minute
@@ -109,7 +122,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(240, '1 m'),
           prefix: 'ratelimit:representatives',
-          analytics: true,
         }),
       ],
       // District map: 120 requests per minute (map panning is bursty)
@@ -119,7 +131,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(120, '1 m'),
           prefix: 'ratelimit:district-map',
-          analytics: true,
         }),
       ],
       // Default: 200 requests per minute
@@ -129,7 +140,6 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           redis: redisInstance,
           limiter: Ratelimit.slidingWindow(200, '1 m'),
           prefix: 'ratelimit:default',
-          analytics: true,
         }),
       ],
     ]);
