@@ -23,12 +23,35 @@ interface CacheEntry<T = unknown> {
   ttl: number;
 }
 
+/**
+ * Result of a real round-trip against the backing store.
+ *
+ * Distinct from `getStatus()`, which reports *configuration* (are credentials
+ * present, did we ever connect). A probe reports *reachability right now* and
+ * never falls back to the in-memory cache — see `RedisCache.probe()`.
+ */
+export interface RedisProbeResult {
+  reachable: boolean;
+  latencyMs: number;
+  transport: 'rest' | 'tcp' | 'none';
+  error?: string;
+}
+
 export class RedisCache {
   private client: Redis | null = null;
   private fallbackCache: Map<string, CacheEntry>;
   private isConnected: boolean = false;
   private readonly keyPrefix: string;
   private redisAvailable: boolean;
+
+  // Every cache operation degrades to the in-memory fallback and reports
+  // success, which is the right behaviour for serving traffic but means a
+  // total Redis outage is invisible from the outside. These two fields are
+  // the breadcrumb: they record that a degrade happened so health checks and
+  // logs can see it. Upstash suspended this project's database for six days
+  // in 2026-07 while /api/health/redis reported "healthy".
+  private lastRestFailure: { op: string; message: string; at: string } | null = null;
+  private restFailureCount = 0;
 
   constructor(config?: Partial<CacheConfig>) {
     this.keyPrefix = config?.keyPrefix || 'civiq:';
@@ -244,6 +267,7 @@ export class RedisCache {
           logger.debug('[Cache] REST API miss', key);
           return null;
         } catch (restError) {
+          this.recordRestFailure('get', restError);
           logger.warn('[Cache] REST API error, falling back to memory', {
             key,
             error: (restError as Error).message,
@@ -339,6 +363,7 @@ export class RedisCache {
           const errorBody = await response.text().catch(() => '');
           throw new Error(`REST API failed: ${response.status} ${errorBody}`);
         } catch (restError) {
+          this.recordRestFailure('set', restError);
           logger.warn('[Cache] REST API error on set, falling back to memory', {
             key,
             error: (restError as Error).message,
@@ -417,6 +442,7 @@ export class RedisCache {
 
           throw new Error(`REST API failed: ${response.status}`);
         } catch (restError) {
+          this.recordRestFailure('delete', restError);
           logger.warn('[Cache] REST API error on delete, falling back to memory', {
             key,
             error: (restError as Error).message,
@@ -477,6 +503,7 @@ export class RedisCache {
             throw new Error(`REST API failed: ${response.status}`);
           }
         } catch (restError) {
+          this.recordRestFailure('flush', restError);
           logger.warn('[Cache] REST API error on flush', {
             error: (restError as Error).message,
           });
@@ -529,6 +556,7 @@ export class RedisCache {
 
           throw new Error(`REST API failed: ${response.status}`);
         } catch (restError) {
+          this.recordRestFailure('exists', restError);
           logger.warn('[Cache] REST API error on exists, falling back to memory', {
             key,
             error: (restError as Error).message,
@@ -594,6 +622,7 @@ export class RedisCache {
 
           throw new Error(`REST API failed: ${response.status}`);
         } catch (restError) {
+          this.recordRestFailure('mget', restError);
           logger.warn('[Cache] REST API error on mget, falling back to memory', {
             error: (restError as Error).message,
           });
@@ -661,6 +690,7 @@ export class RedisCache {
           }
           throw new Error(`REST API failed: ${response.status}`);
         } catch (restError) {
+          this.recordRestFailure('keys', restError);
           logger.warn('[Cache] REST API error on keys, falling back to memory', {
             pattern,
             error: (restError as Error).message,
@@ -682,17 +712,137 @@ export class RedisCache {
     }
   }
 
+  /** Record that an operation degraded to the in-memory fallback. */
+  private recordRestFailure(op: string, error: unknown): void {
+    this.restFailureCount++;
+    this.lastRestFailure = {
+      op,
+      message: error instanceof Error ? error.message : String(error),
+      at: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Round-trip the backing store and report what actually happened.
+   *
+   * Deliberately does NOT use get/set/exists: those swallow transport errors
+   * and answer from the in-memory fallback, so they return `true` against a
+   * suspended database. This writes, reads back, and verifies the value, and
+   * surfaces the upstream error verbatim on failure — which is how an
+   * operator learns the difference between "cache is cold" and
+   * "ERR This database has been suspended for exceeding the defined budget".
+   */
+  async probe(): Promise<RedisProbeResult> {
+    const startedAt = Date.now();
+    const elapsed = () => Date.now() - startedAt;
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    if (!this.redisAvailable) {
+      return {
+        reachable: false,
+        latencyMs: elapsed(),
+        transport: 'none',
+        error: 'Redis is not configured in this environment',
+      };
+    }
+
+    if (url && token) {
+      const auth = { Authorization: `Bearer ${token}` };
+      const key = `${this.keyPrefix}health:probe`;
+      const token36 = Date.now().toString(36);
+      try {
+        const write = await fetch(`${url}/setex/${encodeURIComponent(key)}/30`, {
+          method: 'POST',
+          headers: auth,
+          body: JSON.stringify({ probe: token36 }),
+        });
+        if (!write.ok) {
+          const body = await write.text().catch(() => '');
+          return {
+            reachable: false,
+            latencyMs: elapsed(),
+            transport: 'rest',
+            error: `write failed: ${write.status} ${body}`.trim(),
+          };
+        }
+
+        const read = await fetch(`${url}/get/${encodeURIComponent(key)}`, { headers: auth });
+        if (!read.ok) {
+          const body = await read.text().catch(() => '');
+          return {
+            reachable: false,
+            latencyMs: elapsed(),
+            transport: 'rest',
+            error: `read failed: ${read.status} ${body}`.trim(),
+          };
+        }
+
+        const payload: unknown = await read.json();
+        const stored =
+          typeof payload === 'object' && payload !== null && 'result' in payload
+            ? (payload as { result: unknown }).result
+            : null;
+        const roundTripped = typeof stored === 'string' && stored.includes(token36);
+
+        await fetch(`${url}/del/${encodeURIComponent(key)}`, {
+          method: 'POST',
+          headers: auth,
+        }).catch(() => undefined);
+
+        return {
+          reachable: roundTripped,
+          latencyMs: elapsed(),
+          transport: 'rest',
+          ...(roundTripped
+            ? {}
+            : { error: 'write reported success but the value did not read back' }),
+        };
+      } catch (error) {
+        return {
+          reachable: false,
+          latencyMs: elapsed(),
+          transport: 'rest',
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }
+
+    try {
+      const pong = await this.client?.ping();
+      return {
+        reachable: pong === 'PONG',
+        latencyMs: elapsed(),
+        transport: 'tcp',
+        ...(pong === 'PONG' ? {} : { error: `unexpected PING response: ${String(pong)}` }),
+      };
+    } catch (error) {
+      return {
+        reachable: false,
+        latencyMs: elapsed(),
+        transport: 'tcp',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
   getStatus(): {
     isConnected: boolean;
     fallbackCacheSize: number;
     redisStatus: string;
     redisAvailable: boolean;
+    degraded: boolean;
+    restFailureCount: number;
+    lastRestFailure: { op: string; message: string; at: string } | null;
   } {
     return {
       isConnected: this.isConnected,
       fallbackCacheSize: this.fallbackCache.size,
       redisStatus: this.client?.status || 'not-available',
       redisAvailable: this.redisAvailable,
+      degraded: this.restFailureCount > 0,
+      restFailureCount: this.restFailureCount,
+      lastRestFailure: this.lastRestFailure,
     };
   }
 

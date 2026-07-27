@@ -70,10 +70,14 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
     // Worse, the sets it writes are never cleaned up. @upstash/ratelimit
     // v2.0.7 passes `retention: '90d'` to @upstash/core-analytics, but
     // v0.0.10 of that package has no EXPIRE call anywhere: `ingest()` is a
-    // bare zincrby. So each hourly `@upstash/ratelimit:events:*` bucket
-    // persists forever, holding one sorted-set member per distinct
-    // identifier seen. Before the identifier was narrowed to (IP, route
-    // class), that was one member per (IP, URL) pair.
+    // bare zincrby. Analytics inherits each limiter's own prefix, so the
+    // keys are `ratelimit:<name>:events:<hour>` — e.g.
+    // `ratelimit:api:events:1773615600000`. Each bucket persists forever,
+    // holding one sorted-set member per distinct identifier seen. Before
+    // the identifier was narrowed to (IP, route class), that was one member
+    // per (IP, URL) pair. Measured 2026-07-27 before cleanup: 9,364 such
+    // keys, ~1.7M members, 23% of the entire keyspace, all with TTL -1,
+    // accumulated since 2026-03-15.
     //
     // Nothing in this codebase reads the ratelimit analytics dashboard, so
     // this was pure cost. Re-enable only alongside a retention story.

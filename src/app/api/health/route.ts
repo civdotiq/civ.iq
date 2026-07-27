@@ -690,6 +690,12 @@ interface HealthResponse {
   redis: {
     connected: boolean;
     available: boolean;
+    // `connected`/`available` describe configuration, not reachability — they
+    // stay true against a suspended database. `degraded` is the honest signal:
+    // it means cache operations have silently fallen back to memory on this
+    // instance. For an actual round-trip, call /api/health/redis.
+    degraded: boolean;
+    lastRestFailure: { op: string; message: string; at: string } | null;
   };
   apiKeys: Record<string, boolean>;
 }
@@ -736,6 +742,8 @@ export async function GET(_request: NextRequest) {
       redis: {
         connected: redisStatus.isConnected,
         available: redisStatus.redisAvailable,
+        degraded: redisStatus.degraded,
+        lastRestFailure: redisStatus.lastRestFailure,
       },
       apiKeys: {
         congress: !!process.env.CONGRESS_API_KEY,
