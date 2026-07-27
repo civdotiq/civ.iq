@@ -380,15 +380,8 @@ if (global.navigator) {
   });
 }
 
-// Mock html2canvas
-jest.mock('html2canvas', () => {
-  return jest.fn().mockImplementation(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 320;
-    canvas.height = 500;
-    return Promise.resolve(canvas);
-  });
-});
+// (html2canvas mock removed along with the dependency — nothing in the
+// codebase imported html2canvas; this mock was the only reference to it.)
 
 // Mock console methods to reduce noise in tests (but preserve original methods for React DOM)
 const originalConsole = global.console;
