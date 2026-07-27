@@ -63,6 +63,7 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
     initials: getRepresentativeInitials(name),
     backgroundColor: getAvatarBackgroundColor(name),
   });
+  const [remainingFallbacks, setRemainingFallbacks] = useState<string[]>([]);
   const imgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,6 +75,8 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
       }));
       return;
     }
+
+    setRemainingFallbacks(getRepresentativePhotoUrls(bioguideId).fallback);
 
     setPhotoState(prev => ({
       ...prev,
@@ -162,6 +165,20 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           onError={() => {
+            // Advance through the direct-source fallbacks before giving up.
+            //
+            // The photo API is trusted without a HEAD probe (see
+            // enhanced-photo-service), so a failure surfaces here at render
+            // time rather than during validation. Retrying the direct
+            // GitHub URLs keeps portraits working when our own function is
+            // unreachable — the case the probe used to cover — while the
+            // happy path still costs exactly one request.
+            const next = remainingFallbacks[0];
+            if (next) {
+              setRemainingFallbacks(rest => rest.slice(1));
+              setPhotoState(prev => ({ ...prev, photoUrl: next }));
+              return;
+            }
             setPhotoState(prev => ({
               ...prev,
               photoUrl: null,

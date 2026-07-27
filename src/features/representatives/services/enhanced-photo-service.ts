@@ -193,30 +193,30 @@ export class EnhancedPhotoService {
     const startTime = Date.now();
 
     try {
-      // For API proxy, use fetch
+      // Our own photo proxy is accepted without a probe.
+      //
+      // This used to fire a HEAD at /api/representative-photo/{id} before
+      // rendering it, which doubled the request count for every portrait on
+      // every page: once to ask whether the image existed, once for <Image>
+      // to actually load it. The probe was not cheap on the server either —
+      // the App Router synthesises HEAD by running the GET handler and
+      // discarding the body, so each one paid the full four-tier waterfall
+      // (filesystem read, or a Wikidata lookup plus a remote image fetch)
+      // to produce bytes nobody read.
+      //
+      // It also bought nothing. The endpoint answers 404 only when all four
+      // tiers miss, and the consumer already handles that: <Image onError>
+      // in RepresentativePhoto walks the same direct GitHub URLs this class
+      // would have tried next, then falls through to the initials avatar.
+      // Failing at render time costs one request; probing first cost two on
+      // every success to save one on a rare failure.
       if (source.type === 'api-proxy') {
-        const response = await fetch(source.url, {
-          method: 'HEAD',
-          signal: AbortSignal.timeout(5000),
-        });
-
-        const loadTime = Date.now() - startTime;
-
-        if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
-          return {
-            url: source.url,
-            isValid: true,
-            loadTime,
-            source,
-          };
-        } else {
-          return {
-            url: source.url,
-            isValid: false,
-            error: `HTTP ${response.status}`,
-            source,
-          };
-        }
+        return {
+          url: source.url,
+          isValid: true,
+          loadTime: Date.now() - startTime,
+          source,
+        };
       }
 
       // For direct URLs, use Image() with timeout
