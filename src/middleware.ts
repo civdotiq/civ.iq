@@ -274,9 +274,18 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    // Apply rate limiting (now async with Upstash)
-    const rateLimitResult = await checkRateLimit(request, clientInfo.ip);
-    if (!rateLimitResult.allowed) {
+    // Apply rate limiting — API routes only.
+    //
+    // The matcher below deliberately covers page navigations too (for the
+    // district/digest canonical redirects above and the security headers
+    // below), but rate limiting them cost an Upstash round-trip on the
+    // critical path of every HTML request, including ones the CDN would
+    // otherwise serve without waking a function. Rate limiting exists to
+    // protect the API surface; page routes are static or ISR and are already
+    // covered by Vercel's platform-level DDoS mitigation.
+    const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+    const rateLimitResult = isApiRoute ? await checkRateLimit(request, clientInfo.ip) : null;
+    if (rateLimitResult && !rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded', {
         url: request.url,
         ip: clientInfo.ip,
@@ -344,13 +353,16 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
     }
 
-    // Add rate limit headers
-    response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
-    response.headers.set(
-      'X-RateLimit-Remaining',
-      Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString()
-    );
-    response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
+    // Add rate limit headers (API routes only — meaningless on page routes,
+    // which are no longer rate limited)
+    if (rateLimitResult) {
+      response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
+      response.headers.set(
+        'X-RateLimit-Remaining',
+        Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString()
+      );
+      response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
+    }
 
     // Add performance headers
     const duration = Date.now() - startTime;
