@@ -214,8 +214,32 @@ const nextConfig = {
   // Headers for security and performance
   async headers() {
     return [
+      // Never-cache surface: user-token endpoints (alerts/digest manage,
+      // verify, unsubscribe), admin and debug routes, cron and cache
+      // infrastructure. These set no Cache-Control of their own, so without
+      // this rule they fall to the blanket API default below and are stored
+      // by the CDN. Measured 2026-07-26: /api/cache/status was
+      // `x-vercel-cache: HIT` at age 17 and `STALE` at age 348 in production
+      // — i.e. really cached for the blanket 300s. A shared cache holding a
+      // subscriber's state, or making a state-changing GET look idempotent,
+      // is the wrong default for all of these.
+      //
+      // This is carved OUT of the blanket rule below (negative lookahead)
+      // rather than layered on top of it, so exactly one header rule matches
+      // any given path and there is no precedence question to reason about.
       {
-        source: '/api/:path*',
+        source:
+          '/api/:path(alerts/.*|digest/.*|admin/.*|debug|debug/.*|agent|cache/.*|cron/.*|warmup|health/redis)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
+          },
+        ],
+      },
+      {
+        source:
+          '/api/:path((?!alerts/|digest/|admin/|debug|agent|cache/|cron/|warmup|health/redis).*)',
         headers: [
           {
             key: 'Cache-Control',
