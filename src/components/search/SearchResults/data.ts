@@ -118,7 +118,7 @@ async function searchBills(query: string, limit: number): Promise<BillResult[]> 
         return [];
       }
     },
-    5 * 60 * 1000
+    5 * 60
   );
 }
 

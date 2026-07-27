@@ -37,6 +37,45 @@ export interface RedisProbeResult {
   error?: string;
 }
 
+/**
+ * Longest TTL any cache entry may claim, in seconds (90 days).
+ *
+ * Guards against passing milliseconds to a seconds parameter. Every caller
+ * of `cachedFetch(key, fn, ttlSeconds)` writes its TTL as an expression like
+ * `6 * 60 * 60`, and appending `* 1000` to that — which reads naturally if
+ * you think the unit is milliseconds — turns 6 hours into 250 days. Nothing
+ * rejected it, so the entry outlived its intended life by a factor of 1000
+ * and served stale data until someone noticed.
+ *
+ * That happened: 39 call sites shipped with millisecond TTLs. It surfaced on
+ * 2026-07-27 as `congress-legislators-current` holding a 69-day-old roster —
+ * two sitting members missing, one departed member still listed — on a
+ * platform whose first rule is real government data or nothing.
+ *
+ * 90 days is comfortably above the longest deliberate TTL in the codebase
+ * (30 days, for immutable Federal Register preambles) and far below the
+ * smallest plausible millisecond slip (1 hour in ms is 41 days, but 6 hours
+ * in ms is 250 — anything genuinely long enough to trip this is suspect).
+ */
+export const MAX_TTL_SECONDS = 90 * 24 * 60 * 60;
+
+export function clampTtl(key: string, ttlSeconds: number): number {
+  if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0) return 3600;
+  if (ttlSeconds <= MAX_TTL_SECONDS) return ttlSeconds;
+
+  logger.error(
+    '[Cache] TTL exceeds the maximum and was clamped — check for a milliseconds/seconds mix-up',
+    new Error('TTL out of range'),
+    {
+      key,
+      requestedTtlSeconds: ttlSeconds,
+      clampedToSeconds: MAX_TTL_SECONDS,
+      looksLikeMilliseconds: ttlSeconds % 1000 === 0,
+    }
+  );
+  return MAX_TTL_SECONDS;
+}
+
 export class RedisCache {
   private client: Redis | null = null;
   private fallbackCache: Map<string, CacheEntry>;
@@ -324,6 +363,7 @@ export class RedisCache {
 
   async set<T = unknown>(key: string, value: T, ttlSeconds: number = 3600): Promise<boolean> {
     const monitor = monitorCache('set', key);
+    ttlSeconds = clampTtl(key, ttlSeconds);
 
     try {
       const serializedValue = JSON.stringify(value);

@@ -384,7 +384,7 @@ async function searchBills(query: string, limit: number): Promise<Bill[]> {
         return [];
       }
     },
-    5 * 60 * 1000 // 5 minute cache
+    5 * 60 // 5 minute cache
   );
 }
 

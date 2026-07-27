@@ -387,7 +387,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
         return [];
       }
     },
-    6 * 60 * 60 * 1000 // 6 hours cache - data doesn't change frequently
+    6 * 60 * 60 // 6 hours cache - data doesn't change frequently
   );
 }
 
@@ -438,7 +438,7 @@ async function fetchHistoricalLegislators(): Promise<CongressLegislator[]> {
         return [];
       }
     },
-    12 * 60 * 60 * 1000 // 12 hours cache - historical data changes infrequently
+    12 * 60 * 60 // 12 hours cache - historical data changes infrequently
   );
 }
 
@@ -483,7 +483,7 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
         return [];
       }
     },
-    6 * 60 * 60 * 1000 // 6 hours cache
+    6 * 60 * 60 // 6 hours cache
   );
 }
 
@@ -671,7 +671,7 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
         return [];
       }
     },
-    6 * 60 * 60 * 1000 // 6 hours cache
+    6 * 60 * 60 // 6 hours cache
   );
 }
 
@@ -704,7 +704,7 @@ export async function fetchCommittees(): Promise<CongressCommittee[]> {
         return [];
       }
     },
-    6 * 60 * 60 * 1000 // 6 hours cache
+    6 * 60 * 60 // 6 hours cache
   );
 }
 

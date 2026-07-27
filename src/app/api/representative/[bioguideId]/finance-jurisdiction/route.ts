@@ -162,7 +162,7 @@ export async function GET(
 
         return response;
       },
-      12 * 60 * 60 * 1000 // 12 hour cache
+      12 * 60 * 60 // 12 hour cache
     );
 
     if (!result) {

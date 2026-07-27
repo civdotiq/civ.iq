@@ -433,7 +433,7 @@ export async function GET(
           },
         };
       },
-      6 * 60 * 60 * 1000 // 6 hour cache
+      6 * 60 * 60 // 6 hour cache
     );
 
     if ('error' in result && typeof result.error === 'string') {

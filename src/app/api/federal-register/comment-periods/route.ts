@@ -180,7 +180,7 @@ async function fetchCommentPeriods(): Promise<{
         };
       }
     },
-    60 * 60 * 1000 // 1 hour cache
+    60 * 60 // 1 hour cache
   );
 }
 

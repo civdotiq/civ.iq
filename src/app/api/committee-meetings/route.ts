@@ -256,7 +256,7 @@ async function fetchAllMeetings(
         total: totalCount,
       };
     },
-    60 * 60 * 1000 // 1 hour cache
+    60 * 60 // 1 hour cache
   );
 }
 

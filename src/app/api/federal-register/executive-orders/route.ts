@@ -97,7 +97,7 @@ async function fetchExecutiveOrders(
         return { orders: [], total: 0 };
       }
     },
-    6 * 60 * 60 * 1000 // 6 hour cache
+    6 * 60 * 60 // 6 hour cache
   );
 }
 

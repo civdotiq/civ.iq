@@ -201,7 +201,7 @@ export async function GET(
 
         return response;
       },
-      6 * 60 * 60 * 1000 // 6 hour cache
+      6 * 60 * 60 // 6 hour cache
     );
 
     if (!result) {

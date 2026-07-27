@@ -214,7 +214,7 @@ export async function GET(
 
         return lifecycleResponse;
       },
-      60 * 60 * 1000 // 1 hour cache
+      60 * 60 // 1 hour cache
     );
 
     if (!result) {

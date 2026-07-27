@@ -201,7 +201,7 @@ export async function GET(
           },
         } satisfies IndustryConnectionsResponse;
       },
-      2 * 60 * 60 * 1000
+      2 * 60 * 60
     );
 
     if (!result) {

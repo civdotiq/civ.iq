@@ -291,7 +291,7 @@ export async function GET(
 
         return { representative, demographics, elections };
       },
-      2 * 60 * 60 * 1000 // 2 hours cache for demographics (changes infrequently)
+      2 * 60 * 60 // 2 hours cache for demographics (changes infrequently)
     );
 
     const { representative, demographics, elections } = districtData;

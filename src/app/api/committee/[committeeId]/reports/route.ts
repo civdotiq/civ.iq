@@ -97,7 +97,7 @@ async function _fetchCommitteeReports(committeeId: string): Promise<CommitteeRep
         return getEmptyReportsResponse(committeeId);
       }
     },
-    4 * 60 * 60 * 1000 // 4 hours cache - reports don't change frequently
+    4 * 60 * 60 // 4 hours cache - reports don't change frequently
   );
 }
 

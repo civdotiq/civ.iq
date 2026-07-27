@@ -493,7 +493,7 @@ export async function GET(request: NextRequest) {
           },
         };
       },
-      86400 * 1000 // 24 hour cache (matches ISR revalidation)
+      86400 // 24 hour cache (matches ISR revalidation)
     );
 
     logger.info('Successfully processed committee directory', {

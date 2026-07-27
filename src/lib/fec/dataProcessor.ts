@@ -88,7 +88,7 @@ async function fetchCandidateTotals(candidateId: string): Promise<FECCandidateTo
 
       return response.json();
     },
-    2 * 60 * 60 * 1000 // 2 hours
+    2 * 60 * 60 // 2 hours
   );
 }
 
@@ -146,7 +146,7 @@ async function fetchAllContributions(candidateId: string): Promise<ContributionD
 
       return allContributions;
     },
-    60 * 60 * 1000 // 1 hour
+    60 * 60 // 1 hour
   );
 }
 
@@ -205,7 +205,7 @@ async function fetchAllExpenditures(candidateId: string): Promise<ExpenditureDet
 
       return allExpenditures;
     },
-    60 * 60 * 1000 // 1 hour
+    60 * 60 // 1 hour
   );
 }
 

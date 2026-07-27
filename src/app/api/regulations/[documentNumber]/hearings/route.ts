@@ -189,7 +189,7 @@ export async function GET(
           },
         } satisfies RegulationHearingsResponse;
       },
-      2 * 60 * 60 * 1000
+      2 * 60 * 60
     );
 
     if (!result) {

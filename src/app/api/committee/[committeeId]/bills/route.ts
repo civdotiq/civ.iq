@@ -176,7 +176,7 @@ async function _fetchCommitteeBills(committeeId: string): Promise<CongressBill[]
         return getEmptyBillsResponse(committeeId);
       }
     },
-    2 * 60 * 60 * 1000 // 2 hours cache - bills don't change frequently
+    2 * 60 * 60 // 2 hours cache - bills don't change frequently
   );
 }
 

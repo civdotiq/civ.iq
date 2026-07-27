@@ -112,7 +112,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<Geographic
     const results = await cachedFetch(
       cacheKey,
       async () => fetchGeographicSpending(geoLayer, scope, fiscalYear),
-      24 * 60 * 60 * 1000 // 24 hour cache
+      24 * 60 * 60 // 24 hour cache
     );
 
     return NextResponse.json(

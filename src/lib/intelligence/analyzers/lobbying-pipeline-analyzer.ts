@@ -471,7 +471,7 @@ async function fetchAndMatchBills(
         const data = await response.json();
         return (data.bills ?? []) as CongressBillListItem[];
       },
-      2 * 60 * 60 * 1000 // 2 hour cache
+      2 * 60 * 60 // 2 hour cache
     );
   } catch (error) {
     logger.warn('[LobbyingPipeline] Congress.gov bill fetch failed', {

@@ -874,6 +874,6 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
         return null;
       }
     },
-    24 * 60 * 60 * 1000
+    24 * 60 * 60
   );
 }

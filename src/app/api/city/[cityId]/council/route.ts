@@ -164,7 +164,7 @@ export async function GET(
     const members = await cachedFetch(
       cacheKey,
       async () => fetchCouncilMembers(cityConfig, activeOnly),
-      24 * 60 * 60 * 1000 // 24 hour cache
+      24 * 60 * 60 // 24 hour cache
     );
 
     const activeMembers = members.filter(m => m.active).length;

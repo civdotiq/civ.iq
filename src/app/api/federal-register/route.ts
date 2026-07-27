@@ -168,7 +168,7 @@ async function fetchDocuments(
         return { items: [], total: 0, totalPages: 0 };
       }
     },
-    60 * 60 * 1000 // 1 hour cache
+    60 * 60 // 1 hour cache
   );
 }
 

@@ -247,7 +247,7 @@ async function fetchHouseSchedule(): Promise<{
         return null;
       }
     },
-    15 * 60 * 1000 // 15 minute cache
+    15 * 60 // 15 minute cache
   );
 }
 
@@ -313,7 +313,7 @@ async function fetchSenateSchedule(): Promise<SenateFloorSession | null> {
         return null;
       }
     },
-    15 * 60 * 1000 // 15 minute cache
+    15 * 60 // 15 minute cache
   );
 }
 

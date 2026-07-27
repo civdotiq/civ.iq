@@ -363,7 +363,7 @@ export async function GET(
 
         return response;
       },
-      2 * 60 * 60 * 1000 // 2 hour cache
+      2 * 60 * 60 // 2 hour cache
     );
 
     if (!result) {

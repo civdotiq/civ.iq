@@ -287,7 +287,7 @@ export async function GET(
 
         return response;
       },
-      3 * 60 * 60 * 1000 // 3 hour cache
+      3 * 60 * 60 // 3 hour cache
     );
 
     if (!result) {
