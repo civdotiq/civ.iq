@@ -82,32 +82,42 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
           analytics: true,
         }),
       ],
-      // API routes: 100 requests per minute (sliding window)
+      // Internal API surface: 600 requests per minute.
+      //
+      // These next three are first-party UI traffic, and the quota is now
+      // aggregated per IP rather than per URL (see the identifier note in
+      // checkRateLimit). The previous numbers were sized when each URL had
+      // its own budget, which made them effectively unlimited — applying
+      // them as aggregates would false-positive on any shared or NAT'd IP.
+      // A single profile view fires roughly ten API calls, and CIV.IQ is
+      // explicitly aimed at libraries, newsrooms, and civic offices where
+      // many people sit behind one address. 600/min sustains ~10 req/s for
+      // such a site while still stopping a scraper running thousands/min.
       [
         '/api/',
         new Ratelimit({
           redis: redisInstance,
-          limiter: Ratelimit.slidingWindow(100, '1 m'),
+          limiter: Ratelimit.slidingWindow(600, '1 m'),
           prefix: 'ratelimit:api',
           analytics: true,
         }),
       ],
-      // Representatives endpoint: 60 requests per minute
+      // Representatives endpoints: 240 requests per minute
       [
         '/api/representatives',
         new Ratelimit({
           redis: redisInstance,
-          limiter: Ratelimit.slidingWindow(60, '1 m'),
+          limiter: Ratelimit.slidingWindow(240, '1 m'),
           prefix: 'ratelimit:representatives',
           analytics: true,
         }),
       ],
-      // District map: 30 requests per minute
+      // District map: 120 requests per minute (map panning is bursty)
       [
         '/api/district-map',
         new Ratelimit({
           redis: redisInstance,
-          limiter: Ratelimit.slidingWindow(30, '1 m'),
+          limiter: Ratelimit.slidingWindow(120, '1 m'),
           prefix: 'ratelimit:district-map',
           analytics: true,
         }),
@@ -182,13 +192,15 @@ interface RateLimitConfig {
   windowMs: number;
 }
 
+// Must stay in sync with the Ratelimit instances in getRatelimiters() —
+// this table drives the in-memory fallback used when Upstash is unavailable.
 const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
-  '/api/v1/': { requests: 60, windowMs: 60000 },
-  '/api/feed/': { requests: 60, windowMs: 60000 },
-  '/api/': { requests: 100, windowMs: 60000 },
-  '/api/representatives': { requests: 60, windowMs: 60000 },
-  '/api/district-map': { requests: 30, windowMs: 60000 },
-  default: { requests: 200, windowMs: 60000 },
+  '/api/v1/': { requests: 60, windowMs: 60000 }, // published public contract
+  '/api/feed/': { requests: 60, windowMs: 60000 }, // published public contract
+  '/api/': { requests: 600, windowMs: 60000 },
+  '/api/representatives': { requests: 240, windowMs: 60000 },
+  '/api/district-map': { requests: 120, windowMs: 60000 },
+  default: { requests: 600, windowMs: 60000 },
 };
 
 export async function middleware(request: NextRequest) {
@@ -526,7 +538,16 @@ async function checkRateLimit(
   if (limiters) {
     try {
       const limiter = limiters.get(ratelimiterKey) || limiters.get('default')!;
-      const identifier = `${clientIp}:${url.pathname}`;
+      // Bucket per (IP, route class) — NOT per (IP, exact URL).
+      //
+      // The old `${clientIp}:${url.pathname}` key meant the quota applied to
+      // each distinct URL separately, so an IP's total request rate was
+      // unbounded: a crawler walking 10,000 representative pages got 10,000
+      // independent budgets and created 10,000 sliding-window keys in Redis.
+      // The limiter cost money and enforced nothing. Keying on the route
+      // class makes the published "60 requests/minute per IP" contract real
+      // and collapses key cardinality to one per IP per class.
+      const identifier = `${clientIp}:${ratelimiterKey}`;
       const result = await limiter.limit(identifier);
 
       return {
@@ -546,7 +567,8 @@ async function checkRateLimit(
   }
 
   // Fallback: In-memory rate limiting (for local dev or Redis failures)
-  return checkFallbackRateLimit(clientIp, url.pathname, config);
+  // Same bucketing as the Upstash path — per (IP, route class), not per URL.
+  return checkFallbackRateLimit(clientIp, ratelimiterKey, config);
 }
 
 /**
@@ -555,7 +577,7 @@ async function checkRateLimit(
  */
 function checkFallbackRateLimit(
   clientIp: string,
-  pathname: string,
+  bucket: string,
   config: RateLimitConfig
 ): {
   allowed: boolean;
@@ -565,7 +587,7 @@ function checkFallbackRateLimit(
   source: 'fallback';
 } {
   const now = Date.now();
-  const key = `${clientIp}:${pathname}`;
+  const key = `${clientIp}:${bucket}`;
   const windowStart = Math.floor(now / config.windowMs) * config.windowMs;
   const resetTime = windowStart + config.windowMs;
 
