@@ -30,10 +30,24 @@ describe('FEC_CACHE constants', () => {
 describe('FEC_CACHE_HEADERS', () => {
   it('includes proper cache control headers', () => {
     expect(FEC_CACHE_HEADERS.get('Cache-Control')).toBe(
-      'public, max-age=2592000, stale-while-revalidate=86400'
+      'public, max-age=300, s-maxage=2592000, stale-while-revalidate=86400'
     );
     expect(FEC_CACHE_HEADERS.get('CDN-Cache-Control')).toBe('public, max-age=2592000');
     expect(FEC_CACHE_HEADERS.get('Vary')).toBe('Accept-Encoding');
+  });
+
+  // Guards the reason the two lifetimes differ. A browser must not pin
+  // campaign finance figures for 30 days — a citizen who loaded a page once
+  // would not see corrected numbers for a month. Shared caches may hold them
+  // that long because they can be purged.
+  it('keeps the browser lifetime short and the shared-cache lifetime long', () => {
+    const cc = FEC_CACHE_HEADERS.get('Cache-Control') ?? '';
+    const maxAge = Number(/(?:^|[ ,])max-age=(\d+)/.exec(cc)?.[1]);
+    const sMaxAge = Number(/s-maxage=(\d+)/.exec(cc)?.[1]);
+
+    expect(maxAge).toBeLessThanOrEqual(600);
+    expect(sMaxAge).toBeGreaterThanOrEqual(86400);
+    expect(sMaxAge).toBeGreaterThan(maxAge);
   });
 });
 
