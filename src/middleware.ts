@@ -10,6 +10,7 @@ import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { LOCAL_PHOTO_IDS } from '@/generated/local-photo-ids';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
@@ -217,25 +218,44 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   default: { requests: 600, windowMs: 60000 },
 };
 
-// API routes that serve cacheable static assets rather than data, and are
-// therefore exempt from rate limiting.
-//
-// The limiter runs in middleware, which on Vercel executes *before* the CDN
-// is consulted. A route whose responses the CDN already serves still burns
-// one Upstash command per request — measured against production 2026-07-27,
-// four consecutive requests to a single portrait returned
-// `x-vercel-cache: HIT` while `x-ratelimit-remaining` fell 597 -> 594. The
-// origin function never ran; the Redis command was pure cost.
-//
-// /api/representative-photo was 65% of all API traffic (4,569 of 6,994
-// sampled requests). It proxies public-domain federal portraits under
-// 17 U.S.C. § 105, holds no secrets, hits no metered upstream on the common
-// path, and is CDN-cached for a week. Rate limiting it protected nothing and
-// was the single largest remaining consumer of Upstash commands.
-//
-// Add a prefix here only if the same three things hold: the response is
-// public, CDN-cacheable, and cheap to regenerate.
-const UNMETERED_ASSET_ROUTES = ['/api/representative-photo/'];
+const PHOTO_ROUTE_PREFIX = '/api/representative-photo/';
+
+/**
+ * Is this a portrait request we can serve without metering it?
+ *
+ * The limiter runs in middleware, which on Vercel executes *before* the CDN
+ * is consulted. A route whose responses the CDN already serves still burns
+ * one Upstash command per request — measured against production 2026-07-27,
+ * four consecutive requests to a single portrait returned
+ * `x-vercel-cache: HIT` while `x-ratelimit-remaining` fell 597 -> 594. The
+ * origin function never ran; the Redis command was pure cost.
+ *
+ * /api/representative-photo was 65% of all API traffic (4,569 of 6,994
+ * sampled requests), making it the largest remaining consumer of Upstash
+ * commands after page views came off the limiter.
+ *
+ * The exemption is deliberately keyed on the specific ID rather than the
+ * route prefix. The route accepts any /^[A-Z]\d{6}$/ string — 26 million of
+ * them — and only the ~437 with a pre-downloaded portrait are cheap. The
+ * rest fall through to Wikidata, the House Clerk, and two GitHub fetches
+ * with 8s timeouts, and their 404 is CDN-cached for only five minutes, so an
+ * exemption by prefix would leave an uncapped path that generates outbound
+ * traffic against third parties. Known ID: disk hit, cached a week, safe to
+ * exempt. Unknown ID: metered exactly as before.
+ *
+ * LOCAL_PHOTO_IDS is generated from public/photos/webp/ — see
+ * scripts/gen-local-photo-ids.mjs. If it goes stale, a new portrait is rate
+ * limited rather than exempt, which is the pre-exemption behaviour.
+ */
+function isUnmeteredPhotoRequest(pathname: string): boolean {
+  if (!pathname.startsWith(PHOTO_ROUTE_PREFIX)) return false;
+
+  const id = pathname.slice(PHOTO_ROUTE_PREFIX.length);
+  // Reject anything with a trailing path segment before the Set lookup.
+  if (id.includes('/')) return false;
+
+  return LOCAL_PHOTO_IDS.has(id.toUpperCase());
+}
 
 export async function middleware(request: NextRequest) {
   const startTime = Date.now();
@@ -330,14 +350,13 @@ export async function middleware(request: NextRequest) {
     // protect the API surface; page routes are static or ISR and are already
     // covered by Vercel's platform-level DDoS mitigation.
     //
-    // Unmetered asset routes are exempt for the same reason. See
-    // UNMETERED_ASSET_ROUTES above.
+    // Portrait requests for known-local IDs are exempt for the same reason.
+    // See isUnmeteredPhotoRequest above.
     const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
-    const isUnmetered = UNMETERED_ASSET_ROUTES.some(prefix =>
-      request.nextUrl.pathname.startsWith(prefix)
-    );
     const rateLimitResult =
-      isApiRoute && !isUnmetered ? await checkRateLimit(request, clientInfo.ip) : null;
+      isApiRoute && !isUnmeteredPhotoRequest(request.nextUrl.pathname)
+        ? await checkRateLimit(request, clientInfo.ip)
+        : null;
     if (rateLimitResult && !rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded', {
         url: request.url,
