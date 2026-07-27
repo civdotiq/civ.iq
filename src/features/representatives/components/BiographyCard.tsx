@@ -12,7 +12,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { fetchBiography } from '@/lib/api/wikipedia';
 import { fetchWikidataBiography } from '@/lib/api/wikidata';
 import { sanitizeAndValidateWikipediaHtml } from '@/utils/sanitize';
-import { loadStaticBiography } from '@/lib/data/static-biographies';
+import type { StaticBiography } from '@/lib/data/static-biographies';
 
 interface BiographyCardProps {
   representative: EnhancedRepresentative;
@@ -147,6 +147,26 @@ function calculateYearsInOffice(terms?: Term[]): number {
 }
 
 /**
+ * Fetch the pre-generated biography record for one member.
+ *
+ * The corpus behind this route is 1.34 MB covering all 520 members, so it is
+ * read server-side and only the single record crosses the wire. Returns null
+ * when the member has no pre-generated record (404), which is the signal to
+ * fall back to live Wikipedia/Wikidata.
+ */
+const fetchStaticBiography = async (bioguideId: string): Promise<StaticBiography | null> => {
+  try {
+    const response = await fetch(`/api/representative/${bioguideId}/biography`);
+    if (!response.ok) return null;
+    const payload = await response.json();
+    return (payload?.biography as StaticBiography) ?? null;
+  } catch {
+    // Network failure is not fatal — fall through to the live sources.
+    return null;
+  }
+};
+
+/**
  * Production-hardened SWR fetcher with graceful degradation and persistent caching
  * HYBRID APPROACH: Check static data first, fall back to API if not found
  */
@@ -160,8 +180,8 @@ const biographyFetcher = async (
     return cached;
   }
 
-  // 2. Check static pre-generated data (99% of cases - NO API CALLS!)
-  const staticData = await loadStaticBiography(bioguideId);
+  // 2. Check static pre-generated data (99% of cases - NO EXTERNAL API CALLS!)
+  const staticData = await fetchStaticBiography(bioguideId);
   if (staticData) {
     // Convert static data to CombinedBiography format
     const combined: CombinedBiography = {
