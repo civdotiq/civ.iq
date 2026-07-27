@@ -361,7 +361,10 @@ export async function GET(
         bioguideId,
         responseTime: Date.now() - startTime,
       });
-      return NextResponse.json({
+      // Same cache headers as the cold path below — a Redis hit is still a
+      // fully-valid response and is by far the common case, so without this
+      // the majority of traffic fell to the blanket 300s API default.
+      return withFECCacheHeaders({
         ...cached,
         metadata: { ...cached.metadata, cacheHit: true },
       });

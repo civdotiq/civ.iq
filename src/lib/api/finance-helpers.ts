@@ -29,11 +29,24 @@ export const FEC_CACHE = {
 } as const;
 
 /**
- * Standard HTTP cache headers for FEC data
- * FEC data updates quarterly, so 30-day cache with 1-day stale-while-revalidate
+ * Standard HTTP cache headers for FEC data.
+ *
+ * Split browser and shared-cache lifetimes deliberately:
+ *
+ * - `s-maxage=2592000` (30 days) — the CDN and any shared cache may hold
+ *   these for a long time. This matches FEC_CACHE_OPTIONS' 30-day Redis TTL
+ *   and FEC's quarterly filing cadence, and a shared cache can be purged if
+ *   the numbers need to move sooner.
+ * - `max-age=300` (5 minutes) — a *browser* must not pin campaign finance
+ *   figures for 30 days. Previously this header sent `max-age=2592000` with
+ *   no `s-maxage`, so both layers held 30 days and a citizen who had loaded
+ *   a page once could not see corrected or updated numbers for a month
+ *   without a hard refresh. On a platform whose value is that the figures
+ *   are right, that is the wrong trade. Revalidation is cheap — it hits the
+ *   CDN, not FEC.
  */
 export const FEC_CACHE_HEADERS = new Headers({
-  'Cache-Control': 'public, max-age=2592000, stale-while-revalidate=86400',
+  'Cache-Control': 'public, max-age=300, s-maxage=2592000, stale-while-revalidate=86400',
   'CDN-Cache-Control': 'public, max-age=2592000',
   Vary: 'Accept-Encoding',
 });

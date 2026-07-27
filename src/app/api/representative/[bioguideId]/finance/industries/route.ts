@@ -64,7 +64,10 @@ export async function GET(
     const cached = await govCache.get<IndustryAnalysisResponse>(cacheKey);
 
     if (cached) {
-      return NextResponse.json(cached);
+      // Same cache headers as the cold path below — a Redis hit is still a
+      // fully-valid response and is by far the common case, so without this
+      // the majority of traffic fell to the blanket 300s API default.
+      return withFECCacheHeaders(cached);
     }
 
     const fecMapping = getFECMapping(bioguideId);

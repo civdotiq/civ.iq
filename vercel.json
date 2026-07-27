@@ -52,6 +52,10 @@
       "maxDuration": 60,
       "memory": 1024
     },
+    "src/app/api/representative/[bioguideId]/finance/comprehensive/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "src/app/api/download/**/*.ts": {
       "maxDuration": 120,
       "memory": 1024
