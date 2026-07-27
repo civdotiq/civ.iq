@@ -2,13 +2,25 @@
  * Next.js configuration optimized for Vercel deployment
  */
 
-// Bundle analyzer configuration
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({
-      enabled: true,
-      openAnalyzer: true,
-    })
-  : (config) => config;
+// NOTE ON BUNDLE ANALYSIS (2026-07-26)
+//
+// This file previously wrapped the config in `@next/bundle-analyzer` via a
+// bare `require()`. Three things were wrong with that and all three were
+// verified:
+//
+//   1. This is an ES module — `require` is not defined, so the call threw.
+//   2. The package was not installed at all.
+//   3. Even installed, it does not work here: the analyzer is incompatible
+//      with Turbopack ("The Next Bundle Analyzer is not compatible with
+//      Turbopack builds, no report will be generated"), and this project
+//      builds with Turbopack. Forcing `next build --webpack` instead OOMs,
+//      at both the default heap and 8 GB. `next experimental-analyze` (the
+//      Turbopack-native path Next suggests) produced no output in 11 minutes.
+//
+// So the wrapper is gone rather than left as decoration. Use
+// `npm run perf:analyze`, which measures the real Turbopack client output.
+// If you want the interactive treemap, `next experimental-analyze` is the
+// upstream direction — it just could not be verified on this machine.
 
 const nextConfig = {
   typescript: {
@@ -189,8 +201,26 @@ const nextConfig = {
   compress: true,
   experimental: {
     scrollRestoration: true,
-    // Optimize package imports for better tree-shaking
-    optimizePackageImports: ['d3', 'recharts', 'lucide-react', 'date-fns'],
+    // Optimize package imports for better tree-shaking.
+    //
+    // Must name the packages actually imported. Previously this listed
+    // `date-fns` (not a dependency at all) and `d3` (only ever imported as a
+    // type — the real value imports are the d3-* submodules below), while
+    // omitting @heroicons/react, the largest icon package in the tree.
+    optimizePackageImports: [
+      'recharts',
+      'lucide-react',
+      '@heroicons/react',
+      'd3-selection',
+      'd3-scale',
+      'd3-force',
+      'd3-axis',
+      'd3-shape',
+      'd3-array',
+      'd3-drag',
+      'd3-zoom',
+      'd3-interpolate',
+    ],
   },
   // Redirects for deprecated routes
   async redirects() {
@@ -264,4 +294,4 @@ const nextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default nextConfig;
