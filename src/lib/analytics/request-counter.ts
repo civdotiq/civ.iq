@@ -7,7 +7,12 @@
  * Request Analytics — Upstash Redis Counters
  *
  * Fire-and-forget request counting for API usage analytics.
- * Never blocks responses. 30-day TTL on all counter keys.
+ * Never blocks responses.
+ *
+ * Each key gets a 30-day TTL set on its first increment, which keeps the hot
+ * path at one command per request. If that follow-up EXPIRE fails to land the
+ * key persists — see the sweep in scripts/ops rather than paying for a
+ * pipelined EXPIRE on every request.
  */
 
 import { Redis } from '@upstash/redis';
@@ -33,6 +38,10 @@ function getRedis(): Redis | null {
 }
 
 const TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+// Keys read per MGET when aggregating. A single day can hold thousands of
+// counters, so the reads are batched rather than sent one at a time.
+const MGET_CHUNK_SIZE = 500;
 
 /**
  * Increment a request counter. Fire-and-forget — errors are silently ignored.
@@ -93,14 +102,21 @@ export async function getRequestCounts(
 
     try {
       const keys = await client.keys(pattern);
-      for (const key of keys) {
-        const val = await client.get<number>(key);
-        if (val) {
+
+      // Batch the reads. A GET per key meant one call to this endpoint issued
+      // as many sequential round-trips as there were counters — over a
+      // thousand commands to answer a single request.
+      for (let i = 0; i < keys.length; i += MGET_CHUNK_SIZE) {
+        const chunk = keys.slice(i, i + MGET_CHUNK_SIZE);
+        const values = await client.mget<(number | null)[]>(chunk);
+
+        chunk.forEach((key, index) => {
+          const val = values[index];
+          if (!val) return;
           // Extract path from key for aggregation
-          const parts = key.split(':');
-          const path = parts[3] || 'unknown';
+          const path = key.split(':')[3] || 'unknown';
           counts[path] = (counts[path] || 0) + val;
-        }
+        });
       }
     } catch {
       // Skip dates with errors
