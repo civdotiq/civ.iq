@@ -61,6 +61,17 @@ const STAGES = [
   // Separate bug: these have no expiry at all. incrementRequestCounter sets
   // the TTL on first increment, so a dropped EXPIRE leaks the key forever.
   { name: 'analytics', match: 'analytics:*', spreadDays: [1, 7] },
+  // Catch-all, run last. The named stages above came from a hand-written
+  // survey that turned out to be incomplete — it missed roughly a thousand
+  // keys spread thinly across families like committee-real-*,
+  // spending-district-*, state-executives-* and civiq:fec, most of them one
+  // key per prefix and so invisible in a census grouped by prefix.
+  //
+  // Matching everything is safe here by construction: only keys over the
+  // frozen threshold or with no expiry at all are touched, and healthy keys
+  // are left alone. The window is wide because civiq:fec entries are ~1.3 MB
+  // apiece and refetching them is paced by the FEC limiter.
+  { name: 'remaining', match: '*', spreadDays: [1, 7] },
 ];
 
 const args = process.argv.slice(2);
