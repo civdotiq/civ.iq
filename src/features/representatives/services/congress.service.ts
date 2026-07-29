@@ -951,9 +951,73 @@ export async function getEnhancedRepresentative(
 }
 
 /**
+ * In-process memo for the full roster.
+ *
+ * `getAllEnhancedRepresentatives` has 52 call sites across 26 files, and each
+ * one previously reached Redis and pulled the whole ~1 MB
+ * `congress-legislators-current` blob. That is ~2% of our Redis commands but
+ * effectively all of our bandwidth.
+ *
+ * Under Fluid Compute module scope survives between invocations on a warm
+ * instance, so memoising here collapses those reads to roughly one per TTL
+ * window per instance. The window is deliberately shorter than the 6-hour Redis
+ * TTL underneath it, so this can only ever serve data the layer below would
+ * have served anyway.
+ */
+const ROSTER_MEMO_TTL_MS = getRosterMemoTtlMinutes() * 60 * 1000;
+
+function getRosterMemoTtlMinutes(): number {
+  const raw = process.env.ROSTER_MEMO_TTL_MINUTES;
+  if (!raw) return 60;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
+}
+
+let rosterMemo: { data: EnhancedRepresentative[]; expiresAt: number } | null = null;
+let rosterInFlight: Promise<EnhancedRepresentative[]> | null = null;
+
+/**
+ * Drop the memo. Exported for tests and cache-clearing endpoints — without it a
+ * warm instance would keep serving the old roster for up to a full TTL window
+ * after someone deliberately busts the Redis key.
+ */
+export function resetRosterMemo(): void {
+  rosterMemo = null;
+  rosterInFlight = null;
+}
+
+/**
  * Get all enhanced representatives
  */
 export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
+  if (rosterMemo && Date.now() < rosterMemo.expiresAt) {
+    // Hand out a shallow copy so a caller sorting the result in place cannot
+    // reorder the roster for everyone else on this instance.
+    return rosterMemo.data.slice();
+  }
+
+  // Single-flight: concurrent requests on the same instance share one fetch
+  // rather than each pulling their own copy of the blob.
+  if (!rosterInFlight) {
+    rosterInFlight = buildEnhancedRepresentatives()
+      .then(reps => {
+        // Never memoise an empty roster — buildEnhancedRepresentatives returns
+        // [] on upstream failure, and caching that would hide a real outage
+        // behind a full TTL window. Same guard as cachedFetch's.
+        if (reps.length > 0) {
+          rosterMemo = { data: reps, expiresAt: Date.now() + ROSTER_MEMO_TTL_MS };
+        }
+        return reps;
+      })
+      .finally(() => {
+        rosterInFlight = null;
+      });
+  }
+
+  return (await rosterInFlight).slice();
+}
+
+async function buildEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
   try {
     logger.debug('Starting to fetch all enhanced representatives data');
     const [legislators, socialMedia] = await Promise.all([

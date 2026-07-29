@@ -39,6 +39,7 @@ import {
   fetchCommitteeMemberships,
   getOpenSecretsId,
   getFECIds,
+  resetRosterMemo,
   type CongressLegislator,
 } from '@/features/representatives/services/congress.service';
 import {
@@ -203,6 +204,9 @@ function mockGitHubFetch(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // The roster memo is module-level and survives between tests, so a stale
+  // entry would mask the fetch behaviour each case is asserting on.
+  resetRosterMemo();
   mockFileCache.get.mockResolvedValue(null);
   mockFileCache.set.mockResolvedValue(undefined);
   mockGitHubFetch();
@@ -399,6 +403,68 @@ describe('cache-poisoning guard (persistentCachedFetch)', () => {
     await getAllEnhancedRepresentatives();
 
     expect(mockFileCache.set).not.toHaveBeenCalled();
+  });
+});
+
+describe('roster memo (getAllEnhancedRepresentatives)', () => {
+  const rosterFetchCount = () =>
+    (global.fetch as jest.Mock).mock.calls.filter(([url]) =>
+      String(url).endsWith('legislators-current.yaml')
+    ).length;
+
+  it('serves a second call from memory without reaching the network', async () => {
+    await getAllEnhancedRepresentatives();
+    (global.fetch as jest.Mock).mockClear();
+
+    const reps = await getAllEnhancedRepresentatives();
+
+    expect(reps).toHaveLength(4);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('collapses concurrent callers into a single fetch', async () => {
+    const results = await Promise.all([
+      getAllEnhancedRepresentatives(),
+      getAllEnhancedRepresentatives(),
+      getAllEnhancedRepresentatives(),
+    ]);
+
+    for (const reps of results) {
+      expect(reps).toHaveLength(4);
+    }
+    expect(rosterFetchCount()).toBe(1);
+  });
+
+  it('hands out a copy so one caller cannot reorder the roster for others', async () => {
+    const first = await getAllEnhancedRepresentatives();
+    first.reverse();
+
+    const second = await getAllEnhancedRepresentatives();
+
+    expect(second.map(r => r.bioguideId)).not.toEqual(first.map(r => r.bioguideId));
+  });
+
+  it('does not memoise an empty roster after an upstream failure', async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' });
+
+    await expect(getAllEnhancedRepresentatives()).resolves.toEqual([]);
+
+    // Once upstream recovers the next call must go back out, rather than serve
+    // the empty array for a full TTL window.
+    mockGitHubFetch();
+    await expect(getAllEnhancedRepresentatives()).resolves.toHaveLength(4);
+  });
+
+  it('resetRosterMemo sends the next call back to the source', async () => {
+    await getAllEnhancedRepresentatives();
+    (global.fetch as jest.Mock).mockClear();
+
+    resetRosterMemo();
+    await getAllEnhancedRepresentatives();
+
+    expect(rosterFetchCount()).toBe(1);
   });
 });
 

@@ -4,6 +4,7 @@
  */
 
 import fs from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
 import logger from '@/lib/logging/simple-logger';
@@ -15,12 +16,29 @@ interface FileCacheEntry<T = unknown> {
   hash: string;
 }
 
+/**
+ * Where the cache lives on disk.
+ *
+ * Vercel serves functions from a read-only deployment bundle — at runtime only
+ * the OS temp directory is writable. Defaulting to `.next/cache` meant every
+ * read missed and every write failed in production, so this layer never
+ * absorbed anything and each congress lookup fell through to Redis and pulled
+ * the full ~1 MB blob over the network.
+ *
+ * Locally `.next/cache` is still the better home: it keeps the data alongside
+ * the build it belongs to, and `rm -rf .next` clears it as you'd expect.
+ */
+export function defaultCacheDir(): string {
+  return process.env.VERCEL
+    ? path.join(os.tmpdir(), 'civiq-congress-data')
+    : path.join(process.cwd(), '.next', 'cache', 'congress-data');
+}
+
 export class FileCache {
   private cacheDir: string;
 
   constructor(cacheDir?: string) {
-    // Use .next/cache for persistent caching between restarts
-    this.cacheDir = cacheDir || path.join(process.cwd(), '.next', 'cache', 'congress-data');
+    this.cacheDir = cacheDir || defaultCacheDir();
   }
 
   private async ensureCacheDir(): Promise<void> {

@@ -17,6 +17,7 @@ const mockIncr = jest.fn().mockResolvedValue(1);
 const mockExpire = jest.fn().mockResolvedValue(true);
 const mockKeys = jest.fn().mockResolvedValue([]);
 const mockGet = jest.fn().mockResolvedValue(null);
+const mockMget = jest.fn().mockResolvedValue([]);
 
 jest.mock('@upstash/redis', () => ({
   Redis: jest.fn().mockImplementation(() => ({
@@ -24,6 +25,7 @@ jest.mock('@upstash/redis', () => ({
     expire: mockExpire,
     keys: mockKeys,
     get: mockGet,
+    mget: mockMget,
   })),
 }));
 
@@ -137,11 +139,28 @@ describe('Request Counter', () => {
         'analytics:requests:2025-01-01:/api/v1/representatives:GET:200',
         'analytics:requests:2025-01-01:/api/v1/bills:GET:200',
       ]);
-      mockGet.mockResolvedValueOnce(42).mockResolvedValueOnce(18);
+      mockMget.mockResolvedValueOnce([42, 18]);
 
       const counts = await getRequestCounts('2025-01-01', '2025-01-01');
       expect(counts['/api/v1/representatives']).toBe(42);
       expect(counts['/api/v1/bills']).toBe(18);
+    });
+
+    it('reads a day in one batch rather than one call per key', async () => {
+      const keys = Array.from(
+        { length: 120 },
+        (_, i) => `analytics:requests:2025-01-01:/api/v1/bills/${i}:GET:200`
+      );
+      mockKeys.mockResolvedValue(keys);
+      mockMget.mockResolvedValueOnce(keys.map(() => 1));
+
+      await getRequestCounts('2025-01-01', '2025-01-01');
+
+      // One MGET for the whole day, and no per-key GET. The old loop issued
+      // 120 sequential round-trips for this same data.
+      expect(mockMget).toHaveBeenCalledTimes(1);
+      expect(mockMget).toHaveBeenCalledWith(keys);
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it('should handle multi-day ranges', async () => {
@@ -149,7 +168,7 @@ describe('Request Counter', () => {
       mockKeys
         .mockResolvedValueOnce(['analytics:requests:2025-01-01:/api/v1/bills:GET:200'])
         .mockResolvedValueOnce(['analytics:requests:2025-01-02:/api/v1/bills:GET:200']);
-      mockGet.mockResolvedValueOnce(10).mockResolvedValueOnce(20);
+      mockMget.mockResolvedValueOnce([10]).mockResolvedValueOnce([20]);
 
       const counts = await getRequestCounts('2025-01-01', '2025-01-02');
       expect(counts['/api/v1/bills']).toBe(30);
