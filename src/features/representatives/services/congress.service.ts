@@ -166,62 +166,119 @@ function determineVotingStatusAndRole(
 /**
  * Enhanced caching with file persistence for large congress data
  */
+/**
+ * In-process memo for the congress-legislators blobs.
+ *
+ * These are the largest things we read from Redis — `congress-legislators-current`
+ * is ~1 MB and `congress-legislators-historical` ~8 MB — and they are read on
+ * the hot path for every representative page, via both
+ * `getAllEnhancedRepresentatives` and `getEnhancedRepresentative`.
+ *
+ * Under Fluid Compute module scope survives between invocations on a warm
+ * instance, so memoising here collapses those to roughly one read per TTL
+ * window per instance. The window is shorter than the 6-hour Redis TTL beneath
+ * it, so this can only ever serve data the layer below would have served.
+ *
+ * Memoise at the blob level rather than at `getAllEnhancedRepresentatives`:
+ * the single-representative path fetches these four blobs directly and would
+ * otherwise bypass the memo entirely.
+ */
+const BLOB_MEMO_TTL_MS = getBlobMemoTtlMinutes() * 60 * 1000;
+
+function getBlobMemoTtlMinutes(): number {
+  const raw = process.env.ROSTER_MEMO_TTL_MINUTES;
+  if (!raw) return 60;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
+}
+
+const blobMemo = new Map<string, { data: unknown; expiresAt: number }>();
+const blobInFlight = new Map<string, Promise<unknown>>();
+
+async function memoizedBlob<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = blobMemo.get(key);
+  if (hit && Date.now() < hit.expiresAt) return hit.data as T;
+
+  // Single-flight: concurrent requests on the same instance share one load
+  // instead of each pulling their own copy of the blob.
+  let flight = blobInFlight.get(key) as Promise<T> | undefined;
+  if (!flight) {
+    flight = load()
+      .then(data => {
+        // Never memoise an empty result — it means upstream failed, and caching
+        // that would hide a real outage for a full TTL window.
+        if (!(Array.isArray(data) && data.length === 0)) {
+          blobMemo.set(key, { data, expiresAt: Date.now() + BLOB_MEMO_TTL_MS });
+        }
+        return data;
+      })
+      .finally(() => {
+        blobInFlight.delete(key);
+      });
+    blobInFlight.set(key, flight as Promise<unknown>);
+  }
+
+  return flight;
+}
+
 async function persistentCachedFetch<T>(
   key: string,
   fetchFn: () => Promise<T>,
   ttlSeconds: number = 86400
 ): Promise<T> {
-  const startTime = Date.now();
+  return memoizedBlob(key, async () => {
+    const startTime = Date.now();
 
-  // Try file cache first for persistence across restarts.
-  // Empty arrays are treated as miss so a transient upstream failure can't
-  // poison the cache.
-  const fileCached = await fileCache.get<T>(key);
-  if (fileCached && !(Array.isArray(fileCached) && fileCached.length === 0)) {
-    const duration = Date.now() - startTime;
-    logger.debug('File cache hit', { key, duration });
-    logger.info('File cache hit for congress data', { key, duration });
-    return fileCached;
-  }
+    // Try file cache first for persistence across restarts.
+    // Empty arrays are treated as miss so a transient upstream failure can't
+    // poison the cache.
+    const fileCached = await fileCache.get<T>(key);
+    if (fileCached && !(Array.isArray(fileCached) && fileCached.length === 0)) {
+      const duration = Date.now() - startTime;
+      logger.debug('File cache hit', { key, duration });
+      logger.info('File cache hit for congress data', { key, duration });
+      return fileCached;
+    }
 
-  logger.debug('File cache miss, checking memory cache', { key });
+    logger.debug('File cache miss, checking memory cache', { key });
 
-  // Fall back to regular cache and fetch
-  return cachedFetch(
-    key,
-    async () => {
-      logger.info('Downloading from GitHub', { key });
-      logger.info('Fetching congress data from remote source', { key });
+    const data = await cachedFetch(
+      key,
+      async () => {
+        logger.info('Downloading from GitHub', { key });
+        logger.info('Fetching congress data from remote source', { key });
 
-      const fetchStartTime = Date.now();
-      const data = await fetchFn();
-      const fetchDuration = Date.now() - fetchStartTime;
+        const fetchStartTime = Date.now();
+        const fetched = await fetchFn();
 
-      logger.info('Download complete', { key, fetchDuration });
+        logger.info('Download complete', { key, fetchDuration: Date.now() - fetchStartTime });
+        return fetched;
+      },
+      ttlSeconds
+    );
 
-      // Don't persist empty results — they indicate fetch failure.
-      if (Array.isArray(data) && data.length === 0) {
-        logger.warn('Skipping file cache write for empty congress data', { key });
-        return data;
-      }
-
-      // Save to file cache for persistence
-      const cacheStartTime = Date.now();
-      await fileCache.set(key, data, ttlSeconds);
-      const cacheDuration = Date.now() - cacheStartTime;
-
-      logger.debug('Saved to file cache', { key, cacheDuration });
-      logger.info('Congress data cached successfully', {
-        key,
-        fetchDuration,
-        cacheDuration,
-        totalDuration: Date.now() - startTime,
-      });
-
+    // Write the file tier whether the value came from Redis or from upstream.
+    // This used to live inside the fetchFn above, which cachedFetch only
+    // invokes on a Redis MISS — so with a warm Redis, which is the normal
+    // case, the file tier was never written and therefore never hit. Fixing
+    // the directory to a writable path did nothing on its own because nothing
+    // ever wrote to it.
+    if (Array.isArray(data) && data.length === 0) {
+      logger.warn('Skipping file cache write for empty congress data', { key });
       return data;
-    },
-    ttlSeconds
-  );
+    }
+
+    const cacheStartTime = Date.now();
+    await fileCache.set(key, data, ttlSeconds);
+
+    logger.info('Congress data cached successfully', {
+      key,
+      cacheDuration: Date.now() - cacheStartTime,
+      totalDuration: Date.now() - startTime,
+    });
+
+    return data;
+  });
 }
 
 // Interfaces for congress-legislators data
@@ -589,6 +646,10 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
  * Fetch committee membership data
  */
 export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
+  return memoizedBlob('congress-committee-memberships', fetchCommitteeMembershipsUncached);
+}
+
+async function fetchCommitteeMembershipsUncached(): Promise<CongressCommitteeMembership[]> {
   return cachedFetch(
     'congress-committee-memberships',
     async () => {
@@ -679,6 +740,10 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
  * Fetch committee data
  */
 export async function fetchCommittees(): Promise<CongressCommittee[]> {
+  return memoizedBlob('congress-committees-current', fetchCommitteesUncached);
+}
+
+async function fetchCommitteesUncached(): Promise<CongressCommittee[]> {
   return cachedFetch(
     'congress-committees-current',
     async () => {
@@ -977,13 +1042,19 @@ let rosterMemo: { data: EnhancedRepresentative[]; expiresAt: number } | null = n
 let rosterInFlight: Promise<EnhancedRepresentative[]> | null = null;
 
 /**
- * Drop the memo. Exported for tests and cache-clearing endpoints — without it a
- * warm instance would keep serving the old roster for up to a full TTL window
- * after someone deliberately busts the Redis key.
+ * Drop every in-process congress cache. Exported for tests and cache-clearing
+ * endpoints — without it a warm instance keeps serving the old roster for up to
+ * a full TTL window after someone deliberately busts the Redis key.
+ *
+ * Clears both tiers deliberately. Dropping only the roster memo would leave the
+ * blob memo underneath still serving the same stale legislator data, so the
+ * reset would look like it worked and change nothing.
  */
-export function resetRosterMemo(): void {
+export function resetCongressMemos(): void {
   rosterMemo = null;
   rosterInFlight = null;
+  blobMemo.clear();
+  blobInFlight.clear();
 }
 
 /**

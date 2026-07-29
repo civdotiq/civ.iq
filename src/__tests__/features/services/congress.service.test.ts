@@ -32,6 +32,7 @@ jest.mock('@/lib/cache/file-cache', () => {
 });
 
 import yaml from 'js-yaml';
+import { cachedFetch } from '@/lib/cache';
 import { getFileCache } from '@/lib/cache/file-cache';
 import {
   getEnhancedRepresentative,
@@ -39,7 +40,7 @@ import {
   fetchCommitteeMemberships,
   getOpenSecretsId,
   getFECIds,
-  resetRosterMemo,
+  resetCongressMemos,
   type CongressLegislator,
 } from '@/features/representatives/services/congress.service';
 import {
@@ -50,6 +51,7 @@ import {
 } from '@/lib/data/congressional-constants';
 
 const mockFileCache = getFileCache() as unknown as { get: jest.Mock; set: jest.Mock };
+const mockCachedFetch = cachedFetch as jest.Mock;
 
 const CURRENT_CONGRESS = getCurrentCongressNumber();
 const { start: congressStart, end: congressEnd } = getCongressDateRange(CURRENT_CONGRESS);
@@ -204,9 +206,9 @@ function mockGitHubFetch(
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // The roster memo is module-level and survives between tests, so a stale
-  // entry would mask the fetch behaviour each case is asserting on.
-  resetRosterMemo();
+  // Both memos are module-level and survive between tests, so a stale entry
+  // would mask the fetch behaviour each case is asserting on.
+  resetCongressMemos();
   mockFileCache.get.mockResolvedValue(null);
   mockFileCache.set.mockResolvedValue(undefined);
   mockGitHubFetch();
@@ -457,14 +459,64 @@ describe('roster memo (getAllEnhancedRepresentatives)', () => {
     await expect(getAllEnhancedRepresentatives()).resolves.toHaveLength(4);
   });
 
-  it('resetRosterMemo sends the next call back to the source', async () => {
+  it('resetCongressMemos sends the next call back to the source', async () => {
     await getAllEnhancedRepresentatives();
     (global.fetch as jest.Mock).mockClear();
 
-    resetRosterMemo();
+    resetCongressMemos();
     await getAllEnhancedRepresentatives();
 
     expect(rosterFetchCount()).toBe(1);
+  });
+});
+
+describe('blob memo (shared by both representative paths)', () => {
+  const rosterFetchCount = () =>
+    (global.fetch as jest.Mock).mock.calls.filter(([url]) =>
+      String(url).endsWith('legislators-current.yaml')
+    ).length;
+
+  it('memoises the roster for the single-representative path too', async () => {
+    // getEnhancedRepresentative fetches the four congress blobs directly rather
+    // than going through getAllEnhancedRepresentatives, so a memo placed only on
+    // the roster builder would miss the hot path for every /representative page.
+    await getEnhancedRepresentative('A000001');
+    await getEnhancedRepresentative('B000002');
+
+    expect(rosterFetchCount()).toBe(1);
+  });
+
+  it('shares one memo between the single and bulk paths', async () => {
+    await getEnhancedRepresentative('A000001');
+    await getAllEnhancedRepresentatives();
+
+    expect(rosterFetchCount()).toBe(1);
+  });
+
+  it('writes the file tier even when the value came from the cache below', async () => {
+    // The file-cache write used to live inside the fetchFn handed to
+    // cachedFetch, which only runs it on a MISS. With a warm cache below — the
+    // normal case in production — the file tier was never written and so could
+    // never be hit, no matter where its directory pointed.
+    const passThrough = mockCachedFetch.getMockImplementation()!;
+    mockCachedFetch.mockImplementation(async (key: string) => {
+      if (key === 'congress-legislators-current') return CURRENT_LEGISLATORS;
+      if (key === 'congress-legislators-social-media') return SOCIAL_MEDIA;
+      return [];
+    });
+
+    try {
+      await getAllEnhancedRepresentatives();
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(mockFileCache.set).toHaveBeenCalledWith(
+        'congress-legislators-current',
+        CURRENT_LEGISLATORS,
+        expect.any(Number)
+      );
+    } finally {
+      mockCachedFetch.mockImplementation(passThrough);
+    }
   });
 });
 
