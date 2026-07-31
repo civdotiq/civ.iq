@@ -74,12 +74,12 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </Link>
               </li>
               <li>
-                <Link href="/developers" className={linkClass}>
+                <Link href="/developers#mcp" className={linkClass}>
                   MCP Server
                 </Link>
               </li>
               <li>
-                <Link href="/developers" className={linkClass}>
+                <Link href="/developers#sdk" className={linkClass}>
                   TypeScript SDK
                 </Link>
               </li>
@@ -94,7 +94,7 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
                 </a>
               </li>
               <li>
-                <Link href="/developers" className={linkClass}>
+                <Link href="/developers#bulk-data" className={linkClass}>
                   Bulk Data
                 </Link>
               </li>
