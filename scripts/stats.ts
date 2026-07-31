@@ -19,6 +19,7 @@
 
 import * as dotenv from 'dotenv';
 import { Redis } from '@upstash/redis';
+import { fetchGa4Summary, type Ga4Summary } from './ga4-client';
 
 dotenv.config({ path: '.env.local' });
 
@@ -28,6 +29,7 @@ const CACHE_PREFIX = 'civiq:';
 const REQUEST_WINDOW_DAYS = 7;
 const ADOPTION_WINDOW_DAYS = 28;
 const CRAWLER_WINDOW_DAYS = 7;
+const GA4_WINDOW_DAYS = 7;
 
 interface Subscription {
   verified: boolean;
@@ -63,6 +65,7 @@ interface StatsReport {
     windowDays: number;
     byBot: Record<string, number>;
   };
+  ga4: Ga4Summary;
   npmDownloads: Array<{ package: string; lastWeek: number | null; lastMonth: number | null }>;
 }
 
@@ -334,21 +337,45 @@ function printReport(report: StatsReport): void {
   }
 
   line();
-  line('GA4 (manual — no API access from this script)');
-  line('  https://analytics.google.com → Reports → Engagement → Pages and screens');
-  line('  → Acquisition → Traffic acquisition: look for chatgpt.com, perplexity.ai,');
-  line('    claude.ai referrers (the AI-pipeline signal)');
+  line(`GA4 — real humans (last ${report.ga4.windowDays} days)`);
+  if (!report.ga4.configured) {
+    line('  not configured — set GA4_PROPERTY_ID, GA4_CLIENT_EMAIL and');
+    line('  GA4_PRIVATE_KEY in .env.local (see scripts/ga4-client.ts for setup)');
+  } else if (report.ga4.error) {
+    line(`  ERROR: ${report.ga4.error}`);
+  } else {
+    const t = report.ga4.totals;
+    if (!t) line('  no data returned for this window');
+    else line(`  ${t.activeUsers} users, ${t.sessions} sessions, ${t.pageViews} pageviews`);
+
+    if (report.ga4.topPages.length > 0) {
+      line('  Top pages:');
+      for (const p of report.ga4.topPages) line(`    ${p.views}  ${p.path}`);
+    }
+    if (report.ga4.topSources.length > 0) {
+      line('  Top sources:');
+      for (const s of report.ga4.topSources) line(`    ${s.sessions}  ${s.source}`);
+    }
+    // The agent-native bet (PLAN-chatgpt-app) lives or dies on this line.
+    if (report.ga4.aiReferrals.length === 0) {
+      line('  AI assistant referrals: none');
+    } else {
+      line('  AI assistant referrals:');
+      for (const s of report.ga4.aiReferrals) line(`    ${s.sessions}  ${s.source}`);
+    }
+  }
 }
 
 async function main(): Promise<void> {
   const asJson = process.argv.includes('--json');
   const redis = getRedis();
 
-  const [subscribers, apiRequests, adoption, crawlers, npmDownloads] = await Promise.all([
+  const [subscribers, apiRequests, adoption, crawlers, ga4, npmDownloads] = await Promise.all([
     collectSubscribers(redis),
     collectApiRequests(redis),
     collectAdoption(redis),
     collectCrawlers(redis),
+    fetchGa4Summary(GA4_WINDOW_DAYS),
     collectNpm(),
   ]);
 
@@ -358,6 +385,7 @@ async function main(): Promise<void> {
     apiRequests,
     adoption,
     crawlers,
+    ga4,
     npmDownloads,
   };
 
