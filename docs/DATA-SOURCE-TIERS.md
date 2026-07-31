@@ -51,7 +51,7 @@ These power the money-votes-lobbying join. If any of these goes down, CIV.IQ's c
 
 | Property           | Value                                                                                                                            |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Base URL           | `https://lda.senate.gov/api/v1`                                                                                                  |
+| Base URL           | `https://lda.gov/api/v1`                                                                                                         |
 | API key            | None (public)                                                                                                                    |
 | Cache TTL          | 7 days (quarterly filings), 24 hr (org search), 30 min (assembled route)                                                         |
 | Consumers          | 20 files: lobbying route, lobby org route, 4 analyzers, graph hydrators, MCP tools, dataset generators                           |

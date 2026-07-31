@@ -153,7 +153,7 @@ export function ProfileSidebar({
           </li>
           <li className="py-2 border-b border-gray-100">
             <a
-              href="https://lda.senate.gov"
+              href="https://lda.gov"
               target="_blank"
               rel="noopener noreferrer"
               className="text-civiq-blue hover:underline"

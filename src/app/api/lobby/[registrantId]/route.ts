@@ -555,7 +555,7 @@ export async function getLobbyingOrgProfile(
   return cachedFetch(
     `lobby-profile:${registrantId}`,
     async () => {
-      const url = `https://lda.senate.gov/api/v1/filings/?registrant_id=${registrantId}&page_size=50`;
+      const url = `https://lda.gov/api/v1/filings/?registrant_id=${registrantId}&page_size=50`;
 
       const response = await fetch(url, {
         headers: {

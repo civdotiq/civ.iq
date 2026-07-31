@@ -10,7 +10,7 @@
  * Only maps codes with clear correspondence. Unmapped codes are excluded
  * from bill matching but their spending still counts in totals.
  *
- * Source: LDA issue codes from https://lda.senate.gov/api/v1/constants/filing/lobbyingactivityissues/
+ * Source: LDA issue codes from https://lda.gov/api/v1/constants/filing/lobbyingactivityissues/
  * Target: Congress.gov policyArea values from policy-area-map.ts
  */
 

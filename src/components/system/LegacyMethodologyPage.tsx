@@ -64,7 +64,7 @@ const CORE_SOURCES: DataSource[] = [
   {
     name: 'Senate LDA',
     covers: 'Lobbying disclosure filings (U.S. Senate)',
-    url: 'https://lda.senate.gov/api/v1',
+    url: 'https://lda.gov/api/v1',
   },
   {
     name: 'Census Geocoder',

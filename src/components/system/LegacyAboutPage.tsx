@@ -235,7 +235,7 @@ export function LegacyAboutPage() {
             <DataSourceRow
               name="Senate LDA"
               description="Lobbying disclosures"
-              href="https://lda.senate.gov/"
+              href="https://lda.gov/"
             />
             <DataSourceRow
               name="USASpending.gov"

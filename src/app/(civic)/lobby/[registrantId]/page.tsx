@@ -52,7 +52,7 @@ export default async function LobbyOrgPage({ params }: PageProps) {
           address={profile.wiki?.headquarters ? { locality: profile.wiki.headquarters } : undefined}
           memberOf={{
             name: 'Senate Lobbying Disclosure',
-            url: 'https://lda.senate.gov',
+            url: 'https://lda.gov',
             type: 'GovernmentOrganization',
           }}
         />

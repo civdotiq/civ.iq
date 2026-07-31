@@ -294,7 +294,7 @@ async function hydrateLobbyingFilings(
             }
           : undefined,
         dataAsOf,
-        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceUrl: `https://lda.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
         sourceLabel: 'Senate Lobbying Disclosure Act',
       });
     }

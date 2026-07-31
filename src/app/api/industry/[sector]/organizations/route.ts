@@ -147,7 +147,7 @@ export async function GET(
 
           const fetchIssueFilings = async (code: string): Promise<LDAFilingResult[]> => {
             try {
-              const url = `https://lda.senate.gov/api/v1/filings/?general_issue_code=${code}&page_size=50`;
+              const url = `https://lda.gov/api/v1/filings/?general_issue_code=${code}&page_size=50`;
               const res = await fetch(url, {
                 headers: {
                   Accept: 'application/json',

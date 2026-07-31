@@ -225,7 +225,7 @@ function DisclaimerPod({ disclaimer }: { disclaimer: string }) {
       <p className="type-xs text-gray-500 mt-2">
         Data from{' '}
         <a
-          href="https://lda.senate.gov"
+          href="https://lda.gov"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3ea2d4] hover:underline"
@@ -333,7 +333,7 @@ function FallbackSourcesPod() {
       <p className="type-xs text-gray-500 mt-2">
         Data sources:{' '}
         <a
-          href="https://lda.senate.gov"
+          href="https://lda.gov"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3ea2d4] hover:underline"

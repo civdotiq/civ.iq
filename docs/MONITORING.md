@@ -22,11 +22,11 @@ For each source below, configure changedetection.io to fetch the URL at the list
 
 These power the core platform (bills, members, campaign finance, lobbying).
 
-| Source           | Probe URL                                                               | Auth                   | Notes                |
-| ---------------- | ----------------------------------------------------------------------- | ---------------------- | -------------------- |
-| Congress.gov API | `https://api.congress.gov/v3?api_key={CONGRESS_API_KEY}`                | API key in query param | Rate limit: 5,000/hr |
-| FEC API          | `https://api.open.fec.gov/v1/`                                          | None for status page   | Rate limit: 1,000/hr |
-| Senate LDA       | `https://lda.senate.gov/api/v1/filings/?filing_period=2025&page_size=1` | None                   | Lobbying filings     |
+| Source           | Probe URL                                                        | Auth                   | Notes                |
+| ---------------- | ---------------------------------------------------------------- | ---------------------- | -------------------- |
+| Congress.gov API | `https://api.congress.gov/v3?api_key={CONGRESS_API_KEY}`         | API key in query param | Rate limit: 5,000/hr |
+| FEC API          | `https://api.open.fec.gov/v1/`                                   | None for status page   | Rate limit: 1,000/hr |
+| Senate LDA       | `https://lda.gov/api/v1/filings/?filing_period=2025&page_size=1` | None                   | Lobbying filings     |
 
 ### Important — Check Daily
 

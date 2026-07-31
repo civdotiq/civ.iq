@@ -588,7 +588,7 @@ async function executeOrganizationQuery(query: StructuredQuery): Promise<QueryRe
         lobbyingRole: org.role,
       },
       dataAsOf: new Date().toISOString(),
-      sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(org.name)}`,
+      sourceUrl: `https://lda.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(org.name)}`,
       sourceLabel: 'Senate LDA filings',
     }));
 

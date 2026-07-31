@@ -225,7 +225,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
     description:
       'SAMPLE, NOT A COMPLETE SET — the first page of each quarter the Senate LDA API returns, roughly 0.09% of filings. Registrants, clients, income, and issue areas. Individual rows are accurate; do not compute totals or rankings from them.',
     source: 'Senate LDA API',
-    sourceUrl: 'https://lda.senate.gov',
+    sourceUrl: 'https://lda.gov',
     approximateRows: '~175',
     freshness: 'Updated daily',
     columnLabels: [

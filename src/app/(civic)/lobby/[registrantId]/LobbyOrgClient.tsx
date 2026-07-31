@@ -71,7 +71,7 @@ function InfoCard({ profile }: Props) {
         </div>
       </div>
       <a
-        href={`https://lda.senate.gov/filings/public/filing/search/?registrant_id=${profile.registrantId}`}
+        href={`https://lda.gov/filings/public/filing/search/?registrant_id=${profile.registrantId}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-[#3ea2d4] hover:underline text-sm"
@@ -80,7 +80,7 @@ function InfoCard({ profile }: Props) {
       </a>
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"
@@ -169,7 +169,7 @@ function IdentityHeader({ profile }: Props) {
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"
@@ -210,7 +210,7 @@ function IssuesSection({ profile }: Props) {
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"
@@ -276,7 +276,7 @@ function CongressionalActivity({ profile }: Props) {
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"
@@ -355,7 +355,7 @@ function SpendingChart({ profile }: Props) {
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"
@@ -389,7 +389,7 @@ function TopClients({ profile }: Props) {
 
       <DataSourceAttribution
         sourceName="U.S. Senate Lobbying Disclosure Act"
-        sourceUrl="https://lda.senate.gov"
+        sourceUrl="https://lda.gov"
         reliability="high"
         variant="compact"
         className="mt-4"

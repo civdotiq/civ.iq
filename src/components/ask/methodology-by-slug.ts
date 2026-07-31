@@ -239,7 +239,7 @@ export const METHODOLOGY_BY_SLUG: Record<string, SlugMethodology> = {
       'Spending totals reflect the lobbying firm’s entire quarterly disclosure, not just work on this committee.',
     ],
     citations: [
-      { source: 'Senate LDA', entity: 'LD-2 quarterly filings', href: 'https://lda.senate.gov/' },
+      { source: 'Senate LDA', entity: 'LD-2 quarterly filings', href: 'https://lda.gov/' },
     ],
     underlyingData: [
       { route: '/committee/{entityId}', title: 'Committee detail', sub: 'Lobbying panel' },

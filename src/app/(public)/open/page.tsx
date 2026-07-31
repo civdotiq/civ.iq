@@ -188,7 +188,7 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
     url: 'https://api.usaspending.gov',
     description: 'Federal spending, contracts, grants',
   },
-  { name: 'Senate LDA', url: 'https://lda.senate.gov/api', description: 'Lobbying disclosures' },
+  { name: 'Senate LDA', url: 'https://lda.gov/api', description: 'Lobbying disclosures' },
   {
     name: 'U.S. Census Bureau',
     url: 'https://www.census.gov/data/developers.html',
@@ -283,7 +283,7 @@ const DATASET_SAME_AS: Record<string, string> = {
   'campaign-finance': 'https://api.open.fec.gov/v1/candidates',
   'election-results-2024': 'https://github.com/MEDSL/2024-elections-official',
   'senate-stock-trades': 'https://efdsearch.senate.gov',
-  'lobbying-filings': 'https://lda.senate.gov/api',
+  'lobbying-filings': 'https://lda.gov/api',
   'federal-register-rules': 'https://www.federalregister.gov/api/v1',
 };
 

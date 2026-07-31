@@ -333,7 +333,7 @@ describe('LobbyingTab', () => {
     expect(screen.getByText(/Filing a disclosure does not mean/)).toBeInTheDocument();
     const ldaLink = screen.getByText('Search all filings on Senate LDA');
     expect(ldaLink.tagName).toBe('A');
-    expect(ldaLink).toHaveAttribute('href', 'https://lda.senate.gov/filings/public/filing/search/');
+    expect(ldaLink).toHaveAttribute('href', 'https://lda.gov/filings/public/filing/search/');
   });
 
   it('links organization names to internal lobby profile', () => {

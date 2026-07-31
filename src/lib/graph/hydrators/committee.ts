@@ -228,7 +228,7 @@ async function hydrateLobbyingActivity(
         label: formatNodeLabel('organization', { name: displayName }),
         properties: { name: orgName, lobbyingSpending: spending },
         dataAsOf,
-        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceUrl: `https://lda.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
         sourceLabel: 'Senate LDA filings',
       });
 
@@ -249,7 +249,7 @@ async function hydrateLobbyingActivity(
             }
           : undefined,
         dataAsOf,
-        sourceUrl: `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
+        sourceUrl: `https://lda.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(orgName)}`,
         sourceLabel: 'Senate Lobbying Disclosure Act',
       });
     }

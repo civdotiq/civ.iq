@@ -92,7 +92,7 @@ const DATA_SOURCES: SourceDefinition[] = [
     // (filing_period=2025 is invalid; the API expects filing_year). Match
     // the production query shape used by SenateLobbyingAPI.fetchFilingsByQuarter.
     probeUrl:
-      'https://lda.senate.gov/api/v1/filings/?filing_year=2025&filing_period=first_quarter&page_size=1',
+      'https://lda.gov/api/v1/filings/?filing_year=2025&filing_period=first_quarter&page_size=1',
     staleTtlHours: 168, // weekly filings
     cacheKeyPattern: 'lobbying:*',
   },

@@ -96,7 +96,7 @@ function fecSource(fecId: string | null): BriefPatternSource {
 function ldaSource(): BriefPatternSource {
   return {
     label: 'Senate LDA filings',
-    url: 'https://lda.senate.gov/filings/public/filing/search/',
+    url: 'https://lda.gov/filings/public/filing/search/',
   };
 }
 

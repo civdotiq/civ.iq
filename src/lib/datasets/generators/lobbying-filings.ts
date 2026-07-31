@@ -100,7 +100,7 @@ export async function generateLobbyingFilings(): Promise<DatasetResult> {
       description:
         'SAMPLE, NOT A COMPLETE SET. Lobbying disclosure filings from the Senate Lobbying Disclosure Act (LDA) database, including registrants, clients, income, and issue areas. The LDA API serves 25 filings per page and this dataset takes only the first page of each quarter — roughly 25 of the ~27,000 filings matching a quarter, about 0.09%. Individual rows are accurate; totals, rankings, and market shares computed across them are not, because this is the first page in the API ordering rather than a random sample.',
       source: 'Senate LDA API',
-      sourceUrl: 'https://lda.senate.gov',
+      sourceUrl: 'https://lda.gov',
       generated: new Date().toISOString(),
       recordCount: data.length,
       license: 'Public Domain',

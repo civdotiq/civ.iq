@@ -350,7 +350,10 @@ export function _resetLDALabelEmbeddingsCacheForTesting(): void {
 }
 
 export class SenateLobbyingAPI {
-  private baseUrl = 'https://lda.senate.gov/api/v1';
+  // The LDA moved off senate.gov in 2026. lda.senate.gov 301s every path to the
+  // lda.gov root, dropping path and query, so the old base returned homepage
+  // HTML instead of JSON on every call.
+  private baseUrl = 'https://lda.gov/api/v1';
 
   /**
    * Fetch lobbying filings for a specific quarter

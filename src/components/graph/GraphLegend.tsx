@@ -73,7 +73,7 @@ export function GraphLegend() {
               <SourceItem
                 label="Lobbying disclosures"
                 source="Senate LDA"
-                url="https://lda.senate.gov/filings/public/filing/search/"
+                url="https://lda.gov/filings/public/filing/search/"
               />
               <SourceItem
                 label="Bills, votes, committees"

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const result = await cachedFetch(
       `lobby-search:${q.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
       async () => {
-        const url = `https://lda.senate.gov/api/v1/filings/?registrant_name=${encodeURIComponent(q)}&page_size=25`;
+        const url = `https://lda.gov/api/v1/filings/?registrant_name=${encodeURIComponent(q)}&page_size=25`;
 
         const res = await fetch(url, {
           headers: {

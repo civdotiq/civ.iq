@@ -89,7 +89,7 @@ const fetcher = async (url: string) => {
 };
 
 function ldaSearchUrl(registrantName: string): string {
-  return `https://lda.senate.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(registrantName)}&filing_year=`;
+  return `https://lda.gov/filings/public/filing/search/?registrant_name=${encodeURIComponent(registrantName)}&filing_year=`;
 }
 
 function formatCompact(amount: number): string {
@@ -298,7 +298,7 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
         filings, not a complete tally of all lobbying. Filing a disclosure does not mean money
         changed hands or votes were affected.{' '}
         <a
-          href="https://lda.senate.gov/filings/public/filing/search/"
+          href="https://lda.gov/filings/public/filing/search/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3ea2d4] hover:underline"

@@ -123,7 +123,7 @@ const SOURCES: ReadonlyArray<{ name: string; description: string; href: string }
     description: 'Rules, regulations, executive orders',
     href: 'https://www.federalregister.gov/',
   },
-  { name: 'Senate LDA', description: 'Lobbying disclosures', href: 'https://lda.senate.gov/' },
+  { name: 'Senate LDA', description: 'Lobbying disclosures', href: 'https://lda.gov/' },
   {
     name: 'USASpending.gov',
     description: 'Federal contracts, grants',
