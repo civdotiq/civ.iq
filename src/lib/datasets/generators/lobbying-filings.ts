@@ -6,8 +6,18 @@
 /**
  * Lobbying Filings Dataset Generator
  *
- * Recent lobbying disclosure filings from the Senate LDA API.
- * Covers the last 2 years of quarterly filings.
+ * Lobbying disclosure filings from the Senate LDA API, spanning the last two
+ * years of quarters.
+ *
+ * It samples those quarters rather than covering them. The LDA list endpoint
+ * serves 25 filings per page and the client does not paginate, so each quarter
+ * contributes 25 rows — measured 2026-07-31 against 2025 Q1, that is 25 of
+ * 27,446 matching filings, or 0.09%. Roughly 175 rows total, not the ~2,000
+ * the registry used to claim.
+ *
+ * The rows themselves are real filings and safe to read individually. Summing
+ * them is not: this is the first page in the API's own ordering, not a random
+ * draw. Fix is tracked in PLAN-lobbying-corpus-2026-07.md.
  */
 
 import { SenateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
@@ -85,10 +95,10 @@ export async function generateLobbyingFilings(): Promise<DatasetResult> {
 
   return {
     metadata: {
-      name: 'Lobbying Disclosure Filings',
+      name: 'Lobbying Disclosure Filings (sample)',
       slug: 'lobbying-filings',
       description:
-        'Recent lobbying disclosure filings from the Senate Lobbying Disclosure Act (LDA) database, including registrants, clients, income, and issue areas.',
+        'SAMPLE, NOT A COMPLETE SET. Lobbying disclosure filings from the Senate Lobbying Disclosure Act (LDA) database, including registrants, clients, income, and issue areas. The LDA API serves 25 filings per page and this dataset takes only the first page of each quarter — roughly 25 of the ~27,000 filings matching a quarter, about 0.09%. Individual rows are accurate; totals, rankings, and market shares computed across them are not, because this is the first page in the API ordering rather than a random sample.',
       source: 'Senate LDA API',
       sourceUrl: 'https://lda.senate.gov',
       generated: new Date().toISOString(),

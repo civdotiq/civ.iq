@@ -10,6 +10,16 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 
+/**
+ * The LDA list endpoint serves 25 filings per page and the client does not
+ * paginate, so every lobbying surface sees the first page only. Measured
+ * 2026-07-31 against 2025 Q1: 27,446 filings match the query, 25 come back.
+ * It is the first page in the API's own ordering rather than a random draw,
+ * so it cannot be aggregated. Fix is tracked in PLAN-lobbying-corpus-2026-07.md.
+ */
+const LOBBYING_SAMPLE_CAVEAT =
+  'SAMPLE ONLY — the first page the Senate LDA API returns (~25 filings) out of ~27,000 matching each quarter. Not a random sample: do not compute totals, rankings, or market shares from it.';
+
 export function registerFinanceTools(server: McpServer): void {
   server.registerTool(
     'get_campaign_finance',
@@ -75,7 +85,7 @@ export function registerFinanceTools(server: McpServer): void {
     {
       title: 'Lobbying filings search',
       description:
-        'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes.',
+        'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes. Returns a small unrepresentative sample of each quarter, not the full set — see the `coverage` field on the response before using the numbers.',
       inputSchema: {
         year: z
           .number()
@@ -95,8 +105,19 @@ export function registerFinanceTools(server: McpServer): void {
 
         const filings = await senateLobbyingAPI.fetchFilingsByQuarter(filingYear, filingQuarter);
 
+        // Wrapped rather than returned bare: an agent handed a naked array has
+        // no way to tell a 25-row sample from a complete quarter.
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(filings.slice(0, 50)) }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                coverage: LOBBYING_SAMPLE_CAVEAT,
+                quarter: `${filingYear}Q${filingQuarter}`,
+                filings: filings.slice(0, 50),
+              }),
+            },
+          ],
         };
       } catch (error) {
         return {

@@ -221,12 +221,12 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
   },
   {
     slug: 'lobbying-filings',
-    name: 'Lobbying Disclosure Filings',
+    name: 'Lobbying Disclosure Filings (sample)',
     description:
-      'Recent lobbying disclosure filings from the Senate LDA database, including registrants, clients, income, and issue areas.',
+      'SAMPLE, NOT A COMPLETE SET — the first page of each quarter the Senate LDA API returns, roughly 0.09% of filings. Registrants, clients, income, and issue areas. Individual rows are accurate; do not compute totals or rankings from them.',
     source: 'Senate LDA API',
     sourceUrl: 'https://lda.senate.gov',
-    approximateRows: '~2,000',
+    approximateRows: '~175',
     freshness: 'Updated daily',
     columnLabels: [
       'Filing ID',
