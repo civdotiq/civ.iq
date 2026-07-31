@@ -247,7 +247,7 @@ describe('Middleware Tests', () => {
   describe('Content Security Policy', () => {
     const PRODUCTION_CSP =
       "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com; " +
+      "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " +
       "img-src 'self' data: https:; " +
       "font-src 'self' data: https://fonts.gstatic.com; " +
@@ -265,6 +265,10 @@ describe('Middleware Tests', () => {
     it('should allow Google Analytics scripts', () => {
       expect(PRODUCTION_CSP).toContain('https://www.googletagmanager.com');
       expect(PRODUCTION_CSP).toContain('https://www.google-analytics.com');
+    });
+
+    it('should allow the Vercel Web Analytics script', () => {
+      expect(PRODUCTION_CSP).toContain('https://va.vercel-scripts.com');
     });
 
     it('should allow fonts from Google Fonts', () => {

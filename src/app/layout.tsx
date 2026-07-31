@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/shared/layout/SiteFooter';
 import { LiteModeProvider } from '@/lib/lite-mode/context';
 import { ToastProvider } from '@/shared/components/ui/Toast';
 import { OrganizationSchema, WebSiteSchema } from '@/components/seo/JsonLd';
+import { Analytics } from '@vercel/analytics/next';
 
 // Google Analytics Measurement ID
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
@@ -178,6 +179,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </ToastProvider>
         </LiteModeProvider>
+        {/* Vercel Web Analytics — route-level pageviews that outlive the 24h log window */}
+        <Analytics />
       </body>
     </html>
   );

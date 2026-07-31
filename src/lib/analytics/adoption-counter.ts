@@ -13,7 +13,12 @@
  *
  * Key formats:
  *   analytics:adoption:mcp:{YYYY-MM-DD}:{clientName}
+ *   analytics:adoption:mcptool:{YYYY-MM-DD}:{toolName}
  *   analytics:adoption:sdk:{YYYY-MM-DD}:{version}
+ *
+ * `mcp` counts handshakes, `mcptool` counts actual tool invocations. The gap
+ * between them is the signal that matters: registry scanners initialize and
+ * disconnect without ever calling a tool, so only `mcptool` proves real use.
  */
 
 import { Redis } from '@upstash/redis';
@@ -63,6 +68,12 @@ function increment(key: string): void {
 export function incrementMcpInitialize(clientName: string): void {
   const date = new Date().toISOString().slice(0, 10);
   increment(`analytics:adoption:mcp:${date}:${sanitizeSegment(clientName)}`);
+}
+
+/** Count an MCP `tools/call` invocation by tool name (e.g. get_representative). */
+export function incrementMcpToolCall(toolName: string): void {
+  const date = new Date().toISOString().slice(0, 10);
+  increment(`analytics:adoption:mcptool:${date}:${sanitizeSegment(toolName)}`);
 }
 
 /** Count a REST request that carried an @civiq/sdk User-Agent signature. */

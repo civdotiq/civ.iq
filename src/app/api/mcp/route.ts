@@ -10,15 +10,17 @@
  * Supports streamable HTTP transport (GET for SSE, POST for messages).
  * See: https://modelcontextprotocol.io
  *
- * Adoption telemetry: on POST we clone the request body and peek for a
- * JSON-RPC `initialize` method; if present we fire `adoption.mcp.initialize`
- * with `clientInfo`. mcp-handler's onEvent API declares REQUEST_RECEIVED but
+ * Adoption telemetry: on POST we clone the request body and peek for JSON-RPC
+ * `initialize` (fires `adoption.mcp.initialize` with `clientInfo`) and
+ * `tools/call` (fires `adoption.mcp.tool_call` with the tool name). Registry
+ * scanners handshake without ever invoking a tool, so tool calls are the only
+ * proof of real use. mcp-handler's onEvent API declares REQUEST_RECEIVED but
  * the runtime never emits it — see inline note below.
  */
 
 import { createMcpHandler } from 'mcp-handler/next';
 import { initializeMcpServer } from '@/lib/mcp/server';
-import { recordMcpInitialize } from '@/lib/analytics/adoption-telemetry';
+import { recordMcpInitialize, recordMcpToolCall } from '@/lib/analytics/adoption-telemetry';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +69,7 @@ async function postWithTelemetry(request: Request): Promise<Response> {
       if (text) {
         const body: unknown = JSON.parse(text);
         recordMcpInitialize(body);
+        recordMcpToolCall(body);
       }
     }
   } catch {

@@ -17,7 +17,11 @@
  * counts for the three published packages.
  */
 
-import { incrementMcpInitialize, incrementSdkRequest } from './adoption-counter';
+import {
+  incrementMcpInitialize,
+  incrementMcpToolCall,
+  incrementSdkRequest,
+} from './adoption-counter';
 
 // Match signatures like "@civiq/sdk/0.1.0" anywhere inside a UA string so we
 // can detect SDK usage even when consumers append their own app name.
@@ -91,6 +95,25 @@ function isClientInfo(value: unknown): value is McpClientInfo {
   return typeof name === 'string' && typeof version === 'string';
 }
 
+/**
+ * Extract the tool names from a JSON-RPC `tools/call` message (or batch).
+ * Returns every name found, since a batch may invoke several tools at once.
+ */
+export function extractMcpToolCalls(input: unknown): string[] {
+  const candidates = Array.isArray(input) ? input : [input];
+  const names: string[] = [];
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object') continue;
+    const obj = candidate as Record<string, unknown>;
+    if (obj.method !== 'tools/call') continue;
+    const params = obj.params;
+    if (!params || typeof params !== 'object') continue;
+    const name = (params as { name?: unknown }).name;
+    if (typeof name === 'string' && name) names.push(name);
+  }
+  return names;
+}
+
 interface AdoptionLogger {
   metric: (name: string, data: Record<string, unknown>) => void;
 }
@@ -139,4 +162,11 @@ export function recordMcpInitialize(body: unknown, logger: AdoptionLogger = edge
     protocolVersion: info.protocolVersion,
   });
   incrementMcpInitialize(info.clientInfo.name);
+}
+
+export function recordMcpToolCall(body: unknown, logger: AdoptionLogger = edgeSafeLogger): void {
+  for (const toolName of extractMcpToolCalls(body)) {
+    logger.metric('adoption.mcp.tool_call', { toolName });
+    incrementMcpToolCall(toolName);
+  }
 }

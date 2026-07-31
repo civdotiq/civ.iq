@@ -9,6 +9,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
+import { incrementCrawlerHit } from '@/lib/analytics/crawler-counter';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { LOCAL_PHOTO_IDS } from '@/generated/local-photo-ids';
 
@@ -169,7 +170,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // Future: Implement nonce-based CSP for stricter security
 const PRODUCTION_CSP =
   "default-src 'self'; " +
-  "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com; " + // unsafe-inline required for Next.js App Router hydration, Google Analytics
+  "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " + // unsafe-inline required for Next.js App Router hydration, Google Analytics; va.vercel-scripts.com for Vercel Web Analytics
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unsafe-inline for styled-components/CSS-in-JS, unpkg.com for MapLibre GL
   "img-src 'self' data: https:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
@@ -183,7 +184,7 @@ const PRODUCTION_CSP =
 // Development CSP: More permissive for hot reload and debugging
 const DEVELOPMENT_CSP =
   "default-src 'self'; " +
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com; " + // Google Analytics
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " + // Google Analytics, Vercel Web Analytics
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unpkg.com for MapLibre GL
   "img-src 'self' data: https: blob:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
@@ -464,6 +465,13 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/api/mcp')
     ) {
       recordSdkRequest(clientInfo.userAgent, request.nextUrl.pathname, request.method);
+    }
+
+    // Fire-and-forget crawler attribution for page paths. API paths already log
+    // their User-Agent; pages did not, which made search/AI indexing invisible.
+    // Only known bots increment, so humans never cost a Redis command.
+    if (!request.nextUrl.pathname.startsWith('/api/')) {
+      incrementCrawlerHit(clientInfo.userAgent);
     }
 
     return response;

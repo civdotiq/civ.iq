@@ -27,6 +27,7 @@ const NPM_PACKAGES = ['@civiq/sdk', '@civiq/civic-statistics', '@civiq/entity-re
 const CACHE_PREFIX = 'civiq:';
 const REQUEST_WINDOW_DAYS = 7;
 const ADOPTION_WINDOW_DAYS = 28;
+const CRAWLER_WINDOW_DAYS = 7;
 
 interface Subscription {
   verified: boolean;
@@ -54,7 +55,13 @@ interface StatsReport {
     configured: boolean;
     windowDays: number;
     mcpInitializesByClient: Record<string, number>;
+    mcpToolCallsByName: Record<string, number>;
     sdkRequestsByVersion: Record<string, number>;
+  };
+  crawlers: {
+    configured: boolean;
+    windowDays: number;
+    byBot: Record<string, number>;
   };
   npmDownloads: Array<{ package: string; lastWeek: number | null; lastMonth: number | null }>;
 }
@@ -164,20 +171,43 @@ async function collectApiRequests(redis: Redis | null): Promise<StatsReport['api
   return { configured: true, windowDays: REQUEST_WINDOW_DAYS, total, topPaths };
 }
 
+async function collectCrawlers(redis: Redis | null): Promise<StatsReport['crawlers']> {
+  const empty = { configured: false, windowDays: CRAWLER_WINDOW_DAYS, byBot: {} };
+  if (!redis) return empty;
+
+  const byBot: Record<string, number> = {};
+  for (const date of lastNDates(CRAWLER_WINDOW_DAYS)) {
+    const keys = await redis.keys(`analytics:crawler:${date}:*`);
+    if (keys.length === 0) continue;
+    const values = await redis.mget<Array<number | null>>(...keys);
+    keys.forEach((key, i) => {
+      const count = Number(values[i]);
+      if (!Number.isFinite(count) || count <= 0) return;
+      const bot = key.slice(`analytics:crawler:${date}:`.length);
+      byBot[bot] = (byBot[bot] || 0) + count;
+    });
+  }
+
+  return { configured: true, windowDays: CRAWLER_WINDOW_DAYS, byBot };
+}
+
 async function collectAdoption(redis: Redis | null): Promise<StatsReport['adoption']> {
   const empty = {
     configured: false,
     windowDays: ADOPTION_WINDOW_DAYS,
     mcpInitializesByClient: {},
+    mcpToolCallsByName: {},
     sdkRequestsByVersion: {},
   };
   if (!redis) return empty;
 
   const mcpInitializesByClient: Record<string, number> = {};
+  const mcpToolCallsByName: Record<string, number> = {};
   const sdkRequestsByVersion: Record<string, number> = {};
 
   for (const [kind, sink] of [
     ['mcp', mcpInitializesByClient],
+    ['mcptool', mcpToolCallsByName],
     ['sdk', sdkRequestsByVersion],
   ] as const) {
     for (const date of lastNDates(ADOPTION_WINDOW_DAYS)) {
@@ -197,6 +227,7 @@ async function collectAdoption(redis: Redis | null): Promise<StatsReport['adopti
     configured: true,
     windowDays: ADOPTION_WINDOW_DAYS,
     mcpInitializesByClient,
+    mcpToolCallsByName,
     sdkRequestsByVersion,
   };
 }
@@ -261,13 +292,39 @@ function printReport(report: StatsReport): void {
   line(`MCP / SDK adoption (last ${report.adoption.windowDays} days)`);
   if (!report.adoption.configured) line(notConfigured);
   else {
-    const mcp = Object.entries(report.adoption.mcpInitializesByClient).sort((a, b) => b[1] - a[1]);
-    const sdk = Object.entries(report.adoption.sdkRequestsByVersion).sort((a, b) => b[1] - a[1]);
+    const byCount = (a: [string, number], b: [string, number]) => b[1] - a[1];
+    const mcp = Object.entries(report.adoption.mcpInitializesByClient).sort(byCount);
+    const tools = Object.entries(report.adoption.mcpToolCallsByName).sort(byCount);
+    const sdk = Object.entries(report.adoption.sdkRequestsByVersion).sort(byCount);
+
+    // Tool calls first: handshakes prove a scanner found us, tool calls prove use.
+    const toolTotal = tools.reduce((sum, [, n]) => sum + n, 0);
+    if (tools.length === 0) {
+      line('  MCP tool calls: none recorded yet (handshake-only traffic = scanners, not users)');
+    } else {
+      line(`  MCP tool calls: ${toolTotal} across ${tools.length} tools`);
+      for (const [tool, n] of tools) line(`    ${tool}: ${n}`);
+    }
+
+    const mcpTotal = mcp.reduce((sum, [, n]) => sum + n, 0);
     if (mcp.length === 0) line('  MCP initializes: none recorded yet');
-    else
-      for (const [client, n] of mcp) line(`  MCP ${client}: ${n} initialize${n === 1 ? '' : 's'}`);
+    else {
+      line(`  MCP initializes: ${mcpTotal} from ${mcp.length} clients (top 10)`);
+      for (const [client, n] of mcp.slice(0, 10)) line(`    ${client}: ${n}`);
+      if (mcp.length > 10) line(`    …and ${mcp.length - 10} more (mostly registry scanners)`);
+    }
+
     if (sdk.length === 0) line('  SDK requests: none recorded yet');
     else for (const [version, n] of sdk) line(`  SDK ${version}: ${n} requests`);
+  }
+
+  line();
+  line(`Search / AI crawlers on page paths (last ${report.crawlers.windowDays} days)`);
+  if (!report.crawlers.configured) line(notConfigured);
+  else {
+    const bots = Object.entries(report.crawlers.byBot).sort((a, b) => b[1] - a[1]);
+    if (bots.length === 0) line('  none recorded yet');
+    else for (const [bot, n] of bots) line(`  ${bot}: ${n}`);
   }
 
   line();
@@ -287,10 +344,11 @@ async function main(): Promise<void> {
   const asJson = process.argv.includes('--json');
   const redis = getRedis();
 
-  const [subscribers, apiRequests, adoption, npmDownloads] = await Promise.all([
+  const [subscribers, apiRequests, adoption, crawlers, npmDownloads] = await Promise.all([
     collectSubscribers(redis),
     collectApiRequests(redis),
     collectAdoption(redis),
+    collectCrawlers(redis),
     collectNpm(),
   ]);
 
@@ -299,6 +357,7 @@ async function main(): Promise<void> {
     subscribers,
     apiRequests,
     adoption,
+    crawlers,
     npmDownloads,
   };
 

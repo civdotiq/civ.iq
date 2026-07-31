@@ -12,8 +12,10 @@
 
 import {
   extractMcpClientInfo,
+  extractMcpToolCalls,
   extractSdkSignature,
   recordMcpInitialize,
+  recordMcpToolCall,
   recordSdkRequest,
 } from '@/lib/analytics/adoption-telemetry';
 
@@ -147,6 +149,50 @@ describe('recordSdkRequest', () => {
   it('no-ops for missing UA', () => {
     const metric = jest.fn();
     recordSdkRequest(null, '/api/v1/votes', 'GET', { metric });
+    expect(metric).not.toHaveBeenCalled();
+  });
+});
+
+describe('extractMcpToolCalls', () => {
+  it('pulls the tool name from a tools/call message', () => {
+    const msg = { method: 'tools/call', params: { name: 'get_representative', arguments: {} } };
+    expect(extractMcpToolCalls(msg)).toEqual(['get_representative']);
+  });
+
+  it('pulls every tool name from a batch', () => {
+    const batch = [
+      { method: 'tools/call', params: { name: 'get_bill' } },
+      { method: 'initialize', params: { clientInfo: { name: 'x', version: '1' } } },
+      { method: 'tools/call', params: { name: 'get_votes' } },
+    ];
+    expect(extractMcpToolCalls(batch)).toEqual(['get_bill', 'get_votes']);
+  });
+
+  it('ignores non-tools/call methods and malformed params', () => {
+    expect(extractMcpToolCalls({ method: 'tools/list' })).toEqual([]);
+    expect(extractMcpToolCalls({ method: 'tools/call', params: { name: 42 } })).toEqual([]);
+    expect(extractMcpToolCalls({ method: 'tools/call' })).toEqual([]);
+    expect(extractMcpToolCalls(null)).toEqual([]);
+  });
+});
+
+describe('recordMcpToolCall', () => {
+  it('emits one metric per invoked tool', () => {
+    const metric = jest.fn();
+    recordMcpToolCall(
+      [
+        { method: 'tools/call', params: { name: 'get_bill' } },
+        { method: 'tools/call', params: { name: 'get_votes' } },
+      ],
+      { metric }
+    );
+    expect(metric).toHaveBeenCalledTimes(2);
+    expect(metric).toHaveBeenCalledWith('adoption.mcp.tool_call', { toolName: 'get_bill' });
+  });
+
+  it('stays silent on a handshake-only payload', () => {
+    const metric = jest.fn();
+    recordMcpToolCall({ method: 'initialize', params: {} }, { metric });
     expect(metric).not.toHaveBeenCalled();
   });
 });
