@@ -193,12 +193,19 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
               <SectionNav items={NAV_ITEMS} />
             </div>
 
-            <div className="pt-8" id="overview">
-              <GlanceBand
-                summary={summary}
-                loading={summaryLoading}
-                committeeCount={representative.committees?.length ?? 0}
-              />
+            {/* The overview anchor wraps ONLY the glance band. It used to wrap
+                every section below it, which made it an ancestor of #votes,
+                #money, #bills, #influence and #news — so the scroll-spy saw it
+                intersecting at every scroll position and it beat its own
+                children on every comparison. */}
+            <div className="pt-8">
+              <div id="overview" className="scroll-mt-16">
+                <GlanceBand
+                  summary={summary}
+                  loading={summaryLoading}
+                  committeeCount={representative.committees?.length ?? 0}
+                />
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
                 <main>
