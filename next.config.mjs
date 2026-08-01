@@ -42,7 +42,7 @@ const nextConfig = {
     // The LDA corpus status route and the health freshness canary read this
     // sidecar at runtime; the tracer won't infer the fs read, so ship it with
     // those functions explicitly.
-    '/api/lda/**': ['./data/lda-aggregates.meta.json'],
+    '/api/lda/**': ['./data/lda-aggregates.meta.json', './data/lda-filings.meta.json'],
     '/api/health': ['./data/lda-aggregates.meta.json'],
     // The rep lobbying route reads the full corpus for per-committee totals.
     '/api/representative/[bioguideId]/lobbying': ['./data/lda-aggregates.json'],
@@ -52,6 +52,11 @@ const nextConfig = {
     '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json'],
     // The committee intelligence route's analyzer ranks peers off the corpus.
     '/api/intelligence/committee/[committeeId]': ['./data/lda-aggregates.json'],
+    // The influence-chain analyzer reads filing-level rows, not aggregates —
+    // it needs the organizations behind a committee's spending, not its total.
+    '/api/intelligence/representative/[bioguideId]/influence-chain': [
+      './data/lda-filings.json.br',
+    ],
   },
   // Remove console logs in production for better performance
   compiler: {

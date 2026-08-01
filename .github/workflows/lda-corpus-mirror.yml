@@ -37,20 +37,27 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Mirror the LDA corpus into data/lda-aggregates.json
+      # --filings also emits the dictionary-encoded filing-level corpus the
+      # influence-chain analyzer reads. Both artifacts come out of one run so
+      # they always describe the same set of filings.
+      - name: Mirror the LDA corpus into data/
         env:
           LDA_API_KEY: ${{ secrets.LDA_API_KEY }}
-        run: npx tsx scripts/sync-lda-corpus.ts --quarters ${{ inputs.quarters || '8' }}
+        run: npx tsx scripts/sync-lda-corpus.ts --quarters ${{ inputs.quarters || '8' }} --filings
 
-      - name: Commit updated aggregates
+      - name: Commit updated corpus
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/lda-aggregates.json; then
-            echo "No change to data/lda-aggregates.json"
+          # Commit the pair together. Committing only one would leave the
+          # aggregates and the filing rows describing different corpora, which
+          # is exactly the drift the freshness canary cannot detect after the
+          # fact.
+          if git diff --quiet -- data/lda-aggregates.json data/lda-filings.json.br; then
+            echo "No change to the LDA corpus"
           else
-            git add data/lda-aggregates.json
-            git commit -m "chore(lobbying): refresh LDA corpus aggregates [skip ci]"
+            git add data/lda-aggregates.json data/lda-aggregates.meta.json data/lda-filings.json.br
+            git commit -m "chore(lobbying): refresh LDA corpus [skip ci]"
             git push
           fi
 

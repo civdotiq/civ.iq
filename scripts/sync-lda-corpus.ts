@@ -15,17 +15,32 @@
  *
  * Usage:
  *   LDA_API_KEY=... npx tsx scripts/sync-lda-corpus.ts [--quarters 8] [--max-pages N] [--out PATH]
+ *                                                     [--filings] [--filings-out PATH]
+ *                                                     [--cache-dir PATH]
  *
- * --max-pages caps pages per quarter (smoke tests). Auth is Django REST
- * framework token auth: `Authorization: Token <key>`.
+ * --max-pages caps pages per quarter (smoke tests). --cache-dir checkpoints each
+ * finished quarter so a failed run resumes instead of re-paging from scratch;
+ * leave it off for scheduled refreshes, where a cached quarter would be stale.
+ * --filings additionally emits
+ * the brotli-compressed filing-level corpus the analyzers read (Phase 3); it is
+ * opt-in so the weekly Action can adopt it separately from the aggregates. Auth
+ * is Django REST framework token auth: `Authorization: Token <key>`.
  */
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
+import { brotliCompressSync, constants as zlibConstants } from 'node:zlib';
 import { dirname, resolve } from 'node:path';
-import { buildAggregates, parseRawFiling } from '../src/lib/data-sources/lda-corpus/index';
+import {
+  buildAggregates,
+  buildFilingCorpus,
+  parseRawFiling,
+} from '../src/lib/data-sources/lda-corpus/index';
 import type { CompactFiling, RawApiFiling } from '../src/lib/data-sources/lda-corpus/index';
 
-const API_BASE = 'https://lda.senate.gov/api/v1/filings/';
+// The LDA moved off senate.gov in 2026: lda.senate.gov now 301s every path to
+// the lda.gov root, dropping the path and query, so the old base silently
+// returned the homepage HTML instead of JSON.
+const API_BASE = 'https://lda.gov/api/v1/filings/';
 const PAGE_SIZE = 25; // hard cap; larger values are ignored by the API
 const CONCURRENCY = 3; // in-flight requests; the pace gate is the real throttle
 const MIN_INTERVAL_MS = 550; // ~109 req/min — under the registered-key ceiling, no 429 backoff
@@ -49,6 +64,9 @@ const API_KEY = process.env.LDA_API_KEY;
 const QUARTERS = Number(arg('--quarters') ?? 8);
 const MAX_PAGES = arg('--max-pages') ? Number(arg('--max-pages')) : Infinity;
 const OUT_PATH = resolve(arg('--out') ?? 'data/lda-aggregates.json');
+const CACHE_DIR = arg('--cache-dir');
+const EMIT_FILINGS = process.argv.includes('--filings') || arg('--filings-out') !== undefined;
+const FILINGS_OUT_PATH = resolve(arg('--filings-out') ?? 'data/lda-filings.json.br');
 
 /** The N most recent completed quarters, oldest first, as {year, period}. */
 function quarterWindow(now: Date, count: number): Array<{ year: number; period: string }> {
@@ -80,21 +98,41 @@ async function fetchPage(year: number, period: string, page: number): Promise<Ap
   const url = `${API_BASE}?filing_year=${year}&filing_period=${period}&page=${page}&page_size=${PAGE_SIZE}`;
   for (let attempt = 0; attempt < 5; attempt++) {
     await pace();
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Token ${API_KEY}`,
-        'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
-      },
-      signal: AbortSignal.timeout(30_000),
-    });
+    // A full run makes ~9,000 requests, so a single dropped connection or slow
+    // response is close to certain. Retry thrown network errors and timeouts the
+    // same way as 429/5xx — before this, one DOMException from AbortSignal
+    // discarded the whole multi-hour run.
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Token ${API_KEY}`,
+          'User-Agent': 'CIV.IQ/1.0 (Civic Information Platform)',
+        },
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch (error) {
+      console.warn(
+        `  retrying ${year} ${period} p${page} after ${(error as Error).name}: ${(error as Error).message}`
+      );
+      await new Promise(r => setTimeout(r, 2 ** attempt * 1000));
+      continue;
+    }
     if (res.status === 429 || res.status >= 500) {
       const retryAfter = Number(res.headers.get('retry-after')) || 2 ** attempt;
       await new Promise(r => setTimeout(r, retryAfter * 1000));
       continue;
     }
     if (!res.ok) throw new Error(`LDA API ${res.status} for ${year} ${period} p${page}`);
-    return (await res.json()) as ApiPage;
+    try {
+      return (await res.json()) as ApiPage;
+    } catch (error) {
+      console.warn(
+        `  retrying ${year} ${period} p${page} after body error: ${(error as Error).message}`
+      );
+      await new Promise(r => setTimeout(r, 2 ** attempt * 1000));
+    }
   }
   throw new Error(`LDA API exhausted retries for ${year} ${period} p${page}`);
 }
@@ -113,7 +151,40 @@ async function pool<T>(tasks: Array<() => Promise<T>>, size: number): Promise<T[
   return results;
 }
 
+/**
+ * Optional per-quarter checkpoint. A full run takes ~100 minutes; without this
+ * any failure discards all of it. Opt-in (`--cache-dir`) rather than automatic
+ * because quarters keep receiving amendments — a cached quarter is a snapshot,
+ * fine for re-running a build locally, wrong for a scheduled refresh.
+ */
+function cachePathFor(year: number, period: string): string | null {
+  return CACHE_DIR ? resolve(CACHE_DIR, `${year}-${period}.json`) : null;
+}
+
+function readQuarterCache(year: number, period: string): CompactFiling[] | null {
+  const path = cachePathFor(year, period);
+  if (!path || !existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, 'utf8')) as CompactFiling[];
+  } catch {
+    return null;
+  }
+}
+
+function writeQuarterCache(year: number, period: string, filings: CompactFiling[]): void {
+  const path = cachePathFor(year, period);
+  if (!path) return;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(filings));
+}
+
 async function fetchQuarter(year: number, period: string): Promise<CompactFiling[]> {
+  const cached = readQuarterCache(year, period);
+  if (cached) {
+    console.log(`  ${year} ${period}: ${cached.length} reports (cached)`);
+    return cached;
+  }
+
   const first = await fetchPage(year, period, 1);
   const totalPages = Math.min(Math.ceil(first.count / PAGE_SIZE), MAX_PAGES);
   const filings: CompactFiling[] = [];
@@ -134,12 +205,13 @@ async function fetchQuarter(year: number, period: string): Promise<CompactFiling
   console.log(
     `  ${year} ${period}: ${first.count} filings, ${totalPages} pages -> ${filings.length} reports`
   );
+  writeQuarterCache(year, period, filings);
   return filings;
 }
 
 async function main(): Promise<void> {
   if (!API_KEY) {
-    console.error('LDA_API_KEY is required. Register at https://lda.senate.gov/api/register/');
+    console.error('LDA_API_KEY is required. Register at https://lda.gov/api/register/');
     process.exit(1);
   }
   const window = quarterWindow(new Date(), QUARTERS);
@@ -179,6 +251,48 @@ async function main(): Promise<void> {
       `${aggregates.committees.length} committee-quarters · ${aggregates.issues.length} issue-quarters · ` +
       `${aggregates.meta.reportFilingsUsed} reports (${aggregates.meta.gatedFilingCount} gated) · ` +
       `latest ${aggregates.latestFilingPosted}`
+  );
+
+  if (EMIT_FILINGS) writeFilingCorpus(all, aggregates.generatedAt);
+}
+
+/**
+ * Emit the filing-level corpus the analyzers read. Dictionary-encoded and
+ * brotli-compressed, it is small enough to commit alongside the aggregates —
+ * an array of filing objects would not have been.
+ */
+function writeFilingCorpus(all: CompactFiling[], generatedAt: string): void {
+  const corpus = buildFilingCorpus(all, generatedAt);
+  const json = JSON.stringify(corpus);
+  const compressed = brotliCompressSync(Buffer.from(json), {
+    params: {
+      [zlibConstants.BROTLI_PARAM_QUALITY]: 11,
+      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: Buffer.byteLength(json),
+    },
+  });
+  mkdirSync(dirname(FILINGS_OUT_PATH), { recursive: true });
+  writeFileSync(FILINGS_OUT_PATH, compressed);
+
+  // Sidecar so the status route and health canary can check freshness — and
+  // whether this artifact and the aggregates came from the same run — without
+  // decompressing the corpus.
+  writeFileSync(
+    FILINGS_OUT_PATH.replace(/\.json\.br$/, '.meta.json'),
+    JSON.stringify({
+      generatedAt: corpus.generatedAt,
+      latestFilingPosted: corpus.latestFilingPosted,
+      quarters: corpus.quarters,
+      rows: corpus.rows.length,
+      compressedBytes: compressed.length,
+      meta: corpus.meta,
+    })
+  );
+
+  console.log(
+    `Wrote ${FILINGS_OUT_PATH} — ${(compressed.length / 1_000_000).toFixed(2)}MB brotli ` +
+      `(${(Buffer.byteLength(json) / 1_000_000).toFixed(2)}MB raw) · ` +
+      `${corpus.rows.length} rows · ${corpus.clients.length} clients · ` +
+      `${corpus.committees.length} committees · ${corpus.entities.length} entities`
   );
 }
 

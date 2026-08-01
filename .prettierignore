@@ -4,3 +4,4 @@
 # GitHub Action commits. Keep it minified.
 data/lda-aggregates.json
 data/lda-aggregates.meta.json
+data/lda-filings.meta.json

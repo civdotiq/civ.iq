@@ -80,6 +80,16 @@ jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
   },
 }));
 
+/**
+ * Corpus reader. Defaults to unavailable so the cases below exercise the API
+ * sample path they were written against — without this the analyzer reads the
+ * real committed corpus off disk and the mocked filings never run.
+ */
+const mockForEachFilingForCommittees = jest.fn().mockResolvedValue(false);
+jest.mock('@/lib/data-sources/lda-corpus/load-filings', () => ({
+  forEachFilingForCommittees: (...args: unknown[]) => mockForEachFilingForCommittees(...args),
+}));
+
 const mockResolveFilingEntities = jest.fn();
 const mockGetResolvedCommittees = jest.fn();
 jest.mock('@/lib/intelligence/entity-resolution/lobbying-committee-resolver', () => ({
@@ -167,6 +177,9 @@ describe('analyzeInfluenceChains', () => {
 
     // Default: contributions that match lobbying org names
     mockGetSampleContributions.mockResolvedValue(makeContributions(10));
+
+    // Default: corpus unavailable, so the API sample path runs
+    mockForEachFilingForCommittees.mockResolvedValue(false);
 
     // Default: lobbying filings targeting rep's committees
     mockFetchRecentFilings.mockResolvedValue(makeLobbyingFilings(5));
@@ -422,5 +435,90 @@ describe('analyzeInfluenceChains', () => {
     await analyzeInfluenceChains('B000944');
 
     expect(mockFetchRecentFilings).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Corpus path ─────────────────────────────────────────────────
+
+  /** Feed the analyzer corpus rows instead of the API sample. */
+  function serveCorpus(rows: Array<Record<string, unknown>>): void {
+    mockForEachFilingForCommittees.mockImplementation(
+      async (_codes: string[], visit: (f: unknown) => void) => {
+        for (const row of rows) visit(row);
+        return true;
+      }
+    );
+  }
+
+  function corpusRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      clientName: 'Acme Health 0',
+      registrantName: 'Acme Health 0',
+      registrantId: '77',
+      quarter: '2026-Q1',
+      amount: 500000,
+      issueCodes: ['HCR'],
+      governmentEntities: ['House Energy and Commerce'],
+      committeeCodes: ['HSIF'],
+      ...overrides,
+    };
+  }
+
+  it('builds chains from the corpus and never touches the API sample', async () => {
+    serveCorpus([corpusRow()]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).not.toBeNull();
+    expect(result!.chains.length).toBeGreaterThan(0);
+    expect(mockFetchRecentFilings).not.toHaveBeenCalled();
+    expect(result!.methodology).toContain('complete LD-2 quarterly corpus');
+    expect(result!.sources.some(s => s.name.includes('complete quarterly corpus'))).toBe(true);
+  });
+
+  it('sums an organization across the filings of every firm it hires', async () => {
+    // One client, two registrants — LDA client ids are per firm-relationship.
+    serveCorpus([
+      corpusRow({ clientName: 'ACME HEALTH 0', registrantName: 'Firm A', registrantId: '1' }),
+      corpusRow({ clientName: 'Acme Health 0, Inc.', registrantName: 'Firm B', registrantId: '2' }),
+    ]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    const orgs = new Set(result!.chains.map(c => c.organization));
+    expect(orgs.size).toBe(1);
+    expect(result!.chains[0]!.lobbyingSpending).toBe(1_000_000);
+    // Two registrants means no single lobby profile to link to.
+    expect(result!.chains[0]!.registrantId).toBeUndefined();
+  });
+
+  it('falls back to the API sample when the corpus is unavailable', async () => {
+    mockForEachFilingForCommittees.mockResolvedValue(false);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(mockFetchRecentFilings).toHaveBeenCalled();
+    expect(result!.methodology).toContain('small sample of recent filings');
+  });
+
+  it('ranks organizations with contribution evidence ahead of bigger spenders', async () => {
+    // The top spender never contributed; only the smaller organization did, and
+    // a chain without contribution evidence is dropped below the threshold.
+    mockGetSampleContributions.mockResolvedValue([
+      { contributor_employer: 'Acme Health 0', contribution_receipt_amount: 2500 },
+    ]);
+    serveCorpus([
+      corpusRow({
+        clientName: 'Megacorp Industries',
+        registrantName: 'Megacorp',
+        amount: 9_000_000,
+      }),
+      corpusRow({ clientName: 'Acme Health 0', amount: 25_000 }),
+    ]);
+
+    const result = await analyzeInfluenceChains(BIO_ID);
+
+    expect(result).not.toBeNull();
+    expect(new Set(result!.chains.map(c => c.organization))).toEqual(new Set(['Acme Health 0']));
+    expect(result!.chains[0]!.hasContributionEvidence).toBe(true);
   });
 });

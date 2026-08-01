@@ -20,8 +20,15 @@ interface InfluenceSectionProps {
   onExploreIntelligence?: () => void;
 }
 
-/** Insights below this confidence are hidden per intelligence-layer rules. */
-const MIN_CONFIDENCE = 0.6;
+/**
+ * Insights below this confidence are hidden per intelligence-layer rules.
+ *
+ * Must not exceed 0.5: when the narrative falls back to the statistical
+ * template (no AI text), every analyzer in the codebase caps the reported
+ * confidence at 0.5. A gate above that silently discarded every fallback
+ * insight, so the section rendered empty even when the analysis succeeded.
+ */
+const MIN_CONFIDENCE = 0.5;
 
 async function fetchInsight(url: string): Promise<InfluenceChainInsight | null> {
   const response = await fetch(url);

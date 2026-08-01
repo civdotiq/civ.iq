@@ -6,6 +6,9 @@
 export { parseRawFiling, quarterKey } from './parse';
 export { dedupeAmendments } from './dedupe';
 export { buildAggregates } from './aggregate';
+export { buildFilingCorpus } from './build-filing-corpus';
+export { decodeFilingRow } from './filing-corpus';
+export type { FilingCorpusFile, EncodedFilingRow, CorpusFiling } from './filing-corpus';
 export type {
   RawApiFiling,
   CompactFiling,

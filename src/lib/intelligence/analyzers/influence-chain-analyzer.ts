@@ -23,6 +23,7 @@ import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { forEachFilingForCommittees } from '@/lib/data-sources/lda-corpus/load-filings';
 import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import {
   resolveFilingEntities,
@@ -53,6 +54,7 @@ import type { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import type { LobbyingFiling } from '@/lib/data-sources/senate-lobbying-api';
 import {
+  ALL_COMMITTEE_MAPPINGS,
   normalizeCompanyName,
   similarityRatio,
   validateTokenOverlap,
@@ -69,6 +71,17 @@ const MAX_CONTRIBUTIONS = 250;
 
 /** Max chains to return */
 const MAX_CHAINS = 10;
+
+/** Max organizations carried into chain assembly */
+const MAX_ORGS = 50;
+
+/**
+ * Organizations put through the fuzzy contribution match. Every organization
+ * gets the exact-name pass (a hash lookup), but Levenshtein is
+ * O(orgs x employers) and the full corpus yields tens of thousands of
+ * organizations for a busy committee, so the fuzzy pass takes the top spenders.
+ */
+const FUZZY_CANDIDATE_ORGS = 500;
 
 /** Minimum chain confidence to keep */
 const MIN_CHAIN_CONFIDENCE = 0.5;
@@ -249,14 +262,19 @@ async function computeAndCache(
   if (!rep) return null;
 
   // 3. Fetch and filter lobbying filings
-  const lobbyingOrgs = await fetchLobbyingOrgs(rep);
+  const { orgs: lobbyingOrgs, source: lobbyingSource } = await fetchLobbyingOrgs(rep);
   if (lobbyingOrgs.length === 0) {
-    logger.info('[InfluenceChain] No lobbying orgs targeting rep committees', { bioguideId });
+    logger.info('[InfluenceChain] No lobbying orgs targeting rep committees', {
+      bioguideId,
+      lobbyingSource,
+    });
     return null;
   }
 
-  // 4. Cross-reference with FEC contributions
+  // 4. Cross-reference with FEC contributions, then keep the organizations that
+  //    can actually form a chain
   const contributionMatches = await fetchContributionMatches(bioguideId, lobbyingOrgs);
+  const chainOrgs = selectChainCandidates(lobbyingOrgs, contributionMatches);
 
   // 5. Fetch and classify votes
   const votes = await fetchAndClassifyVotes(bioguideId, rep.chamber);
@@ -265,7 +283,7 @@ async function computeAndCache(
 
   // 7. Assemble chains
   const { chains, totalDetected, dropped } = assembleChains(
-    lobbyingOrgs,
+    chainOrgs,
     contributionMatches,
     rep,
     votes
@@ -283,9 +301,12 @@ async function computeAndCache(
   const conf = confidenceScore({
     sampleSize: chains.length,
     minimumSampleSize: 3,
+    // Completeness is the share of the organizations actually put through chain
+    // assembly that carried contribution evidence — not a share of every
+    // organization the corpus returned, which would drive it to ~0.
     dataCompleteness:
       contributionMatches.size > 0 && votes.length > 0
-        ? Math.min(contributionMatches.size / lobbyingOrgs.length, 1)
+        ? Math.min(contributionMatches.size / Math.max(chainOrgs.length, 1), 1)
         : 0,
     peerCount: peer?.peerCount ?? 0,
   });
@@ -294,7 +315,12 @@ async function computeAndCache(
   const { narrative, source } = await generateNarrative(rep, chains, peer);
 
   const sc = new SourceCollector();
-  sc.add('Senate LDA filings', '119th Congress');
+  sc.add(
+    lobbyingSource === 'corpus'
+      ? 'Senate LDA filings (complete quarterly corpus)'
+      : 'Senate LDA filings (API sample)',
+    '119th Congress'
+  );
   sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
   sc.add('Congress.gov roll calls', '119th Congress', votes.length);
 
@@ -317,7 +343,13 @@ async function computeAndCache(
     dataAsOf: freshestDate(...votes.map(v => v.date))!,
     methodology:
       'Traces lobbying filings → campaign contributions → committee membership → ' +
-      'bill sector classification → voting records. Organization names matched via ' +
+      'bill sector classification → voting records. ' +
+      (lobbyingSource === 'corpus'
+        ? 'Lobbying rows come from the complete LD-2 quarterly corpus for the ' +
+          'member’s committees. '
+        : 'Lobbying rows come from a small sample of recent filings, so coverage ' +
+          'is partial. ') +
+      'Organization names matched via ' +
       'Levenshtein similarity (threshold > 0.8). Bills classified by sector using ' +
       'AI summaries with keyword fallback.',
     disclaimer: DISCLAIMER,
@@ -390,7 +422,127 @@ export function _resetFilingsCache(): void {
   cachedFilingsTimestamp = 0;
 }
 
-async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
+/** Where a run's lobbying rows came from, for the methodology string. */
+type LobbyingSource = 'corpus' | 'sample';
+
+/**
+ * Match the representative's committee names to corpus committee codes.
+ * Candidates are scoped to the member's own chamber (House codes start with H,
+ * Senate with S) so a House subcommittee named "Health" cannot resolve to the
+ * Senate HELP committee. Returns code → the member's own name for that
+ * committee, which is what chain labels display.
+ */
+function committeeCodesForRep(rep: RepData): Map<string, string> {
+  const chamberPrefix = rep.chamber === 'House' ? 'H' : 'S';
+  const codes = new Map<string, string>();
+
+  for (const name of rep.committeeNames) {
+    const norm = normalizeCommitteeName(name);
+    if (!norm) continue;
+    const match = ALL_COMMITTEE_MAPPINGS.find(m => {
+      if (!m.committeeCode.startsWith(chamberPrefix)) return false;
+      const mNorm = normalizeCommitteeName(m.committeeName);
+      return norm === mNorm || norm.includes(mNorm) || mNorm.includes(norm);
+    });
+    if (match && !codes.has(match.committeeCode)) codes.set(match.committeeCode, name);
+  }
+  return codes;
+}
+
+/** Strip punctuation so "Committee on Veterans' Affairs" matches "Veterans Affairs". */
+function normalizeCommitteeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Roll the complete LDA corpus up into per-organization summaries for the
+ * committees this member sits on. Organizations are keyed by canonical company
+ * name because LDA client ids are per firm-relationship — one client that hires
+ * several firms otherwise appears as several organizations.
+ *
+ * Returns null when the corpus is unavailable so the caller falls back to the
+ * API sample rather than reporting no lobbying activity.
+ */
+async function fetchLobbyingOrgsFromCorpus(rep: RepData): Promise<LobbyingOrgSummary[] | null> {
+  const codeToCommitteeName = committeeCodesForRep(rep);
+  if (codeToCommitteeName.size === 0) return null;
+
+  const committeeNamesLower = [...rep.committeeNames].map(n => n.toLowerCase());
+  const orgMap = new Map<string, LobbyingOrgSummary>();
+
+  const available = await forEachFilingForCommittees([...codeToCommitteeName.keys()], filing => {
+    const key = normalizeCompanyName(filing.clientName) || filing.clientName.trim().toUpperCase();
+    let org = orgMap.get(key);
+    if (!org) {
+      org = {
+        name: filing.clientName,
+        totalSpending: 0,
+        filingCount: 0,
+        issueCodes: [],
+        directCommitteeMatch: false,
+        targetedCommittees: new Set<string>(),
+      };
+      orgMap.set(key, org);
+    }
+
+    org.totalSpending += filing.amount;
+    org.filingCount += 1;
+    for (const code of filing.issueCodes) {
+      if (!org.issueCodes.includes(code)) org.issueCodes.push(code);
+    }
+    for (const code of filing.committeeCodes) {
+      const name = codeToCommitteeName.get(code);
+      if (name) org.targetedCommittees.add(name);
+    }
+
+    // A filing that names the committee among its disclosed government entities
+    // is stronger evidence than one attributed by issue-code jurisdiction; the
+    // lobbying link's confidence depends on the distinction.
+    if (!org.directCommitteeMatch) {
+      const entities = filing.governmentEntities.map(e => e.toLowerCase());
+      org.directCommitteeMatch = committeeNamesLower.some(name =>
+        entities.some(e => e.includes(name) || name.includes(e))
+      );
+    }
+
+    // Only an organization filing on its own behalf has a lobby profile to link.
+    if (
+      !org.registrantId &&
+      filing.registrantName.toLowerCase() === filing.clientName.toLowerCase()
+    ) {
+      org.registrantId = filing.registrantId;
+    }
+  });
+
+  if (!available) return null;
+  return Array.from(orgMap.values()).sort((a, b) => b.totalSpending - a.totalSpending);
+}
+
+async function fetchLobbyingOrgs(
+  rep: RepData
+): Promise<{ orgs: LobbyingOrgSummary[]; source: LobbyingSource }> {
+  try {
+    const fromCorpus = await fetchLobbyingOrgsFromCorpus(rep);
+    if (fromCorpus) return { orgs: fromCorpus, source: 'corpus' };
+  } catch (error) {
+    logger.warn('[InfluenceChain] Corpus lobbying fetch failed', {
+      error: (error as Error).message,
+    });
+  }
+  return { orgs: await fetchLobbyingOrgsFromSample(rep), source: 'sample' };
+}
+
+/**
+ * Fallback path: the LDA API's first page, ~25 of ~28,000 filings per quarter.
+ * Far too thin to reliably intersect a member's committees, contributions and
+ * votes — kept only so the analyzer degrades instead of failing when the corpus
+ * is missing.
+ */
+async function fetchLobbyingOrgsFromSample(rep: RepData): Promise<LobbyingOrgSummary[]> {
   try {
     const now = Date.now();
     if (!cachedFilings || now - cachedFilingsTimestamp > FILING_CACHE_TTL) {
@@ -442,10 +594,9 @@ async function fetchLobbyingOrgs(rep: RepData): Promise<LobbyingOrgSummary[]> {
       }
     }
 
-    // Sort by total spending, take top organizations
-    return Array.from(orgMap.values())
-      .sort((a, b) => b.totalSpending - a.totalSpending)
-      .slice(0, 50);
+    // Sort by total spending; selection down to MAX_ORGS happens after the
+    // contribution match, so organizations that actually donated rank first.
+    return Array.from(orgMap.values()).sort((a, b) => b.totalSpending - a.totalSpending);
   } catch (error) {
     logger.warn('[InfluenceChain] Lobbying fetch failed', {
       error: (error as Error).message,
@@ -538,20 +689,29 @@ async function fetchContributionMatches(
       }
     }
 
-    // For each lobbying org, find matching employer contributions
+    // Exact matching is a hash lookup, so every organization gets it. Fuzzy
+    // matching is O(orgs x employers) and the corpus can yield tens of
+    // thousands of organizations per committee, so it runs on the highest
+    // spenders that did not match exactly (lobbyingOrgs is spending-sorted).
+    const unmatched: LobbyingOrgSummary[] = [];
     for (const org of lobbyingOrgs) {
       const normalizedOrg = normalizeCompanyName(org.name);
       if (normalizedOrg.length === 0) continue;
 
-      // Check exact match first
-      if (employerContributions.has(normalizedOrg)) {
+      const exactAmount = employerContributions.get(normalizedOrg);
+      if (exactAmount !== undefined) {
         matches.set(org.name, {
           organization: org.name,
-          amount: employerContributions.get(normalizedOrg) ?? 0,
+          amount: exactAmount,
           isExactMatch: true,
         });
-        continue;
+      } else {
+        unmatched.push(org);
       }
+    }
+
+    for (const org of unmatched.slice(0, FUZZY_CANDIDATE_ORGS)) {
+      const normalizedOrg = normalizeCompanyName(org.name);
 
       // Fuzzy match against all employer names
       let bestRatio = 0;
@@ -587,6 +747,24 @@ async function fetchContributionMatches(
   }
 
   return matches;
+}
+
+/**
+ * Narrow the organizations carried into chain assembly.
+ *
+ * A chain without contribution evidence is capped below MIN_CHAIN_CONFIDENCE
+ * and dropped, so ranking by spending alone wastes the budget on organizations
+ * that cannot produce a chain — the difference matters now that the corpus
+ * returns thousands of organizations rather than the sample's handful.
+ * Organizations that matched a contribution come first; when none did, fall
+ * back to the top spenders so the detected/dropped counts stay meaningful.
+ */
+function selectChainCandidates(
+  lobbyingOrgs: LobbyingOrgSummary[],
+  contributionMatches: Map<string, ContributionMatch>
+): LobbyingOrgSummary[] {
+  const matched = lobbyingOrgs.filter(o => contributionMatches.has(o.name));
+  return (matched.length > 0 ? matched : lobbyingOrgs).slice(0, MAX_ORGS);
 }
 
 // ── Step 5: Fetch and Classify Votes ────────────────────────────────

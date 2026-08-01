@@ -4,13 +4,18 @@
  */
 
 /**
- * Freshness status for the committed LDA corpus (data/lda-aggregates.json).
+ * Freshness status for the committed LDA corpus.
  *
- * Reads only the small meta sidecar written by scripts/sync-lda-corpus.ts, so
- * the health canary and dashboards can check when the mirror last ran and how
- * recent its newest filing is — without loading the multi-MB corpus. Returns
- * `status: "unavailable"` (HTTP 200) when the corpus has never been generated,
- * per the real-data-or-unavailable rule.
+ * The mirror emits two artifacts: aggregate totals (data/lda-aggregates.json)
+ * and the filing-level rows the analyzers read (data/lda-filings.json.br). Both
+ * come from one run, so a difference in their generatedAt means one of them was
+ * committed without the other and they now describe different sets of filings —
+ * reported here as `drift`, since nothing downstream can detect it after the
+ * fact.
+ *
+ * Reads only the small meta sidecars, so the health canary and dashboards never
+ * load the multi-MB corpus. Returns `status: "unavailable"` (HTTP 200) when the
+ * corpus has never been generated, per the real-data-or-unavailable rule.
  */
 
 import { NextResponse } from 'next/server';
@@ -33,17 +38,30 @@ interface CorpusMeta {
   };
 }
 
-async function loadMeta(): Promise<CorpusMeta | null> {
+interface FilingsMeta {
+  generatedAt: string;
+  latestFilingPosted: string | null;
+  quarters: string[];
+  rows: number;
+  compressedBytes: number;
+}
+
+async function readSidecar<T>(fileName: string): Promise<T | null> {
   try {
-    const raw = await readFile(join(process.cwd(), 'data/lda-aggregates.meta.json'), 'utf8');
-    return JSON.parse(raw) as CorpusMeta;
+    return JSON.parse(await readFile(join(process.cwd(), 'data', fileName), 'utf8')) as T;
   } catch {
     return null;
   }
 }
 
+const loadMeta = (): Promise<CorpusMeta | null> =>
+  readSidecar<CorpusMeta>('lda-aggregates.meta.json');
+
 export async function GET() {
-  const meta = await loadMeta();
+  const [meta, filings] = await Promise.all([
+    loadMeta(),
+    readSidecar<FilingsMeta>('lda-filings.meta.json'),
+  ]);
   if (!meta) {
     return NextResponse.json(
       {
@@ -68,6 +86,15 @@ export async function GET() {
       reportFilingsUsed: meta.meta.reportFilingsUsed,
       gatedFilingCount: meta.meta.gatedFilingCount,
       committeeMatch: meta.meta.committeeMatch,
+      filings: filings
+        ? {
+            status: filings.generatedAt === meta.generatedAt ? 'ok' : 'drift',
+            generatedAt: filings.generatedAt,
+            rows: filings.rows,
+            quarters: filings.quarters,
+            compressedBytes: filings.compressedBytes,
+          }
+        : { status: 'unavailable' },
     },
     { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' } }
   );

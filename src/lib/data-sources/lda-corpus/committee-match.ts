@@ -50,8 +50,25 @@ const ISSUE_TO_COMMITTEES: Map<string, CommitteeRef[]> = (() => {
   return map;
 })();
 
+/**
+ * Resolution depends only on a filing's entity and issue-code sets, and those
+ * sets repeat heavily across a 137k-filing corpus (most filings name only
+ * "SENATE"/"HOUSE" and one or two issue codes). Memoizing on that key keeps the
+ * Fuse.js entity resolution off the hot loop — the corpus build resolves every
+ * filing twice (aggregates and filing-level output).
+ */
+const resolutionMemo = new Map<string, CommitteeRef[]>();
+
+function resolutionKey(filing: CompactFiling): string {
+  return `${[...filing.governmentEntities].sort().join('|')}#${[...filing.issueCodes].sort().join('|')}`;
+}
+
 /** Union of committees implied by a filing's government entities and issue codes. */
 export function resolveFilingCommittees(filing: CompactFiling): CommitteeRef[] {
+  const key = resolutionKey(filing);
+  const memoized = resolutionMemo.get(key);
+  if (memoized) return memoized;
+
   const seen = new Map<string, string>();
 
   for (const c of getResolvedCommittees(resolveFilingEntities(filing.governmentEntities))) {
@@ -63,5 +80,10 @@ export function resolveFilingCommittees(filing: CompactFiling): CommitteeRef[] {
     }
   }
 
-  return Array.from(seen, ([committeeCode, committeeName]) => ({ committeeCode, committeeName }));
+  const resolved = Array.from(seen, ([committeeCode, committeeName]) => ({
+    committeeCode,
+    committeeName,
+  }));
+  resolutionMemo.set(key, resolved);
+  return resolved;
 }
