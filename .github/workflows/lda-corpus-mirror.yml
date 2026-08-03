@@ -56,8 +56,19 @@ jobs:
           if git diff --quiet -- data/lda-aggregates.json data/lda-filings.json.br; then
             echo "No change to the LDA corpus"
           else
-            git add data/lda-aggregates.json data/lda-aggregates.meta.json data/lda-filings.json.br
+            git add data/lda-aggregates.json data/lda-aggregates.meta.json data/lda-filings.meta.json data/lda-filings.json.br
             git commit -m "chore(lobbying): refresh LDA corpus [skip ci]"
+            # A full mirror pages for well over an hour, long enough to race any
+            # push to main; the checkout is stale by the time we get here and the
+            # push is rejected as non-fast-forward. Rebase and retry rather than
+            # merge: main-protection enforces linear history, so a merge commit
+            # would be rejected outright. Only data/ files are touched here, so a
+            # rebase conflict would mean someone hand-edited the corpus.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
             git push
           fi
 
