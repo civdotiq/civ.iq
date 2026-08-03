@@ -532,8 +532,14 @@ function EnforcementSection({ profile }: Props) {
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">Actions</span>
           <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {profile.enforcement.actionCount}
+            {profile.enforcement.actionCountIsLowerBound ? 'At least ' : ''}
+            {profile.enforcement.actionCount.toLocaleString()}
           </p>
+          {profile.enforcement.actionCountIsLowerBound && (
+            <span className="text-xs text-gray-500">
+              An agency returned a full page — the real count is higher
+            </span>
+          )}
         </div>
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">Agencies</span>

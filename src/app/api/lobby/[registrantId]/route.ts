@@ -88,7 +88,10 @@ interface PACRecipient {
 
 /** Enforcement action summary */
 interface EnforcementSummary {
+  /** Actions found. A floor, not a census, when `actionCountIsLowerBound` is set. */
   actionCount: number;
+  actionCountIsLowerBound: boolean;
+  /** One entry per agency that contributed actions — not a truncated list. */
   topActions: Array<{ agency: string; count: number }>;
   narrative: string | null;
 }
@@ -419,6 +422,7 @@ async function fetchEnforcement(orgName: string): Promise<EnforcementSummary | n
     if (!insight || insight.stats.totalActions === 0) return null;
     return {
       actionCount: insight.stats.totalActions,
+      actionCountIsLowerBound: insight.stats.totalIsLowerBound,
       topActions: insight.stats.byAgency.map(a => ({
         agency: a.agency,
         count: a.count,

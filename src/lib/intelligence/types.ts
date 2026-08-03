@@ -620,7 +620,12 @@ export interface EnforcementInsight extends InsightBase {
     | { type: 'organization'; name: string };
   actions: EnforcementAction[];
   stats: {
+    /**
+     * Actions retrieved. A LOWER BOUND, not a census, when `totalIsLowerBound`
+     * is set: every source paginates and each one is read to a bounded depth.
+     */
     totalActions: number;
+    totalIsLowerBound: boolean;
     totalPenalties: number;
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';

@@ -98,7 +98,7 @@ async function computeAndCache(
   cacheKey: string
 ): Promise<EnforcementInsight | null> {
   // 2. Fetch from all three agencies in parallel
-  const actions = await fetchEnforcementActions(scope);
+  const { actions, saturated } = await fetchEnforcementActions(scope);
 
   if (actions.length < MIN_ENFORCEMENT_ACTIONS) {
     logger.info('[Enforcement] Insufficient actions', {
@@ -110,7 +110,7 @@ async function computeAndCache(
   }
 
   // 3. Compute statistics
-  const stats = computeStats(actions);
+  const stats = computeStats(actions, saturated);
 
   // 4. Peer comparison
   const peer = await computePeerComparison(scope, stats.totalActions);
@@ -187,7 +187,22 @@ async function computeAndCache(
 
 // ── Data Fetching ────────────────────────────────────────────────────
 
-async function fetchEnforcementActions(scope: EnforcementScope): Promise<EnforcementAction[]> {
+/**
+ * Actions from one source, plus whether that source was read to its cap.
+ *
+ * Every agency here paginates and none is walked to the end — walking OSHA to
+ * the end for a large employer is thousands of requests. So a fetch that comes
+ * back full means "there is more", and the caller has to say so rather than
+ * publish the cap as a count.
+ */
+interface AgencyFetch {
+  actions: EnforcementAction[];
+  saturated: boolean;
+}
+
+async function fetchEnforcementActions(
+  scope: EnforcementScope
+): Promise<{ actions: EnforcementAction[]; saturated: boolean }> {
   const actions: EnforcementAction[] = [];
 
   // Build scope-specific queries
@@ -203,7 +218,7 @@ async function fetchEnforcementActions(scope: EnforcementScope): Promise<Enforce
       : [];
 
   // Fetch from all agencies in parallel, querying each SIC prefix separately
-  const fetchPromises: Promise<EnforcementAction[]>[] = [];
+  const fetchPromises: Promise<AgencyFetch>[] = [];
 
   if (sicPrefixes.length > 1) {
     // Multiple SIC prefixes: parallel calls per prefix, then deduplicate
@@ -221,11 +236,12 @@ async function fetchEnforcementActions(scope: EnforcementScope): Promise<Enforce
   }
 
   const results = await Promise.all(fetchPromises);
+  const saturated = results.some(r => r.saturated);
 
   // Deduplicate by agency + organization + date (parallel prefix queries may overlap)
   const seen = new Set<string>();
   for (const batch of results) {
-    for (const action of batch) {
+    for (const action of batch.actions) {
       const key = `${action.agency}|${action.organization}|${action.date}|${action.penaltyAmount}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -236,17 +252,20 @@ async function fetchEnforcementActions(scope: EnforcementScope): Promise<Enforce
 
   // If sector scope, filter to matching sector
   if (scope.type === 'sector') {
-    return actions.filter(a => a.sector === scope.sector);
+    return { actions: actions.filter(a => a.sector === scope.sector), saturated };
   }
 
-  return actions;
+  return { actions, saturated };
 }
+
+/** ECHO's get_cases serves one responseset per call; a full one means more exist. */
+const EPA_RESPONSESET = 100;
 
 async function fetchEPAActions(
   state?: string,
   sicCode?: string,
   orgName?: string
-): Promise<EnforcementAction[]> {
+): Promise<AgencyFetch> {
   try {
     const cases = await epaEchoService.searchEnforcementCases({
       state,
@@ -254,7 +273,7 @@ async function fetchEPAActions(
       facilityName: orgName,
     });
 
-    return cases.map(c => {
+    const actions = cases.map(c => {
       const resolved = c.defendants.length > 0 ? resolveCompanyName(c.defendants[0]!) : null;
 
       return {
@@ -269,26 +288,47 @@ async function fetchEPAActions(
         district: null,
       };
     });
+
+    return { actions, saturated: cases.length >= EPA_RESPONSESET };
   } catch (error) {
     logger.warn('[Enforcement] EPA fetch failed', { error: (error as Error).message });
-    return [];
+    return { actions: [], saturated: false };
   }
 }
+
+/**
+ * OSHA is the one source that pages cheaply (the DOL API takes an offset), so it
+ * is walked several pages deep instead of stopping at the first. The walk is
+ * still bounded — a large employer has thousands of inspections and this runs
+ * inside an analyzer timeout — so a full final page still means "more exist".
+ */
+const OSHA_PAGE_SIZE = 200;
+const OSHA_MAX_PAGES = 5;
 
 async function fetchOSHAActions(
   state?: string,
   sicCode?: string,
   orgName?: string
-): Promise<EnforcementAction[]> {
+): Promise<AgencyFetch> {
   try {
-    const inspections = await oshaService.searchInspections({
-      state,
-      sicCode,
-      establishmentName: orgName,
-      limit: 100,
-    });
+    const inspections: Awaited<ReturnType<typeof oshaService.searchInspections>> = [];
+    let saturated = false;
 
-    return inspections
+    for (let page = 0; page < OSHA_MAX_PAGES; page++) {
+      const batch = await oshaService.searchInspections({
+        state,
+        sicCode,
+        establishmentName: orgName,
+        limit: OSHA_PAGE_SIZE,
+        offset: page * OSHA_PAGE_SIZE,
+      });
+      inspections.push(...batch);
+      if (batch.length < OSHA_PAGE_SIZE) break;
+      // Last page came back full: either continue, or record that we stopped short.
+      if (page === OSHA_MAX_PAGES - 1) saturated = true;
+    }
+
+    const actions = inspections
       .filter(i => i.totalCurrentPenalty > 0) // Only include penalized inspections
       .map(i => {
         const resolved = resolveCompanyName(i.establishmentName);
@@ -304,18 +344,23 @@ async function fetchOSHAActions(
           district: null,
         };
       });
+
+    return { actions, saturated };
   } catch (error) {
     logger.warn('[Enforcement] OSHA fetch failed', { error: (error as Error).message });
-    return [];
+    return { actions: [], saturated: false };
   }
 }
 
-async function fetchCFPBActions(state?: string, orgName?: string): Promise<EnforcementAction[]> {
+/** CFPB is read one page deep; a full page means the company has more complaints. */
+const CFPB_PAGE_SIZE = 100;
+
+async function fetchCFPBActions(state?: string, orgName?: string): Promise<AgencyFetch> {
   try {
     const { complaints } = await cfpbComplaintService.searchComplaints({
       state,
       company: orgName,
-      size: 100,
+      size: CFPB_PAGE_SIZE,
       sort: 'created_date_desc',
     });
 
@@ -338,7 +383,7 @@ async function fetchCFPBActions(state?: string, orgName?: string): Promise<Enfor
       }
     }
 
-    return Array.from(byCompany.entries()).map(([company, data]) => {
+    const actions = Array.from(byCompany.entries()).map(([company, data]) => {
       const resolved = resolveCompanyName(company);
       return {
         agency: 'CFPB' as const,
@@ -352,15 +397,20 @@ async function fetchCFPBActions(state?: string, orgName?: string): Promise<Enfor
         district: null,
       };
     });
+
+    return { actions, saturated: complaints.length >= CFPB_PAGE_SIZE };
   } catch (error) {
     logger.warn('[Enforcement] CFPB fetch failed', { error: (error as Error).message });
-    return [];
+    return { actions: [], saturated: false };
   }
 }
 
 // ── Statistics ────────────────────────────────────────────────────────
 
-function computeStats(actions: EnforcementAction[]): EnforcementInsight['stats'] {
+function computeStats(
+  actions: EnforcementAction[],
+  totalIsLowerBound: boolean
+): EnforcementInsight['stats'] {
   const totalPenalties = actions.reduce((sum, a) => sum + a.penaltyAmount, 0);
 
   // By agency
@@ -409,6 +459,7 @@ function computeStats(actions: EnforcementAction[]): EnforcementInsight['stats']
 
   return {
     totalActions: actions.length,
+    totalIsLowerBound,
     totalPenalties,
     byAgency,
     trend,
@@ -496,11 +547,15 @@ async function generateNarrative(
       `(${peer.peerCount} peers, percentile rank: ${peer.percentileRank}).`
     : 'No peer comparison available yet.';
 
+  const countLabel = stats.totalIsLowerBound
+    ? `${stats.totalActions} (AT LEAST — one or more agency feeds returned a full page, so the real figure is higher)`
+    : String(stats.totalActions);
+
   const userPrompt = `SCOPE: ${scopeLabel}
 
 ENFORCEMENT SUMMARY:
-- Total actions: ${stats.totalActions}
-- Total penalties: $${stats.totalPenalties.toLocaleString()}
+- Actions retrieved: ${countLabel}
+- Penalties across those actions: $${stats.totalPenalties.toLocaleString()}
 - Trend: ${stats.trend}
 - Period: ${stats.periodMonths} months
 
@@ -509,7 +564,11 @@ ${agencyLines}
 
 ${peerLine}
 
-Write a 2-3 sentence plain-language summary of these factual patterns. State the total number of enforcement actions and penalties. Note which agency is most active. State the trend direction. If peer comparison is available, note relative position. Do not claim causation. Do not judge.
+Write a 2-3 sentence plain-language summary of these factual patterns. ${
+    stats.totalIsLowerBound
+      ? 'The counts above are a floor, not a census — write "at least N" and never present N as the total.'
+      : 'State the total number of enforcement actions and penalties.'
+  } Note which agency is most active. State the trend direction. If peer comparison is available, note relative position. Do not claim causation. Do not judge.
 
 ${PLAIN_LANGUAGE_RULES}`;
 
@@ -525,9 +584,12 @@ function buildStatisticalSummary(
 ): string {
   const topAgency = stats.byAgency.sort((a, b) => b.count - a.count)[0];
 
-  let summary =
-    `${stats.totalActions} enforcement actions totaling $${stats.totalPenalties.toLocaleString()} ` +
-    `in penalties were recorded for ${scopeLabel} over the past ${stats.periodMonths} months.`;
+  let summary = stats.totalIsLowerBound
+    ? `At least ${stats.totalActions} enforcement actions totaling $${stats.totalPenalties.toLocaleString()} ` +
+      `in penalties were found for ${scopeLabel} over the past ${stats.periodMonths} months. ` +
+      `An agency feed returned a full page, so the real count is higher.`
+    : `${stats.totalActions} enforcement actions totaling $${stats.totalPenalties.toLocaleString()} ` +
+      `in penalties were recorded for ${scopeLabel} over the past ${stats.periodMonths} months.`;
 
   if (topAgency) {
     summary += ` ${topAgency.agency} accounted for ${topAgency.count} actions.`;

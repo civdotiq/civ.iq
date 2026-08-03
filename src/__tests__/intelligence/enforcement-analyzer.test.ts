@@ -167,6 +167,66 @@ describe('analyzeEnforcement', () => {
     expect(result?.disclaimer).toContain('Correlation');
   });
 
+  describe('cap disclosure', () => {
+    it('reports a true total when every source came back short of its cap', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchInspections.mockResolvedValue(makeOSHAInspections(2));
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      expect(result?.stats.totalIsLowerBound).toBe(false);
+    });
+
+    it('pages OSHA by offset and stops once a page comes back short', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchInspections
+        .mockResolvedValueOnce(makeOSHAInspections(200))
+        .mockResolvedValueOnce(makeOSHAInspections(5));
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      expect(mockSearchInspections).toHaveBeenCalledTimes(2);
+      expect(mockSearchInspections.mock.calls[0]?.[0]).toMatchObject({ limit: 200, offset: 0 });
+      expect(mockSearchInspections.mock.calls[1]?.[0]).toMatchObject({ limit: 200, offset: 200 });
+      // It ran out of rows before the page bound, so the count is a real total.
+      expect(result?.stats.totalIsLowerBound).toBe(false);
+    });
+
+    it('marks the total a lower bound when OSHA is still full at the page bound', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchInspections.mockResolvedValue(makeOSHAInspections(200));
+
+      const result = await analyzeEnforcement({ type: 'organization', name: 'Big Employer' });
+
+      expect(mockSearchInspections).toHaveBeenCalledTimes(5);
+      expect(result?.stats.totalIsLowerBound).toBe(true);
+    });
+
+    it('marks the total a lower bound when EPA fills its responseset', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(100));
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      expect(result?.stats.totalIsLowerBound).toBe(true);
+    });
+
+    it('marks the total a lower bound when CFPB fills its page', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchComplaints.mockResolvedValue({
+        complaints: Array.from({ length: 100 }, (_, i) => ({
+          company: `Bank ${i % 4}`,
+          dateReceived: '2025-05-01',
+          state: 'CA',
+        })),
+        total: 5000,
+      });
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      expect(result?.stats.totalIsLowerBound).toBe(true);
+    });
+  });
+
   it('computes insight for organization scope', async () => {
     mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
 

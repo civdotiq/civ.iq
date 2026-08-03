@@ -29,6 +29,8 @@ interface EnforcementInsightResponse {
   actions: EnforcementAction[];
   stats: {
     totalActions: number;
+    /** When true, totalActions is a floor: an agency feed was read to its cap. */
+    totalIsLowerBound: boolean;
     totalPenalties: number;
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';
@@ -331,7 +333,10 @@ function EnforcementResults({ data }: { data: EnforcementInsightResponse }) {
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <StatBox label="Total actions" value={String(stats.totalActions)} />
+          <StatBox
+            label={stats.totalIsLowerBound ? 'Actions found (at least)' : 'Total actions'}
+            value={stats.totalActions.toLocaleString()}
+          />
           <StatBox label="Total penalties" value={formatPenalty(stats.totalPenalties)} />
           <StatBox label="Trend" value={TREND_LABELS[stats.trend] ?? stats.trend} />
           <StatBox
