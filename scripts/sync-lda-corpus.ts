@@ -46,6 +46,22 @@ const CONCURRENCY = 3; // in-flight requests; the pace gate is the real throttle
 const MIN_INTERVAL_MS = 550; // ~109 req/min — under the registered-key ceiling, no 429 backoff
 const PERIODS = ['first_quarter', 'second_quarter', 'third_quarter', 'fourth_quarter'] as const;
 
+// The mirror refreshes weekly. Three consecutive misses is the point where the
+// corpus stops being defensible as current, so that is the staleness horizon.
+const STALE_AFTER_DAYS = 21;
+
+/**
+ * Absolute date (YYYY-MM-DD) after which consumers should treat the corpus as
+ * stale. Deliberately an absolute date rather than a relative TTL: a date
+ * comparison cannot be wrong about its own units or about when it was read,
+ * which is exactly how the cache-TTL milliseconds bug froze keys for 250 days.
+ */
+function staleAfterFrom(generatedAt: string): string {
+  const d = new Date(generatedAt);
+  d.setUTCDate(d.getUTCDate() + STALE_AFTER_DAYS);
+  return d.toISOString().slice(0, 10);
+}
+
 /** Global pace gate: dispatch at most one request per MIN_INTERVAL_MS. */
 let nextSlot = 0;
 async function pace(): Promise<void> {
@@ -237,6 +253,7 @@ async function main(): Promise<void> {
     metaPath,
     JSON.stringify({
       generatedAt: aggregates.generatedAt,
+      staleAfter: staleAfterFrom(aggregates.generatedAt),
       latestFilingPosted: aggregates.latestFilingPosted,
       quarters: aggregates.quarters,
       committeeQuarters: aggregates.committees.length,
@@ -280,6 +297,7 @@ function writeFilingCorpus(all: CompactFiling[], generatedAt: string): void {
     FILINGS_OUT_PATH.replace(/\.json\.br$/, '.meta.json'),
     JSON.stringify({
       generatedAt: corpus.generatedAt,
+      staleAfter: staleAfterFrom(corpus.generatedAt),
       latestFilingPosted: corpus.latestFilingPosted,
       quarters: corpus.quarters,
       rows: corpus.rows.length,

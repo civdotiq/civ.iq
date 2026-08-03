@@ -26,6 +26,8 @@ export const dynamic = 'force-dynamic';
 
 interface CorpusMeta {
   generatedAt: string;
+  /** Absolute YYYY-MM-DD. Absent on corpora generated before it was emitted. */
+  staleAfter?: string;
   latestFilingPosted: string | null;
   quarters: string[];
   committeeQuarters: number;
@@ -74,11 +76,19 @@ export async function GET() {
 
   const generatedAgeHours = (Date.now() - new Date(meta.generatedAt).getTime()) / (1000 * 60 * 60);
 
+  // Plain date comparison against the absolute date the mirror stamped, so
+  // reading this never has to reason about units or elapsed time. Null when the
+  // corpus predates the field — unknown staleness, not fresh.
+  const today = new Date().toISOString().slice(0, 10);
+  const stale = meta.staleAfter ? today >= meta.staleAfter : null;
+
   return NextResponse.json(
     {
       status: 'ok',
       generatedAt: meta.generatedAt,
       generatedAgeHours: Math.round(generatedAgeHours),
+      staleAfter: meta.staleAfter ?? null,
+      stale,
       latestFilingPosted: meta.latestFilingPosted,
       quarters: meta.quarters,
       committeeQuarters: meta.committeeQuarters,
