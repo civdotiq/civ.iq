@@ -55,15 +55,13 @@ export interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
-  // metrics.totalLobbyingSpending also exists but is a small sample and not
-  // rendered; use corpusLobbying below for the real per-sector total.
-  metrics: {
-    activePACCount: number;
-    activeLobbyingOrgCount: number;
-  };
-  // Corpus-backed lobbying totals for the sector's issue areas (complete corpus).
+  // Corpus-backed lobbying figures for the sector's issue areas (complete corpus).
+  // topPACs and topLobbyingOrgs are ranked display lists off a first-page API
+  // search — their lengths describe the list, never the sector.
   corpusLobbying?: {
     windowTotal: number;
+    organizationCount: number;
+    filingCount: number;
     quarters: string[];
     quarterly: Array<{ quarter: string; total: number }>;
     byIssue: Array<{ code: string; label: string; windowTotal: number }>;

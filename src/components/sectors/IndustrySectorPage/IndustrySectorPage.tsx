@@ -224,9 +224,14 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
             }}
           >
             {orgs
-              ? `${orgs.metrics.activePACCount} PACs · ${orgs.metrics.activeLobbyingOrgCount} lobbying registrants${
-                  connections ? ` · ${connections.recentBills.length} bills tracked` : ''
-                }`
+              ? [
+                  orgs.corpusLobbying
+                    ? `${orgs.corpusLobbying.organizationCount.toLocaleString()} lobbying organizations`
+                    : null,
+                  connections ? `${connections.recentBills.length} bills tracked` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ') || 'Sector roll-up unavailable'
               : 'Loading sector roll-up…'}
           </p>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -256,7 +261,12 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
               ['Total to legislators', formatCompactDollars(totalDonations)],
               ['To Democrats', formatCompactDollars(partyTotals?.d ?? 0)],
               ['To Republicans', formatCompactDollars(partyTotals?.r ?? 0)],
-              ['Lobbying registrants', String(orgs?.metrics.activeLobbyingOrgCount ?? 0)],
+              [
+                'Lobbying organizations',
+                orgs?.corpusLobbying
+                  ? orgs.corpusLobbying.organizationCount.toLocaleString()
+                  : 'Unavailable',
+              ],
               ['Bills tracked', String(connections?.recentBills.length ?? 0)],
             ].map(([k, v], i) => (
               <li
@@ -312,20 +322,17 @@ export function IndustrySectorPage({ sector, sectorSlug, displayName }: Industry
                 },
               ]
             : []),
-          {
-            key: 'active-pacs',
-            label: 'Active PACs',
-            value: String(orgs?.metrics.activePACCount ?? 0),
-            caption: 'Classified by FEC committee',
-            color: 'ink' as const,
-          },
-          {
-            key: 'lobby-orgs',
-            label: 'Lobbying orgs',
-            value: String(orgs?.metrics.activeLobbyingOrgCount ?? 0),
-            caption: 'Registrants in recent LDA filings',
-            color: 'ink' as const,
-          },
+          ...(corpusSpend
+            ? [
+                {
+                  key: 'lobby-orgs',
+                  label: 'Lobbying orgs',
+                  value: corpusSpend.organizationCount.toLocaleString(),
+                  caption: `${corpusSpend.filingCount.toLocaleString()} filings on these issue areas`,
+                  color: 'ink' as const,
+                },
+              ]
+            : []),
           {
             key: 'bills-tracked',
             label: 'Bills tracked',

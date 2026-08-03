@@ -7,6 +7,7 @@ import { brotliCompressSync } from 'node:zlib';
 import {
   forEachFiling,
   forEachFilingForCommittees,
+  forEachFilingForIssues,
   forEachFilingForOrganization,
   forEachFilingForQuarters,
   getFilingCorpusMeta,
@@ -191,6 +192,45 @@ describe('load-filings', () => {
     await forEachFilingForQuarters(['2025-Q4', '2026-Q1'], f => found.push(f));
 
     expect(found.map(f => f.quarter)).toEqual(['2025-Q4', '2026-Q1']);
+  });
+
+  it('selects filings by issue code', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    const available = await forEachFilingForIssues(['TAX'], f => found.push(f));
+
+    expect(available).toBe(true);
+    expect(found.map(f => f.clientName)).toEqual(['Acme Client Inc']);
+  });
+
+  it('visits a filing citing several requested issue codes only once', async () => {
+    // Row 0 reports lobbying on both TAX and HCR. Asking for both must not
+    // count it twice — that double count is exactly what the per-issue
+    // aggregates carry and what the filing reader exists to avoid.
+    mockCorpusResponse({
+      ...CORPUS,
+      rows: [
+        [0, 0, 1, 50000, [0, 1], [0], [0, 1]],
+        [1, 1, 0, 90000, [1], [1], [1]],
+      ],
+    });
+
+    const found: CorpusFiling[] = [];
+    await forEachFilingForIssues(['TAX', 'HCR'], f => found.push(f));
+
+    expect(found).toHaveLength(2);
+    expect(new Set(found.map(f => f.clientName)).size).toBe(2);
+  });
+
+  it('reports availability with no visits for an issue code the corpus never saw', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    const available = await forEachFilingForIssues(['ZZZ'], f => found.push(f));
+
+    expect(available).toBe(true);
+    expect(found).toEqual([]);
   });
 
   it('scans the whole table for bulk export', async () => {

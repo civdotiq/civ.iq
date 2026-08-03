@@ -51,14 +51,13 @@ interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
-  // metrics.totalLobbyingSpending is a small sample and not rendered; use
-  // corpusLobbying below for the real per-sector total.
-  metrics: {
-    activePACCount: number;
-    activeLobbyingOrgCount: number;
-  };
+  // topPACs and topLobbyingOrgs are ranked display lists off a first-page API
+  // search — their lengths describe the list, never the sector. Sector-wide
+  // figures come from corpusLobbying below.
   corpusLobbying?: {
     windowTotal: number;
+    organizationCount: number;
+    filingCount: number;
     quarters: string[];
     quarterly: Array<{ quarter: string; total: number }>;
     byIssue: Array<{ code: string; label: string; windowTotal: number }>;
@@ -72,6 +71,8 @@ interface IndustryOrganizationsResponse {
 interface EnforcementInsightResponse {
   stats: {
     totalActions: number;
+    /** When true, totalActions is a floor: an agency feed was read to its cap. */
+    totalIsLowerBound: boolean;
     totalPenalties: number;
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';
@@ -158,30 +159,24 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
         {/* Lobbying spend is corpus-backed (complete Senate LDA corpus, across
             the corpus window); the sample-based figure removed in Phase 0b is
             never rendered. */}
-        {orgsData?.metrics && (
-          <div
-            className={`grid ${orgsData.corpusLobbying ? 'grid-cols-3' : 'grid-cols-2'} gap-4 pt-4 border-t border-gray-200 dark:border-gray-700`}
-          >
-            {orgsData.corpusLobbying && (
-              <div>
-                <span className="text-xs tracking-wider text-gray-500 uppercase">
-                  Lobbying spend
-                </span>
-                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {formatCorpusDollars(orgsData.corpusLobbying.windowTotal)}
-                </p>
-              </div>
-            )}
+        {orgsData?.corpusLobbying && (
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div>
-              <span className="text-xs tracking-wider text-gray-500 uppercase">Active PACs</span>
+              <span className="text-xs tracking-wider text-gray-500 uppercase">Lobbying spend</span>
               <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {orgsData.metrics.activePACCount}
+                {formatCorpusDollars(orgsData.corpusLobbying.windowTotal)}
               </p>
             </div>
             <div>
               <span className="text-xs tracking-wider text-gray-500 uppercase">Lobbying orgs</span>
               <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {orgsData.metrics.activeLobbyingOrgCount}
+                {orgsData.corpusLobbying.organizationCount.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <span className="text-xs tracking-wider text-gray-500 uppercase">Filings</span>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {orgsData.corpusLobbying.filingCount.toLocaleString()}
               </p>
             </div>
           </div>
@@ -488,8 +483,12 @@ function EnforcementLandscape({
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
         <div>
-          <span className="text-xs tracking-wider text-gray-500 uppercase">Total actions</span>
-          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stats.totalActions}</p>
+          <span className="text-xs tracking-wider text-gray-500 uppercase">
+            {stats.totalIsLowerBound ? 'Actions found (at least)' : 'Total actions'}
+          </span>
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {stats.totalActions.toLocaleString()}
+          </p>
         </div>
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">Total penalties</span>

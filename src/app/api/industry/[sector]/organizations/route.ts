@@ -22,6 +22,7 @@ import {
 import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-map';
 import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import { getSectorCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
+import { forEachFilingForIssues } from '@/lib/data-sources/lda-corpus/load-filings';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,15 +38,14 @@ interface IndustryOrganizationsResponse {
     totalSpending: number;
     filingCount: number;
   }>;
-  metrics: {
-    totalLobbyingSpending: number;
-    activePACCount: number;
-    activeLobbyingOrgCount: number;
-  };
-  // Corpus-backed lobbying totals for the sector's issue areas (complete Senate
-  // LDA corpus, not the sample that feeds topLobbyingOrgs/totalLobbyingSpending).
+  // Corpus-backed lobbying figures for the sector's issue areas (complete Senate
+  // LDA corpus, not the API first-page sample that feeds topLobbyingOrgs).
   corpusLobbying?: {
     windowTotal: number;
+    /** Distinct organizations filing on the sector's issue codes, counted once. */
+    organizationCount: number;
+    /** Filings touching the sector's issue codes, counted once. */
+    filingCount: number;
     quarters: string[];
     quarterly: Array<{ quarter: string; total: number }>;
     byIssue: Array<{ code: string; label: string; windowTotal: number }>;
@@ -88,6 +88,28 @@ interface LDAFilingResult {
   client: { id: number; name: string };
   income: string | null;
   expenses: string | null;
+}
+
+/**
+ * How many organizations and filings the sector's issue codes actually cover,
+ * from the complete filing corpus. Null when the corpus is unavailable.
+ *
+ * Counted here rather than read off the aggregates because IssueQuarterAgg.orgCount
+ * is per issue x quarter: an organization lobbying on three of a sector's codes
+ * across four quarters would be counted twelve times. The filing reader visits a
+ * filing citing several of the codes once, and names are deduped as they arrive
+ * so nothing larger than the two sets is ever held.
+ */
+async function countSectorFilings(
+  issueCodes: string[]
+): Promise<{ organizationCount: number; filingCount: number } | null> {
+  const organizations = new Set<string>();
+  let filingCount = 0;
+  const available = await forEachFilingForIssues(issueCodes, filing => {
+    filingCount += 1;
+    organizations.add(filing.clientName.trim().toUpperCase());
+  });
+  return available ? { organizationCount: organizations.size, filingCount } : null;
 }
 
 export async function GET(
@@ -200,25 +222,21 @@ export async function GET(
             filingCount: org.filingCount,
           }));
 
-        const totalLobbyingSpending = [...lobbyingMap.values()].reduce(
-          (sum, org) => sum + org.totalSpending,
-          0
-        );
-
-        const corpusTotals = await getSectorCorpusTotals(getSectorIssueCodes(sector));
+        const issueCodes = getSectorIssueCodes(sector);
+        const [corpusTotals, corpusScale] = await Promise.all([
+          getSectorCorpusTotals(issueCodes),
+          countSectorFilings(issueCodes),
+        ]);
 
         return {
           topPACs,
           topLobbyingOrgs,
-          metrics: {
-            totalLobbyingSpending,
-            activePACCount: topPACs.length,
-            activeLobbyingOrgCount: lobbyingMap.size,
-          },
-          ...(corpusTotals
+          ...(corpusTotals && corpusScale
             ? {
                 corpusLobbying: {
                   windowTotal: corpusTotals.windowTotal,
+                  organizationCount: corpusScale.organizationCount,
+                  filingCount: corpusScale.filingCount,
                   quarters: corpusTotals.quarters,
                   quarterly: corpusTotals.quarterly,
                   byIssue: corpusTotals.byIssue,

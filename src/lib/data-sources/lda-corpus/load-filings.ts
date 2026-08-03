@@ -59,6 +59,8 @@ interface FilingIndex {
   byOrganization?: Map<string, number[]>;
   /** quarter key → row positions. */
   byQuarter?: Map<string, number[]>;
+  /** LDA issue code → row positions. */
+  byIssue?: Map<string, number[]>;
 }
 
 // undefined = not yet loaded; null = corpus unavailable.
@@ -129,6 +131,18 @@ function indexByQuarter(file: FilingCorpusFile): Map<string, number[]> {
   return map;
 }
 
+/** Build the issue index: one entry per issue code a filing reports lobbying on. */
+function indexByIssue(file: FilingCorpusFile): Map<string, number[]> {
+  const map = new Map<string, number[]>();
+  for (let i = 0; i < file.rows.length; i++) {
+    for (const c of file.rows[i]![4]) {
+      const code = file.issues[c];
+      if (code) push(map, code, i);
+    }
+  }
+  return map;
+}
+
 /** Normalize an organization name to its index key. Empty when unusable. */
 function orgKey(name: string): string {
   return normalizeCompanyName(name) || name.trim().toUpperCase();
@@ -165,7 +179,7 @@ async function loadIndex(): Promise<FilingIndex | null> {
 /** Memoized index accessor — builds the requested index on first use only. */
 function indexBy(
   index: FilingIndex,
-  key: 'byCommittee' | 'byOrganization' | 'byQuarter'
+  key: 'byCommittee' | 'byOrganization' | 'byQuarter' | 'byIssue'
 ): Map<string, number[]> {
   const existing = index[key];
   if (existing) return existing;
@@ -176,7 +190,9 @@ function indexBy(
       ? indexByCommittee(index.file)
       : key === 'byOrganization'
         ? indexByOrganization(index.file)
-        : indexByQuarter(index.file);
+        : key === 'byQuarter'
+          ? indexByQuarter(index.file)
+          : indexByIssue(index.file);
   index[key] = built;
 
   logger.info('[LdaFilings] Index built', {
@@ -269,6 +285,27 @@ export async function forEachFilingForQuarters(
   visitPositions(
     index,
     quarters.map(q => byQuarter.get(q)),
+    visit
+  );
+  return true;
+}
+
+/**
+ * Visit every filing reporting lobbying on one of these LDA issue codes. A
+ * filing citing several of them is visited once, so counting inside the callback
+ * gives a deduped figure rather than the per-issue sum the aggregates carry.
+ */
+export async function forEachFilingForIssues(
+  issueCodes: string[],
+  visit: (filing: CorpusFiling) => void
+): Promise<boolean> {
+  const index = await loadIndex();
+  if (!index) return false;
+
+  const byIssue = indexBy(index, 'byIssue');
+  visitPositions(
+    index,
+    issueCodes.map(code => byIssue.get(code)),
     visit
   );
   return true;

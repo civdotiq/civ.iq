@@ -284,8 +284,8 @@ export function IssueTopicPage({
           Topic clustering uses Congress.gov policy-area codes plus FEC industry classifications. A
           bill may appear under multiple topics. Industry contributions reflect cached vote-finance
           insights computed from individual representative profiles.
-          {orgs?.metrics
-            ? ` Lobby roll-up: ${orgs.metrics.activeLobbyingOrgCount} registrants in recent filings.`
+          {orgs?.corpusLobbying
+            ? ` Lobby roll-up: ${orgs.corpusLobbying.organizationCount.toLocaleString()} organizations across ${orgs.corpusLobbying.filingCount.toLocaleString()} filings on these issue areas, from the complete Senate LDA corpus.`
             : ''}
           {/* Slug echo for QA traceability */}
           <span style={{ display: 'none' }}>{slug}</span>
