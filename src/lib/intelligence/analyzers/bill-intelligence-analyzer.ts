@@ -628,8 +628,11 @@ async function generateNarrative(
       ? `Among ${cosponsorSummary.analyzedCosponsors} analyzed cosponsors (of ${cosponsorSummary.totalCosponsors} total), the average sector-related contribution percentage was ${cosponsorSummary.avgSectorDonationPercentage.toFixed(1)}%.`
       : `Cosponsor contribution data is not available.`;
 
-  // Dollar amount omitted: lobbyingSpending sums a ~0.1% LDA filing sample
-  // (fetchFilingsByQuarter), so the figure is misleading (PLAN-lobbying-corpus-2026-07.md).
+  // Dollar amount still omitted, but the reason has changed. lobbyingSpending
+  // used to sum a ~0.1% LDA sample; it now comes from the complete corpus via
+  // analyzeLobbyingPipeline, so the figure is sound. What is left is a wording
+  // question — committee-referral spending is not spending "on this bill" —
+  // rather than a data one. Restoring it is a narrative change, not a fix.
   const lobbyingInfo =
     lobbyingOrgs > 0
       ? `${lobbyingOrgs} organizations filed lobbying disclosures on the committees this bill was referred to.`
@@ -787,7 +790,8 @@ function buildStatisticalNarrative(
     );
   }
 
-  // Lobbying with org names — dollar omitted (sample-based, see fetchFilingsByQuarter)
+  // Lobbying with org names. The dollar figure is corpus-backed now and could
+  // be shown; it stays out for the wording reason noted in generateNarrative.
   if (lobbyingOrgs > 0) {
     const orgDetail =
       storyContext.topLobbyingOrgNames.length > 0
