@@ -150,6 +150,9 @@ async function computeSimilarityInternal(
     matches: topMatches,
     averageSimilarity,
     hasStrongMatches,
+    // Callers pass the LDA API sample: this comparison needs the filings'
+    // free-text specific_issues, which the complete corpus does not carry.
+    coverage: 'sample',
   };
 }
 

@@ -239,7 +239,10 @@ async function computeAndCache(
   const sc = new SourceCollector();
   sc.add('FEC individual filings', `${getCurrentElectionCycle()} cycle`);
   sc.add('Congress.gov bills', '119th Congress');
-  sc.add('Senate LDA filings', '119th Congress', lobbyingOrgs);
+  sc.add('Senate LDA filings (complete corpus)', '119th Congress', lobbyingOrgs);
+  if (lobbyingSimilarity) {
+    sc.add('Senate LDA filings (API sample, for bill-language similarity only)', '119th Congress');
+  }
   if (storyContext.voteOutcome) sc.add('Congress.gov roll calls', '119th Congress');
 
   const insight: BillIntelligenceInsight = {
@@ -260,7 +263,10 @@ async function computeAndCache(
       (usedMLClassification
         ? 'Sectors identified by analyzing the bill text with an embedding model. '
         : 'Sectors mapped via Congress.gov policy areas. ') +
-      'Lobbying data from Senate LDA disclosures matched to bill committees.' +
+      'Lobbying spending and organization counts from the complete Senate LDA corpus, matched to bill committees.' +
+      (lobbyingSimilarity
+        ? ' Bill-language similarity compares against a sample of LDA filings — the first page of each quarter, roughly 0.1% — because the complete corpus does not carry filings’ free-text issue descriptions. A match it reports is real; the absence of one means nothing.'
+        : '') +
       (storyContext.voteOutcome ? ' Vote data from Congress.gov roll calls.' : '') +
       (storyContext.fiscalImpact ? ' Fiscal estimates from CBO.' : ''),
     disclaimer: DISCLAIMER,
@@ -528,6 +534,26 @@ async function getRelatedLobbyingData(
 
 // ── Lobbying Similarity ──────────────────────────────────────────────
 
+/**
+ * The one lobbying path still reading the LDA API sample, deliberately.
+ *
+ * Every other surface moved to the committed corpus, which covers every
+ * quarterly report in its window. This comparison cannot: it embeds each
+ * filing's `specific_issues` — the free-text description of what was lobbied on
+ * — and the corpus does not carry that field. Storing 155k descriptions would
+ * dwarf an artifact that is a megabyte precisely because everything in it
+ * dictionary-encodes, and free text does not.
+ *
+ * The sample is sound for what this does and unsound for what it does not do.
+ * A high-similarity match is real: the language genuinely appears in that
+ * filing. What the result cannot support is any negative or comparative claim —
+ * that no filing matches, that this is the closest, or that a match is
+ * unusually strong — because 25 of ~28,000 rows a quarter were examined.
+ *
+ * The insight's methodology string and its `sources` list say so, and
+ * `BillLobbyingSimilarity.coverage` carries it in the data. Do not aggregate
+ * these matches or count them.
+ */
 async function fetchLobbyingSimilarity(billId: string, billTitle: string, _policyArea: string) {
   try {
     // Fetch recent lobbying filings for the bill's policy area

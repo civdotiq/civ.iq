@@ -545,6 +545,17 @@ export interface BillLobbyingSimilarity {
   matches: LobbyingSimilarityMatch[];
   averageSimilarity: number;
   hasStrongMatches: boolean;
+  /**
+   * What set of filings the language was compared against.
+   *
+   * 'sample' is the LDA list endpoint's first page, ~25 of ~28,000 filings a
+   * quarter. This comparison needs the filings' free-text specific_issues, which
+   * the complete corpus does not carry — 155k descriptions would dwarf the
+   * artifact — so it is the one lobbying surface still reading the sample. A
+   * match it finds is real, because the text really is in that filing; what it
+   * cannot say is that no other filing matches, or that this is the closest one.
+   */
+  coverage: 'sample';
 }
 
 // ── Regulation Node ──────────────────────────────────────────────────

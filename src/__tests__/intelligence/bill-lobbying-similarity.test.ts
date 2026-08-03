@@ -212,4 +212,15 @@ describe('Bill-Lobbying Similarity', () => {
     // Verify the cache key format
     expect(setCalls[0][0]).toContain('lobbying-embedding:filing-1');
   });
+  it('labels its result a sample so no caller aggregates it', async () => {
+    // The corpus carries no free-text specific_issues, so this is the one
+    // lobbying path still reading the LDA API sample.
+    const result = await computeBillLobbyingSimilarity(
+      'hr-1234',
+      'Drug Pricing Act',
+      sampleFilings
+    );
+
+    expect(result?.coverage).toBe('sample');
+  });
 });
