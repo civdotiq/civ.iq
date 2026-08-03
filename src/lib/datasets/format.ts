@@ -67,6 +67,61 @@ export function getContentType(format: FormatType): string {
   return format === 'csv' ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8';
 }
 
+/** Rows per emitted chunk. Large enough to keep syscalls cheap, small enough to bound memory. */
+const STREAM_CHUNK_ROWS = 2000;
+
+/**
+ * Yield a dataset as text chunks instead of one string.
+ *
+ * The complete lobbying corpus is 123,561 rows and roughly 28 MB of CSV.
+ * Building that as a single string holds the whole payload in memory twice — the
+ * array and its serialization — and a serverless function is the wrong place to
+ * do it. Small datasets can still use formatDataset; anything unbounded should
+ * stream.
+ */
+export function* streamDataset(result: DatasetResult, format: FormatType): Generator<string> {
+  const { metadata, data } = result;
+
+  if (format === 'json') {
+    // Hand-assembled so rows serialize in batches rather than all at once. The
+    // envelope matches formatJSON's shape exactly.
+    yield `{\n  "metadata": ${JSON.stringify(metadata, null, 2)},\n  "data": [`;
+    for (let i = 0; i < data.length; i += STREAM_CHUNK_ROWS) {
+      const batch = data.slice(i, i + STREAM_CHUNK_ROWS);
+      yield batch
+        .map((row, j) => (i + j === 0 ? '' : ',') + '\n    ' + JSON.stringify(row))
+        .join('');
+    }
+    yield '\n  ]\n}\n';
+    return;
+  }
+
+  yield [
+    `# Dataset: ${metadata.name}`,
+    `# Source: ${metadata.source} (${metadata.sourceUrl})`,
+    `# Generated: ${metadata.generated}`,
+    `# Records: ${metadata.recordCount}`,
+    `# License: ${metadata.license}`,
+    '#',
+  ].join('\n');
+
+  if (data.length === 0) return;
+
+  yield '\n' + metadata.columns.map(col => escapeCSV(col.label)).join(',');
+
+  for (let i = 0; i < data.length; i += STREAM_CHUNK_ROWS) {
+    const lines: string[] = [];
+    for (const row of data.slice(i, i + STREAM_CHUNK_ROWS)) {
+      lines.push(
+        metadata.columns
+          .map(col => escapeCSV(formatValue((row as Record<string, unknown>)[col.key])))
+          .join(',')
+      );
+    }
+    yield '\n' + lines.join('\n');
+  }
+}
+
 /**
  * Escape CSV special characters
  */

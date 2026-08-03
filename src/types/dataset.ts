@@ -48,6 +48,19 @@ export interface DatasetGenerator {
   columnLabels: string[];
   /** Column key used to identify rows for change detection (e.g. 'bioguideId', 'billNumber') */
   keyColumn: string;
+  /**
+   * Skip snapshot storage and row-level change detection for this dataset.
+   *
+   * Change detection keeps a full copy of the previous version in Redis and
+   * rewrites it on every generation. That is cheap for a few hundred rows and
+   * ruinous for a hundred thousand — a multi-megabyte SET per download request,
+   * on a Redis budget this project has already been suspended for exceeding.
+   *
+   * Set only for datasets that are large AND already carry their own provenance
+   * (a generatedAt stamp and freshness canary), where a row-level diff would
+   * add nothing a consumer could act on.
+   */
+  skipDiff?: boolean;
   generate: () => Promise<DatasetResult | null>;
 }
 

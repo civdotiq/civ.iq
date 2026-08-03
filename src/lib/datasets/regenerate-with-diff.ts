@@ -43,7 +43,13 @@ const MAX_STORED_DIFFS = 100;
 export async function regenerateWithDiff(
   generator: DatasetGenerator
 ): Promise<DatasetResult | null> {
-  const { slug, keyColumn } = generator;
+  const { slug, keyColumn, skipDiff } = generator;
+
+  // Datasets that opt out are generated and returned directly. Storing a
+  // snapshot of one would write megabytes to Redis on every request.
+  if (skipDiff) {
+    return generator.generate();
+  }
 
   // Step 1: Read the previous snapshot from cache
   const snapshotKey = `${SNAPSHOT_PREFIX}${slug}`;

@@ -14,7 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatasetBySlug, DATASET_REGISTRY } from '@/lib/datasets';
-import { formatDataset, getContentType } from '@/lib/datasets/format';
+import { streamDataset, getContentType } from '@/lib/datasets/format';
 import { regenerateWithDiff } from '@/lib/datasets/regenerate-with-diff';
 import type { FormatType } from '@/types/dataset';
 import logger from '@/lib/logging/simple-logger';
@@ -71,7 +71,6 @@ export async function GET(
       );
     }
 
-    const content = formatDataset(result, format);
     const date = new Date().toISOString().split('T')[0];
     const extension = format === 'csv' ? 'csv' : 'json';
     const filename = `${slug}-${date}.${extension}`;
@@ -83,7 +82,24 @@ export async function GET(
       operation: 'dataset_download',
     });
 
-    return new NextResponse(content, {
+    // Streamed rather than serialized into one string. The complete lobbying
+    // corpus is ~124,000 rows and ~28 MB of CSV; buffering that holds the whole
+    // payload in function memory and pushes the response past what a serverless
+    // function should be handing back in one piece.
+    const chunks = streamDataset(result, format);
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const next = chunks.next();
+        if (next.done) controller.close();
+        else controller.enqueue(encoder.encode(next.value));
+      },
+      cancel() {
+        chunks.return(undefined);
+      },
+    });
+
+    return new NextResponse(body, {
       headers: {
         'Content-Type': getContentType(format),
         'Content-Disposition': `attachment; filename="${filename}"`,
