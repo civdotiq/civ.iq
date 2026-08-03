@@ -87,19 +87,53 @@ async function loadDisbursements(
   }
 }
 
-/** Returns the dollar amount, or null when the FEC lookup failed (≠ a real $0). */
+// schedule_e/by_candidate returns one row per spending committee per
+// support/oppose position, so a contested race runs to several hundred rows.
+// A single page silently truncates the sum, which is worse than saying so —
+// page through, bounded, because each page spends the shared FEC budget.
+const IE_PAGE_SIZE = 100;
+const IE_MAX_PAGES = 4;
+
+/**
+ * Total independent expenditures for or against this candidate.
+ *
+ * `complete` is false when the page bound was hit before FEC ran out of rows:
+ * the amount is then a floor, and the caller must not publish it as the total.
+ * Returns null when the lookup failed outright (≠ a real $0).
+ */
 async function loadIndependentExpenditures(
   candidateId: string,
   cycle: number,
   apiKey: string
-): Promise<number | null> {
+): Promise<{ amount: number; complete: boolean } | null> {
   try {
-    const json = await fecGet<{ results?: FecScheduleEByCandidateRow[] }>(
-      `/schedules/schedule_e/by_candidate/?candidate_id=${candidateId}&cycle=${cycle}&per_page=100`,
-      apiKey
-    );
-    const rows = json.results ?? [];
-    return rows.reduce((sum, r) => sum + (Number.isFinite(r.total) ? r.total : 0), 0);
+    let amount = 0;
+    let complete = false;
+
+    for (let page = 1; page <= IE_MAX_PAGES; page++) {
+      const json = await fecGet<{
+        results?: FecScheduleEByCandidateRow[];
+        pagination?: { pages?: number };
+      }>(
+        `/schedules/schedule_e/by_candidate/?candidate_id=${candidateId}&cycle=${cycle}&per_page=${IE_PAGE_SIZE}&page=${page}`,
+        apiKey
+      );
+      const rows = json.results ?? [];
+      amount += rows.reduce((sum, r) => sum + (Number.isFinite(r.total) ? r.total : 0), 0);
+
+      const pages = json.pagination?.pages ?? 1;
+      if (page >= pages || rows.length < IE_PAGE_SIZE) {
+        complete = true;
+        break;
+      }
+    }
+
+    if (!complete) {
+      logger.warn(
+        `[elections/total-spent] schedule_e page bound hit for ${candidateId} — IE total is a floor`
+      );
+    }
+    return { amount, complete };
   } catch (error) {
     logger.warn(
       `[elections/total-spent] schedule_e lookup failed for ${candidateId}: ${(error as Error).message}`
@@ -149,8 +183,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     // Bounded concurrency: each candidate fires 2 FEC calls, so process
     // CANDIDATE_CONCURRENCY candidates at a time instead of all at once.
-    const spends: Array<{ disbursements: number | null; independentExpenditures: number | null }> =
-      [];
+    const spends: Array<{
+      disbursements: number | null;
+      independentExpenditures: { amount: number; complete: boolean } | null;
+    }> = [];
     for (let i = 0; i < ids.length; i += CANDIDATE_CONCURRENCY) {
       const chunk = ids.slice(i, i + CANDIDATE_CONCURRENCY);
       const chunkResults = await Promise.all(
@@ -180,15 +216,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const candidateDisbursements = spends.reduce((a, s) => a + (s.disbursements ?? 0), 0);
     const independentExpenditures = spends.reduce(
-      (a, s) => a + (s.independentExpenditures ?? 0),
+      (a, s) => a + (s.independentExpenditures?.amount ?? 0),
       0
     );
     const total = candidateDisbursements + independentExpenditures;
-    const incomplete = failedCandidates > 0;
+
+    // A truncated IE walk is incomplete for the same reason a failed lookup is:
+    // the published total is under the real one, and must not be cached as final.
+    const truncatedCandidates = spends.filter(
+      s => s.independentExpenditures !== null && !s.independentExpenditures.complete
+    ).length;
+    const incomplete = failedCandidates > 0 || truncatedCandidates > 0;
 
     const payload: ElectionTotalSpentPayload & {
       incomplete?: boolean;
       failedCandidates?: number;
+      truncatedCandidates?: number;
     } = {
       raceId,
       cycle,
@@ -199,7 +242,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         total,
       },
       dataAsOf: new Date().toISOString(),
-      ...(incomplete ? { incomplete: true, failedCandidates } : {}),
+      ...(incomplete ? { incomplete: true, failedCandidates, truncatedCandidates } : {}),
     };
 
     return NextResponse.json(payload, {
