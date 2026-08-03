@@ -63,6 +63,7 @@ function transformFacility(raw: Record<string, string | null>): EpaFacility {
     state: raw['FacState'] ?? '',
     zip: raw['FacZip'] ?? '',
     county: raw['FacCounty'] ?? '',
+    countyFips: raw['FacDerivedStctyFIPS'] ?? '',
     latitude: raw['FacLat'] ? parseFloat(raw['FacLat']) : null,
     longitude: raw['FacLong'] ? parseFloat(raw['FacLong']) : null,
     sicCodes: raw['FacSICCodes'] ?? '',
@@ -130,7 +131,10 @@ export class EpaEchoService {
           const qidParams = new URLSearchParams({
             output: 'JSON',
             qid,
-            qcolumns: '1,2,3,4,5,6,7,15,16,17,18,34,36,41,54,60,68',
+            // 91 is FacDerivedStctyFIPS, the state+county FIPS EPA derives for
+            // each facility — the only field here that joins to the county and
+            // district mappings. FacCounty (7) is a name and is often null.
+            qcolumns: '1,2,3,4,5,6,7,15,16,17,18,34,36,41,54,60,68,91',
             responseset: String(Math.min(limit, 100)),
           });
 

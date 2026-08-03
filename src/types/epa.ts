@@ -24,6 +24,13 @@ export interface EpaFacility {
   state: string;
   zip: string;
   county: string;
+  /**
+   * State+county FIPS EPA derives for the facility (FAC_DERIVED_STCTY_FIPS).
+   * The join key for county and district work — `county` is a bare name and is
+   * null on a noticeable share of rows, while this is populated and matches the
+   * 5-digit codes in county-district-mapping. Empty when EPA has not derived one.
+   */
+  countyFips: string;
   latitude: number | null;
   longitude: number | null;
   sicCodes: string;

@@ -92,7 +92,7 @@ export function registerEnvironmentTools(server: McpServer): void {
     {
       title: 'District environmental profile',
       description:
-        'Environmental profile for a congressional district: regulated facilities, active violations, Superfund sites, toxic releases. Includes serving representative.',
+        'Environmental profile for a congressional district: regulated facilities, active violations and toxic releases, all scoped to the district by county FIPS. Superfund sites are returned STATEWIDE, not per district, because the EPA layer serving them carries no county FIPS. Includes serving representative.',
       inputSchema: {
         stateCode: z.string().length(2).describe('Two-letter state code (e.g., MI)'),
         districtNumber: z
@@ -135,23 +135,13 @@ export function registerEnvironmentTools(server: McpServer): void {
           epaEchoService.getToxicReleases(state),
         ]);
 
-        // Filter facilities by county FIPS (from ZIP prefix match)
-        const countyPrefixes = new Set(countyFipsList.map(f => f.slice(2))); // county part of FIPS
-        const districtFacilities = facilities.filter(f => {
-          // Match by ZIP if facility has one, or by county name
-          for (const countyFips of countyFipsList) {
-            if (f.zip && f.zip.startsWith(countyFips.slice(0, 3))) return true;
-          }
-          return false;
-        });
-
-        // Filter Superfund by county
-        const countyNames = new Set(superfundSites.map(s => s.county.toUpperCase()));
-        const districtSuperfund = superfundSites.filter(s =>
-          countyFipsList.some(fips => {
-            const siteCounty = s.county.toUpperCase();
-            return countyNames.has(siteCounty);
-          })
+        // Filter facilities to the district's counties on EPA's own derived
+        // county FIPS. This previously tested `f.zip.startsWith(fips.slice(0,3))`,
+        // comparing a ZIP against a state FIPS plus one county digit — two
+        // unrelated numbering systems, so the count it produced meant nothing.
+        const districtCountyFips = new Set(countyFipsList);
+        const districtFacilities = facilities.filter(
+          f => f.countyFips && districtCountyFips.has(f.countyFips)
         );
 
         // Filter TRI by county FIPS
@@ -175,15 +165,21 @@ export function registerEnvironmentTools(server: McpServer): void {
           summary: {
             totalRegulatedFacilities: districtFacilities.length,
             facilitiesWithViolations: activeViolations.length,
-            superfundSites: districtSuperfund.length,
             toxicReleaseFacilities: districtTri.length,
+            // Superfund is reported STATEWIDE, and named so. The GIS layer gives
+            // sites a county name and an empty fips_code, and nothing here maps
+            // a county name to the FIPS the district mapping uses — so these
+            // cannot be narrowed to the district. The previous field claimed to
+            // be district-scoped and was filtered by a predicate that was always
+            // true, which returned the statewide list under a district label.
+            statewideSuperfundSites: superfundSites.length,
             // ECHO caps the statewide search at a 100-row responseset and the
             // district filter runs over whatever that returned, so a populous
             // state's district count is a floor.
             coverage: coverageFor(facilities.length, ECHO_FACILITY_CAP, 'regulated facilities'),
           },
           facilities: districtFacilities.slice(0, 20),
-          superfundSites: districtSuperfund,
+          statewideSuperfundSites: superfundSites,
           toxicReleases: districtTri.slice(0, 20),
           metadata: {
             generatedAt: new Date().toISOString(),
