@@ -18,7 +18,11 @@ import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-se
 import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
 import { fdicService } from '@/lib/data-sources/fdic-service';
 import { nhtsaService } from '@/lib/data-sources/nhtsa-service';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  describeCorpusCoverage,
+  getCommitteeLobbyingFromCorpus,
+} from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import { getCommitteesForAgency } from '@civiq/entity-resolution';
 import { entitiesMatch } from '@civiq/entity-resolution';
@@ -283,8 +287,7 @@ export function registerIntelligenceTools(server: McpServer): void {
         }
 
         // Get lobbying data for the sector
-        let lobbyingData: Awaited<ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>> =
-          [];
+        let lobbyingData: CommitteeLobbyingData[] = [];
         try {
           // Map sector name to likely committee topics
           const committeeTopics = [sector];
@@ -293,7 +296,7 @@ export function registerIntelligenceTools(server: McpServer): void {
           if (sectorLower.includes('finance')) committeeTopics.push('Banking', 'Finance');
           if (sectorLower.includes('defense')) committeeTopics.push('Armed Services');
 
-          lobbyingData = await senateLobbyingAPI.getCommitteeLobbyingData(committeeTopics);
+          lobbyingData = (await getCommitteeLobbyingFromCorpus(committeeTopics)) ?? [];
         } catch (e) {
           logger.warn('Lobbying data fetch failed for industry landscape', {
             error: (e as Error).message,
@@ -319,11 +322,13 @@ export function registerIntelligenceTools(server: McpServer): void {
           regulatory: regulatoryData,
           agenciesChecked,
           lobbying: {
+            coverage: await describeCorpusCoverage(),
             committees: lobbyingData.map(l => ({
               committee: l.committee,
               totalSpending: l.totalSpending,
               companyCount: l.companyCount,
-              topFilers: l.filings.slice(0, 5),
+              filingCount: l.filingCount,
+              topFilers: (l.companies ?? []).slice(0, 5),
             })),
           },
           oversightCommittees,
@@ -383,13 +388,10 @@ export function registerIntelligenceTools(server: McpServer): void {
         }
 
         // Get lobbying data for related committee topics
-        let lobbyingData: Awaited<ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>> =
-          [];
+        let lobbyingData: CommitteeLobbyingData[] = [];
         try {
           if (mapping.topics.length > 0) {
-            lobbyingData = await senateLobbyingAPI.getCommitteeLobbyingData(
-              mapping.topics.slice(0, 5)
-            );
+            lobbyingData = (await getCommitteeLobbyingFromCorpus(mapping.topics.slice(0, 5))) ?? [];
           }
         } catch (e) {
           logger.warn('Lobbying data fetch failed for policy area ecosystem', {
@@ -424,11 +426,13 @@ export function registerIntelligenceTools(server: McpServer): void {
           federalRegisterKeywords: mapping.federalRegisterKeywords,
           agencyOversight: agencyCommittees,
           lobbying: {
+            coverage: await describeCorpusCoverage(),
             committees: lobbyingData.map(l => ({
               committee: l.committee,
               totalSpending: l.totalSpending,
               companyCount: l.companyCount,
-              topFilers: l.filings.slice(0, 5),
+              filingCount: l.filingCount,
+              topFilers: (l.companies ?? []).slice(0, 5),
             })),
           },
           committeeMembers: {

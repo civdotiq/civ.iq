@@ -15,7 +15,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { getAgenciesForCommittee, type AgencyInfo } from '@/lib/connections/committee-agency-map';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { getCommitteeLobbyingFromCorpus } from '@/lib/data-sources/lda-corpus/committee-lobbying';
 import {
   toCanonicalId,
   toEdgeId,
@@ -180,45 +180,22 @@ async function hydrateLobbyingActivity(
   const edges: GraphEdge[] = [];
 
   try {
-    const lobbyingData = await senateLobbyingAPI.getCommitteeLobbyingData([committeeCode]);
+    // Corpus only. The API path returns the LDA's first 25 filings, from which
+    // the top-20 lobbying organizations of a committee cannot be known — the
+    // graph would assert 20 "lobbied" edges drawn from 0.09% of the record.
+    // No corpus means no edges.
+    const lobbyingData = await getCommitteeLobbyingFromCorpus([committeeCode]);
     if (!lobbyingData || lobbyingData.length === 0) return { nodes, edges };
 
-    // Aggregate lobbying by org — take top 20
-    const orgSpending = new Map<
-      string,
-      { total: number; earliestQuarter: string; latestQuarter: string }
-    >();
-    for (const data of lobbyingData) {
-      const filings = data.filings ?? [];
-      for (const filing of filings) {
-        const orgName = filing.company?.trim();
-        if (!orgName) continue;
-        const key = orgName.toUpperCase();
-        const existing = orgSpending.get(key) ?? {
-          total: 0,
-          earliestQuarter: '',
-          latestQuarter: '',
-        };
-        existing.total += filing.amount ?? 0;
-        const period = filing.year && filing.quarter ? `${filing.year}-${filing.quarter}` : '';
-        if (period && (!existing.earliestQuarter || period < existing.earliestQuarter)) {
-          existing.earliestQuarter = period;
-        }
-        if (period && period > existing.latestQuarter) {
-          existing.latestQuarter = period;
-        }
-        orgSpending.set(key, existing);
-      }
-    }
+    // Company rollups already cover every filing, so no re-aggregation here —
+    // `filings` is capped and would undercount.
+    const sorted = (lobbyingData[0]?.companies ?? []).slice(0, 20);
 
-    const sorted = Array.from(orgSpending.entries())
-      .sort(([, a], [, b]) => b.total - a.total)
-      .slice(0, 20);
+    const maxSpend = sorted[0]?.totalSpending ?? 1;
 
-    const maxSpend = sorted[0]?.[1]?.total ?? 1;
-
-    for (const [orgName, orgData] of sorted) {
-      const spending = orgData.total;
+    for (const orgData of sorted) {
+      const orgName = orgData.name.trim().toUpperCase();
+      const spending = orgData.totalSpending;
       const orgId = toCanonicalId('organization', normalizeOrgName(orgName));
       const displayName = toTitleCase(orgName);
 

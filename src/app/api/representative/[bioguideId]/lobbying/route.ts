@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { getMemberLobbyingFromCorpus } from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import { getLDAIssueLabel } from '@civiq/entity-resolution';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
@@ -243,170 +244,67 @@ export async function GET(
         async () => {
           logger.info('Fetching committee lobbying data', { bioguideId, committees });
 
-          const committeeLobbyingData =
-            await senateLobbyingAPI.getCommitteeLobbyingData(committees);
+          // Corpus only. The API path this used to call returns the LDA's first
+          // 25 filings of a quarter, from which a member's lobbying picture
+          // cannot be assembled — the totals, the top-10 organizations and the
+          // quarterly trend were all computed from about 0.09% of the record.
+          // No corpus means no lobbying section, not a thinner one.
+          const rollup = await getMemberLobbyingFromCorpus(committees);
 
-          if (committeeLobbyingData.length === 0) {
-            logger.info('No lobbying data found for representative committees', {
+          if (!rollup) {
+            logger.info('No corpus lobbying data for representative committees', {
               bioguideId,
               committees,
             });
             return null;
           }
 
-          // De-duplicate filings across committees
-          const uniqueFilingMap = new Map<
-            string,
-            {
-              id: string;
-              company: string;
-              registrantId: string;
-              amount: number;
-              issues: string[];
-              quarter: string;
-              year: number;
-              committees: string[];
-            }
-          >();
+          const topCompanies = rollup.topCompanies.slice(0, 10).map(c => ({
+            name: c.name,
+            registrantId: c.registrantId,
+            totalSpending: c.totalSpending,
+            committees: c.committees,
+            recentFilings: c.filingCount,
+          }));
 
-          committeeLobbyingData.forEach(committeeData => {
-            committeeData.filings.forEach(filing => {
-              const existing = uniqueFilingMap.get(filing.id);
-              if (!existing) {
-                uniqueFilingMap.set(filing.id, {
-                  id: filing.id,
-                  company: filing.company,
-                  registrantId: filing.registrantId,
-                  amount: filing.amount,
-                  issues: filing.issues,
-                  quarter: filing.quarter,
-                  year: filing.year,
-                  committees: [committeeData.committee],
-                });
-              } else if (!existing.committees.includes(committeeData.committee)) {
-                existing.committees.push(committeeData.committee);
-              }
-            });
-          });
+          const committeeBreakdown = rollup.committeeBreakdown.map(c => ({
+            committee: c.committee,
+            totalSpending: c.attributedSpending,
+            companyCount: c.companyCount,
+            // The corpus stores LDA issue codes; every surface downstream
+            // (SectorLink, /industry/{sector}) keys on the human label the API
+            // path used to return.
+            topIssues: c.topIssues.map(code => getLDAIssueLabel(code) || code),
+          }));
 
-          const uniqueFilings = Array.from(uniqueFilingMap.values());
-          const totalRelevantSpending = uniqueFilings.reduce(
-            (sum, filing) => sum + filing.amount,
-            0
-          );
-
-          const allCompanies: Record<
-            string,
-            {
-              totalSpending: number;
-              committees: Set<string>;
-              filings: number;
-              registrantId: string | null;
-            }
-          > = {};
-
-          uniqueFilings.forEach(filing => {
-            if (!allCompanies[filing.company]) {
-              allCompanies[filing.company] = {
-                totalSpending: 0,
-                committees: new Set(),
-                filings: 0,
-                registrantId: filing.registrantId ?? null,
-              };
-            }
-            const company = allCompanies[filing.company];
-            if (company) {
-              company.totalSpending += filing.amount;
-              filing.committees.forEach(c => company.committees.add(c));
-              company.filings += 1;
-              if (!company.registrantId && filing.registrantId) {
-                company.registrantId = filing.registrantId;
-              }
-            }
-          });
-
-          const topCompanies = Object.entries(allCompanies)
-            .map(([name, data]) => ({
-              name,
-              registrantId: data.registrantId,
-              totalSpending: data.totalSpending,
-              committees: Array.from(data.committees),
-              recentFilings: data.filings,
-            }))
-            .sort((a, b) => b.totalSpending - a.totalSpending)
-            .slice(0, 10);
-
-          // Proportional attribution for committee breakdown
-          const committeeBreakdown = committeeLobbyingData.map(committeeResult => {
-            let attributedSpending = 0;
-            committeeResult.filings.forEach(filing => {
-              const uniqueFiling = uniqueFilingMap.get(filing.id);
-              const matchedCommitteeCount = uniqueFiling?.committees.length ?? 1;
-              attributedSpending += filing.amount / matchedCommitteeCount;
-            });
-
+          // Only quarters the corpus actually covers. Projecting a fixed
+          // two-year window would draw a zero bar for a quarter whose filings
+          // are not due yet and read as "nobody lobbied".
+          const quarterlyTrend = rollup.quarters.map(key => {
+            const [year, quarter] = key.split('-');
             return {
-              committee: committeeResult.committee,
-              totalSpending: attributedSpending,
-              companyCount: committeeResult.companyCount,
-              topIssues: Array.from(new Set(committeeResult.filings.flatMap(f => f.issues))).slice(
-                0,
-                5
-              ),
+              quarter: quarter ?? key,
+              year: Number(year) || 0,
+              spending: rollup.quarterTotals[key] ?? 0,
             };
           });
 
-          // Trend over the full fetched window (last year + current year up to
-          // the current quarter) — must stay in sync with fetchRecentFilings.
-          const currentYear = new Date().getFullYear();
-          const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
-          const quarterLabels = [
-            'first_quarter',
-            'second_quarter',
-            'third_quarter',
-            'fourth_quarter',
-          ];
-          const quarterlyTrend = [];
-          for (const year of [currentYear - 1, currentYear]) {
-            for (let q = 1; q <= 4; q++) {
-              if (year === currentYear && q > currentQuarter) continue;
-
-              const quarterSpending = uniqueFilings
-                .filter(f => f.year === year && f.quarter === quarterLabels[q - 1])
-                .reduce((sum, f) => sum + f.amount, 0);
-
-              quarterlyTrend.push({
-                quarter: `Q${q}`,
-                year,
-                spending: quarterSpending,
-              });
-            }
-          }
-
           // Industry breakdown by filing count, not dollars
-          const issueFilingCount: Record<string, number> = {};
-          uniqueFilings.forEach(filing => {
-            const issues = filing.issues.length > 0 ? filing.issues : ['Other'];
-            issues.forEach(issue => {
-              issueFilingCount[issue] = (issueFilingCount[issue] || 0) + 1;
-            });
-          });
-
-          const totalFilings = uniqueFilings.length;
-          const industryBreakdown = Object.entries(issueFilingCount)
+          const industryBreakdown = Object.entries(rollup.issueFilingCounts)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 6)
-            .map(([industry, filingCount]) => ({
-              industry,
+            .map(([code, filingCount]) => ({
+              industry: getLDAIssueLabel(code) || code,
               filingCount,
-              percentage: totalFilings > 0 ? (filingCount / totalFilings) * 100 : 0,
+              percentage: rollup.filingCount > 0 ? (filingCount / rollup.filingCount) * 100 : 0,
             }));
 
           return {
-            totalRelevantSpending,
-            affectedCommittees: committeeLobbyingData.length,
+            totalRelevantSpending: rollup.totalSpending,
+            affectedCommittees: rollup.committeeBreakdown.length,
             topCompanies,
             committeeBreakdown,
+            coverage: 'complete' as const,
             summary: { quarterlyTrend, industryBreakdown },
           };
         },

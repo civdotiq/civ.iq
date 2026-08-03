@@ -36,12 +36,8 @@ import {
 } from '@/lib/connections/committee-agency-map';
 import { searchAgencyRules } from '@/lib/data-sources/federal-register-service';
 import { regulationsGovService } from '@/lib/data-sources/regulations-gov-service';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
-import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
-import {
-  resolveFilingEntities,
-  getResolvedCommittees,
-} from '../entity-resolution/lobbying-committee-resolver';
+import { forEachFilingForCommittees } from '@/lib/data-sources/lda-corpus/load-filings';
+import type { CorpusFiling } from '@/lib/data-sources/lda-corpus/filing-corpus';
 import { peerComparison, confidenceScore, MIN_PEERS } from '../statistics/civic-stats';
 import { LINK_CONFIDENCE } from '../confidence-constants';
 import type { RegulationInsight, RegulationNode, PeerComparison } from '../types';
@@ -228,7 +224,7 @@ async function computeAndCache(
     methodology:
       'Regulations identified via Federal Register API, filtered by agency. ' +
       'Agency-committee oversight mapped via committee-agency-map. ' +
-      'Lobbying-comment overlap detected by matching LDA filing organizations against Regulations.gov commenters. ' +
+      'Lobbying-comment overlap detected by matching organizations in the complete LDA corpus against Regulations.gov commenters. ' +
       'Data from Federal Register API and Senate LDA disclosures.',
     disclaimer: DISCLAIMER,
     signal: classifySignal({
@@ -261,31 +257,21 @@ async function findLobbyingCommentOverlap(
   committeeCodes: string[],
   regulations: RegulationNode[]
 ): Promise<LobbyingCommentOverlapEntry[]> {
-  // Get lobbying filings that mention the overseeing committees
-  let allFilings: Awaited<ReturnType<typeof senateLobbyingAPI.fetchRecentFilings>>;
-  try {
-    allFilings = await senateLobbyingAPI.fetchRecentFilings();
-  } catch {
-    logger.warn('[Regulation] Failed to fetch LDA filings for overlap check');
-    return [];
-  }
-
-  // Find organizations lobbying the committees that oversee this agency
+  // Organizations lobbying the committees that oversee this agency, from the
+  // complete corpus. This used to read fetchRecentFilings() — 25 filings a
+  // quarter — and resolve their government entities at request time. Whether
+  // any of those 25 also commented on one of this agency's rules was close to
+  // chance, so the overlap signal was noise. Committee attribution now comes
+  // resolved from the corpus build.
   const lobbyingOrgs = new Map<string, number>();
 
-  for (const filing of allFilings) {
-    if (!Array.isArray(filing.government_entities) || filing.government_entities.length === 0) {
-      continue;
-    }
+  const available = await forEachFilingForCommittees(committeeCodes, (filing: CorpusFiling) => {
+    lobbyingOrgs.set(filing.clientName, (lobbyingOrgs.get(filing.clientName) ?? 0) + filing.amount);
+  });
 
-    const resolutions = resolveFilingEntities(filing.government_entities);
-    const resolvedCommittees = getResolvedCommittees(resolutions);
-
-    const mentionsTarget = resolvedCommittees.some(c => committeeCodes.includes(c.committeeCode));
-    if (mentionsTarget) {
-      const orgName = filing.client.name;
-      lobbyingOrgs.set(orgName, (lobbyingOrgs.get(orgName) ?? 0) + reportedFilingAmount(filing));
-    }
+  if (!available) {
+    logger.info('[Regulation] Corpus unavailable for lobbying-comment overlap');
+    return [];
   }
 
   if (lobbyingOrgs.size === 0) return [];

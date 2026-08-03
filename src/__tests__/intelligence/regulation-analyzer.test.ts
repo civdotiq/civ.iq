@@ -56,16 +56,11 @@ jest.mock('@/lib/data-sources/regulations-gov-service', () => ({
   },
 }));
 
-const mockFetchRecentFilings = jest.fn();
-jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
-  senateLobbyingAPI: {
-    fetchRecentFilings: (...args: unknown[]) => mockFetchRecentFilings(...args),
-  },
-}));
-
-jest.mock('@/lib/intelligence/entity-resolution/lobbying-committee-resolver', () => ({
-  resolveFilingEntities: jest.fn().mockReturnValue([]),
-  getResolvedCommittees: jest.fn().mockReturnValue([{ committeeCode: 'HSIF' }]),
+// The analyzer reads the committed LDA corpus. Mocked so the suite does not
+// depend on data/lda-filings.json.br, and so corpus-unavailable is testable.
+const mockForEachFiling = jest.fn();
+jest.mock('@/lib/data-sources/lda-corpus/load-filings', () => ({
+  forEachFilingForCommittees: (...args: unknown[]) => mockForEachFiling(...args),
 }));
 
 jest.mock('@/lib/connections/committee-agency-map', () => ({
@@ -162,18 +157,23 @@ function makeFRDocs(count: number) {
   }));
 }
 
-function makeFilings(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    filing_uuid: `filing-${i}`,
-    filing_type: 'First Mid-Year Report',
-    filingYear: 2025,
-    income: 50000 + i * 10000,
-    client: { name: `Environmental Org ${i}` },
-    registrant: { name: `Lobby Firm ${i}` },
-    government_entities: [{ name: 'House Committee on Energy and Commerce' }],
-    issues: [{ code: 'ENV', description: 'Environmental' }],
-    specific_issues: ['Clean air standards'],
-  }));
+/** Make forEachFilingForCommittees visit `count` corpus rows. */
+function visitFilings(count: number) {
+  return (_codes: string[], visit: (filing: unknown) => void) => {
+    for (let i = 0; i < count; i++) {
+      visit({
+        clientName: `Environmental Org ${i}`,
+        registrantId: `${100 + i}`,
+        registrantName: `Lobby Firm ${i}`,
+        quarter: '2025-Q2',
+        amount: 50000 + i * 10000,
+        issueCodes: ['ENV'],
+        governmentEntities: ['HOUSE COMMITTEE ON ENERGY AND COMMERCE'],
+        committeeCodes: ['HSIF'],
+      });
+    }
+    return Promise.resolve(true);
+  };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ describe('analyzeRegulations', () => {
     mockRedisGet.mockResolvedValue(null); // No cache
     mockRedisSet.mockResolvedValue(undefined);
     mockRedisMget.mockResolvedValue([]);
-    mockFetchRecentFilings.mockResolvedValue([]);
+    mockForEachFiling.mockImplementation(visitFilings(0));
     mockGetOrganizationComments.mockResolvedValue({ comments: [], total: 0 });
   });
 
@@ -227,7 +227,7 @@ describe('analyzeRegulations', () => {
 
   it('computes insight with sufficient regulation data', async () => {
     mockSearchAgencyRules.mockResolvedValueOnce(makeFRDocs(5));
-    mockFetchRecentFilings.mockResolvedValueOnce(makeFilings(3));
+    mockForEachFiling.mockImplementationOnce(visitFilings(3));
 
     const result = await analyzeRegulations('environmental-protection-agency');
 
@@ -264,7 +264,7 @@ describe('analyzeRegulations', () => {
 
   it('detects lobbying-comment overlap', async () => {
     mockSearchAgencyRules.mockResolvedValueOnce(makeFRDocs(5));
-    mockFetchRecentFilings.mockResolvedValueOnce(makeFilings(3));
+    mockForEachFiling.mockImplementationOnce(visitFilings(3));
     mockGetOrganizationComments.mockResolvedValue({ comments: [{ id: 'c1' }], total: 2 });
 
     const result = await analyzeRegulations('environmental-protection-agency');
@@ -274,9 +274,9 @@ describe('analyzeRegulations', () => {
     expect(result?.lobbyingCommentOverlap).toBeDefined();
   });
 
-  it('handles lobbying fetch failure gracefully', async () => {
+  it('reports no overlap rather than a sample when the corpus is unavailable', async () => {
     mockSearchAgencyRules.mockResolvedValueOnce(makeFRDocs(4));
-    mockFetchRecentFilings.mockRejectedValueOnce(new Error('LDA API down'));
+    mockForEachFiling.mockResolvedValueOnce(false);
 
     const result = await analyzeRegulations('environmental-protection-agency');
 

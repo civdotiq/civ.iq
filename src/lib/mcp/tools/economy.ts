@@ -38,7 +38,11 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { entitiesMatch } from '@civiq/entity-resolution';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  describeCorpusCoverage,
+  getCommitteeLobbyingFromCorpus,
+} from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
@@ -150,14 +154,14 @@ export function registerEconomyTools(server: McpServer): void {
         const energyProfile = await eiaService.getStateEnergyProfile(state);
 
         // Get energy sector lobbying data
-        let energyLobbying: Awaited<ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>> =
-          [];
+        let energyLobbying: CommitteeLobbyingData[] = [];
         try {
-          energyLobbying = await senateLobbyingAPI.getCommitteeLobbyingData([
-            'Energy',
-            'Energy and Commerce',
-            'Energy and Natural Resources',
-          ]);
+          energyLobbying =
+            (await getCommitteeLobbyingFromCorpus([
+              'Energy',
+              'Energy and Commerce',
+              'Energy and Natural Resources',
+            ])) ?? [];
         } catch (e) {
           logger.warn('Could not fetch lobbying data for energy analysis', {
             error: (e as Error).message,
@@ -165,11 +169,15 @@ export function registerEconomyTools(server: McpServer): void {
         }
 
         // Entity resolution: match top energy sources to lobbying registrants
+        // `companies` is the per-organization rollup over every filing; `filings`
+        // is capped for memory, so matching against it would only see the
+        // biggest spenders.
         const lobbyingEntities = new Set<string>();
         for (const committee of energyLobbying) {
-          for (const filing of committee.filings) {
-            lobbyingEntities.add(filing.company);
-          }
+          const names = committee.companies
+            ? committee.companies.map(c => c.name)
+            : committee.filings.map(f => f.company);
+          for (const name of names) lobbyingEntities.add(name);
         }
 
         const topSourceNames = (energyProfile?.topSources ?? []).slice(0, 5).map(s => s.source);
@@ -242,11 +250,13 @@ export function registerEconomyTools(server: McpServer): void {
             hasEnergyOversight: energyCommittees.length > 0,
           },
           lobbyingContext: {
+            coverage: await describeCorpusCoverage(),
             energyRelatedLobbying: energyLobbying.map(l => ({
               committee: l.committee,
               totalSpending: l.totalSpending,
               companyCount: l.companyCount,
-              topFilers: l.filings.slice(0, 5),
+              filingCount: l.filingCount,
+              topFilers: (l.companies ?? []).slice(0, 5),
             })),
           },
           recentEnergyLegislation: energyBills,

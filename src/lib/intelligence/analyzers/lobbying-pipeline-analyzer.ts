@@ -36,16 +36,12 @@ import {
   ALL_COMMITTEE_MAPPINGS,
   type CommitteeMapping,
 } from '@/lib/connections/committee-agency-map';
-import { senateLobbyingAPI, type LobbyingFiling } from '@/lib/data-sources/senate-lobbying-api';
-import { reportedFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
+import { forEachFilingForCommittees } from '@/lib/data-sources/lda-corpus/load-filings';
+import type { CorpusFiling } from '@/lib/data-sources/lda-corpus/filing-corpus';
 import {
   getCommitteeCorpusTotals,
   getAllCommitteeWindowTotals,
 } from '@/lib/data-sources/lda-corpus/load';
-import {
-  resolveFilingEntities,
-  getResolvedCommittees,
-} from '../entity-resolution/lobbying-committee-resolver';
 import {
   getLDAIssueLabel,
   getPolicyAreasForLDAIssue,
@@ -56,14 +52,12 @@ import {
   MIN_FILINGS_LOBBYING,
   MIN_PEERS,
 } from '../statistics/civic-stats';
-import { classifyStance } from '../embeddings/stance-classifier';
 import type {
   LobbyingPipelineInsight,
   LobbyingOrganizationActivity,
   MatchedBill,
   TimelineAlignment,
   PeerComparison,
-  StanceClassification,
 } from '../types';
 
 /** Redis cache TTL: 7 days */
@@ -126,7 +120,7 @@ async function computeAndCache(
   }
 
   // 4. Compute statistics
-  const stats = await computeStatistics(data);
+  const stats = computeStatistics(data);
 
   // 4b. Prefer the complete corpus total over the ~0.1% sample for the dollar
   // figure that drives peer ranking, the signal, and caching. The sample still
@@ -156,7 +150,7 @@ async function computeAndCache(
   const { narrative, source } = await generateNarrative(committeeMapping, stats, peer);
 
   const sc = new SourceCollector();
-  sc.add('Senate LDA filings', '119th Congress', data.matchedFilings.length);
+  sc.add('Senate LDA filings', 'complete corpus', data.filingCount);
   sc.add('Congress.gov bills', '119th Congress', stats.matchedBillCount);
 
   const insight: LobbyingPipelineInsight = {
@@ -182,10 +176,10 @@ async function computeAndCache(
     confidenceMethod: 'computed',
     dataAsOf: freshestDate(
       ...stats.issueAlignments.flatMap(a => a.matchedBills.map(b => b.introducedDate)),
-      ...data.matchedFilings.map(f => `${f.filingYear}-12-31`)
+      ...data.quarters.map(quarterEndDate)
     )!,
     methodology:
-      'Lobbying filings matched to committees via entity resolution of LDA government_entities field. ' +
+      'Complete Senate LDA quarterly reports for the corpus window, matched to committees via entity resolution of the LDA government_entities field and issue-code jurisdiction. ' +
       'Bills matched via LDA issue code to Congress.gov policyArea mapping. ' +
       'Data from Senate LDA disclosures and Congress.gov.',
     disclaimer: DISCLAIMER,
@@ -210,64 +204,127 @@ async function computeAndCache(
 
 // ── Data Fetching & Resolution ───────────────────────────────────────
 
-interface ResolvedData {
-  matchedFilings: LobbyingFiling[];
-  totalFilings: number;
+/** Last day of a corpus quarter key ("2026-Q1" → "2026-03-31"), for dataAsOf. */
+function quarterEndDate(quarter: string): string {
+  const [year, q] = quarter.split('-');
+  const ends: Record<string, string> = { Q1: '03-31', Q2: '06-30', Q3: '09-30', Q4: '12-31' };
+  return `${year}-${ends[q ?? ''] ?? '12-31'}`;
 }
 
+interface ResolvedData {
+  /** Per-organization rollups over every filing touching the committee. */
+  organizations: Array<{
+    name: string;
+    registrantId?: string;
+    spending: number;
+    filingCount: number;
+    issueCodes: string[];
+  }>;
+  /** Per-issue rollups over the same filings. */
+  issues: Array<{ code: string; spending: number; organizationCount: number }>;
+  totalSpending: number;
+  /** Distinct filings behind the rollups. */
+  filingCount: number;
+  /** Quarter keys covered, oldest first. */
+  quarters: string[];
+}
+
+/**
+ * Read the committee's filings from the corpus.
+ *
+ * This used to call `fetchRecentFilings()` and keep the rows whose disclosed
+ * government entities resolved to the committee — 25 filings a quarter, of which
+ * a handful matched, from which the analyzer then ranked "top organizations".
+ * The dollar total was already corrected from the aggregate corpus; everything
+ * else on the card still came from the sample.
+ *
+ * Returns null when the corpus is unavailable. The analyzer is a
+ * complete-record claim about who lobbies a committee — there is no honest
+ * degraded version of it.
+ */
 async function fetchAndResolve(
   committeeCode: string,
   _mapping: CommitteeMapping
 ): Promise<ResolvedData | null> {
-  let allFilings: LobbyingFiling[];
-  try {
-    allFilings = await senateLobbyingAPI.fetchRecentFilings();
-  } catch {
-    logger.warn('[LobbyingPipeline] Failed to fetch LDA filings', { committeeCode });
+  const orgMap = new Map<
+    string,
+    { spending: number; filingCount: number; issueCodes: Set<string>; registrantId?: string }
+  >();
+  const issueMap = new Map<string, { spending: number; orgs: Set<string> }>();
+  const quarters = new Set<string>();
+  let totalSpending = 0;
+  let filingCount = 0;
+
+  const available = await forEachFilingForCommittees([committeeCode], (filing: CorpusFiling) => {
+    totalSpending += filing.amount;
+    filingCount += 1;
+    quarters.add(filing.quarter);
+
+    let org = orgMap.get(filing.clientName);
+    if (!org) {
+      org = { spending: 0, filingCount: 0, issueCodes: new Set() };
+      orgMap.set(filing.clientName, org);
+    }
+    org.spending += filing.amount;
+    org.filingCount += 1;
+    // Only an organization filing on its own behalf has a lobby profile to link.
+    if (
+      !org.registrantId &&
+      filing.registrantName.toLowerCase() === filing.clientName.toLowerCase()
+    ) {
+      org.registrantId = filing.registrantId;
+    }
+
+    for (const code of filing.issueCodes) {
+      org.issueCodes.add(code);
+      let issue = issueMap.get(code);
+      if (!issue) {
+        issue = { spending: 0, orgs: new Set() };
+        issueMap.set(code, issue);
+      }
+      issue.spending += filing.amount;
+      issue.orgs.add(filing.clientName);
+    }
+  });
+
+  if (!available) {
+    logger.info('[LobbyingPipeline] Corpus unavailable', { committeeCode });
     return null;
   }
 
-  if (allFilings.length === 0) {
-    logger.info('[LobbyingPipeline] No filings available', { committeeCode });
-    return null;
-  }
-
-  // Resolve government_entities in each filing and filter to those mentioning target committee
-  const matchedFilings: LobbyingFiling[] = [];
-
-  for (const filing of allFilings) {
-    if (!Array.isArray(filing.government_entities) || filing.government_entities.length === 0) {
-      continue;
-    }
-
-    const resolutions = resolveFilingEntities(filing.government_entities);
-    const resolvedCommittees = getResolvedCommittees(resolutions);
-
-    const mentionsTarget = resolvedCommittees.some(c => c.committeeCode === committeeCode);
-    if (mentionsTarget) {
-      matchedFilings.push(filing);
-    }
-  }
-
-  if (matchedFilings.length < MIN_FILINGS_LOBBYING) {
+  if (filingCount < MIN_FILINGS_LOBBYING) {
     logger.info('[LobbyingPipeline] Insufficient filings for committee', {
       committeeCode,
-      matchedCount: matchedFilings.length,
+      matchedCount: filingCount,
       minimum: MIN_FILINGS_LOBBYING,
     });
     return null;
   }
 
-  logger.info('[LobbyingPipeline] Entity resolution complete', {
+  logger.info('[LobbyingPipeline] Resolved committee filings from corpus', {
     committeeCode,
-    totalFilings: allFilings.length,
-    matchedFilings: matchedFilings.length,
+    filingCount,
+    organizations: orgMap.size,
   });
 
-  return { matchedFilings, totalFilings: allFilings.length };
+  return {
+    organizations: Array.from(orgMap.entries()).map(([name, o]) => ({
+      name,
+      ...(o.registrantId ? { registrantId: o.registrantId } : {}),
+      spending: o.spending,
+      filingCount: o.filingCount,
+      issueCodes: Array.from(o.issueCodes),
+    })),
+    issues: Array.from(issueMap.entries()).map(([code, i]) => ({
+      code,
+      spending: i.spending,
+      organizationCount: i.orgs.size,
+    })),
+    totalSpending,
+    filingCount,
+    quarters: Array.from(quarters).sort(),
+  };
 }
-
-// ── Statistical Computation ──────────────────────────────────────────
 
 interface ComputedStats {
   totalSpending: number;
@@ -278,123 +335,49 @@ interface ComputedStats {
   confidence: number;
 }
 
-async function computeStatistics(data: ResolvedData): Promise<ComputedStats> {
-  const { matchedFilings } = data;
-
-  // Group by organization
-  const orgMap = new Map<
-    string,
-    { spending: number; filingCount: number; issueCodes: Set<string>; registrantId?: string }
-  >();
-
-  for (const filing of matchedFilings) {
-    const orgName = filing.client.name;
-    const existing = orgMap.get(orgName) ?? { spending: 0, filingCount: 0, issueCodes: new Set() };
-    existing.spending += reportedFilingAmount(filing);
-    existing.filingCount += 1;
-    // Track registrant ID for self-lobbying orgs (registrant === client)
-    if (
-      !existing.registrantId &&
-      filing.registrant?.name &&
-      filing.registrant.name.toLowerCase() === filing.client.name.toLowerCase()
-    ) {
-      existing.registrantId = filing.registrant.id;
-    }
-    for (const issue of filing.issues) {
-      existing.issueCodes.add(issue.code);
-    }
-    orgMap.set(orgName, existing);
-  }
-
-  const topOrganizations: LobbyingOrganizationActivity[] = Array.from(orgMap.entries())
-    .map(([name, data]) => ({
-      name,
-      registrantId: data.registrantId,
-      totalSpending: data.spending,
-      filingCount: data.filingCount,
-      issueCodes: Array.from(data.issueCodes),
+function computeStatistics(data: ResolvedData): ComputedStats {
+  const topOrganizations: LobbyingOrganizationActivity[] = data.organizations
+    .map(o => ({
+      name: o.name,
+      registrantId: o.registrantId,
+      totalSpending: o.spending,
+      filingCount: o.filingCount,
+      issueCodes: o.issueCodes,
     }))
     .sort((a, b) => b.totalSpending - a.totalSpending)
     .slice(0, 15);
 
-  // Classify stance for top organizations using their specific_issues text
-  await classifyOrganizationStances(topOrganizations, matchedFilings);
+  // Organization stance is not set on this path. Classifying it needs the
+  // filings' free-text specific_issues, which the corpus does not carry —
+  // 155k descriptions would dwarf the artifact. Rather than classify a stance
+  // from whichever unrelated 25 filings the API sample happens to return,
+  // organizations go out without one.
 
-  const totalSpending = Array.from(orgMap.values()).reduce((sum, o) => sum + o.spending, 0);
-  const organizationCount = orgMap.size;
-
-  // Group by LDA issue code
-  const issueMap = new Map<string, { spending: number; orgs: Set<string> }>();
-
-  for (const filing of matchedFilings) {
-    for (const issue of filing.issues) {
-      const existing = issueMap.get(issue.code) ?? { spending: 0, orgs: new Set() };
-      existing.spending += reportedFilingAmount(filing);
-      existing.orgs.add(filing.client.name);
-      issueMap.set(issue.code, existing);
-    }
-  }
-
-  // Build issue alignments (bills fetched separately)
-  const issueAlignments: TimelineAlignment[] = Array.from(issueMap.entries())
-    .map(([code, data]) => ({
-      issueCode: code,
-      issueLabel: getLDAIssueLabel(code),
-      lobbyingSpending: data.spending,
-      organizationCount: data.orgs.size,
+  const issueAlignments: TimelineAlignment[] = data.issues
+    .map(i => ({
+      issueCode: i.code,
+      issueLabel: getLDAIssueLabel(i.code),
+      lobbyingSpending: i.spending,
+      organizationCount: i.organizationCount,
       matchedBills: [], // Populated in fetchAndMatchBills
     }))
     .sort((a, b) => b.lobbyingSpending - a.lobbyingSpending);
 
   const confidence = confidenceScore({
-    sampleSize: matchedFilings.length,
+    sampleSize: data.filingCount,
     minimumSampleSize: MIN_FILINGS_LOBBYING,
     dataCompleteness: Math.min(issueAlignments.length / 3, 1),
     peerCount: 0, // Updated after peer comparison
   });
 
   return {
-    totalSpending,
-    organizationCount,
+    totalSpending: data.totalSpending,
+    organizationCount: data.organizations.length,
     matchedBillCount: 0, // Updated after bill fetch
     topOrganizations,
     issueAlignments,
     confidence,
   };
-}
-
-// ── Stance Classification ────────────────────────────────────────────
-
-async function classifyOrganizationStances(
-  orgs: LobbyingOrganizationActivity[],
-  filings: LobbyingFiling[]
-): Promise<void> {
-  // Build a map of org name → concatenated specific_issues text
-  const orgIssueText = new Map<string, string>();
-  for (const filing of filings) {
-    const issues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
-    if (issues.length === 0) continue;
-    const orgName = filing.client.name;
-    const existing = orgIssueText.get(orgName) ?? '';
-    orgIssueText.set(orgName, existing + ' ' + issues.join(' '));
-  }
-
-  // Classify stance for each top org (non-blocking, best-effort)
-  const stancePromises = orgs.map(async org => {
-    const text = orgIssueText.get(org.name)?.trim();
-    if (!text || text.length < 20) return; // Skip if insufficient text
-
-    try {
-      const stance = await classifyStance(text.substring(0, 1000), 'lobbying');
-      if (stance) {
-        org.stance = stance;
-      }
-    } catch {
-      // Non-fatal — org just won't have stance data
-    }
-  });
-
-  await Promise.all(stancePromises);
 }
 
 // ── Bill Fetching & Matching ─────────────────────────────────────────

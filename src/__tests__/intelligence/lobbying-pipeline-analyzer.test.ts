@@ -95,16 +95,12 @@ jest.mock('@/lib/connections/committee-agency-map', () => ({
   ],
 }));
 
-const mockFetchRecentFilings = jest.fn();
-jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
-  senateLobbyingAPI: {
-    fetchRecentFilings: (...args: unknown[]) => mockFetchRecentFilings(...args),
-  },
-}));
-
-jest.mock('@/lib/intelligence/entity-resolution/lobbying-committee-resolver', () => ({
-  resolveFilingEntities: jest.fn().mockReturnValue([]),
-  getResolvedCommittees: jest.fn().mockReturnValue([{ committeeCode: 'HSEN' }]),
+// The analyzer reads the committed LDA corpus, where committee attribution is
+// already resolved. Mocked so the suite does not depend on
+// data/lda-filings.json.br, and so corpus-unavailable is testable.
+const mockForEachFiling = jest.fn();
+jest.mock('@/lib/data-sources/lda-corpus/load-filings', () => ({
+  forEachFilingForCommittees: (...args: unknown[]) => mockForEachFiling(...args),
 }));
 
 jest.mock('@/lib/intelligence/entity-resolution/lda-issue-policy-map', () => ({
@@ -124,14 +120,23 @@ import { analyzeLobbyingPipeline } from '@/lib/intelligence/analyzers/lobbying-p
 
 // ── Test Data ─────────────────────────────────────────────────────
 
-function makeFilings(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    filing_uuid: `filing-${i}`,
-    client: { name: `Org ${i % 5}` },
-    income: 100000 + i * 10000,
-    government_entities: [{ name: 'Energy and Commerce' }],
-    issues: [{ code: 'HCR', description: 'Health Care' }],
-  }));
+/** Make forEachFilingForCommittees visit `count` corpus rows. */
+function visitFilings(count: number) {
+  return (_codes: string[], visit: (filing: unknown) => void) => {
+    for (let i = 0; i < count; i++) {
+      visit({
+        clientName: `Org ${i % 5}`,
+        registrantId: `${200 + i}`,
+        registrantName: `Org ${i % 5}`,
+        quarter: '2025-Q2',
+        amount: 100000 + i * 10000,
+        issueCodes: ['HCR'],
+        governmentEntities: ['ENERGY AND COMMERCE'],
+        committeeCodes: ['HSEN'],
+      });
+    }
+    return Promise.resolve(true);
+  };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -143,7 +148,7 @@ describe('analyzeLobbyingPipeline', () => {
     mockRedisSet.mockResolvedValue(undefined);
     mockRedisKeys.mockResolvedValue([]);
     mockRedisMget.mockResolvedValue([]);
-    mockFetchRecentFilings.mockResolvedValue(makeFilings(20));
+    mockForEachFiling.mockImplementation(visitFilings(20));
   });
 
   it('returns cached insight on cache hit', async () => {
@@ -152,7 +157,7 @@ describe('analyzeLobbyingPipeline', () => {
 
     const result = await analyzeLobbyingPipeline('HSEN');
     expect(result).toEqual(cached);
-    expect(mockFetchRecentFilings).not.toHaveBeenCalled();
+    expect(mockForEachFiling).not.toHaveBeenCalled();
   });
 
   it('returns null for unknown committee code', async () => {
@@ -161,14 +166,20 @@ describe('analyzeLobbyingPipeline', () => {
   });
 
   it('returns null when no filings found', async () => {
-    mockFetchRecentFilings.mockResolvedValue([]);
+    mockForEachFiling.mockImplementation(visitFilings(0));
 
     const result = await analyzeLobbyingPipeline('HSEN');
     expect(result).toBeNull();
   });
 
+  it('returns null rather than a sample when the filing corpus is unavailable', async () => {
+    mockForEachFiling.mockResolvedValue(false);
+
+    expect(await analyzeLobbyingPipeline('HSEN')).toBeNull();
+  });
+
   it('returns null when fewer than MIN_FILINGS_LOBBYING matched', async () => {
-    mockFetchRecentFilings.mockResolvedValue(makeFilings(2));
+    mockForEachFiling.mockImplementation(visitFilings(2));
 
     const result = await analyzeLobbyingPipeline('HSEN');
     expect(result).toBeNull();

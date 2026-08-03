@@ -335,6 +335,17 @@ export async function searchOrganizationNames(
   return { matches: matches.slice(0, limit), total: matches.length };
 }
 
+/**
+ * The committees the corpus attributes filings to, as code → name. Callers
+ * resolving a committee name or topic to a corpus code need to know which codes
+ * exist; a code the corpus has never seen means no data, not zero spending.
+ */
+export async function getFilingCorpusCommittees(): Promise<Map<string, string> | null> {
+  const index = await loadIndex();
+  if (!index) return null;
+  return new Map(index.file.committees);
+}
+
 export interface FilingCorpusMeta {
   generatedAt: string;
   latestFilingPosted: string | null;

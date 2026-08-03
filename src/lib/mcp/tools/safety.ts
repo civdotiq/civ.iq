@@ -40,7 +40,11 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { STATE_FIPS } from '@/app/api/districts/census-helpers';
 import { entitiesMatch } from '@civiq/entity-resolution';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  describeCorpusCoverage,
+  getCommitteeLobbyingFromCorpus,
+} from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
@@ -621,26 +625,24 @@ export function registerSafetyTools(server: McpServer): void {
         }
 
         // Get lobbying data for finance-related topics
-        let financeLobbying: Awaited<
-          ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>
-        > = [];
+        let financeLobbying: CommitteeLobbyingData[] = [];
         try {
-          financeLobbying = await senateLobbyingAPI.getCommitteeLobbyingData([
-            'Banking',
-            'Finance',
-          ]);
+          financeLobbying = (await getCommitteeLobbyingFromCorpus(['Banking', 'Finance'])) ?? [];
         } catch (e) {
           logger.warn('Could not fetch lobbying data for consumer protection analysis', {
             error: (e as Error).message,
           });
         }
 
-        // Extract all lobbying registrant/client names
+        // Extract all lobbying registrant/client names. `companies` is the
+        // rollup over every filing; `filings` is capped for memory, so matching
+        // against it would only see the biggest spenders.
         const lobbyingEntities = new Set<string>();
         for (const committee of financeLobbying) {
-          for (const filing of committee.filings) {
-            lobbyingEntities.add(filing.company);
-          }
+          const names = committee.companies
+            ? committee.companies.map(c => c.name)
+            : committee.filings.map(f => f.company);
+          for (const name of names) lobbyingEntities.add(name);
         }
 
         // Entity resolution: fuzzy match CFPB companies to lobbying registrants
@@ -714,11 +716,13 @@ export function registerSafetyTools(server: McpServer): void {
             hasFinanceOversight: financeCommittees.length > 0,
           },
           lobbyingContext: {
+            coverage: await describeCorpusCoverage(),
             financeRelatedLobbying: financeLobbying.map(l => ({
               committee: l.committee,
               totalSpending: l.totalSpending,
               companyCount: l.companyCount,
-              topFilers: l.filings.slice(0, 5),
+              filingCount: l.filingCount,
+              topFilers: (l.companies ?? []).slice(0, 5),
             })),
           },
           relevantPolicyArea: 'Finance and Financial Sector',

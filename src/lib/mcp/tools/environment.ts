@@ -24,7 +24,11 @@ import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { sicToSector } from '@civiq/entity-resolution';
 import { getCommitteesForAgency } from '@/lib/connections/committee-agency-map';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  describeCorpusCoverage,
+  getCommitteeLobbyingFromCorpus,
+} from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
@@ -267,14 +271,10 @@ export function registerEnvironmentTools(server: McpServer): void {
         );
 
         // Get lobbying data for environment-related topics
-        let environmentLobbying: Awaited<
-          ReturnType<typeof senateLobbyingAPI.getCommitteeLobbyingData>
-        > = [];
+        let environmentLobbying: CommitteeLobbyingData[] = [];
         try {
-          environmentLobbying = await senateLobbyingAPI.getCommitteeLobbyingData([
-            'Environment',
-            'Energy',
-          ]);
+          environmentLobbying =
+            (await getCommitteeLobbyingFromCorpus(['Environment', 'Energy'])) ?? [];
         } catch (e) {
           logger.warn('Could not fetch lobbying data for environmental analysis', {
             error: (e as Error).message,
@@ -298,11 +298,13 @@ export function registerEnvironmentTools(server: McpServer): void {
             hasEpaOversight: committeeOverlap.length > 0,
           },
           lobbyingContext: {
+            coverage: await describeCorpusCoverage(),
             environmentRelatedLobbying: environmentLobbying.map(l => ({
               committee: l.committee,
               totalSpending: l.totalSpending,
               companyCount: l.companyCount,
-              topFilers: l.filings.slice(0, 5),
+              filingCount: l.filingCount,
+              topFilers: (l.companies ?? []).slice(0, 5),
             })),
           },
           disclaimer:

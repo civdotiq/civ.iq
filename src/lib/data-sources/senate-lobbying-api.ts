@@ -109,7 +109,13 @@ function transformRawFiling(raw: RawLDAFiling): LobbyingFiling {
   };
 }
 
-export type MatchingMethod = 'keyword' | 'embedding' | 'fallback';
+/**
+ * How a filing set was attributed to a committee. The first three are this
+ * module's own tiers, applied to the API sample. 'corpus' means the attribution
+ * was resolved at corpus build time over the complete filing set — see
+ * lda-corpus/committee-lobbying.ts.
+ */
+export type MatchingMethod = 'keyword' | 'embedding' | 'fallback' | 'corpus';
 
 export interface CommitteeLobbyingData {
   committee: string;
@@ -117,6 +123,39 @@ export interface CommitteeLobbyingData {
   companyCount: number;
   matchingMethod: MatchingMethod;
   matchConfidence: number;
+  /**
+   * What record the numbers describe. 'sample' is the LDA list endpoint's first
+   * page — about 0.09% of a quarter — and any surface presenting it must say so.
+   * 'complete' is the corpus mirror.
+   */
+  coverage: 'complete' | 'sample';
+  /** Corpus committee code, when attribution came from the corpus. */
+  committeeCode?: string;
+  /** Corpus committee name, when attribution came from the corpus. */
+  committeeName?: string;
+  /**
+   * True number of filings behind the totals. The corpus path caps `filings`
+   * for memory, so `filings.length` is not the count.
+   */
+  filingCount?: number;
+  /**
+   * Per-company rollups over every filing, largest first. Corpus path only —
+   * consumers that need company rankings should prefer this over `filings`,
+   * which is capped.
+   */
+  companies?: Array<{
+    name: string;
+    registrantId: string;
+    totalSpending: number;
+    filingCount: number;
+    issueCodes: string[];
+    earliestQuarter: string;
+    latestQuarter: string;
+  }>;
+  /** Issue code → number of filings disclosing it, over every filing. Corpus only. */
+  issueFilingCounts?: Record<string, number>;
+  /** Quarter key ("2026-Q1") → total spending, over every filing. Corpus only. */
+  quarterTotals?: Record<string, number>;
   filings: Array<{
     id: string;
     company: string;
@@ -661,6 +700,7 @@ export class SenateLobbyingAPI {
           companyCount: uniqueCompanies.size,
           matchingMethod: method,
           matchConfidence: confidence,
+          coverage: 'sample',
           filings: filings.sort((a, b) => b.amount - a.amount),
         });
       }
