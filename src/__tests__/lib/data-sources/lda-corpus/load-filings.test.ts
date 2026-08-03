@@ -5,8 +5,12 @@
 
 import { brotliCompressSync } from 'node:zlib';
 import {
+  forEachFiling,
   forEachFilingForCommittees,
+  forEachFilingForOrganization,
+  forEachFilingForQuarters,
   getFilingCorpusMeta,
+  searchOrganizationNames,
   __resetFilingCorpusCache,
 } from '@/lib/data-sources/lda-corpus/load-filings';
 import type { CorpusFiling, FilingCorpusFile } from '@/lib/data-sources/lda-corpus/filing-corpus';
@@ -128,6 +132,117 @@ describe('load-filings', () => {
     await Promise.all([collect(['HSWM']), collect(['SSFI']), collect(['HSWM'])]);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('finds an organization by its client name, normalizing punctuation and suffixes', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    const available = await forEachFilingForOrganization('ACME CLIENT, INC.', f => found.push(f));
+
+    expect(available).toBe(true);
+    expect(found.map(f => f.clientName)).toEqual(['Acme Client Inc']);
+  });
+
+  it('finds an organization by its registrant name too', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    await forEachFilingForOrganization('Acme Government Affairs LLC', f => found.push(f));
+
+    expect(found.map(f => f.registrantName)).toEqual(['Acme Government Affairs LLC']);
+  });
+
+  it('visits a self-filing organization once, not twice', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    await forEachFilingForOrganization('Beta Corp', f => found.push(f));
+
+    expect(found).toHaveLength(1);
+    expect(found[0]!.amount).toBe(90000);
+  });
+
+  it('reports availability with no visits for an unknown organization', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    const available = await forEachFilingForOrganization('Nonexistent Holdings', f =>
+      found.push(f)
+    );
+
+    expect(available).toBe(true);
+    expect(found).toHaveLength(0);
+  });
+
+  it('selects filings by quarter', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    await forEachFilingForQuarters(['2025-Q4'], f => found.push(f));
+
+    expect(found.map(f => f.clientName)).toEqual(['Beta Corp']);
+  });
+
+  it('visits every filing once across several quarters', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    await forEachFilingForQuarters(['2025-Q4', '2026-Q1'], f => found.push(f));
+
+    expect(found.map(f => f.quarter)).toEqual(['2025-Q4', '2026-Q1']);
+  });
+
+  it('scans the whole table for bulk export', async () => {
+    mockCorpusResponse();
+
+    const found: CorpusFiling[] = [];
+    const available = await forEachFiling(f => found.push(f));
+
+    expect(available).toBe(true);
+    expect(found).toHaveLength(2);
+  });
+
+  it('searches organization names against the dictionaries', async () => {
+    mockCorpusResponse();
+
+    const result = await searchOrganizationNames('acme');
+
+    expect(result).toEqual({
+      total: 2,
+      matches: [
+        { name: 'Acme Government Affairs LLC', role: 'registrant' },
+        { name: 'Acme Client Inc', role: 'client' },
+      ],
+    });
+  });
+
+  it('returns a name recorded as both registrant and client once', async () => {
+    mockCorpusResponse();
+
+    const result = await searchOrganizationNames('Beta Corp', { op: 'eq' });
+
+    expect(result!.matches).toEqual([{ name: 'Beta Corp', role: 'registrant' }]);
+  });
+
+  it('caps organization search results at the requested limit but reports the total', async () => {
+    mockCorpusResponse();
+
+    const result = await searchOrganizationNames('c', { limit: 1 });
+
+    expect(result!.matches).toHaveLength(1);
+    expect(result!.total).toBeGreaterThan(1);
+  });
+
+  it('signals unavailable from every reader when the corpus cannot be read', async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: false, status: 404 }) as unknown as typeof fetch;
+
+    expect(await forEachFilingForOrganization('Acme Client Inc', () => undefined)).toBe(false);
+    expect(await forEachFilingForQuarters(['2026-Q1'], () => undefined)).toBe(false);
+    expect(await forEachFiling(() => undefined)).toBe(false);
+    expect(await searchOrganizationNames('acme')).toBeNull();
   });
 
   it('exposes provenance for methodology and the freshness canary', async () => {
