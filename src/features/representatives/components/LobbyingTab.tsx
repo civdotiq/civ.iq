@@ -49,6 +49,8 @@ interface LobbyingResponse {
   };
   lobbyingData: {
     affectedCommittees: number;
+    /** Distinct organizations across every filing, not the length of topCompanies. */
+    organizationCount: number;
     topCompanies: LobbyingCompany[];
     committeeBreakdown: CommitteeBreakdownItem[];
     summary?: {
@@ -307,12 +309,19 @@ export function LobbyingTab({ bioguideId, hasCommittees }: LobbyingTabProps) {
         </a>
       </p>
 
-      {/* Summary stats — counts only; sample-based dollar totals are withheld */}
+      {/* Summary stats — counts, not a summed dollar total.
+          A single lobbying-spending figure per member is not a number this data
+          supports: LDA filings disclose committees, agencies and chambers, never
+          individual members, and the average filing is attributed to 5.4
+          committees. Summing a member's committees gives every representative on
+          Energy and Commerce the same $8.95B — 74% of all federal lobbying in the
+          window — regardless of who they are or what they did. Per-committee
+          totals, which do mean something, are in CorpusLobbyingSection below. */}
       {hasLobbyingData && (
         <div className="grid grid-cols-2 gap-3">
           <StatBox
-            value={String(lobbying.topCompanies.length)}
-            label="Organizations in recent filings"
+            value={(lobbying.organizationCount || lobbying.topCompanies.length).toLocaleString()}
+            label="Organizations lobbying these committees"
           />
           <StatBox value={String(lobbying.affectedCommittees)} label="Committees targeted" />
         </div>

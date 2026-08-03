@@ -53,6 +53,14 @@ interface RepresentativeLobbyingResponse {
   lobbyingData: {
     totalRelevantSpending: number;
     affectedCommittees: number;
+    /**
+     * Distinct organizations across every filing touching this member's
+     * committees. Not topCompanies.length — that is a top-N display list and
+     * reports its own cap, which for most members is simply 10.
+     */
+    organizationCount: number;
+    /** Distinct filings behind the figures, each counted once across committees. */
+    filingCount: number;
     topCompanies: Array<{
       name: string;
       registrantId: string | null;
@@ -152,6 +160,8 @@ async function buildCorpusLobbying(
 const EMPTY_LOBBYING_DATA = {
   totalRelevantSpending: 0,
   affectedCommittees: 0,
+  organizationCount: 0,
+  filingCount: 0,
   topCompanies: [],
   committeeBreakdown: [],
   summary: {
@@ -302,6 +312,8 @@ export async function GET(
           return {
             totalRelevantSpending: rollup.totalSpending,
             affectedCommittees: rollup.committeeBreakdown.length,
+            organizationCount: rollup.companyCount,
+            filingCount: rollup.filingCount,
             topCompanies,
             committeeBreakdown,
             coverage: 'complete' as const,

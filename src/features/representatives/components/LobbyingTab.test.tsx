@@ -39,6 +39,7 @@ const makeLobbyingData = () => ({
   lobbyingData: {
     totalRelevantSpending: 5_000_000,
     affectedCommittees: 3,
+    organizationCount: 3_043,
     topCompanies: [
       {
         name: 'Acme Corp',
@@ -124,16 +125,27 @@ describe('LobbyingTab', () => {
     mockUseSWR.mockReset();
   });
 
-  it('renders count-based summary stats and withholds the sample-based dollar total', () => {
+  it('shows the true organization count, not the length of the top-N list', () => {
     setupSWR(
       { data: makeLobbyingData(), error: undefined, isLoading: false },
       { data: undefined, error: undefined, isLoading: false }
     );
     render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
-    expect(screen.getByText('Organizations in recent filings')).toBeInTheDocument();
+    expect(screen.getByText('Organizations lobbying these committees')).toBeInTheDocument();
+    // 3,043 organizations filed; topCompanies holds 3 of them for display.
+    expect(screen.getByText('3,043')).toBeInTheDocument();
     expect(screen.getByText('Committees targeted')).toBeInTheDocument();
-    // The API still returns totalRelevantSpending ($5.0M) but the sample-based
-    // aggregate must not be rendered (PLAN-lobbying-corpus-2026-07.md Phase 0)
+  });
+
+  it('withholds a summed per-member dollar total', () => {
+    setupSWR(
+      { data: makeLobbyingData(), error: undefined, isLoading: false },
+      { data: undefined, error: undefined, isLoading: false }
+    );
+    render(<LobbyingTab bioguideId="T000001" hasCommittees={true} />);
+    // The API returns totalRelevantSpending, but no single figure can describe
+    // lobbying "of" a member: filings disclose committees, not members, and the
+    // average filing is attributed to 5.4 of them. Per-committee totals only.
     expect(screen.queryByText('Total lobbying spending')).not.toBeInTheDocument();
     expect(screen.queryByText('$5.0M')).not.toBeInTheDocument();
   });
@@ -184,6 +196,7 @@ describe('LobbyingTab', () => {
           lobbyingData: {
             totalRelevantSpending: 0,
             affectedCommittees: 0,
+            organizationCount: 0,
             topCompanies: [],
             committeeBreakdown: [],
           },
@@ -456,6 +469,7 @@ describe('LobbyingTab', () => {
       lobbyingData: {
         totalRelevantSpending: 0,
         affectedCommittees: 0,
+        organizationCount: 0,
         topCompanies: [],
         committeeBreakdown: [],
       },
