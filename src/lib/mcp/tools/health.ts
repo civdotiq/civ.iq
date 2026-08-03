@@ -17,7 +17,11 @@ import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
+import { coverageFor } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
+
+/** cms-provider-service requests 200 rows per provider query. */
+const CMS_PROVIDER_CAP = 200;
 
 /** Fetch recent health-related bills directly from Congress.gov API */
 async function fetchHealthBills(limit: number): Promise<unknown[]> {
@@ -255,6 +259,12 @@ export function registerHealthTools(server: McpServer): void {
               }
             : null,
           healthcareInfrastructure: {
+            // CMS serves 200 providers per query and the district filter runs
+            // over that, so a large state's counts are floors.
+            coverage: {
+              hospitals: coverageFor(hospitals.length, CMS_PROVIDER_CAP, 'hospitals'),
+              nursingHomes: coverageFor(nursingHomes.length, CMS_PROVIDER_CAP, 'nursing homes'),
+            },
             hospitals: {
               total: hospitals.length,
               withEmergencyServices: hospitals.filter(h => h.emergencyServices).length,

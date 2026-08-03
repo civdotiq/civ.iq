@@ -30,7 +30,11 @@ import {
 } from '@/lib/data-sources/lda-corpus/committee-lobbying';
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
+import { coverageFor } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
+
+/** ECHO serves at most a 100-row responseset, whatever `limit` asks for. */
+const ECHO_FACILITY_CAP = 100;
 
 export function registerEnvironmentTools(server: McpServer): void {
   // ── Tier 1: Raw EPA facility search ────────────────────────────
@@ -126,7 +130,7 @@ export function registerEnvironmentTools(server: McpServer): void {
 
         // Fetch EPA data for the state (then filter by county overlap)
         const [facilities, superfundSites, toxicReleases] = await Promise.all([
-          epaEchoService.searchFacilities({ state, limit: 100 }),
+          epaEchoService.searchFacilities({ state, limit: ECHO_FACILITY_CAP }),
           epaEchoService.getSuperfundSites(state),
           epaEchoService.getToxicReleases(state),
         ]);
@@ -173,6 +177,10 @@ export function registerEnvironmentTools(server: McpServer): void {
             facilitiesWithViolations: activeViolations.length,
             superfundSites: districtSuperfund.length,
             toxicReleaseFacilities: districtTri.length,
+            // ECHO caps the statewide search at a 100-row responseset and the
+            // district filter runs over whatever that returned, so a populous
+            // state's district count is a floor.
+            coverage: coverageFor(facilities.length, ECHO_FACILITY_CAP, 'regulated facilities'),
           },
           facilities: districtFacilities.slice(0, 20),
           superfundSites: districtSuperfund,
@@ -237,7 +245,10 @@ export function registerEnvironmentTools(server: McpServer): void {
         }
 
         // Get facilities with violations in the district
-        const facilities = await epaEchoService.searchFacilities({ state, limit: 100 });
+        const facilities = await epaEchoService.searchFacilities({
+          state,
+          limit: ECHO_FACILITY_CAP,
+        });
         const toxicReleases = await epaEchoService.getToxicReleases(state);
 
         // Filter TRI to district by county FIPS

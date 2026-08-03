@@ -47,7 +47,11 @@ import {
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
+import { coverageFor } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
+
+/** Rows the district disaster profile asks FEMA for. */
+const FEMA_DISASTER_CAP = 200;
 
 export function registerSafetyTools(server: McpServer): void {
   // ── Tier 1: FEMA disaster declaration search ───────────────────
@@ -155,7 +159,7 @@ export function registerSafetyTools(server: McpServer): void {
         const currentYear = new Date().getFullYear();
         const disasters = await femaService.searchDisasters({
           state,
-          limit: 200,
+          limit: FEMA_DISASTER_CAP,
         });
 
         // Filter to lookback period
@@ -263,6 +267,9 @@ export function registerSafetyTools(server: McpServer): void {
             yearsAnalyzed: lookback,
             uniqueDisasters: uniqueDisasterNumbers.length,
             recurringHazards,
+            // Declarations are filtered down from one bounded statewide fetch,
+            // so a disaster-heavy state's district counts are floors.
+            coverage: coverageFor(disasters.length, FEMA_DISASTER_CAP, 'disaster declarations'),
           },
           assistance: {
             totalIndividualHouseholdAssistance: totalIhpApproved,

@@ -45,7 +45,12 @@ import {
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
+import { coverageFor } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
+
+/** Row ceilings these profiles ask their upstream APIs for. */
+const NIH_GRANT_CAP = 50;
+const FDIC_INSTITUTION_CAP = 50;
 
 /** Fetch recent energy-related bills directly from Congress.gov API */
 async function fetchEnergyBills(limit: number): Promise<unknown[]> {
@@ -586,7 +591,7 @@ export function registerEconomyTools(server: McpServer): void {
         );
 
         // Get state NIH grants
-        const grants = await nihReporterService.searchGrants({ state, limit: 50 });
+        const grants = await nihReporterService.searchGrants({ state, limit: NIH_GRANT_CAP });
 
         // Aggregate by institution
         const instMap = new Map<string, { count: number; totalFunding: number }>();
@@ -638,6 +643,9 @@ export function registerEconomyTools(server: McpServer): void {
               }
             : null,
           nihResearch: {
+            // totalFunding is a sum over the grants retrieved, so when the fetch
+            // saturates it is a floor, not the district's NIH funding.
+            coverage: coverageFor(grants.length, NIH_GRANT_CAP, 'grants'),
             totalGrants: grants.length,
             totalFunding,
             topInstitutions: topInstitutions.slice(0, 10),
@@ -773,7 +781,7 @@ export function registerEconomyTools(server: McpServer): void {
 
         // Get state banks and failures in parallel
         const [institutions, failures] = await Promise.all([
-          fdicService.searchInstitutions({ state, limit: 50 }),
+          fdicService.searchInstitutions({ state, limit: FDIC_INSTITUTION_CAP }),
           fdicService.getBankFailures({ state, startYear: new Date().getFullYear() - 10 }),
         ]);
 
@@ -803,6 +811,9 @@ export function registerEconomyTools(server: McpServer): void {
               }
             : null,
           banking: {
+            // totalAssets and totalDeposits are sums over the institutions
+            // retrieved. A state with more banks than the cap reports a floor.
+            coverage: coverageFor(institutions.length, FDIC_INSTITUTION_CAP, 'institutions'),
             totalInstitutions: institutions.length,
             totalAssets,
             totalDeposits,
