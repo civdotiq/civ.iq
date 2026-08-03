@@ -67,8 +67,10 @@ jest.mock('@/lib/data-sources/cfpb-complaint-service', () => ({
   },
 }));
 
+const mockSectorToSicRanges = jest.fn().mockReturnValue([{ start: 29, end: 30 }]);
 jest.mock('@civiq/entity-resolution', () => ({
   sicToSector: jest.fn().mockReturnValue('Energy/Natural Resources'),
+  sectorToSicRanges: (...args: unknown[]) => mockSectorToSicRanges(...args),
   resolveCompanyName: jest.fn().mockReturnValue({
     canonicalName: 'Test Company',
     confidence: 0.9,
@@ -131,6 +133,7 @@ describe('analyzeEnforcement', () => {
     mockSearchEnforcementCases.mockResolvedValue([]);
     mockSearchInspections.mockResolvedValue([]);
     mockSearchComplaints.mockResolvedValue({ complaints: [], total: 0 });
+    mockSectorToSicRanges.mockReturnValue([{ start: 29, end: 30 }]);
   });
 
   it('returns cached insight on cache hit', async () => {
@@ -199,6 +202,29 @@ describe('analyzeEnforcement', () => {
       const result = await analyzeEnforcement({ type: 'organization', name: 'Big Employer' });
 
       expect(mockSearchInspections).toHaveBeenCalledTimes(5);
+      expect(result?.stats.totalIsLowerBound).toBe(true);
+    });
+
+    it('divides OSHA page depth across a sector fanning out to many SIC prefixes', async () => {
+      // Sector scope issues one OSHA query per SIC prefix against a client that
+      // spaces every request, so depth x fan-out has to stay inside the 55s
+      // analyzer budget. Shallower pages still report saturation.
+      mockSectorToSicRanges.mockReturnValue([
+        { start: 10, end: 14 },
+        { start: 29, end: 30 },
+        { start: 46, end: 46 },
+        { start: 49, end: 49 },
+      ]);
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchInspections.mockResolvedValue(makeOSHAInspections(200));
+
+      const result = await analyzeEnforcement({
+        type: 'sector',
+        sector: 'Energy/Natural Resources' as never,
+      });
+
+      // 4 prefixes x floor(5/4)=1 page each, not 4 x 5.
+      expect(mockSearchInspections).toHaveBeenCalledTimes(4);
       expect(result?.stats.totalIsLowerBound).toBe(true);
     });
 

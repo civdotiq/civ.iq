@@ -220,18 +220,24 @@ async function fetchEnforcementActions(
   // Fetch from all agencies in parallel, querying each SIC prefix separately
   const fetchPromises: Promise<AgencyFetch>[] = [];
 
+  // The OSHA walk costs pages x prefixes, and the DOL client spaces every
+  // request by a fixed interval, so a sector fanning out to 8 prefixes would
+  // spend the analyzer's whole 55s budget paging. Depth is therefore divided
+  // across the fan-out: one query pages deep, eight stay shallow and say so.
+  const oshaPages = Math.max(1, Math.floor(OSHA_MAX_PAGES / Math.max(1, sicPrefixes.length)));
+
   if (sicPrefixes.length > 1) {
     // Multiple SIC prefixes: parallel calls per prefix, then deduplicate
     for (const prefix of sicPrefixes) {
       fetchPromises.push(fetchEPAActions(stateFilter, prefix, orgFilter));
-      fetchPromises.push(fetchOSHAActions(stateFilter, prefix, orgFilter));
+      fetchPromises.push(fetchOSHAActions(stateFilter, prefix, orgFilter, oshaPages));
     }
     fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
   } else {
     // Single or no SIC prefix: original behavior
     const sicCodeFilter = sicPrefixes[0];
     fetchPromises.push(fetchEPAActions(stateFilter, sicCodeFilter, orgFilter));
-    fetchPromises.push(fetchOSHAActions(stateFilter, sicCodeFilter, orgFilter));
+    fetchPromises.push(fetchOSHAActions(stateFilter, sicCodeFilter, orgFilter, OSHA_MAX_PAGES));
     fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
   }
 
@@ -301,20 +307,25 @@ async function fetchEPAActions(
  * is walked several pages deep instead of stopping at the first. The walk is
  * still bounded — a large employer has thousands of inspections and this runs
  * inside an analyzer timeout — so a full final page still means "more exist".
+ *
+ * `maxPages` is set by the caller, not fixed here: the sector scope issues one
+ * OSHA query per SIC prefix and they share the same 55s budget and the same
+ * request-spacing floor in the DOL client.
  */
 const OSHA_PAGE_SIZE = 200;
 const OSHA_MAX_PAGES = 5;
 
 async function fetchOSHAActions(
-  state?: string,
-  sicCode?: string,
-  orgName?: string
+  state: string | undefined,
+  sicCode: string | undefined,
+  orgName: string | undefined,
+  maxPages: number
 ): Promise<AgencyFetch> {
   try {
     const inspections: Awaited<ReturnType<typeof oshaService.searchInspections>> = [];
     let saturated = false;
 
-    for (let page = 0; page < OSHA_MAX_PAGES; page++) {
+    for (let page = 0; page < maxPages; page++) {
       const batch = await oshaService.searchInspections({
         state,
         sicCode,
@@ -325,7 +336,7 @@ async function fetchOSHAActions(
       inspections.push(...batch);
       if (batch.length < OSHA_PAGE_SIZE) break;
       // Last page came back full: either continue, or record that we stopped short.
-      if (page === OSHA_MAX_PAGES - 1) saturated = true;
+      if (page === maxPages - 1) saturated = true;
     }
 
     const actions = inspections
