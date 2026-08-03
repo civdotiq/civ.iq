@@ -33,6 +33,7 @@ import {
   getFilingCorpusCommittees,
   getFilingCorpusMeta,
 } from './load-filings';
+import { addVariant, organizationKey, pickDisplayName } from './org-identity';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
 import logger from '@/lib/logging/simple-logger';
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
@@ -111,6 +112,8 @@ interface CompanyAccumulator {
   issueCodes: Set<string>;
   earliestQuarter: string;
   latestQuarter: string;
+  /** Spellings seen for this organization, to pick one for display. */
+  variants: Map<string, number>;
 }
 
 /**
@@ -134,7 +137,11 @@ async function rollUpCommittee(
     filingCount += 1;
     quarterTotals[filing.quarter] = (quarterTotals[filing.quarter] ?? 0) + filing.amount;
 
-    let company = companies.get(filing.clientName);
+    // Keyed on the canonical organization, not the filed spelling — see
+    // org-identity. The row-level `company` and `id` below keep the raw name,
+    // which is what that filing actually says.
+    const key = organizationKey(filing.clientName);
+    let company = companies.get(key);
     if (!company) {
       company = {
         name: filing.clientName,
@@ -144,9 +151,11 @@ async function rollUpCommittee(
         issueCodes: new Set(),
         earliestQuarter: filing.quarter,
         latestQuarter: filing.quarter,
+        variants: new Map(),
       };
-      companies.set(filing.clientName, company);
+      companies.set(key, company);
     }
+    addVariant(company.variants, filing.clientName);
     company.totalSpending += filing.amount;
     company.filingCount += 1;
     if (filing.quarter < company.earliestQuarter) company.earliestQuarter = filing.quarter;
@@ -194,7 +203,7 @@ async function rollUpCommittee(
       .sort((a, b) => b.totalSpending - a.totalSpending)
       .slice(0, MAX_COMPANIES)
       .map(c => ({
-        name: c.name,
+        name: pickDisplayName(c.variants) || c.name,
         registrantId: c.registrantId,
         totalSpending: c.totalSpending,
         filingCount: c.filingCount,
@@ -313,6 +322,9 @@ export async function getMemberLobbyingFromCorpus(
   }
   if (codeToRequested.size === 0) return null;
 
+  // Keyed on the canonical organization (org-identity), so a company that files
+  // under several spellings is one organization here, in the top-orgs list, and
+  // in the sector counts alike.
   const companies = new Map<
     string,
     {
@@ -320,6 +332,7 @@ export async function getMemberLobbyingFromCorpus(
       totalSpending: number;
       filingCount: number;
       committees: Set<string>;
+      variants: Map<string, number>;
     }
   >();
   const perCommittee = new Map<
@@ -342,16 +355,19 @@ export async function getMemberLobbyingFromCorpus(
       issueFilingCounts[issue] = (issueFilingCounts[issue] ?? 0) + 1;
     }
 
-    let company = companies.get(filing.clientName);
+    const orgKey = organizationKey(filing.clientName);
+    let company = companies.get(orgKey);
     if (!company) {
       company = {
         registrantId: filing.registrantId || null,
         totalSpending: 0,
         filingCount: 0,
         committees: new Set(),
+        variants: new Map(),
       };
-      companies.set(filing.clientName, company);
+      companies.set(orgKey, company);
     }
+    addVariant(company.variants, filing.clientName);
     company.totalSpending += filing.amount;
     company.filingCount += 1;
     if (!company.registrantId && filing.registrantId) company.registrantId = filing.registrantId;
@@ -372,7 +388,7 @@ export async function getMemberLobbyingFromCorpus(
         perCommittee.set(code, bucket);
       }
       bucket.attributedSpending += share;
-      bucket.companies.add(filing.clientName);
+      bucket.companies.add(orgKey);
       bucket.filingCount += 1;
       for (const issue of filing.issueCodes) bucket.issues.add(issue);
     }
@@ -387,11 +403,13 @@ export async function getMemberLobbyingFromCorpus(
     totalSpending,
     filingCount,
     companyCount: companies.size,
-    topCompanies: Array.from(companies.entries())
-      .sort(([, a], [, b]) => b.totalSpending - a.totalSpending)
+    topCompanies: Array.from(companies.values())
+      .sort((a, b) => b.totalSpending - a.totalSpending)
       .slice(0, MAX_MEMBER_COMPANIES)
-      .map(([name, c]) => ({
-        name,
+      .map(c => ({
+        // The map key is the canonical form, which is not a name a citizen
+        // should read — show the spelling the organization files under most.
+        name: pickDisplayName(c.variants),
         registrantId: c.registrantId,
         totalSpending: c.totalSpending,
         filingCount: c.filingCount,

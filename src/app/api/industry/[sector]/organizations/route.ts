@@ -23,6 +23,7 @@ import { getIndustrySectorsForPolicyArea } from '@/lib/connections/policy-area-m
 import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
 import { getSectorCorpusTotals } from '@/lib/data-sources/lda-corpus/load';
 import { forEachFilingForIssues } from '@/lib/data-sources/lda-corpus/load-filings';
+import { organizationKey } from '@/lib/data-sources/lda-corpus/org-identity';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,8 +98,12 @@ interface LDAFilingResult {
  * Counted here rather than read off the aggregates because IssueQuarterAgg.orgCount
  * is per issue x quarter: an organization lobbying on three of a sector's codes
  * across four quarters would be counted twelve times. The filing reader visits a
- * filing citing several of the codes once, and names are deduped as they arrive
- * so nothing larger than the two sets is ever held.
+ * filing citing several of the codes once, and organizations are deduped as they
+ * arrive so nothing larger than the one set is ever held.
+ *
+ * Organizations are keyed through org-identity, the same canonical form the
+ * top-orgs list on this page is merged by — otherwise the count and the list
+ * beside it would disagree about what one organization is.
  */
 async function countSectorFilings(
   issueCodes: string[]
@@ -107,7 +112,7 @@ async function countSectorFilings(
   let filingCount = 0;
   const available = await forEachFilingForIssues(issueCodes, filing => {
     filingCount += 1;
-    organizations.add(filing.clientName.trim().toUpperCase());
+    organizations.add(organizationKey(filing.clientName));
   });
   return available ? { organizationCount: organizations.size, filingCount } : null;
 }

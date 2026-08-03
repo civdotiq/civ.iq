@@ -17,7 +17,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { normalizeCompanyName } from '@civiq/entity-resolution';
+import { addVariant, organizationKey, pickDisplayName } from './org-identity';
 import type { CommitteeQuarterAgg, IssueQuarterAgg, LdaAggregates, OrgAgg } from './types';
 
 const TOP_ORGS = 15;
@@ -35,7 +35,7 @@ function mergeTopOrgs(lists: OrgAgg[][], limit = TOP_ORGS): OrgAgg[] {
   >();
   for (const list of lists) {
     for (const o of list) {
-      const key = normalizeCompanyName(o.name) || o.name.trim().toUpperCase();
+      const key = organizationKey(o.name);
       const acc = map.get(key) ?? {
         variants: new Map<string, number>(),
         registrantIds: new Set<string>(),
@@ -44,7 +44,7 @@ function mergeTopOrgs(lists: OrgAgg[][], limit = TOP_ORGS): OrgAgg[] {
       };
       acc.amount += o.amount;
       acc.filings += o.filings;
-      acc.variants.set(o.name, (acc.variants.get(o.name) ?? 0) + 1);
+      addVariant(acc.variants, o.name);
       if (o.registrantId) acc.registrantIds.add(o.registrantId);
       map.set(key, acc);
     }
@@ -53,9 +53,7 @@ function mergeTopOrgs(lists: OrgAgg[][], limit = TOP_ORGS): OrgAgg[] {
     .sort((a, b) => b.amount - a.amount || b.filings - a.filings)
     .slice(0, limit)
     .map(a => ({
-      name: [...a.variants.entries()].sort(
-        (x, y) => y[1] - x[1] || y[0].length - x[0].length
-      )[0]![0],
+      name: pickDisplayName(a.variants),
       registrantId: a.registrantIds.size === 1 ? [...a.registrantIds][0]! : null,
       amount: a.amount,
       filings: a.filings,

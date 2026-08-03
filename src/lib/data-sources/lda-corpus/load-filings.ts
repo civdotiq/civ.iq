@@ -34,8 +34,8 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { brotliDecompress } from 'node:zlib';
 import { promisify } from 'node:util';
-import { normalizeCompanyName } from '@civiq/entity-resolution';
 import logger from '@/lib/logging/simple-logger';
+import { organizationKey } from './org-identity';
 import { decodeFilingRow } from './filing-corpus';
 import type { CorpusFiling, FilingCorpusFile } from './filing-corpus';
 
@@ -143,10 +143,8 @@ function indexByIssue(file: FilingCorpusFile): Map<string, number[]> {
   return map;
 }
 
-/** Normalize an organization name to its index key. Empty when unusable. */
-function orgKey(name: string): string {
-  return normalizeCompanyName(name) || name.trim().toUpperCase();
-}
+/** Normalize an organization name to its index key. */
+const orgKey = organizationKey;
 
 async function loadIndex(): Promise<FilingIndex | null> {
   if (cache !== undefined) return cache;
