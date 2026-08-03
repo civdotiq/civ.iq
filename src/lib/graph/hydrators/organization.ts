@@ -14,12 +14,13 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { fecApiService } from '@/lib/fec/fec-api-service';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
-import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
+import {
+  forEachFilingForOrganization,
+  getFilingCorpusCommittees,
+} from '@/lib/data-sources/lda-corpus/load-filings';
+import type { CorpusFiling } from '@/lib/data-sources/lda-corpus/filing-corpus';
 import { getCurrentElectionCycle } from '@/lib/intelligence/analyzers/shared';
 import {
-  resolveFilingEntities,
-  getResolvedCommittees,
   categorizeContribution,
   getBioguideFromFEC,
   IndustrySector,
@@ -151,6 +152,13 @@ export async function hydrateOrganization(normalizedName: string): Promise<Hydra
 
 // ── Source 1: Lobbying → Committee edges ────────────────────────────
 
+/** First day of a corpus quarter key ("2026-Q2" → "2026-04-01"), for edge temporality. */
+function quarterStartDate(quarter: string): string {
+  const [year, q] = quarter.split('-');
+  const starts: Record<string, string> = { Q1: '01-01', Q2: '04-01', Q3: '07-01', Q4: '10-01' };
+  return `${year}-${starts[q ?? ''] ?? '01-01'}`;
+}
+
 async function hydrateLobbyingFilings(
   orgId: string,
   orgName: string,
@@ -160,16 +168,20 @@ async function hydrateLobbyingFilings(
   const edges: GraphEdge[] = [];
 
   try {
-    // Use targeted API call instead of fetching all filings
-    const rawFilings = await senateLobbyingAPI.fetchFilingsForOrganization(orgName);
+    // Read from the committed corpus rather than the live LDA API.
+    //
+    // Unlike the other lobbying surfaces, the API path here was not a first-page
+    // sample — fetchFilingsForOrganization filters server-side by name and
+    // paginates. What it was is truncated in the wrong direction: results come
+    // back oldest-first and it stops at 10 pages, so any organization with more
+    // than 250 filings lost its most recent ones. It also cost up to twenty
+    // sequential API calls per hydration.
+    //
+    // The trade is history for completeness: the corpus covers its own window
+    // (currently eight quarters) rather than all time, but covers it fully, and
+    // resolves committee attribution the same way every other surface does.
+    const committeeNames = await getFilingCorpusCommittees();
 
-    if (rawFilings.length === 0) {
-      // API may have failed (rate limited, timeout). Fall back to sector-based
-      // committee inference so the path tracer still produces edges.
-      return inferCommitteesFromSector(orgId, orgName, dataAsOf);
-    }
-
-    // Aggregate lobbying data per committee across all filings
     const committeeAggregates = new Map<
       string,
       {
@@ -178,80 +190,55 @@ async function hydrateLobbyingFilings(
         filingCount: number;
         issueCodes: Set<string>;
         bestConfidence: number;
-        latestYear: number;
-        latestPeriod: string;
+        latestQuarter: string;
       }
     >();
 
-    const totalSpending = rawFilings.reduce((sum, f) => sum + reportedRawFilingAmount(f), 0);
+    let totalSpending = 0;
+    let filingCount = 0;
 
-    for (const filing of rawFilings) {
-      const filingAmount = reportedRawFilingAmount(filing);
-      const activities = filing.lobbying_activities ?? [];
+    const available = await forEachFilingForOrganization(orgName, (filing: CorpusFiling) => {
+      totalSpending += filing.amount;
+      filingCount += 1;
 
-      // Tier 1: Try entity resolution from government_entities nested in activities
-      const allEntityNames: string[] = [];
-      const allIssueCodes: string[] = [];
+      const disclosedEntities = filing.governmentEntities.map(e => e.toLowerCase());
 
-      for (const activity of activities) {
-        const entityNames = (activity.government_entities ?? []).map(e => e.name);
-        allEntityNames.push(...entityNames);
-        if (activity.general_issue_code) {
-          allIssueCodes.push(activity.general_issue_code);
-        }
-      }
+      for (const committeeCode of filing.committeeCodes) {
+        const committeeName = committeeNames?.get(committeeCode) ?? committeeCode;
 
-      const resolutions = resolveFilingEntities(allEntityNames);
-      let committees = getResolvedCommittees(resolutions);
+        // A filing naming the committee among its disclosed government entities
+        // is stronger evidence than one attributed by issue-code jurisdiction.
+        // Same distinction the API path drew between its two tiers.
+        const named = committeeName.toLowerCase();
+        const confidence = disclosedEntities.some(e => e.includes(named) || named.includes(e))
+          ? 0.85
+          : 0.7;
 
-      // Tier 2: If entity resolution yielded nothing (entities were too generic
-      // like "SENATE" / "HOUSE OF REPRESENTATIVES"), infer committees from
-      // LDA issue codes. Confidence is lower since this is an inference.
-      if (committees.length === 0 && allIssueCodes.length > 0) {
-        const issueCommittees = new Map<string, { committeeName: string; confidence: number }>();
-        for (const issueCode of allIssueCodes) {
-          const mapped = LDA_ISSUE_TO_COMMITTEES[issueCode];
-          if (!mapped) continue;
-          for (const cmte of mapped) {
-            const existing = issueCommittees.get(cmte.code);
-            if (!existing || existing.confidence < 0.7) {
-              issueCommittees.set(cmte.code, {
-                committeeName: cmte.name,
-                confidence: 0.7,
-              });
-            }
-          }
-        }
-        committees = Array.from(issueCommittees.entries()).map(([committeeCode, data]) => ({
-          committeeCode,
-          committeeName: data.committeeName,
-          confidence: data.confidence,
-        }));
-      }
-
-      for (const cmte of committees) {
-        const existing = committeeAggregates.get(cmte.committeeCode);
+        const existing = committeeAggregates.get(committeeCode);
         if (existing) {
-          existing.totalAmount += filingAmount;
+          existing.totalAmount += filing.amount;
           existing.filingCount += 1;
-          for (const code of allIssueCodes) existing.issueCodes.add(code);
-          existing.bestConfidence = Math.max(existing.bestConfidence, cmte.confidence);
-          if (filing.filing_year > existing.latestYear) {
-            existing.latestYear = filing.filing_year;
-            existing.latestPeriod = filing.filing_period ?? '';
-          }
+          for (const code of filing.issueCodes) existing.issueCodes.add(code);
+          existing.bestConfidence = Math.max(existing.bestConfidence, confidence);
+          if (filing.quarter > existing.latestQuarter) existing.latestQuarter = filing.quarter;
         } else {
-          committeeAggregates.set(cmte.committeeCode, {
-            committeeName: cmte.committeeName,
-            totalAmount: filingAmount,
+          committeeAggregates.set(committeeCode, {
+            committeeName,
+            totalAmount: filing.amount,
             filingCount: 1,
-            issueCodes: new Set(allIssueCodes),
-            bestConfidence: cmte.confidence,
-            latestYear: filing.filing_year,
-            latestPeriod: filing.filing_period ?? '',
+            issueCodes: new Set(filing.issueCodes),
+            bestConfidence: confidence,
+            latestQuarter: filing.quarter,
           });
         }
       }
+    });
+
+    if (!available || filingCount === 0) {
+      // No corpus, or an organization that filed nothing in the window. Fall
+      // back to sector-based committee inference so the path tracer still
+      // produces edges — it is labelled as an inference at 0.5 confidence.
+      return inferCommitteesFromSector(orgId, orgName, dataAsOf);
     }
 
     // Create one node + one edge per committee (aggregated)
@@ -287,10 +274,10 @@ async function hydrateLobbyingFilings(
         },
         weight,
         confidence: agg.bestConfidence,
-        temporal: agg.latestPeriod
+        temporal: agg.latestQuarter
           ? {
-              date: `${agg.latestYear}-01-01`,
-              period: `${agg.latestYear} ${agg.latestPeriod}`,
+              date: quarterStartDate(agg.latestQuarter),
+              period: agg.latestQuarter,
             }
           : undefined,
         dataAsOf,

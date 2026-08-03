@@ -17,7 +17,7 @@ import { hydrateNeighborhood } from './hydrator';
 import { toCanonicalId, formatNodeLabel, normalizeOrgName } from './normalize';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { ALL_COMMITTEE_MAPPINGS } from '@/lib/connections/committee-agency-map';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import { searchOrganizationNames } from '@/lib/data-sources/lda-corpus/load-filings';
 import type { StructuredQuery } from './query-compiler';
 import { getStateName } from '@/lib/data/us-states';
 import type { GraphNode, GraphEdge } from '@/types/graph';
@@ -542,42 +542,39 @@ async function executeOrganizationQuery(query: StructuredQuery): Promise<QueryRe
       };
     }
 
-    const filings = await senateLobbyingAPI.fetchRecentFilings();
-    const searchTerm = String(nameFilter.value).toLowerCase();
+    // Searched against the corpus dictionaries rather than filing rows. Client
+    // and registrant names are dictionary-encoded, so this scans ~22,000 client
+    // names and the registrant table without decoding a single filing — where
+    // the API path searched the 25 filings of its first page and reported
+    // "no organizations named X" for almost every X.
+    const limit = Math.min(query.limit ?? 20, MAX_CANDIDATES);
+    const searchTerm = String(nameFilter.value);
+    const found = await searchOrganizationNames(searchTerm, {
+      op: nameFilter.op === 'eq' ? 'eq' : 'contains',
+      // Over-fetch so name normalization can collapse variants of the same
+      // organization before the limit is applied.
+      limit: limit * 4,
+    });
+
+    if (!found) {
+      return {
+        matchingNodes: [],
+        relatedEdges: [],
+        explanation:
+          'Organization search is unavailable — the Senate LDA corpus could not be read.',
+        truncated: false,
+      };
+    }
 
     // Deduplicate orgs by normalized name, collecting from both registrant and client fields
     const orgMap = new Map<string, { name: string; role: string }>();
-
-    for (const filing of filings) {
-      const registrantName = filing.registrant.name;
-      const clientName = filing.client.name;
-
-      if (
-        nameFilter.op === 'contains'
-          ? registrantName.toLowerCase().includes(searchTerm)
-          : registrantName.toLowerCase() === searchTerm
-      ) {
-        const key = normalizeOrgName(registrantName);
-        if (!orgMap.has(key)) {
-          orgMap.set(key, { name: registrantName, role: 'registrant' });
-        }
-      }
-
-      if (
-        nameFilter.op === 'contains'
-          ? clientName.toLowerCase().includes(searchTerm)
-          : clientName.toLowerCase() === searchTerm
-      ) {
-        const key = normalizeOrgName(clientName);
-        if (!orgMap.has(key)) {
-          orgMap.set(key, { name: clientName, role: 'client' });
-        }
-      }
+    for (const match of found.matches) {
+      const key = normalizeOrgName(match.name);
+      if (!orgMap.has(key)) orgMap.set(key, { name: match.name, role: match.role });
     }
 
-    const limit = Math.min(query.limit ?? 20, MAX_CANDIDATES);
     const orgs = Array.from(orgMap.entries()).slice(0, limit);
-    const truncated = orgMap.size > limit;
+    const truncated = found.total > orgs.length;
 
     const matchingNodes: GraphNode[] = orgs.map(([normalizedName, org]) => ({
       id: toCanonicalId('organization', normalizedName),
