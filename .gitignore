@@ -39,9 +39,11 @@ next-env.d.ts
 .idea/
 .vscode/
 
-# Claude Code (internal AI tooling, not for public repo)
-.claude/
-CLAUDE.md
+# Claude Code — CLAUDE.md and the shared rule files travel with the code.
+# Everything else under .claude/ is machine-local state (permissions, session
+# scratch, agent memory, scheduler locks) and stays out of the public repo.
+.claude/*
+!.claude/rules/
 
 # Private working docs — plans, prompts, briefs, notes, audits (local-only)
 GRANT-*.md
