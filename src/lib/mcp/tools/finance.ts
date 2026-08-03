@@ -7,18 +7,14 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
-import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
+import {
+  forEachFilingForOrganization,
+  forEachFilingForQuarters,
+  getFilingCorpusMeta,
+} from '@/lib/data-sources/lda-corpus/load-filings';
+import { describeCorpusCoverage } from '@/lib/data-sources/lda-corpus/committee-lobbying';
+import type { CorpusFiling } from '@/lib/data-sources/lda-corpus/filing-corpus';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
-
-/**
- * The LDA list endpoint serves 25 filings per page and the client does not
- * paginate, so every lobbying surface sees the first page only. Measured
- * 2026-07-31 against 2025 Q1: 27,446 filings match the query, 25 come back.
- * It is the first page in the API's own ordering rather than a random draw,
- * so it cannot be aggregated. Fix is tracked in PLAN-lobbying-corpus-2026-07.md.
- */
-const LOBBYING_SAMPLE_CAVEAT =
-  'SAMPLE ONLY — the first page the Senate LDA API returns (~25 filings) out of ~27,000 matching each quarter. Not a random sample: do not compute totals, rankings, or market shares from it.';
 
 export function registerFinanceTools(server: McpServer): void {
   server.registerTool(
@@ -85,7 +81,7 @@ export function registerFinanceTools(server: McpServer): void {
     {
       title: 'Lobbying filings search',
       description:
-        'Search Senate LDA lobbying filings. Returns registrant, client, spending amount, and issue codes. Returns a small unrepresentative sample of each quarter, not the full set — see the `coverage` field on the response before using the numbers.',
+        'Search Senate LDA lobbying filings from the complete corpus — every quarterly report (LD-2) in the covered window, not a sample. Returns registrant, client, spending amount, issue codes and the committees each filing touches, plus exact totals. Filter by quarter, by organization, or both. Amounts are plausibility-gated (income <= $5M, expenses <= $50M per filing).',
       inputSchema: {
         year: z
           .number()
@@ -93,28 +89,133 @@ export function registerFinanceTools(server: McpServer): void {
           .min(1990)
           .max(2030)
           .optional()
-          .describe('Filing year, default current'),
-        quarter: z.number().min(1).max(4).optional().describe('Quarter (1-4), default most recent'),
+          .describe('Filing year. Omit to search every quarter the corpus covers.'),
+        quarter: z.number().min(1).max(4).optional().describe('Quarter (1-4). Requires `year`.'),
+        organization: z
+          .string()
+          .optional()
+          .describe(
+            'Client or registrant name. Matched on a normalized form, so "Pfizer Inc." and "PFIZER, INC." reach the same filings.'
+          ),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(200)
+          .optional()
+          .describe(
+            'Rows to return, largest amount first. Default 50. Totals always cover every match.'
+          ),
       },
       annotations: READ_ONLY_EXTERNAL,
     },
-    async ({ year, quarter }) => {
+    async ({ year, quarter, organization, limit }) => {
       try {
-        const filingYear = year ?? new Date().getFullYear();
-        const filingQuarter = quarter ?? Math.ceil((new Date().getMonth() + 1) / 3);
+        const meta = await getFilingCorpusMeta();
+        if (!meta) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Lobbying data unavailable — the Senate LDA corpus could not be read. No sample is returned in its place: the API fallback is the first page of a quarter, about 0.09% of filings, and cannot be searched or aggregated.',
+              },
+            ],
+            isError: true,
+          };
+        }
 
-        const filings = await senateLobbyingAPI.fetchFilingsByQuarter(filingYear, filingQuarter);
+        // Requested window, intersected with what the corpus actually holds. An
+        // agent asking for a quarter outside the window gets told so rather than
+        // an empty result it would read as "nobody lobbied".
+        const requested = year
+          ? quarter
+            ? [`${year}-Q${quarter}`]
+            : [1, 2, 3, 4].map(q => `${year}-Q${q}`)
+          : meta.quarters;
+        const quarters = requested.filter(q => meta.quarters.includes(q));
 
-        // Wrapped rather than returned bare: an agent handed a naked array has
-        // no way to tell a 25-row sample from a complete quarter.
+        if (quarters.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify({
+                  error: 'Requested period is outside the corpus window.',
+                  requested,
+                  covered: meta.quarters,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const rows: Array<{
+          registrant: string;
+          registrantId: string;
+          client: string;
+          amount: number;
+          quarter: string;
+          issueCodes: string[];
+          governmentEntities: string[];
+          committeeCodes: string[];
+        }> = [];
+        const clients = new Set<string>();
+        let filingCount = 0;
+        let totalSpending = 0;
+
+        const wanted = new Set(quarters);
+        const collect = (filing: CorpusFiling): void => {
+          if (!wanted.has(filing.quarter)) return;
+          filingCount += 1;
+          totalSpending += filing.amount;
+          clients.add(filing.clientName);
+          rows.push({
+            registrant: filing.registrantName,
+            registrantId: filing.registrantId,
+            client: filing.clientName,
+            amount: filing.amount,
+            quarter: filing.quarter,
+            issueCodes: filing.issueCodes,
+            governmentEntities: filing.governmentEntities,
+            committeeCodes: filing.committeeCodes,
+          });
+        };
+
+        const available = organization
+          ? await forEachFilingForOrganization(organization, collect)
+          : await forEachFilingForQuarters(quarters, collect);
+
+        if (!available) {
+          return {
+            content: [
+              { type: 'text' as const, text: 'Lobbying corpus became unavailable mid-search.' },
+            ],
+            isError: true,
+          };
+        }
+
+        rows.sort((a, b) => b.amount - a.amount);
+
         return {
           content: [
             {
               type: 'text' as const,
               text: JSON.stringify({
-                coverage: LOBBYING_SAMPLE_CAVEAT,
-                quarter: `${filingYear}Q${filingQuarter}`,
-                filings: filings.slice(0, 50),
+                coverage: await describeCorpusCoverage(),
+                query: { quarters, organization: organization ?? null },
+                // Computed over every match, not over the returned rows.
+                totals: {
+                  filingCount,
+                  totalSpending,
+                  organizationCount: clients.size,
+                },
+                // Corpus rows carry no LDA filing UUID, no income/expenses
+                // split and no lobbyist roster — dropped at build time to keep
+                // the artifact shippable. Use the LDA site for a single filing's
+                // full detail.
+                returned: Math.min(rows.length, limit ?? 50),
+                filings: rows.slice(0, limit ?? 50),
               }),
             },
           ],
