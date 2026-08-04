@@ -128,7 +128,8 @@ interface CampaignFinanceData {
     outOfDistrict?: { amount: number; percentage: number; contributionCount: number };
   };
   donorMetrics?: {
-    totalDonors: number;
+    donorsInSample: number;
+    sampleSize: number;
     smallDonors: number;
     smallDonorPercentage: number;
     averageSmallDonation: number;
@@ -680,9 +681,12 @@ export function CampaignFinanceVisualizer({
               {financeData?.donorMetrics && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="p-4 bg-gray-50 border-2 border-gray-200">
-                    <div className="text-sm text-gray-600 mb-1">Total Donors</div>
+                    <div className="text-sm text-gray-600 mb-1">Donors in sample</div>
                     <div className="text-xl font-bold text-gray-900">
-                      {financeData.donorMetrics.totalDonors.toLocaleString()}
+                      {financeData.donorMetrics.donorsInSample.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      of {financeData.donorMetrics.sampleSize.toLocaleString()} contributions read
                     </div>
                   </div>
                   <div className="p-4 bg-gray-50 border-2 border-gray-200">
@@ -691,7 +695,7 @@ export function CampaignFinanceVisualizer({
                       {financeData.donorMetrics.smallDonorPercentage.toFixed(1)}%
                     </div>
                     <div className="text-xs text-gray-500">
-                      {financeData.donorMetrics.smallDonors.toLocaleString()} donors ≤$200
+                      {financeData.donorMetrics.smallDonors.toLocaleString()} in sample ≤$200
                     </div>
                   </div>
                   <div className="p-4 bg-gray-50 border-2 border-gray-200">

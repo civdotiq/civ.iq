@@ -225,7 +225,10 @@ interface ComprehensiveFinanceResponse {
 
   // Enhanced Donor Metrics
   donorMetrics?: {
-    totalDonors: number;
+    /** Distinct donors in the contribution sample — not the campaign's donor count. */
+    donorsInSample: number;
+    /** Contributions the sample held, so the figure above has a denominator. */
+    sampleSize: number;
     smallDonors: number; // ≤$200
     smallDonorPercentage: number;
     averageSmallDonation: number;
@@ -760,7 +763,12 @@ export async function GET(
     const sortedAmounts = [...allDonationAmounts].sort((a, b) => a - b);
 
     const donorMetrics = {
-      totalDonors: allContributors.length,
+      // Distinct donors in the 250-row sample, not the campaign's donor count.
+      // FEC reports no distinct-donor figure — unitemized givers are never
+      // listed individually — so there is no exact number to swap in, and this
+      // is named for what it counts rather than dressed up as a total.
+      donorsInSample: allContributors.length,
+      sampleSize: contributions.length,
       smallDonors: smallDonations.length,
       smallDonorPercentage:
         allDonationAmounts.length > 0
@@ -782,7 +790,7 @@ export async function GET(
     logger.info('[Comprehensive Finance API] Geographic and donor analysis complete', {
       topStates: topStates.length,
       recentContributions: recentContribs.length,
-      totalDonors: donorMetrics.totalDonors,
+      donorsInSample: donorMetrics.donorsInSample,
     });
 
     // Calculate Top Contributing Organizations (OpenSecrets-style employer aggregation)
