@@ -160,15 +160,27 @@ export function registerIntelligenceTools(server: McpServer): void {
           nihGrants,
           banks,
         ] = await Promise.all([
-          epaEchoService.searchFacilities({ state, limit: 50 }).catch(() => []),
-          cmsProviderService.searchHospitals(state).catch(() => []),
-          cmsProviderService.searchNursingHomes(state).catch(() => []),
-          femaService.searchDisasters({ state, limit: 20 }).catch(() => []),
+          epaEchoService
+            .searchFacilitiesWithTotal({ state, limit: 50 })
+            .catch(() => ({ items: [], totalAvailable: null })),
+          cmsProviderService
+            .searchHospitalsWithTotal(state)
+            .catch(() => ({ items: [], totalAvailable: null })),
+          cmsProviderService
+            .searchNursingHomesWithTotal(state)
+            .catch(() => ({ items: [], totalAvailable: null })),
+          femaService
+            .searchDisastersWithTotal({ state, limit: 20 })
+            .catch(() => ({ items: [], totalAvailable: null })),
           cfpbComplaintService.getComplaintAggregates(state).catch(() => null),
           eiaService.getStateEnergyProfile(state).catch(() => null),
-          collegeScorecardService.searchInstitutions({ state, limit: 20 }).catch(() => []),
-          nihReporterService.searchGrants({ state, limit: 20 }).catch(() => []),
-          fdicService.searchInstitutions({ state, limit: 20 }).catch(() => []),
+          collegeScorecardService
+            .searchInstitutionsWithTotal({ state, limit: 20 })
+            .catch(() => ({ items: [], totalAvailable: null })),
+          nihReporterService
+            .searchGrantsWithTotal({ state, limit: 20 })
+            .catch(() => ({ items: [], totalAvailable: null })),
+          fdicService.getStateBankingTotals(state).catch(() => null),
         ]);
 
         const analysis = {
@@ -186,16 +198,24 @@ export function registerIntelligenceTools(server: McpServer): void {
           stateContext: {
             scope: 'state' as const,
             note: `Figures below are ${state} statewide aggregates, not ${state}-${districtStr} district values.`,
+            // Counts are each source's own match count. Where a figure had to
+            // be derived from rows the fetch capped, it is labelled with the
+            // number of rows it was derived from.
             environment: {
-              epaFacilities: epaFacilities.length,
-              facilitiesWithViolations: epaFacilities.filter(f => f.sncFlag === 'Y').length,
+              majorFacilities: epaFacilities.totalAvailable,
+              facilitiesWithViolations: {
+                value: epaFacilities.items.filter(f => f.sncFlag === 'Y').length,
+                examined: epaFacilities.items.length,
+                population: epaFacilities.totalAvailable,
+              },
             },
             health: {
-              hospitals: hospitals.length,
-              nursingHomes: nursingHomes.length,
+              hospitals: hospitals.totalAvailable,
+              nursingHomes: nursingHomes.totalAvailable,
             },
             safety: {
-              recentDisasters: disasters.length,
+              totalDisasters: disasters.totalAvailable,
+              disastersExamined: disasters.items.length,
               consumerComplaints: complaints?.total ?? 0,
             },
             economy: {
@@ -205,10 +225,18 @@ export function registerIntelligenceTools(server: McpServer): void {
                     topSources: energyProfile.topSources.slice(0, 3),
                   }
                 : null,
-              higherEducation: colleges.length,
-              nihGrants: nihGrants.length,
-              nihTotalFunding: nihGrants.reduce((s, g) => s + g.awardAmount, 0),
-              fdicInstitutions: banks.length,
+              higherEducation: colleges.totalAvailable,
+              nihGrants: nihGrants.totalAvailable,
+              // Grants arrive largest-first; this sums only the ones fetched,
+              // so it is named for that rather than as the state's NIH funding.
+              largestGrantsFunding: {
+                value: nihGrants.items.reduce((sum, g) => sum + g.awardAmount, 0),
+                examined: nihGrants.items.length,
+                population: nihGrants.totalAvailable,
+              },
+              fdicInstitutions: banks?.institutions ?? null,
+              bankAssets: banks?.totalAssets ?? null,
+              bankDeposits: banks?.totalDeposits ?? null,
             },
           },
           metadata: {

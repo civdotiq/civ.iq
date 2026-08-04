@@ -45,7 +45,7 @@ import {
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
-import { coverageFor } from '@/lib/mcp/tools/coverage';
+import { coverageOf } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
 
 /** Row ceilings these profiles ask their upstream APIs for. */
@@ -591,7 +591,11 @@ export function registerEconomyTools(server: McpServer): void {
         );
 
         // Get state NIH grants
-        const grants = await nihReporterService.searchGrants({ state, limit: NIH_GRANT_CAP });
+        const grantResult = await nihReporterService.searchGrantsWithTotal({
+          state,
+          limit: NIH_GRANT_CAP,
+        });
+        const grants = grantResult.items;
 
         // Aggregate by institution
         const instMap = new Map<string, { count: number; totalFunding: number }>();
@@ -643,11 +647,14 @@ export function registerEconomyTools(server: McpServer): void {
               }
             : null,
           nihResearch: {
-            // totalFunding is a sum over the grants retrieved, so when the fetch
-            // saturates it is a floor, not the district's NIH funding.
-            coverage: coverageFor(grants.length, NIH_GRANT_CAP, 'grants'),
-            totalGrants: grants.length,
-            totalFunding,
+            // RePORTER reports the match count, so totalGrants is exact. The
+            // money is not: grants arrive sorted by award amount, so this sums
+            // the largest few and is named for that rather than passed off as
+            // the state's NIH funding.
+            coverage: coverageOf(grants.length, grantResult.totalAvailable, 'grants'),
+            totalGrants: grantResult.totalAvailable ?? grants.length,
+            grantsExamined: grants.length,
+            largestGrantsFunding: totalFunding,
             topInstitutions: topInstitutions.slice(0, 10),
             topNihInstitutes: topNihInstitutes.slice(0, 10),
             topGrants: grants.slice(0, 10).map(g => ({
@@ -780,14 +787,15 @@ export function registerEconomyTools(server: McpServer): void {
         );
 
         // Get state banks and failures in parallel
-        const [institutions, failures] = await Promise.all([
-          fdicService.searchInstitutions({ state, limit: FDIC_INSTITUTION_CAP }),
+        // Totals come from a dedicated all-rows query rather than a sum over
+        // the ranked page: no state has more than ~350 active institutions, so
+        // BankFind serves them all at once and these are the real figures.
+        const [institutionResult, stateTotals, failures] = await Promise.all([
+          fdicService.searchInstitutionsWithTotal({ state, limit: FDIC_INSTITUTION_CAP }),
+          fdicService.getStateBankingTotals(state),
           fdicService.getBankFailures({ state, startYear: new Date().getFullYear() - 10 }),
         ]);
-
-        // Compute summary
-        const totalAssets = institutions.reduce((sum, i) => sum + (i.totalAssets ?? 0), 0);
-        const totalDeposits = institutions.reduce((sum, i) => sum + (i.totalDeposits ?? 0), 0);
+        const institutions = institutionResult.items;
 
         // Check Banking committee membership
         const bankingCommittees = districtRep
@@ -811,12 +819,18 @@ export function registerEconomyTools(server: McpServer): void {
               }
             : null,
           banking: {
-            // totalAssets and totalDeposits are sums over the institutions
-            // retrieved. A state with more banks than the cap reports a floor.
-            coverage: coverageFor(institutions.length, FDIC_INSTITUTION_CAP, 'institutions'),
-            totalInstitutions: institutions.length,
-            totalAssets,
-            totalDeposits,
+            // The counts and money below are statewide totals over every active
+            // institution, so this coverage qualifies only `topByAssets`.
+            coverage: coverageOf(
+              institutions.length,
+              institutionResult.totalAvailable,
+              'institutions (ranking only)'
+            ),
+            totalInstitutions:
+              stateTotals?.institutions ?? institutionResult.totalAvailable ?? null,
+            // Null rather than a partial sum when the totals query fails.
+            totalAssets: stateTotals?.totalAssets ?? null,
+            totalDeposits: stateTotals?.totalDeposits ?? null,
             topByAssets: institutions.slice(0, 10).map(i => ({
               name: i.institutionName,
               city: i.city,

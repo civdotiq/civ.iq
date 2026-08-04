@@ -17,11 +17,8 @@ import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
-import { coverageFor } from '@/lib/mcp/tools/coverage';
+import { coverageOf } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
-
-/** cms-provider-service requests 200 rows per provider query. */
-const CMS_PROVIDER_CAP = 200;
 
 /** Fetch recent health-related bills directly from Congress.gov API */
 async function fetchHealthBills(limit: number): Promise<unknown[]> {
@@ -71,18 +68,29 @@ export function registerHealthTools(server: McpServer): void {
         const stateUpper = state.toUpperCase();
 
         const results: { hospitals?: unknown[]; nursingHomes?: unknown[] } = {};
+        // Rows are capped per query; these are what CMS says match overall.
+        let matchingUpstream: number | null = null;
+        const addToTotal = (n: number | null) => {
+          if (n === null) return;
+          matchingUpstream = (matchingUpstream ?? 0) + n;
+        };
 
         if (providerType === 'hospital' || providerType === 'both') {
-          results.hospitals = await cmsProviderService.searchHospitals(stateUpper, city);
+          const r = await cmsProviderService.searchHospitalsWithTotal(stateUpper, city);
+          results.hospitals = r.items;
+          addToTotal(r.totalAvailable);
         }
 
         if (providerType === 'nursing_home' || providerType === 'both') {
-          results.nursingHomes = await cmsProviderService.searchNursingHomes(stateUpper, city);
+          const r = await cmsProviderService.searchNursingHomesWithTotal(stateUpper, city);
+          results.nursingHomes = r.items;
+          addToTotal(r.totalAvailable);
         }
 
-        const totalCount = (results.hospitals?.length ?? 0) + (results.nursingHomes?.length ?? 0);
+        const returnedCount =
+          (results.hospitals?.length ?? 0) + (results.nursingHomes?.length ?? 0);
 
-        if (totalCount === 0) {
+        if (returnedCount === 0) {
           return {
             content: [
               {
@@ -97,7 +105,13 @@ export function registerHealthTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify({ total: totalCount, ...results }),
+              // `total` is the upstream match count, not the row count — the
+              // rows are capped and would report the cap for any large state.
+              text: JSON.stringify({
+                total: matchingUpstream ?? returnedCount,
+                returned: returnedCount,
+                ...results,
+              }),
             },
           ],
         };
@@ -153,10 +167,12 @@ export function registerHealthTools(server: McpServer): void {
         );
 
         // Get state-level healthcare providers (CMS doesn't filter by county easily)
-        const [hospitals, nursingHomes] = await Promise.all([
-          cmsProviderService.searchHospitals(state),
-          cmsProviderService.searchNursingHomes(state),
+        const [hospitalResult, nursingHomeResult] = await Promise.all([
+          cmsProviderService.searchHospitalsWithTotal(state),
+          cmsProviderService.searchNursingHomesWithTotal(state),
         ]);
+        const hospitals = hospitalResult.items;
+        const nursingHomes = nursingHomeResult.items;
 
         // Compute quality summaries
         const hospitalRatings = hospitals
@@ -259,14 +275,20 @@ export function registerHealthTools(server: McpServer): void {
               }
             : null,
           healthcareInfrastructure: {
-            // CMS serves 200 providers per query and the district filter runs
-            // over that, so a large state's counts are floors.
+            // CMS serves 200 providers per query, but reports how many match,
+            // so `total` below is the real statewide count while the rated and
+            // emergency-service breakdowns come from the rows retrieved.
             coverage: {
-              hospitals: coverageFor(hospitals.length, CMS_PROVIDER_CAP, 'hospitals'),
-              nursingHomes: coverageFor(nursingHomes.length, CMS_PROVIDER_CAP, 'nursing homes'),
+              hospitals: coverageOf(hospitals.length, hospitalResult.totalAvailable, 'hospitals'),
+              nursingHomes: coverageOf(
+                nursingHomes.length,
+                nursingHomeResult.totalAvailable,
+                'nursing homes'
+              ),
             },
             hospitals: {
-              total: hospitals.length,
+              total: hospitalResult.totalAvailable ?? hospitals.length,
+              examined: hospitals.length,
               withEmergencyServices: hospitals.filter(h => h.emergencyServices).length,
               averageOverallRating: avgHospitalRating
                 ? Math.round(avgHospitalRating * 10) / 10
@@ -280,7 +302,8 @@ export function registerHealthTools(server: McpServer): void {
               },
             },
             nursingHomes: {
-              total: nursingHomes.length,
+              total: nursingHomeResult.totalAvailable ?? nursingHomes.length,
+              examined: nursingHomes.length,
               averageOverallRating: avgNursingHomeRating
                 ? Math.round(avgNursingHomeRating * 10) / 10
                 : null,
