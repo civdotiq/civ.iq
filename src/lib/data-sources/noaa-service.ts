@@ -15,6 +15,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type {
   NoaaClimateNormals,
@@ -33,14 +34,57 @@ const CACHE_TTL = 86400; // 24 hours
 
 /** FIPS state codes for NOAA API (FIPS:XX format) */
 const STATE_FIPS: Record<string, string> = {
-  AL: '01', AK: '02', AZ: '04', AR: '05', CA: '06', CO: '08', CT: '09',
-  DE: '10', FL: '12', GA: '13', HI: '15', ID: '16', IL: '17', IN: '18',
-  IA: '19', KS: '20', KY: '21', LA: '22', ME: '23', MD: '24', MA: '25',
-  MI: '26', MN: '27', MS: '28', MO: '29', MT: '30', NE: '31', NV: '32',
-  NH: '33', NJ: '34', NM: '35', NY: '36', NC: '37', ND: '38', OH: '39',
-  OK: '40', OR: '41', PA: '42', RI: '44', SC: '45', SD: '46', TN: '47',
-  TX: '48', UT: '49', VT: '50', VA: '51', WA: '53', WV: '54', WI: '55',
-  WY: '56', DC: '11',
+  AL: '01',
+  AK: '02',
+  AZ: '04',
+  AR: '05',
+  CA: '06',
+  CO: '08',
+  CT: '09',
+  DE: '10',
+  FL: '12',
+  GA: '13',
+  HI: '15',
+  ID: '16',
+  IL: '17',
+  IN: '18',
+  IA: '19',
+  KS: '20',
+  KY: '21',
+  LA: '22',
+  ME: '23',
+  MD: '24',
+  MA: '25',
+  MI: '26',
+  MN: '27',
+  MS: '28',
+  MO: '29',
+  MT: '30',
+  NE: '31',
+  NV: '32',
+  NH: '33',
+  NJ: '34',
+  NM: '35',
+  NY: '36',
+  NC: '37',
+  ND: '38',
+  OH: '39',
+  OK: '40',
+  OR: '41',
+  PA: '42',
+  RI: '44',
+  SC: '45',
+  SD: '46',
+  TN: '47',
+  TX: '48',
+  UT: '49',
+  VT: '50',
+  VA: '51',
+  WA: '53',
+  WV: '54',
+  WI: '55',
+  WY: '56',
+  DC: '11',
 };
 
 function getToken(): string | null {
@@ -178,17 +222,44 @@ export class NoaaService {
     stateAbbrev: string,
     year?: number
   ): Promise<NoaaSevereWeatherEvent[]> {
+    return (await this.getSevereWeatherEventsDetailed(stateAbbrev, year)).events;
+  }
+
+  /**
+   * As `getSevereWeatherEvents`, but says what the rows actually are.
+   *
+   * The Storm Events database is the only source here carrying casualties and
+   * damage. When it is unreachable this falls back to GHCND daily weather-type
+   * flags (fog, thunder, hail observed at a station), which are real
+   * observations but are not events and carry no impact data at all — the
+   * transform fills those fields with zero.
+   *
+   * A caller that sums those zeros publishes "0 deaths" as a measurement. So
+   * the shape of the answer travels with it: `hasImpactData` is false for the
+   * fallback, and casualty and damage figures must then be withheld rather
+   * than reported as zero.
+   */
+  async getSevereWeatherEventsDetailed(
+    stateAbbrev: string,
+    year?: number
+  ): Promise<{
+    events: NoaaSevereWeatherEvent[];
+    /** True only for Storm Events rows, which carry casualties and damage. */
+    hasImpactData: boolean;
+    /** Rows matching upstream, when reported. */
+    totalAvailable: number | null;
+  }> {
     const token = getToken();
     if (!token) {
       logger.warn('NOAA_TOKEN not configured');
-      return [];
+      return { events: [], hasImpactData: false, totalAvailable: null };
     }
 
     const state = stateAbbrev.toUpperCase();
     const fips = STATE_FIPS[state];
     if (!fips) {
       logger.warn('Unknown state for NOAA storm events', { state });
-      return [];
+      return { events: [], hasImpactData: false, totalAvailable: null };
     }
 
     const targetYear = year ?? new Date().getFullYear() - 1;
@@ -213,7 +284,8 @@ export class NoaaService {
             if (response.ok) {
               const text = await response.text();
               // Parse CSV if available
-              return parseStormEventsCsv(text, state);
+              const events = parseStormEventsCsv(text, state);
+              return { events, hasImpactData: true, totalAvailable: events.length };
             }
           } catch {
             // Fall through to CDO approach
@@ -226,7 +298,7 @@ export class NoaaService {
             const cdoResponse = await rateLimitedCdoFetch(cdoUrl);
             if (cdoResponse.ok) {
               const data: NoaaCdoResponse<RawNoaaDataValue> = await cdoResponse.json();
-              return (data.results ?? []).map(r => ({
+              const events = (data.results ?? []).map(r => ({
                 eventId: `${r.station}-${r.date}-${r.datatype}`,
                 eventType: mapWeatherType(r.datatype),
                 state,
@@ -240,18 +312,24 @@ export class NoaaService {
                 source: 'NOAA GHCND',
                 narrative: null,
               }));
+              return {
+                events,
+                // GHCND weather-type flags: no casualties or damage recorded.
+                hasImpactData: false,
+                totalAvailable: parseUpstreamTotal(data.metadata?.resultset?.count),
+              };
             }
           } catch {
             // Return empty on failure
           }
 
-          return [];
+          return { events: [], hasImpactData: false, totalAvailable: null };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('NoaaService.getSevereWeatherEvents failed', error as Error);
-      return [];
+      return { events: [], hasImpactData: false, totalAvailable: null };
     }
   }
 }

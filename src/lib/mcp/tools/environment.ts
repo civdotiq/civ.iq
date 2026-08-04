@@ -30,7 +30,7 @@ import {
 } from '@/lib/data-sources/lda-corpus/committee-lobbying';
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
-import { coverageFor } from '@/lib/mcp/tools/coverage';
+import { coverageOf } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
 
 /** ECHO serves at most a 100-row responseset, whatever `limit` asks for. */
@@ -130,7 +130,7 @@ export function registerEnvironmentTools(server: McpServer): void {
 
         // Fetch EPA data for the state (then filter by county overlap)
         const [facilities, superfundSites, toxicReleases] = await Promise.all([
-          epaEchoService.searchFacilities({ state, limit: ECHO_FACILITY_CAP }),
+          epaEchoService.searchFacilitiesWithTotal({ state, limit: ECHO_FACILITY_CAP }),
           epaEchoService.getSuperfundSites(state),
           epaEchoService.getToxicReleases(state),
         ]);
@@ -140,7 +140,7 @@ export function registerEnvironmentTools(server: McpServer): void {
         // comparing a ZIP against a state FIPS plus one county digit — two
         // unrelated numbering systems, so the count it produced meant nothing.
         const districtCountyFips = new Set(countyFipsList);
-        const districtFacilities = facilities.filter(
+        const districtFacilities = facilities.items.filter(
           f => f.countyFips && districtCountyFips.has(f.countyFips)
         );
 
@@ -175,8 +175,13 @@ export function registerEnvironmentTools(server: McpServer): void {
             statewideSuperfundSites: superfundSites.length,
             // ECHO caps the statewide search at a 100-row responseset and the
             // district filter runs over whatever that returned, so a populous
-            // state's district count is a floor.
-            coverage: coverageFor(facilities.length, ECHO_FACILITY_CAP, 'regulated facilities'),
+            // state's district count is a floor. `population` is the statewide
+            // match count ECHO reports, which is what the fetch is short of.
+            coverage: coverageOf(
+              facilities.items.length,
+              facilities.totalAvailable,
+              'major regulated facilities statewide'
+            ),
           },
           facilities: districtFacilities.slice(0, 20),
           statewideSuperfundSites: superfundSites,
@@ -400,10 +405,11 @@ export function registerEnvironmentTools(server: McpServer): void {
         const state = stateCode.toUpperCase();
 
         // Fetch climate normals and severe weather in parallel
-        const [normals, severeWeather] = await Promise.all([
+        const [normals, weather] = await Promise.all([
           noaaService.getClimateNormals(state),
-          noaaService.getSevereWeatherEvents(state, year),
+          noaaService.getSevereWeatherEventsDetailed(state, year),
         ]);
+        const severeWeather = weather.events;
 
         // Get state delegation environment committee members
         const allReps = await RepresentativesCoreService.getAllRepresentatives();
@@ -441,10 +447,26 @@ export function registerEnvironmentTools(server: McpServer): void {
           climateNormals: normals,
           severeWeather: {
             year: year ?? new Date().getFullYear() - 1,
-            totalEvents: severeWeather.length,
-            totalInjuries,
-            totalDeaths,
-            totalPropertyDamage,
+            observations: severeWeather.length,
+            coverage: coverageOf(
+              severeWeather.length,
+              weather.totalAvailable,
+              weather.hasImpactData ? 'storm events' : 'weather observations'
+            ),
+            // Casualties and damage exist only in the Storm Events database.
+            // On the GHCND fallback every row carries zeros because nothing was
+            // measured, so these are withheld rather than summed to a confident
+            // "0 deaths" that describes the absence of a field, not the year.
+            ...(weather.hasImpactData
+              ? { totalInjuries, totalDeaths, totalPropertyDamage }
+              : {
+                  impactDataAvailable: false,
+                  impactNote:
+                    'NOAA Storm Events was unavailable, so these rows are GHCND ' +
+                    'daily weather-type observations (fog, thunder, hail seen at a ' +
+                    'station). They record no injuries, deaths or property damage, ' +
+                    'and are observations rather than discrete severe-weather events.',
+                }),
             topEventTypes: topEventTypes.slice(0, 10),
             recentEvents: severeWeather.slice(0, 20),
           },
