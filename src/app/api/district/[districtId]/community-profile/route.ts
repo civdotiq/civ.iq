@@ -16,14 +16,31 @@ import logger from '@/lib/logging/simple-logger';
 
 export const revalidate = 86400; // 24 hours
 
+const EPA_LIMIT = 100;
+const FEMA_LIMIT = 50;
+const COLLEGE_LIMIT = 50;
+const NIH_LIMIT = 50;
+
 /**
- * Community profile for a congressional district.
+ * A figure derived from rows rather than counted upstream.
  *
- * Aggregates data from 8 government APIs into a single response:
- * EPA, CMS, FEMA, CFPB, EIA, College Scorecard, NIH, FDIC.
- *
- * @example GET /api/district/CA-12/community-profile
+ * Averages, rates and subgroup counts need the rows themselves, and every
+ * source here caps how many rows it will serve. Such a figure describes the
+ * rows examined, so it travels with that denominator and never alone: a caller
+ * that renders `value` must render `examined` of `population` beside it.
  */
+interface SampledFigure<T> {
+  value: T;
+  /** Rows the figure was computed over. */
+  examined: number;
+  /** Rows that exist upstream, or null when the source does not report it. */
+  population: number | null;
+}
+
+function sampled<T>(value: T, examined: number, population: number | null): SampledFigure<T> {
+  return { value, examined, population };
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ districtId: string }> }
@@ -47,7 +64,8 @@ export async function GET(
 
     const state = stateMatch[1].toUpperCase();
 
-    // Fetch all data sources in parallel — each catches its own errors
+    // Each source reports its own match count; the row caps below bound only
+    // what we can compute an average or a subgroup share over.
     const [
       epaFacilities,
       hospitals,
@@ -57,21 +75,33 @@ export async function GET(
       energyProfile,
       colleges,
       nihGrants,
-      banks,
+      banking,
     ] = await Promise.all([
-      epaEchoService.searchFacilities({ state, limit: 100 }).catch(() => []),
-      cmsProviderService.searchHospitals(state).catch(() => []),
-      cmsProviderService.searchNursingHomes(state).catch(() => []),
-      femaService.searchDisasters({ state, limit: 50 }).catch(() => []),
+      epaEchoService
+        .searchFacilitiesWithTotal({ state, limit: EPA_LIMIT })
+        .catch(() => ({ items: [], totalAvailable: null })),
+      cmsProviderService
+        .searchHospitalsWithTotal(state)
+        .catch(() => ({ items: [], totalAvailable: null })),
+      cmsProviderService
+        .searchNursingHomesWithTotal(state)
+        .catch(() => ({ items: [], totalAvailable: null })),
+      femaService
+        .searchDisastersWithTotal({ state, limit: FEMA_LIMIT })
+        .catch(() => ({ items: [], totalAvailable: null })),
       cfpbComplaintService.getComplaintAggregates(state).catch(() => null),
       eiaService.getStateEnergyProfile(state).catch(() => null),
-      collegeScorecardService.searchInstitutions({ state, limit: 50 }).catch(() => []),
-      nihReporterService.searchGrants({ state, limit: 50 }).catch(() => []),
-      fdicService.searchInstitutions({ state, limit: 50 }).catch(() => []),
+      collegeScorecardService
+        .searchInstitutionsWithTotal({ state, limit: COLLEGE_LIMIT })
+        .catch(() => ({ items: [], totalAvailable: null })),
+      nihReporterService
+        .searchGrantsWithTotal({ state, limit: NIH_LIMIT })
+        .catch(() => ({ items: [], totalAvailable: null })),
+      fdicService.getStateBankingTotals(state).catch(() => null),
     ]);
 
-    // Compute hospital quality
-    const hospitalRatings = hospitals
+    // Compute hospital quality over the hospitals actually retrieved
+    const hospitalRatings = hospitals.items
       .map(h => h.overallRating)
       .filter((r): r is number => r !== null);
     const avgHospitalRating =
@@ -81,29 +111,25 @@ export async function GET(
         : null;
 
     // Count EPA violations — must exclude "No Violation Identified"
-    const facilitiesWithViolations = epaFacilities.filter(f => {
+    const facilitiesWithViolations = epaFacilities.items.filter(f => {
       if (f.sncFlag === 'Y') return true;
       const status = (f.complianceStatus ?? '').toLowerCase();
       return status === 'violation identified' || status === 'significant violation';
     }).length;
 
     // Count significant non-compliance specifically
-    const significantViolations = epaFacilities.filter(f => f.sncFlag === 'Y').length;
+    const significantViolations = epaFacilities.items.filter(f => f.sncFlag === 'Y').length;
 
-    // Recent disasters (last 5 years)
+    // Recent disasters (last 5 years). Declarations arrive newest-first, so a
+    // short page proves the window is fully covered; a full page does not, and
+    // the count is then only what was seen.
     const currentYear = new Date().getFullYear();
-    const recentDisasters = disasters.filter(d => d.fyDeclared >= currentYear - 5);
+    const recentDisasters = disasters.items.filter(d => d.fyDeclared >= currentYear - 5);
+    const recentWindowComplete = disasters.items.length < FEMA_LIMIT;
 
-    // NIH funding total
-    const nihTotalFunding = nihGrants.reduce((sum, g) => sum + g.awardAmount, 0);
-
-    // FDIC totals
-    const totalBankAssets = banks.reduce((sum, b) => sum + (b.totalAssets ?? 0), 0);
-    const totalBankDeposits = banks.reduce((sum, b) => sum + (b.totalDeposits ?? 0), 0);
-
-    // College stats
-    const publicColleges = colleges.filter(c => c.ownership === 'Public').length;
-    const collegesWithEarnings = colleges.filter(c => c.medianEarnings !== null);
+    // College stats over the schools retrieved
+    const publicColleges = colleges.items.filter(c => c.ownership === 'Public').length;
+    const collegesWithEarnings = colleges.items.filter(c => c.medianEarnings !== null);
     const avgMedianEarnings =
       collegesWithEarnings.length > 0
         ? Math.round(
@@ -112,27 +138,53 @@ export async function GET(
           )
         : null;
 
+    // NIH grants come back sorted by award amount, so this is the value of the
+    // largest awards — not state NIH funding, which would need every project.
+    const largestGrantsFunding = nihGrants.items.reduce((sum, g) => sum + g.awardAmount, 0);
+
     const profile = {
       districtId,
       state,
       environment: {
-        epaFacilities: epaFacilities.length,
-        facilitiesWithViolations,
-        significantViolations,
-        violationRate:
-          epaFacilities.length > 0
-            ? Math.round((facilitiesWithViolations / epaFacilities.length) * 1000) / 10
+        // ECHO's state-wide query is restricted to major facilities; a query
+        // for all regulated facilities exceeds its queryset limit.
+        majorFacilities: epaFacilities.totalAvailable,
+        facilitiesWithViolations: sampled(
+          facilitiesWithViolations,
+          epaFacilities.items.length,
+          epaFacilities.totalAvailable
+        ),
+        significantViolations: sampled(
+          significantViolations,
+          epaFacilities.items.length,
+          epaFacilities.totalAvailable
+        ),
+        violationRate: sampled(
+          epaFacilities.items.length > 0
+            ? Math.round((facilitiesWithViolations / epaFacilities.items.length) * 1000) / 10
             : null,
+          epaFacilities.items.length,
+          epaFacilities.totalAvailable
+        ),
       },
       health: {
-        hospitals: hospitals.length,
-        nursingHomes: nursingHomes.length,
-        avgHospitalRating,
-        hospitalsWithEmergency: hospitals.filter(h => h.emergencyServices).length,
+        hospitals: hospitals.totalAvailable,
+        nursingHomes: nursingHomes.totalAvailable,
+        avgHospitalRating: sampled(
+          avgHospitalRating,
+          hospitalRatings.length,
+          hospitals.totalAvailable
+        ),
+        hospitalsWithEmergency: sampled(
+          hospitals.items.filter(h => h.emergencyServices).length,
+          hospitals.items.length,
+          hospitals.totalAvailable
+        ),
       },
       safety: {
+        totalDisasters: disasters.totalAvailable,
         recentDisasters: recentDisasters.length,
-        totalDisasters: disasters.length,
+        recentDisastersComplete: recentWindowComplete,
         consumerComplaints: complaints?.total ?? null,
         topComplaintProducts: (complaints?.byProduct ?? []).slice(0, 3).map(p => p.product ?? p),
       },
@@ -146,17 +198,30 @@ export async function GET(
           }
         : null,
       education: {
-        totalColleges: colleges.length,
-        publicColleges,
-        avgMedianEarnings,
-        nihGrants: nihGrants.length,
-        nihTotalFunding,
+        totalColleges: colleges.totalAvailable,
+        publicColleges: sampled(publicColleges, colleges.items.length, colleges.totalAvailable),
+        avgMedianEarnings: sampled(
+          avgMedianEarnings,
+          collegesWithEarnings.length,
+          colleges.totalAvailable
+        ),
+        nihGrants: nihGrants.totalAvailable,
+        // Deliberately not "total NIH funding": summing every award would take
+        // thousands of rows, and the sum of the largest few is a different
+        // quantity, so it is named for what it measures.
+        largestGrantsFunding: sampled(
+          largestGrantsFunding,
+          nihGrants.items.length,
+          nihGrants.totalAvailable
+        ),
       },
-      banking: {
-        fdicInstitutions: banks.length,
-        totalAssets: totalBankAssets,
-        totalDeposits: totalBankDeposits,
-      },
+      banking: banking
+        ? {
+            fdicInstitutions: banking.institutions,
+            totalAssets: banking.totalAssets,
+            totalDeposits: banking.totalDeposits,
+          }
+        : null,
       metadata: {
         generatedAt: new Date().toISOString(),
         dataSources: [
@@ -170,7 +235,11 @@ export async function GET(
           'NIH RePORTER',
           'FDIC BankFind',
         ],
-        note: 'Data aggregated at state level. District-level patterns approximate.',
+        note:
+          'Data aggregated at state level. District-level patterns approximate. ' +
+          'Counts are the full match count reported by each source. Figures shaped ' +
+          '{ value, examined, population } are computed over the rows retrieved, ' +
+          'not the whole population.',
       },
     };
 

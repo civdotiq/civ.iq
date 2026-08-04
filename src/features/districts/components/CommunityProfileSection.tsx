@@ -22,24 +22,35 @@ interface CommunityProfileSectionProps {
   districtId: string;
 }
 
+/**
+ * A figure the API computed over the rows it could retrieve, not the whole
+ * population. Rendered with its denominator so it is never read as a census.
+ */
+interface SampledFigure<T> {
+  value: T;
+  examined: number;
+  population: number | null;
+}
+
 interface CommunityProfile {
   districtId: string;
   state: string;
   environment: {
-    epaFacilities: number;
-    facilitiesWithViolations: number;
-    significantViolations: number;
-    violationRate: number | null;
+    majorFacilities: number | null;
+    facilitiesWithViolations: SampledFigure<number>;
+    significantViolations: SampledFigure<number>;
+    violationRate: SampledFigure<number | null>;
   };
   health: {
-    hospitals: number;
-    nursingHomes: number;
-    avgHospitalRating: number | null;
-    hospitalsWithEmergency: number;
+    hospitals: number | null;
+    nursingHomes: number | null;
+    avgHospitalRating: SampledFigure<number | null>;
+    hospitalsWithEmergency: SampledFigure<number>;
   };
   safety: {
     recentDisasters: number;
-    totalDisasters: number;
+    recentDisastersComplete: boolean;
+    totalDisasters: number | null;
     consumerComplaints: number | null;
     topComplaintProducts: string[];
   };
@@ -48,17 +59,17 @@ interface CommunityProfile {
     topSources: Array<{ source: string; amount: number }>;
   } | null;
   education: {
-    totalColleges: number;
-    publicColleges: number;
-    avgMedianEarnings: number | null;
-    nihGrants: number;
-    nihTotalFunding: number;
+    totalColleges: number | null;
+    publicColleges: SampledFigure<number>;
+    avgMedianEarnings: SampledFigure<number | null>;
+    nihGrants: number | null;
+    largestGrantsFunding: SampledFigure<number>;
   };
   banking: {
     fdicInstitutions: number;
     totalAssets: number;
     totalDeposits: number;
-  };
+  } | null;
   metadata: {
     generatedAt: string;
     dataSources: string[];
@@ -123,6 +134,51 @@ function DataCard({
       </div>
       {children}
       <SourceLink href={sourceUrl} label={sourceLabel} />
+    </div>
+  );
+}
+
+/** True when the figure was computed over every row that exists upstream. */
+function isComplete(figure: SampledFigure<unknown>): boolean {
+  return figure.population !== null && figure.examined >= figure.population;
+}
+
+/**
+ * A metric computed over a subset, labelled with the subset it describes.
+ *
+ * Where the rows examined are the whole population this renders as a plain
+ * metric; otherwise the denominator is shown, because the alternative is a
+ * number that reads as a state total while measuring a page of results.
+ */
+function SampledMetric({
+  figure,
+  label,
+  format,
+  highlight,
+}: {
+  figure: SampledFigure<number | null>;
+  label: string;
+  format?: (n: number) => string;
+  highlight?: boolean;
+}) {
+  if (figure.value === null) return null;
+  const shown = format ? format(figure.value) : figure.value.toLocaleString();
+
+  if (isComplete(figure)) {
+    return <Metric value={shown} label={label} highlight={highlight} />;
+  }
+
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-xs text-gray-500">
+        {label}
+        <span className="text-gray-400"> (in {formatCount(figure.examined)} sampled)</span>
+      </span>
+      <span
+        className={`text-sm font-semibold tabular-nums ${highlight ? 'text-[#e11d07]' : 'text-gray-900'}`}
+      >
+        {shown}
+      </span>
     </div>
   );
 }
@@ -202,12 +258,14 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
   const { state } = data;
 
   // Only render cards that have meaningful data
-  const hasEnvironment = data.environment.epaFacilities > 0;
-  const hasHealth = data.health.hospitals > 0 || data.health.nursingHomes > 0;
-  const hasSafety = data.safety.totalDisasters > 0 || (data.safety.consumerComplaints ?? 0) > 0;
+  const hasEnvironment = (data.environment.majorFacilities ?? 0) > 0;
+  const hasHealth = (data.health.hospitals ?? 0) > 0 || (data.health.nursingHomes ?? 0) > 0;
+  const hasSafety =
+    (data.safety.totalDisasters ?? 0) > 0 || (data.safety.consumerComplaints ?? 0) > 0;
   const hasEnergy = data.energy !== null && data.energy.topSources.length > 0;
-  const hasEducation = data.education.totalColleges > 0 || data.education.nihGrants > 0;
-  const hasBanking = data.banking.fdicInstitutions > 0;
+  const hasEducation =
+    (data.education.totalColleges ?? 0) > 0 || (data.education.nihGrants ?? 0) > 0;
+  const hasBanking = data.banking !== null && data.banking.fdicInstitutions > 0;
 
   const cardCount = [
     hasEnvironment,
@@ -238,24 +296,24 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceLabel="EPA ECHO"
           >
             <p className="text-xs text-gray-600 mb-3">
-              {data.environment.facilitiesWithViolations > 0
-                ? `${formatCount(data.environment.facilitiesWithViolations)} of ${formatCount(data.environment.epaFacilities)} EPA-regulated facilities in ${state} have compliance violations on record.`
-                : `${formatCount(data.environment.epaFacilities)} EPA-regulated facilities in ${state}, none with current violations.`}
-              {data.environment.significantViolations > 0 &&
-                ` ${data.environment.significantViolations} are flagged as significant.`}
+              {`EPA lists ${formatCount(data.environment.majorFacilities ?? 0)} major regulated facilities in ${state}.`}
+              {data.environment.facilitiesWithViolations.value > 0 &&
+                ` Of the ${formatCount(data.environment.facilitiesWithViolations.examined)} examined here, ${formatCount(data.environment.facilitiesWithViolations.value)} have compliance violations on record` +
+                  (data.environment.significantViolations.value > 0
+                    ? `, ${data.environment.significantViolations.value} of them significant.`
+                    : '.')}
             </p>
             <div className="space-y-1.5">
               <Metric
-                value={formatCount(data.environment.epaFacilities)}
-                label="Regulated facilities"
+                value={formatCount(data.environment.majorFacilities ?? 0)}
+                label="Major regulated facilities"
               />
-              {data.environment.facilitiesWithViolations > 0 && (
-                <Metric
-                  value={data.environment.facilitiesWithViolations}
-                  label="With violations"
-                  highlight
-                />
-              )}
+              <SampledMetric
+                figure={data.environment.facilitiesWithViolations}
+                label="With violations"
+                format={formatCount}
+                highlight
+              />
             </div>
           </DataCard>
         )}
@@ -269,20 +327,23 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceLabel="CMS Hospital Compare"
           >
             <p className="text-xs text-gray-600 mb-3">
-              {state} has {data.health.hospitals} hospitals
-              {data.health.avgHospitalRating !== null
-                ? ` averaging ${data.health.avgHospitalRating} out of 5 stars for quality`
-                : ''}
-              {data.health.nursingHomes > 0
-                ? ` and ${data.health.nursingHomes} nursing homes.`
+              {state} has {formatCount(data.health.hospitals ?? 0)} hospitals
+              {(data.health.nursingHomes ?? 0) > 0
+                ? ` and ${formatCount(data.health.nursingHomes ?? 0)} nursing homes.`
                 : '.'}
+              {data.health.avgHospitalRating.value !== null &&
+                (isComplete(data.health.avgHospitalRating)
+                  ? ` Hospitals average ${data.health.avgHospitalRating.value} out of 5 stars for quality.`
+                  : ` The ${formatCount(data.health.avgHospitalRating.examined)} hospitals sampled here average ${data.health.avgHospitalRating.value} out of 5 stars.`)}
             </p>
             <div className="space-y-1.5">
-              <Metric value={data.health.hospitals} label="Hospitals" />
-              <Metric value={data.health.nursingHomes} label="Nursing homes" />
-              {data.health.avgHospitalRating !== null && (
-                <Metric value={`${data.health.avgHospitalRating}/5`} label="Avg quality rating" />
-              )}
+              <Metric value={formatCount(data.health.hospitals ?? 0)} label="Hospitals" />
+              <Metric value={formatCount(data.health.nursingHomes ?? 0)} label="Nursing homes" />
+              <SampledMetric
+                figure={data.health.avgHospitalRating}
+                label="Avg quality rating"
+                format={n => `${n}/5`}
+              />
             </div>
           </DataCard>
         )}
@@ -297,14 +358,17 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
           >
             <p className="text-xs text-gray-600 mb-3">
               {data.safety.recentDisasters > 0
-                ? `${data.safety.recentDisasters} federal disaster declarations in ${state} in the last 5 years.`
+                ? `${data.safety.recentDisastersComplete ? '' : 'At least '}${data.safety.recentDisasters} federal disaster declarations in ${state} in the last 5 years${(data.safety.totalDisasters ?? 0) > 0 ? `, out of ${formatCount(data.safety.totalDisasters ?? 0)} on record` : ''}.`
                 : `No federal disaster declarations in ${state} in the last 5 years.`}
               {data.safety.consumerComplaints !== null && data.safety.consumerComplaints > 0
                 ? ` ${formatCount(data.safety.consumerComplaints)} consumer complaints filed with the CFPB.`
                 : ''}
             </p>
             <div className="space-y-1.5">
-              <Metric value={data.safety.recentDisasters} label="Disasters (5 yr)" />
+              <Metric
+                value={`${data.safety.recentDisastersComplete ? '' : '≥'}${data.safety.recentDisasters}`}
+                label="Disasters (5 yr)"
+              />
               {data.safety.consumerComplaints !== null && data.safety.consumerComplaints > 0 && (
                 <Metric
                   value={formatCount(data.safety.consumerComplaints)}
@@ -354,28 +418,37 @@ export function CommunityProfileSection({ districtId }: CommunityProfileSectionP
             sourceLabel="College Scorecard / NIH"
           >
             <p className="text-xs text-gray-600 mb-3">
-              {data.education.totalColleges > 0
-                ? `${data.education.totalColleges} colleges and universities in ${state} (${data.education.publicColleges} public).`
+              {(data.education.totalColleges ?? 0) > 0
+                ? `${formatCount(data.education.totalColleges ?? 0)} colleges and universities in ${state}.`
                 : ''}
-              {data.education.nihGrants > 0
-                ? ` ${data.education.nihGrants} active NIH research grants totaling ${formatDollars(data.education.nihTotalFunding)}.`
+              {(data.education.nihGrants ?? 0) > 0
+                ? ` ${formatCount(data.education.nihGrants ?? 0)} active NIH research grants.`
                 : ''}
             </p>
             <div className="space-y-1.5">
-              {data.education.totalColleges > 0 && (
-                <Metric value={data.education.totalColleges} label="Colleges" />
+              {(data.education.totalColleges ?? 0) > 0 && (
+                <Metric value={formatCount(data.education.totalColleges ?? 0)} label="Colleges" />
               )}
-              {data.education.nihGrants > 0 && (
-                <Metric value={data.education.nihGrants} label="NIH grants" />
+              <SampledMetric
+                figure={data.education.publicColleges}
+                label="Public"
+                format={formatCount}
+              />
+              {(data.education.nihGrants ?? 0) > 0 && (
+                <Metric value={formatCount(data.education.nihGrants ?? 0)} label="NIH grants" />
               )}
-              {data.education.nihTotalFunding > 0 && (
-                <Metric value={formatDollars(data.education.nihTotalFunding)} label="NIH funding" />
-              )}
+              {/* Named for what it is: the value of the largest awards fetched,
+                  not the state's NIH funding, which would need every project. */}
+              <SampledMetric
+                figure={data.education.largestGrantsFunding}
+                label="Largest grants"
+                format={formatDollars}
+              />
             </div>
           </DataCard>
         )}
 
-        {hasBanking && (
+        {hasBanking && data.banking && (
           <DataCard
             icon={<Landmark className="h-4 w-4" />}
             title="Banking"
