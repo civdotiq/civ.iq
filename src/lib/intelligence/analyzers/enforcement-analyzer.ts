@@ -6,7 +6,8 @@
 /**
  * Enforcement Analyzer (Phase 3 — Influence Graph)
  *
- * Aggregates enforcement actions across EPA, OSHA, and CFPB.
+ * Aggregates enforcement actions across EPA and OSHA, and reports CFPB consumer
+ * complaints alongside them as a separate figure.
  * Supports three scopes: sector, state, or organization.
  *
  * Flow: cache → fetch EPA + OSHA + CFPB in parallel → entity resolution →
@@ -98,7 +99,7 @@ async function computeAndCache(
   cacheKey: string
 ): Promise<EnforcementInsight | null> {
   // 2. Fetch from all three agencies in parallel
-  const { actions, saturated } = await fetchEnforcementActions(scope);
+  const { actions, saturated, complaints } = await fetchEnforcementActions(scope);
 
   if (actions.length < MIN_ENFORCEMENT_ACTIONS) {
     logger.info('[Enforcement] Insufficient actions', {
@@ -110,7 +111,7 @@ async function computeAndCache(
   }
 
   // 3. Compute statistics
-  const stats = computeStats(actions, saturated);
+  const stats = computeStats(actions, saturated, complaints);
 
   // 4. Peer comparison
   const peer = await computePeerComparison(scope, stats.totalActions);
@@ -135,12 +136,15 @@ async function computeAndCache(
   if (agencyCount('EPA') > 0) sc.add('EPA ECHO', 'Recent enforcement actions', agencyCount('EPA'));
   if (agencyCount('OSHA') > 0)
     sc.add('OSHA inspections', 'Recent inspections', agencyCount('OSHA'));
-  if (agencyCount('CFPB') > 0) sc.add('CFPB complaints', 'Recent complaints', agencyCount('CFPB'));
+  // CFPB no longer contributes actions, so cite it off the complaint count it
+  // does contribute rather than an agency tally that is now always zero.
+  const complaintTotal = stats.consumerComplaints?.total ?? 0;
+  if (complaintTotal > 0) sc.add('CFPB complaints', 'Consumer complaints', complaintTotal);
 
   const contributingAgencies = [
     agencyCount('EPA') > 0 ? 'EPA ECHO' : null,
     agencyCount('OSHA') > 0 ? 'OSHA inspections (DOL API)' : null,
-    agencyCount('CFPB') > 0 ? 'CFPB complaints' : null,
+    complaintTotal > 0 ? 'CFPB complaints' : null,
   ].filter((a): a is string => a !== null);
 
   const insight: EnforcementInsight = {
@@ -200,9 +204,11 @@ interface AgencyFetch {
   saturated: boolean;
 }
 
-async function fetchEnforcementActions(
-  scope: EnforcementScope
-): Promise<{ actions: EnforcementAction[]; saturated: boolean }> {
+async function fetchEnforcementActions(scope: EnforcementScope): Promise<{
+  actions: EnforcementAction[];
+  saturated: boolean;
+  complaints: ComplaintFetch | null;
+}> {
   const actions: EnforcementAction[] = [];
 
   // Build scope-specific queries
@@ -232,16 +238,19 @@ async function fetchEnforcementActions(
       fetchPromises.push(fetchEPAActions(stateFilter, prefix, orgFilter));
       fetchPromises.push(fetchOSHAActions(stateFilter, prefix, orgFilter, oshaPages));
     }
-    fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
   } else {
     // Single or no SIC prefix: original behavior
     const sicCodeFilter = sicPrefixes[0];
     fetchPromises.push(fetchEPAActions(stateFilter, sicCodeFilter, orgFilter));
     fetchPromises.push(fetchOSHAActions(stateFilter, sicCodeFilter, orgFilter, OSHA_MAX_PAGES));
-    fetchPromises.push(fetchCFPBActions(stateFilter, orgFilter));
   }
 
-  const results = await Promise.all(fetchPromises);
+  // Complaints run alongside but are never folded into `actions` — see the
+  // note on EnforcementInsight['stats'].totalActions.
+  const [results, complaints] = await Promise.all([
+    Promise.all(fetchPromises),
+    fetchCFPBComplaints(stateFilter, orgFilter),
+  ]);
   const saturated = results.some(r => r.saturated);
 
   // Deduplicate by agency + organization + date (parallel prefix queries may overlap)
@@ -258,10 +267,10 @@ async function fetchEnforcementActions(
 
   // If sector scope, filter to matching sector
   if (scope.type === 'sector') {
-    return { actions: actions.filter(a => a.sector === scope.sector), saturated };
+    return { actions: actions.filter(a => a.sector === scope.sector), saturated, complaints };
   }
 
-  return { actions, saturated };
+  return { actions, saturated, complaints };
 }
 
 /** ECHO's get_cases serves one responseset per call; a full one means more exist. */
@@ -363,19 +372,29 @@ async function fetchOSHAActions(
   }
 }
 
-/** CFPB is read one page deep; a full page means the company has more complaints. */
+/**
+ * CFPB is read one page deep, purely to name the companies complained about.
+ * The complaint count itself comes from CFPB's own total, not this page.
+ */
 const CFPB_PAGE_SIZE = 100;
 
-async function fetchCFPBActions(state?: string, orgName?: string): Promise<AgencyFetch> {
+interface ComplaintFetch {
+  /** Distinct companies named in the page read. A floor. */
+  companiesSeen: number;
+  /** CFPB's match count for the scope. Exact, or null if unavailable. */
+  total: number | null;
+}
+
+async function fetchCFPBComplaints(state?: string, orgName?: string): Promise<ComplaintFetch> {
   try {
-    const { complaints } = await cfpbComplaintService.searchComplaints({
+    const { complaints, total } = await cfpbComplaintService.searchComplaints({
       state,
       company: orgName,
       size: CFPB_PAGE_SIZE,
       sort: 'created_date_desc',
     });
 
-    // Group by company to create one action per company
+    // Group by company only to count distinct companies in the page.
     const byCompany = new Map<string, { count: number; latestDate: string; state: string }>();
 
     for (const c of complaints) {
@@ -394,25 +413,10 @@ async function fetchCFPBActions(state?: string, orgName?: string): Promise<Agenc
       }
     }
 
-    const actions = Array.from(byCompany.entries()).map(([company, data]) => {
-      const resolved = resolveCompanyName(company);
-      return {
-        agency: 'CFPB' as const,
-        actionType: 'consumer_complaint',
-        organization: company,
-        resolvedCompany: resolved,
-        sector: null, // CFPB doesn't use SIC codes
-        penaltyAmount: 0, // Complaints don't have penalties
-        date: data.latestDate,
-        state: data.state,
-        district: null,
-      };
-    });
-
-    return { actions, saturated: complaints.length >= CFPB_PAGE_SIZE };
+    return { companiesSeen: byCompany.size, total };
   } catch (error) {
     logger.warn('[Enforcement] CFPB fetch failed', { error: (error as Error).message });
-    return { actions: [], saturated: false };
+    return { companiesSeen: 0, total: null };
   }
 }
 
@@ -420,7 +424,8 @@ async function fetchCFPBActions(state?: string, orgName?: string): Promise<Agenc
 
 function computeStats(
   actions: EnforcementAction[],
-  totalIsLowerBound: boolean
+  totalIsLowerBound: boolean,
+  complaints: ComplaintFetch | null
 ): EnforcementInsight['stats'] {
   const totalPenalties = actions.reduce((sum, a) => sum + a.penaltyAmount, 0);
 
@@ -475,6 +480,9 @@ function computeStats(
     byAgency,
     trend,
     periodMonths,
+    consumerComplaints: complaints
+      ? { total: complaints.total, companiesSeen: complaints.companiesSeen }
+      : null,
   };
 }
 
@@ -562,13 +570,22 @@ async function generateNarrative(
     ? `${stats.totalActions} (AT LEAST — one or more agency feeds returned a full page, so the real figure is higher)`
     : String(stats.totalActions);
 
+  // Complaints are given to the model as a clearly separate quantity, so it
+  // cannot fold them into the enforcement count it is describing.
+  const complaintLine =
+    typeof stats.consumerComplaints?.total === 'number'
+      ? `\n\nCONSUMER COMPLAINTS (SEPARATE — filed by the public, not enforcement actions):
+- CFPB complaints for this scope: ${stats.consumerComplaints.total.toLocaleString()}
+Do not add this to the enforcement action count or call it enforcement.`
+      : '';
+
   const userPrompt = `SCOPE: ${scopeLabel}
 
-ENFORCEMENT SUMMARY:
+ENFORCEMENT SUMMARY (EPA and OSHA only):
 - Actions retrieved: ${countLabel}
 - Penalties across those actions: $${stats.totalPenalties.toLocaleString()}
 - Trend: ${stats.trend}
-- Period: ${stats.periodMonths} months
+- Period: ${stats.periodMonths} months${complaintLine}
 
 BY AGENCY:
 ${agencyLines}

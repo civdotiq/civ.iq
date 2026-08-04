@@ -31,6 +31,11 @@ interface EnforcementInsightResponse {
     totalActions: number;
     /** When true, totalActions is a floor: an agency feed was read to its cap. */
     totalIsLowerBound: boolean;
+    /**
+     * CFPB complaints, reported apart from enforcement actions. `total` is
+     * CFPB's own match count and is exact.
+     */
+    consumerComplaints?: { total: number | null; companiesSeen: number } | null;
     totalPenalties: number;
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';
@@ -334,11 +339,20 @@ function EnforcementResults({ data }: { data: EnforcementInsightResponse }) {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <StatBox
-            label={stats.totalIsLowerBound ? 'Actions found (at least)' : 'Total actions'}
+            label={stats.totalIsLowerBound ? 'EPA + OSHA actions (at least)' : 'EPA + OSHA actions'}
             value={stats.totalActions.toLocaleString()}
           />
           <StatBox label="Total penalties" value={formatPenalty(stats.totalPenalties)} />
-          <StatBox label="Trend" value={TREND_LABELS[stats.trend] ?? stats.trend} />
+          {/* Complaints are consumer-filed, not agency actions, so they get
+              their own box rather than inflating the count beside them. */}
+          {typeof stats.consumerComplaints?.total === 'number' ? (
+            <StatBox
+              label="CFPB complaints"
+              value={stats.consumerComplaints.total.toLocaleString()}
+            />
+          ) : (
+            <StatBox label="Trend" value={TREND_LABELS[stats.trend] ?? stats.trend} />
+          )}
           <StatBox
             label="Period"
             value={

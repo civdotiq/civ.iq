@@ -236,7 +236,10 @@ describe('analyzeEnforcement', () => {
       expect(result?.stats.totalIsLowerBound).toBe(true);
     });
 
-    it('marks the total a lower bound when CFPB fills its page', async () => {
+    it('does not mark the enforcement total a lower bound when CFPB fills its page', async () => {
+      // A 100-complaint page is trivially filled — states run ~130,000
+      // complaints a year — so treating it as saturation made the disclaimer
+      // permanent furniture on every scope and stopped it carrying signal.
       mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
       mockSearchComplaints.mockResolvedValue({
         complaints: Array.from({ length: 100 }, (_, i) => ({
@@ -249,7 +252,41 @@ describe('analyzeEnforcement', () => {
 
       const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
 
-      expect(result?.stats.totalIsLowerBound).toBe(true);
+      expect(result?.stats.totalIsLowerBound).toBe(false);
+    });
+  });
+
+  describe('consumer complaints', () => {
+    it('reports complaints separately from enforcement actions', async () => {
+      // A complaint is filed by the public; an EPA case is an agency action.
+      // Counting them together answers neither question.
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchComplaints.mockResolvedValue({
+        complaints: Array.from({ length: 100 }, (_, i) => ({
+          company: `Bank ${i % 4}`,
+          dateReceived: '2025-05-01',
+          state: 'CA',
+        })),
+        total: 5000,
+      });
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      // 3 EPA cases only — the 100 complaints must not inflate this.
+      expect(result?.stats.totalActions).toBe(3);
+      expect(result?.actions.every(a => a.agency !== 'CFPB')).toBe(true);
+      // CFPB's own match count, not the 100 rows read.
+      expect(result?.stats.consumerComplaints).toEqual({ total: 5000, companiesSeen: 4 });
+    });
+
+    it('carries a null complaint total rather than a row count when CFPB fails', async () => {
+      mockSearchEnforcementCases.mockResolvedValue(makeEPACases(3));
+      mockSearchComplaints.mockRejectedValue(new Error('CFPB down'));
+
+      const result = await analyzeEnforcement({ type: 'state', state: 'CA' });
+
+      expect(result?.stats.consumerComplaints).toEqual({ total: null, companiesSeen: 0 });
+      expect(result?.stats.totalActions).toBe(3);
     });
   });
 

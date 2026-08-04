@@ -621,8 +621,15 @@ export interface EnforcementInsight extends InsightBase {
   actions: EnforcementAction[];
   stats: {
     /**
-     * Actions retrieved. A LOWER BOUND, not a census, when `totalIsLowerBound`
-     * is set: every source paginates and each one is read to a bounded depth.
+     * Agency enforcement actions retrieved — EPA and OSHA only. A LOWER BOUND,
+     * not a census, when `totalIsLowerBound` is set: both sources paginate and
+     * each is read to a bounded depth.
+     *
+     * CFPB consumer complaints are deliberately excluded. A complaint is filed
+     * by a member of the public, not taken by an agency, and there are roughly
+     * 130,000 per state per year against a few dozen real actions — counting
+     * them together produced a number that answered neither question and
+     * saturated its own cap on every scope.
      */
     totalActions: number;
     totalIsLowerBound: boolean;
@@ -630,6 +637,16 @@ export interface EnforcementInsight extends InsightBase {
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';
     periodMonths: number;
+    /**
+     * CFPB complaints for the scope, reported separately from enforcement.
+     * `total` is CFPB's own match count, so it is exact; `companiesSeen` counts
+     * distinct companies in the one page read and is a floor. Null when CFPB
+     * was not queried or failed.
+     */
+    consumerComplaints: {
+      total: number | null;
+      companiesSeen: number;
+    } | null;
   };
   linkedRegulations: Array<{ docketId: string; title: string; agency: string }>;
   /** How this scope's enforcement volume compares to peer scopes. Null when too few peers have data. */

@@ -73,6 +73,11 @@ interface EnforcementInsightResponse {
     totalActions: number;
     /** When true, totalActions is a floor: an agency feed was read to its cap. */
     totalIsLowerBound: boolean;
+    /**
+     * CFPB complaints, reported apart from enforcement actions. `total` is
+     * CFPB's own match count and is exact.
+     */
+    consumerComplaints?: { total: number | null; companiesSeen: number } | null;
     totalPenalties: number;
     byAgency: Array<{ agency: string; count: number; penalties: number }>;
     trend: 'increasing' | 'decreasing' | 'stable';
@@ -484,7 +489,7 @@ function EnforcementLandscape({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">
-            {stats.totalIsLowerBound ? 'Actions found (at least)' : 'Total actions'}
+            {stats.totalIsLowerBound ? 'EPA + OSHA actions (at least)' : 'EPA + OSHA actions'}
           </span>
           <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {stats.totalActions.toLocaleString()}
