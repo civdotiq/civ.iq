@@ -13,7 +13,7 @@
  * by agents, which quote a field called `totalAssets` as the total assets.
  *
  * A saturated fetch cannot be silently presented as a census. Attach the result
- * of `coverageFor` next to the figures it qualifies so the number arrives with
+ * of `coverageOf` next to the figures it qualifies so the number arrives with
  * the one fact needed to read it correctly.
  */
 
@@ -31,11 +31,11 @@ export interface Coverage {
 /**
  * Coverage for figures computed over `rowsReturned` of `totalAvailable` rows.
  *
- * Prefer this over `coverageFor` wherever the upstream reports a match count.
  * "At least 100" and "100 of 3,158" are both honest, but only the second lets
  * an agent tell a small state from a saturated fetch, and every source behind
  * these profiles reports the count either in the response already parsed or for
- * one extra query parameter.
+ * one extra query parameter — so a cap-only variant of this would have no
+ * caller and is deliberately absent.
  */
 export function coverageOf(
   rowsReturned: number,
@@ -65,26 +65,5 @@ export function coverageOf(
       `Computed over ${rowsReturned} of ${totalAvailable} ${subject} upstream. ` +
       `Counts and sums here describe those ${rowsReturned} rows, not all ` +
       `${totalAvailable}, and rankings cover only the rows retrieved.`,
-  };
-}
-
-/**
- * Whether a fetch of `rowsReturned` rows against a `cap`-row ceiling saw
- * everything.
- *
- * A full page is treated as saturated. That is deliberately pessimistic — a
- * source with exactly `cap` rows is reported as incomplete — because claiming a
- * total that is short is the more damaging error of the two.
- *
- * @param subject what the rows are, for the note ("regulated facilities")
- */
-export function coverageFor(rowsReturned: number, cap: number, subject: string): Coverage {
-  if (rowsReturned < cap) return { complete: true };
-  return {
-    complete: false,
-    note:
-      `The upstream API returned its maximum of ${cap} ${subject}, so more exist. ` +
-      `Counts and totals here are lower bounds, not the full picture, and rankings ` +
-      `cover only the rows retrieved.`,
   };
 }

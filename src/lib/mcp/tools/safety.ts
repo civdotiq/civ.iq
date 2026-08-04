@@ -47,7 +47,7 @@ import {
 import type { CommitteeLobbyingData } from '@/lib/data-sources/senate-lobbying-api';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
-import { coverageFor } from '@/lib/mcp/tools/coverage';
+import { coverageOf } from '@/lib/mcp/tools/coverage';
 import logger from '@/lib/logging/simple-logger';
 
 /** Rows the district disaster profile asks FEMA for. */
@@ -157,10 +157,11 @@ export function registerSafetyTools(server: McpServer): void {
 
         // Fetch disasters for the state over the lookback period
         const currentYear = new Date().getFullYear();
-        const disasters = await femaService.searchDisasters({
+        const disasterResult = await femaService.searchDisastersWithTotal({
           state,
           limit: FEMA_DISASTER_CAP,
         });
+        const disasters = disasterResult.items;
 
         // Filter to lookback period
         const recentDisasters = disasters.filter(d => d.fyDeclared >= currentYear - lookback);
@@ -268,8 +269,13 @@ export function registerSafetyTools(server: McpServer): void {
             uniqueDisasters: uniqueDisasterNumbers.length,
             recurringHazards,
             // Declarations are filtered down from one bounded statewide fetch,
-            // so a disaster-heavy state's district counts are floors.
-            coverage: coverageFor(disasters.length, FEMA_DISASTER_CAP, 'disaster declarations'),
+            // so a disaster-heavy state's district counts are floors. The
+            // population here is OpenFEMA's statewide count for the query.
+            coverage: coverageOf(
+              disasters.length,
+              disasterResult.totalAvailable,
+              'statewide disaster declarations'
+            ),
           },
           assistance: {
             totalIndividualHouseholdAssistance: totalIhpApproved,
