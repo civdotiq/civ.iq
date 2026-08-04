@@ -49,6 +49,7 @@ export function LobbyOrgClient({ profile }: Props) {
 }
 
 function InfoCard({ profile }: Props) {
+  const partialFilings = profile.filingsRead < profile.totalFilings;
   return (
     <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{profile.name}</h1>
@@ -58,15 +59,23 @@ function InfoCard({ profile }: Props) {
       </p>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <span className="text-xs tracking-wider text-gray-500 uppercase">Total spending</span>
+          <span className="text-xs tracking-wider text-gray-500 uppercase">
+            {partialFilings ? 'Spending in filings read' : 'Total spending'}
+          </span>
           <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(profile.totalSpending)}
           </p>
+          {partialFilings && (
+            <span className="text-xs text-gray-500">
+              across {profile.filingsRead.toLocaleString()} of{' '}
+              {profile.totalFilings.toLocaleString()}
+            </span>
+          )}
         </div>
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">Filings</span>
           <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-            {profile.totalFilings}
+            {profile.totalFilings.toLocaleString()}
           </p>
         </div>
       </div>
@@ -90,6 +99,7 @@ function InfoCard({ profile }: Props) {
 }
 
 function IdentityHeader({ profile }: Props) {
+  const partialFilings = profile.filingsRead < profile.totalFilings;
   return (
     <div className="border-2 border-black dark:border-[#333333] bg-white dark:bg-[#222226] p-6">
       <div className="flex items-start gap-6">
@@ -125,15 +135,23 @@ function IdentityHeader({ profile }: Props) {
       {/* Key stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
         <div>
-          <span className="text-xs tracking-wider text-gray-500 uppercase">Total spending</span>
+          <span className="text-xs tracking-wider text-gray-500 uppercase">
+            {partialFilings ? 'Spending in filings read' : 'Total spending'}
+          </span>
           <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(profile.totalSpending)}
           </p>
+          {partialFilings && (
+            <span className="text-xs text-gray-500">
+              across {profile.filingsRead.toLocaleString()} of{' '}
+              {profile.totalFilings.toLocaleString()}
+            </span>
+          )}
         </div>
         <div>
           <span className="text-xs tracking-wider text-gray-500 uppercase">Filings</span>
           <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {profile.totalFilings}
+            {profile.totalFilings.toLocaleString()}
           </p>
         </div>
         <div>

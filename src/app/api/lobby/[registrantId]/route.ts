@@ -99,8 +99,12 @@ interface EnforcementSummary {
 export interface LobbyingOrgProfile {
   registrantId: string;
   name: string;
+  /** Summed over the filings read, so a floor when `filingsRead < totalFilings`. */
   totalSpending: number;
+  /** The registrant's full filing count, as reported by LDA. */
   totalFilings: number;
+  /** Filings actually retrieved — the walk stops at 5 pages of 50. */
+  filingsRead: number;
   lobbyistCount: number;
   yearlySpending: YearlySpending[];
   issueAreas: IssueArea[];
@@ -434,7 +438,11 @@ async function fetchEnforcement(orgName: string): Promise<EnforcementSummary | n
   }
 }
 
-function assembleProfile(registrantId: string, filings: RawLDAFiling[]): LobbyingOrgProfile {
+function assembleProfile(
+  registrantId: string,
+  filings: RawLDAFiling[],
+  filingsUpstream: number | null
+): LobbyingOrgProfile {
   const registrantName = filings[0]?.registrant?.name ?? 'Unknown Organization';
 
   // Total spending
@@ -522,11 +530,17 @@ function assembleProfile(registrantId: string, filings: RawLDAFiling[]): Lobbyin
 
   const years = filings.map(f => f.filing_year).filter(Boolean);
 
+  const filingsRead = filings.length;
+  const totalFilings = filingsUpstream ?? filingsRead;
+
   return {
     registrantId,
     name: registrantName,
+    // Spending, lobbyist and client figures below are derived from the filings
+    // actually read, so they understate whenever that is short of the total.
     totalSpending,
-    totalFilings: filings.length,
+    filingsRead,
+    totalFilings,
     lobbyistCount: lobbyistSet.size,
     yearlySpending,
     issueAreas,
@@ -579,6 +593,12 @@ export async function getLobbyingOrgProfile(
 
       if (rawFilings.length === 0) return null;
 
+      // LDA reports the registrant's full filing count; the walk below stops at
+      // 5 pages of 50. Large registrants blow past that — CFM Strategic has
+      // 1,771 filings against a 250-row ceiling — so the count has to come from
+      // here rather than from the rows retrieved.
+      const filingsUpstream: number | null = typeof data?.count === 'number' ? data.count : null;
+
       // Paginate to get more filings if available
       let nextUrl: string | null = data?.next ?? null;
       let pageCount = 1;
@@ -601,7 +621,7 @@ export async function getLobbyingOrgProfile(
         }
       }
 
-      const profile = assembleProfile(registrantId, rawFilings);
+      const profile = assembleProfile(registrantId, rawFilings, filingsUpstream);
 
       // Enrich with Wikipedia and PAC linkage in parallel
       const [wiki, linkedPAC] = await Promise.all([
