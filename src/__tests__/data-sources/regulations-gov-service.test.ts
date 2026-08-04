@@ -550,4 +550,43 @@ describe('RegulationsGovService', () => {
       expect(result.total).toBe(0);
     });
   });
+
+  describe('page[size] bounds', () => {
+    // Verified against the live API 2026-08-04: 4 and 251 are both HTTP 400,
+    // 5 and 250 are both 200. Asking for fewer than 5 rows is not a thing
+    // Regulations.gov supports, so we ask for 5 rather than send a doomed request.
+    const emptyPage = {
+      ok: true,
+      json: async () => ({ data: [], meta: { totalElements: 0, totalPages: 0 } }),
+    };
+
+    function sentPageSize(): string | null {
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      return url.searchParams.get('page[size]');
+    }
+
+    it('raises a below-floor searchDocuments pageSize to 5', async () => {
+      mockFetch.mockResolvedValueOnce(emptyPage);
+      await service.searchDocuments({ searchTerm: 'x', pageSize: 1 });
+      expect(sentPageSize()).toBe('5');
+    });
+
+    it('lowers an above-ceiling searchDocuments pageSize to 250', async () => {
+      mockFetch.mockResolvedValueOnce(emptyPage);
+      await service.searchDocuments({ searchTerm: 'x', pageSize: 1000 });
+      expect(sentPageSize()).toBe('250');
+    });
+
+    it('clamps getComments pageSize to the same window', async () => {
+      mockFetch.mockResolvedValueOnce(emptyPage);
+      await service.getComments('DOCKET-1', { pageSize: 2 });
+      expect(sentPageSize()).toBe('5');
+    });
+
+    it('leaves an in-range pageSize alone', async () => {
+      mockFetch.mockResolvedValueOnce(emptyPage);
+      await service.searchDocuments({ searchTerm: 'x', pageSize: 25 });
+      expect(sentPageSize()).toBe('25');
+    });
+  });
 });

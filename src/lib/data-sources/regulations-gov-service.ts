@@ -20,6 +20,18 @@ import type {
 
 const BASE_URL = 'https://api.regulations.gov/v4';
 
+/**
+ * Regulations.gov v4 rejects page[size] outside [5, 250] with an HTTP 400:
+ * "Page size parameter must be a positive number of 5 or greater." Callers that
+ * want fewer than 5 rows must ask for 5 and slice — the API has no smaller page.
+ */
+export const REG_MIN_PAGE_SIZE = 5;
+export const REG_MAX_PAGE_SIZE = 250;
+
+export function clampRegPageSize(size: number): number {
+  return Math.min(Math.max(size, REG_MIN_PAGE_SIZE), REG_MAX_PAGE_SIZE);
+}
+
 async function rateLimitedFetch(url: string, apiKey: string): Promise<Response> {
   return dataGovRateLimitedFetch(url, {
     headers: {
@@ -64,11 +76,14 @@ export class RegulationsGovService {
     if (filters.searchTerm) params.set('filter[searchTerm]', filters.searchTerm);
     if (filters.postedDateFrom) params.set('filter[postedDate][ge]', filters.postedDateFrom);
     if (filters.postedDateTo) params.set('filter[postedDate][le]', filters.postedDateTo);
-    if (filters.commentEndDateFrom) params.set('filter[commentEndDate][ge]', filters.commentEndDateFrom);
-    if (filters.commentEndDateTo) params.set('filter[commentEndDate][le]', filters.commentEndDateTo);
-    params.set('page[size]', String(filters.pageSize ?? 25));
+    if (filters.commentEndDateFrom)
+      params.set('filter[commentEndDate][ge]', filters.commentEndDateFrom);
+    if (filters.commentEndDateTo)
+      params.set('filter[commentEndDate][le]', filters.commentEndDateTo);
+    params.set('page[size]', String(clampRegPageSize(filters.pageSize ?? 25)));
     params.set('page[number]', String(filters.pageNumber ?? 1));
-    if (filters.sortBy) params.set('sort', `${filters.sortOrder === 'ASC' ? '' : '-'}${filters.sortBy}`);
+    if (filters.sortBy)
+      params.set('sort', `${filters.sortOrder === 'ASC' ? '' : '-'}${filters.sortBy}`);
 
     const cacheKey = `regs-docs:${params.toString()}`;
 
@@ -150,7 +165,7 @@ export class RegulationsGovService {
       return { comments: [], total: 0, totalPages: 0 };
     }
 
-    const pageSize = opts?.pageSize ?? 25;
+    const pageSize = clampRegPageSize(opts?.pageSize ?? 25);
     const pageNumber = opts?.pageNumber ?? 1;
     const cacheKey = `regs-comments:${docketId}:${pageSize}:${pageNumber}`;
 
@@ -270,8 +285,7 @@ export class RegulationsGovService {
             throw new Error(`Regulations.gov API returned ${response.status}`);
           }
 
-          const data: RegAPISingleResponse<Omit<RegDocket, 'id' | 'type'>> =
-            await response.json();
+          const data: RegAPISingleResponse<Omit<RegDocket, 'id' | 'type'>> = await response.json();
 
           return {
             id: data.data.id,
@@ -297,10 +311,7 @@ export class RegulationsGovService {
   /**
    * Get all documents in a docket.
    */
-  async getDocketDocuments(
-    docketId: string,
-    opts?: { pageSize?: number }
-  ): Promise<RegDocument[]> {
+  async getDocketDocuments(docketId: string, opts?: { pageSize?: number }): Promise<RegDocument[]> {
     return this.searchDocuments({ docketId, pageSize: opts?.pageSize ?? 25 });
   }
 
@@ -441,9 +452,7 @@ export class RegulationsGovService {
 
           // Filter to comments where organization matches
           const orgLower = orgName.toLowerCase();
-          const matched = comments.filter(
-            c => c.organization?.toLowerCase().includes(orgLower)
-          );
+          const matched = comments.filter(c => c.organization?.toLowerCase().includes(orgLower));
 
           return { comments: matched, total };
         },
