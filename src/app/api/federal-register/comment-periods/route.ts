@@ -94,7 +94,14 @@ async function fetchCommentPeriods(): Promise<{
         openParams.set('conditions[type]', 'PRORULE');
         openParams.set('conditions[comment_date][gte]', todayStr);
         openParams.set('per_page', '100');
-        openParams.set('order', 'newest');
+        // 'oldest', not 'newest'. Among rules still open, the oldest-published
+        // are the ones closing soonest, and ordering by newest filled the page
+        // with rules that had a month left: measured against the live API, a
+        // newest-ordered page of 100 contained zero rules closing within seven
+        // days, so the "closing this week" figure filtered from it was
+        // structurally zero. Note the API silently ignores an unsupported
+        // order value rather than erroring, so 'comment_date' reads as newest.
+        openParams.set('order', 'oldest');
         fields.forEach(f => openParams.append('fields[]', f));
 
         const openUrl = `${FEDERAL_REGISTER_API}/documents.json?${openParams.toString()}`;
@@ -108,11 +115,46 @@ async function fetchCommentPeriods(): Promise<{
         });
 
         let openComments: FederalRegisterItem[] = [];
+        // Federal Register reports the count for the whole query; the page is
+        // capped at 100 and there are usually more than twice that open.
+        let totalOpenUpstream: number | null = null;
         if (openResponse.ok) {
           const openData: FederalRegisterAPIResponse = await openResponse.json();
+          totalOpenUpstream = typeof openData.count === 'number' ? openData.count : null;
           openComments = openData.results
             .map(transformProposedRule)
             .filter(item => item.isOpenForComment);
+        }
+
+        // Rules closing within a week, counted upstream rather than by
+        // filtering the capped page — this is the number a citizen acts on.
+        const weekAheadStr = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        const soonParams = new URLSearchParams();
+        soonParams.set('conditions[type]', 'PRORULE');
+        soonParams.set('conditions[comment_date][gte]', todayStr);
+        soonParams.set('conditions[comment_date][lte]', weekAheadStr);
+        soonParams.set('per_page', '1');
+        soonParams.append('fields[]', 'document_number');
+
+        let closingThisWeekUpstream: number | null = null;
+        try {
+          const soonResponse = await fetch(
+            `${FEDERAL_REGISTER_API}/documents.json?${soonParams.toString()}`,
+            {
+              headers: {
+                Accept: 'application/json',
+                'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+              },
+            }
+          );
+          if (soonResponse.ok) {
+            const soonData: FederalRegisterAPIResponse = await soonResponse.json();
+            closingThisWeekUpstream = typeof soonData.count === 'number' ? soonData.count : null;
+          }
+        } catch {
+          // Leave null; the page falls back to the capped filter and says so.
         }
 
         // Fetch recently closed (last 7 days)
@@ -165,9 +207,14 @@ async function fetchCommentPeriods(): Promise<{
           closingSoon,
           recentlyClosed,
           stats: {
-            totalOpen: openComments.length,
-            closingThisWeek: closingSoon.length,
+            totalOpen: totalOpenUpstream ?? openComments.length,
+            closingThisWeek: closingThisWeekUpstream ?? closingSoon.length,
+            // Averaged over the soonest-closing rules retrieved, so it skews
+            // low against all open rules. Its denominator travels with it.
             avgDaysRemaining,
+            avgDaysRemainingSampleSize: openComments.length,
+            /** False when a stat above fell back to counting the capped page. */
+            countsAreExact: totalOpenUpstream !== null && closingThisWeekUpstream !== null,
           },
         };
       } catch (error) {

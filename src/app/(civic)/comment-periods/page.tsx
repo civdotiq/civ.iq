@@ -30,6 +30,9 @@ interface CommentPeriodsResponse {
     totalOpen: number;
     closingThisWeek: number;
     avgDaysRemaining: number;
+    /** Rules the average was taken over — the page is capped, the counts are not. */
+    avgDaysRemainingSampleSize?: number;
+    countsAreExact?: boolean;
   };
 }
 
@@ -200,7 +203,9 @@ export default function CommentPeriodsPage() {
                     <div className="text-xs text-gray-500 uppercase">Open for Comment</div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-[#e11d07]">
+                    {/* Amber, not red: urgency is a system state, and red is
+                        reserved for party identification. */}
+                    <div className="text-3xl font-bold text-[#d97706]">
                       {data.stats.closingThisWeek}
                     </div>
                     <div className="text-xs text-gray-500 uppercase">Closing This Week</div>
@@ -209,7 +214,13 @@ export default function CommentPeriodsPage() {
                     <div className="text-3xl font-bold text-gray-900">
                       {Math.round(data.stats.avgDaysRemaining)}
                     </div>
-                    <div className="text-xs text-gray-500 uppercase">Avg. Days Remaining</div>
+                    <div className="text-xs text-gray-500 uppercase">
+                      Avg. Days Remaining
+                      {data.stats.avgDaysRemainingSampleSize !== undefined &&
+                      data.stats.avgDaysRemainingSampleSize < data.stats.totalOpen
+                        ? ` (in ${data.stats.avgDaysRemainingSampleSize} soonest)`
+                        : ''}
+                    </div>
                   </div>
                 </div>
               </div>
