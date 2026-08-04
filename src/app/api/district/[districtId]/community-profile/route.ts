@@ -125,7 +125,11 @@ export async function GET(
     // the count is then only what was seen.
     const currentYear = new Date().getFullYear();
     const recentDisasters = disasters.items.filter(d => d.fyDeclared >= currentYear - 5);
-    const recentWindowComplete = disasters.items.length < FEMA_LIMIT;
+    // A failed fetch also returns zero rows, and calling that a complete window
+    // would report "no disasters in five years" as a finding rather than as an
+    // outage. Completeness requires that the fetch actually reported a count.
+    const recentWindowComplete =
+      disasters.totalAvailable !== null && disasters.items.length < FEMA_LIMIT;
 
     // College stats over the schools retrieved
     const publicColleges = colleges.items.filter(c => c.ownership === 'Public').length;
