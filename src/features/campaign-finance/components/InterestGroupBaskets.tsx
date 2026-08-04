@@ -73,6 +73,14 @@ export function InterestGroupBaskets({
 
   return (
     <div className="space-y-6">
+      {/* The dollar figures below are sums over the contributions this component
+          was handed — a recent-contributions list, not the full cycle — so the
+          basis is stated rather than letting them read as campaign totals. */}
+      <p className="text-xs text-gray-500 border-l-2 border-[#d97706] pl-2">
+        Shares and amounts below are computed from the {contributions.length.toLocaleString()}{' '}
+        contributions shown on this page, not the campaign&apos;s full receipts.
+      </p>
+
       {/* Metrics Overview */}
       {showMetrics && (
         <div className="aicher-card p-6">
