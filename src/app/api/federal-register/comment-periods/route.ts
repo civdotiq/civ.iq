@@ -60,7 +60,16 @@ async function fetchCommentPeriods(): Promise<{
   openComments: FederalRegisterItem[];
   closingSoon: FederalRegisterItem[];
   recentlyClosed: FederalRegisterItem[];
-  stats: { totalOpen: number; closingThisWeek: number; avgDaysRemaining: number };
+  stats: {
+    /** Federal Register's own match count, not the size of the page fetched. */
+    totalOpen: number;
+    closingThisWeek: number;
+    avgDaysRemaining: number;
+    /** Rules the average was taken over; the page is capped, the counts are not. */
+    avgDaysRemainingSampleSize: number;
+    /** False when a count above fell back to filtering the capped page. */
+    countsAreExact: boolean;
+  };
 }> {
   const cacheKey = 'federal-register-comment-periods';
 
@@ -223,7 +232,13 @@ async function fetchCommentPeriods(): Promise<{
           openComments: [],
           closingSoon: [],
           recentlyClosed: [],
-          stats: { totalOpen: 0, closingThisWeek: 0, avgDaysRemaining: 0 },
+          stats: {
+            totalOpen: 0,
+            closingThisWeek: 0,
+            avgDaysRemaining: 0,
+            avgDaysRemainingSampleSize: 0,
+            countsAreExact: false,
+          },
         };
       }
     },
@@ -255,11 +270,17 @@ export async function GET(request: NextRequest): Promise<NextResponse<CommentPer
         openComments: filterByAgency(openComments),
         closingSoon: filterByAgency(closingSoon),
         recentlyClosed: filterByAgency(recentlyClosed),
+        // An agency filter is applied to the retrieved page, not to the query,
+        // so its counts describe those rows rather than the agency's full
+        // docket and are flagged inexact. The unfiltered counts above come
+        // from Federal Register and stay exact.
         stats: agency
           ? {
               totalOpen: filterByAgency(openComments).length,
               closingThisWeek: filterByAgency(closingSoon).length,
               avgDaysRemaining: stats.avgDaysRemaining,
+              avgDaysRemainingSampleSize: stats.avgDaysRemainingSampleSize,
+              countsAreExact: false,
             }
           : stats,
         metadata: {

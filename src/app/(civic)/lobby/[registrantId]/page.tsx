@@ -45,7 +45,7 @@ export default async function LobbyOrgPage({ params }: PageProps) {
           url={pageUrl}
           id={`${pageUrl}#organization`}
           logo={null}
-          description={`Lobbying organization registered with the U.S. Senate. ${profile.totalFilings} filings on record.`}
+          description={`Lobbying organization registered with the U.S. Senate. ${profile.totalFilings.toLocaleString()} filings on record.`}
           mainEntityOfPage={pageUrl}
           sameAs={lobbySameAs}
           foundingDate={profile.wiki?.foundingDate ?? undefined}
@@ -101,7 +101,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       .join(', ');
 
     const title = `${profile.name} — Lobbying Profile`;
-    const description = `${profile.name} has filed ${profile.totalFilings} lobbying disclosure reports with the U.S. Senate, reporting ${spendingStr} in lobbying spending. Top issues: ${topIssues || 'various policy areas'}.`;
+    // The filing count is LDA's own total, while spending sums only the
+    // filings retrieved. Pairing them without qualification would attribute a
+    // partial sum to the full count, so the sentence says which it covers.
+    const spendingClause =
+      profile.filingsRead < profile.totalFilings
+        ? `, reporting ${spendingStr} in lobbying spending across the ${profile.filingsRead.toLocaleString()} most recent`
+        : `, reporting ${spendingStr} in lobbying spending`;
+    const description = `${profile.name} has filed ${profile.totalFilings.toLocaleString()} lobbying disclosure reports with the U.S. Senate${spendingClause}. Top issues: ${topIssues || 'various policy areas'}.`;
 
     return {
       title,
