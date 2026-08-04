@@ -13,6 +13,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type {
   NihGrant,
@@ -100,8 +101,25 @@ export class NihReporterService {
     topic?: string;
     limit?: number;
   }): Promise<NihGrant[]> {
+    return (await this.searchGrantsWithTotal(params)).items;
+  }
+
+  /**
+   * As `searchGrants`, but also reports how many projects match upstream.
+   *
+   * RePORTER puts the full match count in `meta.total` of the same response,
+   * while the rows are capped and sorted by award amount descending. Counting
+   * or summing those rows describes the largest handful of awards, not the
+   * state's NIH funding; `totalAvailable` is the figure to publish as a count.
+   */
+  async searchGrantsWithTotal(params: {
+    state?: string;
+    institution?: string;
+    topic?: string;
+    limit?: number;
+  }): Promise<CountedResult<NihGrant>> {
     const { state, institution, topic, limit = 25 } = params;
-    const cacheKey = `nih-grants:${state ?? ''}:${institution ?? ''}:${topic ?? ''}:${limit}`;
+    const cacheKey = `nih-grants-ct:${state ?? ''}:${institution ?? ''}:${topic ?? ''}:${limit}`;
 
     try {
       return await cachedFetch(
@@ -143,18 +161,21 @@ export class NihReporterService {
           });
 
           if (!response.ok) {
-            if (response.status === 404) return [];
+            if (response.status === 404) return { items: [], totalAvailable: 0 };
             throw new Error(`NIH RePORTER API returned ${response.status}`);
           }
 
           const data: NihReporterSearchResponse = await response.json();
-          return (data.results ?? []).map(transformGrant);
+          return {
+            items: (data.results ?? []).map(transformGrant),
+            totalAvailable: parseUpstreamTotal(data.meta?.total),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('NihReporterService.searchGrants failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 

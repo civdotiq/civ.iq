@@ -16,6 +16,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type {
   EpaFacility,
@@ -88,8 +89,25 @@ export class EpaEchoService {
     sicCode?: string;
     limit?: number;
   }): Promise<EpaFacility[]> {
+    return (await this.searchFacilitiesWithTotal(params)).items;
+  }
+
+  /**
+   * As `searchFacilities`, but also reports how many facilities match upstream.
+   *
+   * ECHO's step-1 search already returns `QueryRows` — the size of the whole
+   * result set — and the row fetch that follows is capped at a 100-row
+   * responseset. Callers that publish a facility count need the former; the
+   * rows only support the per-facility detail.
+   */
+  async searchFacilitiesWithTotal(params: {
+    state: string;
+    zip?: string;
+    sicCode?: string;
+    limit?: number;
+  }): Promise<CountedResult<EpaFacility>> {
     const { state, zip, sicCode, limit = 20 } = params;
-    const cacheKey = `epa-facilities:${state}:${zip ?? ''}:${sicCode ?? ''}:${limit}`;
+    const cacheKey = `epa-facilities-ct:${state}:${zip ?? ''}:${sicCode ?? ''}:${limit}`;
 
     try {
       return await cachedFetch(
@@ -118,7 +136,8 @@ export class EpaEchoService {
           }
 
           const searchData: EchoSearchResponse = await searchResponse.json();
-          if (searchData.Results?.QueryRows === '0') return [];
+          const totalAvailable = parseUpstreamTotal(searchData.Results?.QueryRows);
+          if (searchData.Results?.QueryRows === '0') return { items: [], totalAvailable: 0 };
           const qid = searchData.Results?.QueryID;
           if (!qid) {
             // ECHO returns HTTP 200 with an error message (not results) when a
@@ -146,13 +165,13 @@ export class EpaEchoService {
 
           const qidData: EchoQidResponse = await qidResponse.json();
           const facilities = qidData.Results?.Facilities ?? [];
-          return facilities.map(transformFacility);
+          return { items: facilities.map(transformFacility), totalAvailable };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('EpaEchoService.searchFacilities failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 

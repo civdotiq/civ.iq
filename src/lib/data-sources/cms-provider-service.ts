@@ -14,6 +14,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type { Hospital, NursingHome } from '@/types/cms';
 
@@ -29,7 +30,13 @@ const CMS_QUERY_BASE = 'https://data.cms.gov/provider-data/api/1/datastore/query
 // Note: CMS dropped the *_national_comparison columns from Hospital General
 // Information — transformHospital() degrades those to null (data unavailable).
 const HOSPITAL_DIST_UUID = 'b0a92ff7-a457-54f9-b247-20022db14590';
-const NURSING_HOME_DIST_UUID = '588f22e8-145d-5db5-baff-f59ce253316c';
+// Distribution UUID for "Provider Information" (dataset 4pq5-n9py). CMS rotates
+// these when a dataset is republished, and the previous value had gone dead:
+// every query returned HTTP 400 "No datastore storage found", which this service
+// caught and returned as an empty array, so nursing home counts read 0
+// nationwide rather than reporting an outage. Re-resolve from
+// /provider-data/api/1/metastore/schemas/dataset/items/4pq5-n9py if that recurs.
+const NURSING_HOME_DIST_UUID = '315891b3-d3ad-55e5-b495-6397e2fa657a';
 
 const MIN_REQUEST_INTERVAL_MS = 200;
 let lastRequestTime = 0;
@@ -68,6 +75,9 @@ function buildQueryUrl(
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   params.set('offset', '0');
+  // Returns `count` for the whole condition set, not just this page. Without it
+  // a caller can only count the rows it received, which is the fetch cap.
+  params.set('count', 'true');
 
   for (let i = 0; i < conditions.length; i++) {
     params.set(`conditions[${i}][property]`, conditions[i]!.property);
@@ -137,12 +147,8 @@ function transformHospital(raw: RawHospitalDkan): Hospital {
     emergencyServices: raw.emergency_services === 'Yes',
     overallRating: parseIntOrNull(raw.hospital_overall_rating),
     mortalityNationalComparison: parseNationalComparison(raw.mortality_national_comparison),
-    safetyNationalComparison: parseNationalComparison(
-      raw.safety_of_care_national_comparison
-    ),
-    readmissionNationalComparison: parseNationalComparison(
-      raw.readmission_national_comparison
-    ),
+    safetyNationalComparison: parseNationalComparison(raw.safety_of_care_national_comparison),
+    readmissionNationalComparison: parseNationalComparison(raw.readmission_national_comparison),
     patientExperienceNationalComparison: parseNationalComparison(
       raw.patient_experience_national_comparison
     ),
@@ -187,8 +193,19 @@ export class CmsProviderService {
    * Search CMS hospitals by state, optionally filtered by city.
    */
   async searchHospitals(state: string, city?: string): Promise<Hospital[]> {
+    return (await this.searchHospitalsWithTotal(state, city)).items;
+  }
+
+  /**
+   * As `searchHospitals`, but also reports how many hospitals match upstream.
+   *
+   * The datastore serves at most 200 rows per query, which several states
+   * exceed, so `items.length` saturates and stops tracking the state. `count`
+   * covers the whole condition set and is the number to publish.
+   */
+  async searchHospitalsWithTotal(state: string, city?: string): Promise<CountedResult<Hospital>> {
     const stateUpper = state.toUpperCase();
-    const cacheKey = `cms-hospitals:${stateUpper}:${city ?? ''}`;
+    const cacheKey = `cms-hospitals-ct:${stateUpper}:${city ?? ''}`;
 
     try {
       return await cachedFetch(
@@ -206,20 +223,23 @@ export class CmsProviderService {
 
           const response = await rateLimitedFetch(url);
           if (!response.ok) {
-            if (response.status === 404) return [];
+            if (response.status === 404) return { items: [], totalAvailable: 0 };
             throw new Error(`CMS API returned ${response.status}`);
           }
 
           const data = await response.json();
           const results: RawHospitalDkan[] = data.results ?? [];
 
-          return results.map(transformHospital);
+          return {
+            items: results.map(transformHospital),
+            totalAvailable: parseUpstreamTotal(data.count),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('CmsProviderService.searchHospitals failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 
@@ -227,8 +247,20 @@ export class CmsProviderService {
    * Search CMS nursing homes by state, optionally filtered by city.
    */
   async searchNursingHomes(state: string, city?: string): Promise<NursingHome[]> {
+    return (await this.searchNursingHomesWithTotal(state, city)).items;
+  }
+
+  /**
+   * As `searchNursingHomes`, but also reports how many match upstream.
+   *
+   * @see searchHospitalsWithTotal for why the row count cannot be published.
+   */
+  async searchNursingHomesWithTotal(
+    state: string,
+    city?: string
+  ): Promise<CountedResult<NursingHome>> {
     const stateUpper = state.toUpperCase();
-    const cacheKey = `cms-nursing-homes:${stateUpper}:${city ?? ''}`;
+    const cacheKey = `cms-nursing-homes-ct:${stateUpper}:${city ?? ''}`;
 
     try {
       return await cachedFetch(
@@ -246,20 +278,23 @@ export class CmsProviderService {
 
           const response = await rateLimitedFetch(url);
           if (!response.ok) {
-            if (response.status === 404) return [];
+            if (response.status === 404) return { items: [], totalAvailable: 0 };
             throw new Error(`CMS API returned ${response.status}`);
           }
 
           const data = await response.json();
           const results: RawNursingHomeDkan[] = data.results ?? [];
 
-          return results.map(transformNursingHome);
+          return {
+            items: results.map(transformNursingHome),
+            totalAvailable: parseUpstreamTotal(data.count),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('CmsProviderService.searchNursingHomes failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 }

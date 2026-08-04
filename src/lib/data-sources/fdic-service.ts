@@ -13,6 +13,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type {
   FdicInstitution,
@@ -87,8 +88,25 @@ export class FdicService {
     city?: string;
     limit?: number;
   }): Promise<FdicInstitution[]> {
+    return (await this.searchInstitutionsWithTotal(params)).items;
+  }
+
+  /**
+   * As `searchInstitutions`, but also reports how many institutions match.
+   *
+   * BankFind returns `totals.count` for the whole filter on every response, so
+   * the real institution count costs nothing beyond the request already made.
+   * The rows stay capped and remain sorted by assets descending, which makes
+   * them a "largest N" list — usable for a ranking, not for a state total.
+   */
+  async searchInstitutionsWithTotal(params: {
+    state?: string;
+    name?: string;
+    city?: string;
+    limit?: number;
+  }): Promise<CountedResult<FdicInstitution>> {
     const { state, name, city, limit = 25 } = params;
-    const cacheKey = `fdic-inst:${state ?? ''}:${name ?? ''}:${city ?? ''}:${limit}`;
+    const cacheKey = `fdic-inst-ct:${state ?? ''}:${name ?? ''}:${city ?? ''}:${limit}`;
 
     try {
       return await cachedFetch(
@@ -103,24 +121,82 @@ export class FdicService {
           filters.push('ACTIVE:1');
 
           const filterStr = filters.join(' AND ');
-          const fields = 'CERT,NAME,CITY,STALP,ZIP,COUNTY,BKCLASS,CHRTAGNT,ASSET,DEP,OFFDOM,ESTYMD,ACTIVE,REGAGNT';
+          const fields =
+            'CERT,NAME,CITY,STALP,ZIP,COUNTY,BKCLASS,CHRTAGNT,ASSET,DEP,OFFDOM,ESTYMD,ACTIVE,REGAGNT';
           const url = `${FDIC_BASE}/institutions?filters=${encodeURIComponent(filterStr)}&fields=${fields}&sort_by=ASSET&sort_order=DESC&limit=${Math.min(limit, 100)}`;
 
           logger.info('FDIC institution search', { state, name, city });
           const response = await rateLimitedFetch(url);
           if (!response.ok) {
-            if (response.status === 404) return [];
+            if (response.status === 404) return { items: [], totalAvailable: 0 };
             throw new Error(`FDIC API returned ${response.status}`);
           }
 
           const data: FdicApiResponse<RawFdicInstitution> = await response.json();
-          return (data.data ?? []).map(transformInstitution);
+          return {
+            items: (data.data ?? []).map(transformInstitution),
+            totalAvailable: parseUpstreamTotal(data.totals?.count),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('FdicService.searchInstitutions failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
+    }
+  }
+
+  /**
+   * Exact institution count and asset/deposit totals for one state.
+   *
+   * Summing a capped search is what makes a "total deposits" figure wrong, and
+   * here the cap is avoidable: no state has more than ~350 active institutions
+   * and BankFind serves them all in one request when asked for only the three
+   * fields this sums. So these totals are the real ones, not a top-N subtotal.
+   *
+   * Returns null if the request fails, so a caller shows nothing rather than a
+   * partial sum.
+   */
+  async getStateBankingTotals(state: string): Promise<{
+    institutions: number;
+    totalAssets: number;
+    totalDeposits: number;
+  } | null> {
+    const cacheKey = `fdic-state-totals:${state.toUpperCase()}`;
+
+    try {
+      return await cachedFetch(
+        cacheKey,
+        async () => {
+          const filterStr = `STALP:${state.toUpperCase()} AND ACTIVE:1`;
+          const url =
+            `${FDIC_BASE}/institutions?filters=${encodeURIComponent(filterStr)}` +
+            `&fields=CERT,ASSET,DEP&limit=1000`;
+
+          logger.info('FDIC state totals', { state });
+          const response = await rateLimitedFetch(url);
+          if (!response.ok) throw new Error(`FDIC API returned ${response.status}`);
+
+          const data: FdicApiResponse<RawFdicInstitution> = await response.json();
+          const rows = data.data ?? [];
+          const reported = parseUpstreamTotal(data.totals?.count);
+
+          // A short page means rows were dropped and the sums would understate.
+          if (reported !== null && rows.length < reported) {
+            throw new Error(`FDIC returned ${rows.length} of ${reported} institutions`);
+          }
+
+          return {
+            institutions: reported ?? rows.length,
+            totalAssets: rows.reduce((sum, r) => sum + (Number(r.data?.ASSET) || 0), 0),
+            totalDeposits: rows.reduce((sum, r) => sum + (Number(r.data?.DEP) || 0), 0),
+          };
+        },
+        CACHE_TTL
+      );
+    } catch (error) {
+      logger.error('FdicService.getStateBankingTotals failed', error as Error);
+      return null;
     }
   }
 

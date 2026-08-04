@@ -14,6 +14,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import type {
   FemaDisasterDeclaration,
@@ -92,8 +93,25 @@ export class FemaService {
     type?: 'DR' | 'EM' | 'FM';
     limit?: number;
   }): Promise<FemaDisasterDeclaration[]> {
+    return (await this.searchDisastersWithTotal(params)).items;
+  }
+
+  /**
+   * As `searchDisasters`, but also reports how many declarations match.
+   *
+   * `$inlinecount=allpages` makes OpenFEMA report the full filter count in
+   * `metadata.count` while still honoring `$top`. The rows stay capped and
+   * ordered newest-first, so counting them measures the page, not the state's
+   * declaration history.
+   */
+  async searchDisastersWithTotal(params: {
+    state: string;
+    year?: number;
+    type?: 'DR' | 'EM' | 'FM';
+    limit?: number;
+  }): Promise<CountedResult<FemaDisasterDeclaration>> {
     const { state, year, type, limit = 50 } = params;
-    const cacheKey = `fema-disasters:${state}:${year ?? ''}:${type ?? ''}:${limit}`;
+    const cacheKey = `fema-disasters-ct:${state}:${year ?? ''}:${type ?? ''}:${limit}`;
 
     try {
       return await cachedFetch(
@@ -107,6 +125,7 @@ export class FemaService {
             $filter: filters.join(' and '),
             $orderby: 'declarationDate desc',
             $top: String(Math.min(limit, 200)),
+            $inlinecount: 'allpages',
             $format: 'json',
           });
 
@@ -119,16 +138,18 @@ export class FemaService {
           }
 
           const data = await response.json();
-          const declarations: FemaRawDeclaration[] =
-            data.DisasterDeclarationsSummaries ?? [];
+          const declarations: FemaRawDeclaration[] = data.DisasterDeclarationsSummaries ?? [];
 
-          return declarations.map(transformDeclaration);
+          return {
+            items: declarations.map(transformDeclaration),
+            totalAvailable: parseUpstreamTotal(data.metadata?.count),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('FemaService.searchDisasters failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 
@@ -158,8 +179,7 @@ export class FemaService {
           }
 
           const data = await response.json();
-          const summaries: FemaRawAssistance[] =
-            data.FemaWebDisasterSummaries ?? [];
+          const summaries: FemaRawAssistance[] = data.FemaWebDisasterSummaries ?? [];
 
           if (summaries.length === 0) return null;
           return transformAssistance(summaries[0]!);

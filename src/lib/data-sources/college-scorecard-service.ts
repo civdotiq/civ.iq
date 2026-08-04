@@ -14,6 +14,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
+import { parseUpstreamTotal, type CountedResult } from '@/lib/data-sources/upstream-total';
 import logger from '@/lib/logging/simple-logger';
 import {
   getDataGovApiKey,
@@ -131,14 +132,30 @@ export class CollegeScorecardService {
     name?: string;
     limit?: number;
   }): Promise<CollegeScorecardInstitution[]> {
+    return (await this.searchInstitutionsWithTotal(params)).items;
+  }
+
+  /**
+   * As `searchInstitutions`, but also reports how many schools match upstream.
+   *
+   * Scorecard returns `metadata.total` for the full query alongside a capped,
+   * enrollment-sorted page. The count belongs to `totalAvailable`; the rows are
+   * the largest schools by enrollment and any average taken over them is
+   * weighted toward big institutions, not representative of the state.
+   */
+  async searchInstitutionsWithTotal(params: {
+    state?: string;
+    name?: string;
+    limit?: number;
+  }): Promise<CountedResult<CollegeScorecardInstitution>> {
     const apiKey = getDataGovApiKey();
     if (!apiKey) {
       logger.warn('DATA_GOV_API_KEY not configured');
-      return [];
+      return { items: [], totalAvailable: null };
     }
 
     const { state, name, limit = 25 } = params;
-    const cacheKey = `college-scorecard:${state ?? ''}:${name ?? ''}:${limit}`;
+    const cacheKey = `college-scorecard-ct:${state ?? ''}:${name ?? ''}:${limit}`;
 
     try {
       return await cachedFetch(
@@ -163,18 +180,21 @@ export class CollegeScorecardService {
 
           const response = await dataGovRateLimitedFetch(url);
           if (!response.ok) {
-            if (response.status === 404) return [];
+            if (response.status === 404) return { items: [], totalAvailable: 0 };
             throw new Error(`College Scorecard API returned ${response.status}`);
           }
 
           const data: CollegeScorecardApiResponse = await response.json();
-          return (data.results ?? []).map(transformInstitution);
+          return {
+            items: (data.results ?? []).map(transformInstitution),
+            totalAvailable: parseUpstreamTotal(data.metadata?.total),
+          };
         },
         CACHE_TTL
       );
     } catch (error) {
       logger.error('CollegeScorecardService.searchInstitutions failed', error as Error);
-      return [];
+      return { items: [], totalAvailable: null };
     }
   }
 
