@@ -14,6 +14,7 @@
  */
 
 import { getStateCode } from '@/lib/data/us-states';
+import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
 
 interface OpenStatesConfig {
   apiKey?: string;
@@ -69,6 +70,14 @@ interface V3Jurisdiction {
   url: string;
   latest_bill_update: string;
   latest_people_update: string;
+  /** Only returned when the request passes ?include=legislative_sessions */
+  legislative_sessions?: Array<{
+    identifier: string;
+    name: string;
+    classification?: string;
+    start_date: string;
+    end_date: string;
+  }>;
 }
 
 interface V3Bill {
@@ -699,24 +708,33 @@ class OpenStatesAPI {
     const jurisdiction = state.toLowerCase();
 
     try {
-      const response = await this.makeRequest<V3Jurisdiction>(`/jurisdictions/${jurisdiction}`);
+      // Both sessions and chamber organizations are opt-in includes. Without
+      // them the response carries neither, and callers end up substituting
+      // placeholder session names and generic chamber labels.
+      const response = await this.makeRequest<V3Jurisdiction>(`/jurisdictions/${jurisdiction}`, {
+        include: 'legislative_sessions',
+      });
 
-      // v3 API doesn't return chamber info, use defaults
+      // Chamber names come from the curated NCSL dataset, which carries the
+      // official names OpenStates abbreviates ("House" for Virginia's House of
+      // Delegates) and correctly models the unicameral bodies.
+      const metadata = getStateLegislatureMetadata(getStateCode(state) ?? state.toUpperCase());
+
       return {
         id: response.id,
         name: response.name,
         classification: response.classification,
         chambers: {
           upper: {
-            name: 'Senate',
+            name: metadata?.chambers.upper.name ?? 'Senate',
             title: 'Senator',
           },
           lower: {
-            name: 'House of Representatives',
+            name: metadata?.chambers.lower.name ?? 'House of Representatives',
             title: 'Representative',
           },
         },
-        legislative_sessions: undefined,
+        legislative_sessions: response.legislative_sessions,
       };
     } catch (error) {
       // If jurisdiction not found, return null

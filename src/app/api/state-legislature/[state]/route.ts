@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,32 +45,35 @@ interface StateLegislatureData {
   state: string;
   stateName: string;
   lastUpdated: string;
+  /** True for Nebraska and DC, where upper and lower describe the same body. */
+  isUnicameral?: boolean;
   session: {
     name: string;
+    identifier?: string;
     startDate: string;
     endDate: string;
     type: 'regular' | 'special';
     status?: 'active' | 'in-recess' | 'adjourned' | 'upcoming';
   };
   chambers: {
-    upper: {
-      name: string;
-      title: string; // e.g., "Senator", "State Senator"
-      totalSeats: number;
-      democraticSeats: number;
-      republicanSeats: number;
-      otherSeats: number;
-    };
-    lower: {
-      name: string;
-      title: string; // e.g., "Representative", "Assembly Member"
-      totalSeats: number;
-      democraticSeats: number;
-      republicanSeats: number;
-      otherSeats: number;
-    };
+    upper: ChamberSummary;
+    lower: ChamberSummary;
   };
   legislators: StateLegislator[];
+}
+
+interface ChamberSummary {
+  name: string;
+  title: string; // e.g., "Senator", "State Senator"
+  /** Real chamber size from the curated NCSL dataset. */
+  totalSeats: number;
+  /** How many members OpenStates actually returned — not the seat count. */
+  membersListed?: number;
+  /** False when most listed members have no party (e.g. nonpartisan Nebraska). */
+  partyDataAvailable?: boolean;
+  democraticSeats: number;
+  republicanSeats: number;
+  otherSeats: number;
 }
 
 // Helper function to get state abbreviation mapping
@@ -171,27 +175,75 @@ async function fetchWithRetry(
   return null;
 }
 
-/** OpenStates jurisdiction API response shape */
+/** OpenStates jurisdiction API response shape (v3) */
 interface StateJurisdiction {
   name?: string;
-  latest_session?: {
-    name?: string;
-    start_date?: string;
-    end_date?: string;
-  };
-  chambers?: { chamber?: string; name?: string }[];
+  /** Only present when the request asks for ?include=legislative_sessions */
+  legislative_sessions?: LegislativeSession[];
+}
+
+interface LegislativeSession {
+  identifier?: string;
+  name?: string;
+  classification?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+function isSpecialSession(session: LegislativeSession): boolean {
+  if (session.classification === 'special') return true;
+  // Classification is frequently blank in OpenStates, so fall back to the name
+  // (Virginia labels these "2026, 1st Special Session" with no classification).
+  return /special/i.test(session.name ?? '');
+}
+
+/**
+ * Pick the session a state is actually in.
+ *
+ * Order of preference:
+ *  1. A session currently in progress (started, with a real end date still ahead).
+ *  2. The most recently started regular session — the right answer for states
+ *     like Virginia that adjourn in March and sit idle for most of the year.
+ *  3. The most recently started session of any kind.
+ *
+ * An end date is required for "in progress" on purpose: some states leave old
+ * special sessions open-ended, and treating those as live would let a 2018
+ * session outrank the current one.
+ *
+ * Returns null when OpenStates gives us nothing usable — callers must not
+ * invent a session name.
+ */
+function selectCurrentSession(
+  sessions: LegislativeSession[] | undefined
+): LegislativeSession | null {
+  if (!sessions || sessions.length === 0) return null;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const started = sessions.filter(s => s.start_date && s.start_date <= today);
+  if (started.length === 0) return null;
+
+  const mostRecent = (pool: LegislativeSession[]) =>
+    pool.reduce((latest, s) => (s.start_date! > latest.start_date! ? s : latest));
+
+  const inProgress = started.filter(s => s.end_date && s.end_date >= today);
+  if (inProgress.length > 0) return mostRecent(inProgress);
+
+  const regular = started.filter(s => !isSpecialSession(s));
+  if (regular.length > 0) return mostRecent(regular);
+
+  return mostRecent(started);
 }
 
 // Fetch state jurisdiction info from OpenStates API
 async function fetchStateJurisdiction(stateAbbrev: string): Promise<StateJurisdiction | null> {
-  const monitor = monitorExternalApi(
-    'openstates',
-    'jurisdiction',
-    `https://v3.openstates.org/jurisdictions/${stateAbbrev}`
-  );
+  // legislative_sessions is opt-in; without the include the response carries no
+  // session data at all and every state falls back to a placeholder.
+  const jurisdictionUrl = `https://v3.openstates.org/jurisdictions/${stateAbbrev}?include=legislative_sessions`;
+
+  const monitor = monitorExternalApi('openstates', 'jurisdiction', jurisdictionUrl);
 
   try {
-    const response = await fetchWithRetry(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`);
+    const response = await fetchWithRetry(jurisdictionUrl);
 
     if (!response || !response.ok) {
       monitor.end(false, response?.status);
@@ -471,41 +523,90 @@ export async function GET(
           return acc;
         }, {});
 
-        const sessionStartDate = jurisdiction.latest_session?.start_date || '2024-01-01';
-        const sessionEndDate = jurisdiction.latest_session?.end_date || '2024-12-31';
+        // Real session from OpenStates. If it gives us nothing, say so rather
+        // than inventing a session name.
+        const currentSession = selectCurrentSession(jurisdiction.legislative_sessions);
+        const sessionStartDate = currentSession?.start_date ?? '';
+        const sessionEndDate = currentSession?.end_date ?? '';
+
+        // Chamber names and seat counts come from the curated NCSL dataset.
+        // The roster length is the number of members OpenStates returned, which
+        // drifts from the real chamber size (vacancies, mid-term replacements
+        // still listed) and must never be presented as the seat count.
+        const metadata = getStateLegislatureMetadata(state.toUpperCase());
+        const unicameral = metadata?.unicameral ?? false;
+
+        // In a unicameral legislature every member sits in the single chamber,
+        // whichever bucket OpenStates filed them under.
+        const unicameralPartyCount = unicameral
+          ? legislators.reduce((acc: Record<string, number>, leg) => {
+              acc[leg.party] = (acc[leg.party] || 0) + 1;
+              return acc;
+            }, {})
+          : {};
+
+        const buildChamber = (which: 'upper' | 'lower') => {
+          const partyCount = unicameral
+            ? unicameralPartyCount
+            : which === 'upper'
+              ? upperPartyCount
+              : lowerPartyCount;
+          const roster = unicameral
+            ? legislators
+            : which === 'upper'
+              ? upperLegislators
+              : lowerLegislators;
+          const chamberMeta = metadata?.chambers[which];
+
+          // Unknown party normalizes to 'Other', so a chamber where most
+          // members carry no party is a data gap, not a chamber full of
+          // independents. Nebraska's legislature is elected on a nonpartisan
+          // ballot and trips this legitimately.
+          const identified =
+            (partyCount['Democratic'] || 0) +
+            (partyCount['Republican'] || 0) +
+            (partyCount['Independent'] || 0);
+          const partyDataAvailable = roster.length > 0 && identified > roster.length / 2;
+
+          return {
+            name: chamberMeta?.name ?? (which === 'upper' ? 'Senate' : 'House of Representatives'),
+            title: which === 'upper' ? 'Senator' : 'Representative',
+            totalSeats: chamberMeta?.seats ?? 0,
+            membersListed: roster.length,
+            partyDataAvailable,
+            democraticSeats: partyCount['Democratic'] || 0,
+            republicanSeats: partyCount['Republican'] || 0,
+            otherSeats: (partyCount['Independent'] || 0) + (partyCount['Other'] || 0),
+          };
+        };
 
         return {
           state: state.toUpperCase(),
-          stateName: jurisdiction.name || state.toUpperCase(),
+          stateName: metadata?.name || jurisdiction.name || state.toUpperCase(),
           lastUpdated: new Date().toISOString(),
-          session: {
-            name: jurisdiction.latest_session?.name || '2024 Session',
-            startDate: sessionStartDate,
-            endDate: sessionEndDate,
-            type: 'regular',
-            status: determineSessionStatus(sessionStartDate, sessionEndDate),
-            // Note: recesses and deadlines require state-specific data not provided by OpenStates API
-            // These fields can be populated with manual data or state-specific scraping in the future
-          },
+          isUnicameral: unicameral,
+          session: currentSession
+            ? {
+                name: currentSession.name || currentSession.identifier || 'Current session',
+                identifier: currentSession.identifier,
+                startDate: sessionStartDate,
+                endDate: sessionEndDate,
+                type: (currentSession.classification === 'special' ? 'special' : 'regular') as
+                  | 'regular'
+                  | 'special',
+                status: determineSessionStatus(sessionStartDate, sessionEndDate),
+                // Note: recesses and deadlines require state-specific data not provided by OpenStates API
+                // These fields can be populated with manual data or state-specific scraping in the future
+              }
+            : {
+                name: 'Session data unavailable',
+                startDate: '',
+                endDate: '',
+                type: 'regular' as const,
+              },
           chambers: {
-            upper: {
-              name: jurisdiction.chambers?.find(c => c.chamber === 'upper')?.name || 'State Senate',
-              title: 'Senator',
-              totalSeats: upperLegislators.length,
-              democraticSeats: upperPartyCount['Democratic'] || 0,
-              republicanSeats: upperPartyCount['Republican'] || 0,
-              otherSeats: (upperPartyCount['Independent'] || 0) + (upperPartyCount['Other'] || 0),
-            },
-            lower: {
-              name:
-                jurisdiction.chambers?.find(c => c.chamber === 'lower')?.name ||
-                'House of Representatives',
-              title: 'Representative',
-              totalSeats: lowerLegislators.length,
-              democraticSeats: lowerPartyCount['Democratic'] || 0,
-              republicanSeats: lowerPartyCount['Republican'] || 0,
-              otherSeats: (lowerPartyCount['Independent'] || 0) + (lowerPartyCount['Other'] || 0),
-            },
+            upper: buildChamber('upper'),
+            lower: buildChamber('lower'),
           },
           legislators,
         };
@@ -602,6 +703,7 @@ export async function GET(
 // Never return fake legislators - this was generating mock data
 
 function getBasicStateInfo(state: string) {
+  const metadata = getStateLegislatureMetadata(state);
   const stateNames: Record<string, string> = {
     AL: 'Alabama',
     AK: 'Alaska',
@@ -659,15 +761,17 @@ function getBasicStateInfo(state: string) {
     name: stateNames[state] || 'Unknown State',
     chambers: {
       upper: {
-        name: 'State Senate',
+        name: metadata?.chambers.upper.name ?? 'Senate',
         title: 'Senator',
+        // Left at 0 on purpose: this is the OpenStates-unavailable path, and
+        // consumers read totalSeats === 0 as "no data".
         totalSeats: 0,
         democraticSeats: 0,
         republicanSeats: 0,
         otherSeats: 0,
       },
       lower: {
-        name: 'House of Representatives',
+        name: metadata?.chambers.lower.name ?? 'House of Representatives',
         title: 'Representative',
         totalSeats: 0,
         democraticSeats: 0,

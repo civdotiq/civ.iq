@@ -14,6 +14,8 @@ export const dynamic = 'force-dynamic'; // 24 hours
 interface StateBill {
   id: string;
   billNumber: string;
+  /** Legislative session identifier as reported by OpenStates (e.g. "2025-2026"). */
+  session?: string;
   title: string;
   summary: string;
   chamber: 'upper' | 'lower';
@@ -56,6 +58,56 @@ interface StateBill {
   }>;
   fullTextUrl?: string;
   trackingCount: number; // How many users are tracking this bill
+}
+
+/**
+ * Describe the sessions a result set actually spans.
+ *
+ * OpenStates stamps every bill with its session identifier, so the label is
+ * derived from the data rather than assumed. Returns the single session when
+ * they agree, a comma-joined list when a query straddles sessions, and an
+ * explicit unavailable marker when OpenStates omits the field.
+ */
+function describeSessions(bills: StateBill[], sessionNames: Map<string, string>): string {
+  const identifiers = [...new Set(bills.map(b => b.session).filter((s): s is string => !!s))];
+  if (identifiers.length === 0) return 'Session data unavailable';
+  // Identifiers are terse and state-specific ("20252026" in California), so
+  // prefer the display name OpenStates publishes for the session.
+  return identifiers
+    .sort()
+    .map(id => sessionNames.get(id) ?? id)
+    .join(', ');
+}
+
+/**
+ * Map session identifiers to their published display names.
+ *
+ * Returns an empty map on any failure — the caller then falls back to raw
+ * identifiers, which are still accurate, just less readable.
+ */
+async function fetchSessionNames(stateAbbrev: string): Promise<Map<string, string>> {
+  try {
+    const response = await fetch(
+      `https://v3.openstates.org/jurisdictions/${stateAbbrev}?include=legislative_sessions`,
+      { headers: { 'X-API-KEY': process.env.OPENSTATES_API_KEY || '' } }
+    );
+    if (!response.ok) return new Map();
+
+    const data = (await response.json()) as {
+      legislative_sessions?: Array<{ identifier?: string; name?: string }>;
+    };
+    return new Map(
+      (data.legislative_sessions ?? [])
+        .filter(s => s.identifier && s.name)
+        .map(s => [s.identifier!, s.name!])
+    );
+  } catch (error) {
+    logger.warn('Could not fetch session names', {
+      stateAbbrev,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return new Map();
+  }
 }
 
 interface StateBillsResponse {
@@ -274,6 +326,7 @@ function transformBill(bill: unknown, stateAbbrev: string): StateBill {
   return {
     id: (billData.id as string) || `${stateAbbrev}-${billData.identifier as string}`,
     billNumber: (billData.identifier as string) || 'Unknown',
+    session: billData.session as string | undefined,
     title: (billData.title as string) || 'No title available',
     summary: (billData.abstract as string) || (billData.title as string) || 'No summary available',
     chamber: fromOrganization?.classification === 'upper' ? 'upper' : 'lower',
@@ -448,14 +501,17 @@ export async function GET(
         const stateAbbrev = getStateAbbreviation(state);
 
         // Fetch bills from OpenStates API
-        const bills = await fetchStateBills(stateAbbrev, {
-          chamber: chamber || undefined,
-          subject: subject || undefined,
-          session: session || undefined,
-          search: search || undefined,
-          perPage: limit,
-          page,
-        });
+        const [bills, sessionNames] = await Promise.all([
+          fetchStateBills(stateAbbrev, {
+            chamber: chamber || undefined,
+            subject: subject || undefined,
+            session: session || undefined,
+            search: search || undefined,
+            perPage: limit,
+            page,
+          }),
+          fetchSessionNames(stateAbbrev),
+        ]);
 
         // If no bills found, provide fallback response
         if (bills.length === 0) {
@@ -468,7 +524,7 @@ export async function GET(
           return {
             state: state.toUpperCase(),
             stateName: getStateName(state),
-            session: '2024 Session',
+            session: session || 'Session data unavailable',
             bills: [],
             totalCount: 0,
             lastUpdated: new Date().toISOString(),
@@ -495,7 +551,9 @@ export async function GET(
         return {
           state: state.toUpperCase(),
           stateName: getStateName(state),
-          session: '2024 Regular Session',
+          // Label the response with the sessions the bills actually came from.
+          // A hardcoded label misattributes current bills to an old session.
+          session: describeSessions(bills, sessionNames),
           bills,
           totalCount: bills.length,
           lastUpdated: new Date().toISOString(),
