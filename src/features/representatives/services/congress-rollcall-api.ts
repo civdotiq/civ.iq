@@ -104,7 +104,7 @@ export class CongressRollCallAPI {
         return await response.json();
       };
 
-      return await cachedFetch(cacheKey, fetchFn, 5 * 60 * 1000); // 5-minute cache
+      return await cachedFetch(cacheKey, fetchFn, 5 * 60); // 5 minutes, in seconds
     } catch (error) {
       logger.error('Failed to fetch recent House roll call votes', error as Error, {
         congress,
@@ -150,7 +150,7 @@ export class CongressRollCallAPI {
         return await response.json();
       };
 
-      return await cachedFetch(cacheKey, fetchFn, 60 * 60 * 1000); // 1-hour cache (roll call votes don't change)
+      return await cachedFetch(cacheKey, fetchFn, 60 * 60); // 1 hour, in seconds (roll call votes don't change)
     } catch (error) {
       logger.error('Failed to fetch House roll call vote', error as Error, {
         congress,

@@ -25,7 +25,7 @@ interface DistrictMetadataResponse {
 export async function GET(request: NextRequest) {
   try {
     const cacheKey = 'district-boundaries-metadata';
-    const TTL_1_HOUR = 60 * 60 * 1000; // 1 hour cache
+    const TTL_1_HOUR = 60 * 60; // cachedFetch takes seconds, not milliseconds
 
     const metadata = await cachedFetch(
       cacheKey,

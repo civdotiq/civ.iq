@@ -76,7 +76,9 @@ export async function GET(
 
   try {
     const cacheKey = `state-executives-${state.toUpperCase()}`;
-    const TTL_24_HOURS = 24 * 60 * 60 * 1000;
+    // cachedFetch takes SECONDS. Passing milliseconds here froze the key for
+    // roughly 2.7 years.
+    const TTL_24_HOURS = 24 * 60 * 60;
 
     const executivesData = await cachedFetch(
       cacheKey,
