@@ -166,3 +166,7 @@ INTELLIGENCE_AUDIT_PROMPTS.md
 PROMPTS-mcp-expansion.md
 REMEDIATION_PROMPT.md
 AUDIT-federal-demo-readiness.md
+
+# Local-only design references and talk decks (not app code)
+design-refs/
+presentation/
