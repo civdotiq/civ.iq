@@ -7,10 +7,16 @@
  * Get the base URL for server-side API requests.
  *
  * Priority:
- * 1. NEXT_PUBLIC_SITE_URL / NEXT_PUBLIC_BASE_URL — explicit override
+ * 1. NEXT_PUBLIC_SITE_URL — explicit override (ignored if it points at
+ *    localhost while running on Vercel)
  * 2. VERCEL_PROJECT_PRODUCTION_URL — the production custom domain
  * 3. VERCEL_URL — the deployment URL (previews)
  * 4. localhost:3000 — local development
+ *
+ * NEXT_PUBLIC_BASE_URL is deliberately NOT consulted. It is set to
+ * http://localhost:3000 in .env.local and is scoped to All Environments in the
+ * Vercel dashboard, so treating it as an origin override risks pointing
+ * server-side fetches at localhost from inside a production function.
  *
  * Why the production domain outranks VERCEL_URL:
  *
@@ -32,9 +38,12 @@
  */
 export function getServerBaseUrl(): string {
   // Explicit override for custom domains or specific deployment control.
-  // Both names are accepted because the codebase uses both.
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL;
-  if (explicit) {
+  // A localhost value is ignored when running on Vercel: it can only be dev
+  // configuration that leaked into a deployed environment, and honouring it
+  // would make every server-side fetch call back into the function's own
+  // loopback interface.
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit && !(process.env.VERCEL && /^https?:\/\/(localhost|127\.0\.0\.1)/.test(explicit))) {
     return explicit;
   }
 
