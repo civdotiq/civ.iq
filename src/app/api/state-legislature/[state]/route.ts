@@ -712,12 +712,15 @@ export async function GET(
       error: 'State legislature data temporarily unavailable',
     };
 
-    // Not cached and explicitly not revalidated: this is a transient upstream
-    // failure, most often an OpenStates rate limit, and the next request
-    // should try again rather than be served this from a CDN.
+    // Short CDN cache rather than no-store. The failure must not persist for
+    // the full 60-minute success TTL, but serving it uncached is worse: every
+    // page view would re-attempt OpenStates, and each attempt counts against
+    // the 1000/day quota even when it is rejected, so a quota exhaustion could
+    // never drain. 60 seconds lets the CDN absorb repeats while still
+    // retrying roughly once a minute.
     return NextResponse.json(errorResponse, {
       status: 200,
-      headers: { 'Cache-Control': 'no-store' },
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=60' },
     });
   }
 }
