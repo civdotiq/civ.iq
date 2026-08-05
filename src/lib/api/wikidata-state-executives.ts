@@ -320,12 +320,13 @@ async function fetchStateOfficial(
         # Position must be instance of the position type (e.g., lieutenant governor)
         ?position wdt:P31 wd:${positionTypeId} .
 
-        # Position must be associated with this state
+        # Position must be associated with this state, by jurisdiction only.
+        # A label-substring branch used to be unioned in here; it matched
+        # across states — querying Virginia also matched "… of West Virginia" —
+        # which would attribute another state's official to this one.
         { ?position wdt:P1001 wd:${wikidataId} . }
         UNION
         { ?position wdt:P131 wd:${wikidataId} . }
-        UNION
-        { ?position rdfs:label ?posLabel . FILTER(CONTAINS(LCASE(?posLabel), LCASE("${stateName}"))) }
 
         # Must be current holder (no end date)
         FILTER NOT EXISTS { ?statement pq:P582 ?endTime . }

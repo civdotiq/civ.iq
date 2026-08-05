@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getNextElectionYear } from '@/lib/data/state-election-cycles';
 import { getAllStateExecutives } from '@/lib/api/wikidata-state-executives';
 import type { StateExecutive as WikidataStateExecutive } from '@/lib/api/wikidata-state-executives';
 
@@ -117,14 +118,11 @@ export async function GET(
           lastUpdated: new Date().toISOString(),
           nextElection: {
             date: getNextElectionDate(state.toUpperCase()),
-            offices: [
-              'governor',
-              'lieutenant_governor',
-              'attorney_general',
-              'secretary_of_state',
-              'treasurer',
-              'auditor',
-            ],
+            // No office list: which statewide offices appear on a given
+            // ballot varies by state (many appoint rather than elect the
+            // attorney general or secretary of state), and the fixed six
+            // listed here previously were asserted for all 50.
+            offices: [],
           },
           executives,
           totalCount: executives.length,
@@ -265,17 +263,37 @@ function getStateInfo(state: string) {
   };
 }
 
-function getNextElectionDate(state: string): string {
-  // Most gubernatorial elections are in even years
-  const currentYear = new Date().getFullYear();
-  const nextEvenYear = currentYear % 2 === 0 ? currentYear + 2 : currentYear + 1;
+/**
+ * US general election day: the first Tuesday after the first Monday in November.
+ */
+function generalElectionDay(year: number): string {
+  const firstOfNovember = new Date(Date.UTC(year, 10, 1));
+  // getUTCDay: Sunday 0 … Monday 1 … Saturday 6
+  const daysUntilMonday = (8 - firstOfNovember.getUTCDay()) % 7;
+  const firstMonday = 1 + daysUntilMonday;
+  const tuesday = firstMonday + 1;
+  return `${year}-11-${String(tuesday).padStart(2, '0')}`;
+}
 
-  // Some states have off-year elections (Virginia, New Jersey, etc.)
-  const offYearStates = ['VA', 'NJ'];
-  if (offYearStates.includes(state)) {
-    const nextOddYear = currentYear % 2 === 0 ? currentYear + 1 : currentYear + 2;
-    return `${nextOddYear}-11-07`; // First Tuesday after first Monday in November
-  }
+/**
+ * Date of the next statewide general election.
+ *
+ * The previous version jumped to `currentYear + 2` whenever the current year
+ * was even, which skipped the election happening that very year — in 2026 it
+ * told all 36 states with a gubernatorial race that their next election was in
+ * 2028. It also hardcoded November 7th, which is the right day only
+ * occasionally, and knew about just two of the four odd-year states.
+ *
+ * Cycle membership now comes from the shared state-election-cycles table and
+ * the day is computed rather than assumed.
+ */
+function getNextElectionDate(state: string, today: Date = new Date()): string {
+  const todayIso = today.toISOString().slice(0, 10);
 
-  return `${nextEvenYear}-11-07`;
+  const year = getNextElectionYear(state, today.getFullYear());
+  const date = generalElectionDay(year);
+  if (date >= todayIso) return date;
+
+  // This year's election has already been held; step to the next cycle.
+  return generalElectionDay(getNextElectionYear(state, year + 1));
 }
