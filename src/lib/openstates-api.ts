@@ -634,6 +634,22 @@ class OpenStatesAPI {
     return allResults
       .filter(person => {
         if (!person.current_role) return false;
+
+        // OpenStates lists statewide executives (governor, AG, secretary of
+        // state) under the same jurisdiction as legislators. They hold no
+        // chamber seat, so they are excluded here — otherwise transformPerson
+        // below defaults them to the lower house.
+        // 'legislature' covers the unicameral bodies (Nebraska, DC), which are
+        // neither upper nor lower and must not be filtered out with them.
+        const classification = person.current_role.org_classification;
+        if (
+          classification !== 'upper' &&
+          classification !== 'lower' &&
+          classification !== 'legislature'
+        ) {
+          return false;
+        }
+
         if (!chamber) return true;
 
         // v3 uses organization classification, we need to map it
@@ -682,7 +698,9 @@ class OpenStatesAPI {
       name: person.name,
       party: person.party || 'Unknown',
       chamber,
-      district: person.current_role?.district || 'At-Large',
+      // Not defaulted to 'At-Large': very few state legislative seats actually
+      // are, so inventing one misstates which seat a member holds.
+      district: person.current_role?.district || 'Unknown',
       state: state,
       photo_url: person.image || undefined,
       email: person.email || undefined,

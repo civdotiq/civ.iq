@@ -8,6 +8,7 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
+import { normalizeStateIdentifier } from '@/lib/data/us-states';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,8 @@ interface StateLegislator {
   }>;
   terms: Array<{
     startYear: number;
-    endYear: number;
+    /** Absent when OpenStates reports no end date — never inferred. */
+    endYear?: number;
     chamber: 'upper' | 'lower';
   }>;
   bills: {
@@ -47,6 +49,11 @@ interface StateLegislatureData {
   lastUpdated: string;
   /** True for Nebraska and DC, where upper and lower describe the same body. */
   isUnicameral?: boolean;
+  /**
+   * False when the OpenStates roster fetch stopped early (usually a rate
+   * limit). Party breakdowns are suppressed in that case.
+   */
+  rosterComplete?: boolean;
   session: {
     name: string;
     identifier?: string;
@@ -76,62 +83,13 @@ interface ChamberSummary {
   otherSeats: number;
 }
 
-// Helper function to get state abbreviation mapping
+// Helper function to get the OpenStates jurisdiction abbreviation.
+// Uses the canonical state list rather than a local map: the previous 50-entry
+// map omitted DC, so every request for the DC Council threw "Invalid state
+// abbreviation" even though OpenStates publishes its 13 councilmembers.
 function getStateAbbreviation(state: string): string | null {
-  const stateMap: { [key: string]: string } = {
-    AL: 'al',
-    AK: 'ak',
-    AZ: 'az',
-    AR: 'ar',
-    CA: 'ca',
-    CO: 'co',
-    CT: 'ct',
-    DE: 'de',
-    FL: 'fl',
-    GA: 'ga',
-    HI: 'hi',
-    ID: 'id',
-    IL: 'il',
-    IN: 'in',
-    IA: 'ia',
-    KS: 'ks',
-    KY: 'ky',
-    LA: 'la',
-    ME: 'me',
-    MD: 'md',
-    MA: 'ma',
-    MI: 'mi',
-    MN: 'mn',
-    MS: 'ms',
-    MO: 'mo',
-    MT: 'mt',
-    NE: 'ne',
-    NV: 'nv',
-    NH: 'nh',
-    NJ: 'nj',
-    NM: 'nm',
-    NY: 'ny',
-    NC: 'nc',
-    ND: 'nd',
-    OH: 'oh',
-    OK: 'ok',
-    OR: 'or',
-    PA: 'pa',
-    RI: 'ri',
-    SC: 'sc',
-    SD: 'sd',
-    TN: 'tn',
-    TX: 'tx',
-    UT: 'ut',
-    VT: 'vt',
-    VA: 'va',
-    WA: 'wa',
-    WV: 'wv',
-    WI: 'wi',
-    WY: 'wy',
-  };
-
-  return stateMap[state.toUpperCase()] || null;
+  const code = normalizeStateIdentifier(state);
+  return code ? code.toLowerCase() : null;
 }
 
 // Helper: Sleep for rate limiting
@@ -180,6 +138,12 @@ interface StateJurisdiction {
   name?: string;
   /** Only present when the request asks for ?include=legislative_sessions */
   legislative_sessions?: LegislativeSession[];
+}
+
+interface LegislatorFetchResult {
+  legislators: StateLegislator[];
+  /** False when pagination stopped early — party totals are then unreliable. */
+  complete: boolean;
 }
 
 interface LegislativeSession {
@@ -275,7 +239,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<StateJurisdi
 async function fetchStateLegislators(
   stateAbbrev: string,
   requestedChamber?: string
-): Promise<StateLegislator[]> {
+): Promise<LegislatorFetchResult> {
   const monitor = monitorExternalApi(
     'openstates',
     'legislators',
@@ -288,6 +252,13 @@ async function fetchStateLegislators(
     const allLegislators: StateLegislator[] = [];
     let page = 1;
     let hasMore = true;
+    // OpenStates reports its own match count, so completeness is checked
+    // against that rather than inferred from how many rows we managed to pull.
+    // A 429 partway through a large chamber (New Hampshire needs 9 pages)
+    // otherwise yields a truncated roster and a wrong party split.
+    let rawFetched = 0;
+    let expectedTotal: number | null = null;
+    let complete = true;
 
     while (hasMore) {
       const url = new URL('https://v3.openstates.org/people');
@@ -306,31 +277,72 @@ async function fetchStateLegislators(
           page,
           statusCode: response?.status,
         });
+        complete = false;
         break;
       }
 
       const data = await response.json();
       const results = data.results || [];
+      rawFetched += results.length;
+      if (typeof data.pagination?.total_items === 'number') {
+        expectedTotal = data.pagination.total_items;
+      }
 
       if (results.length === 0) {
         hasMore = false;
       } else {
-        const transformed = results.map((person: unknown) =>
+        // OpenStates returns statewide executives alongside legislators for a
+        // jurisdiction — Michigan's page includes the Governor, Lt. Governor,
+        // Attorney General and Secretary of State. They are not members of
+        // either chamber, so they are dropped here rather than defaulted into
+        // the lower house, where they inflated its roster and party split.
+        // 'legislature' is how the unicameral bodies are classified — Nebraska's
+        // 46 senators and DC's 13 councilmembers are neither upper nor lower.
+        const chamberMembers = (results as unknown[]).filter(person => {
+          const role = (person as Record<string, unknown>).current_role as
+            | Record<string, unknown>
+            | undefined;
+          const classification = role?.org_classification;
+          return (
+            classification === 'upper' ||
+            classification === 'lower' ||
+            classification === 'legislature'
+          );
+        });
+
+        const transformed = chamberMembers.map((person: unknown) =>
           transformLegislator(person, stateAbbrev)
         );
         allLegislators.push(...transformed);
         page++;
-        hasMore = results.length === 50; // If we got exactly 50, there might be more
+        // Page size is judged on the raw result count, not the filtered one,
+        // so dropping executives never truncates pagination early.
+        hasMore = results.length === 50;
       }
     }
 
     monitor.end(true, 200);
+
+    if (expectedTotal !== null && rawFetched < expectedTotal) {
+      complete = false;
+    }
+
+    if (!complete) {
+      logger.warn('State legislator roster is incomplete', {
+        stateAbbrev,
+        requestedChamber,
+        rawFetched,
+        expectedTotal,
+        reason: 'pagination stopped early — likely an OpenStates rate limit',
+      });
+    }
 
     logger.info('Fetched all state legislators from OpenStates', {
       stateAbbrev,
       requestedChamber,
       totalPages: page - 1,
       totalFetched: allLegislators.length,
+      complete,
     });
 
     // Filter by chamber if requested (using org_classification from transform)
@@ -343,17 +355,17 @@ async function fetchStateLegislators(
         beforeFilter: allLegislators.length,
         afterFilter: filtered.length,
       });
-      return filtered;
+      return { legislators: filtered, complete };
     }
 
-    return allLegislators;
+    return { legislators: allLegislators, complete };
   } catch (error) {
     monitor.end(false, undefined, error as Error);
     logger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
       requestedChamber,
     });
-    return [];
+    return { legislators: [], complete: false };
   }
 }
 
@@ -364,6 +376,15 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
 
   // OpenStates v3 uses 'org_classification' not 'chamber'
   const orgClassification = currentRole?.org_classification as string | undefined;
+  const roleTitle = (currentRole?.title as string | undefined)?.toLowerCase() ?? '';
+  // Unicameral members are classified 'legislature'; fall back to the title so
+  // Nebraska's senators land in the senate bucket rather than defaulting to a
+  // lower house that does not exist.
+  const chamber: 'upper' | 'lower' =
+    orgClassification === 'upper' ||
+    (orgClassification === 'legislature' && roleTitle === 'senator')
+      ? 'upper'
+      : 'lower';
   const contactDetails = (personData.contact_details as Record<string, unknown>[]) || [];
 
   const email = contactDetails.find((c: Record<string, unknown>) => c.type === 'email')?.value as
@@ -377,7 +398,7 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
     id: (personData.id as string) || `${stateAbbrev}-${orgClassification}-${currentRole?.district}`,
     name: (personData.name as string) || 'Unknown',
     party: normalizeParty(personData.party as string) || 'Other',
-    chamber: orgClassification === 'upper' ? 'upper' : 'lower',
+    chamber,
     district: (currentRole?.district as string) || 'Unknown',
     email,
     phone,
@@ -386,19 +407,20 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
       | undefined,
     photoUrl: personData.image as string | undefined,
     committees: [], // Would need separate API call to get committee memberships
-    terms: [
-      {
-        startYear: currentRole?.start_date
-          ? new Date(currentRole.start_date as string).getFullYear()
-          : 2023,
-        endYear: currentRole?.end_date
-          ? new Date(currentRole.end_date as string).getFullYear()
-          : orgClassification === 'upper'
-            ? 2027
-            : 2025,
-        chamber: orgClassification === 'upper' ? 'upper' : 'lower',
-      },
-    ],
+    // Only report a term when OpenStates gives us real dates. The previous
+    // fallbacks invented a 2023 start and a 2025/2027 end for anyone missing
+    // them, which put fabricated term years on a legislator's record.
+    terms: currentRole?.start_date
+      ? [
+          {
+            startYear: new Date(currentRole.start_date as string).getFullYear(),
+            endYear: currentRole?.end_date
+              ? new Date(currentRole.end_date as string).getFullYear()
+              : undefined,
+            chamber,
+          },
+        ]
+      : [],
     bills: {
       sponsored: 0, // Would need separate API call to get bill counts
       cosponsored: 0,
@@ -480,10 +502,11 @@ export async function GET(
         }
 
         // Fetch jurisdiction info and legislators from OpenStates API
-        const [jurisdiction, legislators] = await Promise.all([
+        const [jurisdiction, legislatorResult] = await Promise.all([
           fetchStateJurisdiction(stateAbbrev),
           fetchStateLegislators(stateAbbrev, chamber || undefined),
         ]);
+        const { legislators, complete: rosterComplete } = legislatorResult;
 
         // EMERGENCY FIX: Never return fake legislators - return empty results with clear message
         if (!jurisdiction || legislators.length === 0) {
@@ -566,7 +589,10 @@ export async function GET(
             (partyCount['Democratic'] || 0) +
             (partyCount['Republican'] || 0) +
             (partyCount['Independent'] || 0);
-          const partyDataAvailable = roster.length > 0 && identified > roster.length / 2;
+          // A truncated roster produces a party split that looks precise and is
+          // simply wrong, so completeness gates it too.
+          const partyDataAvailable =
+            rosterComplete && roster.length > 0 && identified > roster.length / 2;
 
           return {
             name: chamberMeta?.name ?? (which === 'upper' ? 'Senate' : 'House of Representatives'),
@@ -585,6 +611,7 @@ export async function GET(
           stateName: metadata?.name || jurisdiction.name || state.toUpperCase(),
           lastUpdated: new Date().toISOString(),
           isUnicameral: unicameral,
+          rosterComplete,
           session: currentSession
             ? {
                 name: currentSession.name || currentSession.identifier || 'Current session',

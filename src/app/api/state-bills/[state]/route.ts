@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import { normalizeStateIdentifier, getStateName as canonicalStateName } from '@/lib/data/us-states';
 
 // Bills can be cached - 24 hours for current session data
 export const dynamic = 'force-dynamic'; // 24 hours
@@ -130,62 +131,12 @@ interface StateBillsResponse {
   };
 }
 
-// Helper function to get state abbreviation for OpenStates API
+// Helper function to get the OpenStates jurisdiction abbreviation.
+// Canonical list, so DC resolves rather than falling through to a lowercase
+// guess that happens to work for states and silently misnames everything else.
 function getStateAbbreviation(state: string): string {
-  const stateMap: { [key: string]: string } = {
-    AL: 'al',
-    AK: 'ak',
-    AZ: 'az',
-    AR: 'ar',
-    CA: 'ca',
-    CO: 'co',
-    CT: 'ct',
-    DE: 'de',
-    FL: 'fl',
-    GA: 'ga',
-    HI: 'hi',
-    ID: 'id',
-    IL: 'il',
-    IN: 'in',
-    IA: 'ia',
-    KS: 'ks',
-    KY: 'ky',
-    LA: 'la',
-    ME: 'me',
-    MD: 'md',
-    MA: 'ma',
-    MI: 'mi',
-    MN: 'mn',
-    MS: 'ms',
-    MO: 'mo',
-    MT: 'mt',
-    NE: 'ne',
-    NV: 'nv',
-    NH: 'nh',
-    NJ: 'nj',
-    NM: 'nm',
-    NY: 'ny',
-    NC: 'nc',
-    ND: 'nd',
-    OH: 'oh',
-    OK: 'ok',
-    OR: 'or',
-    PA: 'pa',
-    RI: 'ri',
-    SC: 'sc',
-    SD: 'sd',
-    TN: 'tn',
-    TX: 'tx',
-    UT: 'ut',
-    VT: 'vt',
-    VA: 'va',
-    WA: 'wa',
-    WV: 'wv',
-    WI: 'wi',
-    WY: 'wy',
-  };
-
-  return stateMap[state.toUpperCase()] || state.toLowerCase();
+  const code = normalizeStateIdentifier(state);
+  return (code ?? state).toLowerCase();
 }
 
 // Fetch bills from OpenStates API
@@ -399,62 +350,11 @@ function normalizeParty(party?: string): 'Democratic' | 'Republican' | 'Independ
   return 'Independent';
 }
 
-// Get state names for display
+// Get state names for display. Delegates to the canonical list so DC and the
+// territories resolve instead of rendering as "Unknown State".
 function getStateName(state: string): string {
-  const stateNames: Record<string, string> = {
-    AL: 'Alabama',
-    AK: 'Alaska',
-    AZ: 'Arizona',
-    AR: 'Arkansas',
-    CA: 'California',
-    CO: 'Colorado',
-    CT: 'Connecticut',
-    DE: 'Delaware',
-    FL: 'Florida',
-    GA: 'Georgia',
-    HI: 'Hawaii',
-    ID: 'Idaho',
-    IL: 'Illinois',
-    IN: 'Indiana',
-    IA: 'Iowa',
-    KS: 'Kansas',
-    KY: 'Kentucky',
-    LA: 'Louisiana',
-    ME: 'Maine',
-    MD: 'Maryland',
-    MA: 'Massachusetts',
-    MI: 'Michigan',
-    MN: 'Minnesota',
-    MS: 'Mississippi',
-    MO: 'Missouri',
-    MT: 'Montana',
-    NE: 'Nebraska',
-    NV: 'Nevada',
-    NH: 'New Hampshire',
-    NJ: 'New Jersey',
-    NM: 'New Mexico',
-    NY: 'New York',
-    NC: 'North Carolina',
-    ND: 'North Dakota',
-    OH: 'Ohio',
-    OK: 'Oklahoma',
-    OR: 'Oregon',
-    PA: 'Pennsylvania',
-    RI: 'Rhode Island',
-    SC: 'South Carolina',
-    SD: 'South Dakota',
-    TN: 'Tennessee',
-    TX: 'Texas',
-    UT: 'Utah',
-    VT: 'Vermont',
-    VA: 'Virginia',
-    WA: 'Washington',
-    WV: 'West Virginia',
-    WI: 'Wisconsin',
-    WY: 'Wyoming',
-  };
-
-  return stateNames[state.toUpperCase()] || 'Unknown State';
+  const code = normalizeStateIdentifier(state);
+  return (code && canonicalStateName(code)) || 'Unknown State';
 }
 
 export async function GET(
