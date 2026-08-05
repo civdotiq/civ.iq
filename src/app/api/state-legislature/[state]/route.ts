@@ -140,6 +140,14 @@ interface StateJurisdiction {
   legislative_sessions?: LegislativeSession[];
 }
 
+/** Raised when OpenStates returns nothing usable, so the miss is not cached. */
+class OpenStatesUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OpenStatesUnavailableError';
+  }
+}
+
 interface LegislatorFetchResult {
   legislators: StateLegislator[];
   /** False when pagination stopped early — party totals are then unreliable. */
@@ -517,19 +525,15 @@ export async function GET(
             reason: 'Real state legislature data not available from OpenStates API',
           });
 
-          return {
-            state: state.toUpperCase(),
-            stateName: jurisdiction?.name || getBasicStateInfo(state.toUpperCase()).name,
-            lastUpdated: new Date().toISOString(),
-            session: {
-              name: 'Data Loading from OpenStates...',
-              startDate: '',
-              endDate: '',
-              type: 'regular' as const,
-            },
-            chambers: getBasicStateInfo(state.toUpperCase()).chambers,
-            legislators: [], // NEVER return fake legislators
-          };
+          // Thrown rather than returned so cachedFetch does not store it.
+          // OpenStates allows 40 requests/minute and one roster costs 3-9 of
+          // them, so a 429 here is routine and transient — caching the empty
+          // result would turn a few seconds of rate limiting into an hour of
+          // "Data unavailable". cachedFetch only declines to cache empty
+          // *arrays*, and this response is an object, so it would be stored.
+          throw new OpenStatesUnavailableError(
+            `No legislature data for ${state.toUpperCase()} (jurisdiction: ${!!jurisdiction}, legislators: ${legislators.length})`
+          );
         }
 
         // Calculate party distribution
@@ -688,10 +692,13 @@ export async function GET(
       request
     );
 
-    // Return empty but valid response structure on error
+    // Return empty but valid response structure on error. The state's real
+    // name and chamber names are still known from curated data, so only the
+    // live figures are withheld.
+    const basics = getBasicStateInfo(state.toUpperCase());
     const errorResponse = {
       state: state.toUpperCase(),
-      stateName: 'Unknown State',
+      stateName: basics.name,
       lastUpdated: new Date().toISOString(),
       session: {
         name: 'Data Unavailable',
@@ -699,30 +706,19 @@ export async function GET(
         endDate: '',
         type: 'regular' as const,
       },
-      chambers: {
-        upper: {
-          name: 'State Senate',
-          title: 'Senator',
-          totalSeats: 0,
-          democraticSeats: 0,
-          republicanSeats: 0,
-          otherSeats: 0,
-        },
-        lower: {
-          name: 'State House',
-          title: 'Representative',
-          totalSeats: 0,
-          democraticSeats: 0,
-          republicanSeats: 0,
-          otherSeats: 0,
-        },
-      },
+      chambers: basics.chambers,
       legislators: [],
       totalCount: 0,
       error: 'State legislature data temporarily unavailable',
     };
 
-    return NextResponse.json(errorResponse, { status: 200 });
+    // Not cached and explicitly not revalidated: this is a transient upstream
+    // failure, most often an OpenStates rate limit, and the next request
+    // should try again rather than be served this from a CDN.
+    return NextResponse.json(errorResponse, {
+      status: 200,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 }
 
