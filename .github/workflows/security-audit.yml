@@ -1,0 +1,193 @@
+name: Security Audit
+
+on:
+  schedule:
+    # Mondays at 15:00 UTC — after Dependabot's 04:00 America/New_York run,
+    # so the audit reflects the tree *after* that week's dependency PRs exist.
+    - cron: '0 15 * * 1'
+  workflow_dispatch: {}
+
+# Why a scheduled job rather than a CI gate on pull requests:
+#
+# Advisories land on a calendar, not on your commits. A PR gate only catches
+# vulnerabilities a PR introduces, while failing builds for advisories that
+# have nothing to do with the change under review — which, on a solo repo,
+# gets bypassed rather than fixed. Every advisory in the 2026-08-04 sweep was
+# published *after* the dependency that carried it was already pinned; no PR
+# gate would have fired for any of them.
+#
+# Why this is not redundant with Dependabot: Dependabot manages the
+# `dependencies` and `devDependencies` blocks. It does not touch `overrides`.
+# The critical node-tar advisory in that sweep was held open by an exact
+# `overrides.tar` pin, which Dependabot structurally cannot move. Override-
+# pinned transitive dependencies are invisible to it, and that is precisely
+# where the critical was sitting.
+#
+# Why the gate is `high` and not `moderate`: gating at high means no
+# suppression/allowlist file is needed today (the three known-unreachable
+# @hono/node-server findings are moderate). An allowlist that nobody revisits
+# is worse than no allowlist — it silently hides the next real finding. If a
+# moderate ever becomes genuinely reachable it will normally be rescored.
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # No `npm ci` — `npm audit` resolves the tree from package-lock.json and
+      # queries the registry directly, so installing node_modules would just be
+      # several minutes of wasted runner time.
+      - name: Run npm audit
+        id: audit
+        run: |
+          set -uo pipefail
+
+          # `npm audit` exits non-zero whenever it finds anything at or above
+          # the audit level, so the exit code alone cannot distinguish "found
+          # vulnerabilities" from "the command itself broke". Capture output
+          # and decide from the JSON instead — but fail loudly if the JSON is
+          # unparseable, because that means audit genuinely failed (network,
+          # registry outage, corrupt lockfile) and silently passing there is
+          # the exact bug this workflow exists to avoid.
+          npm audit --json > audit.json 2>audit.err || true
+
+          if ! node -e 'JSON.parse(require("fs").readFileSync("audit.json","utf8"))' 2>/dev/null; then
+            echo "::error::npm audit did not return parseable JSON — audit failed to run"
+            cat audit.err || true
+            head -c 2000 audit.json || true
+            exit 1
+          fi
+
+          node > summary.md <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('audit.json', 'utf8'));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          const high = (counts.high ?? 0) + (counts.critical ?? 0);
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `high=${high}\n`);
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `counts=${counts.critical ?? 0} critical, ${counts.high ?? 0} high, ` +
+              `${counts.moderate ?? 0} moderate, ${counts.low ?? 0} low\n`
+          );
+
+          if (high === 0) process.exit(0);
+
+          const lines = [];
+          for (const [name, v] of Object.entries(report.vulnerabilities ?? {})) {
+            if (v.severity !== 'high' && v.severity !== 'critical') continue;
+            lines.push(`### \`${name}\` — ${v.severity}`);
+            lines.push(`Vulnerable range: \`${v.range}\``);
+            const direct = v.isDirect ? 'direct dependency' : 'transitive';
+            lines.push(`Path: ${direct}, via ${(v.effects ?? []).join(', ') || 'top level'}`);
+            for (const via of v.via ?? []) {
+              if (typeof via === 'object') lines.push(`- [${via.title}](${via.url})`);
+            }
+            const fix = v.fixAvailable;
+            if (fix === false) lines.push('Fix available: **no**');
+            else if (fix === true) lines.push('Fix available: yes, in range');
+            else if (fix) {
+              lines.push(
+                `Fix available: \`${fix.name}@${fix.version}\`` +
+                  (fix.isSemVerMajor ? ' (**breaking**)' : '')
+              );
+            }
+            lines.push('');
+          }
+          console.log(lines.join('\n'));
+          NODE
+
+      - name: Open or update issue
+        if: steps.audit.outputs.high != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const details = fs.readFileSync('summary.md', 'utf8');
+            const counts = '${{ steps.audit.outputs.counts }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = 'Security: high or critical npm advisory';
+
+            const body = [
+              `\`npm audit\` reports **${counts}**.`,
+              '',
+              'Only high and critical findings are listed below; moderates are',
+              'tracked but do not open an issue. See the run for the full report.',
+              '',
+              details,
+              '',
+              'Before upgrading, check two things that cost real time in the',
+              '2026-08-04 sweep:',
+              '',
+              '1. If `npm audit fix` reports a fix but changes nothing, check',
+              '   `overrides` in package.json — an exact pin below the fixed',
+              '   version silently blocks it.',
+              '2. Fix one package at a time and re-run audit. A suggested major',
+              '   or minor bump often collapses to a patch once a sibling',
+              '   dependency is fixed first.',
+              '',
+              runUrl,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['security', 'dependencies'],
+              });
+            }
+
+      - name: Close issue when clean
+        if: steps.audit.outputs.high == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Security: high or critical npm advisory';
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (!match) return;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              body: `No high or critical advisories remain (${'${{ steps.audit.outputs.counts }}'}). Closing.`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              state: 'closed',
+            });
