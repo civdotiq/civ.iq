@@ -134,8 +134,11 @@ const DATA_SOURCES: SourceDefinition[] = [
   {
     name: 'Regulations.gov',
     tier: 'important',
+    // Two upstream constraints this probe has to respect, both HTTP 400 otherwise:
+    // lastModifiedDate demands 'yyyy-MM-dd HH:mm:ss' (unlike postedDate, which
+    // takes a bare date), and page[size] has a floor of 5.
     probeUrl:
-      'https://api.regulations.gov/v4/documents?filter[lastModifiedDate][ge]=2025-01-01&page[size]=1',
+      'https://api.regulations.gov/v4/documents?filter[lastModifiedDate][ge]=2025-01-01%2000:00:00&page[size]=5',
     // Regulations.gov runs on the api.data.gov platform — the service layer
     // (regulations-gov-service.ts) uses the shared DATA_GOV_API_KEY
     requiresKey: 'DATA_GOV_API_KEY',

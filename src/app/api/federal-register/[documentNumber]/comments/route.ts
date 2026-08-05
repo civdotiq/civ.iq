@@ -4,7 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { regulationsGovService } from '@/lib/data-sources/regulations-gov-service';
+import {
+  regulationsGovService,
+  clampRegPageSize,
+} from '@/lib/data-sources/regulations-gov-service';
 import logger from '@/lib/logging/simple-logger';
 import type { RegCommentsResponse } from '@/types/regulations-gov';
 
@@ -28,10 +31,9 @@ export async function GET(
   const { searchParams } = request.nextUrl;
   // NaN page/pageSize would reach Regulations.gov pagination — fall back to defaults
   const page = Math.max(parseInt(searchParams.get('page') ?? '1', 10) || 1, 1);
-  const pageSize = Math.min(
-    Math.max(parseInt(searchParams.get('pageSize') ?? '25', 10) || 25, 1),
-    250
-  );
+  // Clamped to the upstream's own [5, 250] window: ?pageSize=1 used to reach
+  // Regulations.gov verbatim and come back a 400.
+  const pageSize = clampRegPageSize(parseInt(searchParams.get('pageSize') ?? '25', 10) || 25);
 
   logger.info('Federal Register comments request', { documentNumber, page, pageSize });
 
