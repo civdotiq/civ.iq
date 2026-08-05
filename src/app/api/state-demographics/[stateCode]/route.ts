@@ -161,15 +161,13 @@ async function fetchStateDemographics(
     'B23025_005E', // Unemployed
   ].join(',');
 
-  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=state:${stateFips}`;
-
-  const fetchHeaders: Record<string, string> = {};
-  if (censusApiKey) {
-    fetchHeaders['X-API-Key'] = censusApiKey;
-  }
+  // Census only accepts the key as a query parameter. Sent as a header it is
+  // ignored and the API 302s to an HTML "missing key" page, which then fails
+  // JSON parsing.
+  const keyParam = censusApiKey && !censusApiKey.startsWith('your_') ? `&key=${censusApiKey}` : '';
+  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=state:${stateFips}${keyParam}`;
 
   const response = await fetch(url, {
-    headers: fetchHeaders,
     signal: AbortSignal.timeout(15000),
   });
 
