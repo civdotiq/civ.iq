@@ -107,7 +107,9 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total Seats */}
           <div className="bg-gray-50 border-2 border-gray-300 p-4 text-center">
-            <div className="text-3xl font-bold text-gray-900">{courtSystem.supremeCourt.seats}</div>
+            <div className="text-3xl font-bold text-gray-900">
+              {courtSystem.supremeCourt.seats ?? '—'}
+            </div>
             <div className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
               <Users className="w-4 h-4" />
               Total Seats
@@ -117,7 +119,7 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
           {/* Term Length */}
           <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 text-center">
             <div className="text-3xl font-bold text-civiq-blue">
-              {courtSystem.supremeCourt.termLength}
+              {courtSystem.supremeCourt.termLength ?? '—'}
             </div>
             <div className="text-sm text-civiq-blue mt-1">Years per Term</div>
           </div>
@@ -126,11 +128,31 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
           <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4">
             <div className="text-sm text-gray-700 font-medium mb-1">Selection Method</div>
             <div className="text-sm text-civiq-blue font-semibold">
-              {formatSelectionMethod(courtSystem.supremeCourt.selectionMethod)}
+              {courtSystem.supremeCourt.selectionMethod
+                ? formatSelectionMethod(courtSystem.supremeCourt.selectionMethod)
+                : 'Not verified'}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Roster availability */}
+      {!courtSystem.supremeCourt.justicesAvailable && (
+        <div className="bg-white border-2 border-black border-l-[3px] border-l-amber-600 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium mb-1">Justice roster unavailable</p>
+              <p className="text-gray-700">
+                {courtSystem.supremeCourt.justicesUnavailableReason ??
+                  'No verified source for this court&rsquo;s current justices is connected yet.'}{' '}
+                Court structure above is from curated reference data. We show nothing rather than
+                risk naming the wrong judges.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Data Source Notice */}
       <div className="bg-civiq-blue/10 border-2 border-civiq-blue p-4 mb-6">
@@ -139,8 +161,8 @@ export const StateJudiciaryTab: React.FC<StateJudiciaryTabProps> = ({ state }) =
           <div className="text-sm">
             <p className="text-civiq-blue font-medium mb-1">Data Source</p>
             <p className="text-civiq-blue">
-              Judiciary information is sourced from Wikidata and may not be complete for all states.
-              Last updated: {new Date(courtSystem.lastUpdated).toLocaleDateString()}.
+              Court structure is curated reference data and is not available for every state. Last
+              updated: {new Date(courtSystem.lastUpdated).toLocaleDateString()}.
             </p>
           </div>
         </div>

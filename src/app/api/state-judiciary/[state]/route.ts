@@ -37,7 +37,8 @@ export async function GET(
 
   try {
     const cacheKey = `state-judiciary-${state.toUpperCase()}`;
-    const TTL_24_HOURS = 24 * 60 * 60 * 1000;
+    // cachedFetch takes SECONDS, not milliseconds.
+    const TTL_24_HOURS = 24 * 60 * 60;
 
     const courtSystem = await cachedFetch(
       cacheKey,

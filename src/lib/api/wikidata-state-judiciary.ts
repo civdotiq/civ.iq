@@ -4,22 +4,15 @@
  */
 
 /**
- * Wikidata State Judiciary Service
+ * State Judiciary Service
  *
- * Fetches state supreme court justices and other state judicial officers
- * from Wikidata using SPARQL queries.
+ * Serves curated structural facts about state high courts (court name, seat
+ * count, term length, selection method) for the states where those have been
+ * verified. It does NOT serve justice rosters — no source currently provides a
+ * reliable "serving today" set per state. See the note above getStateCourtSystem.
  */
 
-import type {
-  StateSupremeCourtJustice,
-  StateCourtSystem,
-  JudicialSelectionMethod,
-} from '@/types/state-judiciary';
-
-// Network configuration
-const REQUEST_TIMEOUT = 10000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_BASE = 1000;
+import type { StateCourtSystem, JudicialSelectionMethod } from '@/types/state-judiciary';
 
 /**
  * Map of state codes to Wikidata IDs (same as executives)
@@ -100,172 +93,13 @@ const SUPREME_COURT_NAMES: Record<string, string> = {
 };
 
 /**
- * SPARQL binding structure
+ * NOTE: A Wikidata SPARQL roster fetch used to live here. It matched position
+ * labels containing "supreme court" with no jurisdiction constraint, so it
+ * returned U.S. Supreme Court justices — including deceased ones — and stamped
+ * them with whichever state was requested. It has been removed rather than
+ * repaired: neither Wikidata nor CourtListener currently yields a clean
+ * "justices serving today" set per state. See getStateCourtSystem below.
  */
-interface WikidataSparqlBinding {
-  justice?: { value: string };
-  justiceLabel?: { value: string };
-  termStart?: { value: string };
-  termEnd?: { value: string };
-  photo?: { value: string };
-  birthDate?: { value: string };
-  birthPlaceLabel?: { value: string };
-  educationLabel?: { value: string };
-  appointedByLabel?: { value: string };
-  wikipediaUrl?: { value: string };
-}
-
-/**
- * Fetch with timeout and retry logic
- */
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit = {},
-  retries = MAX_RETRIES
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org) Government Data Portal',
-        ...options.headers,
-      },
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok && retries > 0) {
-      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchWithRetry(url, options, retries - 1);
-    }
-
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (retries > 0) {
-      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchWithRetry(url, options, retries - 1);
-    }
-
-    throw error;
-  }
-}
-
-/**
- * Execute SPARQL query
- */
-async function executeSparqlQuery(query: string): Promise<WikidataSparqlBinding[]> {
-  const encodedQuery = encodeURIComponent(query);
-  const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
-
-  try {
-    const response = await fetchWithRetry(sparqlUrl);
-    if (!response.ok) {
-      return [];
-    }
-
-    const data = await response.json();
-    return data.results?.bindings || [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get state supreme court justices from Wikidata
- *
- * @param stateCode - Two-letter state code
- * @returns Array of supreme court justices
- */
-export async function getStateSupremeCourtJustices(
-  stateCode: string
-): Promise<StateSupremeCourtJustice[]> {
-  const upperState = stateCode.toUpperCase();
-  const stateName = SUPREME_COURT_NAMES[upperState] || `${upperState} Supreme Court`;
-
-  // This is a simplified query - Wikidata coverage of state courts varies significantly
-  // In practice, we'd need state-specific queries for each court system
-  const query = `
-    SELECT ?justice ?justiceLabel ?termStart ?termEnd ?photo ?birthDate
-           ?birthPlaceLabel ?educationLabel ?appointedByLabel ?wikipediaUrl
-    WHERE {
-      ?justice wdt:P39 ?position .
-      ?position rdfs:label ?positionLabel .
-      FILTER(CONTAINS(LCASE(?positionLabel), "supreme court"))
-      FILTER(LANG(?positionLabel) = "en")
-
-      OPTIONAL { ?justice wdt:P580 ?termStart . }
-      OPTIONAL { ?justice wdt:P582 ?termEnd . }
-      OPTIONAL { ?justice wdt:P18 ?photo . }
-      OPTIONAL { ?justice wdt:P569 ?birthDate . }
-      OPTIONAL { ?justice wdt:P19 ?birthPlace . }
-      OPTIONAL { ?justice wdt:P69 ?education . }
-      OPTIONAL { ?justice wdt:P748 ?appointedBy . }
-      OPTIONAL {
-        ?wikipediaUrl schema:about ?justice;
-                     schema:isPartOf <https://en.wikipedia.org/>.
-      }
-      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-    }
-    LIMIT 10
-  `;
-
-  const bindings = await executeSparqlQuery(query);
-
-  const justices: StateSupremeCourtJustice[] = [];
-  const seenJustices = new Set<string>();
-
-  for (const binding of bindings) {
-    if (!binding.justice?.value || !binding.justiceLabel?.value) {
-      continue;
-    }
-
-    const justiceId = binding.justice.value.split('/').pop() || '';
-
-    // Avoid duplicates
-    if (seenJustices.has(justiceId)) {
-      continue;
-    }
-    seenJustices.add(justiceId);
-
-    // Collect education from multiple bindings
-    const education: string[] = [];
-    bindings
-      .filter(b => b.justice?.value === binding.justice?.value && b.educationLabel?.value)
-      .forEach(b => {
-        if (b.educationLabel?.value) {
-          education.push(b.educationLabel.value);
-        }
-      });
-
-    justices.push({
-      wikidataId: justiceId,
-      name: binding.justiceLabel.value,
-      court: stateName,
-      courtType: 'supreme',
-      position: 'Justice', // Would need more sophisticated detection for Chief Justice
-      state: upperState,
-      termStart: binding.termStart?.value,
-      termEnd: binding.termEnd?.value,
-      photoUrl: binding.photo?.value,
-      birthDate: binding.birthDate?.value,
-      birthPlace: binding.birthPlaceLabel?.value,
-      education,
-      appointedBy: binding.appointedByLabel?.value,
-      wikipediaUrl: binding.wikipediaUrl?.value,
-    });
-  }
-
-  return justices;
-}
 
 /**
  * Get complete state court system data
@@ -280,10 +114,11 @@ export async function getStateCourtSystem(stateCode: string): Promise<StateCourt
     return null;
   }
 
-  const justices = await getStateSupremeCourtJustices(upperState);
   const courtName = SUPREME_COURT_NAMES[upperState] || `${upperState} Supreme Court`;
 
-  // Default selection methods by state (simplified - real data varies)
+  // Verified for these states only. Never defaulted: state high courts range
+  // from 5 to 9 seats with term lengths from 6 to 14 years, so a fallback
+  // value would be a fabricated fact for the other 40 states.
   const selectionMethods: Record<string, JudicialSelectionMethod> = {
     MI: 'election_nonpartisan',
     OH: 'election_nonpartisan',
@@ -299,18 +134,26 @@ export async function getStateCourtSystem(stateCode: string): Promise<StateCourt
       name: courtName,
       seats: getSupremeCourtSeats(upperState),
       termLength: getTermLength(upperState),
-      selectionMethod: selectionMethods[upperState] || 'appointment',
-      justices,
+      selectionMethod: selectionMethods[upperState],
+      // No verified roster source is wired. Wikidata's position data is not
+      // jurisdiction-clean (a "supreme court" text match returns U.S. Supreme
+      // Court justices, including deceased ones, for every state) and
+      // CourtListener's termination filter still returns former justices.
+      // Shipping either would put fabricated names under a real court.
+      justices: [],
+      justicesAvailable: false,
+      justicesUnavailableReason:
+        'No verified source for current state supreme court rosters is connected yet.',
     },
     lastUpdated: new Date().toISOString(),
-    dataSource: ['wikidata'],
+    dataSource: ['curated'],
   };
 }
 
 /**
  * Get number of seats on state supreme court
  */
-function getSupremeCourtSeats(stateCode: string): number {
+function getSupremeCourtSeats(stateCode: string): number | undefined {
   const seats: Record<string, number> = {
     MI: 7,
     CA: 7,
@@ -323,13 +166,13 @@ function getSupremeCourtSeats(stateCode: string): number {
     GA: 9,
     NC: 7,
   };
-  return seats[stateCode] || 7;
+  return seats[stateCode];
 }
 
 /**
  * Get term length for state supreme court
  */
-function getTermLength(stateCode: string): number {
+function getTermLength(stateCode: string): number | undefined {
   const terms: Record<string, number> = {
     MI: 8,
     CA: 12,
@@ -342,7 +185,7 @@ function getTermLength(stateCode: string): number {
     GA: 6,
     NC: 8,
   };
-  return terms[stateCode] || 8;
+  return terms[stateCode];
 }
 
 /**

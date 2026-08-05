@@ -79,10 +79,20 @@ export interface StateCourtSystem {
   // Supreme Court
   supremeCourt: {
     name: string; // e.g., "Michigan Supreme Court", "Texas Supreme Court"
-    seats: number;
-    termLength: number; // years
-    selectionMethod: JudicialSelectionMethod;
+    /** Omitted for states whose court composition has not been verified. */
+    seats?: number;
+    /** Years. Omitted where unverified. */
+    termLength?: number;
+    /** Omitted where unverified — never defaulted. */
+    selectionMethod?: JudicialSelectionMethod;
     justices: StateSupremeCourtJustice[];
+    /**
+     * False when no verified roster source is wired. Consumers must render an
+     * empty state rather than implying the court has no justices.
+     */
+    justicesAvailable: boolean;
+    /** Human-readable explanation shown when justicesAvailable is false. */
+    justicesUnavailableReason?: string;
   };
 
   // Appellate Courts (if applicable)
