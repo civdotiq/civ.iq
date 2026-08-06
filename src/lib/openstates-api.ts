@@ -198,6 +198,34 @@ export interface OpenStatesLegislator {
 }
 
 /**
+ * OpenStates v3 returns a bare bill — identifier, title, subject, latest action
+ * — and nothing else, on BOTH /bills and /bills/{id}, unless each nested block
+ * is named in an `include` parameter. There is no error and no empty array: the
+ * key is simply absent, so `bill.sponsorships ?? []` reads as "this bill has no
+ * sponsors" rather than "nobody asked for the sponsors". Every state bill
+ * surface was rendering that empty default.
+ *
+ * Lists ask only for what list views show. Asking for versions or votes across
+ * 100 bills multiplies the payload for blocks no list renders.
+ */
+const BILL_LIST_INCLUDES = ['sponsorships', 'abstracts', 'actions'] as const;
+
+/**
+ * A bill's own page shows all of it, so the detail request asks for everything
+ * — `versions` in particular, which is where the bill text links live.
+ */
+const BILL_INCLUDES = [
+  'sponsorships',
+  'abstracts',
+  'actions',
+  'sources',
+  'documents',
+  'versions',
+  'votes',
+  'related_bills',
+] as const;
+
+/**
  * Corpus record → the shape this module already returns, so swapping the source
  * is invisible to every consumer. Mirrors `transformPerson`, with two
  * differences that follow from the source rather than from choice: the corpus
@@ -467,7 +495,7 @@ class OpenStatesAPI {
    */
   private async makeRequest<T = unknown>(
     endpoint: string,
-    params?: Record<string, string | number | boolean | undefined>,
+    params?: Record<string, string | number | boolean | string[] | undefined>,
     cacheTTL?: number
   ): Promise<T> {
     // Build cache key
@@ -483,9 +511,15 @@ class OpenStatesAPI {
     const url = new URL(endpoint, this.config.baseUrl);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
+        if (value === undefined || value === null) return;
+        // `include` is repeated once per requested block. A comma-joined value
+        // is rejected outright (422, "value is not a valid enumeration
+        // member"), so this has to append rather than join. See BILL_INCLUDES.
+        if (Array.isArray(value)) {
+          value.forEach(entry => url.searchParams.append(key, String(entry)));
+          return;
         }
+        url.searchParams.append(key, String(value));
       });
     }
 
@@ -831,10 +865,11 @@ class OpenStatesAPI {
 
     // Paginate to collect enough chamber-filtered results (matching getBillsBySponsor pattern)
     while (hasMore && filteredBills.length < limit && page <= maxPages) {
-      const params: Record<string, string | number> = {
+      const params: Record<string, string | number | string[]> = {
         jurisdiction,
         per_page: Math.min(20, 100), // /bills endpoint max is 20 per page
         page,
+        include: [...BILL_LIST_INCLUDES],
       };
 
       if (session) params.session = session;
@@ -881,11 +916,15 @@ class OpenStatesAPI {
 
     // OpenStates v3 /bills API has a max per_page of 20 (not 100 like other endpoints)
     while (hasMore && allBills.length < limit) {
-      const params: Record<string, string | number> = {
+      const params: Record<string, string | number | string[]> = {
         jurisdiction,
         sponsor: personId,
         per_page: Math.min(20, limit - allBills.length), // /bills endpoint max is 20 per page
         page,
+        // Without this every returned bill has an empty sponsorship list, which
+        // is the whole point of a sponsor query: the co-sponsorship network and
+        // the sponsored/cosponsored split are both computed from it.
+        include: [...BILL_LIST_INCLUDES],
       };
 
       if (session) params.session = session;
@@ -994,7 +1033,9 @@ class OpenStatesAPI {
    */
   async getBillById(billId: string): Promise<OpenStatesBill | null> {
     try {
-      const response = await this.makeRequest<V3Bill>(`/bills/${billId}`);
+      const response = await this.makeRequest<V3Bill>(`/bills/${billId}`, {
+        include: [...BILL_INCLUDES],
+      });
       return this.transformBill(response);
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
