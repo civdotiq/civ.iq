@@ -127,8 +127,16 @@ export class VoteEnrichmentService {
     state: string,
     votes: StatePersonVote[]
   ): Promise<StateVoteDetail[]> {
-    // Deduplicate vote IDs
-    const uniqueVoteIds = [...new Set(votes.map(v => v.vote_id))];
+    // Deduplicate vote IDs, keeping the bill each one belongs to: OpenStates
+    // has no vote-by-id endpoint, so a roll call is fetched through its bill.
+    // Votes with no bill attached cannot be fetched at all and are skipped.
+    const billByVoteId = new Map<string, string>();
+    for (const vote of votes) {
+      if (vote.bill_id && !billByVoteId.has(vote.vote_id)) {
+        billByVoteId.set(vote.vote_id, vote.bill_id);
+      }
+    }
+    const uniqueVoteIds = [...billByVoteId.keys()];
 
     // Limit to 20 concurrent detail fetches to respect OpenStates rate limits
     const BATCH_SIZE = 10;
@@ -137,7 +145,9 @@ export class VoteEnrichmentService {
     for (let i = 0; i < uniqueVoteIds.length; i += BATCH_SIZE) {
       const batch = uniqueVoteIds.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.allSettled(
-        batch.map(voteId => StateLegislatureCoreService.getStateVoteById(state, voteId))
+        batch.map(voteId =>
+          StateLegislatureCoreService.getStateVoteById(state, voteId, billByVoteId.get(voteId)!)
+        )
       );
 
       for (const result of batchResults) {

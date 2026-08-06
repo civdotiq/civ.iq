@@ -20,20 +20,32 @@ interface PageProps {
     state: string;
     id: string;
   }>;
+  /**
+   * `bill` carries the Base64 id of the bill the vote belongs to. OpenStates
+   * has no vote-by-id endpoint, so a roll call is only reachable through its
+   * bill and a vote id on its own is not enough to render this page.
+   */
+  searchParams?: Promise<{ bill?: string }>;
 }
 
 /**
  * Fetch vote data directly from core service
  */
-async function getVote(state: string, base64Id: string) {
+async function getVote(state: string, base64Id: string, base64BillId?: string) {
   try {
+    if (!base64BillId) {
+      logger.warn(`[StateVotePage] No bill id supplied for vote: ${state}/${base64Id}`);
+      return null;
+    }
+
     // Decode Base64 ID to get vote event ID
     const voteId = decodeBase64Url(base64Id);
+    const billId = decodeBase64Url(base64BillId);
 
-    logger.info(`[StateVotePage] Fetching vote: ${state}/${voteId}`);
+    logger.info(`[StateVotePage] Fetching vote: ${state}/${voteId} on bill ${billId}`);
 
     // Call core service directly (no HTTP overhead)
-    const vote = await StateLegislatureCoreService.getStateVoteById(state, voteId);
+    const vote = await StateLegislatureCoreService.getStateVoteById(state, voteId, billId);
 
     if (vote) {
       logger.info(`[StateVotePage] Successfully fetched vote: ${vote.motion_text}`);
@@ -51,9 +63,9 @@ async function getVote(state: string, base64Id: string) {
 /**
  * Generate metadata for SEO
  */
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { state, id } = await params;
-  const vote = await getVote(state, id);
+  const vote = await getVote(state, id, (await searchParams)?.bill);
 
   if (!vote) {
     return {
@@ -68,7 +80,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: {
-      canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/vote/${id}`,
+      // The bill stays on the canonical URL: without it the page cannot be
+      // rendered, so a URL that drops it is not the same page.
+      canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/vote/${id}?bill=${(await searchParams)?.bill ?? ''}`,
     },
     openGraph: {
       title,
@@ -81,9 +95,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * State Vote Detail Page Component
  */
-export default async function StateVotePage({ params }: PageProps) {
+export default async function StateVotePage({ params, searchParams }: PageProps) {
   const { state, id } = await params;
-  const vote = await getVote(state, id);
+  const billParam = (await searchParams)?.bill;
+  const vote = await getVote(state, id, billParam);
 
   if (!vote) {
     notFound();
@@ -94,6 +109,9 @@ export default async function StateVotePage({ params }: PageProps) {
   const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
   const yesCount = vote.counts.find(c => c.option === 'yes')?.value ?? 0;
   const noCount = vote.counts.find(c => c.option === 'no')?.value ?? 0;
+  // Self-references keep the bill: the page does not resolve without it.
+  const votePath = `/state-legislature/${state}/vote/${id}?bill=${billParam ?? ''}`;
+  const voteUrl = `https://civdotiq.org${votePath}`;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -104,14 +122,14 @@ export default async function StateVotePage({ params }: PageProps) {
         startDate={vote.start_date}
         organizer={vote.organization_name}
         location={`${stateName} State Capitol`}
-        url={`https://civdotiq.org/state-legislature/${state}/vote/${id}`}
+        url={voteUrl}
       />
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
           { name: 'States', url: 'https://civdotiq.org/states' },
           { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
-          { name: motionLabel, url: `https://civdotiq.org/state-legislature/${state}/vote/${id}` },
+          { name: motionLabel, url: voteUrl },
         ]}
       />
 
@@ -120,7 +138,7 @@ export default async function StateVotePage({ params }: PageProps) {
           { label: 'Home', href: '/' },
           { label: 'States', href: '/states' },
           { label: state.toUpperCase(), href: `/state-legislature/${state}` },
-          { label: motionLabel, href: `/state-legislature/${state}/vote/${id}` },
+          { label: motionLabel, href: votePath },
         ]}
         className="mb-6"
       />

@@ -306,13 +306,22 @@ export interface StateBillVote {
   result: 'passed' | 'failed';
   chamber: StateChamber;
   counts: Array<{
-    option: 'yes' | 'no' | 'absent' | 'abstain' | 'not voting';
+    option: 'yes' | 'no' | 'absent' | 'abstain' | 'not voting' | 'excused' | 'other';
     value: number;
   }>;
+  /**
+   * How each member voted. Present only on a single-bill lookup, which is the
+   * one request that asks OpenStates for roll calls; list responses omit it
+   * rather than reporting an empty roll call.
+   */
   votes?: Array<{
     legislator_name: string;
+    /**
+     * Absent when OpenStates could not match the name printed on the roll call
+     * to a legislator, so the member is named but not linkable.
+     */
     legislator_id?: string;
-    option: 'yes' | 'no' | 'absent' | 'abstain' | 'not voting';
+    option: 'yes' | 'no' | 'absent' | 'abstain' | 'not voting' | 'excused' | 'other';
   }>;
 }
 

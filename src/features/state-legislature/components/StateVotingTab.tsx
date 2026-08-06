@@ -17,6 +17,28 @@ interface StateVotingTabProps {
   limit?: number;
 }
 
+const VOTE_CARD_CLASSES = 'block bg-white border-2 border-gray-300 p-grid-3';
+
+/**
+ * A vote card, linked to its own page when there is one to link to.
+ *
+ * Votes not attached to a bill have no detail page — the roll call is only
+ * reachable through the bill — so those render as a plain card. An unlinked
+ * card is better than a link to a page that cannot load.
+ */
+function VoteCardShell({ href, children }: { href?: string; children: React.ReactNode }) {
+  if (!href) return <div className={VOTE_CARD_CLASSES}>{children}</div>;
+
+  return (
+    <Link
+      href={href}
+      className={`${VOTE_CARD_CLASSES} hover:border-civiq-blue transition-all cursor-pointer`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 interface VotesResponse {
   success: boolean;
   votes: StatePersonVote[];
@@ -176,10 +198,19 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
       {/* Votes List */}
       <div className="space-y-grid-2">
         {votes.map((vote, index) => (
-          <Link
+          // The roll call lives on the bill — OpenStates has no vote-by-id
+          // endpoint — so the vote page needs the bill id alongside the vote id.
+          // Without a bill this vote has no page to link to, and the card stays
+          // a card rather than pointing at a dead end.
+          <VoteCardShell
             key={vote.vote_id || index}
-            href={`/state-legislature/${state}/vote/${encodeBase64Url(vote.vote_id)}`}
-            className="block bg-white border-2 border-gray-300 p-grid-3 hover:border-civiq-blue transition-all cursor-pointer"
+            href={
+              vote.bill_id
+                ? `/state-legislature/${state}/vote/${encodeBase64Url(
+                    vote.vote_id
+                  )}?bill=${encodeBase64Url(vote.bill_id)}`
+                : undefined
+            }
           >
             {/* Vote Header */}
             <div className="flex items-start justify-between mb-grid-2">
@@ -226,7 +257,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
             <div className="text-sm text-gray-600">
               <span className="font-bold">{vote.organization_name}</span>
             </div>
-          </Link>
+          </VoteCardShell>
         ))}
       </div>
 

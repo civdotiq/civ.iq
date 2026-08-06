@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { StateBill, StateBillVote } from '@/types/state-legislature';
+import { RollCall } from '@/features/state-bills/components/RollCall';
 
 interface StateBillApiResponse {
   success: boolean;
@@ -524,6 +525,8 @@ export default function StateBillDetailPage() {
                             </div>
                           ))}
                         </div>
+
+                        <RollCall state={state} vote={vote} />
                       </div>
                     ))}
                   </div>

@@ -122,12 +122,33 @@ interface V3Bill {
   }>;
   votes: Array<{
     id: string;
+    identifier?: string;
     motion_text: string;
+    motion_classification?: string[];
     start_date: string;
     result: string;
+    // The chamber that took the vote, which is not always the chamber the bill
+    // came from — a House bill gets a Senate floor vote too.
+    organization?: {
+      id: string;
+      name: string;
+      classification: string;
+    };
     counts: Array<{
       option: string;
       value: number;
+    }>;
+    // One record per member. `voter` is the resolved person and is null when
+    // OpenStates could not match the name on the roll call to a legislator.
+    votes?: Array<{
+      id: string;
+      option: string;
+      voter_name: string;
+      voter: {
+        id: string;
+        name: string;
+        party?: string;
+      } | null;
     }>;
   }>;
   sources: Array<{
@@ -280,7 +301,15 @@ export interface OpenStatesBill {
     motion_text: string;
     start_date: string;
     result: string;
+    /** Chamber that took the vote — not necessarily the bill's own chamber. */
+    chamber?: 'upper' | 'lower';
     counts: Array<{ option: string; value: number }>;
+    /** How each member voted. Absent unless the request asked for votes. */
+    votes?: Array<{
+      option: string;
+      voter_name: string;
+      voter_id: string | null;
+    }>;
   }>;
   sources?: Array<{ url: string; note?: string }>;
   // Bill text versions (introduced, amended, enrolled, etc.)
@@ -983,7 +1012,17 @@ class OpenStatesAPI {
           motion_text: v.motion_text,
           start_date: v.start_date,
           result: v.result,
+          chamber: v.organization?.classification as 'upper' | 'lower' | undefined,
           counts: v.counts,
+          // Prefer the resolved person's full name: `voter_name` is whatever
+          // the chamber printed on the roll call, often a bare surname
+          // ("Alexander"). Records whose voter OpenStates could not resolve
+          // keep that printed name and carry no id.
+          votes: v.votes?.map(member => ({
+            option: member.option,
+            voter_name: member.voter?.name || member.voter_name,
+            voter_id: member.voter?.id ?? null,
+          })),
         })) ?? [],
       sources:
         bill.sources?.map(source => ({
@@ -1172,61 +1211,55 @@ class OpenStatesAPI {
   }
 
   /**
-   * Get a specific vote event by ID
+   * Get one roll call, by the id of the bill it belongs to.
+   *
+   * OpenStates v3 has no vote-by-id endpoint: `/vote_events/{id}`, `/votes/{id}`
+   * and the `/vote_events` list all return 404, including for an `ocd-vote/...`
+   * id taken straight out of a bill payload. A roll call is only reachable
+   * through its bill, which is why this takes the bill id — the caller must
+   * carry it rather than hold a vote id alone.
+   *
+   * @param billId - OpenStates bill ID the vote belongs to
    * @param voteId - OpenStates vote event ID
-   * @returns Full vote event details including all voter positions
+   * @returns The vote including every member's position, or null if the bill
+   *          does not exist or holds no vote with that id
    */
-  async getVoteById(voteId: string): Promise<OpenStatesVote | null> {
+  async getBillVoteById(billId: string, voteId: string): Promise<OpenStatesVote | null> {
     try {
-      interface V3VoteEvent {
-        id: string;
-        identifier: string;
-        motion_text: string;
-        motion_classification: string[];
-        start_date: string;
-        result: string;
-        organization: {
-          id: string;
-          name: string;
-          classification: string;
-        };
-        votes: Array<{
-          option: string;
-          voter_name: string;
-          voter_id: string | null;
-        }>;
-        counts: Array<{
-          option: string;
-          value: number;
-        }>;
-        bill: {
-          id: string;
-          identifier: string;
-          title: string;
-        } | null;
-        created_at: string;
-        updated_at: string;
-      }
+      const response = await this.makeRequest<V3Bill>(`/bills/${billId}`, {
+        include: ['votes'],
+      });
 
-      const response = await this.makeRequest<V3VoteEvent>(`/vote_events/${voteId}`);
+      const vote = response.votes?.find(v => v.id === voteId);
+      if (!vote) return null;
 
       return {
-        id: response.id,
-        identifier: response.identifier,
-        motion_text: response.motion_text,
-        motion_classification: response.motion_classification,
-        start_date: response.start_date,
-        result: response.result as 'pass' | 'fail',
-        organization: response.organization,
-        votes: response.votes.map(v => ({
+        id: vote.id,
+        identifier: vote.identifier ?? vote.id,
+        motion_text: vote.motion_text,
+        motion_classification: vote.motion_classification ?? [],
+        start_date: vote.start_date,
+        result: vote.result as 'pass' | 'fail',
+        organization: vote.organization ?? {
+          id: response.from_organization?.id ?? '',
+          name: response.from_organization?.name ?? '',
+          classification: response.from_organization?.classification ?? 'lower',
+        },
+        votes: (vote.votes ?? []).map(v => ({
           option: v.option as 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused',
-          voter_name: v.voter_name,
-          voter_id: v.voter_id,
+          // The resolved person's full name where OpenStates matched one; the
+          // name the chamber printed otherwise.
+          voter_name: v.voter?.name || v.voter_name,
+          voter_id: v.voter?.id ?? null,
         })),
-        counts: response.counts,
-        bill: response.bill,
-        created_at: response.created_at,
-        updated_at: response.updated_at,
+        counts: vote.counts,
+        bill: {
+          id: response.id,
+          identifier: response.identifier,
+          title: response.title,
+        },
+        created_at: response.created_at ?? '',
+        updated_at: response.updated_at ?? '',
       };
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {

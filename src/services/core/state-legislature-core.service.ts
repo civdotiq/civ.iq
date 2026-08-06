@@ -49,6 +49,7 @@ import type {
   StateParty,
   StateBill,
   StateBillSummary,
+  StateBillVote,
   StateJurisdiction,
   ZipCodeStateLegislators,
   StatePersonVote,
@@ -184,10 +185,20 @@ export class StateLegislatureCoreService {
         motion_text: vote.motion_text,
         start_date: vote.start_date,
         result: vote.result as 'passed' | 'failed',
-        chamber: (osBill.chamber ?? 'lower') as StateChamber,
+        // The chamber that took this vote, falling back to the bill's own only
+        // when the vote does not name one. A House bill still gets a Senate
+        // floor vote, and labelling that roll call "House" is simply wrong.
+        chamber: (vote.chamber ?? osBill.chamber ?? 'lower') as StateChamber,
         counts: vote.counts.map(c => ({
-          option: c.option as 'yes' | 'no' | 'absent' | 'abstain' | 'not voting',
+          option: c.option as StateBillVote['counts'][number]['option'],
           value: c.value,
+        })),
+        // Left undefined rather than [] when the roll call was not requested,
+        // so "not asked for" stays distinguishable from "nobody voted".
+        votes: vote.votes?.map(member => ({
+          legislator_name: member.voter_name,
+          legislator_id: member.voter_id ?? undefined,
+          option: member.option as NonNullable<StateBillVote['votes']>[number]['option'],
         })),
       })),
       sources: osBill.sources ?? [],
@@ -906,8 +917,16 @@ export class StateLegislatureCoreService {
 
   /**
    * Get detailed vote information by vote ID - DIRECT function call, no HTTP
+   *
+   * The bill id is required because OpenStates has no vote-by-id endpoint: a
+   * roll call is only reachable through the bill it belongs to. Every caller
+   * that has a vote id also has the bill it came from.
    */
-  static async getStateVoteById(state: string, voteId: string): Promise<StateVoteDetail | null> {
+  static async getStateVoteById(
+    state: string,
+    voteId: string,
+    billId: string
+  ): Promise<StateVoteDetail | null> {
     const cacheKey = `core:state-vote:${state}:${voteId}`;
     const startTime = Date.now();
 
@@ -924,7 +943,7 @@ export class StateLegislatureCoreService {
       }
 
       // Fetch vote details from OpenStates API
-      const osVote = await openStatesAPI.getVoteById(voteId);
+      const osVote = await openStatesAPI.getBillVoteById(billId, voteId);
 
       if (!osVote) {
         logger.warn('State vote not found', {
