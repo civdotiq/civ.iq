@@ -84,7 +84,7 @@ All 50 states. Approximately 7,383 state legislators. Wikidata-sourced executive
 
 ### Reality
 
-CIV.IQ supports city council data for **10 pilot cities** through their open Legistar APIs. Outside of these cities, no local government data is wired — the routes return `dataQuality: 'unavailable'` instead of empty arrays.
+CIV.IQ supports city council data for **10 pilot cities** — nine through their open Legistar APIs, plus Detroit from a hand-verified roster corpus (its Legistar database froze in 2018). Outside of these cities, no local government data is wired — the routes return `dataQuality: 'unavailable'` instead of empty arrays.
 
 | City         | State | Source                 | Endpoint                         |
 | ------------ | ----- | ---------------------- | -------------------------------- |
@@ -92,12 +92,14 @@ CIV.IQ supports city council data for **10 pilot cities** through their open Leg
 | Boston       | MA    | Legistar (boston)      | `/api/city/boston/council`       |
 | Chicago      | IL    | Legistar (chicago)     | `/api/city/chicago/council`      |
 | Denver       | CO    | Legistar (denver)      | `/api/city/denver/council`       |
-| Detroit      | MI    | Legistar (detroitmi)   | `/api/city/detroit/council`      |
+| Detroit      | MI    | Verified roster corpus | `/api/city/detroit/council`      |
 | Minneapolis  | MN    | Legistar (minneapolis) | `/api/city/minneapolis/council`  |
 | Oakland      | CA    | Legistar (oakland)     | `/api/city/oakland/council`      |
 | Philadelphia | PA    | Legistar (philacity)   | `/api/city/philadelphia/council` |
 | Portland     | OR    | Legistar (portland)    | `/api/city/portland/council`     |
 | Seattle      | WA    | Legistar (seattle)     | `/api/city/seattle/council`      |
+
+Detroit additionally supports address → council district → members lookup at `/api/city/detroit/district?address=<full street address>` (Census Geocoder + the city's own district boundary layer, boundaries effective 2026-01-01). Other cities return 501 from that endpoint.
 
 `CITY_CONFIGS` in `src/app/api/city/[cityId]/council/route.ts` is the source of truth. Any city not in that list is genuinely unsupported — calling its endpoint returns the supported-city list.
 

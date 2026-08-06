@@ -7,6 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { CITY_CONFIGS } from '@/lib/local-government/pilot-cities';
+import {
+  DETROIT_ROSTER_META,
+  getDetroitCouncilMembers,
+} from '@/lib/local-government/detroit-council-roster';
 import type {
   CityCouncilResponse,
   CouncilMember,
@@ -151,6 +155,30 @@ export async function GET(
           error: `City not supported. Available cities: ${availableCities}`,
         },
         { status: 400 }
+      );
+    }
+
+    // Detroit's Legistar database is frozen at 2018, so its roster is
+    // served from a hand-verified corpus instead of the shared fetch path.
+    if (normalizedCityId === 'detroit') {
+      const members = getDetroitCouncilMembers();
+      return NextResponse.json(
+        {
+          success: true,
+          city: { id: cityConfig.id, name: cityConfig.name, state: cityConfig.state },
+          members,
+          totalMembers: members.length,
+          activeMembers: members.length,
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            dataSource: `${DETROIT_ROSTER_META.source} (roster verified ${DETROIT_ROSTER_META.verifiedAt})`,
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          },
+        }
       );
     }
 
