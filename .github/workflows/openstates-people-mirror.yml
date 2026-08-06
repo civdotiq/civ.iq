@@ -1,0 +1,182 @@
+name: Mirror OpenStates Rosters
+
+# State legislator rosters used to come from the OpenStates v3 /people endpoint,
+# which pages at 50. One roster costs 3-9 requests and all 50 states once costs
+# ~169 — roughly 17% of a 1,000/day allowance, before bills, committees or any
+# crawler. Production exhausted the cap the day the state fixes shipped:
+# California's legislature page went blank while Michigan and DC were fine,
+# purely on quota luck. A rate limiter paces requests; it does not create
+# capacity.
+#
+# This mirrors github.com/openstates/people (CC0-1.0) into
+# data/openstates-people.json.br so rosters cost no API requests at all. No
+# secret is needed — it is a tarball download, not an API call. See
+# PLAN-openstates-corpus-2026-08.md.
+
+on:
+  schedule:
+    # Weekly, Tuesday 06:15 UTC — offset from the LDA mirror so the two are not
+    # rebasing onto each other. Rosters move on election cycles, not daily.
+    - cron: '15 6 * * 2'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Upstream openstates/people ref to mirror'
+        required: false
+        default: 'main'
+      jurisdictions:
+        description: >-
+          Comma-separated jurisdictions (e.g. mi,ca) to inspect WITHOUT
+          committing. The corpus is a single artifact covering every state, so a
+          partial build cannot be committed — it would delete the states it
+          omits. Leave empty for the normal full refresh.
+        required: false
+        default: ''
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # The whole repo is a 5.3 MB tarball and the build is seconds; the timeout
+    # is here to catch a hang, not to accommodate a long job.
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Scoped run: build to a scratch path and stop. Useful for checking what
+      # upstream currently holds for a state without touching the corpus.
+      - name: Inspect selected jurisdictions (no commit)
+        if: inputs.jurisdictions != ''
+        run: |
+          npx tsx scripts/sync-openstates-people.ts \
+            --ref "${{ inputs.ref || 'main' }}" \
+            --jurisdictions "${{ inputs.jurisdictions }}" \
+            --out /tmp/openstates-people-partial.json.br
+          cat /tmp/openstates-people-partial.meta.json
+
+      - name: Mirror rosters into data/
+        if: inputs.jurisdictions == ''
+        run: npx tsx scripts/sync-openstates-people.ts --ref "${{ inputs.ref || 'main' }}"
+
+      # The corpus is the only source of roster membership, so a build that
+      # silently lost most of it would publish empty legislatures rather than an
+      # error. Both floors are far below the real figures (52 jurisdictions,
+      # ~7,450 members) and only trip on a structural failure.
+      - name: Sanity-check the artifact before committing
+        if: inputs.jurisdictions == ''
+        run: |
+          node -e '
+            const m = require("./data/openstates-people.meta.json");
+            if (m.jurisdictions < 50) throw new Error(`only ${m.jurisdictions} jurisdictions`);
+            if (m.people < 7000) throw new Error(`only ${m.people} members`);
+            console.log(`${m.people} members across ${m.jurisdictions} jurisdictions, ` +
+              `upstream ${m.upstreamCommit.slice(0, 8)} (${m.upstreamCommittedAt}), ` +
+              `${m.departed} departed skipped, stale after ${m.staleAfter}`);
+          '
+
+      - name: Commit updated corpus
+        if: inputs.jurisdictions == ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Stage the corpus and its sidecar together. Committing only the
+          # corpus would leave the freshness canary reporting the previous run's
+          # date — permanent invisible drift, which is the one failure this
+          # canary exists to catch.
+          if git diff --quiet -- data/openstates-people.json.br; then
+            echo "No change to the roster corpus"
+          else
+            git add data/openstates-people.json.br data/openstates-people.meta.json
+            git commit -m "chore(state-legislature): refresh OpenStates roster corpus [skip ci]"
+            # Rebase and retry rather than merge: main-protection enforces
+            # linear history, so a merge commit is rejected outright. Only
+            # data/ files are touched here, so a rebase conflict would mean
+            # someone hand-edited the corpus.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
+            git push
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `Rosters keep serving from the last committed corpus, so this is not an`,
+              `outage — but the corpus ages, and /api/state-legislature/corpus/status`,
+              `reports \`stale: true\` once it passes its staleAfter date.`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }

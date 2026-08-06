@@ -9,6 +9,9 @@ import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
+import { getJurisdictionRoster } from '@/lib/data-sources/openstates-people/load-people';
+import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
+import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
 
 export const dynamic = 'force-dynamic';
 
@@ -243,7 +246,66 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<StateJurisdi
   }
 }
 
-// Fetch state legislators from OpenStates API
+/** Corpus record → the shape this route serves. Mirrors transformLegislator. */
+function transformCorpusPerson(person: CorpusPerson): StateLegislator {
+  const chamber = chamberBucket(person);
+  const startYear = person.startDate ? new Date(person.startDate).getFullYear() : null;
+  const endYear = person.endDate ? new Date(person.endDate).getFullYear() : undefined;
+
+  return {
+    id: person.id,
+    name: person.name || 'Unknown',
+    party: normalizeParty(person.party),
+    chamber,
+    district: person.district || 'Unknown',
+    email: person.email,
+    phone: person.phone,
+    office: person.office,
+    photoUrl: person.image,
+    committees: [], // Rosters carry no committee memberships; that is a separate source.
+    // Only report a term when there are real dates behind it, exactly as the
+    // API path does — never inferred from the election cycle.
+    terms: startYear !== null ? [{ startYear, endYear, chamber }] : [],
+    bills: { sponsored: 0, cosponsored: 0 },
+    votingRecord: { totalVotes: 0, partyLineVotes: 0, crossoverVotes: 0 },
+  };
+}
+
+/**
+ * Roster from the committed corpus, or null when it is unavailable.
+ *
+ * This is the normal path. It replaces 3-9 OpenStates requests per state — New
+ * Hampshire alone needed 9 — against an allowance of 1,000 a day that the state
+ * surface was structurally exceeding. Completeness is unconditional here: there
+ * is no pagination to be truncated by a rate limit, which is the only way the
+ * API path could return a partial roster and a confidently wrong party split.
+ */
+async function fetchStateLegislatorsFromCorpus(
+  stateAbbrev: string,
+  requestedChamber?: string
+): Promise<LegislatorFetchResult | null> {
+  const roster = await getJurisdictionRoster(stateAbbrev);
+  if (!roster || roster.length === 0) return null;
+
+  const legislators = roster.map(transformCorpusPerson);
+  logger.info('Loaded state legislators from roster corpus', {
+    stateAbbrev,
+    requestedChamber,
+    members: legislators.length,
+  });
+
+  return {
+    legislators: requestedChamber
+      ? legislators.filter(leg => leg.chamber === requestedChamber)
+      : legislators,
+    complete: true,
+  };
+}
+
+// Fetch state legislators from the OpenStates API. Fallback only — the corpus
+// above is the normal path; this runs when the artifact is missing or a
+// jurisdiction is absent from it, so a build problem degrades to the old
+// behaviour rather than to "Data unavailable".
 async function fetchStateLegislators(
   stateAbbrev: string,
   requestedChamber?: string
@@ -509,11 +571,14 @@ export async function GET(
           throw new Error('Invalid state abbreviation');
         }
 
-        // Fetch jurisdiction info and legislators from OpenStates API
-        const [jurisdiction, legislatorResult] = await Promise.all([
+        // Rosters come from the committed corpus; only the session still needs
+        // the API, which costs one request instead of the roster's 3-9.
+        const [jurisdiction, corpusResult] = await Promise.all([
           fetchStateJurisdiction(stateAbbrev),
-          fetchStateLegislators(stateAbbrev, chamber || undefined),
+          fetchStateLegislatorsFromCorpus(stateAbbrev, chamber || undefined),
         ]);
+        const legislatorResult =
+          corpusResult ?? (await fetchStateLegislators(stateAbbrev, chamber || undefined));
         const { legislators, complete: rosterComplete } = legislatorResult;
 
         // EMERGENCY FIX: Never return fake legislators - return empty results with clear message

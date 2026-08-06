@@ -23,6 +23,7 @@
     "build": "next build",
     "seed-data": "tsx scripts/seed-congress-data.ts",
     "sync:bioguide-fec": "tsx scripts/sync-bioguide-fec.ts",
+    "sync:openstates-people": "tsx scripts/sync-openstates-people.ts",
     "snapshot:adoption": "tsx scripts/snapshot-adoption.ts",
     "start": "next start",
     "stats": "tsx scripts/stats.ts",

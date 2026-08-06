@@ -15,6 +15,12 @@
 
 import { getStateCode } from '@/lib/data/us-states';
 import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
+import {
+  getJurisdictionRoster,
+  getPersonById as getCorpusPersonById,
+} from '@/lib/data-sources/openstates-people/load-people';
+import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
+import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
 
 interface OpenStatesConfig {
   apiKey?: string;
@@ -189,6 +195,32 @@ export interface OpenStatesLegislator {
     identifier: string; // e.g., username or ID
   }>;
   extras?: Record<string, unknown>;
+}
+
+/**
+ * Corpus record → the shape this module already returns, so swapping the source
+ * is invisible to every consumer. Mirrors `transformPerson`, with two
+ * differences that follow from the source rather than from choice: the corpus
+ * carries the member's office phone directly instead of in `extras`, and its
+ * identifiers are real social handles rather than the legacy OpenStates row ids
+ * that make up almost all of the API's `other_identifiers`.
+ */
+function transformCorpusPerson(person: CorpusPerson, state: string): OpenStatesLegislator {
+  return {
+    id: person.id,
+    name: person.name,
+    party: person.party || 'Unknown',
+    chamber: chamberBucket(person),
+    // Not defaulted to 'At-Large': very few state legislative seats actually
+    // are, so inventing one misstates which seat a member holds.
+    district: person.district || 'Unknown',
+    state,
+    photo_url: person.image,
+    email: person.email,
+    phone: person.phone,
+    links: person.links.map(url => ({ url })),
+    other_identifiers: person.identifiers,
+  };
 }
 
 export interface OpenStatesBill {
@@ -607,6 +639,16 @@ class OpenStatesAPI {
     state: string,
     chamber?: 'upper' | 'lower'
   ): Promise<OpenStatesLegislator[]> {
+    // The committed roster corpus is the normal path: paging this endpoint
+    // costs 3-9 requests per state against a 1,000/day cap that the state
+    // surface was structurally exceeding. The API below is the fallback for
+    // when the artifact is missing or does not cover the jurisdiction.
+    const corpus = await getJurisdictionRoster(state);
+    if (corpus && corpus.length > 0) {
+      const transformed = corpus.map(person => transformCorpusPerson(person, state.toUpperCase()));
+      return chamber ? transformed.filter(leg => leg.chamber === chamber) : transformed;
+    }
+
     // v3 uses lowercase state abbreviations (e.g., 'mi' for Michigan)
     const jurisdiction = state.toLowerCase();
 
@@ -970,6 +1012,12 @@ class OpenStatesAPI {
    * Instead, we use the /people list endpoint with id filter parameter.
    */
   async getPersonById(personId: string): Promise<OpenStatesLegislator | null> {
+    // Corpus first. Its ids are the same `ocd-person/<uuid>` values this
+    // endpoint returns, so a caller holding an id from either source resolves
+    // here without spending a request.
+    const corpus = await getCorpusPersonById(personId);
+    if (corpus) return transformCorpusPerson(corpus, corpus.jurisdiction);
+
     try {
       // Use the /people list endpoint with id filter (OpenStates v3 API design)
       // The id parameter should be passed as a string (the API accepts single ID)

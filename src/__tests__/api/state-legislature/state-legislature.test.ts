@@ -6,6 +6,7 @@
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/state-legislature/[state]/route';
 import { createMockRequest } from '../../utils/test-helpers';
+import { getJurisdictionRoster } from '@/lib/data-sources/openstates-people/load-people';
 
 // Mock the cache module
 jest.mock('@/lib/cache', () => ({
@@ -30,6 +31,15 @@ jest.mock('@/lib/monitoring/telemetry', () => ({
     end: jest.fn(),
   })),
 }));
+
+// The roster corpus is the route's real source, so these tests read the
+// committed artifact rather than the fetch mocks below. It is wrapped in a
+// jest.fn defaulting to the real implementation so a single test can make it
+// unavailable and exercise the API fallback.
+jest.mock('@/lib/data-sources/openstates-people/load-people', () => {
+  const actual = jest.requireActual('@/lib/data-sources/openstates-people/load-people');
+  return { ...actual, getJurisdictionRoster: jest.fn(actual.getJurisdictionRoster) };
+});
 
 // Mock fetch for OpenStates API
 const mockOpenStatesJurisdiction = {
@@ -228,6 +238,11 @@ describe('/api/state-legislature/[state]', () => {
     }, 15000);
 
     it('should handle empty legislator results', async () => {
+      // With the corpus unavailable the route falls back to the API. An API
+      // that reports no members must still yield an empty roster rather than
+      // an invented one.
+      (getJurisdictionRoster as jest.Mock).mockResolvedValueOnce(null);
+
       global.fetch = jest.fn().mockImplementation((url: string) => {
         if (url.includes('/jurisdictions/')) {
           return Promise.resolve({
