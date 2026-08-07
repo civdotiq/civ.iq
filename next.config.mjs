@@ -57,6 +57,11 @@ const nextConfig = {
     '/api/intelligence/representative/[bioguideId]/influence-chain': [
       './data/lda-filings.json.br',
     ],
+    // Address-lookup routes read the CD120 (2026 ballot) district polygons
+    // for local point-in-polygon; the tracer won't infer the fs read.
+    '/api/geocode': ['./data/cd120-districts.json.br'],
+    '/api/unified-geocode': ['./data/cd120-districts.json.br'],
+    '/api/intelligence/address/representatives': ['./data/cd120-districts.json.br'],
   },
   // Remove console logs in production for better performance
   compiler: {

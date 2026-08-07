@@ -14,6 +14,10 @@ import {
   BOUNDARY_FALLBACK_NOTE,
   type InputMode,
 } from '@/lib/backbone/zip-accuracy';
+import {
+  resolveBallotDistrict2026,
+  type BallotDistrict2026,
+} from '@/lib/data-sources/cd120-districts';
 import type { DataQuality, SourceStatus } from '@/types/backbone-response';
 
 function sourceStatusOf(
@@ -66,6 +70,15 @@ interface GeocodeResponse {
     district: string;
     name: string;
   }>;
+  /**
+   * ADDITIVE: the 120th-Congress district this address votes in on the
+   * Nov 3, 2026 ballot, from the committed CD120 corpus (local
+   * point-in-polygon). `district` above stays the 119th-Congress answer —
+   * the sitting representative's district. Ten states redrew maps for 2026,
+   * so the two differ for many addresses; `differsFromCurrent`/`note` say so.
+   * Omitted when the corpus is unavailable or the point matched no district.
+   */
+  ballotDistrict2026?: BallotDistrict2026;
   /**
    * How the district was resolved. 'census_api' is the authoritative Census
    * point-in-polygon path; 'bbox'/'fallback' mean the boundary service
@@ -170,6 +183,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const ballotDistrict2026 = await resolveBallotDistrict2026(longitude, latitude, {
+      state: result.district.state_abbr,
+      district: result.district.district_num,
+    });
+
     logger.info('Geocode GET successful', {
       latitude,
       longitude,
@@ -189,6 +207,7 @@ export async function GET(request: NextRequest) {
           districtId: result.district.id,
           name: result.district.name,
         },
+        ...(ballotDistrict2026 ? { ballotDistrict2026 } : {}),
         coordinates: {
           latitude,
           longitude,
@@ -338,6 +357,17 @@ export async function POST(request: NextRequest) {
     const state = result.district.state_abbr;
     const districtNum = result.district.district_num;
 
+    // 2026-ballot (120th Congress) district from the committed corpus. The
+    // geocoder's answer above is the 119th-Congress district; in the ten
+    // redrawn states they differ, and the response carries both.
+    const ballotDistrict2026 =
+      geocoded?.latitude !== undefined && geocoded?.longitude !== undefined
+        ? await resolveBallotDistrict2026(geocoded.longitude, geocoded.latitude, {
+            state,
+            district: districtNum,
+          })
+        : null;
+
     // Check if this ZIP code (if provided) spans multiple districts
     let isMultiDistrict = false;
     let allDistricts: GeocodeResponse['allDistricts'] = [];
@@ -471,6 +501,7 @@ export async function POST(request: NextRequest) {
       ],
       ...(isMultiDistrict && { allDistricts }),
       ...(accuracyNote ? { accuracyNote } : {}),
+      ...(ballotDistrict2026 ? { ballotDistrict2026 } : {}),
     };
 
     logger.info('Geocode API request successful', {

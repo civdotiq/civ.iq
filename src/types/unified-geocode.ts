@@ -30,6 +30,21 @@ export interface UnifiedGeocodeResult {
       name: string;
     };
   };
+  /**
+   * The 120th-Congress district on the Nov 3, 2026 ballot (CD120 corpus).
+   * `districts.federal` stays the current (119th Congress) answer; in the ten
+   * states redrawn for 2026 the two differ, and `note` explains the split.
+   * Absent when the corpus was unavailable or no coordinates were resolved.
+   */
+  ballotDistrict2026?: {
+    cdSession: '120';
+    state: string;
+    district: string;
+    districtId: string;
+    name: string;
+    differsFromCurrent: boolean;
+    note?: string;
+  };
   federalRepresentatives?: Array<{
     bioguideId: string;
     name: string;

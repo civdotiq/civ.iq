@@ -21,6 +21,10 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import type { InsightError } from '@/lib/intelligence/types';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
+import {
+  resolveBallotDistrict2026,
+  type BallotDistrict2026,
+} from '@/lib/data-sources/cd120-districts';
 import type { DataQuality, SourceStatus } from '@/types/backbone-response';
 
 function sourceStatusOf(
@@ -57,6 +61,15 @@ interface RepresentativesResponse {
   multiDistrict: boolean;
   // accuracyNote is only populated on ZIP (GET) input; address POST leaves it unset.
   accuracyNote?: string;
+  /**
+   * ADDITIVE: the 120th-Congress district this address votes in on the
+   * Nov 3, 2026 ballot (committed CD120 corpus, local point-in-polygon).
+   * `district` above stays the 119th-Congress answer — the sitting
+   * representative's district. Address (POST) input only; the ZIP path has
+   * no coordinate to test against the polygons, and ZIP→district is already
+   * flagged approximate.
+   */
+  ballotDistrict2026?: BallotDistrict2026;
   // ADDITIVE BackboneResponse fields. This route is publicly documented in
   // openapi.json, so the existing top-level payload is preserved and the
   // envelope's honesty fields are added alongside it (geocode precedent,
@@ -150,9 +163,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
       false
     );
 
+    // 2026-ballot (120th Congress) district from the committed corpus. The
+    // geocoder's district above is the 119th-Congress one; in the ten redrawn
+    // states they differ, and the response carries both.
+    const ballotDistrict2026 = geocodeResult.coordinates
+      ? await resolveBallotDistrict2026(
+          geocodeResult.coordinates.lon,
+          geocodeResult.coordinates.lat,
+          { state: result.state, district: result.district }
+        )
+      : null;
+
     return NextResponse.json(
       {
         ...result,
+        ...(ballotDistrict2026 ? { ballotDistrict2026 } : {}),
         errors: [] as InsightError[],
         status: 'complete' as const,
         // Address input resolved via Census: authoritative

@@ -23,6 +23,10 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { CensusGeocoderException } from '@/services/geocoding/census-geocoder.types';
+import {
+  resolveBallotDistrict2026,
+  type BallotDistrict2026,
+} from '@/lib/data-sources/cd120-districts';
 
 // ISR: Revalidate every 30 days - addresses/districts are very stable
 // Districts only change during redistricting (every 10 years)
@@ -135,6 +139,13 @@ interface UnifiedGeocodeResponse {
       name: string;
     };
   };
+  /**
+   * ADDITIVE: the 120th-Congress district on the Nov 3, 2026 ballot, from the
+   * committed CD120 corpus. `districts.federal` stays the 119th-Congress
+   * (current representative) answer; in the ten redrawn states they differ.
+   * Omitted when the corpus is unavailable or no coordinates were resolved.
+   */
+  ballotDistrict2026?: BallotDistrict2026;
   /** Federal representatives (2 Senators + 1 House Rep) */
   federalRepresentatives?: Array<{
     bioguideId: string;
@@ -333,6 +344,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // 2026-ballot (120th Congress) district from the committed corpus — the
+    // geocoder's congressionalDistrict above is the 119th-Congress answer.
+    const ballotDistrict2026 = districtInfo.coordinates
+      ? await resolveBallotDistrict2026(
+          districtInfo.coordinates.lon,
+          districtInfo.coordinates.lat,
+          districtInfo.congressionalDistrict
+            ? { state: derivedState, district: districtInfo.congressionalDistrict.number }
+            : undefined
+        )
+      : null;
+
     // Build response
     const response: UnifiedGeocodeResponse = {
       success: true,
@@ -357,6 +380,7 @@ export async function POST(request: NextRequest) {
             }
           : undefined,
       },
+      ...(ballotDistrict2026 ? { ballotDistrict2026 } : {}),
       federalRepresentatives: federalReps,
       stateLegislators: {
         senator: stateLegislators.senator

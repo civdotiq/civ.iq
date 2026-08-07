@@ -54,6 +54,7 @@ import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
+import { RedistrictingNote } from '@/components/RedistrictingNote';
 import { saveSearchContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 // Dynamic imports for district maps - reduces initial bundle size
 // Federal districts use DistrictMap (GeoJSON/Census API approach)
@@ -782,6 +783,12 @@ function ResultsContent() {
                           </button>
                         </div>
                       )}
+
+                      {/* 2026 redistricting: ballot district differs from the current rep's */}
+                      <RedistrictingNote
+                        ballotDistrict2026={unifiedGeocodeResult?.ballotDistrict2026}
+                        className="mb-6"
+                      />
 
                       <div className="space-y-6">
                         {data.representatives.map((rep, index) => (

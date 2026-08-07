@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { RepBriefSummary } from './RepBriefSummary';
 import { AlertSubscribeForm } from '@/components/alerts/AlertSubscribeForm';
 import { BallotCard } from '@/features/record-card/components/BallotCard';
+import { RedistrictingNote } from '@/components/RedistrictingNote';
 
 interface RepresentativeLookupFormProps {
   className?: string;
@@ -28,6 +29,8 @@ interface RepresentativesResult {
   state: string;
   district: string;
   multiDistrict: boolean;
+  /** 2026-ballot (120th Congress) district when it differs from the current one. */
+  ballotDistrict2026?: { differsFromCurrent: boolean; note?: string };
 }
 
 const US_STATES = [
@@ -237,6 +240,9 @@ export function RepresentativeLookupForm({ className = '' }: RepresentativeLooku
               <span className="text-gray-400"> (multiple districts found — showing primary)</span>
             )}
           </p>
+
+          {/* 2026 redistricting: the ballot district differs from the current rep's */}
+          <RedistrictingNote ballotDistrict2026={result.ballotDistrict2026} className="mb-4" />
 
           {result.representatives.length === 0 && (
             <p className="type-sm text-gray-500">

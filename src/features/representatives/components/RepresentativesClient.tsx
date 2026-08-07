@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/shared/ui/DataQualityIndicator';
 import CongressHeader from './CongressHeader';
 import { AddressPrompt } from './AddressPrompt';
 import { DistrictHeader } from '@/components/DistrictHeader';
+import { RedistrictingNote } from '@/components/RedistrictingNote';
 import { DistrictInfo } from '@/lib/multi-district/detection';
 import { FilterState } from '@/types/filters';
 import logger from '@/lib/logging/simple-logger';
@@ -53,6 +54,8 @@ interface SearchState {
   searchMode: 'address' | 'zip' | null;
   /** Honesty caveat returned by ZIP-based lookups (10–20% of ZIPs span districts). */
   accuracyNote: string | null;
+  /** 2026-ballot (120th Congress) district when it differs from the current one. */
+  ballotDistrict2026: { differsFromCurrent: boolean; note?: string } | null;
   /** Last submitted query, so the error state can retry either mode. */
   lastQuery: string | null;
 }
@@ -100,6 +103,7 @@ export function RepresentativesClient({
     showAddressPrompt: false,
     searchMode: null,
     accuracyNote: null,
+    ballotDistrict2026: null,
     lastQuery: null,
   });
 
@@ -176,6 +180,7 @@ export function RepresentativesClient({
         showAddressPrompt: false,
         searchMode: 'address',
         accuracyNote: data.accuracyNote ?? null,
+        ballotDistrict2026: data.ballotDistrict2026 ?? null,
       }));
 
       logger.info('Address search completed', {
@@ -234,6 +239,8 @@ export function RepresentativesClient({
         selectedDistrictInfo: null, // Reset selection
         searchMode: 'zip',
         accuracyNote: envelope.accuracyNote ?? null,
+        // ZIP has no coordinate to test against the CD120 polygons
+        ballotDistrict2026: null,
       }));
 
       logger.info('ZIP search completed', {
@@ -427,6 +434,9 @@ export function RepresentativesClient({
           <p>{searchState.accuracyNote}</p>
         </div>
       )}
+
+      {/* 2026 redistricting: the ballot district differs from the current rep's */}
+      <RedistrictingNote ballotDistrict2026={searchState.ballotDistrict2026} className="mb-6" />
 
       {/* Multi-district Address Prompt - now controlled by API response */}
       {searchState.showAddressPrompt && searchState.isMultiDistrict && (
