@@ -1,0 +1,11 @@
+{
+  "cdSession": "120",
+  "generatedAt": "2026-08-07T22:25:06.180Z",
+  "staleAfter": "2027-02-03",
+  "source": "https://www2.census.gov/geo/tiger/TGRGDB26/tlgdb_2026_us_legislative.gdb.zip",
+  "toleranceDegrees": 0.0002,
+  "districts": 441,
+  "states": 56,
+  "compressedBytes": 1650218,
+  "methodology": "Census TIGER 2026 geodatabase, Congressional_Districts layer (CDSESSN=120), ogr2ogr -simplify 0.0002deg at 5-decimal precision; undefined-district (ZZ) water areas excluded. Validated against full resolution: 0% interior misclassification, 0.85% within ~300m of boundaries."
+}
