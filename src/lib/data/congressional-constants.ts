@@ -402,22 +402,10 @@ export const SENATE_CLASSES = {
   },
 } as const;
 
-/**
- * Federal general election day for a year: the Tuesday after the first
- * Monday in November (2 U.S.C. §1, 3 U.S.C. §1). UTC.
- */
-export function getGeneralElectionDay(year: number): Date {
-  const nov1Weekday = new Date(Date.UTC(year, 10, 1)).getUTCDay();
-  const firstMonday = 1 + ((8 - nov1Weekday) % 7);
-  return new Date(Date.UTC(year, 10, firstMonday + 1));
-}
-
-const UTC_DAY_MS = 24 * 60 * 60 * 1000;
-
-/** True once the year's general election day (UTC) is fully over. */
-function generalElectionHasPassed(year: number, now: Date): boolean {
-  return now.getTime() >= getGeneralElectionDay(year).getTime() + UTC_DAY_MS;
-}
+// Canonical election-day math lives in election-dates.ts; re-exported here
+// because ~62 modules already import congressional metadata from this file.
+export { getGeneralElectionDay } from './election-dates';
+import { generalElectionHasPassed, nextGeneralElectionYear } from './election-dates';
 
 /**
  * Roll a base election year forward through a 6-year Senate cycle to the
@@ -485,12 +473,7 @@ export function getNextSenateElectionFromTermEnd(
  * from the Wednesday after a November election, the answer is two years out.
  */
 export function getNextHouseElection(now: Date = new Date()): number {
-  const currentYear = now.getUTCFullYear();
-  const candidate = currentYear % 2 === 0 ? currentYear : currentYear + 1;
-  if (candidate === currentYear && generalElectionHasPassed(candidate, now)) {
-    return candidate + 2;
-  }
-  return candidate;
+  return nextGeneralElectionYear(now);
 }
 
 // ============================================================================

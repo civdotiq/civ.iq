@@ -5,6 +5,10 @@
 
 import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
+import {
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 
 interface ProfileTabProps {
   representative: EnhancedRepresentative;
@@ -58,22 +62,15 @@ function calculateYearsInOffice(startDate: string): string {
 
 // Helper function to get next election date
 function getNextElectionDate(chamber: 'House' | 'Senate', currentTermEnd?: string): string {
-  if (currentTermEnd) {
-    const endDate = new Date(currentTermEnd);
-    const electionYear = endDate.getFullYear();
-    return `November ${electionYear}`;
-  }
-
-  // Default fallback based on chamber
   if (chamber === 'House') {
-    // House members are elected every 2 years
-    const currentYear = new Date().getFullYear();
-    const nextEvenYear = currentYear % 2 === 0 ? currentYear : currentYear + 1;
-    return `November ${nextEvenYear}`;
-  } else {
-    // Senate members are elected every 6 years
-    return 'See current term end date';
+    return `November ${getNextHouseElection()}`;
   }
+  if (currentTermEnd) {
+    // Senate terms end Jan 3 after the November election (endYear - 1)
+    const endYear = new Date(currentTermEnd).getFullYear();
+    return `November ${getNextSenateElectionFromTermEnd(endYear)}`;
+  }
+  return 'See current term end date';
 }
 
 export function EnhancedProfileTab({ representative, committees }: ProfileTabProps) {

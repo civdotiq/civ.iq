@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { getNextElectionYear } from '@/lib/data/state-election-cycles';
+import { getGeneralElectionDayISO } from '@/lib/data/election-dates';
 import { getAllStateExecutives } from '@/lib/api/wikidata-state-executives';
 import type { StateExecutive as WikidataStateExecutive } from '@/lib/api/wikidata-state-executives';
 
@@ -263,17 +264,7 @@ function getStateInfo(state: string) {
   };
 }
 
-/**
- * US general election day: the first Tuesday after the first Monday in November.
- */
-function generalElectionDay(year: number): string {
-  const firstOfNovember = new Date(Date.UTC(year, 10, 1));
-  // getUTCDay: Sunday 0 … Monday 1 … Saturday 6
-  const daysUntilMonday = (8 - firstOfNovember.getUTCDay()) % 7;
-  const firstMonday = 1 + daysUntilMonday;
-  const tuesday = firstMonday + 1;
-  return `${year}-11-${String(tuesday).padStart(2, '0')}`;
-}
+const generalElectionDay = getGeneralElectionDayISO;
 
 /**
  * Date of the next statewide general election.

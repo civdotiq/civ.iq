@@ -9,6 +9,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MapPin, Users, Building, Phone, Mail, ExternalLink, Calendar, Clock } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import {
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 import { AicherSidebarCard } from './AicherSidebarCard';
 import { StateMapCard } from './StateMapCard';
 
@@ -94,15 +98,14 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
   useEffect(() => {
     // Get next election year
     const getNextElectionYear = () => {
-      const currentYear = new Date().getFullYear();
       if (representative.chamber === 'House') {
-        // House members elected every 2 years
-        return currentYear % 2 === 0 ? currentYear : currentYear + 1;
-      } else {
-        // Senate members elected every 6 years
-        if (representative.currentTerm?.end) {
-          return new Date(representative.currentTerm.end).getFullYear();
-        }
+        return getNextHouseElection();
+      }
+      if (representative.currentTerm?.end) {
+        // Senate terms end Jan 3 after the November election (endYear - 1)
+        return getNextSenateElectionFromTermEnd(
+          new Date(representative.currentTerm.end).getFullYear()
+        );
       }
       return null;
     };

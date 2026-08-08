@@ -21,6 +21,7 @@
  */
 
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getGeneralElectionDay } from '@/lib/data/election-dates';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
@@ -672,8 +673,7 @@ function isElectionProximity(quarter: string, nextElection?: string): boolean {
   const electionYear = parseInt(nextElection, 10);
   if (isNaN(electionYear)) return false;
 
-  // Election day is first Tuesday after first Monday in November
-  const electionDate = new Date(electionYear, 10, 5); // Approximate: Nov 5
+  const electionDate = getGeneralElectionDay(electionYear);
 
   const diffMs = electionDate.getTime() - quarterEnd.getTime();
   const sixMonthsMs = 6 * 30 * 24 * 60 * 60 * 1000;

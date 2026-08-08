@@ -11,6 +11,10 @@ import { EnhancedRepresentative } from '@/types/representative';
 import type { DataQuality } from '@/types/backbone-response';
 import { useSectionNavigation } from '@/shared/components/dashboard';
 import { hasIntelligenceData } from '@/lib/intelligence/has-intelligence-data';
+import {
+  getNextHouseElection,
+  getNextSenateElectionFromTermEnd,
+} from '@/lib/data/congressional-constants';
 import { RepresentativeDashboard, REPRESENTATIVE_SECTIONS } from '../RepresentativeDashboard';
 import { deriveCommitteeCodes, deriveFocusAreas } from '../../utils/derive-profile-meta';
 import { IdentityHeader } from './IdentityHeader';
@@ -132,12 +136,15 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
   );
 
   const nextElection = useMemo(() => {
-    const currentYear = new Date().getFullYear();
     if (representative.chamber === 'House') {
-      return currentYear % 2 === 0 ? currentYear : currentYear + 1;
+      return getNextHouseElection();
     }
     if (representative.currentTerm?.end) {
-      return new Date(representative.currentTerm.end).getFullYear();
+      // Terms end Jan 3 after the November election, so the seat's cycle is
+      // anchored at endYear - 1; stale data rolls forward by 6-year cycles.
+      return getNextSenateElectionFromTermEnd(
+        new Date(representative.currentTerm.end).getFullYear()
+      );
     }
     return null;
   }, [representative.chamber, representative.currentTerm?.end]);
