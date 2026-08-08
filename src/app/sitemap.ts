@@ -14,6 +14,7 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 export const dynamic = 'force-dynamic';
 
 import committeesData from '@/data/committees-with-subcommittees.json';
+import { RACES_2026 } from '@/data/elections-2026-races';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
@@ -385,6 +386,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/mcp', priority: 0.7, freq: 'monthly' as const },
     { path: '/digest', priority: 0.7, freq: 'weekly' as const },
     { path: '/elections', priority: 0.65, freq: 'monthly' as const },
+    { path: '/elections/2026', priority: 0.75, freq: 'weekly' as const },
     { path: '/elections/federal', priority: 0.6, freq: 'monthly' as const },
     { path: '/elections/state', priority: 0.6, freq: 'monthly' as const },
     { path: '/federal', priority: 0.7, freq: 'monthly' as const },
@@ -404,6 +406,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: page.freq,
       priority: page.priority,
+    });
+  }
+
+  // ===========================================
+  // 2026 RACE PAGES - every federal seat up in 2026, from the committed
+  // FEC race-skeleton corpus (see scripts/sync-races-2026.ts)
+  // ===========================================
+  for (const race of RACES_2026) {
+    entries.push({
+      url: `${BASE_URL}/elections/${race.raceId}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: race.office === 'S' ? 0.7 : 0.6,
     });
   }
 

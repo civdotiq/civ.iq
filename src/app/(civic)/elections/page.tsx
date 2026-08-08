@@ -51,11 +51,29 @@ export default function ElectionsPage() {
           <span className="text-black dark:text-white">Elections</span>
         </nav>
 
-        <h1 className="text-3xl font-bold mb-2">Election results</h1>
+        <h1 className="text-3xl font-bold mb-2">Elections</h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          2024 results from the MIT Election Data and Science Lab (MEDSL) via Harvard Dataverse.
-          Coverage: 46 of 51 jurisdictions (missing AZ, CA, MS, NY, OR).
+          Upcoming 2026 federal races with FEC-filed candidates, and certified 2024 results from the
+          MIT Election Data and Science Lab (MEDSL) via Harvard Dataverse.
         </p>
+
+        {/* 2026 races card */}
+        <Link
+          href="/elections/2026"
+          className="block border-2 border-black dark:border-gray-600 p-6 hover:border-civiq-blue transition-colors group mb-6"
+        >
+          <p className="aicher-heading-wide text-xs text-gray-500 dark:text-gray-400 mb-2 tracking-wider">
+            UPCOMING
+          </p>
+          <h2 className="text-xl font-bold mb-3 group-hover:text-civiq-blue transition-colors">
+            2026 federal elections
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            Every U.S. House and Senate race on the November 3, 2026 ballot — who has filed with the
+            FEC, what they have raised, and each state&rsquo;s primary date.
+          </p>
+          <p className="text-civiq-blue text-sm font-medium">Browse 2026 races &rarr;</p>
+        </Link>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Federal Elections Card */}

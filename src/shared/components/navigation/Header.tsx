@@ -70,7 +70,8 @@ const federalGroups: NavItemGroup[] = [
     items: [
       { name: 'Your Reps', href: '/your-reps' },
       { name: 'Connections', href: '/investigate' },
-      { name: 'Elections', href: '/elections/federal' },
+      { name: '2026 Elections', href: '/elections/2026' },
+      { name: 'Election Results', href: '/elections/federal' },
     ],
   },
 ];
