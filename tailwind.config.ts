@@ -32,6 +32,8 @@ export default {
         // Status semantic colors (not party colors)
         'status-info': '#4b5563',
         'status-warning': '#d97706',
+        // Alias used by profile/district caveat borders (same amber as status-warning)
+        'civiq-amber': '#d97706',
         'status-error': '#b45309',
         'status-success': '#3ea2d4',
         // Party identification colors

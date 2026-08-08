@@ -1060,12 +1060,32 @@ export class FECApiService {
    * Get candidate basic information
    */
   async getCandidateInfo(candidateId: string): Promise<Record<string, unknown> | null> {
+    const cacheKey = `fec:candidate-info:${candidateId}`;
+
     try {
+      const cached = await govCache.get<Record<string, unknown>>(cacheKey);
+      if (cached) {
+        logger.debug(`[FEC API] Candidate info cache hit: ${candidateId}`);
+        return cached;
+      }
+
       const response = await this.makeRequest<FECApiResponse<Record<string, unknown>>>(
         `/candidate/${candidateId}/`
       );
 
-      return response.results?.[0] || null;
+      const result = response.results?.[0] || null;
+
+      // Registrations change on new filings only; 24h keeps new Form 2s
+      // visible within a day.
+      if (result) {
+        await govCache.set(cacheKey, result, {
+          ttl: 24 * 60 * 60 * 1000, // 24 hours in milliseconds (govCache takes ms)
+          source: 'fec-candidate-api',
+          dataType: 'finance',
+        });
+      }
+
+      return result;
     } catch (error) {
       logger.error(`[FEC API] Failed to get candidate info for ${candidateId}:`, error);
       throw error;

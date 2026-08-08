@@ -24,6 +24,8 @@ import {
   type MemberVoteStats,
 } from '@/lib/intelligence/analyzers/chamber-baselines';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getGeneralElectionDay, nextGeneralElectionYear } from '@/lib/data/election-dates';
+import { raceId2026 as buildRaceId2026 } from '@/lib/elections/race-id';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { validateFECMapping } from '@/lib/api/finance-helpers';
@@ -142,13 +144,7 @@ export interface RecordCardData {
 
 // ── Member framing ───────────────────────────────────────────────────
 
-/** Federal election day: first Tuesday after the first Monday in November. */
-export function electionDay(year: number): Date {
-  const firstOfNov = new Date(Date.UTC(year, 10, 1));
-  const dow = firstOfNov.getUTCDay(); // 0=Sun
-  const firstMonday = 1 + ((8 - dow) % 7);
-  return new Date(Date.UTC(year, 10, firstMonday + 1));
-}
+export { getGeneralElectionDay as electionDay } from '@/lib/data/election-dates';
 
 function ordinal(n: number): string {
   const rem10 = n % 10;
@@ -362,6 +358,24 @@ export interface BallotStatus {
   electionDayLabel: string | null;
   /** Vacancy-derived status ('active' unless the seat data says otherwise). */
   status?: string;
+  /**
+   * True when the member's own FEC registration (Form 2, Statement of
+   * Candidacy) covers the next election year. NOT ballot access, and not
+   * proof they are running — filers sometimes withdraw or retire.
+   * null = no FEC id or lookup failed; we claim nothing either way.
+   */
+  incumbentFiled: boolean | null;
+  /** /elections/[id] race id for the seat's 2026 race, when it is up in 2026. */
+  raceId2026: string | null;
+}
+
+function officeAwareFecId(
+  fecIds: string[] | undefined,
+  chamber: 'House' | 'Senate'
+): string | null {
+  if (!fecIds?.length) return null;
+  const prefix = chamber === 'Senate' ? 'S' : 'H';
+  return fecIds.find(id => id.startsWith(prefix)) ?? fecIds[0] ?? null;
 }
 
 /** Lightweight ballot status for one member (powers the your-reps ballot box). */
@@ -369,6 +383,26 @@ export async function getMemberBallotStatus(bioguideId: string): Promise<BallotS
   const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
   if (!rep) return null;
   const framing = deriveBallotFraming(rep.currentTerm?.end ?? rep.terms?.[0]?.endYear ?? null);
+
+  // The incumbent's own FEC registration is real data: election_years on
+  // /candidate/{id}/ lists the cycles a Form 2 covers. Absence of a filing
+  // is NOT evidence of retirement, so null keeps the seats-only framing.
+  let incumbentFiled: boolean | null = null;
+  if (framing.onNextBallot && framing.nextElectionYear) {
+    const fecId = officeAwareFecId(rep.ids?.fec, rep.chamber);
+    if (fecId) {
+      try {
+        const info = await fecApiService.getCandidateInfo(fecId);
+        const electionYears = info?.election_years;
+        incumbentFiled = Array.isArray(electionYears)
+          ? electionYears.includes(framing.nextElectionYear)
+          : null;
+      } catch {
+        incumbentFiled = null;
+      }
+    }
+  }
+
   return {
     bioguideId: rep.bioguideId,
     name: rep.name,
@@ -378,6 +412,11 @@ export async function getMemberBallotStatus(bioguideId: string): Promise<BallotS
     chamber: rep.chamber,
     ...framing,
     status: rep.status,
+    incumbentFiled,
+    raceId2026:
+      framing.nextElectionYear === 2026
+        ? buildRaceId2026(rep.chamber, rep.state, rep.district ?? null)
+        : null,
   };
 }
 
@@ -389,12 +428,10 @@ function deriveBallotFraming(currentTermEnd: string | null | undefined): {
   const endYear = currentTermEnd ? parseInt(String(currentTermEnd).slice(0, 4), 10) : NaN;
   const nextElectionYear = Number.isFinite(endYear) ? endYear - 1 : null;
 
-  const yearNow = new Date().getFullYear();
-  const nextGeneralYear = yearNow % 2 === 0 ? yearNow : yearNow + 1;
-  const onNextBallot = nextElectionYear === nextGeneralYear;
+  const onNextBallot = nextElectionYear === nextGeneralElectionYear();
 
   const electionDayLabel = nextElectionYear
-    ? electionDay(nextElectionYear).toLocaleDateString('en-US', {
+    ? getGeneralElectionDay(nextElectionYear).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',

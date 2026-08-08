@@ -9,6 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { CommitteeLink } from '@/components/shared/links/EntityLinks';
+import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
 import { getStateName } from '@/lib/data/us-states';
 import type { ProfileCommittee } from './types';
 
@@ -44,6 +45,10 @@ export function ProfileSidebar({
   const stateName = getStateName(r.state) || r.state;
   const termEndYear = r.currentTerm?.end ? new Date(r.currentTerm.end).getFullYear() : null;
   const isHouse = r.chamber === 'House';
+  const seatRaceId2026 =
+    nextElection === 2026 && (r.chamber === 'House' || r.chamber === 'Senate')
+      ? raceId2026(r.chamber, r.state, r.district ?? null)
+      : null;
 
   return (
     <aside aria-label="Reference information">
@@ -87,6 +92,16 @@ export function ProfileSidebar({
               <span className="font-medium text-right">{termEndYear}</span>
             </div>
           )}
+        </SidebarCard>
+      )}
+
+      {seatRaceId2026 && (
+        <SidebarCard title="2026 race">
+          <FiledCandidates2026
+            raceId={seatRaceId2026}
+            state={r.state}
+            showRedistrictingNote={isHouse}
+          />
         </SidebarCard>
       )}
 

@@ -20,6 +20,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { CqDisclaimer, CqLabel, CqPlainReading, CqSourceTag } from '@/components/cq';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
 import { HeroStrip } from './HeroStrip';
 import { MapPlaceholder } from './MapPlaceholder';
 import { DemographicsBlock } from './DemographicsBlock';
@@ -128,6 +129,8 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
   const contractsAndGrants = fedInvestment?.contractsAndGrants ?? 0;
   const projects = fedInvestment?.majorProjects ?? [];
 
+  const raceIdFor2026 = raceId2026('House', parsed.state, parsed.district);
+
   const publicHealth = servicesHealth?.services?.publicHealth ?? null;
   const healthEstimate = publicHealth?.districtEstimate ?? null;
   const countyMeasures = publicHealth?.measures ?? null;
@@ -209,6 +212,23 @@ export function DistrictPage({ districtId }: DistrictPageProps) {
         districtLabel={label}
         loading={detailsLoading}
       />
+
+      {/* 2026 ELECTION — FEC filings for this seat */}
+      {raceIdFor2026 && (
+        <div
+          style={{
+            border: '2px solid var(--ink)',
+            background: 'var(--bg1)',
+            padding: '20px 24px',
+            marginBottom: 32,
+          }}
+        >
+          <div style={{ marginBottom: 12 }}>
+            <CqLabel>2026 election</CqLabel>
+          </div>
+          <FiledCandidates2026 raceId={raceIdFor2026} state={parsed.state} showRedistrictingNote />
+        </div>
+      )}
 
       {/* NEIGHBORS + DEMOGRAPHICS */}
       <div

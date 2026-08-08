@@ -9,10 +9,12 @@
  * "Your ballot" box (mockup 1i family) for the your-reps lookup flow.
  *
  * Shows which of the voter's federal seats are on the next general-election
- * ballot, each linking to the incumbent's Record Card. Statements are about
- * SEATS, not candidacies — whether an incumbent is seeking re-election is
- * not in our data, so we never claim it. A vacant seat (non-active status)
- * gets the open-seat framing.
+ * ballot, each linking to the incumbent's Record Card. Seat statements come
+ * from term math; the ONLY candidacy claim we make is the incumbent's own
+ * FEC registration (a Statement of Candidacy covering the next election
+ * year) when the API verified it — never "running" (filers sometimes
+ * withdraw or retire) and never "on the ballot" (state certification).
+ * A vacant seat (non-active status) gets the open-seat framing.
  *
  * Renders nothing while loading or when no seat is on the ballot — this is
  * an additive layer, never a blocker for the lookup results.
@@ -20,19 +22,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import type { BallotStatus } from '@/features/record-card/record-card-data';
 
-interface BallotMember {
-  bioguideId: string;
-  name: string;
-  party: string;
-  state: string;
-  district?: string;
-  chamber: 'House' | 'Senate';
-  nextElectionYear: number | null;
-  onNextBallot: boolean;
-  electionDayLabel: string | null;
-  status?: string;
-}
+type BallotMember = BallotStatus;
 
 export function BallotCard({ bioguideIds }: { bioguideIds: string[] }) {
   const [members, setMembers] = useState<BallotMember[] | null>(null);
@@ -98,8 +90,20 @@ export function BallotCard({ bioguideIds }: { bioguideIds: string[] }) {
               <div className="text-xs tracking-[0.025em] text-gray-500">
                 {vacant
                   ? 'This seat is vacant; there is no incumbent record for this race.'
-                  : 'Seat is up for election — see the incumbent’s record from government sources.'}
+                  : m.incumbentFiled && m.nextElectionYear
+                    ? `Incumbent has a ${m.nextElectionYear} candidacy filing with the FEC. Filing is not ballot access, and filers sometimes withdraw.`
+                    : 'Seat is up for election — see the incumbent’s record from government sources.'}
               </div>
+              {m.raceId2026 && (
+                <div className="mt-0.5 text-xs">
+                  <Link
+                    href={`/elections/${m.raceId2026}`}
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Who has filed for this race →
+                  </Link>
+                </div>
+              )}
             </div>
             {!vacant && (
               <Link

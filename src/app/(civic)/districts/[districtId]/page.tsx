@@ -24,6 +24,7 @@ import { HousingAffordabilitySection } from '@/features/districts/components/Hou
 import ServicesHealthProfile from '@/features/districts/components/ServicesHealthProfile';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
+import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
@@ -292,6 +293,22 @@ export default function DistrictPage() {
               representative={district.representative}
               districtName={district.name}
             />
+
+            {/* 2026 election — FEC filings for this seat */}
+            {(() => {
+              const seatRaceId = raceId2026('House', district.state, district.number);
+              if (!seatRaceId) return null;
+              return (
+                <div className="bg-white border-2 border-black p-4 sm:p-8">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">2026 election</h2>
+                  <FiledCandidates2026
+                    raceId={seatRaceId}
+                    state={district.state}
+                    showRedistrictingNote
+                  />
+                </div>
+              );
+            })()}
 
             {/* Interactive Map */}
             <div className="bg-white border-2 border-black p-4 sm:p-8">
