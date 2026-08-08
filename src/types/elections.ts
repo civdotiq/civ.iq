@@ -65,8 +65,6 @@ export interface ElectionMetadata {
  *   {year}-{office}-{state|NATIONAL}[-{district}]
  * e.g. 2024-US_SENATE-OH, 2024-US_HOUSE-PA-07, 2026-US_HOUSE-NY-08.
  */
-export type ElectionRacePartyChair = 'D' | 'R';
-
 export interface ElectionRaceId {
   year: number;
   office: ElectionOffice;
@@ -78,7 +76,8 @@ export interface ElectionRaceId {
 export interface ElectionRaceCandidate {
   candidateId: string;
   name: string;
-  party: ElectionRacePartyChair;
+  /** FEC party code, e.g. 'DEM', 'REP', 'LIB', 'IND'. Not limited to two parties. */
+  party: string;
   partyLong: string;
   office: ElectionOffice;
   state: string;
@@ -96,15 +95,16 @@ export interface ElectionRacePayload {
   state: string;
   district: string | null;
   cycle: number;
-  democrat: ElectionRaceCandidate;
-  republican: ElectionRaceCandidate;
+  /** All FEC-filed candidates for the race, sorted by receipts descending. */
+  candidates: ElectionRaceCandidate[];
   result2024: RaceResultFull | null;
   dataAsOf: string;
 }
 
 export interface ElectionFinanceCandidateBlock {
   candidateId: string;
-  party: ElectionRacePartyChair;
+  /** FEC party code passed through from the race header; '' when unknown. */
+  party: string;
   receipts: number;
   cashOnHand: number;
   disbursements: number;

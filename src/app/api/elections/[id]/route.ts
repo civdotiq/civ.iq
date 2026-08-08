@@ -2,14 +2,15 @@
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  *
- * Election race header endpoint (PR 19).
+ * Election race header endpoint (PR 19, widened for 2026).
  *
- * Resolves the two top filed candidates (one D, one R) for a federal
- * race id. Race ids are uppercase, hyphen-separated:
+ * Resolves all FEC-filed candidates for a federal race id, any party,
+ * sorted by receipts. Race ids are uppercase, hyphen-separated:
  *   {year}-{office}-{state|NATIONAL}[-{district}]
  *
- * Returns 404 when either party has no FEC-filed candidate. Honest
- * empty state on the page is preferred over a half-rendered hero.
+ * Returns 404 only when no candidate has filed with the FEC. An FEC
+ * filing is NOT ballot access — copy downstream must say "filed",
+ * never "on the ballot".
  *
  * Falls through MEDSL 2024 results when the year is 2024 and the
  * state is in coveredStates.
@@ -23,12 +24,7 @@ import {
   getHouseResult2024,
   getStatewideResult2024,
 } from '@/lib/services/election-results.service';
-import type {
-  ElectionOffice,
-  ElectionRaceCandidate,
-  ElectionRacePartyChair,
-  ElectionRacePayload,
-} from '@/types/elections';
+import type { ElectionOffice, ElectionRaceCandidate, ElectionRacePayload } from '@/types/elections';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 12;
@@ -63,15 +59,27 @@ function officeToFecCode(office: ElectionOffice): 'P' | 'S' | 'H' | null {
   return null;
 }
 
-function partyToChair(party: string | null | undefined): ElectionRacePartyChair | null {
-  const p = (party ?? '').toUpperCase();
-  if (p === 'DEM' || p === 'DFL') return 'D';
-  if (p === 'REP' || p === 'GOP') return 'R';
-  return null;
-}
+/** Display names for common FEC party codes; falls back to the raw code. */
+const PARTY_NAMES: Record<string, string> = {
+  DEM: 'Democrat',
+  DFL: 'Democrat (DFL)',
+  REP: 'Republican',
+  GOP: 'Republican',
+  LIB: 'Libertarian',
+  GRE: 'Green',
+  GRN: 'Green',
+  CON: 'Constitution',
+  IND: 'Independent',
+  NNE: 'None',
+  NON: 'Nonpartisan',
+  NPA: 'No party affiliation',
+  OTH: 'Other',
+  UNK: 'Unknown party',
+  W: 'Write-in',
+};
 
-function partyLong(party: ElectionRacePartyChair): string {
-  return party === 'D' ? 'Democrat' : 'Republican';
+function partyLong(code: string): string {
+  return PARTY_NAMES[code] ?? code;
 }
 
 function incumbencyFull(code: string | null): string | null {
@@ -98,6 +106,7 @@ interface FecCandidateRow {
   incumbent_challenge: string | null;
   first_file_date: string | null;
   receipts: number | null;
+  candidate_election_year: number | null;
 }
 
 async function fecCandidatesTotals(params: URLSearchParams, apiKey: string) {
@@ -125,29 +134,30 @@ async function fecCandidatesTotals(params: URLSearchParams, apiKey: string) {
   return json.results ?? [];
 }
 
-function pickTopByParty(
-  rows: FecCandidateRow[],
-  party: ElectionRacePartyChair
-): FecCandidateRow | null {
-  const filtered = rows
-    .filter(r => partyToChair(r.party) === party)
-    .filter(r => Number.isFinite(r.receipts ?? NaN))
-    .sort((a, b) => (b.receipts ?? 0) - (a.receipts ?? 0));
-  if (filtered.length > 0) return filtered[0]!;
-  const any = rows.find(r => partyToChair(r.party) === party);
-  return any ?? null;
+// Finance and total-spent accept at most 12 ids; the payload matches.
+const MAX_CANDIDATES = 12;
+
+/**
+ * All filed candidates, receipts descending. When at least one candidate
+ * has raised funds (or is the incumbent), zero-money Form-2 filers are
+ * trimmed — MI House alone has 100+ raw filers. When nobody has raised
+ * funds yet, the raw filings ARE the story, so keep them all.
+ */
+function selectCandidates(rows: FecCandidateRow[]): FecCandidateRow[] {
+  const sorted = [...rows].sort((a, b) => (b.receipts ?? 0) - (a.receipts ?? 0));
+  const funded = sorted.filter(
+    r => (r.receipts ?? 0) > 0 || (r.incumbent_challenge ?? '').toUpperCase() === 'I'
+  );
+  return (funded.length > 0 ? funded : sorted).slice(0, MAX_CANDIDATES);
 }
 
-function toCandidate(
-  row: FecCandidateRow,
-  parsed: ParsedRaceId,
-  party: ElectionRacePartyChair
-): ElectionRaceCandidate {
+function toCandidate(row: FecCandidateRow, parsed: ParsedRaceId): ElectionRaceCandidate {
+  const partyCode = (row.party ?? 'UNK').toUpperCase();
   return {
     candidateId: row.candidate_id,
     name: row.name,
-    party,
-    partyLong: partyLong(party),
+    party: partyCode,
+    partyLong: partyLong(partyCode),
     office: parsed.office,
     state: parsed.state,
     district: parsed.district,
@@ -194,12 +204,16 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   // and cycle (totals scope) explicitly.
   const cycle = parsed.year;
 
+  // election_full=true keys totals to the full election period. Without it,
+  // Senate lookups return 2-year-window rows that pull in mid-cycle senators;
+  // the candidate_election_year filter below completes that guard.
   const search = new URLSearchParams({
     office: officeCode,
     election_year: String(parsed.year),
     cycle: String(cycle),
+    election_full: 'true',
     sort: '-receipts',
-    per_page: '20',
+    per_page: '50',
   });
   if (parsed.state !== 'NATIONAL') {
     search.set('state', parsed.state);
@@ -218,17 +232,14 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Failed to fetch FEC candidates', raceId }, { status: 502 });
   }
 
-  const dem = pickTopByParty(rows, 'D');
-  const rep = pickTopByParty(rows, 'R');
+  const inCycle = rows.filter(
+    r => r.candidate_election_year === null || r.candidate_election_year === parsed.year
+  );
+  const selected = selectCandidates(inCycle);
 
-  if (!dem || !rep) {
+  if (selected.length === 0) {
     return NextResponse.json(
-      {
-        error: 'Race not contested two-way',
-        raceId,
-        democratFiled: !!dem,
-        republicanFiled: !!rep,
-      },
+      { error: 'No FEC-filed candidates found for this race', raceId },
       { status: 404 }
     );
   }
@@ -258,8 +269,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     state: parsed.state,
     district: parsed.district,
     cycle,
-    democrat: toCandidate(dem, parsed, 'D'),
-    republican: toCandidate(rep, parsed, 'R'),
+    candidates: selected.map(row => toCandidate(row, parsed)),
     result2024,
     dataAsOf: new Date().toISOString(),
   };

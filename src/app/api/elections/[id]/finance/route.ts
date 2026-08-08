@@ -21,11 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import logger from '@/lib/logging/simple-logger';
-import type {
-  ElectionFinanceCandidateBlock,
-  ElectionFinancePayload,
-  ElectionRacePartyChair,
-} from '@/types/elections';
+import type { ElectionFinanceCandidateBlock, ElectionFinancePayload } from '@/types/elections';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 12;
@@ -101,7 +97,7 @@ function pct(num: number | null, denom: number | null): number | null {
 async function loadCandidateBlock(
   candidateId: string,
   cycle: number,
-  party: ElectionRacePartyChair,
+  party: string,
   apiKey: string
 ): Promise<ElectionFinanceCandidateBlock | null> {
   const totalsPath = `/candidate/${candidateId}/totals/?cycle=${cycle}&per_page=1`;
@@ -165,7 +161,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const raceId = (id ?? '').trim().toUpperCase();
 
   const idsParam = (request.nextUrl.searchParams.get('ids') ?? '').trim();
-  const partiesParam = (request.nextUrl.searchParams.get('parties') ?? 'D,R').trim();
+  const partiesParam = (request.nextUrl.searchParams.get('parties') ?? '').trim();
   const cycleParam = request.nextUrl.searchParams.get('cycle');
   const cycle = cycleParam ? parseInt(cycleParam, 10) : NaN;
 
@@ -177,14 +173,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .split(',')
     .map(s => s.trim().toUpperCase())
     .filter(Boolean);
+  // Optional FEC party codes matched to ids, display passthrough only —
+  // this route never infers party. Empty means unknown.
   const parties = partiesParam
     .split(',')
     .map(s => s.trim().toUpperCase())
-    .filter(Boolean) as ElectionRacePartyChair[];
+    .filter(Boolean);
 
-  if (ids.length === 0 || ids.length !== parties.length) {
+  if (ids.length === 0 || (parties.length > 0 && ids.length !== parties.length)) {
     return NextResponse.json(
-      { error: 'ids and parties must be matched, comma-separated lists.', raceId },
+      { error: 'ids (and parties, when given) must be matched, comma-separated lists.', raceId },
       { status: 400 }
     );
   }
@@ -218,7 +216,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const chunk = ids.slice(i, i + CANDIDATE_CONCURRENCY);
       const chunkResults = await Promise.all(
         chunk.map((cid, j) =>
-          loadCandidateBlock(cid, cycle, parties[i + j] ?? 'D', apiKey).catch(error => {
+          loadCandidateBlock(cid, cycle, parties[i + j] ?? '', apiKey).catch(error => {
             logger.warn(
               `[elections/finance] candidate block failed for ${cid}: ${(error as Error).message}`
             );

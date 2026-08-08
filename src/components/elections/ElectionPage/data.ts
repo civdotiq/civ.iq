@@ -7,7 +7,7 @@
  * election-day inference. No data fetching here.
  */
 
-import type { ElectionOffice, ElectionRaceId, ElectionRacePartyChair } from '@/types/elections';
+import type { ElectionOffice, ElectionRaceId } from '@/types/elections';
 
 const RACE_ID_RE =
   /^(\d{4})-(US_PRESIDENT|US_SENATE|US_HOUSE|GOVERNOR)-([A-Z]{2}|NATIONAL)(?:-(\d{2}|AL|00))?$/;
@@ -48,29 +48,34 @@ export function raceTitle(parsed: ElectionRaceId): string {
   return `${parsed.state} · ${office}`;
 }
 
-export function partyColorVar(party: ElectionRacePartyChair): string {
-  return party === 'D' ? 'var(--party-democrat)' : 'var(--civiq-red)';
+/**
+ * Party grouping from an FEC party code (or MEDSL 'D'/'R' letter).
+ * Party colors are reserved for the two major parties; every other
+ * party renders in the neutral gray ramp per the design system.
+ */
+export function partyGroup(party: string | null | undefined): 'd' | 'r' | 'i' {
+  const p = (party ?? '').toUpperCase();
+  if (p === 'D' || p === 'DEM' || p === 'DFL') return 'd';
+  if (p === 'R' || p === 'REP' || p === 'GOP') return 'r';
+  return 'i';
 }
 
-export function partyChipVariant(party: ElectionRacePartyChair): 'd' | 'r' {
-  return party === 'D' ? 'd' : 'r';
+export function partyColorVar(party: string): string {
+  const group = partyGroup(party);
+  if (group === 'd') return 'var(--party-democrat)';
+  if (group === 'r') return 'var(--civiq-red)';
+  return 'var(--fg2)';
+}
+
+export function partyChipVariant(party: string): 'd' | 'r' | 'i' {
+  return partyGroup(party);
 }
 
 /**
- * General-election day for federal races: Tuesday after the first
- * Monday of November in the election year. Sufficient for the ticker
- * — does not handle off-cycle special elections.
+ * General-election day for federal races. Sufficient for the ticker —
+ * does not handle off-cycle special elections.
  */
-export function generalElectionDay(year: number): Date {
-  // November is month index 10
-  const nov1 = new Date(Date.UTC(year, 10, 1));
-  const dow = nov1.getUTCDay(); // 0 = Sunday
-  // First Monday of November:
-  const firstMondayOffset = (1 - dow + 7) % 7;
-  const firstMonday = 1 + firstMondayOffset;
-  // Tuesday after first Monday:
-  return new Date(Date.UTC(year, 10, firstMonday + 1));
-}
+export { getGeneralElectionDay as generalElectionDay } from '@/lib/data/election-dates';
 
 export function daysUntil(target: Date, now: Date = new Date()): number {
   const ms = target.getTime() - now.getTime();

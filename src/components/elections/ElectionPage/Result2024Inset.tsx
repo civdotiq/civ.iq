@@ -15,17 +15,22 @@ import type { ElectionRaceCandidate } from './types';
 
 interface Result2024InsetProps {
   result: RaceResultFull;
-  democrat: ElectionRaceCandidate;
-  republican: ElectionRaceCandidate;
+  /** Top filer from each major party, when one exists — labels the columns. */
+  democrat: ElectionRaceCandidate | null;
+  republican: ElectionRaceCandidate | null;
 }
 
 export function Result2024Inset({ result, democrat, republican }: Result2024InsetProps) {
   const winnerParty = result.winner === 'D' ? 'D' : result.winner === 'R' ? 'R' : null;
   const winnerName =
     winnerParty === 'D'
-      ? displayName(democrat.name)
+      ? democrat
+        ? displayName(democrat.name)
+        : 'Democrat'
       : winnerParty === 'R'
-        ? displayName(republican.name)
+        ? republican
+          ? displayName(republican.name)
+          : 'Republican'
         : 'Other';
   const winnerVariant = winnerParty ? partyChipVariant(winnerParty) : 'i';
   const marginText = `${winnerName.split(' ').slice(-1)[0]} +${result.margin.toFixed(1)}`;
@@ -63,14 +68,14 @@ export function Result2024Inset({ result, democrat, republican }: Result2024Inse
         }}
       >
         <ResultCell
-          name={displayName(democrat.name)}
+          name={democrat ? displayName(democrat.name) : 'Democrat'}
           pct={result.demPct}
           accent={partyColorVar('D')}
           isWinner={winnerParty === 'D'}
           side="left"
         />
         <ResultCell
-          name={displayName(republican.name)}
+          name={republican ? displayName(republican.name) : 'Republican'}
           pct={result.repPct}
           accent={partyColorVar('R')}
           isWinner={winnerParty === 'R'}

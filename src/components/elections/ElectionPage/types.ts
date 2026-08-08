@@ -8,7 +8,6 @@ export type {
   ElectionFinancePayload,
   ElectionRaceCandidate,
   ElectionRaceId,
-  ElectionRacePartyChair,
   ElectionRacePayload,
   ElectionTotalSpentPayload,
 } from '@/types/elections';

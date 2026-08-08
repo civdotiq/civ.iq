@@ -30,6 +30,7 @@
 import Link from 'next/link';
 import useSWR from 'swr';
 import { CqDisclaimer, CqLabel, CqSourceTag } from '@/components/cq';
+import { AlsoFiledList } from './AlsoFiledList';
 import { CandidateHero } from './CandidateHero';
 import { ComparePane } from './ComparePane';
 import { Result2024Inset } from './Result2024Inset';
@@ -77,26 +78,34 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
   const race = raceResult?.data ?? null;
   const raceUnavailable = raceResult?.unavailable ?? false;
 
-  const candidateIds = race ? [race.democrat.candidateId, race.republican.candidateId] : null;
-  const partiesParam = 'D,R';
+  // Compare the top two fundraisers head-to-head (any party); everyone
+  // else who has filed appears in the "Also filed" list below the hero.
+  const candidates = race?.candidates ?? [];
+  const topTwo = candidates.slice(0, 2);
+  const alsoFiled = candidates.slice(2);
+  const compareIds = topTwo.map(c => c.candidateId);
+  const allIds = candidates.map(c => c.candidateId);
+  const partiesParam = topTwo.map(c => c.party).join(',');
   const cycle = race?.cycle ?? parsed?.year ?? null;
 
   const financeKey =
-    candidateIds && cycle ? `election:finance:${raceId}:${cycle}:${candidateIds.join(',')}` : null;
+    compareIds.length > 0 && cycle
+      ? `election:finance:${raceId}:${cycle}:${compareIds.join(',')}`
+      : null;
   const { data: financeResult, isLoading: financeLoading } = useSWR<
     FetchResult<ElectionFinancePayload>
   >(
     financeKey,
     () =>
       fetcher<ElectionFinancePayload>(
-        `/api/elections/${encodedId}/finance?ids=${candidateIds!.join(',')}&parties=${partiesParam}&cycle=${cycle}`
+        `/api/elections/${encodedId}/finance?ids=${compareIds.join(',')}&parties=${partiesParam}&cycle=${cycle}`
       ),
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
 
   const totalSpentKey =
-    candidateIds && cycle
-      ? `election:totalSpent:${raceId}:${cycle}:${candidateIds.join(',')}`
+    allIds.length > 0 && cycle
+      ? `election:totalSpent:${raceId}:${cycle}:${allIds.join(',')}`
       : null;
   const { data: totalResult, isLoading: totalLoading } = useSWR<
     FetchResult<ElectionTotalSpentPayload>
@@ -104,7 +113,7 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
     totalSpentKey,
     () =>
       fetcher<ElectionTotalSpentPayload>(
-        `/api/elections/${encodedId}/total-spent?ids=${candidateIds!.join(',')}&cycle=${cycle}`
+        `/api/elections/${encodedId}/total-spent?ids=${allIds.join(',')}&cycle=${cycle}`
       ),
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
@@ -128,8 +137,15 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
     totalResult?.data?.dataAsOf ??
     new Date().toISOString();
 
-  const demFinance = financeResult?.data?.candidates.find(c => c.party === 'D') ?? null;
-  const repFinance = financeResult?.data?.candidates.find(c => c.party === 'R') ?? null;
+  const leftCandidate = topTwo[0] ?? null;
+  const rightCandidate = topTwo[1] ?? null;
+  const financeFor = (candidateId: string | undefined) =>
+    financeResult?.data?.candidates.find(c => c.candidateId === candidateId) ?? null;
+
+  // MEDSL 2024 result columns are two-party (D/R); label them with the
+  // race's top filer from each major party when one exists.
+  const topDem = candidates.find(c => c.party === 'DEM' || c.party === 'DFL') ?? null;
+  const topRep = candidates.find(c => c.party === 'REP' || c.party === 'GOP') ?? null;
 
   return (
     <div
@@ -154,7 +170,7 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
         }}
       >
         <Link
-          href="/representatives"
+          href={parsed?.year === 2026 ? '/elections/2026' : '/elections'}
           style={{
             fontSize: 11,
             fontWeight: 700,
@@ -216,7 +232,7 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
           marginBottom: 32,
         }}
       >
-        <CandidateHero candidate={race?.democrat ?? null} loading={raceLoading} />
+        <CandidateHero candidate={leftCandidate} loading={raceLoading} />
         <div
           style={{
             background: 'var(--ink)',
@@ -261,10 +277,10 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
               textTransform: 'uppercase',
             }}
           >
-            Two-way race
+            {candidates.length > 2 ? `Top 2 of ${candidates.length} filed` : 'Top filed candidates'}
           </span>
         </div>
-        <CandidateHero candidate={race?.republican ?? null} loading={raceLoading} flip />
+        <CandidateHero candidate={rightCandidate} loading={raceLoading} flip />
       </div>
 
       {/* Side-by-side finance */}
@@ -279,26 +295,24 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
         }}
       >
         <ComparePane
-          candidate={race?.democrat ?? null}
-          finance={demFinance}
+          candidate={leftCandidate}
+          finance={financeFor(leftCandidate?.candidateId)}
           side="left"
           loading={financeLoading || (!!financeKey && !financeResult)}
         />
         <ComparePane
-          candidate={race?.republican ?? null}
-          finance={repFinance}
+          candidate={rightCandidate}
+          finance={financeFor(rightCandidate?.candidateId)}
           side="right"
           loading={financeLoading || (!!financeKey && !financeResult)}
         />
       </div>
 
+      {alsoFiled.length > 0 && <AlsoFiledList candidates={alsoFiled} />}
+
       {/* 2024 result inset (covered states only) */}
       {race?.result2024 && (
-        <Result2024Inset
-          result={race.result2024}
-          democrat={race.democrat}
-          republican={race.republican}
-        />
+        <Result2024Inset result={race.result2024} democrat={topDem} republican={topRep} />
       )}
 
       {/* Disclaimer */}
@@ -310,10 +324,12 @@ export function ElectionPage({ raceId }: ElectionPageProps) {
         >
           {' '}
           Candidate identity, finance totals, and independent-expenditure spending come from FEC.gov
-          filings. 2024 result figures, when shown, are MIT Election Lab certified precinct rollups.
-          Polling averages, endorsement counts, race ratings, and donor-industry rollups are not
-          rendered on this page because no programmatic government source covers them at acceptable
-          quality. {officeLabel(parsed.office)} race shown is the two-way general (D vs R) only.
+          filings. Candidates shown have filed with the FEC — an FEC filing is not ballot access,
+          and state-certified ballots may differ. 2024 result figures, when shown, are MIT Election
+          Lab certified precinct rollups. Polling averages, endorsement counts, race ratings, and
+          donor-industry rollups are not rendered on this page because no programmatic government
+          source covers them at acceptable quality. The {officeLabel(parsed.office)} comparison
+          shows the two top fundraisers; every other filed candidate is listed above.
         </CqDisclaimer>
       </div>
     </div>
@@ -328,8 +344,8 @@ interface RaceNotFoundProps {
 function RaceNotFound({ raceId, reason }: RaceNotFoundProps) {
   const explanation =
     reason === 'invalid-format'
-      ? 'Race ids look like 2024-US_SENATE-OH or 2024-US_HOUSE-PA-07.'
-      : 'No two-way (Democrat vs Republican) federal race was filed with the FEC for this id.';
+      ? 'Race ids look like 2026-US_SENATE-MI or 2026-US_HOUSE-PA-07.'
+      : 'No candidate has filed with the FEC for this race id.';
   return (
     <div
       style={{

@@ -11,7 +11,7 @@ interface CqPortraitProps {
 }
 
 const PARTY_STRIPE: Record<Party, string> = {
-  d: 'var(--civiq-green)',
+  d: 'var(--party-democrat)',
   r: 'var(--civiq-red)',
   i: 'var(--data-vlau)',
 };
