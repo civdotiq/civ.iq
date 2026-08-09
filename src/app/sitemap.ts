@@ -387,6 +387,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/digest', priority: 0.7, freq: 'weekly' as const },
     { path: '/elections', priority: 0.65, freq: 'monthly' as const },
     { path: '/elections/2026', priority: 0.75, freq: 'weekly' as const },
+    { path: '/elections/2026/how-to-vote', priority: 0.75, freq: 'weekly' as const },
     { path: '/elections/federal', priority: 0.6, freq: 'monthly' as const },
     { path: '/elections/state', priority: 0.6, freq: 'monthly' as const },
     { path: '/federal', priority: 0.7, freq: 'monthly' as const },

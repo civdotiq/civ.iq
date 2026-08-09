@@ -25,6 +25,10 @@ import {
 } from '@/lib/intelligence/analyzers/chamber-baselines';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getGeneralElectionDay, nextGeneralElectionYear } from '@/lib/data/election-dates';
+import {
+  getVoterRegistration2026,
+  summarizeRegistrationDeadline,
+} from '@/lib/data/voter-registration';
 import { raceId2026 as buildRaceId2026 } from '@/lib/elections/race-id';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { fecApiService } from '@/lib/fec/fec-api-service';
@@ -367,6 +371,14 @@ export interface BallotStatus {
   incumbentFiled: boolean | null;
   /** /elections/[id] race id for the seat's 2026 race, when it is up in 2026. */
   raceId2026: string | null;
+  /**
+   * One-line voter-registration deadline summary for the member's state,
+   * from the hand-verified 2026 corpus. null = state unverified or not
+   * covered — the UI says nothing rather than guessing.
+   */
+  registrationDeadline: string | null;
+  /** Official registration page for the member's state, when link-checked. */
+  registrationUrl: string | null;
 }
 
 function officeAwareFecId(
@@ -403,6 +415,8 @@ export async function getMemberBallotStatus(bioguideId: string): Promise<BallotS
     }
   }
 
+  const registration = framing.onNextBallot ? getVoterRegistration2026(rep.state) : null;
+
   return {
     bioguideId: rep.bioguideId,
     name: rep.name,
@@ -417,6 +431,10 @@ export async function getMemberBallotStatus(bioguideId: string): Promise<BallotS
       framing.nextElectionYear === 2026
         ? buildRaceId2026(rep.chamber, rep.state, rep.district ?? null)
         : null,
+    registrationDeadline: registration ? summarizeRegistrationDeadline(registration) : null,
+    registrationUrl: registration
+      ? (registration.registrationUrl ?? registration.infoUrl ?? registration.electionOfficeUrl)
+      : null,
   };
 }
 

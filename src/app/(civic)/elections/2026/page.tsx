@@ -102,6 +102,14 @@ export default function Elections2026Page() {
           (including special elections) and every House seat are up. Each race page shows the
           candidates who have filed with the FEC and what they have raised.
         </p>
+        <p className="mb-6">
+          <Link
+            href="/elections/2026/how-to-vote"
+            className="text-civiq-blue hover:underline font-medium"
+          >
+            Registration deadlines and how to vote, state by state &rarr;
+          </Link>
+        </p>
         <p className="text-sm text-amber-700 dark:text-amber-500 mb-8 border-l-4 border-amber-600 pl-3 py-1">
           Candidate lists come from FEC filings. Filing with the FEC is not the same as qualifying
           for the ballot — state-certified ballots are set after each state&rsquo;s primary and

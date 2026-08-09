@@ -3,12 +3,18 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import Link from 'next/link';
 import { CqLabel } from '@/components/cq';
 import {
   getElectionCycleLabel,
   getNextElectionYear,
   getMostRecentElectionYear,
 } from '@/lib/data/state-election-cycles';
+import {
+  getVoterRegistration2026,
+  summarizeRegistrationDeadline,
+  type StateVoterRegistration2026,
+} from '@/lib/data/voter-registration';
 import { formatCompactCurrency, formatCurrencyDollars } from './helpers';
 import type { StateElectionResult, StateFederalSpending } from './types';
 
@@ -22,11 +28,17 @@ export function Aside({ stateCode, spending, governorResult }: AsideProps) {
   const next = getNextElectionYear(stateCode);
   const recent = getMostRecentElectionYear(stateCode);
   const cycleLabel = getElectionCycleLabel(stateCode);
+  const registration = getVoterRegistration2026(stateCode);
 
   return (
     <aside style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <GovernorResultCard result={governorResult} />
-      <ElectionCalendarCard next={next} recent={recent} cycleLabel={cycleLabel} />
+      <ElectionCalendarCard
+        next={next}
+        recent={recent}
+        cycleLabel={cycleLabel}
+        registration={registration}
+      />
       <PerCapitaCard spending={spending} />
     </aside>
   );
@@ -199,11 +211,14 @@ function ElectionCalendarCard({
   next,
   recent,
   cycleLabel,
+  registration,
 }: {
   next: number;
   recent: number;
   cycleLabel: string;
+  registration: StateVoterRegistration2026 | null;
 }) {
+  const deadlineSummary = registration ? summarizeRegistrationDeadline(registration) : null;
   return (
     <div
       style={{
@@ -240,6 +255,30 @@ function ElectionCalendarCard({
             {recent}
           </div>
         </div>
+        {registration && (
+          <div style={{ padding: '6px 0', borderTop: '1px solid var(--line)' }}>
+            <div style={{ fontWeight: 700 }}>Voter registration · Nov 3, 2026</div>
+            <div style={{ fontSize: 11, color: 'var(--fg3)', lineHeight: 1.5 }}>
+              {deadlineSummary ?? 'Deadline unverified — check your state election office'}
+            </div>
+            <div style={{ fontSize: 11, marginTop: 2, display: 'flex', gap: 10 }}>
+              {registration.registrationRequired &&
+                (registration.registrationUrl ?? registration.infoUrl) && (
+                  <a
+                    href={registration.registrationUrl ?? registration.infoUrl ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--civiq-blue)' }}
+                  >
+                    Register &rarr;
+                  </a>
+                )}
+              <Link href="/elections/2026/how-to-vote" style={{ color: 'var(--civiq-blue)' }}>
+                All deadlines &rarr;
+              </Link>
+            </div>
+          </div>
+        )}
         <div
           style={{
             fontSize: 11,

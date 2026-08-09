@@ -75,6 +75,24 @@ export default function ElectionsPage() {
           <p className="text-civiq-blue text-sm font-medium">Browse 2026 races &rarr;</p>
         </Link>
 
+        {/* How to vote card */}
+        <Link
+          href="/elections/2026/how-to-vote"
+          className="block border-2 border-black dark:border-gray-600 p-6 hover:border-civiq-blue transition-colors group mb-6"
+        >
+          <p className="aicher-heading-wide text-xs text-gray-500 dark:text-gray-400 mb-2 tracking-wider">
+            HOW TO VOTE
+          </p>
+          <h2 className="text-xl font-bold mb-3 group-hover:text-civiq-blue transition-colors">
+            2026 election calendar
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            Voter registration deadlines for every state, with official registration and
+            registration-check links — verified against state election offices.
+          </p>
+          <p className="text-civiq-blue text-sm font-medium">Find your deadline &rarr;</p>
+        </Link>
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Federal Elections Card */}
           <Link

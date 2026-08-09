@@ -23,6 +23,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { BallotStatus } from '@/features/record-card/record-card-data';
+import { getStateName } from '@/lib/data/us-states';
 
 type BallotMember = BallotStatus;
 
@@ -116,6 +117,25 @@ export function BallotCard({ bioguideIds }: { bioguideIds: string[] }) {
           </div>
         );
       })}
+      {onBallot[0]?.registrationDeadline && (
+        <div className="border-t border-gray-300 px-4 py-3 text-xs tracking-[0.025em] text-gray-500">
+          Voter registration in {getStateName(onBallot[0].state) ?? onBallot[0].state}:{' '}
+          {onBallot[0].registrationDeadline}.{' '}
+          {onBallot[0].registrationUrl && (
+            <a
+              href={onBallot[0].registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-civiq-blue hover:underline"
+            >
+              Register →
+            </a>
+          )}{' '}
+          <Link href="/elections/2026/how-to-vote" className="text-civiq-blue hover:underline">
+            All deadlines →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
