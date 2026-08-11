@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-06T04:44:57.647Z",
-  "staleAfter": "2026-08-27",
+  "generatedAt": "2026-08-11T07:34:36.405Z",
+  "staleAfter": "2026-09-01",
   "upstreamCommit": "934bf09a94a35351baf872c70e778a4367c8266e",
   "upstreamCommittedAt": "2026-08-05T23:45:08Z",
   "jurisdictions": 52,
   "people": 7451,
   "departed": 2,
-  "compressedBytes": 520858,
+  "compressedBytes": 520927,
   "meta": {
     "people": 7451,
     "departed": 2,
