@@ -3,41 +3,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-// Preload critical resources
-export function preloadCriticalResources() {
-  if (typeof window === 'undefined') return;
-
-  // Preload critical fonts
-  const criticalFonts = [
-    '/fonts/inter-var.woff2',
-    // Add other critical fonts here
-  ];
-
-  criticalFonts.forEach(font => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = font;
-    link.as = 'font';
-    link.type = 'font/woff2';
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  });
-
-  // Preload critical images
-  const criticalImages: string[] = [
-    // Add critical images that appear above the fold
-  ];
-
-  criticalImages.forEach(src => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = src;
-    link.as = 'image';
-    document.head.appendChild(link);
-  });
-}
-
-// Prefetch likely next pages
 export function prefetchLikelyPages() {
   if (typeof window === 'undefined') return;
 

@@ -3,9 +3,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-// API Services
-export { representativesService } from './api/representatives.service';
-
 // Cache Services
 export { redisService } from './cache/redis.service';
 
@@ -19,9 +16,3 @@ export type {
   BillSummarizationOptions,
   MultiFormatSummary,
 } from './ai/summarization.service';
-export type {
-  RepresentativeFilters,
-  RepresentativesBatchRequest,
-  VotingRecord,
-  CampaignFinance,
-} from './api/representatives.service';

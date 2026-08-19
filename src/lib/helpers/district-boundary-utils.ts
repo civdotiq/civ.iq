@@ -50,11 +50,9 @@ export interface PointInDistrictResult {
 
 class DistrictBoundaryService {
   private metadata: DistrictMetadata | null = null;
-  private pmtilesUrl: string;
   private metadataUrl: string;
 
   constructor() {
-    this.pmtilesUrl = '/maps/congressional_districts_119_real.pmtiles';
     this.metadataUrl = '/api/district-boundaries/metadata';
   }
 
@@ -293,13 +291,6 @@ class DistrictBoundaryService {
     }
 
     return results.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  /**
-   * Get the PMTiles URL for use with MapLibre GL JS
-   */
-  getPMTilesUrl(): string {
-    return this.pmtilesUrl;
   }
 
   /**
