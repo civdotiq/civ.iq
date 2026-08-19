@@ -16,6 +16,7 @@ import { GET } from '@/app/api/state-legislature/[state]/route';
 import { createMockRequest } from '../../utils/test-helpers';
 import { currentChamberRole } from '@/lib/data-sources/openstates-people/build-corpus';
 import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
+import { getJurisdictionRoster } from '@/lib/data-sources/openstates-people/load-people';
 import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
 
 jest.mock('@/lib/cache', () => ({
@@ -117,23 +118,36 @@ describe('roster corpus', () => {
     expect(data.chambers.upper.partyDataAvailable).toBe(false);
   });
 
-  it('reaches the DC Council and shows its vacancy rather than padding it', async () => {
+  it('reaches the DC Council and shows any vacancy rather than padding it', async () => {
     const { data } = await getState('DC');
+
+    // Roster counts are derived from the committed corpus, never hard-coded:
+    // the refresh workflow commits with [skip ci], so a literal here rots
+    // silently and then fails CI on the next unrelated push. Seat totals stay
+    // literal — they come from NCSL, not the corpus.
+    const corpusCount = (await getJurisdictionRoster('DC'))?.length ?? -1;
 
     expect(data.isUnicameral).toBe(true);
     expect(data.chambers.lower.totalSeats).toBe(13);
-    // A member departed in July 2026; upstream has not yet moved the file to
-    // retired/. Listing 12 of 13 is the honest answer.
-    expect(data.legislators.length).toBe(12);
-    expect(data.chambers.lower.membersListed).toBe(12);
+    expect(data.legislators.length).toBe(corpusCount);
+    expect(data.chambers.lower.membersListed).toBe(corpusCount);
+    expect(data.chambers.lower.membersListed).toBeLessThanOrEqual(13);
   });
 
   it('serves New Hampshire, previously nine API requests, with its real vacancies', async () => {
     const { data } = await getState('NH');
 
+    const roster = (await getJurisdictionRoster('NH')) ?? [];
+    const lowerCount = roster.filter(person => chamberBucket(person) === 'lower').length;
+    const upperCount = roster.filter(person => chamberBucket(person) === 'upper').length;
+
     expect(data.chambers.lower.totalSeats).toBe(400);
-    expect(data.chambers.lower.membersListed).toBe(391);
-    expect(data.chambers.upper.membersListed).toBe(24);
+    expect(data.chambers.lower.membersListed).toBe(lowerCount);
+    expect(data.chambers.lower.membersListed).toBeLessThanOrEqual(400);
+    expect(data.chambers.upper.membersListed).toBe(upperCount);
+    // NH always carries vacancies mid-session; a full 400 would mean the
+    // route padded the roster to the seat count.
+    expect(data.chambers.lower.membersListed).toBeLessThan(400);
     expect(requestedUrls().some(url => url.includes('/people'))).toBe(false);
   });
 });
