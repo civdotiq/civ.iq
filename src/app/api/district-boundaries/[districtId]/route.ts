@@ -15,23 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSecureCorsOrigin } from '@/config/api.config';
-import { getServerBaseUrl } from '@/lib/server-url';
+import { getCongressionalDistrictBoundary } from '@/lib/services/tigerweb-boundary.service';
 
 export const dynamic = 'force-dynamic';
-
-interface DistrictManifest {
-  total_districts: number;
-  districts: string[];
-  extraction_stats: {
-    duration_ms: number;
-    optimizations_created: number;
-  };
-  detail_levels: {
-    full: string;
-    standard: string;
-    simple: string;
-  };
-}
 
 interface DistrictProperties {
   GEOID?: string;
@@ -184,43 +170,6 @@ function normalizeDistrictId(districtId: string): string | null {
 }
 
 /**
- * Load and cache the district manifest
- */
-let manifestCache: DistrictManifest | null = null;
-async function loadManifest(baseUrl: string): Promise<DistrictManifest> {
-  if (manifestCache) {
-    return manifestCache;
-  }
-
-  try {
-    const manifestUrl = `${baseUrl}/data/districts/manifest.json`;
-    const response = await fetch(manifestUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch manifest: ${response.statusText}`);
-    }
-    manifestCache = (await response.json()) as DistrictManifest;
-    return manifestCache;
-  } catch (error) {
-    throw new Error(
-      `Failed to load district manifest: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-  }
-}
-
-/**
- * Get file size for a district file (from Content-Length header)
- */
-async function getFileSize(fileUrl: string): Promise<number> {
-  try {
-    const response = await fetch(fileUrl, { method: 'HEAD' });
-    const contentLength = response.headers.get('Content-Length');
-    return contentLength ? parseInt(contentLength, 10) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-/**
  * Main API route handler
  */
 export async function GET(
@@ -260,26 +209,28 @@ export async function GET(
       );
     }
 
-    // Get base URL for fetching static files
-    const baseUrl = getServerBaseUrl();
+    // Geometry comes from the Census TIGERweb ArcGIS API (layer 0, 119th
+    // Congress), generalized per detail level. The old per-district static
+    // files under public/data/districts/ were never committed, so every
+    // request 404'd.
+    const DETAIL_OFFSETS: Record<string, number | undefined> = {
+      full: undefined,
+      standard: 0.001, // ~100m tolerance
+      simple: 0.01, // ~1km tolerance
+    };
 
-    // Load manifest for validation
-    const manifest = await loadManifest(baseUrl);
+    const feature = await getCongressionalDistrictBoundary(normalizedId, DETAIL_OFFSETS[detail]);
 
-    if (!manifest.districts.includes(normalizedId)) {
-      // Helpful error with similar districts
+    if (!feature) {
       const stateFips = normalizedId.slice(0, 2);
       const stateCode = FIPS_STATE_MAP[stateFips];
-      const stateDistricts = manifest.districts.filter(id => id.startsWith(stateFips));
 
       return NextResponse.json(
         {
           error: 'District not found',
-          message: `Congressional district ${districtId} (normalized: ${normalizedId}) not found`,
+          message: `Congressional district ${districtId} (normalized: ${normalizedId}) not found or boundary service unavailable`,
           suggestions: {
             state: stateCode ? `${stateCode} districts` : 'Unknown state',
-            available_in_state: stateDistricts.length > 0 ? stateDistricts.slice(0, 5) : [],
-            total_districts_available: manifest.total_districts,
           },
           examples: ['CA-12', 'NY-14', 'TX-03'],
         },
@@ -287,37 +238,16 @@ export async function GET(
       );
     }
 
-    // Load district GeoJSON file
-    const fileUrl = `${baseUrl}/data/districts/${detail}/${normalizedId}.json`;
-
-    let geoJson: DistrictGeoJSON;
-    try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.statusText}`);
-      }
-      geoJson = (await response.json()) as DistrictGeoJSON;
-    } catch {
-      // File not found or parse error - return helpful message
-      return NextResponse.json(
-        {
-          error: 'District file not found',
-          message: `District ${normalizedId} exists but ${detail} detail file is missing`,
-          available_details: Object.keys(manifest.detail_levels),
+    const geoJson: DistrictGeoJSON = {
+      type: 'Feature',
+      geometry: feature.geometry as DistrictGeoJSON['geometry'],
+      properties: {
+        ...(feature.properties as DistrictProperties),
+        detail_level: detail,
+        api_metadata: {
+          normalized_id: normalizedId,
+          original_request: districtId,
         },
-        { status: 404 }
-      );
-    }
-
-    // Add API metadata
-    const fileSize = await getFileSize(fileUrl);
-    geoJson.properties = {
-      ...geoJson.properties,
-      detail_level: detail,
-      api_metadata: {
-        normalized_id: normalizedId,
-        original_request: districtId,
-        file_size_bytes: fileSize,
       },
     };
 
@@ -338,8 +268,7 @@ export async function GET(
         'X-District-ID': normalizedId,
         'X-Detail-Level': detail,
         'X-Processing-Time': `${processingTime}ms`,
-        'X-File-Size': fileSize.toString(),
-        'X-Total-Districts': manifest.total_districts.toString(),
+        'X-Boundary-Source': 'census-tigerweb',
         // Content optimization
         'Content-Type': 'application/json; charset=utf-8',
         Vary: 'Accept-Encoding',

@@ -191,35 +191,27 @@ export function RealDistrictBoundaryMap({
       const map = mapRef.current;
       const district = mapState.district;
 
-      // CRITICAL FIX: Fetch actual district geometry from GeoJSON instead of using bbox rectangle
-      logger.info('Fetching actual district geometry from GeoJSON file...', {
+      // Fetch this district's real geometry from our boundary API, which
+      // proxies Census TIGERweb server-side (one district ≈ 60-600KB, vs the
+      // never-committed all-districts GeoJSON this used to point at)
+      logger.info('Fetching district geometry from boundary API...', {
         districtId: district.id,
         geoid: district.geoid,
       });
 
-      // Fetch the full GeoJSON file with real district boundaries
-      const geojsonResponse = await fetch(
-        '/data/districts/congressional_districts_119_real.geojson'
+      let districtFeature: GeoJSON.Feature | null = null;
+      const boundaryResponse = await fetch(
+        `/api/district-boundaries/${district.geoid}?detail=standard`
       );
-      if (!geojsonResponse.ok) {
-        throw new Error(`Failed to fetch district GeoJSON: ${geojsonResponse.status}`);
+      if (boundaryResponse.ok) {
+        districtFeature = (await boundaryResponse.json()) as GeoJSON.Feature;
       }
 
-      const geojsonData = await geojsonResponse.json();
-      logger.info('GeoJSON loaded, searching for district geometry...', {
-        totalFeatures: geojsonData.features?.length,
-      });
-
-      // Find the specific district feature by GEOID
-      let districtFeature = geojsonData.features.find(
-        (feature: { properties?: { GEOID?: string } }) =>
-          feature.properties?.GEOID === district.geoid
-      );
-
-      if (!districtFeature) {
-        logger.warn('District geometry not found in GeoJSON, falling back to bbox', {
+      if (!districtFeature?.geometry) {
+        logger.warn('District geometry unavailable from boundary API, falling back to bbox', {
           geoid: district.geoid,
           districtId: district.id,
+          status: boundaryResponse.status,
         });
 
         // Fallback to bounding box rectangle if geometry not found
@@ -253,9 +245,10 @@ export function RealDistrictBoundaryMap({
         logger.info('Found real district geometry!', {
           geometryType: districtFeature.geometry?.type,
           coordinateCount:
-            districtFeature.geometry?.type === 'Polygon'
-              ? districtFeature.geometry.coordinates[0]?.length
-              : districtFeature.geometry?.coordinates?.length,
+            districtFeature.geometry?.type === 'Polygon' ||
+            districtFeature.geometry?.type === 'MultiPolygon'
+              ? districtFeature.geometry.coordinates.length
+              : undefined,
         });
       }
 

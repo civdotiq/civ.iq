@@ -16,6 +16,7 @@ const TIGERWEB_BASE =
   'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
 
 // Layer IDs in TIGERweb Legislative MapServer
+const LAYER_CD119 = 0; // 119th Congressional Districts
 const LAYER_SLDU = 1; // State Senate Districts (upper)
 const LAYER_SLDL = 2; // State House Districts (lower)
 
@@ -177,6 +178,87 @@ export async function getDistrictBoundary(
       chamber,
       district,
     });
+    return null;
+  }
+}
+
+/**
+ * Fetch a single 119th-Congress congressional district boundary from TIGERweb.
+ *
+ * @param geoid 4-digit GEOID (state FIPS + district number, e.g. "2613")
+ * @param maxAllowableOffset Optional generalization tolerance in degrees
+ *   (~0.001 = 100m). Omit for full resolution.
+ * @returns GeoJSON Feature or null
+ */
+export async function getCongressionalDistrictBoundary(
+  geoid: string,
+  maxAllowableOffset?: number
+): Promise<DistrictBoundary | null> {
+  // GEOID goes into the ArcGIS where clause — accept exactly 4 digits
+  if (!/^\d{4}$/.test(geoid)) {
+    logger.warn('Invalid congressional GEOID for TIGERweb', { geoid });
+    return null;
+  }
+
+  const cacheKey = `tigerweb:boundary:cd119:${geoid}:${maxAllowableOffset ?? 'full'}`;
+
+  try {
+    const cached = await govCache.get<DistrictBoundary>(cacheKey);
+    if (cached) {
+      logger.info('TIGERweb congressional boundary cache hit', { geoid });
+      return cached;
+    }
+
+    const queryParams = new URLSearchParams({
+      where: `GEOID='${geoid}'`,
+      outFields: 'GEOID,NAME,STATE,CDSESSN,CENTLAT,CENTLON,FUNCSTAT',
+      f: 'geojson',
+      outSR: '4326',
+      ...(maxAllowableOffset ? { maxAllowableOffset: String(maxAllowableOffset) } : {}),
+    });
+
+    const url = `${TIGERWEB_BASE}/${LAYER_CD119}/query?${queryParams}`;
+
+    logger.info('Fetching congressional boundary from TIGERweb', { geoid });
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        'User-Agent': 'CivicIntelHub/1.0 (https://civdotiq.org)',
+      },
+    });
+
+    if (!response.ok) {
+      logger.error('TIGERweb API error', new Error(`HTTP ${response.status}`), {
+        geoid,
+        status: response.status,
+      });
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.features || data.features.length === 0) {
+      logger.warn('No congressional boundary found in TIGERweb', { geoid });
+      return null;
+    }
+
+    const feature = data.features[0] as DistrictBoundary;
+
+    await govCache.set(cacheKey, feature, {
+      ttl: BOUNDARY_CACHE_TTL,
+      source: 'tigerweb',
+      dataType: 'districts',
+    });
+
+    logger.info('TIGERweb congressional boundary fetched', {
+      geoid,
+      hasGeometry: !!feature.geometry,
+    });
+
+    return feature;
+  } catch (error) {
+    logger.error('TIGERweb congressional boundary fetch failed', error as Error, { geoid });
     return null;
   }
 }
