@@ -57,6 +57,9 @@ const nextConfig = {
     '/api/intelligence/representative/[bioguideId]/influence-chain': [
       './data/lda-filings.json.br',
     ],
+    // The district metadata route reads the committed 119th-Congress corpus
+    // from disk; the tracer won't infer the fs read.
+    '/api/district-boundaries/metadata': ['./data/districts/district_metadata_real.json'],
     // Address-lookup routes read the CD120 (2026 ballot) district polygons
     // for local point-in-polygon; the tracer won't infer the fs read.
     '/api/geocode': ['./data/cd120-districts.json.br'],

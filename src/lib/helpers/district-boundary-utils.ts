@@ -5,6 +5,8 @@
  * using Census TIGER/Line data and PMTiles format.
  */
 
+import { getServerBaseUrl } from '@/lib/server-url';
+
 // Types for district boundary data
 export interface DistrictBoundary {
   id: string;
@@ -63,11 +65,10 @@ class DistrictBoundaryService {
     if (this.metadata) return;
 
     try {
-      // Determine the base URL for API calls
-      const baseUrl =
-        typeof window !== 'undefined'
-          ? window.location.origin
-          : `http://localhost:${process.env.PORT || 3000}`;
+      // Determine the base URL for API calls. Server-side, localhost only
+      // exists in dev — on Vercel the self-fetch must target the deployment
+      // URL or it fails and this service silently serves empty metadata.
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : getServerBaseUrl();
 
       const metadataUrl = `${baseUrl}${this.metadataUrl}`;
 

@@ -3,10 +3,11 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
-import { getServerBaseUrl } from '@/lib/server-url';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
 export const dynamic = 'force-dynamic';
@@ -30,21 +31,19 @@ export async function GET(request: NextRequest) {
     const metadata = await cachedFetch(
       cacheKey,
       async (): Promise<DistrictMetadataResponse> => {
-        // Get base URL for fetching static files
-        const baseUrl = getServerBaseUrl();
-
-        // Try to load from the REAL Census data file first, fall back to demo
-        const realDataUrl = `${baseUrl}/data/districts/district_metadata_real.json`;
+        // The corpus lives in data/, which Next.js does not serve — read it
+        // from disk (shipped via outputFileTracingIncludes), never over HTTP.
+        const metadataPath = join(
+          process.cwd(),
+          'data',
+          'districts',
+          'district_metadata_real.json'
+        );
 
         try {
-          logger.debug('Fetching district metadata from URL', { url: realDataUrl });
-          const response = await fetch(realDataUrl);
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const parsedData = await response.json();
+          const parsedData = JSON.parse(
+            await readFile(metadataPath, 'utf8')
+          ) as DistrictMetadataResponse;
 
           logger.info(
             'Loaded REAL district metadata from Census data',
@@ -64,13 +63,12 @@ export async function GET(request: NextRequest) {
             {
               operation: 'district_metadata_fallback',
               error: fileError instanceof Error ? fileError.message : 'Unknown error',
-              url: realDataUrl,
+              path: metadataPath,
             },
             request
           );
 
-          // Fallback: Generate basic metadata structure
-          // This would be populated when the data processing script runs
+          // Empty fallback — regenerate with `node scripts/generate-real-metadata.mjs`
           return {
             districts: {},
             states: {},
@@ -78,7 +76,7 @@ export async function GET(request: NextRequest) {
               total_districts: 0,
               states_with_districts: 0,
               last_updated: new Date().toISOString(),
-              source: 'Fallback - Run npm run process-district-boundaries to generate real data',
+              source: 'Fallback - run node scripts/generate-real-metadata.mjs to regenerate',
             },
           };
         }
