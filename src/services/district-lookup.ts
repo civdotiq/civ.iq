@@ -23,7 +23,7 @@ interface DistrictLookupResult {
   found: boolean;
   district?: DistrictBoundary;
   confidence: number;
-  method: 'geometry' | 'bbox' | 'census_api' | 'fallback';
+  method: 'geometry' | 'bbox' | 'census_api' | 'zip_approximation' | 'fallback';
   geocoded?: GeocodeResult;
   error?: string;
 }
@@ -309,8 +309,10 @@ class DistrictLookupService {
         return {
           found: true,
           district,
-          confidence: 0.95,
-          method: 'census_api',
+          // ZIP-table assignment, not Census point-in-polygon: 10-20% of
+          // ZIPs span multiple districts, so this can never be authoritative
+          confidence: 0.85,
+          method: 'zip_approximation',
         };
       }
 
@@ -332,8 +334,10 @@ class DistrictLookupService {
       return {
         found: true,
         district: fallbackDistrict,
-        confidence: 0.8,
-        method: 'census_api',
+        // ZIP-table assignment AND placeholder geometry (US-center
+        // centroid/bbox above) — lowest-trust successful path
+        confidence: 0.7,
+        method: 'zip_approximation',
       };
     } catch (error) {
       logger.error('Error in district ZIP lookup', error as Error, {

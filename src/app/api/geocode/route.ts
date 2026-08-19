@@ -12,6 +12,7 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import {
   getZipAccuracyNote,
   BOUNDARY_FALLBACK_NOTE,
+  ZIP_ACCURACY_NOTE,
   type InputMode,
 } from '@/lib/backbone/zip-accuracy';
 import {
@@ -83,10 +84,12 @@ interface GeocodeResponse {
    * How the district was resolved. 'census_api' is the authoritative Census
    * point-in-polygon path; 'bbox'/'fallback' mean the boundary service
    * degraded to bounding-box or centroid-distance matching, and the result
-   * carries BOUNDARY_FALLBACK_NOTE in accuracyNote.
+   * carries BOUNDARY_FALLBACK_NOTE in accuracyNote. 'zip_approximation'
+   * means the district came from the ZIP→district table (wrong for 10-20%
+   * of addresses) and carries ZIP_ACCURACY_NOTE instead.
    */
   lookup?: {
-    method: 'geometry' | 'bbox' | 'census_api' | 'fallback';
+    method: 'geometry' | 'bbox' | 'census_api' | 'zip_approximation' | 'fallback';
     confidence: number;
   };
   // Populated only when the resolved district was inherited from ZIP input
@@ -138,7 +141,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    logger.info('Geocode GET request', { latitude, longitude });
+    // Privacy: log coordinates at ~1km precision only — full precision
+    // identifies a household (see PRIVACY.md "Address lookups")
+    logger.info('Geocode GET request', {
+      latitude: Math.round(latitude * 100) / 100,
+      longitude: Math.round(longitude * 100) / 100,
+    });
 
     // Initialize district lookup service
     await districtLookupService.initialize();
@@ -189,8 +197,8 @@ export async function GET(request: NextRequest) {
     });
 
     logger.info('Geocode GET successful', {
-      latitude,
-      longitude,
+      latitude: Math.round(latitude * 100) / 100,
+      longitude: Math.round(longitude * 100) / 100,
       state: result.district.state_abbr,
       district: result.district.district_num,
       zipCode,
@@ -449,9 +457,16 @@ export async function POST(request: NextRequest) {
     // Census point-in-polygon path. If the boundary service degraded to
     // bbox/centroid matching, say so — even for full-address input.
     const boundaryDegraded = result.method !== 'census_api';
+    // A ZIP-derived match degraded because of its input, not because the
+    // boundary service failed — the "try again" framing of the fallback
+    // note would be wrong there.
+    const degradedNote =
+      result.method === 'zip_approximation' ? ZIP_ACCURACY_NOTE : BOUNDARY_FALLBACK_NOTE;
     const noteParts = [
-      ...(boundaryDegraded ? [BOUNDARY_FALLBACK_NOTE] : []),
-      ...(getZipAccuracyNote(inputMode) ? [getZipAccuracyNote(inputMode) as string] : []),
+      ...new Set([
+        ...(boundaryDegraded ? [degradedNote] : []),
+        ...(getZipAccuracyNote(inputMode) ? [getZipAccuracyNote(inputMode) as string] : []),
+      ]),
     ];
     const accuracyNote = noteParts.length > 0 ? noteParts.join(' ') : undefined;
 
