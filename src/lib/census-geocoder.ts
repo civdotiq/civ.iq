@@ -164,11 +164,11 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
   // Check cache
   const cached = geocodeCache.get(cleanedAddress);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    logger.debug('Census Geocoder cache hit', { address: cleanedAddress });
+    logger.debug('Census Geocoder cache hit');
     return cached.data;
   }
 
-  const monitor = monitorExternalApi('census', 'geocoder', cleanedAddress);
+  const monitor = monitorExternalApi('census', 'geocoder');
 
   try {
     // Parse address components for better API compatibility
@@ -226,7 +226,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     monitor.end(true, 200);
 
     if (!data.result?.addressMatches || data.result.addressMatches.length === 0) {
-      logger.warn('No address matches found', { address: cleanedAddress });
+      logger.warn('No address matches found');
       return {
         error: 'No matching address found',
         code: 'NO_MATCH',
@@ -245,7 +245,6 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
 
     if (validMatches.length === 0) {
       logger.warn('Addresses found but no congressional district data', {
-        address: cleanedAddress,
         matchCount: data.result.addressMatches.length,
       });
       return {
@@ -286,7 +285,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     return validMatches;
   } catch (error) {
     monitor.end(false, 0);
-    logger.error('Census Geocoder error', error as Error, { address: cleanedAddress });
+    logger.error('Census Geocoder error', error as Error);
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {

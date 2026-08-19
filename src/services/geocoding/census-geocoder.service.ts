@@ -14,6 +14,7 @@
  * API Documentation: https://geocoding.geo.census.gov/geocoder/Geocoding_Services_API.html
  */
 
+import { createHash } from 'crypto';
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import type {
@@ -39,21 +40,25 @@ export class CensusGeocoderService {
   static async geocodeAddress(request: CensusGeocodeRequest): Promise<ParsedDistrictInfo> {
     const startTime = Date.now();
     const normalizedAddress = this.normalizeAddress(request);
-    const cacheKey = `census:geocode:${normalizedAddress}`;
+    // Privacy: the raw address must never appear in logs or cache keys
+    // (see PRIVACY.md "Address lookups") — key on a one-way hash instead.
+    const addressHash = createHash('sha256').update(normalizedAddress).digest('hex').slice(0, 16);
+    const cacheKey = `census:geocode:${addressHash}`;
 
     try {
       // Check cache first
       const cached = await govCache.get<ParsedDistrictInfo>(cacheKey);
       if (cached) {
         logger.info('Census geocoder cache hit', {
-          address: normalizedAddress,
+          addressHash,
+          state: request.state,
           responseTime: Date.now() - startTime,
         });
         return cached;
       }
 
       // Make API request
-      logger.info('Geocoding address via Census API', { address: normalizedAddress });
+      logger.info('Geocoding address via Census API', { addressHash, state: request.state });
       const response = await this.makeGeocodeRequest(request);
 
       // Validate response
@@ -69,7 +74,8 @@ export class CensusGeocoderService {
       });
 
       logger.info('Census geocoding successful', {
-        address: normalizedAddress,
+        addressHash,
+        state: request.state,
         upperDistrict: districtInfo.upperDistrict?.number,
         lowerDistrict: districtInfo.lowerDistrict?.number,
         responseTime: Date.now() - startTime,
@@ -78,7 +84,8 @@ export class CensusGeocoderService {
       return districtInfo;
     } catch (error) {
       logger.error('Census geocoding failed', error as Error, {
-        address: normalizedAddress,
+        addressHash,
+        state: request.state,
         responseTime: Date.now() - startTime,
       });
 

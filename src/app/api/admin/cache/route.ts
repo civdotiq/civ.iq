@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
         'core:state-legislator-votes:{state}:{id}',
         'core:state-bill:{state}:{id}',
         'core:state-jurisdiction:{state}',
-        'census:geocode:{address}',
+        'census:geocode:{sha256(address)}',
       ],
     });
   } catch (error) {

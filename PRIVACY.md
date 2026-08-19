@@ -12,7 +12,10 @@ When you enter an address to find your representatives, the address is:
 
 1. Sent to the Census Bureau Geocoder API to resolve to a congressional district
 2. Used to query representative data from Congress.gov and related APIs
-3. **Not stored.** The address is processed in the request and discarded. It is not logged, saved to a database, or sent to any third party beyond the Census geocoding service.
+3. **Never logged.** Server logs record only the city and state of a lookup (and a one-way hash used for cache accounting) — never the street address.
+4. **Cached briefly, under a hash.** To make repeat lookups fast, the district result for an address (including the Census Bureau's normalized form of it) is cached for up to 7 days, keyed by a one-way hash of the address. The cache is not tied to you: CIV.IQ has no accounts, cookies, or user identifiers, so a cached entry cannot be connected to any person or browser. After 7 days it is deleted automatically.
+
+The cache runs on managed Redis infrastructure (Upstash); no other third party receives the address beyond the Census geocoding service.
 
 ## Analytics
 

@@ -225,8 +225,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Geocode address using Census API to get ALL districts
+    // Privacy: never log the street address (see PRIVACY.md "Address lookups")
     logger.info('Geocoding address via Census API', {
-      street: body.street,
       city: body.city,
       state: body.state,
     });
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
       body.state.toUpperCase(); // Fallback to client-provided state
 
     logger.info('Census geocoding successful', {
-      matchedAddress: districtInfo.matchedAddress,
+      hasMatch: !!districtInfo.matchedAddress,
       hasUpperDistrict: !!districtInfo.upperDistrict,
       hasLowerDistrict: !!districtInfo.lowerDistrict,
       hasCongressionalDistrict: !!districtInfo.congressionalDistrict,

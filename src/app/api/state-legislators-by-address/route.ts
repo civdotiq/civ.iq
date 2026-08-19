@@ -56,11 +56,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Privacy: never log the street address (see PRIVACY.md "Address lookups")
     logger.info('Address-to-legislators API request', {
-      street: body.street,
       city: body.city,
       state: body.state,
-      zip: body.zip,
     });
 
     // Perform lookup
@@ -72,7 +71,8 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info('Address-to-legislators API success', {
-      address: body,
+      city: body.city,
+      state: body.state,
       senator: result.legislators.senator?.name,
       representative: result.legislators.representative?.name,
       responseTime: Date.now() - startTime,
