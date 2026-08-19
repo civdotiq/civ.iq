@@ -23,6 +23,20 @@ interface APIHealthCheck {
   error?: string;
 }
 
+interface HealthApiResponse {
+  status: string;
+  timestamp: string;
+  environment: string;
+  sources: Array<{
+    name: string;
+    status: string;
+    responseTimeMs?: number | null;
+    lastSuccessfulFetch?: string | null;
+    error?: string | null;
+  }>;
+  apiKeys: Record<string, boolean>;
+}
+
 interface HealthReport {
   timestamp: string;
   overall: 'operational' | 'degraded' | 'error';
@@ -50,12 +64,44 @@ export default function APIHealthPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/api-health');
+      const response = await fetch('/api/health');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      // /api/health is the canonical probe endpoint; adapt its shape to
+      // this dashboard's HealthReport. 'skipped' sources were not probed
+      // this cycle, so they carry no signal — leave them out.
+      const raw = (await response.json()) as HealthApiResponse;
+      const statusMap: Record<string, APIHealthCheck['status']> = {
+        ok: 'operational',
+        degraded: 'degraded',
+        down: 'error',
+      };
+      const data: HealthReport = {
+        timestamp: raw.timestamp,
+        overall:
+          raw.status === 'ok' ? 'operational' : raw.status === 'degraded' ? 'degraded' : 'error',
+        apis: raw.sources
+          .filter(source => source.status !== 'skipped')
+          .map(source => ({
+            name: source.name,
+            status: statusMap[source.status] ?? 'error',
+            responseTime: source.responseTimeMs ?? 0,
+            lastChecked: source.lastSuccessfulFetch ?? raw.timestamp,
+            ...(source.error ? { error: source.error } : {}),
+          })),
+        environment: {
+          NODE_ENV: raw.environment,
+          apiKeysConfigured: {
+            congress: raw.apiKeys.congress ?? false,
+            fec: raw.apiKeys.fec ?? false,
+            census: raw.apiKeys.census ?? false,
+            openStates: raw.apiKeys.openstates ?? false,
+            openAI: raw.apiKeys.openAI ?? false,
+          },
+        },
+      };
       setHealth(data);
       setLastRefresh(new Date());
     } catch (err) {

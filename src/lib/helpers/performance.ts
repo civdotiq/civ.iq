@@ -138,40 +138,6 @@ export async function batchApiRequests<T>(
   return resultObject;
 }
 
-// Representative data batching
-export async function batchRepresentativeRequests(bioguideIds: string[]) {
-  return batchApiRequests('representatives', bioguideIds, async ids => {
-    const response = await fetch('/api/representatives/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bioguideIds: ids }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Batch request failed: ${response.statusText}`);
-    }
-
-    return await response.json();
-  });
-}
-
-// News data batching
-export async function batchNewsRequests(bioguideIds: string[]) {
-  return batchApiRequests('news', bioguideIds, async ids => {
-    const response = await fetch('/api/news/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bioguideIds: ids }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Batch news request failed: ${response.statusText}`);
-    }
-
-    return await response.json();
-  });
-}
-
 // Performance monitoring utilities
 interface PerformanceMetrics {
   name: string;
