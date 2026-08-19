@@ -130,7 +130,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     descriptionPattern:
       'Organizations lobbying the {name} ({chamber}), spending by issue, and related legislation. Data from Senate LDA disclosures.',
     entityType: 'committee',
-    dataSources: ['/api/intelligence/lobbying-pipeline/[id]'],
+    dataSources: ['/api/intelligence/committee/[id]'],
     relatedSlugs: ['committee-members', 'committee-activity'],
   },
   {

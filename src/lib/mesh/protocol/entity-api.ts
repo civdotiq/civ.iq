@@ -165,9 +165,9 @@ async function fetchIntelligence(
   } else if (type === 'committee') {
     const code = canonicalId.replace('cmte:', '');
     const fetches = await safeParallelFetch({
-      'lobbying-pipeline': fetchInsightSafe(
-        `/api/intelligence/committee/${code}/lobbying-pipeline`
-      ),
+      // The committee intelligence route serves the lobbying-pipeline
+      // insight directly — there is no /lobbying-pipeline sub-path
+      'lobbying-pipeline': fetchInsightSafe(`/api/intelligence/committee/${code}`),
     });
     Object.assign(insights, fetches);
   }

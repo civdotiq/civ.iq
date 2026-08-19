@@ -17,9 +17,6 @@ export const apiConfig = {
   // Internal API endpoints
   endpoints: {
     representatives: '/api/v1/representatives',
-    representative: '/api/v1/representative',
-    news: '/api/v1/news',
-    legislation: '/api/v1/legislation',
     bills: '/api/v1/bills',
     districts: '/api/v1/districts',
     search: '/api/search',
