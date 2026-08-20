@@ -4,7 +4,7 @@
  */
 
 export { detectBillEvents } from './bill-detector';
-export { detectVoteEvents } from './vote-detector';
+export { detectVoteEvents, detectSenateVoteEvents } from './vote-detector';
 export { detectExecutiveOrderEvents } from './executive-order-detector';
 export { detectCommentPeriodEvents } from './comment-period-detector';
 export { detectHearingEvents } from './hearing-detector';

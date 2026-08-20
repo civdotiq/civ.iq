@@ -45,6 +45,11 @@ export const nostrConfig = {
   dedupPrefix: 'nostr:published:',
   dedupTTL: 30 * 24 * 60 * 60,
 
+  // Content-freshness canary: hours without a new Kind 30023 content event
+  // before /api/nostr/status reports stale. 72h absorbs weekends and short
+  // recesses while still catching multi-day publish outages.
+  staleContentHours: parseInt(process.env.NOSTR_STALE_CONTENT_HOURS ?? '72', 10),
+
   // NIP-11 relay capability negotiation
   enableNip11Check: (process.env.NOSTR_NIP11_CHECK ?? 'true') !== 'false',
   nip11CacheTTL: 24 * 60 * 60, // 24 hours in seconds

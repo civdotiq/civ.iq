@@ -125,3 +125,151 @@ export async function queryRelays(
     pool.destroy();
   }
 }
+
+// ── Reach measurement & content freshness ────────────────────────────
+
+export interface EngagementMetrics {
+  /** Unique pubkeys whose kind-3 contact list includes ours. */
+  followers: number;
+  /** Kind-1 notes tagging our pubkey (replies + mentions). */
+  replies: number;
+  /** Kind-6 reposts of our events. */
+  reposts: number;
+  /** Kind-7 reactions to our events. */
+  reactions: number;
+  /** Kind-9735 zap receipts referencing our pubkey. */
+  zaps: number;
+  /** Unique pubkeys across replies/reposts/reactions/zaps. */
+  uniqueEngagers: number;
+  measuredAt: string;
+}
+
+export interface ContentFreshness {
+  /** ISO timestamp of the newest content event found on relays, or null. */
+  newestEventAt: string | null;
+  ageHours: number | null;
+  /** True when no content event is newer than the stale threshold — the
+   *  canary that catches metadata-only publishing (July 2026 outage mode). */
+  stale: boolean;
+  staleAfterHours: number;
+}
+
+/** Aggregate querySync across relays with a timeout; [] on failure. */
+async function querySyncSafe(
+  pool: SimplePool,
+  relays: string[],
+  filter: Filter,
+  timeout: number,
+  label: string
+): Promise<Array<{ id: string; pubkey: string; kind: number; created_at: number }>> {
+  try {
+    return await Promise.race([
+      pool.querySync(relays, filter),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error(`${label} query timeout`)), timeout);
+      }),
+    ]);
+  } catch (error) {
+    logger.warn(`Relay ${label} query failed`, {
+      error: error instanceof Error ? error.message : 'Unknown',
+      operation: 'nostr_status',
+    });
+    return [];
+  }
+}
+
+/**
+ * Measure how widely the feed is actually seen: followers plus events
+ * referencing our pubkey. Relay `#p` queries are capped at limit 1000, so
+ * counts are floors once engagement exceeds relay limits — the decision
+ * these numbers inform is "is anyone listening at all", where a floor is
+ * exactly as useful as a total.
+ */
+export async function measureEngagement(pubkey: string): Promise<EngagementMetrics> {
+  const relays = nostrConfig.relays;
+  const pool = new SimplePool();
+  const timeout = nostrConfig.publishTimeout * 2;
+
+  try {
+    const [followerEvents, engagementEvents] = await Promise.all([
+      querySyncSafe(pool, relays, { kinds: [3], '#p': [pubkey], limit: 1000 }, timeout, 'follower'),
+      querySyncSafe(
+        pool,
+        relays,
+        { kinds: [1, 6, 7, 9735], '#p': [pubkey], limit: 1000 },
+        timeout,
+        'engagement'
+      ),
+    ]);
+
+    const followers = new Set(followerEvents.map(e => e.pubkey)).size;
+
+    let replies = 0;
+    let reposts = 0;
+    let reactions = 0;
+    let zaps = 0;
+    const engagers = new Set<string>();
+    const seenIds = new Set<string>();
+    for (const event of engagementEvents) {
+      if (seenIds.has(event.id) || event.pubkey === pubkey) continue;
+      seenIds.add(event.id);
+      if (event.kind === 1) replies++;
+      else if (event.kind === 6) reposts++;
+      else if (event.kind === 7) reactions++;
+      else if (event.kind === 9735) zaps++;
+      engagers.add(event.pubkey);
+    }
+
+    return {
+      followers,
+      replies,
+      reposts,
+      reactions,
+      zaps,
+      uniqueEngagers: engagers.size,
+      measuredAt: new Date().toISOString(),
+    };
+  } finally {
+    pool.destroy();
+  }
+}
+
+/**
+ * Age of the newest content event (Kind 30023 article) on the relays.
+ * Metadata kinds (0/10002) are deliberately excluded: they publish before
+ * detection every run, which is why the status endpoint stayed green
+ * through a two-day content outage.
+ */
+export async function getContentFreshness(
+  pubkey: string,
+  staleAfterHours = nostrConfig.staleContentHours
+): Promise<ContentFreshness> {
+  const pool = new SimplePool();
+  const timeout = nostrConfig.publishTimeout * 2;
+
+  try {
+    const events = await querySyncSafe(
+      pool,
+      nostrConfig.relays,
+      { authors: [pubkey], kinds: [nostrConfig.eventKind], limit: 25 },
+      timeout,
+      'freshness'
+    );
+
+    if (events.length === 0) {
+      return { newestEventAt: null, ageHours: null, stale: true, staleAfterHours };
+    }
+
+    const newest = Math.max(...events.map(e => e.created_at));
+    const ageHours = (Date.now() / 1000 - newest) / 3600;
+
+    return {
+      newestEventAt: new Date(newest * 1000).toISOString(),
+      ageHours: Math.round(ageHours * 10) / 10,
+      stale: ageHours > staleAfterHours,
+      staleAfterHours,
+    };
+  } finally {
+    pool.destroy();
+  }
+}

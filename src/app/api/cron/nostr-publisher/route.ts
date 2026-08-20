@@ -16,6 +16,7 @@ import { getNostrKeypair } from '@/lib/nostr';
 import {
   detectBillEvents,
   detectVoteEvents,
+  detectSenateVoteEvents,
   detectExecutiveOrderEvents,
   detectCommentPeriodEvents,
   detectHearingEvents,
@@ -74,24 +75,33 @@ const STATE_DETECTION_BUDGET_MS = 120000;
 
 /** Detect all new civic events from government APIs */
 async function detectNewEvents(): Promise<DetectionResult> {
-  const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents, stateResult] =
-    await Promise.all([
-      withDetectionTimeout(detectBillEvents, 'bills'),
-      withDetectionTimeout(detectVoteEvents, 'votes'),
-      withDetectionTimeout(detectExecutiveOrderEvents, 'executive-orders'),
-      withDetectionTimeout(detectCommentPeriodEvents, 'comment-periods'),
-      withDetectionTimeout(detectHearingEvents, 'hearings'),
-      detectStateEventsWithStaleness(Date.now() + STATE_DETECTION_BUDGET_MS).catch(err => {
-        logger.error('State event detection failed', err as Error, {
-          operation: 'nostr_publisher',
-        });
-        return { events: [] as CivicEvent[], staleness: [] as StateStalenessInfo[] };
-      }),
-    ]);
+  const [
+    billEvents,
+    voteEvents,
+    senateVoteEvents,
+    eoEvents,
+    commentEvents,
+    hearingEvents,
+    stateResult,
+  ] = await Promise.all([
+    withDetectionTimeout(detectBillEvents, 'bills'),
+    withDetectionTimeout(detectVoteEvents, 'votes'),
+    withDetectionTimeout(detectSenateVoteEvents, 'senate-votes'),
+    withDetectionTimeout(detectExecutiveOrderEvents, 'executive-orders'),
+    withDetectionTimeout(detectCommentPeriodEvents, 'comment-periods'),
+    withDetectionTimeout(detectHearingEvents, 'hearings'),
+    detectStateEventsWithStaleness(Date.now() + STATE_DETECTION_BUDGET_MS).catch(err => {
+      logger.error('State event detection failed', err as Error, {
+        operation: 'nostr_publisher',
+      });
+      return { events: [] as CivicEvent[], staleness: [] as StateStalenessInfo[] };
+    }),
+  ]);
   return {
     events: [
       ...billEvents,
       ...voteEvents,
+      ...senateVoteEvents,
       ...eoEvents,
       ...commentEvents,
       ...hearingEvents,

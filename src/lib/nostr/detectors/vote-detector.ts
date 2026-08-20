@@ -5,14 +5,17 @@
 
 /**
  * Vote Event Detector
- * Detects new House roll call votes from the Congress.gov house-vote API.
- *
- * Senate roll calls are not exposed by Congress.gov (senate.gov XML is
- * Akamai-blocked from servers); they come from the GH-Actions mirror corpus
- * and are out of scope here.
+ * Detects new House roll call votes from the Congress.gov house-vote API,
+ * and new Senate roll calls from the MR10 mirror corpus (senate.gov XML is
+ * Akamai-blocked from servers, so Senate data is read from Redis only).
  */
 
 import { getRedisCache } from '@/lib/cache/redis-client';
+import {
+  getSenateVoteMenu,
+  rollKey,
+  type CompactRollCall,
+} from '@/features/representatives/services/roll-call-corpus';
 import { nostrConfig } from '@/config/nostr.config';
 import type { CivicEvent, VoteRecordEvent } from '@/types/nostr';
 import type { HouseVoteListResponse, HouseVoteDetailResponse } from './types';
@@ -150,6 +153,98 @@ export async function detectVoteEvents(): Promise<CivicEvent[]> {
     }
   } catch (error) {
     logger.error('Failed to detect vote events', error as Error, {
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return events;
+}
+
+/**
+ * Detect new Senate roll call votes from the GH-Actions mirror corpus (MR10).
+ * senate.gov XML is Akamai-blocked from cloud IPs, so this reads ONLY the
+ * mirrored vote menu + compact rolls in Redis — it never fetches senate.gov.
+ * Menu entries whose roll call hasn't been ingested yet are skipped and
+ * picked up on a later run once the mirror fills the gap.
+ */
+export async function detectSenateVoteEvents(): Promise<CivicEvent[]> {
+  const congress = parseInt(process.env.CURRENT_CONGRESS || '119', 10);
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+
+  try {
+    const menu = await getSenateVoteMenu(congress);
+    if (!menu) {
+      logger.info('Senate vote menu absent (mirror not run) — no Senate vote events', {
+        congress,
+        operation: 'nostr_publisher',
+      });
+      return [];
+    }
+
+    const cutoff = Date.now() - MAX_VOTE_AGE_DAYS * 24 * 60 * 60 * 1000;
+    const recent = Object.entries(menu.sessions)
+      .flatMap(([session, entries]) =>
+        entries.map(entry => ({ session: parseInt(session, 10), entry }))
+      )
+      .filter(({ entry }) => {
+        const t = new Date(entry.d).getTime();
+        return !Number.isNaN(t) && t >= cutoff;
+      })
+      .sort((a, b) => b.session - a.session || b.entry.n - a.entry.n)
+      .slice(0, MAX_ROLLS_PER_RUN);
+
+    for (const { session, entry } of recent) {
+      const voteId = `senate-${congress}-${session}-${entry.n}`;
+      const dedupKey = `${nostrConfig.dedupPrefix}vote-${voteId}`;
+      if (await cache.exists(dedupKey)) continue;
+
+      const compact = await cache.get<CompactRollCall>(
+        rollKey('senate', congress, session, entry.n)
+      );
+      if (!compact) continue; // menu is ahead of the mirrored rolls — defer
+
+      let yeas = 0;
+      let nays = 0;
+      let notVoting = 0;
+      for (const v of compact.votes) {
+        if (v.v === 'Y') yeas++;
+        else if (v.v === 'N') nays++;
+        else if (v.v === 'X') notVoting++;
+      }
+
+      const question = entry.i ? `${entry.q} — ${entry.i}` : entry.q;
+      const padded = String(entry.n).padStart(5, '0');
+      const sourceUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${padded}.htm`;
+
+      const voteData: VoteRecordEvent = {
+        voteId,
+        chamber: 'Senate',
+        rollNumber: entry.n,
+        question,
+        result: entry.r,
+        date: entry.d,
+        yeas,
+        nays,
+        notVoting,
+      };
+
+      events.push({
+        type: 'vote-record',
+        id: `vote-${voteId}`,
+        timestamp: Math.floor(new Date(entry.d).getTime() / 1000),
+        title: `Senate Vote #${entry.n}: ${question}`,
+        summary: `Senate Roll Call #${entry.n} — ${entry.t || question}. Result: ${entry.r} (${yeas} yea, ${nays} nay).`,
+        tags: ['vote', 'senate'],
+        source: {
+          url: sourceUrl,
+          api: 'senate.gov (mirrored corpus)',
+        },
+        data: voteData,
+      });
+    }
+  } catch (error) {
+    logger.error('Failed to detect Senate vote events', error as Error, {
       operation: 'nostr_publisher',
     });
   }
