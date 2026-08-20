@@ -181,6 +181,28 @@ export async function GET(): Promise<NextResponse> {
     nostr: {
       description:
         'Nostr publishing layer. Civic events signed with Schnorr signatures and distributed to relays as NIP-23 long-form Markdown content.',
+      following: {
+        nip05: 'civiq@civdotiq.org',
+        pubkey: 'See /api/nostr/status publicKey field',
+        eventKinds: {
+          '30023': 'Long-form article per civic event (canonical record)',
+          '1': 'Short alert note linking to the article',
+        },
+        description:
+          'Every event carries `t` tags — subscribe to a topic without following the whole feed by filtering on them (most clients support hashtag follows).',
+        tagScheme: {
+          'event type':
+            'bill-action, bill-introduced, vote-record, executive-order, comment-period, hearing, state-bill-introduced, state-bill-action, state-vote',
+          federal:
+            'legislation, new-bill, vote, hearing, executive-order, presidential, comment-period, regulation, house, senate',
+          regulatory:
+            'Federal Register agency slug on comment periods (e.g. environmental-protection-agency)',
+          state:
+            'state-legislation or state-vote plus the lowercase state code (e.g. ca, ny, il) and chamber (upper/lower)',
+        },
+        example:
+          'Filter {"kinds":[30023],"authors":["<pubkey>"],"#t":["vote"]} yields every congressional roll-call article; add "senate" for one chamber.',
+      },
       endpoints: {
         status: {
           url: 'https://civdotiq.org/api/nostr/status',

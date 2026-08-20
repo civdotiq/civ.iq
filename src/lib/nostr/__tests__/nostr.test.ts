@@ -363,3 +363,94 @@ describe('Nostr Configuration', () => {
     }
   });
 });
+
+describe('canonicalEventUrl', () => {
+  const base = 'https://civdotiq.org';
+
+  function makeEvent(type: CivicEvent['type'], data: CivicEvent['data']): CivicEvent {
+    return {
+      type,
+      id: 'test-id',
+      timestamp: 1755640800,
+      title: 'Test',
+      summary: 'Test summary',
+      tags: [],
+      source: { url: 'https://example.gov', api: 'test' },
+      data,
+    };
+  }
+
+  test('federal bills use the canonical congress-type-number slug', () => {
+    const { canonicalEventUrl } = require('@/lib/nostr/events');
+    const event = makeEvent('bill-introduced', {
+      billId: 'hr877-119',
+      billType: 'HR',
+      billNumber: '877',
+      congress: 119,
+      title: 'Example Act',
+      sponsor: 'Rep. Example',
+      chamber: 'House',
+      introducedDate: '2026-08-01',
+    });
+    expect(canonicalEventUrl(event)).toBe(`${base}/bill/119-hr-877`);
+  });
+
+  test('votes link to /vote/{voteId} for both chambers', () => {
+    const { canonicalEventUrl } = require('@/lib/nostr/events');
+    const event = makeEvent('vote-record', {
+      voteId: 'senate-119-2-42',
+      chamber: 'Senate',
+      rollNumber: 42,
+      question: 'On Passage',
+      result: 'Passed',
+      date: '2026-08-01',
+      yeas: 60,
+      nays: 40,
+      notVoting: 0,
+    });
+    expect(canonicalEventUrl(event)).toBe(`${base}/vote/senate-119-2-42`);
+  });
+
+  test('executive orders and comment periods link to /regulations/{documentNumber}', () => {
+    const { canonicalEventUrl } = require('@/lib/nostr/events');
+    const event = makeEvent('executive-order', {
+      documentNumber: '2026-12345',
+      title: 'Test EO',
+      summary: null,
+      agency: 'Executive Office',
+      url: 'https://federalregister.gov/d/2026-12345',
+    });
+    expect(canonicalEventUrl(event)).toBe(`${base}/regulations/2026-12345`);
+  });
+
+  test('state bills use lowercase state and base64url ocd id', () => {
+    const { canonicalEventUrl } = require('@/lib/nostr/events');
+    const { encodeBase64Url } = require('@/lib/url-encoding');
+    const ocdId = 'ocd-bill/abc-123-def';
+    const event = makeEvent('state-bill-introduced', {
+      billId: ocdId,
+      identifier: 'AB 181',
+      state: 'CA',
+      title: 'Example State Act',
+      chamber: 'lower',
+      session: '2026',
+      sponsor: 'Asm. Example',
+      introducedDate: '2026-08-01',
+      openstatesUrl: 'https://openstates.org/ca/bills/2026/AB181',
+    });
+    expect(canonicalEventUrl(event)).toBe(`${base}/state-bills/ca/${encodeBase64Url(ocdId)}`);
+  });
+
+  test('hearings and state votes have no canonical page', () => {
+    const { canonicalEventUrl } = require('@/lib/nostr/events');
+    const event = makeEvent('hearing', {
+      packageId: 'CHRG-119hhrg12345',
+      title: 'Test Hearing',
+      congress: 119,
+      chamber: 'House',
+      dateIssued: '2026-08-01',
+      url: 'https://govinfo.gov/x',
+    });
+    expect(canonicalEventUrl(event)).toBeNull();
+  });
+});

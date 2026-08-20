@@ -10,12 +10,59 @@
 
 import { finalizeEvent, type VerifiedEvent } from 'nostr-tools/pure';
 import { naddrEncode } from 'nostr-tools/nip19';
-import type { CivicEvent } from '@/types/nostr';
+import type {
+  CivicEvent,
+  BillActionEvent,
+  BillIntroducedEvent,
+  VoteRecordEvent,
+  ExecutiveOrderEvent,
+  CommentPeriodEvent,
+  StateBillIntroducedEvent,
+  StateBillActionEvent,
+} from '@/types/nostr';
 import { nostrConfig } from '@/config/nostr.config';
+import { encodeBase64Url } from '@/lib/url-encoding';
+
+function getSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
+}
+
+/**
+ * Canonical civdotiq.org page for an event, or null where no page exists
+ * (hearings, state floor votes). Paths mirror the app router: bill slugs are
+ * `{congress}-{type}-{number}` lowercase, state bill ids are base64url ocd ids.
+ */
+export function canonicalEventUrl(event: CivicEvent): string | null {
+  const base = getSiteUrl();
+  switch (event.type) {
+    case 'bill-action':
+    case 'bill-introduced': {
+      const d = event.data as BillActionEvent | BillIntroducedEvent;
+      return `${base}/bill/${d.congress}-${d.billType.toLowerCase()}-${d.billNumber}`;
+    }
+    case 'vote-record': {
+      const d = event.data as VoteRecordEvent;
+      return `${base}/vote/${d.voteId}`;
+    }
+    case 'executive-order':
+    case 'comment-period': {
+      const d = event.data as ExecutiveOrderEvent | CommentPeriodEvent;
+      return `${base}/regulations/${d.documentNumber}`;
+    }
+    case 'state-bill-introduced':
+    case 'state-bill-action': {
+      const d = event.data as StateBillIntroducedEvent | StateBillActionEvent;
+      return `${base}/state-bills/${d.state.toLowerCase()}/${encodeBase64Url(d.billId)}`;
+    }
+    default:
+      return null;
+  }
+}
 
 /** Build and sign a Nostr event from a CivicEvent */
 export function createSignedCivicEvent(event: CivicEvent, privateKey: Uint8Array): VerifiedEvent {
   const dTag = `civiq:${event.type}:${event.id}`;
+  const canonicalUrl = canonicalEventUrl(event);
 
   const unsignedEvent = {
     kind: nostrConfig.eventKind,
@@ -27,6 +74,7 @@ export function createSignedCivicEvent(event: CivicEvent, privateKey: Uint8Array
       ['published_at', String(event.timestamp)],
       ['t', event.type],
       ['r', event.source.url],
+      ...(canonicalUrl ? [['r', canonicalUrl]] : []),
       ...event.tags.map(t => ['t', t]),
     ],
     content: buildMarkdownContent(event),
@@ -79,6 +127,7 @@ export function createSignedAlertEvent(
     .concat('#civictech')
     .join(' ');
 
+  const canonicalUrl = canonicalEventUrl(event);
   const content = [
     event.title,
     '',
@@ -86,12 +135,14 @@ export function createSignedAlertEvent(
     '',
     hashtags,
     '',
+    ...(canonicalUrl ? [`Full record: ${canonicalUrl}`] : []),
     `Full details: nostr:${naddr}`,
   ].join('\n');
 
   const tags: string[][] = [
     ['e', articleEventId, '', 'mention'],
     ['r', event.source.url],
+    ...(canonicalUrl ? [['r', canonicalUrl]] : []),
     ...event.tags.map(t => ['t', t]),
     ['t', 'civictech'],
   ];
@@ -108,12 +159,14 @@ export function createSignedAlertEvent(
 
 /** Build Markdown content for NIP-23 long-form events */
 function buildMarkdownContent(event: CivicEvent): string {
+  const canonicalUrl = canonicalEventUrl(event);
   const lines = [
     `# ${event.title}`,
     '',
     event.summary,
     '',
     `**Type**: ${event.type} | **Source**: [${event.source.api}](${event.source.url})`,
+    ...(canonicalUrl ? ['', `[Full record on CIV.IQ](${canonicalUrl})`] : []),
     '',
     '---',
     '',
