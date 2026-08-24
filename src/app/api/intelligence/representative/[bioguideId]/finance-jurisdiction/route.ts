@@ -14,6 +14,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  ApiErrors,
+  createErrorResponse,
+  ErrorCodes,
+  type ApiError,
+} from '@/lib/api/error-responses';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { classifyError } from '@/lib/intelligence/error-utils';
 import type { FinanceJurisdictionInsight, InsightError } from '@/lib/intelligence/types';
@@ -24,11 +30,11 @@ export const maxDuration = 60;
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
-): Promise<NextResponse<FinanceJurisdictionInsight | { error: string }>> {
+): Promise<NextResponse<FinanceJurisdictionInsight | ApiError>> {
   const { bioguideId } = await params;
 
   if (!bioguideId || typeof bioguideId !== 'string') {
-    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
+    return ApiErrors.validation('Bioguide ID is required');
   }
 
   const upperId = bioguideId.toUpperCase();
@@ -43,13 +49,10 @@ export async function GET(
     });
 
     if (!insight) {
-      return NextResponse.json(
-        {
-          error: 'Finance-jurisdiction analysis not available for this legislator',
-          errors,
-          status: 'unavailable' as const,
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        'Finance-jurisdiction analysis not available for this legislator',
+        404
       );
     }
 
@@ -65,6 +68,6 @@ export async function GET(
     logger.error('[Intelligence] Finance-jurisdiction error', error as Error, {
       bioguideId: upperId,
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

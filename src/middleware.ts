@@ -359,6 +359,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(new URL('/api/mcp', request.nextUrl));
     }
 
+    // Agent probes that GET /mcp asking for JSON (not HTML, not an event
+    // stream) get the server manifest — valid JSON describing the endpoint —
+    // instead of the docs page's HTML shell.
+    if (request.nextUrl.pathname === '/mcp' && request.method === 'GET') {
+      const accept = request.headers.get('accept') ?? '';
+      if (accept.includes('application/json') && !accept.includes('text/html')) {
+        return NextResponse.rewrite(new URL('/.well-known/mcp.json', request.nextUrl));
+      }
+    }
+
     const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
 
     // Markdown content negotiation (acceptmarkdown.com convention) for page

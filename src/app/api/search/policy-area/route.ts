@@ -12,6 +12,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  ApiErrors,
+  createErrorResponse,
+  ErrorCodes,
+  type ApiError,
+} from '@/lib/api/error-responses';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import { searchPolicyArea } from '@/lib/services/policy-area-search.service';
 import type { PolicyAreaResults } from '@/types/joins';
@@ -20,15 +26,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest
-): Promise<NextResponse<PolicyAreaResults | { error: string }>> {
+): Promise<NextResponse<PolicyAreaResults | ApiError>> {
   const { searchParams } = request.nextUrl;
   const policyArea = searchParams.get('policyArea');
 
   if (!policyArea) {
-    return NextResponse.json(
-      { error: 'Query parameter "policyArea" is required' },
-      { status: 400 }
-    );
+    return ApiErrors.validation('Query parameter "policyArea" is required');
   }
 
   try {
@@ -36,7 +39,7 @@ export async function GET(
 
     const mapping = getPolicyAreaMapping(policyArea);
     if (!mapping) {
-      return NextResponse.json({ error: `Unknown policy area: ${policyArea}` }, { status: 404 });
+      return createErrorResponse(ErrorCodes.NOT_FOUND, `Unknown policy area: ${policyArea}`, 404);
     }
 
     // parseInt('abc') is NaN and Math.min(NaN, 30) stays NaN — fall back to the default
@@ -44,7 +47,11 @@ export async function GET(
     const result = await searchPolicyArea(policyArea, limit);
 
     if (!result) {
-      return NextResponse.json({ error: 'Failed to fetch policy area results' }, { status: 500 });
+      return createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        'Failed to fetch policy area results',
+        500
+      );
     }
 
     return NextResponse.json(result, {
@@ -54,6 +61,6 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Policy area search error', error as Error, { policyArea });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

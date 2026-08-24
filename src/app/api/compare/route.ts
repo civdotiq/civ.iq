@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { ApiErrors } from '@/lib/api/error-responses';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { votingDataService } from '@/features/representatives/services/voting-data-service';
 
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest) {
   const bioguideId = searchParams.get('bioguideId');
 
   if (!bioguideId) {
-    return NextResponse.json({ error: 'bioguideId is required' }, { status: 400 });
+    return ApiErrors.validation('bioguideId is required');
   }
 
   try {
@@ -159,7 +160,7 @@ export async function GET(request: NextRequest) {
     const representative = await getEnhancedRepresentative(bioguideId);
     if (!representative) {
       logger.warn('Representative not found for comparison', { bioguideId });
-      return NextResponse.json({ error: 'Representative not found' }, { status: 404 });
+      return ApiErrors.notFound('Representative', bioguideId);
     }
 
     const chamber = representative.chamber;
@@ -194,6 +195,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Comparison API Error', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

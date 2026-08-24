@@ -113,7 +113,7 @@ describe('/api/search/policy-area', () => {
 
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toContain('policyArea');
+    expect(data.error.message).toContain('policyArea');
   });
 
   it('should return 404 for unknown policy area', async () => {

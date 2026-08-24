@@ -157,6 +157,7 @@ const MCP_MARKDOWN = `# CIV.IQ MCP server
 Model Context Protocol server exposing CIV.IQ's civic data to AI assistants.
 
 - Endpoint: \`${SITE}/api/mcp\` (Streamable HTTP; \`${SITE}/mcp\` accepts the same protocol traffic). No auth.
+- Server manifest: \`${SITE}/.well-known/mcp.json\` (MCP registry server.json format)
 - 47 read-only tools across representatives, legislation, finance, intelligence, civic, environment, safety, health, and economy domains
 - 6 prompt templates, 7 resource templates (e.g. \`civiq://legislators/{bioguideId}\`), plus static doc resources (\`civiq://docs/*\`)
 

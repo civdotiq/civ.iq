@@ -56,7 +56,11 @@ export function OrganizationSchema({
   url = 'https://civdotiq.org',
   logo = 'https://civdotiq.org/images/civiq-logo.png',
   description = 'Civic intelligence platform providing real-time access to federal and state government data — plus 10 pilot cities — including representatives, voting records, bills, and campaign finance.',
-  sameAs = ['https://twitter.com/civdotiq', 'https://github.com/civdotiq'],
+  sameAs = [
+    'https://twitter.com/civdotiq',
+    'https://github.com/civdotiq',
+    'https://www.npmjs.com/package/@civiq/sdk',
+  ],
   id,
   identifier,
   keywords,

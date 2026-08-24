@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { ApiErrors, createErrorResponse, ErrorCodes } from '@/lib/api/error-responses';
 import type { InsightError } from '@/lib/intelligence/types';
 import {
   getInfluenceClusters,
@@ -33,13 +34,10 @@ export async function GET(request: NextRequest) {
       // Single legislator lookup
       const result = getLegislatorCluster(bioguideId.toUpperCase());
       if (!result) {
-        return NextResponse.json(
-          {
-            error: 'Legislator not found in cluster data',
-            errors: [] as InsightError[],
-            status: 'unavailable' as const,
-          },
-          { status: 404 }
+        return createErrorResponse(
+          ErrorCodes.NOT_FOUND,
+          'Legislator not found in cluster data',
+          404
         );
       }
 
@@ -56,13 +54,10 @@ export async function GET(request: NextRequest) {
     // Full cluster data
     const data = getInfluenceClusters();
     if (!data) {
-      return NextResponse.json(
-        {
-          error: 'Cluster data not available — run compute-influence-clusters.py first',
-          errors: [] as InsightError[],
-          status: 'unavailable' as const,
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        'Cluster data not available — run compute-influence-clusters.py first',
+        404
       );
     }
 
@@ -89,6 +84,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('[Intelligence] Influence clusters error', error as Error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

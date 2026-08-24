@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/docs/api' },
   title: 'API Reference',
   description:
-    'Documentation for the CIV.IQ Public API v1. Open REST endpoints for U.S. government data. No API key required.',
+    'Documentation for the CIV.IQ (civdotiq.org) Public API v1. Open REST endpoints for U.S. government data. No API key required.',
 };
 
 const BASE = 'https://civdotiq.org/api/v1';

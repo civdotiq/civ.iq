@@ -12,7 +12,7 @@
 
 // Keep in sync with public/openapi.json info.version and the newest
 // /api/v1/changelog entry.
-const API_VERSION = '1.2.0';
+const API_VERSION = '1.2.1';
 
 interface VersionConfig {
   sunset?: string; // RFC 7231 date string (e.g., "Sat, 01 Jan 2028 00:00:00 GMT")

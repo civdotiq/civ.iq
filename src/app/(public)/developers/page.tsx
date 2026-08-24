@@ -15,14 +15,17 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
   title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'The CIV.IQ developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+    'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
   openGraph: {
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'The CIV.IQ developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+      'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
     type: 'website',
   },
   keywords: [
+    'civdotiq',
+    'civdotiq API',
+    'CIV.IQ developer resources',
     'congress API',
     'civic data API',
     'government data API',

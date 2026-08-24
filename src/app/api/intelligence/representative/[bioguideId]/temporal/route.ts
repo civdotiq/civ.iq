@@ -15,6 +15,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  ApiErrors,
+  createErrorResponse,
+  ErrorCodes,
+  type ApiError,
+} from '@/lib/api/error-responses';
 import { analyzeTemporalVotes } from '@/lib/intelligence/analyzers/temporal-vote-analyzer';
 import type { TemporalVoteInsight, InsightError } from '@/lib/intelligence/types';
 
@@ -24,11 +30,11 @@ export const maxDuration = 60;
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
-): Promise<NextResponse<TemporalVoteInsight | { error: string }>> {
+): Promise<NextResponse<TemporalVoteInsight | ApiError>> {
   const { bioguideId } = await params;
 
   if (!bioguideId || typeof bioguideId !== 'string') {
-    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
+    return ApiErrors.validation('Bioguide ID is required');
   }
 
   const upperId = bioguideId.toUpperCase();
@@ -39,13 +45,10 @@ export async function GET(
     const insight = await analyzeTemporalVotes(upperId);
 
     if (!insight) {
-      return NextResponse.json(
-        {
-          error: 'Insufficient voting data for temporal analysis',
-          errors: [] as InsightError[],
-          status: 'unavailable' as const,
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        'Insufficient voting data for temporal analysis',
+        404
       );
     }
 
@@ -61,6 +64,6 @@ export async function GET(
     logger.error('[Intelligence] Temporal vote insights error', error as Error, {
       bioguideId: upperId,
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

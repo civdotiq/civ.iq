@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { ApiErrors } from '@/lib/api/error-responses';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { normalizeStateIdentifier, getStateName as canonicalStateName } from '@/lib/data/us-states';
 
@@ -374,7 +375,7 @@ export async function GET(
   const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
 
   if (!state || state.length !== 2) {
-    return NextResponse.json({ error: 'Valid state abbreviation is required' }, { status: 400 });
+    return ApiErrors.validation('Valid state abbreviation is required');
   }
 
   try {

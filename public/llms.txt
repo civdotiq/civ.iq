@@ -81,6 +81,7 @@ Each page includes JSON-LD FAQPage schema, breadcrumb navigation, and related qu
 
 CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
 - Endpoint: `https://civdotiq.org/api/mcp` (Streamable HTTP, no auth required; `https://civdotiq.org/mcp` accepts the same protocol traffic)
+- Server manifest: `https://civdotiq.org/.well-known/mcp.json` (MCP registry server.json format)
 - 47 read-only tools across 9 domains: representatives, legislation, finance, intelligence, civic, environment, safety, health, economy
 - 7 resource templates (e.g. `civiq://legislators/{bioguideId}`) plus 3 static doc resources (`civiq://docs/when-to-use`, `civiq://docs/api-quickstart`, `civiq://docs/versioning-policy`)
 - 6 prompt templates for common analysis patterns

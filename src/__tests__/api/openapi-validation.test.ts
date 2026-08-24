@@ -290,6 +290,83 @@ describe('OpenAPI Specification', () => {
       expect(responses).toHaveProperty('TooManyRequests');
       expect(responses).toHaveProperty('BadGateway');
       expect(responses).toHaveProperty('ServiceUnavailable');
+      expect(responses).toHaveProperty('InternalServerError');
+      expect(responses).toHaveProperty('ApiInternalError');
+      expect(responses).toHaveProperty('FeedInternalError');
+    });
+
+    // Typed error model: agents handle failures by schema, not by guessing.
+    // Every operation must declare at least one 5xx, and every declared
+    // 4xx/5xx must carry a typed body (after resolving component refs).
+    describe('error model consistency', () => {
+      type ResponseObject = {
+        $ref?: string;
+        description?: string;
+        content?: Record<string, { schema?: unknown }>;
+      };
+
+      const resolveResponse = (resp: ResponseObject): ResponseObject => {
+        if (!resp.$ref) return resp;
+        const key = resp.$ref.replace('#/components/responses/', '');
+        expect(spec.components.responses).toHaveProperty(key);
+        return spec.components.responses[key] as ResponseObject;
+      };
+
+      it('every operation should declare at least one 5xx response', () => {
+        for (const [pathKey, pathItem] of Object.entries(spec.paths)) {
+          for (const [method, operation] of Object.entries(pathItem)) {
+            const codes = Object.keys((operation as PathOperation).responses);
+            const has5xx = codes.some(c => c.startsWith('5'));
+            expect(`${method.toUpperCase()} ${pathKey} has5xx=${has5xx}`).toBe(
+              `${method.toUpperCase()} ${pathKey} has5xx=true`
+            );
+          }
+        }
+      });
+
+      it('every 4xx/5xx response should carry a typed body schema', () => {
+        for (const pathItem of Object.values(spec.paths)) {
+          for (const operation of Object.values(pathItem)) {
+            const responses = (operation as PathOperation).responses;
+            for (const [code, resp] of Object.entries(responses)) {
+              if (!code.startsWith('4') && !code.startsWith('5')) continue;
+              const resolved = resolveResponse(resp as ResponseObject);
+              expect(resolved.content).toBeDefined();
+              const bodies = Object.values(resolved.content!);
+              expect(bodies.length).toBeGreaterThan(0);
+              for (const body of bodies) {
+                expect(body.schema).toBeDefined();
+              }
+            }
+          }
+        }
+      });
+
+      it('every component response should be referenced by some operation', () => {
+        const raw = fs.readFileSync(openapiPath, 'utf-8');
+        for (const name of Object.keys(spec.components.responses)) {
+          const refCount = raw.split(`#/components/responses/${name}"`).length - 1;
+          expect(`${name} referenced=${refCount > 0}`).toBe(`${name} referenced=true`);
+        }
+      });
+
+      it('every component schema should be referenced somewhere', () => {
+        const raw = fs.readFileSync(openapiPath, 'utf-8');
+        for (const name of Object.keys(spec.components.schemas)) {
+          const refCount = raw.split(`#/components/schemas/${name}"`).length - 1;
+          expect(`${name} referenced=${refCount > 0}`).toBe(`${name} referenced=true`);
+        }
+      });
+
+      it('MCP errors should use the JSON-RPC envelope, not ApiError', () => {
+        const mcpPost = spec.paths['/mcp']!['post'] as PathOperation;
+        const err500 = mcpPost.responses['500'] as {
+          content: Record<string, { schema: { $ref?: string } }>;
+        };
+        expect(err500.content['application/json']!.schema.$ref).toBe(
+          '#/components/schemas/JsonRpcError'
+        );
+      });
     });
 
     it('all $ref values should resolve to existing schemas', () => {

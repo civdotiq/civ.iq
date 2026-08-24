@@ -15,6 +15,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  ApiErrors,
+  createErrorResponse,
+  ErrorCodes,
+  type ApiError,
+} from '@/lib/api/error-responses';
 import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
 import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
@@ -78,7 +84,7 @@ interface RepresentativesResponse {
   sourceStatus?: SourceStatus[];
 }
 
-type RouteResponse = RepresentativesResponse | { error: string };
+type RouteResponse = RepresentativesResponse | ApiError;
 
 // ── Shared Logic ─────────────────────────────────────────────────────
 
@@ -123,7 +129,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
     }>;
 
     if (!body.street || !body.city || !body.state) {
-      return NextResponse.json({ error: 'street, city, and state are required' }, { status: 400 });
+      return ApiErrors.validation('street, city, and state are required');
     }
 
     logger.info('[Representatives] POST address resolution', {
@@ -143,17 +149,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
     );
 
     if (!geocodeResult.congressionalDistrict) {
-      return NextResponse.json(
-        {
-          error: 'Could not resolve congressional district for this address',
-          errors: [] as InsightError[],
-          status: 'unavailable' as const,
-          dataQuality: 'empty' as const,
-          sourceStatus: [
-            sourceStatusOf('census-geocoder', 'ok', 'No district matched this address'),
-          ],
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        'Could not resolve congressional district for this address',
+        404
       );
     }
 
@@ -195,7 +194,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
     );
   } catch (error) {
     logger.error('[Representatives] POST error', error as Error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }
 
@@ -206,10 +205,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
     const zip = request.nextUrl.searchParams.get('zip');
 
     if (!zip || !/^\d{5}$/.test(zip)) {
-      return NextResponse.json(
-        { error: 'A valid 5-digit zip query parameter is required' },
-        { status: 400 }
-      );
+      return ApiErrors.validation('A valid 5-digit zip query parameter is required');
     }
 
     logger.info('[Representatives] GET zip resolution', { zip });
@@ -217,17 +213,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
     const districts = getAllDistrictsForZip(zip);
 
     if (districts.length === 0) {
-      return NextResponse.json(
-        {
-          error: `No congressional district found for ZIP ${zip}`,
-          errors: [] as InsightError[],
-          status: 'unavailable' as const,
-          dataQuality: 'empty' as const,
-          sourceStatus: [
-            sourceStatusOf('zip-district-mapping', 'ok', 'ZIP not mapped to any district'),
-          ],
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        `No congressional district found for ZIP ${zip}`,
+        404
       );
     }
 
@@ -261,6 +250,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
     );
   } catch (error) {
     logger.error('[Representatives] GET error', error as Error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

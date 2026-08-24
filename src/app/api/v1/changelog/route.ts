@@ -11,12 +11,22 @@
  */
 
 import { NextResponse } from 'next/server';
-import { v1Success } from '@/lib/api/v1-response';
+import { v1Success, v1Error } from '@/lib/api/v1-response';
 import { addVersionHeaders, API_VERSION } from '@/lib/api/v1-versioning';
 
 export const dynamic = 'force-dynamic';
 
 const CHANGELOG = [
+  {
+    version: '1.2.1',
+    date: '2026-08-24',
+    changes: [
+      'OpenAPI: every operation now declares typed 5xx error responses matching actual route behavior',
+      'OpenAPI: removed unreferenced error components; MCP errors documented as JSON-RPC envelopes',
+      'Non-v1 JSON endpoints (intelligence, search, compare, state) standardized on the ApiError envelope for error responses',
+      'MCP server manifest published at /.well-known/mcp.json (MCP registry server.json format)',
+    ],
+  },
   {
     version: '1.2.0',
     date: '2026-08-21',
@@ -48,22 +58,26 @@ const CHANGELOG = [
 ];
 
 export async function GET(): Promise<NextResponse> {
-  const response = NextResponse.json(
-    v1Success(
+  try {
+    const response = NextResponse.json(
+      v1Success(
+        {
+          currentVersion: API_VERSION,
+          versions: CHANGELOG,
+        },
+        'civ.iq'
+      ),
       {
-        currentVersion: API_VERSION,
-        versions: CHANGELOG,
-      },
-      'civ.iq'
-    ),
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
-      },
-    }
-  );
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
 
-  addVersionHeaders(response.headers);
+    addVersionHeaders(response.headers);
 
-  return response;
+    return response;
+  } catch {
+    return NextResponse.json(v1Error(500, 'Internal server error'), { status: 500 });
+  }
 }

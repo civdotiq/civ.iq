@@ -17,6 +17,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import {
+  ApiErrors,
+  createErrorResponse,
+  ErrorCodes,
+  type ApiError,
+} from '@/lib/api/error-responses';
 import { buildSectorLeaderboard } from '@/lib/intelligence/analyzers/sector-leaderboard-analyzer';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorLeaderboardResponse, InsightError } from '@/lib/intelligence/types';
@@ -50,16 +56,17 @@ const MAX_LIMIT = 100;
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sector: string }> }
-): Promise<NextResponse<SectorLeaderboardResponse | { error: string }>> {
+): Promise<NextResponse<SectorLeaderboardResponse | ApiError>> {
   const { sector: sectorSlug } = await params;
 
   // Validate sector slug
   const sector = SLUG_TO_SECTOR[sectorSlug];
   if (!sector) {
     const validSlugs = Object.keys(SLUG_TO_SECTOR).join(', ');
-    return NextResponse.json(
-      { error: `Invalid sector slug: "${sectorSlug}". Valid slugs: ${validSlugs}` },
-      { status: 404 }
+    return createErrorResponse(
+      ErrorCodes.NOT_FOUND,
+      `Invalid sector slug: "${sectorSlug}". Valid slugs: ${validSlugs}`,
+      404
     );
   }
 
@@ -95,13 +102,10 @@ export async function GET(
     const result = await buildSectorLeaderboard(sector, { chamber, party, limit });
 
     if (!result) {
-      return NextResponse.json(
-        {
-          error: `No leaderboard data available for sector: ${sector}`,
-          errors: [] as InsightError[],
-          status: 'unavailable' as const,
-        },
-        { status: 404 }
+      return createErrorResponse(
+        ErrorCodes.NOT_FOUND,
+        `No leaderboard data available for sector: ${sector}`,
+        404
       );
     }
 
@@ -119,6 +123,6 @@ export async function GET(
       chamber: chamber ?? 'all',
       party: party ?? 'all',
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return ApiErrors.serverError();
   }
 }

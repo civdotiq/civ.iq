@@ -598,6 +598,7 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 
 **Endpoint:** `https://civdotiq.org/api/mcp` (`https://civdotiq.org/mcp` accepts the same protocol traffic)
 **Transport:** Streamable HTTP (POST for messages)
+**Manifest:** `https://civdotiq.org/.well-known/mcp.json` (MCP registry server.json format)
 
 ### Tools (47, all read-only)
 

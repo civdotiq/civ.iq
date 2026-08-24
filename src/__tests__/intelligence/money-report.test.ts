@@ -182,7 +182,7 @@ describe('POST /api/intelligence/address/money-report', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toMatch(/street/i);
+    expect(data.error.message).toMatch(/street/i);
   });
 
   it('resolves address and returns money report', async () => {
@@ -242,7 +242,7 @@ describe('POST /api/intelligence/address/money-report', () => {
     const data = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe('Internal server error');
+    expect(data.error.code).toBe('INTERNAL_ERROR');
   });
 
   it('handles partial analyzer results on timeout', async () => {
@@ -394,7 +394,7 @@ describe('GET /api/intelligence/address/money-report', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toMatch(/zip/i);
+    expect(data.error.message).toMatch(/zip/i);
   });
 
   it('resolves ZIP and returns money report', async () => {
@@ -436,6 +436,6 @@ describe('GET /api/intelligence/address/money-report', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toMatch(/no congressional district/i);
+    expect(data.error.message).toMatch(/no congressional district/i);
   });
 });

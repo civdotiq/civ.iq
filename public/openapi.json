@@ -3,7 +3,7 @@
   "info": {
     "title": "CIV.IQ Public API",
     "description": "Open REST API for normalized U.S. government data — federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.\n\n## Rate limiting\n\nResponses carry the IETF RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset / RateLimit-Policy headers (plus the legacy X-RateLimit-* trio); a 429 includes Retry-After.\n\n## Versioning & deprecation policy\n\nThe API is versioned in the URL path (/api/v1); every v1 response carries X-API-Version. Additive changes ship within v1 and are recorded at GET /v1/changelog. Breaking changes only ship as a new URL version. Before any version is retired, its responses will carry Deprecation and Sunset headers (RFC 8594) plus Link rel=\"successor-version\" at least 6 months before shutdown. No version is currently deprecated. Full policy: https://civdotiq.org/docs/api#versioning\n\n## Errors\n\nEvery error is structured JSON: v1 endpoints return V1Error (integer code + meta), non-v1 endpoints return ApiError (string code + metadata). Unknown API paths return a JSON 404, never HTML.",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": {
       "name": "MIT",
       "url": "https://github.com/civdotiq/civ.iq/blob/main/LICENSE"
@@ -39,6 +39,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -102,6 +105,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -176,6 +182,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -218,6 +227,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -280,6 +292,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -324,6 +339,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -365,6 +383,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -409,6 +430,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -448,6 +472,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -503,6 +530,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -544,6 +574,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -567,6 +600,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -583,12 +619,32 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "405": {
+            "description": "GET without an SSE Accept header (text/event-stream required)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonRpcError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error (JSON-RPC envelope)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonRpcError"
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "summary": "MCP server",
-        "description": "Model Context Protocol endpoint for AI assistant integration. 16 tools, 3 resources, 3 prompts. See https://modelcontextprotocol.io",
+        "description": "Model Context Protocol endpoint for AI assistant integration. 47 tools, 3 resources, 3 prompts. See https://modelcontextprotocol.io",
         "operationId": "mcpServer",
         "tags": ["MCP"],
         "responses": {
@@ -597,6 +653,26 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "400": {
+            "description": "Malformed JSON-RPC request or unacceptable Accept header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonRpcError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error (JSON-RPC envelope)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonRpcError"
+                }
+              }
+            }
           }
         }
       },
@@ -614,6 +690,16 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "description": "Unexpected server error (JSON-RPC envelope)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonRpcError"
+                }
+              }
+            }
           }
         }
       }
@@ -655,6 +741,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -696,6 +785,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -737,6 +829,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -778,6 +873,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -844,6 +942,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -883,6 +984,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       },
@@ -932,6 +1036,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1018,6 +1125,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       },
@@ -1089,6 +1199,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1136,6 +1249,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1184,6 +1300,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1261,6 +1380,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1305,13 +1427,37 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
+            "description": "Missing or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeError"
+                }
+              }
+            }
           },
           "404": {
-            "$ref": "#/components/responses/ApiNotFound"
+            "description": "No result for this address or these coordinates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeError"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeError"
+                }
+              }
+            }
           }
         }
       },
@@ -1359,10 +1505,27 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
+            "description": "Missing or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeError"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeocodeError"
+                }
+              }
+            }
           }
         }
       }
@@ -1417,6 +1580,30 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "districts": {
+                      "type": "array",
+                      "items": {},
+                      "description": "Always empty on error"
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
           }
         }
       }
@@ -1476,6 +1663,12 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiServiceUnavailable"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1538,10 +1731,37 @@
             }
           },
           "404": {
-            "$ref": "#/components/responses/ApiNotFound"
+            "description": "Representative not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentativeErrorEnvelope"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "502": {
+            "description": "Upstream data source unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentativeErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentativeErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -1591,6 +1811,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1664,6 +1887,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1758,6 +1984,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -1828,10 +2057,47 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
+            "description": "Invalid or unparseable address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "404": {
+            "description": "Address, district, or legislators not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream geocoder or Open States error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
           }
         }
       },
@@ -1888,10 +2154,47 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
+            "description": "Invalid or unparseable address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "404": {
+            "description": "Address, district, or legislators not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream geocoder or Open States error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressLookupError"
+                }
+              }
+            }
           }
         }
       }
@@ -1981,6 +2284,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -2022,6 +2328,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -2071,6 +2380,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -2119,6 +2431,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/ApiInternalError"
           }
         }
       }
@@ -2154,6 +2469,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/FeedInternalError"
           }
         }
       }
@@ -2189,6 +2507,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/FeedInternalError"
           }
         }
       }
@@ -2224,6 +2545,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/FeedInternalError"
           }
         }
       }
@@ -2259,6 +2583,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/FeedInternalError"
           }
         }
       }
@@ -2294,6 +2621,9 @@
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/FeedInternalError"
           }
         }
       }
@@ -3045,26 +3375,12 @@
         }
       },
       "IntelligenceInsightResponse": {
-        "type": "object",
         "description": "Standard intelligence analyzer response",
-        "properties": {
-          "confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "dataAsOf": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "methodology": {
-            "type": "string"
-          },
-          "disclaimer": {
-            "type": "string"
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IntelligenceMetadata"
           }
-        },
-        "required": ["confidence", "dataAsOf", "methodology", "disclaimer"]
+        ]
       },
       "SectorLeaderboardResponse": {
         "type": "object",
@@ -3365,6 +3681,85 @@
           }
         },
         "required": ["success", "error"]
+      },
+      "JsonRpcError": {
+        "type": "object",
+        "description": "JSON-RPC 2.0 error envelope returned by the MCP endpoint.",
+        "properties": {
+          "jsonrpc": {
+            "type": "string",
+            "enum": ["2.0"]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "description": "JSON-RPC error code (e.g. -32000)"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["code", "message"]
+          },
+          "id": {
+            "description": "Request id the error responds to; null for transport-level errors."
+          }
+        },
+        "required": ["jsonrpc", "error"]
+      },
+      "GeocodeError": {
+        "type": "object",
+        "description": "Error envelope returned by /geocode.",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        },
+        "required": ["success", "error"]
+      },
+      "AddressLookupError": {
+        "type": "object",
+        "description": "Error envelope returned by /state-legislators-by-address.",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error type (e.g. INVALID_ADDRESS, ADDRESS_NOT_FOUND, CENSUS_API_ERROR, OPENSTATES_API_ERROR, UNKNOWN_ERROR)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        },
+        "required": ["error", "message"]
+      },
+      "RepresentativeErrorEnvelope": {
+        "type": "object",
+        "description": "Error envelope returned by /representative/{bioguideId}.",
+        "properties": {
+          "representative": {
+            "description": "Always null on error."
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["success", "error"]
       }
     },
     "securitySchemes": {
@@ -3505,32 +3900,43 @@
           }
         }
       },
-      "ApiUnauthorized": {
-        "description": "Missing or invalid bearer token",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ApiError"
-            }
-          }
-        }
-      },
-      "ApiBadGateway": {
-        "description": "Upstream data source error",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ApiError"
-            }
-          }
-        }
-      },
       "ApiServiceUnavailable": {
         "description": "Service temporarily unavailable",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Unexpected server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/V1Error"
+            }
+          }
+        }
+      },
+      "ApiInternalError": {
+        "description": "Unexpected server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "FeedInternalError": {
+        "description": "Unexpected server error (Atom error document)",
+        "content": {
+          "application/atom+xml": {
+            "schema": {
+              "type": "string",
+              "description": "XML error document"
             }
           }
         }

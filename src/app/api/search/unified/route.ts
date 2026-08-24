@@ -23,6 +23,7 @@ import { COMMITTEE_INFO } from '@/lib/data/committee-names';
 import { cachedFetch } from '@/lib/cache';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 5 minutes
 export const dynamic = 'force-dynamic';
@@ -527,6 +528,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   }
 
+  try {
+    return await runUnifiedSearch(query, limit);
+  } catch (error) {
+    logger.error('Unified search error', error as Error, { query });
+    return ApiErrors.serverError();
+  }
+}
+
+async function runUnifiedSearch(query: string, limit: number): Promise<NextResponse> {
   // Parse state prefix from query
   const { stateCode, searchQuery } = parseStatePrefix(query);
 

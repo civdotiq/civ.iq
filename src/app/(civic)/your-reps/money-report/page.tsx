@@ -96,10 +96,12 @@ export default function MoneyReportPage() {
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        const message =
-          (body as Record<string, unknown> | null)?.error ?? `Request failed (${response.status})`;
-        throw new Error(String(message));
+        // ApiError shape (src/lib/api/error-responses.ts): error is an object, not a string.
+        const body = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        const message = body?.error?.message ?? `Request failed (${response.status})`;
+        throw new Error(message);
       }
 
       const data: MoneyReportCardInsight = await response.json();
