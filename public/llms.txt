@@ -4,6 +4,27 @@
 
 CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google Civic Info API, and OpenSecrets API. It aggregates data from Congress.gov, FEC, Senate LDA, USASpending, Federal Register, Census Bureau, BLS, and more into a unified, free REST API.
 
+## When to Use CIV.IQ
+
+Reach for CIV.IQ when an agent needs, without an API key:
+
+- Who represents a U.S. street address (federal + state legislators). Always pass a full street address, not a ZIP code — ZIP boundaries misalign with congressional districts in 10-20% of cases.
+- A member of Congress's voting record, sponsored bills, committee seats, or party-alignment statistics
+- Federal campaign finance (FEC) with industry and geography breakdowns
+- Federal lobbying filings (Senate LDA), federal spending by district (USASpending), or Federal Register rules
+- Congressional district demographics, economics, and boundaries
+- Bill search and status tracking for the current Congress
+
+Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), nationwide local government (10 pilot cities only), live election-night results, or non-U.S. data. When CIV.IQ lacks data it says so — responses carry a `dataQuality` field instead of silently returning empty arrays.
+
+How to call it:
+
+- REST: `GET https://civdotiq.org/api/v1/...` — no auth, 60 requests/minute per IP
+- MCP: Streamable HTTP endpoint at `https://civdotiq.org/api/mcp` — 47 read-only tools, no auth
+- CLI: `npx @civiq/sdk representatives --state MI`
+- SDK: `npm install @civiq/sdk`
+- Markdown variants: key pages (`/`, `/about`, `/developers`, `/docs/api`, `/mcp`, `/support`) respond to `Accept: text/markdown` with markdown instead of HTML
+
 ## Core Capabilities
 
 - **Representatives**: Look up federal and state legislators by street address or state
@@ -28,15 +49,18 @@ The canonical coverage matrix is published at https://github.com/civdotiq/civ.iq
 - Versioned API: `https://civdotiq.org/api/v1`
 - OpenAPI spec: `https://civdotiq.org/openapi.json`
 - No authentication required
-- Rate limited to 60 requests/minute per IP
+- Rate limited to 60 requests/minute per IP; responses carry standard `RateLimit-*` headers (plus legacy `X-RateLimit-*`), and a 429 includes `Retry-After`
+- Errors are always structured JSON: `{ "error": { "code", "message", "details?" }, "meta": {...} }` — unknown API paths return this shape with status 404, never HTML
+- Versioning: v1 in the URL path; breaking changes only ship as a new version with ≥6 months of `Deprecation`/`Sunset` (RFC 8594) header notice. Policy: https://civdotiq.org/docs/api#versioning
 
 ## Key Endpoints
 
 - `GET /api/v1/representatives?state=MI&chamber=house` — list legislators
 - `GET /api/v1/representatives/{bioguideId}` — legislator detail
-- `GET /api/v1/representatives/{bioguideId}/votes` — voting record
-- `GET /api/v1/representatives/{bioguideId}/finance` — campaign finance
-- `GET /api/v1/bills?query=healthcare&congress=119` — search bills
+- `GET /api/representative/{bioguideId}/votes` — voting record
+- `GET /api/representative/{bioguideId}/finance` — campaign finance
+- `GET /api/v1/bills?sort=updateDate+desc&limit=20` — recent bills
+- `GET /api/search/unified?q=healthcare` — keyword search (bills, members, committees)
 - `GET /api/v1/bills/{billId}` — bill detail
 - `GET /api/v1/committees` — list committees
 - `POST /api/intelligence/address/representatives` — find reps by full address
@@ -56,10 +80,18 @@ Each page includes JSON-LD FAQPage schema, breadcrumb navigation, and related qu
 ## MCP Server
 
 CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
-- Endpoint: `https://civdotiq.org/api/mcp` (Streamable HTTP, no auth required)
+- Endpoint: `https://civdotiq.org/api/mcp` (Streamable HTTP, no auth required; `https://civdotiq.org/mcp` accepts the same protocol traffic)
 - 47 read-only tools across 9 domains: representatives, legislation, finance, intelligence, civic, environment, safety, health, economy
-- 7 resource templates (e.g. `civiq://legislators/{bioguideId}`)
+- 7 resource templates (e.g. `civiq://legislators/{bioguideId}`) plus 3 static doc resources (`civiq://docs/when-to-use`, `civiq://docs/api-quickstart`, `civiq://docs/versioning-policy`)
 - 6 prompt templates for common analysis patterns
+
+## CLI
+
+The `@civiq/sdk` npm package ships a `civiq` command-line tool for scripted lookups:
+- `npx @civiq/sdk representatives --state MI --chamber house`
+- `npx @civiq/sdk search healthcare`
+- `npx @civiq/sdk representative P000197 votes`
+All commands print JSON to stdout. Run `npx @civiq/sdk --help` for the full command list.
 
 ## Migration
 
@@ -67,9 +99,12 @@ CIV.IQ exposes a Model Context Protocol server for AI assistant integration:
 
 ## Documentation
 
+- Developer portal: [https://civdotiq.org/developers](/developers)
+- API reference (human-readable): [https://civdotiq.org/docs/api](/docs/api)
 - Full API docs: [llms-full.txt](/llms-full.txt)
 - OpenAPI 3.0 spec: [openapi.json](/openapi.json)
-- API reference: [docs/API_REFERENCE.md](https://github.com/civdotiq/civ.iq/blob/main/docs/API_REFERENCE.md)
+- API reference (repo): [docs/API_REFERENCE.md](https://github.com/civdotiq/civ.iq/blob/main/docs/API_REFERENCE.md)
+- TypeScript SDK & CLI: [@civiq/sdk on npm](https://www.npmjs.com/package/@civiq/sdk)
 
 ## Data Sources
 

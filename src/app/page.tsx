@@ -333,6 +333,53 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ============ ABOUT THE DATA ============ */}
+      <section className={styles.block} aria-labelledby="data-title">
+        <h2 className={styles.sectionTitle} id="data-title">
+          About the data
+        </h2>
+        <div className={styles.aboutProse}>
+          <p>
+            <strong>Official sources only.</strong> Every number on CIV.IQ comes from a government
+            record: members and bills from{' '}
+            <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer">
+              Congress.gov
+            </a>
+            , campaign finance from the{' '}
+            <a href="https://www.fec.gov" target="_blank" rel="noopener noreferrer">
+              Federal Election Commission
+            </a>
+            , lobbying from Senate disclosure filings, federal spending from USAspending, district
+            demographics from the Census Bureau. Votes refresh hourly; finance, lobbying, and member
+            data refresh daily. Nothing is estimated or filled in — when a source is unavailable,
+            the page says so instead of guessing.
+          </p>
+          <p>
+            <strong>Honest about coverage.</strong> Federal data is deep: voting records, sponsored
+            bills, committee seats, contributions by industry, and district-level spending for all
+            535 members of Congress. State coverage is thinner — legislator rosters and bills for
+            all 50 states via <Link href="/states">state legislatures</Link>, but no state-level
+            campaign finance. Local coverage is a ten-city pilot. Each page labels what its sources
+            can and cannot show.
+          </p>
+          <p>
+            <strong>Nonpartisan by construction.</strong> CIV.IQ publishes the record, not ratings:
+            no scores, no endorsements, no editorializing. The{' '}
+            <Link href="/methodology">methodology</Link> behind every statistic is public, the code
+            is <a href="https://github.com/civdotiq/civ.iq">open source</a>, and every profile links
+            a corrections flow if you spot an error.
+          </p>
+          <p>
+            <strong>Built to be reused.</strong> Everything here is available programmatically: a
+            free REST API with no key required (<Link href="/docs/api">documentation</Link>,{' '}
+            <a href="/openapi.json">OpenAPI spec</a>), an{' '}
+            <Link href="/mcp">MCP server for AI assistants</Link>, Atom feeds, bulk downloads, and
+            the <code>@civiq/sdk</code> TypeScript client and CLI on npm. Start at the{' '}
+            <Link href="/developers">developer portal</Link>.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

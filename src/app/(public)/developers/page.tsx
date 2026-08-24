@@ -13,13 +13,13 @@ import { DATASET_REGISTRY } from '@/lib/datasets';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
-  title: 'Developers — Free Civic Data API, MCP Server, SDK & Bulk Data',
+  title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
   description:
-    'Build with CIV.IQ: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+    'The CIV.IQ developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
   openGraph: {
-    title: 'Developers — Free Civic Data API, MCP Server, SDK & Bulk Data',
+    title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
-      'Build with CIV.IQ: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
+      'The CIV.IQ developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
     type: 'website',
   },
   keywords: [
@@ -515,6 +515,21 @@ const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119')
               GitHub
             </a>
           </div>
+        </section>
+
+        {/* CLI */}
+        <section id="cli" className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Command-line tool</h2>
+          <p className="text-gray-600 mb-grid-3">
+            The <code className="text-sm">civiq</code> CLI ships with the SDK package — script
+            lookups from a shell or let agents call it directly. JSON output, no API key.
+          </p>
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
+            {`npx @civiq/sdk representatives --state MI --chamber house
+npx @civiq/sdk representative P000197 votes --limit 5
+npx @civiq/sdk search healthcare
+npx @civiq/sdk --help`}
+          </pre>
         </section>
 
         {/* Atom Feeds */}

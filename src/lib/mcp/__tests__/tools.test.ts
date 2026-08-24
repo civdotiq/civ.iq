@@ -36,6 +36,7 @@ import { initializeMcpServer } from '../server';
 const EXPECTED_TOOL_COUNT = 47;
 const EXPECTED_PROMPT_COUNT = 6;
 const EXPECTED_RESOURCE_TEMPLATE_COUNT = 7;
+const EXPECTED_STATIC_RESOURCE_COUNT = 3;
 
 async function connectedClient(): Promise<Client> {
   const server = new McpServer({ name: 'civiq-test', version: '1.0.0' });
@@ -112,5 +113,28 @@ describe('MCP server surface', () => {
 
     const { resourceTemplates } = await client.listResourceTemplates();
     expect(resourceTemplates).toHaveLength(EXPECTED_RESOURCE_TEMPLATE_COUNT);
+  });
+
+  it(`resources/list returns the ${EXPECTED_STATIC_RESOURCE_COUNT} static doc resources (never empty — the server advertises the resources capability)`, async () => {
+    const { resources } = await client.listResources();
+    expect(resources).toHaveLength(EXPECTED_STATIC_RESOURCE_COUNT);
+
+    const uris = resources.map(r => r.uri).sort();
+    expect(uris).toEqual([
+      'civiq://docs/api-quickstart',
+      'civiq://docs/versioning-policy',
+      'civiq://docs/when-to-use',
+    ]);
+    for (const resource of resources) {
+      expect(resource.mimeType).toBe('text/markdown');
+      expect(resource.description).toBeTruthy();
+    }
+  });
+
+  it('static doc resources are readable and carry real markdown content', async () => {
+    const result = await client.readResource({ uri: 'civiq://docs/when-to-use' });
+    const text = result.contents[0]?.text as string;
+    expect(text).toContain('When to use CIV.IQ');
+    expect(text).toContain('/api/v1');
   });
 });

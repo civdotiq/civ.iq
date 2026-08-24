@@ -36,6 +36,12 @@ interface OrganizationSchemaProps {
   address?: { locality?: string; region?: string; country?: string };
   /** Parent/registry org this entity belongs to (e.g. a disclosure registry). */
   memberOf?: { name: string; url?: string; type?: string };
+  /**
+   * Contact point. Defaults to the CIV.IQ support inbox on the CIV.IQ org
+   * node only (no custom `id`); third-party orgs (PACs, lobby groups) never
+   * inherit it. Pass explicitly to override, or null to omit.
+   */
+  contactPoint?: { email: string; contactType?: string; url?: string } | null;
 }
 
 /**
@@ -58,7 +64,22 @@ export function OrganizationSchema({
   foundingDate,
   address,
   memberOf,
+  contactPoint,
 }: OrganizationSchemaProps) {
+  // Default contact only applies to the CIV.IQ org node (no custom `id`);
+  // third-party orgs must opt in explicitly.
+  const resolvedContactPoint =
+    contactPoint === null
+      ? undefined
+      : (contactPoint ??
+        (id === undefined
+          ? {
+              email: 'contact@civdotiq.org',
+              contactType: 'customer support',
+              url: 'https://civdotiq.org/support',
+            }
+          : undefined));
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -93,6 +114,15 @@ export function OrganizationSchema({
       '@type': memberOf.type ?? 'Organization',
       name: memberOf.name,
       ...(memberOf.url && { url: memberOf.url }),
+    };
+  }
+  if (resolvedContactPoint) {
+    schema.contactPoint = {
+      '@type': 'ContactPoint',
+      email: resolvedContactPoint.email,
+      contactType: resolvedContactPoint.contactType ?? 'customer support',
+      ...(resolvedContactPoint.url && { url: resolvedContactPoint.url }),
+      availableLanguage: 'English',
     };
   }
 

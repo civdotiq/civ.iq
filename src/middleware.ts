@@ -12,6 +12,10 @@ import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
 import { incrementCrawlerHit } from '@/lib/analytics/crawler-counter';
 import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { LOCAL_PHOTO_IDS } from '@/generated/local-photo-ids';
+import { KNOWN_ROUTE_PREFIXES } from '@/generated/known-route-prefixes';
+import { addVersionHeaders } from '@/lib/api/v1-versioning';
+import { prefersMarkdown, acceptsHtmlExplicitly } from '@/lib/http/content-negotiation';
+import { MARKDOWN_PAGES, AGENT_NOT_FOUND_MARKDOWN } from '@/lib/machine-content/markdown-pages';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
@@ -341,6 +345,57 @@ export async function middleware(request: NextRequest) {
       });
     }
 
+    // MCP protocol traffic addressed to /mcp (the human docs page) is served
+    // by the real Streamable HTTP endpoint at /api/mcp. POST and DELETE are
+    // always protocol traffic; GET is protocol only when the client asks for
+    // an event stream — browsers asking for HTML keep the docs page.
+    if (
+      request.nextUrl.pathname === '/mcp' &&
+      (request.method === 'POST' ||
+        request.method === 'DELETE' ||
+        (request.method === 'GET' &&
+          (request.headers.get('accept') ?? '').includes('text/event-stream')))
+    ) {
+      return NextResponse.rewrite(new URL('/api/mcp', request.nextUrl));
+    }
+
+    const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+
+    // Markdown content negotiation (acceptmarkdown.com convention) for page
+    // requests. RSC/prefetch traffic is framework-internal and must never be
+    // intercepted, so anything carrying router headers passes straight through.
+    const isPageRequest = !isApiRoute && (request.method === 'GET' || request.method === 'HEAD');
+    const isRscRequest =
+      request.headers.get('rsc') !== null || request.headers.get('next-router-state-tree') !== null;
+    if (isPageRequest && !isRscRequest) {
+      const accept = request.headers.get('accept');
+      const wantsMarkdown = prefersMarkdown(accept);
+
+      if (wantsMarkdown) {
+        const normalizedPath =
+          request.nextUrl.pathname.length > 1
+            ? request.nextUrl.pathname.toLowerCase().replace(/\/+$/, '')
+            : '/';
+        const markdown = MARKDOWN_PAGES.get(normalizedPath);
+        if (markdown) {
+          return markdownResponse(markdown, 200, request.method === 'HEAD');
+        }
+      }
+
+      // Guaranteed-404 shortcut: a first path segment that no route or
+      // public/ file can ever match. Browsers (they name text/html) still
+      // get the designed 404 page from the router; agents get a short
+      // markdown body with recovery links instead of a 61KB HTML shell.
+      const firstSegment = request.nextUrl.pathname.split('/')[1]?.toLowerCase() ?? '';
+      if (
+        firstSegment !== '' &&
+        !KNOWN_ROUTE_PREFIXES.has(firstSegment) &&
+        (wantsMarkdown || !acceptsHtmlExplicitly(accept))
+      ) {
+        return markdownResponse(AGENT_NOT_FOUND_MARKDOWN, 404, request.method === 'HEAD');
+      }
+    }
+
     // Apply rate limiting — API routes only.
     //
     // The matcher below deliberately covers page navigations too (for the
@@ -353,7 +408,6 @@ export async function middleware(request: NextRequest) {
     //
     // Portrait requests for known-local IDs are exempt for the same reason.
     // See isUnmeteredPhotoRequest above.
-    const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
     const rateLimitResult =
       isApiRoute && !isUnmeteredPhotoRequest(request.nextUrl.pathname)
         ? await checkRateLimit(request, clientInfo.ip)
@@ -368,13 +422,11 @@ export async function middleware(request: NextRequest) {
       });
 
       return createErrorResponse(429, 'Too Many Requests', {
-        'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-        'X-RateLimit-Remaining': Math.max(
-          0,
-          rateLimitResult.limit - rateLimitResult.current
+        ...buildRateLimitHeaders(rateLimitResult),
+        'Retry-After': Math.max(
+          1,
+          Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
         ).toString(),
-        'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-        'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString(),
       });
     }
 
@@ -429,12 +481,17 @@ export async function middleware(request: NextRequest) {
     // Add rate limit headers (API routes only — meaningless on page routes,
     // which are no longer rate limited)
     if (rateLimitResult) {
-      response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
-      response.headers.set(
-        'X-RateLimit-Remaining',
-        Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString()
-      );
-      response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
+      Object.entries(buildRateLimitHeaders(rateLimitResult)).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+    }
+
+    // Version headers on every v1 response — one central wiring point, so a
+    // future Deprecation/Sunset announcement reaches all v1 consumers without
+    // touching each route. See src/lib/api/v1-versioning.ts and the policy at
+    // /docs/api#versioning.
+    if (request.nextUrl.pathname.startsWith('/api/v1/')) {
+      addVersionHeaders(response.headers);
     }
 
     // Add performance headers
@@ -689,6 +746,58 @@ function cleanupFallbackRateLimitStore() {
       fallbackRateLimitStore.delete(key);
     }
   }
+}
+
+/**
+ * Rate-limit state headers: the IETF standard `RateLimit-*` family
+ * (draft-ietf-httpapi-ratelimit-headers: Limit / Remaining / Reset as
+ * delta-seconds, plus RateLimit-Policy) alongside the legacy `X-RateLimit-*`
+ * trio (Reset as a Unix ms timestamp) that existing consumers already parse.
+ * All limiter windows are 60s — see RATE_LIMIT_CONFIGS.
+ */
+function buildRateLimitHeaders(result: {
+  limit: number;
+  current: number;
+  resetTime: number;
+}): Record<string, string> {
+  const remaining = Math.max(0, result.limit - result.current).toString();
+  const resetSeconds = Math.max(0, Math.ceil((result.resetTime - Date.now()) / 1000)).toString();
+  return {
+    'RateLimit-Limit': result.limit.toString(),
+    'RateLimit-Remaining': remaining,
+    'RateLimit-Reset': resetSeconds,
+    'RateLimit-Policy': `${result.limit};w=60`,
+    'X-RateLimit-Limit': result.limit.toString(),
+    'X-RateLimit-Remaining': remaining,
+    'X-RateLimit-Reset': result.resetTime.toString(),
+  };
+}
+
+/**
+ * A text/markdown response per the acceptmarkdown.com convention:
+ * `Content-Type: text/markdown; charset=utf-8` with `Vary: Accept` so
+ * shared caches never hand the markdown variant to an HTML client (or
+ * vice versa). HEAD requests get headers only.
+ */
+function markdownResponse(markdown: string, status: number, isHead: boolean): NextResponse {
+  const response = new NextResponse(isHead ? null : markdown, {
+    status,
+    headers: {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      Vary: 'Accept',
+      'Cache-Control':
+        status === 200
+          ? 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
+          : 'public, max-age=0, s-maxage=300',
+    },
+  });
+
+  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  response.headers.set('X-Request-ID', generateRequestId());
+
+  return response;
 }
 
 function createErrorResponse(

@@ -12,9 +12,17 @@
 
 ## Rate Limiting
 
-- 60 requests/minute per IP address
-- Responses include `X-RateLimit-Remaining` header
-- 429 responses include `Retry-After` header
+- 60 requests/minute per IP address on `/api/v1/`
+- Responses carry the IETF standard headers: `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` (delta seconds), and `RateLimit-Policy` (e.g. `60;w=60`)
+- Legacy `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-Reset` (Unix ms) are also sent for older consumers
+- 429 responses include `Retry-After` (seconds)
+
+## Versioning & Deprecation Policy
+
+- The API is versioned in the URL path (`/api/v1`); every response carries `X-API-Version`
+- Additive changes ship within v1 and are recorded at `GET /api/v1/changelog`
+- Breaking changes only ship as a new URL version; a retiring version will send `Deprecation` and `Sunset` headers (RFC 8594) plus `Link rel="successor-version"` at least 6 months before shutdown
+- No version is currently deprecated; no sunset is scheduled for v1
 
 ## Data Freshness
 
@@ -91,7 +99,7 @@ Get detailed info for a specific member of Congress.
 }
 ```
 
-### GET /api/v1/representatives/{bioguideId}/votes
+### GET /api/representative/{bioguideId}/votes
 
 Voting record for a specific legislator.
 
@@ -121,7 +129,7 @@ Voting record for a specific legislator.
 }
 ```
 
-### GET /api/v1/representatives/{bioguideId}/finance
+### GET /api/representative/{bioguideId}/finance
 
 FEC campaign finance data for a legislator.
 
@@ -177,16 +185,17 @@ Find representatives by full street address (resolves exact congressional distri
 
 ### GET /api/v1/bills
 
-Search bills across Congress.
+List recent bills in the current Congress.
 
 **Parameters:**
-- `query` (string, optional): search term
-- `congress` (integer, optional): congress number (e.g., 119)
-- `status` (string, optional): bill status filter
-- `limit` (integer, optional): default 20, max 50
+- `sort` (string, optional): `updateDate+desc` (default), `updateDate+asc`, `number+desc`, `number+asc`
+- `limit` (integer, optional): default 50, max 250
 - `offset` (integer, optional): pagination offset
 
-**Example:** `GET /api/v1/bills?query=healthcare&congress=119&limit=5`
+**Example:** `GET /api/v1/bills?sort=updateDate+desc&limit=5`
+
+For keyword search across bills (and representatives, committees), use
+`GET /api/search/unified?q=healthcare` instead.
 
 **Response shape:**
 ```json
@@ -300,7 +309,7 @@ Search individual contributions.
 
 ## Lobbying (Senate LDA)
 
-### GET /api/v1/representatives/{bioguideId}/lobbying
+### GET /api/representative/{bioguideId}/lobbying
 
 Lobbying filings related to a legislator's committees.
 
@@ -587,45 +596,55 @@ Civic knowledge graph — find related entities (legislators, bills, committees,
 
 CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 
-**Endpoint:** `https://civdotiq.org/api/mcp`
-**Transport:** Streamable HTTP (GET for SSE, POST for messages)
+**Endpoint:** `https://civdotiq.org/api/mcp` (`https://civdotiq.org/mcp` accepts the same protocol traffic)
+**Transport:** Streamable HTTP (POST for messages)
 
-### Tools (16)
+### Tools (47, all read-only)
 
-| Tool | Description | Key Parameters |
-|------|-------------|----------------|
-| `lookup_representatives` | Find legislators by full street address (Census Geocoder) | street, city, state, zip? |
-| `list_state_delegation` | List all federal legislators for a state | state |
-| `get_representative_profile` | Detailed legislator profile | bioguideId |
-| `compare_legislators` | Side-by-side comparison | bioguideIds[] |
-| `search_legislation` | Search bills | query?, congress?, limit? |
-| `get_bill_details` | Full bill information | billId |
-| `get_vote_record` | Roll call vote details | voteId |
-| `get_voting_history` | Legislator's voting record | bioguideId, limit? |
-| `get_campaign_finance` | FEC finance data | bioguideId |
-| `search_lobbying` | Senate LDA filings | query?, registrantName? |
-| `get_federal_spending` | USASpending data | state?, district? |
-| `get_committee_info` | Committee details | committeeId |
-| `get_federal_register` | Federal Register search | query?, type? |
-| `get_district_info` | District demographics | stateCode, districtNumber |
-| `analyze_vote_prediction` | ML vote prediction | bioguideId |
-| `get_influence_chain` | Money-to-vote tracing | bioguideId |
+By domain:
 
-### Resources (3)
+- **Representatives:** `lookup_representatives` (full street address — not ZIP), `list_state_delegation`, `get_representative_profile`, `compare_legislators`
+- **Legislation:** `search_legislation`, `get_bill_details`, `get_voting_history`, `get_vote_record`
+- **Finance:** `get_campaign_finance`, `search_lobbying`, `get_federal_spending`
+- **Intelligence:** `analyze_vote_prediction`, `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`
+- **Civic:** `get_committee_info`, `get_federal_register`, `get_district_info`
+- **Environment:** `search_epa_facilities`, `get_district_environmental_profile`, `analyze_environmental_influence`, `get_climate_data`, `get_state_climate_profile`
+- **Safety:** `search_fema_disasters`, `get_district_disaster_history`, `search_crime_statistics`, `get_state_public_safety_profile`, `search_consumer_complaints`, `get_district_consumer_complaints`, `analyze_consumer_protection_influence`, `get_housing_affordability`, `get_district_housing_profile`, `search_vehicle_recalls`, `search_vehicle_complaints`
+- **Health:** `search_healthcare_providers`, `get_district_healthcare_profile`
+- **Economy:** `get_state_energy_profile`, `analyze_energy_policy_influence`, `search_colleges`, `get_district_education_profile`, `search_nih_grants`, `get_district_research_profile`, `search_fdic_institutions`, `get_district_banking_profile`, `get_federal_fiscal_data`, `get_federal_debt_context`
+
+### Resources
+
+Static doc resources (returned by `resources/list`):
+
+| URI | Description |
+|-----|-------------|
+| `civiq://docs/when-to-use` | When an agent should (and should not) use CIV.IQ |
+| `civiq://docs/api-quickstart` | REST quick start: base URL, rate limits, error shape |
+| `civiq://docs/versioning-policy` | Versioning, deprecation, and sunset policy |
+
+Resource templates (returned by `resources/templates/list`):
 
 | URI Pattern | Description |
 |-------------|-------------|
 | `civiq://legislators/{bioguideId}` | Representative profile JSON |
 | `civiq://bills/{congress}/{type}/{number}` | Bill detail JSON |
 | `civiq://districts/{stateCode}/{districtNumber}` | District info JSON |
+| `civiq://districts/{stateCode}/{districtNumber}/environment` | District environment profile |
+| `civiq://districts/{stateCode}/{districtNumber}/health` | District health profile |
+| `civiq://districts/{stateCode}/{districtNumber}/safety` | District safety profile |
+| `civiq://districts/{stateCode}/{districtNumber}/economy` | District economy profile |
 
-### Prompts (3)
+### Prompts (6)
 
 | Prompt | Description |
 |--------|-------------|
 | `legislator_accountability` | Finance + voting + committee data combined |
 | `bill_impact_analysis` | Bill details + sponsor funding + lobbying |
 | `policy_comparison` | Cross-legislator position comparison |
+| `district_deep_dive` | Full district profile across all data domains |
+| `environmental_justice` | Environment + demographics + policy influence |
+| `industry_investigation` | Industry lobbying + finance + regulatory landscape |
 
 ---
 
@@ -633,14 +652,38 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 
 ### Error responses
 
-All endpoints return errors in this shape:
+`/api/v1/` endpoints return errors in the v1 envelope (also documented as the `V1Error` schema in the OpenAPI spec):
 ```json
 {
-  "error": "Human-readable error message",
-  "reason": "Technical detail",
-  "status": 404
+  "error": {
+    "code": 404,
+    "message": "Human-readable error message",
+    "details": "Optional technical detail and where to look next"
+  },
+  "meta": {
+    "apiVersion": "v1",
+    "timestamp": "2026-08-21T00:00:00Z",
+    "source": "error",
+    "license": "MIT",
+    "documentation": "https://civdotiq.org/docs/api"
+  }
 }
 ```
+
+Non-v1 `/api/` endpoints use a string error code:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Human-readable error message",
+    "details": "Optional technical detail"
+  },
+  "metadata": { "timestamp": "2026-08-21T00:00:00Z" }
+}
+```
+
+Unknown API paths return one of these JSON shapes with status 404 — never an HTML page.
 
 ### Data provenance
 

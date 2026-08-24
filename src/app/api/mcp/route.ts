@@ -56,6 +56,21 @@ const handler = createMcpHandler(
   }
 );
 
+/**
+ * Middleware rewrites protocol traffic from /mcp to this route, but the
+ * rewritten request still carries the original /mcp URL — and mcp-handler
+ * string-compares the pathname against streamableHttpEndpoint before doing
+ * anything, so it would answer "Not found". Normalize the URL first.
+ */
+function atCanonicalPath(request: Request): Request {
+  const url = new URL(request.url);
+  if (url.pathname === '/mcp') {
+    url.pathname = '/api/mcp';
+    return new Request(url, request);
+  }
+  return request;
+}
+
 // mcp-handler@<current> defines `requestReceived` on its event emitter but
 // never calls it; only REQUEST_COMPLETED fires, and the request body is
 // passed as `result`. Rather than couple telemetry to that quirk we peek
@@ -75,7 +90,12 @@ async function postWithTelemetry(request: Request): Promise<Response> {
   } catch {
     // Telemetry never throws.
   }
-  return handler(request);
+  return handler(atCanonicalPath(request));
 }
 
-export { handler as GET, postWithTelemetry as POST, handler as DELETE };
+const getAtCanonicalPath = (request: Request): Promise<Response> =>
+  handler(atCanonicalPath(request));
+const deleteAtCanonicalPath = (request: Request): Promise<Response> =>
+  handler(atCanonicalPath(request));
+
+export { getAtCanonicalPath as GET, postWithTelemetry as POST, deleteAtCanonicalPath as DELETE };

@@ -10,7 +10,9 @@
  * Supports Sunset/Deprecation headers for future version transitions.
  */
 
-const API_VERSION = '1.0.0';
+// Keep in sync with public/openapi.json info.version and the newest
+// /api/v1/changelog entry.
+const API_VERSION = '1.2.0';
 
 interface VersionConfig {
   sunset?: string; // RFC 7231 date string (e.g., "Sat, 01 Jan 2028 00:00:00 GMT")

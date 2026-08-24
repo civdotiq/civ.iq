@@ -15,6 +15,11 @@ import { eiaService } from '@/lib/data-sources/eia-service';
 import { collegeScorecardService } from '@/lib/data-sources/college-scorecard-service';
 import { nihReporterService } from '@/lib/data-sources/nih-reporter-service';
 import { fdicService } from '@/lib/data-sources/fdic-service';
+import {
+  MARKDOWN_PAGES,
+  WHEN_TO_USE_MARKDOWN,
+  VERSIONING_POLICY_MARKDOWN,
+} from '@/lib/machine-content/markdown-pages';
 
 export function registerResources(server: McpServer): void {
   // Legislator profile resource
@@ -317,4 +322,51 @@ export function registerResources(server: McpServer): void {
       }
     }
   );
+
+  registerStaticDocResources(server);
+}
+
+/**
+ * Static documentation resources.
+ *
+ * The templates above are parameterized and therefore invisible to
+ * `resources/list` (they only appear under `resources/templates/list`).
+ * A server that advertises the `resources` capability must return at least
+ * one concrete resource from `resources/list`, and these docs are genuinely
+ * useful to a connecting agent: what CIV.IQ is for, how to call the REST
+ * API, and what stability guarantees it makes. Content is shared with the
+ * markdown page variants in src/lib/machine-content/markdown-pages.ts.
+ */
+function registerStaticDocResources(server: McpServer): void {
+  const docs: Array<{ name: string; uri: string; description: string; text: string }> = [
+    {
+      name: 'when-to-use-civiq',
+      uri: 'civiq://docs/when-to-use',
+      description: 'When an agent should (and should not) reach for CIV.IQ, and how to call it',
+      text: WHEN_TO_USE_MARKDOWN,
+    },
+    {
+      name: 'api-quickstart',
+      uri: 'civiq://docs/api-quickstart',
+      description: 'REST API quick start: base URL, auth, rate limits, error shape, key endpoints',
+      text: MARKDOWN_PAGES.get('/docs/api') ?? '',
+    },
+    {
+      name: 'versioning-policy',
+      uri: 'civiq://docs/versioning-policy',
+      description: 'API versioning, deprecation, and sunset policy (RFC 8594 headers)',
+      text: VERSIONING_POLICY_MARKDOWN,
+    },
+  ];
+
+  for (const doc of docs) {
+    server.resource(
+      doc.name,
+      doc.uri,
+      { description: doc.description, mimeType: 'text/markdown' },
+      async () => ({
+        contents: [{ uri: doc.uri, mimeType: 'text/markdown', text: doc.text }],
+      })
+    );
+  }
 }

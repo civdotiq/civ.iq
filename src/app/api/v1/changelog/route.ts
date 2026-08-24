@@ -18,6 +18,19 @@ export const dynamic = 'force-dynamic';
 
 const CHANGELOG = [
   {
+    version: '1.2.0',
+    date: '2026-08-21',
+    changes: [
+      'Unknown /api paths now return structured JSON 404s (never HTML)',
+      'IETF RateLimit-Limit/Remaining/Reset/Policy headers on all API responses (legacy X-RateLimit-* kept)',
+      'X-API-Version header on every v1 response',
+      'OpenAPI: typed ApiError schema for non-v1 endpoints, 429 documented on every operation',
+      'Published versioning & deprecation policy (RFC 8594 Sunset/Deprecation signaling): https://civdotiq.org/docs/api#versioning',
+      'Markdown content negotiation (Accept: text/markdown) on key pages; agent-readable markdown 404s',
+      'MCP: static doc resources exposed via resources/list; /mcp accepts protocol traffic',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2025-12-15',
     changes: [

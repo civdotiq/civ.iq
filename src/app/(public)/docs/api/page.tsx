@@ -303,20 +303,62 @@ export default function ApiDocsPage() {
                 </thead>
                 <tbody>
                   <tr className="border-b border-gray-100">
-                    <td className="p-grid-2 font-mono text-sm">X-RateLimit-Limit</td>
-                    <td className="p-grid-2">Maximum requests per window</td>
+                    <td className="p-grid-2 font-mono text-sm">RateLimit-Limit</td>
+                    <td className="p-grid-2">Maximum requests per window (IETF standard)</td>
                   </tr>
                   <tr className="border-b border-gray-100">
-                    <td className="p-grid-2 font-mono text-sm">X-RateLimit-Remaining</td>
+                    <td className="p-grid-2 font-mono text-sm">RateLimit-Remaining</td>
                     <td className="p-grid-2">Remaining requests in current window</td>
                   </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-sm">RateLimit-Reset</td>
+                    <td className="p-grid-2">Seconds until the window resets</td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-sm">RateLimit-Policy</td>
+                    <td className="p-grid-2">
+                      Quota policy, e.g. <code>60;w=60</code> (60 requests per 60-second window)
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-sm">X-RateLimit-*</td>
+                    <td className="p-grid-2">
+                      Legacy trio (Limit / Remaining / Reset as Unix ms), kept for older consumers
+                    </td>
+                  </tr>
                   <tr>
-                    <td className="p-grid-2 font-mono text-sm">X-RateLimit-Reset</td>
-                    <td className="p-grid-2">Unix timestamp when window resets</td>
+                    <td className="p-grid-2 font-mono text-sm">Retry-After</td>
+                    <td className="p-grid-2">On a 429 response: seconds to wait before retrying</td>
                   </tr>
                 </tbody>
               </table>
             </div>
+          </section>
+
+          {/* Versioning & deprecation policy */}
+          <section id="versioning" className="mb-grid-8">
+            <h2 className="text-2xl font-bold mb-grid-2">Versioning &amp; deprecation policy</h2>
+            <ul className="list-disc pl-grid-4 text-gray-600 space-y-2">
+              <li>
+                The API is versioned in the URL path (<code>/api/v1</code>). Every v1 response
+                carries an <code>X-API-Version</code> header.
+              </li>
+              <li>
+                Additive, non-breaking changes (new endpoints, new optional fields) ship within v1
+                and are recorded at <code>GET /api/v1/changelog</code>.
+              </li>
+              <li>
+                Breaking changes only ever ship as a new URL version (e.g. <code>/api/v2</code>); v1
+                is never mutated incompatibly.
+              </li>
+              <li>
+                Before any version is retired, its responses will carry <code>Deprecation</code> and{' '}
+                <code>Sunset</code> headers (RFC 8594) plus a{' '}
+                <code>Link rel=&quot;successor-version&quot;</code> header at least 6 months before
+                shutdown. The changelog and this page will announce the same dates.
+              </li>
+              <li>No version is currently deprecated and no sunset is scheduled for v1.</li>
+            </ul>
           </section>
 
           {/* REST Endpoints */}

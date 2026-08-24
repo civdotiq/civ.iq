@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "CIV.IQ Public API",
-    "description": "Open REST API for normalized U.S. government data \u2014 federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.",
-    "version": "1.1.0",
+    "description": "Open REST API for normalized U.S. government data — federal and state legislators, bills, votes, campaign finance, lobbying, and ML-powered intelligence analysis. No API key required. Rate limited to 60 requests/minute per IP.\n\n## Rate limiting\n\nResponses carry the IETF RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset / RateLimit-Policy headers (plus the legacy X-RateLimit-* trio); a 429 includes Retry-After.\n\n## Versioning & deprecation policy\n\nThe API is versioned in the URL path (/api/v1); every v1 response carries X-API-Version. Additive changes ship within v1 and are recorded at GET /v1/changelog. Breaking changes only ship as a new URL version. Before any version is retired, its responses will carry Deprecation and Sunset headers (RFC 8594) plus Link rel=\"successor-version\" at least 6 months before shutdown. No version is currently deprecated. Full policy: https://civdotiq.org/docs/api#versioning\n\n## Errors\n\nEvery error is structured JSON: v1 endpoints return V1Error (integer code + meta), non-v1 endpoints return ApiError (string code + metadata). Unknown API paths return a JSON 404, never HTML.",
+    "version": "1.2.0",
     "license": {
       "name": "MIT",
       "url": "https://github.com/civdotiq/civ.iq/blob/main/LICENSE"
@@ -36,6 +36,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -43,7 +46,7 @@
     "/v1/analytics": {
       "get": {
         "summary": "Per-endpoint request counts",
-        "description": "Returns request counts per endpoint for a given date range. Authenticated with a bearer token (CACHE_WARM_SECRET). Intended for operational observability \u2014 not part of the citizen-facing read path.",
+        "description": "Returns request counts per endpoint for a given date range. Authenticated with a bearer token (CACHE_WARM_SECRET). Intended for operational observability — not part of the citizen-facing read path.",
         "operationId": "getAnalytics",
         "tags": ["Analytics"],
         "security": [
@@ -96,6 +99,9 @@
           },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -167,6 +173,9 @@
           },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -206,6 +215,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -265,6 +277,9 @@
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -306,6 +321,9 @@
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -344,6 +362,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -385,6 +406,9 @@
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -421,6 +445,9 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -473,6 +500,9 @@
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -511,6 +541,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -531,6 +564,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -544,6 +580,9 @@
         "responses": {
           "200": {
             "description": "MCP protocol response"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
@@ -555,6 +594,9 @@
         "responses": {
           "200": {
             "description": "MCP protocol response"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
@@ -568,7 +610,10 @@
             "description": "Session terminated"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -603,10 +648,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -641,10 +689,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -679,10 +730,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -717,10 +771,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -783,7 +840,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -791,7 +851,7 @@
     "/intelligence/address/money-report": {
       "get": {
         "summary": "Money report by ZIP code",
-        "description": "Campaign finance report card for representatives serving a ZIP code. ZIP-based responses include `accuracyNote` and `status: 'partial'` \u2014 ZIP \u2194 congressional district alignment is 10\u201320% wrong. For authoritative results, use the address POST endpoint.",
+        "description": "Campaign finance report card for representatives serving a ZIP code. ZIP-based responses include `accuracyNote` and `status: 'partial'` — ZIP ↔ congressional district alignment is 10–20% wrong. For authoritative results, use the address POST endpoint.",
         "operationId": "getMoneyReportByZip",
         "tags": ["Intelligence"],
         "parameters": [
@@ -809,7 +869,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Money report for ZIP (approximate \u2014 see accuracyNote)",
+            "description": "Money report for ZIP (approximate — see accuracyNote)",
             "content": {
               "application/json": {
                 "schema": {
@@ -819,7 +879,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
@@ -865,7 +928,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -873,7 +939,7 @@
     "/intelligence/address/representatives": {
       "post": {
         "summary": "Representatives by address",
-        "description": "Look up all federal representatives (House + Senate) for a street address. Address-based responses do NOT include `accuracyNote` \u2014 the district is authoritative.",
+        "description": "Look up all federal representatives (House + Senate) for a street address. Address-based responses do NOT include `accuracyNote` — the district is authoritative.",
         "operationId": "getRepresentativesByAddress",
         "tags": ["Intelligence"],
         "requestBody": {
@@ -926,7 +992,7 @@
                     },
                     "accuracyNote": {
                       "type": "string",
-                      "description": "Populated only on ZIP-based GET responses (not address POST). Communicates that ZIP \u2194 district alignment is 10\u201320% wrong and address-based lookup is preferred for authoritative results."
+                      "description": "Populated only on ZIP-based GET responses (not address POST). Communicates that ZIP ↔ district alignment is 10–20% wrong and address-based lookup is preferred for authoritative results."
                     },
                     "status": {
                       "type": "string",
@@ -948,13 +1014,16 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "get": {
         "summary": "Representatives by ZIP code",
-        "description": "ZIP-code fallback for the address-based lookup. Responses include `accuracyNote` and `status: 'partial'` because ZIP \u2194 district alignment is 10\u201320% wrong; prefer the address POST endpoint for authoritative results.",
+        "description": "ZIP-code fallback for the address-based lookup. Responses include `accuracyNote` and `status: 'partial'` because ZIP ↔ district alignment is 10–20% wrong; prefer the address POST endpoint for authoritative results.",
         "operationId": "getRepresentativesByZip",
         "tags": ["Intelligence"],
         "parameters": [
@@ -972,7 +1041,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Representatives for ZIP (approximate \u2014 see accuracyNote)",
+            "description": "Representatives for ZIP (approximate — see accuracyNote)",
             "content": {
               "application/json": {
                 "schema": {
@@ -995,7 +1064,7 @@
                     },
                     "accuracyNote": {
                       "type": "string",
-                      "description": "Present on ZIP-based responses. ZIP \u2194 district alignment is 10\u201320% wrong; use address POST for authoritative results."
+                      "description": "Present on ZIP-based responses. ZIP ↔ district alignment is 10–20% wrong; use address POST for authoritative results."
                     },
                     "status": {
                       "type": "string",
@@ -1016,7 +1085,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1061,6 +1133,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1105,7 +1180,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1179,7 +1257,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1224,10 +1305,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
@@ -1275,7 +1359,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1327,6 +1414,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1383,6 +1473,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1445,7 +1538,10 @@
             }
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1491,7 +1587,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1561,7 +1660,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1652,7 +1754,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1723,7 +1828,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
@@ -1780,7 +1888,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1863,10 +1974,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1901,10 +2015,13 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/ApiNotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1950,7 +2067,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1995,7 +2115,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/ApiBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2028,6 +2151,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2060,6 +2186,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2092,6 +2221,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2124,6 +2256,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2156,6 +2291,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -2995,7 +3133,7 @@
           },
           "accuracyNote": {
             "type": "string",
-            "description": "Present on ZIP-based GET responses. ZIP \u2194 district alignment is 10\u201320% wrong; use the address POST endpoint for authoritative results."
+            "description": "Present on ZIP-based GET responses. ZIP ↔ district alignment is 10–20% wrong; use the address POST endpoint for authoritative results."
           },
           "status": {
             "type": "string",
@@ -3042,7 +3180,7 @@
           },
           "accuracyNote": {
             "type": "string",
-            "description": "Present when the request carried a ZIP code (body.zipCode) rather than pure coordinates or address-only. Downstream consumers using the returned district inherit ZIP imprecision (10\u201320% misalignment)."
+            "description": "Present when the request carried a ZIP code (body.zipCode) rather than pure coordinates or address-only. Downstream consumers using the returned district inherit ZIP imprecision (10–20% misalignment)."
           },
           "isMultiDistrict": {
             "type": "boolean"
@@ -3140,7 +3278,7 @@
                   "type": "integer",
                   "minimum": 0
                 },
-                "description": "Map of endpoint path \u2192 request count"
+                "description": "Map of endpoint path → request count"
               }
             }
           },
@@ -3175,6 +3313,58 @@
           }
         },
         "required": ["source", "status", "fetchedAt"]
+      },
+      "ApiError": {
+        "type": "object",
+        "description": "Error envelope returned by non-v1 /api endpoints (intelligence, search, geocode, mesh). v1 endpoints use V1Error.",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "NOT_FOUND",
+                  "VALIDATION_ERROR",
+                  "INTERNAL_ERROR",
+                  "UNAUTHORIZED",
+                  "FORBIDDEN",
+                  "RATE_LIMITED",
+                  "SERVICE_UNAVAILABLE",
+                  "BAD_REQUEST",
+                  "NO_DATA"
+                ],
+                "description": "Machine-readable error code"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "details": {
+                "type": "string",
+                "description": "Optional technical detail"
+              }
+            },
+            "required": ["code", "message"]
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": ["success", "error"]
       }
     },
     "securitySchemes": {
@@ -3238,35 +3428,109 @@
       "TooManyRequests": {
         "description": "Rate limit exceeded (60 requests/minute per IP)",
         "headers": {
-          "X-RateLimit-Limit": {
+          "RateLimit-Limit": {
             "schema": {
               "type": "integer"
             },
-            "description": "Maximum requests per window"
+            "description": "Maximum requests per window (IETF RateLimit headers)"
           },
-          "X-RateLimit-Remaining": {
+          "RateLimit-Remaining": {
             "schema": {
               "type": "integer"
             },
             "description": "Remaining requests in current window"
           },
+          "RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Seconds until the window resets"
+          },
+          "RateLimit-Policy": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Quota policy, e.g. '60;w=60' (60 requests per 60s window)"
+          },
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Legacy: maximum requests per window"
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Legacy: remaining requests in current window"
+          },
           "X-RateLimit-Reset": {
             "schema": {
               "type": "integer"
             },
-            "description": "Unix timestamp when window resets"
+            "description": "Legacy: Unix millisecond timestamp when the window resets"
           },
           "Retry-After": {
             "schema": {
               "type": "integer"
             },
-            "description": "Seconds until rate limit resets"
+            "description": "Seconds to wait before retrying"
           }
         },
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/V1Error"
+            }
+          }
+        }
+      },
+      "ApiBadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "ApiNotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "ApiUnauthorized": {
+        "description": "Missing or invalid bearer token",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "ApiBadGateway": {
+        "description": "Upstream data source error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "ApiServiceUnavailable": {
+        "description": "Service temporarily unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
             }
           }
         }
@@ -3280,7 +3544,7 @@
     },
     {
       "name": "Representatives",
-      "description": "Members of Congress \u2014 federal level"
+      "description": "Members of Congress — federal level"
     },
     {
       "name": "Bills",
@@ -3300,7 +3564,7 @@
     },
     {
       "name": "Intelligence",
-      "description": "ML-powered analysis \u2014 vote prediction, influence chains, temporal shifts"
+      "description": "ML-powered analysis — vote prediction, influence chains, temporal shifts"
     },
     {
       "name": "Search",
@@ -3312,7 +3576,7 @@
     },
     {
       "name": "Graph",
-      "description": "Civic knowledge graph \u2014 entity resolution and connections"
+      "description": "Civic knowledge graph — entity resolution and connections"
     },
     {
       "name": "Feeds",

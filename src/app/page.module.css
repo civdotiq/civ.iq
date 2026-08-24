@@ -99,6 +99,28 @@
   margin: 0 0 36px;
 }
 
+.aboutProse {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.aboutProse p {
+  margin: 0 0 16px;
+}
+.aboutProse p:last-child {
+  margin-bottom: 0;
+}
+.aboutProse strong {
+  color: var(--ink-1, #000);
+  font-weight: 600;
+}
+.aboutProse a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* ============ CARD GRID — "What you can do" ============ */
 .cards {
   display: grid;

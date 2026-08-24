@@ -243,6 +243,28 @@ const nextConfig = {
         destination: '/your-reps',
         permanent: true,
       },
+      // Predictable developer-resource URLs: agents and search engines try
+      // these names first, so they must land somewhere real.
+      {
+        source: '/developer-portal',
+        destination: '/developers',
+        permanent: true,
+      },
+      {
+        source: '/docs',
+        destination: '/docs/api',
+        permanent: true,
+      },
+      {
+        source: '/api-docs',
+        destination: '/docs/api',
+        permanent: true,
+      },
+      {
+        source: '/.well-known/openapi.json',
+        destination: '/openapi.json',
+        permanent: true,
+      },
     ];
   },
   // Rewrites for clean URL aliases
