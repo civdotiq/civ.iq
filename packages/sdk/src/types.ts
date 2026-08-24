@@ -405,3 +405,31 @@ export interface StateBillsParams {
   chamber?: 'upper' | 'lower';
   limit?: number;
 }
+
+export interface VotingRecordVote {
+  voteId: string;
+  question?: string;
+  result?: string;
+  date?: string;
+  position?: string;
+  chamber?: string;
+  category?: string;
+  isKeyVote?: boolean;
+  bill?: { number?: string; title?: string; congress?: string; type?: string };
+}
+
+export interface VotingRecordResponse {
+  votes: VotingRecordVote[];
+  totalResults?: number;
+  [key: string]: unknown;
+}
+
+export interface CampaignFinanceResponse {
+  totalRaised?: number;
+  totalSpent?: number;
+  cashOnHand?: number;
+  individualContributions?: number;
+  pacContributions?: number;
+  industryBreakdown?: Array<{ industry?: string; total?: number; [key: string]: unknown }>;
+  [key: string]: unknown;
+}

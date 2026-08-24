@@ -2,6 +2,14 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.2.0] — 2026-08-21
+
+### Added
+
+- `civiq` CLI (`npx @civiq/sdk <command>`): representatives, representative (with `votes`/`finance`/`lobbying`/`profile` subcommands), bills, bill (+`summary`), vote, district, committees, committee, search. JSON output; `--base-url`, `--compact`, `--help`, `--version`. Zero new dependencies (node:util parseArgs).
+- `civiq.representatives.votes(bioguideId)`, `.finance(bioguideId)`, `.lobbying(bioguideId)` — the per-member endpoints at `/representative/{id}/…`.
+- `VotingRecordResponse` / `CampaignFinanceResponse` types.
+
 ## [0.1.1] — 2026-04-17
 
 ### Changed

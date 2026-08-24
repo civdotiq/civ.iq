@@ -21,6 +21,20 @@ All data comes from real government APIs. No mock data. When a source is unavail
 npm install @civiq/sdk
 ```
 
+## CLI
+
+The package ships a `civiq` command — script lookups from a shell, or point an AI agent at it. JSON output, no API key required.
+
+```bash
+npx @civiq/sdk representatives --state MI --chamber house
+npx @civiq/sdk representative P000197 votes --limit 5
+npx @civiq/sdk bill 119-hr-1 summary
+npx @civiq/sdk search healthcare
+npx @civiq/sdk --help
+```
+
+Commands: `representatives`, `representative <id> [profile|votes|finance|lobbying]`, `bills`, `bill <id> [summary]`, `vote <id>`, `district <id>`, `committees`, `committee <id>`, `search <query>`. Options: `--base-url`, `--compact`, `--limit`, `--offset`. Errors print structured JSON on stderr with exit code 1.
+
 ## Quick start
 
 ```typescript

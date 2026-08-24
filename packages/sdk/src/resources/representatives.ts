@@ -5,6 +5,8 @@ import type {
   FullRepresentativeProfile,
   CompareResponse,
   ListRepresentativesParams,
+  VotingRecordResponse,
+  CampaignFinanceResponse,
 } from '../types.js';
 
 export class RepresentativesResource {
@@ -36,5 +38,26 @@ export class RepresentativesResource {
     metadata: Record<string, unknown>;
   }> {
     return this.http.get('/representatives/all', params as Record<string, unknown>);
+  }
+
+  /** Voting record (House via Congress.gov, Senate via official XML feeds). */
+  votes(bioguideId: string, params?: { limit?: number }): Promise<VotingRecordResponse> {
+    return this.http.get(
+      `/representative/${encodeURIComponent(bioguideId)}/votes`,
+      params as Record<string, unknown>
+    );
+  }
+
+  /** FEC campaign finance summary with industry breakdown. */
+  finance(bioguideId: string, params?: { cycle?: number }): Promise<CampaignFinanceResponse> {
+    return this.http.get(
+      `/representative/${encodeURIComponent(bioguideId)}/finance`,
+      params as Record<string, unknown>
+    );
+  }
+
+  /** Senate LDA lobbying filings relevant to this member. */
+  lobbying(bioguideId: string): Promise<Record<string, unknown>> {
+    return this.http.get(`/representative/${encodeURIComponent(bioguideId)}/lobbying`);
   }
 }

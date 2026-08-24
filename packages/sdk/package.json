@@ -1,10 +1,13 @@
 {
   "name": "@civiq/sdk",
-  "version": "0.1.1",
-  "description": "TypeScript client for the CIV.IQ civic data API — representatives, bills, votes, committees, intelligence analysis",
+  "version": "0.2.0",
+  "description": "TypeScript client and `civiq` CLI for the CIV.IQ civic data API — representatives, bills, votes, committees, intelligence analysis",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "civiq": "./dist/bin.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
