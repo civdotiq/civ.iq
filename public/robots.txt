@@ -1,5 +1,10 @@
+# /api/v1/ is the public, documented, rate-limited agent API — always allowed
+# (longest-match wins over Disallow: /api/). Bare /api/ stays blocked: those
+# are internal UI routes backed by rate-limited upstream government APIs.
+
 User-agent: *
 Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
@@ -11,6 +16,7 @@ Allow: /api/representative-photo/
 
 User-agent: GPTBot
 Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
@@ -19,8 +25,33 @@ Disallow: /admin/
 User-agent: ChatGPT-User
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /api/v1/
+Allow: /api/representative-photo/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
 User-agent: ClaudeBot
 Allow: /
+Allow: /api/v1/
+Allow: /api/representative-photo/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Claude-User
+Allow: /
+Allow: /api/v1/
+Allow: /api/representative-photo/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Claude-SearchBot
+Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
@@ -28,6 +59,15 @@ Disallow: /admin/
 
 User-agent: PerplexityBot
 Allow: /
+Allow: /api/v1/
+Allow: /api/representative-photo/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+User-agent: Perplexity-User
+Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
@@ -35,6 +75,7 @@ Disallow: /admin/
 
 User-agent: Applebot-Extended
 Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
@@ -42,6 +83,7 @@ Disallow: /admin/
 
 User-agent: Google-Extended
 Allow: /
+Allow: /api/v1/
 Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
