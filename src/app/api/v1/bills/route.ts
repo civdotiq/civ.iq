@@ -13,10 +13,30 @@
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
+import { unknownParamWarnings } from '@/lib/api/v1-params';
 import logger from '@/lib/logging/simple-logger';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 
 export const dynamic = 'force-dynamic';
+
+/** Query parameters this route understands; anything else is reported in meta.warnings. */
+const SUPPORTED_PARAMS = ['congress', 'sort', 'limit', 'offset'] as const;
+
+/** Congress.gov's /bill collection starts at the 93rd Congress (1973). */
+const MIN_CONGRESS = 93;
+
+/**
+ * The Congress to query when the caller doesn't name one.
+ *
+ * CURRENT_CONGRESS is an operator override; a non-numeric value falls back to
+ * the date-derived number rather than reaching Congress.gov as garbage.
+ */
+function resolveDefaultCongress(): number {
+  const override = Number.parseInt(process.env.CURRENT_CONGRESS ?? '', 10);
+  return Number.isInteger(override) && override >= MIN_CONGRESS
+    ? override
+    : getCurrentCongressNumber();
+}
 
 interface CongressBill {
   congress: number;
@@ -39,8 +59,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       });
     }
 
-    const congress = process.env.CURRENT_CONGRESS || String(getCurrentCongressNumber());
     const { searchParams } = request.nextUrl;
+
+    // `congress` is new as of 2026-08-27. Callers were already guessing it —
+    // rejecting an out-of-range value breaks nobody, since no value worked
+    // before, and a silent fallback would repeat the bug this change fixes.
+    const defaultCongress = resolveDefaultCongress();
+    const congressParam = searchParams.get('congress');
+    let congress = defaultCongress;
+    if (congressParam !== null) {
+      const parsed = Number.parseInt(congressParam, 10);
+      if (!Number.isInteger(parsed) || parsed < MIN_CONGRESS || parsed > defaultCongress) {
+        return NextResponse.json(
+          v1Error(
+            400,
+            'Invalid congress parameter',
+            `Expected an integer between ${MIN_CONGRESS} and ${defaultCongress}; received '${congressParam}'`
+          ),
+          { status: 400 }
+        );
+      }
+      congress = parsed;
+    }
+
     const validSorts = ['updateDate+desc', 'updateDate+asc', 'number+desc', 'number+asc'];
     const sortParam = searchParams.get('sort') || 'updateDate+desc';
     const sort = validSorts.includes(sortParam) ? sortParam : 'updateDate+desc';
@@ -85,7 +126,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     logger.info('v1 bills list', { congress, returned: data.length, sort });
 
-    return NextResponse.json(v1Success(data, 'congress.gov', { total, limit, offset }), {
+    const warnings = unknownParamWarnings(searchParams, SUPPORTED_PARAMS);
+
+    return NextResponse.json(v1Success(data, 'congress.gov', { total, limit, offset }, warnings), {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
       },

@@ -28,6 +28,27 @@ describe('V1 Response Envelope', () => {
       expect(metaKeys).toEqual(['apiVersion', 'documentation', 'license', 'source', 'timestamp']);
     });
 
+    it('should omit meta.warnings when none are passed', () => {
+      const result = v1Success([], 'congress.gov');
+      expect(result.meta).not.toHaveProperty('warnings');
+    });
+
+    it('should omit meta.warnings when an empty array is passed', () => {
+      const result = v1Success([], 'congress.gov', undefined, []);
+      expect(result.meta).not.toHaveProperty('warnings');
+    });
+
+    it('should surface meta.warnings when warnings are passed', () => {
+      const result = v1Success([], 'congress.gov', undefined, ["Unknown parameter 'query'"]);
+      expect(result.meta.warnings).toEqual(["Unknown parameter 'query'"]);
+    });
+
+    it('should keep warnings alongside pagination', () => {
+      const result = v1Success([], 'congress.gov', { total: 9, limit: 5, offset: 0 }, ['note']);
+      expect(result.pagination?.hasMore).toBe(true);
+      expect(result.meta.warnings).toEqual(['note']);
+    });
+
     it('should set apiVersion to v1', () => {
       const result = v1Success(null, 'test');
       expect(result.meta.apiVersion).toBe('v1');

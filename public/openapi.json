@@ -242,6 +242,16 @@
         "tags": ["Bills"],
         "parameters": [
           {
+            "name": "congress",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 93,
+              "default": 119
+            },
+            "description": "Congress number (93 or later, up to the current Congress). Defaults to the current Congress."
+          },
+          {
             "name": "sort",
             "in": "query",
             "schema": {
@@ -2652,6 +2662,13 @@
           "documentation": {
             "type": "string",
             "format": "uri"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Advisory notes about the request, such as unrecognized query parameters that were ignored. Omitted when there is nothing to report."
           }
         },
         "required": ["apiVersion", "timestamp"]

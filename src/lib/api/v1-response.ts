@@ -22,6 +22,12 @@ interface V1Meta {
   source: string;
   license: string;
   documentation: string;
+  /**
+   * Advisory notes about the request — currently unrecognized query
+   * parameters that were ignored. Omitted entirely when there is nothing to
+   * report, so the happy-path envelope is unchanged. See v1-params.ts.
+   */
+  warnings?: string[];
 }
 
 interface V1Response<T> {
@@ -52,11 +58,17 @@ function buildMeta(source: string): V1Meta {
 export function v1Success<T>(
   data: T,
   source: string,
-  pagination?: { total: number; limit: number; offset: number }
+  pagination?: { total: number; limit: number; offset: number },
+  warnings?: string[]
 ): V1Response<T> {
+  const meta = buildMeta(source);
+  if (warnings && warnings.length > 0) {
+    meta.warnings = warnings;
+  }
+
   const response: V1Response<T> = {
     data,
-    meta: buildMeta(source),
+    meta,
   };
 
   if (pagination) {
