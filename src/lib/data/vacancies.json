@@ -1,6 +1,6 @@
 {
   "congress": 119,
-  "lastUpdated": "2026-04-14",
+  "lastUpdated": "2026-08-24",
   "source": "https://en.wikipedia.org/wiki/119th_United_States_Congress#Changes_in_membership",
   "vacancies": [
     {
@@ -8,19 +8,13 @@
       "chamber": "Senate",
       "district": null,
       "senateClass": "1",
-      "vacantSince": "2025-01-03",
+      "vacantSince": null,
       "reason": "other",
-      "reasonDetail": "Senator-elect chose to wait until finishing his term as Governor of West Virginia before taking his seat.",
       "previousMember": {
         "name": "Vacant",
         "party": "N/A"
       },
-      "successor": {
-        "name": "Jim Justice",
-        "party": "Republican",
-        "installedDate": "2025-01-14",
-        "method": "elected"
-      }
+      "reasonDetail": "Senator-elect chose to wait until finishing his term as Governor of West Virginia before taking his seat."
     },
     {
       "state": "OH",
@@ -29,16 +23,11 @@
       "senateClass": "3",
       "vacantSince": "2025-01-10",
       "reason": "executive_appointment",
-      "reasonDetail": "Resigned to become Vice President of the United States.",
       "previousMember": {
         "name": "JD Vance",
         "party": "Republican"
       },
-      "specialElection": {
-        "date": null,
-        "runoffDate": null,
-        "notes": "Special election to be held in 2026 to fill remainder of term."
-      },
+      "reasonDetail": "Incumbent resigned January 10, 2025, to become Vice President of the United States. Successor was appointed to continue the term until a special election is held in 2026.",
       "successor": {
         "name": "Jon Husted",
         "party": "Republican",
@@ -53,16 +42,11 @@
       "senateClass": "3",
       "vacantSince": "2025-01-20",
       "reason": "executive_appointment",
-      "reasonDetail": "Resigned to become United States Secretary of State.",
       "previousMember": {
         "name": "Marco Rubio",
         "party": "Republican"
       },
-      "specialElection": {
-        "date": null,
-        "runoffDate": null,
-        "notes": "Special election to be held in 2026 to fill remainder of term."
-      },
+      "reasonDetail": "Incumbent resigned January 20, 2025, to become United States Secretary of State. Successor was appointed to continue the term until a special election is held in 2026.",
       "successor": {
         "name": "Ashley Moody",
         "party": "Republican",
@@ -77,11 +61,11 @@
       "senateClass": "2",
       "vacantSince": "2026-03-23",
       "reason": "executive_appointment",
-      "reasonDetail": "Resigned to become United States Secretary of Homeland Security.",
       "previousMember": {
         "name": "Markwayne Mullin",
         "party": "Republican"
       },
+      "reasonDetail": "Incumbent resigned March 23, 2026, to become United States Secretary of Homeland Security. Successor was appointed to finish the term.",
       "successor": {
         "name": "Alan S. Armstrong",
         "party": "Republican",
@@ -90,18 +74,17 @@
       }
     },
     {
-      "state": "OK",
+      "state": "SC",
       "chamber": "Senate",
       "district": null,
       "senateClass": "2",
-      "vacantSince": null,
-      "reason": "resignation",
-      "reasonDetail": "Appointee resigning late 2026 to give successor seniority advantages. Successor will be appointed having already been elected to the next term.",
+      "vacantSince": "2026-07-11",
+      "reason": "death",
       "previousMember": {
-        "name": "Alan S. Armstrong",
+        "name": "Lindsey Graham",
         "party": "Republican"
       },
-      "notes": "Pending — resignation date and successor TBD."
+      "reasonDetail": "Incumbent died July 11, 2026. Successor was appointed to finish the term."
     },
     {
       "state": "FL",
@@ -110,11 +93,11 @@
       "senateClass": null,
       "vacantSince": "2024-11-13",
       "reason": "resignation",
-      "reasonDetail": "Resigned November 13, 2024, before the beginning of the 119th Congress, and declined to take office after being re-elected.",
       "previousMember": {
         "name": "Matt Gaetz",
         "party": "Republican"
       },
+      "reasonDetail": "Matt Gaetz (R) resigned November 13, 2024, before the beginning of this Congress, and declined to take office after being re-elected.",
       "specialElection": {
         "date": "2025-04-01",
         "runoffDate": null
@@ -133,11 +116,11 @@
       "senateClass": null,
       "vacantSince": "2025-01-20",
       "reason": "executive_appointment",
-      "reasonDetail": "Resigned to become National Security Advisor.",
       "previousMember": {
         "name": "Mike Waltz",
         "party": "Republican"
       },
+      "reasonDetail": "Incumbent resigned January 20, 2025, to become National Security Advisor.",
       "specialElection": {
         "date": "2025-04-01",
         "runoffDate": null
@@ -160,6 +143,7 @@
         "name": "Sylvester Turner",
         "party": "Democrat"
       },
+      "reasonDetail": "Incumbent died March 5, 2025.",
       "specialElection": {
         "date": "2025-11-04",
         "runoffDate": "2026-01-31"
@@ -178,12 +162,12 @@
       "senateClass": null,
       "vacantSince": "2025-03-13",
       "reason": "death",
-      "reasonDetail": "Died having already planned to retire at the end of the term.",
       "previousMember": {
         "name": "Raúl Grijalva",
         "party": "Democrat",
         "bioguideId": "G000551"
       },
+      "reasonDetail": "Incumbent died March 13, 2025, having already planned to retire at the end of the term.",
       "specialElection": {
         "date": "2025-09-23",
         "runoffDate": null
@@ -202,11 +186,11 @@
       "senateClass": null,
       "vacantSince": "2025-05-21",
       "reason": "death",
-      "reasonDetail": "Died having already planned to retire at the end of the term.",
       "previousMember": {
         "name": "Gerry Connolly",
         "party": "Democrat"
       },
+      "reasonDetail": "Incumbent died May 21, 2025, having already planned to retire at the end of the term.",
       "specialElection": {
         "date": "2025-09-09",
         "runoffDate": null
@@ -225,12 +209,12 @@
       "senateClass": null,
       "vacantSince": "2025-07-20",
       "reason": "resignation",
-      "reasonDetail": "Resigned to take a job in the private sector.",
       "previousMember": {
         "name": "Mark Green",
         "party": "Republican",
         "bioguideId": "G000590"
       },
+      "reasonDetail": "Incumbent resigned July 20, 2025, to take a job in the private sector.",
       "specialElection": {
         "date": "2025-12-02",
         "runoffDate": null
@@ -249,14 +233,20 @@
       "senateClass": null,
       "vacantSince": "2025-11-20",
       "reason": "resignation",
-      "reasonDetail": "Resigned after being elected Governor of New Jersey.",
       "previousMember": {
         "name": "Mikie Sherrill",
         "party": "Democrat"
       },
+      "reasonDetail": "Incumbent resigned November 20, 2025, after being elected Governor of New Jersey.",
       "specialElection": {
         "date": "2026-04-16",
         "runoffDate": null
+      },
+      "successor": {
+        "name": "Analilia Mejia",
+        "party": "Democrat",
+        "installedDate": "2026-04-20",
+        "method": "elected"
       },
       "notes": "Special election April 16, 2026. Seat currently vacant."
     },
@@ -267,21 +257,20 @@
       "senateClass": null,
       "vacantSince": "2026-01-05",
       "reason": "resignation",
-      "reasonDetail": "Resigned citing disagreements with President Trump.",
       "previousMember": {
         "name": "Marjorie Taylor Greene",
         "party": "Republican"
       },
+      "reasonDetail": "Incumbent resigned January 5, 2026, citing her disagreements with President Donald Trump.",
       "specialElection": {
         "date": "2026-03-10",
-        "runoffDate": "2026-04-07"
+        "runoffDate": null
       },
       "successor": {
         "name": "Clay Fuller",
         "party": "Republican",
-        "installedDate": null,
-        "method": "elected",
-        "notes": "Winner declared; sworn-in date TBD."
+        "installedDate": "2026-04-14",
+        "method": "elected"
       }
     },
     {
@@ -295,28 +284,59 @@
         "name": "Doug LaMalfa",
         "party": "Republican"
       },
+      "reasonDetail": "Incumbent died January 6, 2026.",
       "specialElection": {
         "date": "2026-06-02",
-        "runoffDate": "2026-08-04",
-        "notes": "Runoff scheduled August 4, 2026, if no candidate receives majority."
+        "runoffDate": null
+      },
+      "successor": {
+        "name": "James Gallagher",
+        "party": "Republican",
+        "installedDate": "2026-06-10",
+        "method": "elected"
       },
       "notes": "Seat currently vacant."
     },
     {
       "state": "CA",
       "chamber": "House",
-      "district": "14",
+      "district": "03",
       "senateClass": null,
       "vacantSince": null,
+      "reason": "other",
+      "previousMember": {
+        "name": "Kevin Kiley",
+        "party": "Republican"
+      },
+      "reasonDetail": "Incumbent changed parties March 9, 2026.",
+      "successor": {
+        "name": "Kevin Kiley",
+        "party": "Independent",
+        "installedDate": "2026-03-09",
+        "method": "elected"
+      }
+    },
+    {
+      "state": "CA",
+      "chamber": "House",
+      "district": "14",
+      "senateClass": null,
+      "vacantSince": "2026-04-14",
       "reason": "resignation",
-      "reasonDetail": "Announced intent to resign amid sexual misconduct allegations; resignation date TBD.",
       "previousMember": {
         "name": "Eric Swalwell",
         "party": "Democrat"
       },
+      "reasonDetail": "Incumbent resigned April 14, 2026, following sexual assault allegations.",
       "specialElection": {
-        "date": null,
+        "date": "2026-06-16",
         "runoffDate": null
+      },
+      "successor": {
+        "name": "Aisha Wahab",
+        "party": "Democrat",
+        "installedDate": null,
+        "method": "elected"
       },
       "notes": "Pending — resignation date and special election TBD."
     },
@@ -325,18 +345,44 @@
       "chamber": "House",
       "district": "23",
       "senateClass": null,
-      "vacantSince": null,
+      "vacantSince": "2026-04-14",
       "reason": "resignation",
-      "reasonDetail": "Announced intent to resign; date TBD.",
       "previousMember": {
         "name": "Tony Gonzales",
         "party": "Republican"
       },
-      "specialElection": {
-        "date": null,
-        "runoffDate": null
-      },
+      "reasonDetail": "Incumbent resigned April 14, 2026, after admitting to an affair.",
       "notes": "Pending — resignation date and special election TBD."
+    },
+    {
+      "state": "FL",
+      "chamber": "House",
+      "district": "20",
+      "senateClass": null,
+      "vacantSince": "2026-04-21",
+      "reason": "resignation",
+      "previousMember": {
+        "name": "Sheila Cherfilus-McCormick",
+        "party": "Democrat"
+      },
+      "reasonDetail": "Incumbent resigned April 21, 2026, following money laundering allegations."
+    },
+    {
+      "state": "GA",
+      "chamber": "House",
+      "district": "13",
+      "senateClass": null,
+      "vacantSince": "2026-04-22",
+      "reason": "death",
+      "previousMember": {
+        "name": "David Scott",
+        "party": "Democrat"
+      },
+      "reasonDetail": "Incumbent died April 22, 2026.",
+      "specialElection": {
+        "date": "2026-07-28",
+        "runoffDate": null
+      }
     }
   ]
 }
