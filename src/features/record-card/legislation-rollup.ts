@@ -18,8 +18,10 @@
  * "reported"-only count.
  *
  * Data caveats surfaced to the UI rather than hidden:
- * - The cosponsored fetch is capped at 5,000 bills; `cosponsoredSample`
- *   carries the exact API total so truncation is disclosed, never silent.
+ * - The cosponsored fetch is capped at 1,000 bills (4 sequential Congress.gov
+ *   pages — the old 5,000 cap took ~30s for long-tenured members and timed
+ *   out the function); `cosponsoredSample` carries the exact API total so
+ *   truncation is disclosed, never silent.
  * - The sponsored-legislation feed includes amendments; they are excluded
  *   here so "bills introduced" means bills and resolutions only.
  */

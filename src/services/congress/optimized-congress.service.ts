@@ -93,6 +93,18 @@ class CongressRateLimiter {
 const rateLimiter = new CongressRateLimiter();
 
 /**
+ * Page caps for the cosponsored-legislation walk (250 bills/page). Congress.gov
+ * ignores the congress filter, so every page is an all-time page, fetched
+ * sequentially; under load single pages stall for 7-8s. The old 20-page career
+ * cap (5,000 bills) took 25-30s for ten-term members and tripped the 30s
+ * function ceiling — a 504 with nothing cached, every visit. Career counts
+ * stay exact via pagination.count; only the status sample is truncated, and
+ * the rollup discloses that.
+ */
+const DEFAULT_COSPONSORED_PAGES = 2;
+const CAREER_COSPONSORED_PAGE_CAP = 4;
+
+/**
  * Helper interface for processed bills with relationship type
  */
 interface ProcessedBill {
@@ -113,26 +125,27 @@ interface ProcessedBill {
  * Fetch ALL sponsored legislation from Congress.gov API with proper pagination
  * NOTE: Congress.gov API ignores the 'congress' filter parameter, so we must filter client-side
  */
-async function fetchSponsoredLegislation(
-  bioguideId: string,
+/**
+ * Page a member legislation endpoint. Congress.gov ignores the congress
+ * filter, so pages are all-time and the walk is capped. Page 1 is fetched
+ * alone (it carries pagination.count); the remaining pages go out together,
+ * launch-staggered by the rate limiter. Congress.gov page latency is erratic
+ * (0.3s to 8s+ per page, observed 2026-09-03), so sequential paging summed
+ * the stalls into 25s+ walks; in parallel the walk is bounded by its slowest
+ * page.
+ */
+async function fetchLegislationPages(
+  endpoint: string,
+  listKey: 'sponsoredLegislation' | 'cosponsoredLegislation',
   apiKey: string,
-  congress: number,
-  _limit: number,
-  _page: number
-): Promise<{ bills: ProcessedBill[]; total: number; apiTotal: number }> {
-  const allBills: ProcessedBill[] = [];
-  let totalCount = 0;
-  let currentOffset = 0;
+  maxPages: number
+): Promise<{ rawBills: CongressBill[]; totalCount: number; pagesFetched: number }> {
   const pageSize = 250; // Max allowed by Congress.gov API
 
-  // For sponsored bills, usually there are fewer, so we can fetch all at once
-  // But we'll still handle pagination properly
-  do {
-    const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation`);
+  const fetchPage = async (offset: number): Promise<{ bills: CongressBill[]; count: number }> => {
+    const url = new URL(endpoint);
     url.searchParams.set('limit', pageSize.toString());
-    url.searchParams.set('offset', currentOffset.toString());
-    // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
-    // We filter client-side below instead
+    url.searchParams.set('offset', offset.toString());
     url.searchParams.set('format', 'json');
 
     const response = await fetch(url.toString(), {
@@ -143,48 +156,77 @@ async function fetchSponsoredLegislation(
       },
       signal: AbortSignal.timeout(10000),
     });
-
     if (!response.ok) {
-      throw new Error(`Sponsored legislation API error: ${response.status}`);
+      throw new Error(`${listKey} API error: ${response.status}`);
     }
+    const data = (await response.json()) as {
+      sponsoredLegislation?: CongressBill[];
+      cosponsoredLegislation?: CongressBill[];
+      pagination?: { count?: number };
+    };
+    return { bills: data[listKey] || [], count: data.pagination?.count || 0 };
+  };
 
-    const data = (await response.json()) as CongressAPIResponse;
-    const rawBills = data.sponsoredLegislation || [];
-    totalCount = data.pagination?.count || 0;
+  const first = await fetchPage(0);
+  const totalCount = first.count;
+  const totalPages = Math.min(Math.ceil(totalCount / pageSize), maxPages);
 
-    // Debug logging for sponsored legislation
-    logger.info('Sponsored legislation API page fetch', {
-      bioguideId,
-      congress,
-      totalCount,
-      currentOffset,
-      pageSize,
-      rawBillsLength: rawBills.length,
-      fetchedSoFar: allBills.length + rawBills.length,
+  const rest: Promise<{ bills: CongressBill[]; count: number }>[] = [];
+  for (let page = 1; page < totalPages && first.bills.length === pageSize; page++) {
+    await rateLimiter.waitIfNeeded();
+    rest.push(fetchPage(page * pageSize));
+  }
+  const pages = [first, ...(await Promise.all(rest))];
+  const rawBills = pages.flatMap(p => p.bills);
+
+  if (totalPages < Math.ceil(totalCount / pageSize)) {
+    logger.warn('Member legislation walk capped', {
+      endpoint,
+      totalFromApi: totalCount,
+      totalFetched: rawBills.length,
+      maxPages,
     });
+  }
 
-    const bills: ProcessedBill[] = rawBills.map((bill: CongressBill) => ({
-      id: bill.number || `unknown-${Date.now()}`,
-      number: bill.number || 'Unknown',
-      title: bill.title || 'Title not available',
-      introducedDate: bill.introducedDate || '',
-      status: bill.latestAction?.text || 'Status unknown',
-      lastAction: bill.latestAction?.text || 'No recent action',
-      congress: bill.congress || 0,
-      type: bill.type || 'Unknown',
-      policyArea: bill.policyArea?.name || undefined,
-      url: bill.url || undefined,
-      relationship: 'sponsored' as const,
-    }));
+  return { rawBills, totalCount, pagesFetched: pages.length };
+}
 
-    allBills.push(...bills);
-    currentOffset += pageSize;
+function toProcessedBill(
+  bill: CongressBill,
+  relationship: 'sponsored' | 'cosponsored'
+): ProcessedBill {
+  return {
+    id: bill.number || `unknown-${Date.now()}`,
+    number: bill.number || 'Unknown',
+    title: bill.title || 'Title not available',
+    introducedDate: bill.introducedDate || '',
+    status: bill.latestAction?.text || 'Status unknown',
+    lastAction: bill.latestAction?.text || 'No recent action',
+    congress: bill.congress || 0,
+    type: bill.type || 'Unknown',
+    policyArea: bill.policyArea?.name || undefined,
+    url: bill.url || undefined,
+    relationship,
+  };
+}
 
-    // Stop if we've fetched all bills or no more bills in response
-    if (rawBills.length < pageSize || allBills.length >= totalCount) {
-      break;
-    }
-  } while (currentOffset < totalCount);
+/** Sponsored walks are uncapped in practice (no sitting member nears 2,000). */
+const SPONSORED_PAGE_CAP = 8;
+
+async function fetchSponsoredLegislation(
+  bioguideId: string,
+  apiKey: string,
+  congress: number,
+  _limit: number,
+  _page: number
+): Promise<{ bills: ProcessedBill[]; total: number; apiTotal: number }> {
+  const { rawBills, totalCount, pagesFetched } = await fetchLegislationPages(
+    `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation`,
+    'sponsoredLegislation',
+    apiKey,
+    SPONSORED_PAGE_CAP
+  );
+  const allBills = rawBills.map(bill => toProcessedBill(bill, 'sponsored'));
 
   // Filter bills by requested congress (Congress.gov API ignores congress param)
   const filteredBills =
@@ -196,13 +238,14 @@ async function fetchSponsoredLegislation(
     totalFromApi: totalCount,
     totalFetched: allBills.length,
     filteredCount: filteredBills.length,
+    pagesFetched,
   });
 
   return { bills: filteredBills, total: filteredBills.length, apiTotal: totalCount };
 }
 
 /**
- * Fetch ALL cosponsored legislation from Congress.gov API with proper pagination
+ * Fetch cosponsored legislation from Congress.gov with capped pagination.
  * NOTE: Congress.gov API ignores the 'congress' filter parameter, so we must filter client-side
  */
 async function fetchCosponsoredLegislation(
@@ -211,105 +254,19 @@ async function fetchCosponsoredLegislation(
   congress: number,
   _limit: number,
   _page: number,
-  fetchAll: boolean = false // New parameter to control full fetch
+  maxPages: number = DEFAULT_COSPONSORED_PAGES
 ): Promise<{ bills: ProcessedBill[]; total: number; apiTotal: number }> {
-  const allBills: ProcessedBill[] = [];
-  let totalCount = 0;
-  let currentOffset = 0;
-  const pageSize = 250; // Max allowed by Congress.gov API
-  const maxPages = fetchAll ? 20 : 2; // Reduced to 2 pages (500 bills) to prevent timeouts - most reps have <500 cosponsorships
-  let pagesFeched = 0;
-
-  // For cosponsored bills, there can be MANY (1000+), so we need pagination
-  do {
-    const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation`);
-    url.searchParams.set('limit', pageSize.toString());
-    url.searchParams.set('offset', currentOffset.toString());
-    // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
-    // We filter client-side below instead
-    url.searchParams.set('format', 'json');
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CIV.IQ/2.0 (Comprehensive)',
-        'X-API-Key': apiKey,
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Cosponsored legislation API error: ${response.status}`);
-    }
-
-    const data = (await response.json()) as {
-      cosponsoredLegislation?: CongressBill[];
-      pagination?: { count?: number };
-    };
-    const rawBills = data.cosponsoredLegislation || [];
-    totalCount = data.pagination?.count || 0;
-
-    logger.debug('Cosponsored API raw response', { data });
-
-    // Debug logging for cosponsored legislation
-    logger.info('Cosponsored legislation API page fetch', {
-      bioguideId,
-      congress,
-      totalCount,
-      currentOffset,
-      pageSize,
-      rawBillsLength: rawBills.length,
-      fetchedSoFar: allBills.length + rawBills.length,
-      pagesFeched: pagesFeched + 1,
-    });
-
-    const bills: ProcessedBill[] = rawBills.map((bill: CongressBill) => ({
-      id: bill.number || `unknown-${Date.now()}`,
-      number: bill.number || 'Unknown',
-      title: bill.title || 'Title not available',
-      introducedDate: bill.introducedDate || '',
-      status: bill.latestAction?.text || 'Status unknown',
-      lastAction: bill.latestAction?.text || 'No recent action',
-      congress: bill.congress || 0,
-      type: bill.type || 'Unknown',
-      policyArea: bill.policyArea?.name || undefined,
-      url: bill.url || undefined,
-      relationship: 'cosponsored' as const,
-    }));
-
-    allBills.push(...bills);
-    currentOffset += pageSize;
-    pagesFeched++;
-
-    // Add small delay to respect rate limits
-    if (pagesFeched < maxPages && rawBills.length === pageSize) {
-      await rateLimiter.waitIfNeeded();
-    }
-
-    // Stop conditions:
-    // 1. No more bills in response
-    // 2. Fetched all available bills
-    // 3. Reached max pages limit (to prevent timeout)
-    if (rawBills.length < pageSize || allBills.length >= totalCount || pagesFeched >= maxPages) {
-      break;
-    }
-  } while (currentOffset < totalCount);
+  const { rawBills, totalCount, pagesFetched } = await fetchLegislationPages(
+    `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation`,
+    'cosponsoredLegislation',
+    apiKey,
+    maxPages
+  );
+  const allBills = rawBills.map(bill => toProcessedBill(bill, 'cosponsored'));
 
   // Filter bills by requested congress (Congress.gov API ignores congress param)
   const filteredBills =
     congress > 0 ? allBills.filter(bill => bill.congress === congress) : allBills;
-
-  // Log warning if we hit the page limit before getting all bills for this congress
-  if (pagesFeched >= maxPages && allBills.length < totalCount) {
-    logger.warn('Cosponsored bills fetch limited by max pages', {
-      bioguideId,
-      congress,
-      totalFromApi: totalCount,
-      totalFetched: allBills.length,
-      filteredCount: filteredBills.length,
-      maxPagesReached: maxPages,
-    });
-  }
 
   logger.info('Cosponsored legislation complete fetch', {
     bioguideId,
@@ -317,7 +274,7 @@ async function fetchCosponsoredLegislation(
     totalFromApi: totalCount,
     totalFetched: allBills.length,
     filteredCount: filteredBills.length,
-    pagesFeched,
+    pagesFetched,
   });
 
   return { bills: filteredBills, total: filteredBills.length, apiTotal: totalCount };
@@ -327,8 +284,8 @@ async function fetchCosponsoredLegislation(
  * Fetch a member's complete legislation history (all congresses, unfiltered)
  * for career/current-congress rollups. Passing congress=0 skips client-side
  * filtering so one fetch serves both splits. Cosponsored fetch is capped at
- * 20 pages (5,000 bills) — apiTotal preserves the exact all-time count so
- * callers can detect and disclose truncation.
+ * CAREER_COSPONSORED_PAGE_CAP pages (1,000 bills) — apiTotal preserves the
+ * exact all-time count so callers can detect and disclose truncation.
  */
 export interface MemberLegislationHistory {
   sponsored: { bills: ProcessedBill[]; apiTotal: number };
@@ -347,7 +304,7 @@ export async function fetchAllMemberLegislation(
 
   const [sponsored, cosponsored] = await Promise.all([
     fetchSponsoredLegislation(bioguideId, apiKey, 0, 250, 1),
-    fetchCosponsoredLegislation(bioguideId, apiKey, 0, 250, 1, true),
+    fetchCosponsoredLegislation(bioguideId, apiKey, 0, 250, 1, CAREER_COSPONSORED_PAGE_CAP),
   ]);
 
   return {
@@ -394,7 +351,7 @@ export async function getComprehensiveBillsByMember(
     // For cosponsored: fetch up to 500 bills (2 pages) by default
     const [sponsoredData, cosponsoredData] = await Promise.all([
       fetchSponsoredLegislation(bioguideId, apiKey, congress, limit, page),
-      fetchCosponsoredLegislation(bioguideId, apiKey, congress, limit, page, false), // fetchAll=false for performance
+      fetchCosponsoredLegislation(bioguideId, apiKey, congress, limit, page),
     ]);
 
     // Combine and process bills
@@ -652,7 +609,7 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
     // (Congress.gov API ignores the congress param — pagination.count is always all-time)
     const [sponsoredData, cosponsoredData] = await Promise.all([
       fetchSponsoredLegislation(bioguideId, apiKey, 119, 250, 1),
-      fetchCosponsoredLegislation(bioguideId, apiKey, 119, 250, 1, true),
+      fetchCosponsoredLegislation(bioguideId, apiKey, 119, 250, 1, CAREER_COSPONSORED_PAGE_CAP),
     ]);
 
     const result: BillsSummaryResult = {

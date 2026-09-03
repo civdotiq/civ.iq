@@ -460,6 +460,32 @@ function deriveBallotFraming(currentTermEnd: string | null | undefined): {
   return { nextElectionYear, onNextBallot, electionDayLabel };
 }
 
+export interface RecordCardHeadline {
+  legislation: LegislationRollup | null;
+  voting: VotingSection | null;
+}
+
+/**
+ * Headline stats only (bills + votes) for the profile stat band, share cards
+ * and the summary API. Same functions as the full card, so the numbers agree
+ * with /record — without the FEC, USASpending and PTR fan-out those surfaces
+ * never display. The summary used to build the whole card for two fields,
+ * which pushed long-tenured members past the 30s function ceiling.
+ */
+export async function getRecordCardHeadline(
+  bioguideId: string
+): Promise<RecordCardHeadline | null> {
+  const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
+  if (!rep) return null;
+
+  const [legislation, voting] = await Promise.all([
+    getLegislationRollup(rep.bioguideId),
+    fetchVotingSection(rep.bioguideId, rep.chamber, rep.party),
+  ]);
+
+  return { legislation, voting };
+}
+
 export async function getRecordCardData(bioguideId: string): Promise<RecordCardData | null> {
   const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
   if (!rep) return null;

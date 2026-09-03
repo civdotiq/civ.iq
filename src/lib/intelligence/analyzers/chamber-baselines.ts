@@ -53,8 +53,11 @@ import {
 } from '@/features/representatives/services/roll-call-corpus';
 import { computeChamberAlignment, MIN_VOTES_FOR_ALIGNMENT } from './party-line-analyzer';
 
-/** Redis TTL: 24h — new roll calls land daily when in session. */
-const CACHE_TTL_SECONDS = 24 * 60 * 60;
+/** Redis TTL: 7 days. The cron rebuilds daily, so a healthy blob is never
+ *  older than a day; the long TTL only matters when a run fails (one
+ *  Congress.gov vote-list timeout on 2026-09-03 let the 24h key expire and
+ *  blanked vote counts for every House member until the next run). */
+const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 /** Roll-call fetch ceiling (a two-year House Congress runs ~600-900). */
 const HOUSE_SWEEP_LIMIT = 1500;

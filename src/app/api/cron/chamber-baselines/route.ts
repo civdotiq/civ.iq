@@ -26,10 +26,25 @@ import { buildChamberBaselines } from '@/lib/intelligence/analyzers/chamber-base
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
+/** Mirrors the analyzer's default per-run fetch budget (200s of the 300s). */
+const HOUSE_FETCH_BUDGET_MS = 200_000;
+const HOUSE_RETRY_IF_FAILED_WITHIN_MS = 60_000;
+const HOUSE_RETRY_DELAY_MS = 3_000;
+
 async function runBuilds() {
   const startTime = Date.now();
 
-  const house = await buildChamberBaselines('House');
+  let house = await buildChamberBaselines('House');
+  // A fast null is a vote-list fetch failure (Congress.gov timeout), not a
+  // budget exhaustion — one retry inside the remaining window usually lands.
+  const firstAttemptMs = Date.now() - startTime;
+  if (!house && firstAttemptMs < HOUSE_RETRY_IF_FAILED_WITHIN_MS) {
+    logger.warn('House baselines build failed fast — retrying once', { firstAttemptMs });
+    await new Promise(r => setTimeout(r, HOUSE_RETRY_DELAY_MS));
+    house = await buildChamberBaselines('House', undefined, {
+      fetchBudgetMs: HOUSE_FETCH_BUDGET_MS - (Date.now() - startTime),
+    });
+  }
   let senate = null;
   try {
     senate = await buildChamberBaselines('Senate');

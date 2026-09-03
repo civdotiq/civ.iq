@@ -11,6 +11,8 @@ import { formatMoney, type ProfileSummary } from './types';
 interface GlanceBandProps {
   summary: ProfileSummary | null;
   loading: boolean;
+  /** The summary request failed (timeout, 5xx). Distinct from "no data". */
+  error?: boolean;
   committeeCount: number;
 }
 
@@ -45,7 +47,11 @@ function GlanceCell({ label, value, caption, loading }: GlanceCellProps) {
  * At-a-glance stat band. Numbers come from real Congress.gov / FEC data;
  * cells show "Data unavailable" rather than ever inventing a figure.
  */
-export function GlanceBand({ summary, loading, committeeCount }: GlanceBandProps) {
+export function GlanceBand({ summary, loading, error, committeeCount }: GlanceBandProps) {
+  // A failed request is not evidence of absence: never tell the citizen
+  // "No FEC filings found" because our own endpoint timed out.
+  const failed = Boolean(error) && !summary;
+  const unavailable = failed ? 'Could not load — retry shortly' : 'Data unavailable';
   const votes = summary?.votesParticipated;
   const sponsored = summary?.billsSponsored;
   const cosponsored = summary?.billsCosponsored;
@@ -58,7 +64,7 @@ export function GlanceBand({ summary, loading, committeeCount }: GlanceBandProps
       <GlanceCell
         label="Roll-call votes"
         value={votes && votes > 0 ? String(votes) : '—'}
-        caption={votes && votes > 0 ? 'Most recent floor votes' : 'Data unavailable'}
+        caption={votes && votes > 0 ? 'Most recent floor votes' : unavailable}
         loading={loading}
       />
       <GlanceCell
@@ -67,7 +73,7 @@ export function GlanceBand({ summary, loading, committeeCount }: GlanceBandProps
         caption={
           sponsored && sponsored > 0
             ? `${cosponsored && cosponsored > 0 ? `${cosponsored} cosponsored · ` : ''}119th Congress`
-            : 'Data unavailable'
+            : unavailable
         }
         loading={loading}
       />
@@ -77,7 +83,9 @@ export function GlanceBand({ summary, loading, committeeCount }: GlanceBandProps
         caption={
           raised
             ? `${cycle ? `${cycle} cycle` : 'Latest cycle'}${spent ? ` · ${spent} spent` : ''}`
-            : 'No FEC filings found'
+            : failed
+              ? unavailable
+              : 'No FEC filings found'
         }
         loading={loading}
       />

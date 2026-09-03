@@ -682,17 +682,18 @@ export async function getRepresentativeSummary(bioguideId: string) {
   }
 
   try {
-    // Bills + votes come from the canonical Incumbent Record data so this
-    // summary (KeyStatsBar, trading cards) agrees with the /record page. The
-    // old paths were wrong: getBillsSummary returned 0 for members who had
+    // Bills + votes come from the canonical Incumbent Record functions so this
+    // summary (GlanceBand, share cards) agrees with the /record page. The old
+    // paths were wrong: getBillsSummary returned 0 for members who had
     // sponsored bills, and the vote count was a page-capped fetch (limit 20 →
-    // "20" instead of the true total). getRecordCardData computes both
-    // efficiently (cached, corpus-backed), which also removes the multi-second
-    // per-vote XML fetch this used to do. Finance stays on the batch path —
-    // it carries spent/cashOnHand the record data doesn't expose.
-    const { getRecordCardData } = await import('@/features/record-card/record-card-data');
+    // "20" instead of the true total). Only the headline slice is built here:
+    // the full card's FEC / USASpending / PTR fan-out isn't displayed by any
+    // summary consumer and pushed ten-term members past the 30s function
+    // ceiling (504, nothing cached). Finance stays on the batch path — it
+    // carries spent/cashOnHand the record data doesn't expose.
+    const { getRecordCardHeadline } = await import('@/features/record-card/record-card-data');
     const [recordResult, financeSummary] = await Promise.allSettled([
-      getRecordCardData(bioguideId),
+      getRecordCardHeadline(bioguideId),
       executeBatchRequest({
         bioguideId,
         endpoints: ['finance'],
@@ -706,16 +707,24 @@ export async function getRepresentativeSummary(bioguideId: string) {
         ? financeSummary.value.data.finance
         : null;
 
+    // Raised, spent, cash and the cycle label all come from the same FEC
+    // filing set. Mixing the record card's current-cycle raised figure with
+    // the batch path's matched-cycle spent figure labelled the band "$1.6M
+    // raised · 2024 cycle · $1.8M spent" for one member — two cycles, one label.
+    const finance = financeData as {
+      totalRaised?: number;
+      totalSpent?: number;
+      cashOnHand?: number;
+      metadata?: { matchedCycle?: number };
+    } | null;
     const result = {
       billsSponsored: record?.legislation?.current.introduced ?? 0,
       billsCosponsored: record?.legislation?.current.cosponsored ?? 0,
-      totalRaised:
-        record?.money?.totalRaised ?? (financeData as { totalRaised?: number })?.totalRaised ?? 0,
-      totalSpent: (financeData as { totalSpent?: number })?.totalSpent ?? 0,
-      cashOnHand: (financeData as { cashOnHand?: number })?.cashOnHand ?? 0,
+      totalRaised: finance?.totalRaised ?? 0,
+      totalSpent: finance?.totalSpent ?? 0,
+      cashOnHand: finance?.cashOnHand ?? 0,
       votesParticipated: record?.voting?.stats.cast,
-      financeCycle: (financeData as { metadata?: { matchedCycle?: number } })?.metadata
-        ?.matchedCycle,
+      financeCycle: finance?.metadata?.matchedCycle,
       lastUpdated: new Date().toISOString(),
     };
 

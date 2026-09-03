@@ -85,7 +85,11 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
     validSections: [...REPRESENTATIVE_SECTIONS],
   });
 
-  const { data: summaryResp, isLoading: summaryLoading } = useSWR<ProfileSummaryResponse>(
+  const {
+    data: summaryResp,
+    error: summaryError,
+    isLoading: summaryLoading,
+  } = useSWR<ProfileSummaryResponse>(
     `/api/representative/${representative.bioguideId}/batch?summary=true`,
     fetchJson<ProfileSummaryResponse>,
     { revalidateOnFocus: false, dedupingInterval: 300000 }
@@ -210,6 +214,7 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                 <GlanceBand
                   summary={summary}
                   loading={summaryLoading}
+                  error={Boolean(summaryError)}
                   committeeCount={representative.committees?.length ?? 0}
                 />
               </div>
