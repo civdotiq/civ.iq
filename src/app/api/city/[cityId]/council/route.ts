@@ -66,8 +66,20 @@ function transformMember(record: LegistarOfficeRecord): CouncilMember {
   };
 }
 
+/** Thrown when Legistar itself fails, so the route can answer `unavailable` instead of an empty roster. */
+class LegistarUnavailableError extends Error {
+  constructor(
+    readonly client: string,
+    readonly status: number | null
+  ) {
+    super(`Legistar API unavailable for client "${client}" (HTTP ${status ?? 'n/a'})`);
+    this.name = 'LegistarUnavailableError';
+  }
+}
+
 /**
- * Fetch city council members from Legistar API
+ * Fetch city council members from Legistar API.
+ * Throws LegistarUnavailableError on upstream failure; never returns a silent [].
  */
 async function fetchCouncilMembers(
   cityConfig: LegistarCityConfig,
@@ -99,7 +111,7 @@ async function fetchCouncilMembers(
 
     if (!response.ok) {
       logger.error('Legistar API error', new Error(`HTTP ${response.status}`));
-      return [];
+      throw new LegistarUnavailableError(cityConfig.apiClient, response.status);
     }
 
     const data: LegistarOfficeRecord[] = await response.json();
@@ -124,8 +136,9 @@ async function fetchCouncilMembers(
 
     return members;
   } catch (error) {
+    if (error instanceof LegistarUnavailableError) throw error;
     logger.error('Error fetching council members', error as Error);
-    return [];
+    throw new LegistarUnavailableError(cityConfig.apiClient, null);
   }
 }
 
@@ -144,6 +157,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
+          dataQuality: 'unavailable',
           city: { id: normalizedCityId, name: normalizedCityId, state: '' },
           members: [],
           totalMembers: 0,
@@ -165,6 +179,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: true,
+          dataQuality: members.length > 0 ? 'complete' : 'empty',
           city: { id: cityConfig.id, name: cityConfig.name, state: cityConfig.state },
           members,
           totalMembers: members.length,
@@ -200,6 +215,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: true,
+        dataQuality: members.length > 0 ? 'complete' : 'empty',
         city: {
           id: cityConfig.id,
           name: cityConfig.name,
@@ -221,12 +237,14 @@ export async function GET(
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const upstreamDown = error instanceof LegistarUnavailableError;
 
     logger.error('City council API error', error as Error);
 
     return NextResponse.json(
       {
         success: false,
+        dataQuality: 'unavailable',
         city: { id: '', name: '', state: '' },
         members: [],
         totalMembers: 0,
@@ -235,9 +253,11 @@ export async function GET(
           generatedAt: new Date().toISOString(),
           dataSource: 'legistar.com',
         },
-        error: errorMessage,
+        error: upstreamDown
+          ? `${errorMessage}. Council data is unavailable; an empty roster here does not mean the city has no council.`
+          : errorMessage,
       },
-      { status: 500 }
+      { status: upstreamDown ? 503 : 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

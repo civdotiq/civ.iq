@@ -41,7 +41,7 @@ describe('/api/local-government/[location]', () => {
     expect(data.sourceStatus[0].source).toBe('legistar:boston');
     expect(data.sourceStatus[0].status).toBe('ok');
     expect(data.metadata.note).toContain('/api/city/boston/council');
-    expect(data.pilotCities).toHaveLength(10);
+    expect(data.pilotCities).toHaveLength(5);
   });
 
   it('returns 503 with dataQuality: unavailable for an unsupported location (fakecity-zz)', async () => {
@@ -57,11 +57,11 @@ describe('/api/local-government/[location]', () => {
     expect(data.sourceStatus).toHaveLength(1);
     expect(data.sourceStatus[0].source).toBe('civiq:local-government');
     expect(data.sourceStatus[0].status).toBe('not-configured');
-    expect(data.pilotCities).toHaveLength(10);
-    // The pilot city list should enumerate the 10 supported cities with their endpoints
+    expect(data.pilotCities).toHaveLength(5);
+    // The pilot city list should enumerate the 5 supported cities with their endpoints
     const cityIds = data.pilotCities.map((c: { id: string }) => c.id).sort();
     expect(cityIds).toContain('boston');
-    expect(cityIds).toContain('chicago');
+    expect(cityIds).toContain('seattle');
     expect(data.pilotCities[0]).toHaveProperty('councilEndpoint');
   });
 });
