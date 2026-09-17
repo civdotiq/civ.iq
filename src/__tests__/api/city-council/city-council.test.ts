@@ -72,27 +72,27 @@ describe('/api/city/[cityId]/council', () => {
   });
 
   describe('Success Cases', () => {
-    it('should return council members for supported city (chicago)', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+    it('should return council members for supported city (boston)', async () => {
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.city?.name).toBe('Chicago');
-      expect(data.city?.state).toBe('IL');
+      expect(data.city?.name).toBe('Boston');
+      expect(data.city?.state).toBe('MA');
       expect(data).toHaveProperty('members');
       expect(data).toHaveProperty('totalMembers');
       expect(data).toHaveProperty('activeMembers');
     });
 
     it('should handle case-insensitive city IDs', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/CHICAGO/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'CHICAGO' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/BOSTON/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'BOSTON' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.city?.id).toBe('chicago');
+      expect(data.city?.id).toBe('boston');
     });
 
     it('should return council members for seattle', async () => {
@@ -116,8 +116,8 @@ describe('/api/city/[cityId]/council', () => {
     });
 
     it('should filter active members by default', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -126,9 +126,9 @@ describe('/api/city/[cityId]/council', () => {
 
     it('should return all members when active=false', async () => {
       const request = createMockRequest(
-        'http://localhost:3000/api/city/chicago/council?active=false'
+        'http://localhost:3000/api/city/boston/council?active=false'
       );
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -153,7 +153,7 @@ describe('/api/city/[cityId]/council', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('chicago');
+      expect(data.error).toContain('boston');
       expect(data.error).toContain('seattle');
       expect(data.error).toContain('boston');
     });
@@ -167,28 +167,33 @@ describe('/api/city/[cityId]/council', () => {
         json: () => Promise.resolve({ error: 'Internal error' }),
       });
 
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
+      expect(response.status).toBe(503);
+      expect(data.success).toBe(false);
+      expect(data.dataQuality).toBe('unavailable');
       expect(data.members).toEqual([]);
     });
 
     it('should handle network errors', async () => {
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
+      expect(response.status).toBe(503);
+      expect(data.dataQuality).toBe('unavailable');
       expect(data.members).toEqual([]);
     });
   });
 
   describe('Response Structure', () => {
     it('should include all required fields in response', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(data).toHaveProperty('success');
@@ -200,8 +205,8 @@ describe('/api/city/[cityId]/council', () => {
     });
 
     it('should include city information', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(data.city).toHaveProperty('id');
@@ -210,8 +215,8 @@ describe('/api/city/[cityId]/council', () => {
     });
 
     it('should include metadata with data source', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       expect(data.metadata?.dataSource).toBe('legistar.com');
@@ -219,8 +224,8 @@ describe('/api/city/[cityId]/council', () => {
     });
 
     it('should transform members to expected format', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       if (data.members.length > 0) {
@@ -238,8 +243,8 @@ describe('/api/city/[cityId]/council', () => {
 
   describe('District Extraction', () => {
     it('should extract ward number from body name', async () => {
-      const request = createMockRequest('http://localhost:3000/api/city/chicago/council');
-      const response = await GET(request, { params: Promise.resolve({ cityId: 'chicago' }) });
+      const request = createMockRequest('http://localhost:3000/api/city/boston/council');
+      const response = await GET(request, { params: Promise.resolve({ cityId: 'boston' }) });
       const data = await response.json();
 
       const memberWithWard = data.members.find((m: { district: string | null }) =>
@@ -253,17 +258,26 @@ describe('/api/city/[cityId]/council', () => {
 
   describe('Supported Cities', () => {
     const supportedCities = [
-      { id: 'chicago', name: 'Chicago', state: 'IL' },
       { id: 'seattle', name: 'Seattle', state: 'WA' },
       { id: 'boston', name: 'Boston', state: 'MA' },
       { id: 'denver', name: 'Denver', state: 'CO' },
-      { id: 'austin', name: 'Austin', state: 'TX' },
-      { id: 'portland', name: 'Portland', state: 'OR' },
       { id: 'oakland', name: 'Oakland', state: 'CA' },
-      { id: 'minneapolis', name: 'Minneapolis', state: 'MN' },
-      { id: 'philadelphia', name: 'Philadelphia', state: 'PA' },
       { id: 'detroit', name: 'Detroit', state: 'MI' },
     ];
+
+    const removedCities = ['chicago', 'austin', 'portland', 'minneapolis', 'philadelphia'];
+
+    it.each(removedCities)(
+      'should reject %s (Legistar client offline, removed 2026-09-17)',
+      async id => {
+        const request = createMockRequest(`http://localhost:3000/api/city/${id}/council`);
+        const response = await GET(request, { params: Promise.resolve({ cityId: id }) });
+        const data = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(data.dataQuality).toBe('unavailable');
+      }
+    );
 
     it.each(supportedCities)('should accept $id as a valid city', async ({ id, name, state }) => {
       const request = createMockRequest(`http://localhost:3000/api/city/${id}/council`);

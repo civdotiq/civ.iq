@@ -13,18 +13,18 @@
  *  - docs/COVERAGE.md (public-facing matrix)
  *
  * When a city is added here, update docs/COVERAGE.md in the same change.
+ *
+ * Removed 2026-09-17: chicago, austin, portland, minneapolis, philacity.
+ * Legistar's web API answers HTTP 500 for those clients
+ * ("LegistarConnectionString setting is not set up in InSite"), so the
+ * council route had been returning success:true with an empty roster.
+ * Re-add a city only after `webapi.legistar.com/v1/<client>/OfficeRecords`
+ * returns a roster.
  */
 
 import type { LegistarCityConfig } from '@/types/legistar';
 
 export const CITY_CONFIGS: Record<string, LegistarCityConfig> = {
-  chicago: {
-    id: 'chicago',
-    name: 'Chicago',
-    state: 'IL',
-    apiClient: 'chicago',
-    population: 2746388,
-  },
   seattle: {
     id: 'seattle',
     name: 'Seattle',
@@ -46,40 +46,12 @@ export const CITY_CONFIGS: Record<string, LegistarCityConfig> = {
     apiClient: 'denver',
     population: 715522,
   },
-  austin: {
-    id: 'austin',
-    name: 'Austin',
-    state: 'TX',
-    apiClient: 'austin',
-    population: 978908,
-  },
-  portland: {
-    id: 'portland',
-    name: 'Portland',
-    state: 'OR',
-    apiClient: 'portland',
-    population: 641162,
-  },
   oakland: {
     id: 'oakland',
     name: 'Oakland',
     state: 'CA',
     apiClient: 'oakland',
     population: 433031,
-  },
-  minneapolis: {
-    id: 'minneapolis',
-    name: 'Minneapolis',
-    state: 'MN',
-    apiClient: 'minneapolis',
-    population: 429954,
-  },
-  philadelphia: {
-    id: 'philadelphia',
-    name: 'Philadelphia',
-    state: 'PA',
-    apiClient: 'philacity',
-    population: 1603797,
   },
   detroit: {
     id: 'detroit',

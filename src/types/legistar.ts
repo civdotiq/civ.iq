@@ -12,18 +12,14 @@
  * API Documentation: https://webapi.legistar.com/Help
  */
 
-// Supported cities with open Legistar APIs (no auth required)
-export type LegistarCity =
-  | 'chicago'
-  | 'seattle'
-  | 'boston'
-  | 'denver'
-  | 'austin'
-  | 'portland'
-  | 'oakland'
-  | 'minneapolis'
-  | 'philadelphia'
-  | 'detroit';
+// Supported cities with open Legistar APIs (no auth required).
+// Chicago, Austin, Portland, Minneapolis, and Philadelphia were removed
+// 2026-09-17: their Legistar web API clients return HTTP 500
+// ("LegistarConnectionString setting is not set up in InSite").
+export type LegistarCity = 'seattle' | 'boston' | 'denver' | 'oakland' | 'detroit';
+
+/** Coverage signal for council responses; mirrors BackboneResponse.dataQuality. */
+export type CityCouncilDataQuality = 'complete' | 'empty' | 'unavailable';
 
 // City configuration for API access
 export interface LegistarCityConfig {
@@ -113,6 +109,8 @@ export interface CouncilMember {
 // City council response
 export interface CityCouncilResponse {
   success: boolean;
+  /** 'unavailable' means the upstream failed — do not read an empty members[] as "no council". */
+  dataQuality: CityCouncilDataQuality;
   city: {
     id: string;
     name: string;

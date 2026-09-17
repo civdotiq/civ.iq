@@ -38,21 +38,16 @@ export default function LocalPage() {
 
           {/* Roadmap Notice */}
           <div className="max-w-2xl mx-auto border-2 border-black p-8 mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Pilot Cities (10)</h2>
+            <h2 className="text-2xl font-semibold mb-4">Pilot Cities (5)</h2>
             <p className="text-gray-700 mb-4">
-              Today CIV.IQ supports city council data for ten cities through their open Legistar
-              APIs:
+              Today CIV.IQ supports city council data for five cities: four through their open
+              Legistar APIs, plus Detroit from a hand-verified roster:
             </p>
             <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-gray-700 mb-4 list-disc list-inside">
-              <li>Austin, TX</li>
               <li>Boston, MA</li>
-              <li>Chicago, IL</li>
               <li>Denver, CO</li>
               <li>Detroit, MI</li>
-              <li>Minneapolis, MN</li>
               <li>Oakland, CA</li>
-              <li>Philadelphia, PA</li>
-              <li>Portland, OR</li>
               <li>Seattle, WA</li>
             </ul>
             <p className="text-gray-700 mb-4">
@@ -63,7 +58,9 @@ export default function LocalPage() {
             <p className="text-gray-700 mb-4">
               There is no single API for local government data in the United States. Over 90,000
               local jurisdictions each publish records in different formats, or not at all. CIV.IQ
-              is expanding coverage one city at a time, after verifying each Legistar endpoint.
+              is expanding coverage one city at a time, after verifying each Legistar endpoint. Five
+              earlier pilot cities (Austin, Chicago, Minneapolis, Philadelphia, Portland) were
+              removed in September 2026 when their Legistar APIs stopped answering.
             </p>
             <p className="text-gray-700">
               For everywhere else, use our address search to find your federal and state
