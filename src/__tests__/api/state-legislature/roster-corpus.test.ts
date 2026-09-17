@@ -68,6 +68,31 @@ async function getState(state: string) {
 }
 
 describe('roster corpus', () => {
+  it('serves the roster when the OpenStates daily quota is exhausted (2026-09-17 outage)', async () => {
+    // Production regression: every state returned "temporarily unavailable" while
+    // the corpus roster loaded fine, because the route demanded the OpenStates
+    // session lookup succeed too — and the key was at 5,264 of 1,000/day.
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: () => Promise.resolve('{"detail":"exceeded limit of 1000/day: 5264"}'),
+      json: () => Promise.resolve({ detail: 'exceeded limit of 1000/day: 5264' }),
+    });
+
+    const request = createMockRequest('http://localhost:3000/api/state-legislature/MI');
+    const response = await GET(request, { params: Promise.resolve({ state: 'MI' }) });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.error).toBeUndefined();
+    expect(data.totalCount).toBeGreaterThan(100);
+    expect(data.legislators.length).toBe(data.totalCount);
+    expect(data.session.name).toBe('Session data unavailable');
+    // A daily-quota 429 must not be retried: each retry is another rejected
+    // request that still counts against the quota.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('serves a full roster without calling the OpenStates people endpoint', async () => {
     const { response, data } = await getState('MI');
 
