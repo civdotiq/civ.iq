@@ -9,6 +9,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Googlebot-Image
 Allow: /photos/
@@ -21,6 +23,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: ChatGPT-User
 Allow: /
@@ -32,6 +36,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: ClaudeBot
 Allow: /
@@ -40,6 +46,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Claude-User
 Allow: /
@@ -48,6 +56,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Claude-SearchBot
 Allow: /
@@ -56,6 +66,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: PerplexityBot
 Allow: /
@@ -64,6 +76,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Perplexity-User
 Allow: /
@@ -72,6 +86,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Applebot-Extended
 Allow: /
@@ -80,6 +96,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 User-agent: Google-Extended
 Allow: /
@@ -88,6 +106,8 @@ Allow: /api/representative-photo/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+# State committee pages are rendered from the live OpenStates API (1000 req/day).
+Disallow: /state-legislature/*/committee/
 
 Sitemap: https://civdotiq.org/sitemap.xml
 Sitemap: https://civdotiq.org/sitemap-images.xml

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
+import { cachedFetch, cache } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { ApiErrors } from '@/lib/api/error-responses';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
@@ -101,6 +101,39 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * OpenStates enforces 40/min AND 1000/day. A per-minute 429 is worth a retry;
+ * a daily-quota 429 is not — every retry is another rejected call that still
+ * counts. When the body says the daily limit is gone, remember that until the
+ * quota resets at 00:00 UTC and stop calling OpenStates for the rest of the day.
+ */
+const OPENSTATES_QUOTA_FLAG = 'openstates:daily-quota-exhausted';
+
+function secondsUntilUtcMidnight(): number {
+  const now = new Date();
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Math.max(60, Math.ceil((next - now.getTime()) / 1000));
+}
+
+async function isDailyQuotaExhausted(): Promise<boolean> {
+  try {
+    return (await cache?.get<boolean>(OPENSTATES_QUOTA_FLAG)) === true;
+  } catch {
+    return false;
+  }
+}
+
+async function markDailyQuotaExhausted(detail: string): Promise<void> {
+  logger.warn('OpenStates daily quota exhausted; skipping OpenStates until 00:00 UTC', {
+    detail,
+  });
+  try {
+    await cache?.set(OPENSTATES_QUOTA_FLAG, true, secondsUntilUtcMidnight());
+  } catch {
+    // Flag is an optimisation; failing to store it only costs extra rejected calls.
+  }
+}
+
 // Helper: Retry with exponential backoff for rate limiting
 async function fetchWithRetry(
   url: string,
@@ -115,8 +148,15 @@ async function fetchWithRetry(
         },
       });
 
-      // If rate limited (429), wait and retry
+      // If rate limited (429), wait and retry — unless it is the daily quota,
+      // which no amount of waiting inside one request will restore.
       if (response.status === 429) {
+        const body =
+          typeof response.text === 'function' ? await response.text().catch(() => '') : '';
+        if (/\/day/.test(body)) {
+          await markDailyQuotaExhausted(body.slice(0, 120));
+          return response;
+        }
         const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
         logger.warn('OpenStates rate limit hit, retrying...', {
           attempt: attempt + 1,
@@ -215,6 +255,11 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<StateJurisdi
   // legislative_sessions is opt-in; without the include the response carries no
   // session data at all and every state falls back to a placeholder.
   const jurisdictionUrl = `https://v3.openstates.org/jurisdictions/${stateAbbrev}?include=legislative_sessions`;
+
+  if (await isDailyQuotaExhausted()) {
+    logger.info('Skipping OpenStates jurisdiction lookup: daily quota exhausted', { stateAbbrev });
+    return null;
+  }
 
   const monitor = monitorExternalApi('openstates', 'jurisdiction', jurisdictionUrl);
 
@@ -582,15 +627,26 @@ export async function GET(
           corpusResult ?? (await fetchStateLegislators(stateAbbrev, chamber || undefined));
         const { legislators, complete: rosterComplete } = legislatorResult;
 
-        // EMERGENCY FIX: Never return fake legislators - return empty results with clear message
-        if (!jurisdiction || legislators.length === 0) {
-          logger.warn('OpenStates API unavailable - returning empty results', {
+        // The roster is the product; the session name is decoration. The corpus
+        // roster must be served even when OpenStates (quota, outage) cannot
+        // supply the session — a missing session label is reported as such
+        // below, never by blanking 7,000 legislators. Only an empty roster is
+        // a real failure.
+        if (legislators.length === 0) {
+          logger.warn('No state legislature roster available - returning empty results', {
             state: state.toUpperCase(),
             hasJurisdiction: !!jurisdiction,
             legislatorCount: legislators.length,
-            reason: 'Real state legislature data not available from OpenStates API',
+            reason: 'Neither the roster corpus nor the OpenStates API returned legislators',
           });
-
+        }
+        if (!jurisdiction) {
+          logger.warn('OpenStates jurisdiction unavailable; serving roster without session', {
+            state: state.toUpperCase(),
+            legislatorCount: legislators.length,
+          });
+        }
+        if (legislators.length === 0) {
           // Thrown rather than returned so cachedFetch does not store it.
           // OpenStates allows 40 requests/minute and one roster costs 3-9 of
           // them, so a 429 here is routine and transient — caching the empty
@@ -618,7 +674,7 @@ export async function GET(
 
         // Real session from OpenStates. If it gives us nothing, say so rather
         // than inventing a session name.
-        const currentSession = selectCurrentSession(jurisdiction.legislative_sessions);
+        const currentSession = selectCurrentSession(jurisdiction?.legislative_sessions);
         const sessionStartDate = currentSession?.start_date ?? '';
         const sessionEndDate = currentSession?.end_date ?? '';
 
@@ -678,7 +734,7 @@ export async function GET(
 
         return {
           state: state.toUpperCase(),
-          stateName: metadata?.name || jurisdiction.name || state.toUpperCase(),
+          stateName: metadata?.name || jurisdiction?.name || state.toUpperCase(),
           lastUpdated: new Date().toISOString(),
           isUnicameral: unicameral,
           rosterComplete,

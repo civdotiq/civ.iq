@@ -201,16 +201,19 @@ describe('/api/state-legislature/[state]', () => {
   });
 
   describe('API Error Handling', () => {
-    it('should handle OpenStates API errors gracefully', async () => {
+    it('should serve the corpus roster when OpenStates errors, without a session', async () => {
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
       const request = createMockRequest('http://localhost:3000/api/state-legislature/MI');
       const response = await GET(request, { params: Promise.resolve({ state: 'MI' }) });
       const data = await response.json();
 
-      // API returns 200 with empty data on error (graceful degradation)
+      // The roster comes from the committed corpus, so an OpenStates outage
+      // must not blank it. Only the session label degrades.
       expect(response.status).toBe(200);
-      expect(data.legislators).toEqual([]);
+      expect(data.error).toBeUndefined();
+      expect(data.legislators.length).toBeGreaterThan(100);
+      expect(data.session.name).toBe('Session data unavailable');
     });
 
     it('should handle rate limiting (429) with retry', async () => {
