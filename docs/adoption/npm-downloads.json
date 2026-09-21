@@ -1,36 +1,36 @@
 {
-  "generatedAt": "2026-04-17T19:38:26.038Z",
+  "generatedAt": "2026-09-21T18:23:07.247Z",
   "source": "https://api.npmjs.org/downloads/point/{period}/{package}",
   "packages": [
     {
       "package": "@civiq/civic-statistics",
       "downloads": {
         "last-day": 0,
-        "last-week": 4,
-        "last-month": 64
+        "last-week": 2,
+        "last-month": 19
       },
       "publishedVersion": "0.1.2",
-      "lastRefreshed": "2026-04-17T19:38:26.038Z"
+      "lastRefreshed": "2026-09-21T18:23:07.228Z"
     },
     {
       "package": "@civiq/entity-resolution",
       "downloads": {
         "last-day": 0,
-        "last-week": 3,
-        "last-month": 65
+        "last-week": 7,
+        "last-month": 45
       },
       "publishedVersion": "0.1.2",
-      "lastRefreshed": "2026-04-17T19:38:26.025Z"
+      "lastRefreshed": "2026-09-21T18:23:07.236Z"
     },
     {
       "package": "@civiq/sdk",
       "downloads": {
-        "last-day": 0,
-        "last-week": 4,
-        "last-month": 66
+        "last-day": 7,
+        "last-week": 14,
+        "last-month": 268
       },
-      "publishedVersion": "0.1.1",
-      "lastRefreshed": "2026-04-17T19:38:26.013Z"
+      "publishedVersion": "0.2.0",
+      "lastRefreshed": "2026-09-21T18:23:07.247Z"
     }
   ]
 }
