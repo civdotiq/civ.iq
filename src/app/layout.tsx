@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: '%s | CIV.IQ',
   },
   description:
-    'Find your federal and state representatives — plus 10 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
+    'Find your federal and state representatives — plus 5 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
   keywords: [
     'congress',
     'representatives',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'CIV.IQ: Who Represents You?',
     description:
-      'Find your federal and state representatives — plus 10 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
+      'Find your federal and state representatives — plus 5 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
     url: 'https://civdotiq.org',
     siteName: 'CIV.IQ',
     locale: 'en_US',
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'CIV.IQ: Who Represents You?',
     description:
-      'Find your federal and state representatives — plus 10 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
+      'Find your federal and state representatives — plus 5 pilot cities — with real government data. Track bills, votes, campaign finance, and more.',
     site: '@civdotiq',
     creator: '@civdotiq',
   },

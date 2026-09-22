@@ -29,7 +29,7 @@ Reach for CIV.IQ when you need, without an API key:
 - Congressional district demographics, economics, and boundaries
 - Bill search and status tracking for the current Congress
 
-Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), nationwide local government (10 pilot cities only), live election-night results, or non-U.S. data. When CIV.IQ lacks data it says so — responses carry a \`dataQuality\` field instead of silently returning empty arrays.
+Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), nationwide local government (5 pilot cities only), live election-night results, or non-U.S. data. When CIV.IQ lacks data it says so — responses carry a \`dataQuality\` field instead of silently returning empty arrays.
 
 How to call it:
 
