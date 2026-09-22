@@ -210,6 +210,12 @@ function toProcessedBill(
   };
 }
 
+/** True for bills/resolutions; false for amendments and typeless items,
+ *  which toProcessedBill marks with the 'Unknown' placeholders. */
+export function isBillOrResolution(bill: Pick<ProcessedBill, 'type' | 'number'>): boolean {
+  return bill.type !== 'Unknown' && bill.number !== 'Unknown' && /^\d+$/.test(bill.number);
+}
+
 /** Sponsored walks are uncapped in practice (no sitting member nears 2,000). */
 const SPONSORED_PAGE_CAP = 8;
 
@@ -353,6 +359,15 @@ export async function getComprehensiveBillsByMember(
       fetchSponsoredLegislation(bioguideId, apiKey, congress, limit, page),
       fetchCosponsoredLegislation(bioguideId, apiKey, congress, limit, page),
     ]);
+
+    // Congress.gov mixes amendments (amendmentNumber, no bill type/number)
+    // into sponsored-legislation; they are not bills and have no bill page.
+    if (!includeAmendments) {
+      sponsoredData.bills = sponsoredData.bills.filter(isBillOrResolution);
+      sponsoredData.total = sponsoredData.bills.length;
+      cosponsoredData.bills = cosponsoredData.bills.filter(isBillOrResolution);
+      cosponsoredData.total = cosponsoredData.bills.length;
+    }
 
     // Combine and process bills
     const allBills = [...sponsoredData.bills, ...cosponsoredData.bills];
