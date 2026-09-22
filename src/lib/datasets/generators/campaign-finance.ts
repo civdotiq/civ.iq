@@ -18,6 +18,7 @@ import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { cache } from '@/lib/cache';
 import { reserveFecCall } from '@/lib/fec/fec-rate-limiter';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
+import { getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 export const CAMPAIGN_FINANCE_CACHE_KEY = 'dataset:campaign-finance';
 const CACHE_TTL = 172800; // 48 hours
@@ -114,7 +115,7 @@ async function fetchFECTotals(fecCandidateId: string): Promise<{
   const fecApiKey = process.env.FEC_API_KEY;
   if (!fecApiKey) return null;
 
-  const cycles = [2024, 2022, 2020];
+  const cycles = getRecentElectionCycles(3);
 
   for (const cycle of cycles) {
     try {

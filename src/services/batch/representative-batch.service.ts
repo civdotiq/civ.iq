@@ -11,6 +11,7 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { createLegacyResponse } from '@/services/congress/bill-response-utils';
 import { fecApiService } from '@/lib/fec/fec-api-service';
+import { getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 export interface BatchRequest {
   bioguideId: string;
@@ -402,7 +403,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
           // Call FEC API with the mapped ID — try all cycles concurrently, pick newest with data
           const candidateId = fecMapping.fecId;
-          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018] as const;
+          const FALLBACK_CYCLES = getRecentElectionCycles(4);
 
           let summaryData = null;
           let matchedCycle: number | undefined;

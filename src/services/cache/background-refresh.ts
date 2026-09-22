@@ -12,6 +12,7 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 /**
  * Safely extracts an error message from an unknown error value
@@ -134,7 +135,7 @@ async function refreshRepresentative(
         if (!candidateId) {
           logger.debug(`No FEC mapping for ${bioguideId}, skipping finance cache`);
         } else {
-          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
+          const FALLBACK_CYCLES = getRecentElectionCycles(4);
           for (const cycle of FALLBACK_CYCLES) {
             try {
               const financeData = await fecApiService.getFinancialSummary(candidateId, cycle);

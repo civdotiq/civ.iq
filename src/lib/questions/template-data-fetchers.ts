@@ -36,9 +36,7 @@ import type {
   CommitteeActivityMeeting,
   CommitteeActivityBill,
 } from '@/lib/services/committee-activity.service';
-
-// FEC fallback cycles — most recent completed cycle first
-const FALLBACK_CYCLES = [2024, 2022, 2020] as const;
+import { getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 // Cache TTLs matching API route behavior
 const FINANCE_TTL = 30 * 60; // 30 min (FEC data)
@@ -161,7 +159,7 @@ function wrapInsight<T>(data: T | null): InsightResponse<T> | null {
 }
 
 async function getFinancialSummaryWithFallback(fecId: string) {
-  for (const cycle of FALLBACK_CYCLES) {
+  for (const cycle of getRecentElectionCycles(3)) {
     const summary = await fecApiService.getFinancialSummary(fecId, cycle);
     if (summary) return summary;
   }

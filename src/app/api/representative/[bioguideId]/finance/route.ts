@@ -26,15 +26,10 @@ import {
   categorizeContribution,
 } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
+import { getCurrentElectionCycle, getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 // Current year for cycle calculations
 const CURRENT_YEAR = new Date().getFullYear();
-// Calculate current election cycle (even years only)
-const _CURRENT_CYCLE = CURRENT_YEAR % 2 === 0 ? CURRENT_YEAR : CURRENT_YEAR + 1;
-
-// Election cycles to try in order (most recent first)
-// Using 2024 as primary since that's the most recent completed cycle
-const FALLBACK_CYCLES: [number, ...number[]] = [2024, 2022, 2020, 2018];
 
 /**
  * Determine Senate class and next election year from FEC candidate ID
@@ -241,7 +236,9 @@ export async function GET(
     logger.info('[Finance API] Optimized endpoint called', { bioguideId });
 
     // Check cache first - uses multi-cycle key since we may fallback to older cycles
-    const cacheKey = `finance:${bioguideId}:multi-cycle`;
+    // v2: entries under the old key were built from a hardcoded 2024-first
+    // cycle list and hold up to 30 days; the new key stops them serving.
+    const cacheKey = `finance:${bioguideId}:multi-cycle-v2`;
     const cached = await govCache.get<FinanceResponse>(cacheKey);
 
     if (cached) {
@@ -302,7 +299,7 @@ export async function GET(
           overallDataConfidence: 'low',
         },
         candidateId: '',
-        cycle: 2024,
+        cycle: getCurrentElectionCycle(),
         lastUpdated: new Date().toISOString(),
         fecDataSources: {
           financialSummary: 'No FEC mapping available',
@@ -351,8 +348,10 @@ export async function GET(
 
     // MULTI-CYCLE FALLBACK: Try cycles in order until data is found
     // This ensures Senators not up for re-election still show their last campaign data
+    // Current cycle first; older cycles only when the member has no filings in it.
+    const FALLBACK_CYCLES = getRecentElectionCycles(4);
     let financialSummary = null;
-    let dataFromCycle = FALLBACK_CYCLES[0]; // Start with most recent (2024)
+    let dataFromCycle = FALLBACK_CYCLES[0];
     const requestedCycle = FALLBACK_CYCLES[0];
 
     for (const cycle of FALLBACK_CYCLES) {
