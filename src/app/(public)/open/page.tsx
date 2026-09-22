@@ -109,8 +109,9 @@ const ENDPOINTS: {
   {
     method: 'GET',
     path: '/bills/{billId}/summary',
-    description: 'Cached plain-language bill summary',
-    example: '/bills/119-hr-1/summary',
+    // No example link: this route only serves summaries already in cache and
+    // answers 404 otherwise, so no bill ID is a reliably live example.
+    description: 'Cached plain-language bill summary (404 until one has been generated)',
   },
   {
     method: 'GET',
