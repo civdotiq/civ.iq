@@ -80,7 +80,7 @@ async function warmIntelligenceCache() {
             redis.get(`insight:finance_jurisdiction:${bioguideId}`),
             redis.get(`insight:vote_finance:${bioguideId}`),
             redis.get(`insight:vote_prediction:${bioguideId}`),
-            redis.get(`insight:influence_chain:${bioguideId}`),
+            redis.get(`insight:influence_chain:v2:${bioguideId}`),
           ]);
           if (cached.every(c => c !== null)) {
             skipped++;

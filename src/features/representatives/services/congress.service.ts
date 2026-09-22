@@ -389,6 +389,20 @@ export interface CongressCommittee {
 }
 
 /**
+ * Resolve a subcommittee thomas_id ("HSHM09" = parent "HSHM" + sub "09") to
+ * "Subcommittee on <name>", or null when it isn't a known subcommittee.
+ */
+export function subcommitteeName(committees: CongressCommittee[], thomasId: string): string | null {
+  const match = /^([A-Z]+)(\d+)$/.exec(thomasId);
+  if (!match) return null;
+  const [, parentId, subId] = match;
+  const sub = committees
+    .find(c => c.thomas_id === parentId)
+    ?.subcommittees?.find(s => s.thomas_id === subId);
+  return sub ? `Subcommittee on ${sub.name}` : null;
+}
+
+/**
  * Fetch current legislators data
  */
 async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
@@ -836,10 +850,14 @@ export async function getEnhancedRepresentative(
         ?.map(membership => {
           const committee = committees.find(c => c.thomas_id === membership.thomas_id);
           return {
-            // Subcommittees are absent from the parent-committee roster, so fall
-            // back to the thomas_id → name map rather than showing the raw code
-            // (e.g. "SSEV09" → "Subcommittee on Clean Air, Climate, ...").
-            name: committee?.name || getCommitteeName(membership.thomas_id),
+            // Subcommittees ("HSHM09") are nested under their parent committee
+            // in committees-current.yaml. Resolve the real subcommittee name;
+            // the thomas_id map falls back to the PARENT's name, which listed
+            // subcommittee seats as duplicate full-committee seats.
+            name:
+              committee?.name ||
+              subcommitteeName(committees, membership.thomas_id) ||
+              getCommitteeName(membership.thomas_id),
             role: membership.title || 'Member',
             thomas_id: membership.thomas_id,
             // The thomas_id is the site-wide committee URL key; membership

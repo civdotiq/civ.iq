@@ -14,6 +14,7 @@ interface GlanceBandProps {
   /** The summary request failed (timeout, 5xx). Distinct from "no data". */
   error?: boolean;
   committeeCount: number;
+  subcommitteeCount?: number;
 }
 
 interface GlanceCellProps {
@@ -47,7 +48,13 @@ function GlanceCell({ label, value, caption, loading }: GlanceCellProps) {
  * At-a-glance stat band. Numbers come from real Congress.gov / FEC data;
  * cells show "Data unavailable" rather than ever inventing a figure.
  */
-export function GlanceBand({ summary, loading, error, committeeCount }: GlanceBandProps) {
+export function GlanceBand({
+  summary,
+  loading,
+  error,
+  committeeCount,
+  subcommitteeCount = 0,
+}: GlanceBandProps) {
   // A failed request is not evidence of absence: never tell the citizen
   // "No FEC filings found" because our own endpoint timed out.
   const failed = Boolean(error) && !summary;
@@ -93,7 +100,13 @@ export function GlanceBand({ summary, loading, error, committeeCount }: GlanceBa
       <GlanceCell
         label="Committees"
         value={committeeCount > 0 ? String(committeeCount) : '—'}
-        caption={committeeCount > 0 ? 'Current assignments' : 'Data unavailable'}
+        caption={
+          committeeCount > 0
+            ? subcommitteeCount > 0
+              ? `Plus ${subcommitteeCount} subcommittee${subcommitteeCount === 1 ? '' : 's'}`
+              : 'Current assignments'
+            : 'Data unavailable'
+        }
         loading={false}
       />
     </div>
