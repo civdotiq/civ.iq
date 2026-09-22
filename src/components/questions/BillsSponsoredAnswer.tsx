@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import { parseBillSlug } from '@/lib/data/route-slugs';
 
 interface BillItem {
   id: string;
@@ -48,8 +49,13 @@ const BILL_TYPE_LABEL: Record<string, string> = {
  * Congress.gov, which is NOT a valid route param on its own and 404s, so the
  * link must be assembled from congress + type + number.
  */
-function billHref(bill: Pick<BillItem, 'congress' | 'type' | 'number'>): string {
-  return `/bill/${bill.congress}-${(bill.type ?? '').toLowerCase()}-${bill.number}`;
+function billHref(bill: Pick<BillItem, 'congress' | 'type' | 'number'>): string | null {
+  // Items without a real bill type/number (e.g. amendments, which Congress.gov
+  // mixes into sponsored-legislation) have no bill page — render plain text.
+  const parsed = parseBillSlug(
+    `${bill.congress}-${(bill.type ?? '').toLowerCase()}-${bill.number}`
+  );
+  return parsed.kind === 'invalid' ? null : `/bill/${parsed.canonical}`;
 }
 
 function formatBillLabel(bill: Pick<BillItem, 'type' | 'number'>): string {
@@ -118,12 +124,20 @@ function SponsoredBillsPod({ bills }: { bills: BillItem[] }) {
           <li key={bill.id} className="py-2 first:pt-0 last:pb-0">
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0 flex-1">
-                <Link
-                  href={billHref(bill)}
-                  className="type-sm text-[#3ea2d4] hover:underline line-clamp-1"
-                >
-                  {formatBillLabel(bill)}: {bill.title}
-                </Link>
+                {(() => {
+                  const href = billHref(bill);
+                  const label = `${formatBillLabel(bill)}: ${bill.title}`;
+                  return href ? (
+                    <Link
+                      href={href}
+                      className="type-sm text-[#3ea2d4] hover:underline line-clamp-1"
+                    >
+                      {label}
+                    </Link>
+                  ) : (
+                    <span className="type-sm text-black line-clamp-1">{label}</span>
+                  );
+                })()}
                 <p className="type-xs text-gray-500 mt-0.5">
                   {new Date(bill.introducedDate).toLocaleDateString('en-US', {
                     month: 'short',

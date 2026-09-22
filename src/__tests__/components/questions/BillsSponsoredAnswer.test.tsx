@@ -174,6 +174,25 @@ describe('BillsSponsoredAnswer', () => {
       const link = screen.getByRole('link', { name: /HUD Data Privacy Act/ });
       expect(link).toHaveAttribute('href', '/bill/119-hr-8814');
     });
+
+    it('renders plain text, not a /bill/119-unknown-Unknown link, for typeless items', () => {
+      // Regression: amendments in Congress.gov's sponsored-legislation feed
+      // carry no bill type/number and produced /bill/119-unknown-Unknown (404).
+      const bills: Bill[] = [
+        makeBill({
+          id: 'unknown-1',
+          number: 'Unknown',
+          type: 'Unknown',
+          title: 'Title not available',
+          relationship: 'sponsored',
+        }),
+      ];
+
+      render(<BillsSponsoredAnswer bills={bills} sponsoredCount={1} cosponsoredCount={0} />);
+
+      expect(screen.queryByRole('link', { name: /Title not available/ })).not.toBeInTheDocument();
+      expect(screen.getByText(/Title not available/)).toBeInTheDocument();
+    });
   });
 
   describe('status labels', () => {

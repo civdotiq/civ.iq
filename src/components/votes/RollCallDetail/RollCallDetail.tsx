@@ -14,6 +14,7 @@ import {
 } from '@/components/cq';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { VoteFooter } from '@/components/seo/VoteFooter';
+import { voteMeasureBillHref } from '@/lib/votes/vote-links';
 import { MemberGrid } from './MemberGrid';
 import type { PartyTally, RollCallDetailData } from './types';
 
@@ -180,11 +181,7 @@ function buildPlainReading(data: RollCallDetailData): string {
 function billLink(data: RollCallDetailData): string | null {
   const bill = data.vote.bill;
   if (!bill?.number) return null;
-  const billType =
-    bill.type?.toLowerCase().replace(/\./g, '') || (data.vote.chamber === 'House' ? 'hr' : 's');
-  const billNumber = bill.number.replace(/[^\d]/g, '');
-  if (!billNumber) return null;
-  return `/bill/${data.vote.congress}-${billType}-${billNumber}`;
+  return voteMeasureBillHref(data.vote.congress, data.vote.chamber, bill.type, bill.number);
 }
 
 export function RollCallDetail({ data }: RollCallDetailProps) {
