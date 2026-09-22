@@ -69,7 +69,7 @@ const COVERAGE: ReadonlyArray<{
   },
   {
     scope: 'Local',
-    body: '10 pilot cities via Legistar — Austin, Boston, Chicago, Denver, Detroit, Minneapolis, Oakland, Philadelphia, Portland, Seattle. Outside this list, local routes return "data unavailable" rather than empty arrays.',
+    body: '5 pilot cities via Legistar — Boston, Denver, Detroit, Oakland, Seattle. Outside this list, local routes return "data unavailable" rather than empty arrays.',
     status: 'partial',
   },
 ] as const;

@@ -271,8 +271,8 @@ export default function StateDistrictBoundaryMap({
               'source-layer': layerName,
               filter: currentDistrictFilter,
               paint: {
-                'fill-color': '#3b82f6',
-                'fill-opacity': 0.3,
+                'fill-color': '#000000',
+                'fill-opacity': 0.12,
               },
             });
 
@@ -284,7 +284,7 @@ export default function StateDistrictBoundaryMap({
               'source-layer': layerName,
               filter: currentDistrictFilter,
               paint: {
-                'line-color': '#1e40af',
+                'line-color': '#000000',
                 'line-width': 3,
               },
             });

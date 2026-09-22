@@ -24,7 +24,7 @@ const SHORTCUTS: ReadonlyArray<{
     href: '/',
     eyebrow: 'Officials',
     title: 'Find your representative',
-    body: 'Enter your full street address. Returns federal and state officials, plus 10 pilot cities for local government.',
+    body: 'Enter your full street address. Returns federal and state officials, plus 5 pilot cities for local government.',
   },
   {
     href: '/legislation',
@@ -43,70 +43,22 @@ const SHORTCUTS: ReadonlyArray<{
 export function NotFoundHybrid() {
   return (
     <div
+      className="px-4 pt-8 pb-14 sm:px-9"
       style={{
         background: 'var(--bg1)',
         color: 'var(--fg1)',
         fontFamily: 'var(--font-primary)',
-        padding: '32px 36px 56px',
         maxWidth: 1280,
         margin: '0 auto',
       }}
     >
-      {/* Crumb rail */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 14,
-          marginBottom: 20,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            gap: 10,
-            fontSize: 11,
-            fontFamily: 'var(--font-mono)',
-            color: 'var(--fg3)',
-            letterSpacing: 'var(--tracking-label)',
-            textTransform: 'uppercase',
-          }}
-        >
-          <span>Error</span>
-          <span aria-hidden="true">›</span>
-          <span style={{ color: 'var(--fg1)' }}>404</span>
-          <span aria-hidden="true">›</span>
-          <span>Not in record</span>
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            fontFamily: 'var(--font-mono)',
-            color: 'var(--fg3)',
-            letterSpacing: 'var(--tracking-label)',
-            textTransform: 'uppercase',
-          }}
-        >
-          Ref · 404-NTREC
-        </div>
-      </div>
-
       {/* Black file-stamp hero */}
       <div
-        style={{
-          background: '#000',
-          color: '#fff',
-          padding: '48px 56px',
-          border: '2px solid #000',
-          display: 'grid',
-          gridTemplateColumns: '180px minmax(0, 1fr)',
-          gap: 40,
-          alignItems: 'center',
-        }}
+        className="grid grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)] gap-10 items-center p-6 sm:px-14 sm:py-12"
+        style={{ background: '#000', color: '#fff', border: '2px solid #000' }}
       >
         <div
+          className="hidden md:block"
           style={{
             width: 180,
             height: 180,
@@ -164,25 +116,13 @@ export function NotFoundHybrid() {
           </div>
         </div>
         <div>
-          <div
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              color: 'var(--civiq-blue)',
-              letterSpacing: 'var(--tracking-label)',
-              textTransform: 'uppercase',
-              fontWeight: 700,
-            }}
-          >
-            File · 404-NTREC · CIV.IQ documentation
-          </div>
           <h1
+            className="text-4xl sm:text-6xl"
             style={{
-              fontSize: 64,
               fontWeight: 700,
               letterSpacing: 'var(--tracking-display)',
               lineHeight: 0.95,
-              margin: '10px 0 14px',
+              margin: '0 0 14px',
               textTransform: 'uppercase',
               color: '#fff',
             }}
@@ -245,22 +185,17 @@ export function NotFoundHybrid() {
         <CqLabel as="div" style={{ marginBottom: 8 }}>
           <span id="shortcuts">Try one of these</span>
         </CqLabel>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            border: '2px solid var(--ink)',
-          }}
-        >
-          {SHORTCUTS.map((s, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ border: '2px solid var(--ink)' }}>
+          {SHORTCUTS.map(s => (
             <Link
               key={s.title}
               href={s.href}
+              className="border-b md:border-b-0 md:border-r last:border-0"
               style={{
                 padding: '24px 22px',
                 textDecoration: 'none',
                 color: 'var(--fg1)',
-                borderRight: i < SHORTCUTS.length - 1 ? '1px solid var(--line)' : 0,
+                borderColor: 'var(--line)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 10,

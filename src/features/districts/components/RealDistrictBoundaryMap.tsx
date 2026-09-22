@@ -267,8 +267,8 @@ export function RealDistrictBoundaryMap({
         type: 'fill',
         source: 'district-boundary',
         paint: {
-          'fill-color': '#3b82f6',
-          'fill-opacity': 0.3,
+          'fill-color': '#000000',
+          'fill-opacity': 0.12,
         },
       });
 
@@ -278,14 +278,14 @@ export function RealDistrictBoundaryMap({
         type: 'line',
         source: 'district-boundary',
         paint: {
-          'line-color': '#1d4ed8',
+          'line-color': '#000000',
           'line-width': 3,
         },
       });
 
       // Add district centroid marker
       const _marker = new (await import('maplibre-gl')).default.Marker({
-        color: '#dc2626',
+        color: '#000000',
       })
         .setLngLat(district.centroid)
         .setPopup(

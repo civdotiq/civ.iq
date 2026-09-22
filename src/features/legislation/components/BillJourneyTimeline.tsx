@@ -7,6 +7,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { formatDateOnly } from '@/lib/utils/date-only';
 import {
   FileText,
   Users,
@@ -263,84 +264,8 @@ export function BillJourneyTimeline({
       <h3 className="text-lg font-semibold text-gray-900 mb-2">Bill Journey</h3>
       {chamber && <p className="text-sm text-gray-500 mb-4">Originated in the {chamber}</p>}
 
-      {/* Horizontal Timeline for Desktop */}
-      <div className="hidden md:block">
-        <div className="relative">
-          {/* Progress Bar */}
-          <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200">
-            <div
-              className="h-full bg-civiq-blue transition-all duration-500"
-              style={{
-                width: `${(stages.filter(s => s.status === 'completed' || s.status === 'current').length / stages.length) * 100}%`,
-              }}
-            />
-          </div>
-
-          {/* Stages */}
-          <div className="relative flex justify-between">
-            {stages.map(stage => {
-              const Icon = stage.icon;
-              const isCompleted = stage.status === 'completed';
-              const isCurrent = stage.status === 'current';
-              const isFailed = stage.status === 'failed';
-
-              return (
-                <div
-                  key={stage.stage}
-                  className="flex flex-col items-center"
-                  style={{ width: `${100 / stages.length}%` }}
-                >
-                  {/* Icon Circle */}
-                  <div
-                    className={`
-                      relative z-10 w-10 h-10 flex items-center justify-center
-                      border-2 transition-all duration-300
-                      ${
-                        isCompleted
-                          ? 'bg-civiq-blue border-civiq-blue text-white'
-                          : isCurrent
-                            ? 'bg-white border-civiq-blue text-civiq-blue ring-4 ring-civiq-blue/20'
-                            : isFailed
-                              ? 'bg-civiq-red border-civiq-red text-white'
-                              : 'bg-white border-gray-300 text-gray-400'
-                      }
-                    `}
-                    title={stage.description}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-
-                  {/* Label */}
-                  <div className="mt-3 text-center">
-                    <p
-                      className={`text-xs font-medium ${
-                        isCompleted || isCurrent
-                          ? 'text-gray-900'
-                          : isFailed
-                            ? 'text-civiq-red'
-                            : 'text-gray-400'
-                      }`}
-                    >
-                      {stage.shortLabel}
-                    </p>
-                    {stage.date && (
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {new Date(stage.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Vertical Timeline for Mobile */}
-      <div className="md:hidden">
+      {/* Vertical timeline: the card sits in a narrow sidebar, so stages stack */}
+      <div>
         <div className="relative">
           {/* Vertical Line */}
           <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200" />
@@ -365,7 +290,7 @@ export function BillJourneyTimeline({
                           : isCurrent
                             ? 'bg-white border-civiq-blue text-civiq-blue ring-4 ring-civiq-blue/20'
                             : isFailed
-                              ? 'bg-civiq-red border-civiq-red text-white'
+                              ? 'bg-black border-black text-white'
                               : 'bg-white border-gray-300 text-gray-400'
                       }
                     `}
@@ -380,7 +305,7 @@ export function BillJourneyTimeline({
                         isCompleted || isCurrent
                           ? 'text-gray-900'
                           : isFailed
-                            ? 'text-civiq-red'
+                            ? 'text-gray-900 font-bold'
                             : 'text-gray-400'
                       }`}
                     >
@@ -388,7 +313,7 @@ export function BillJourneyTimeline({
                     </p>
                     {stage.date && (
                       <p className="text-xs text-gray-500">
-                        {new Date(stage.date).toLocaleDateString('en-US', {
+                        {formatDateOnly(stage.date, {
                           month: 'long',
                           day: 'numeric',
                           year: 'numeric',

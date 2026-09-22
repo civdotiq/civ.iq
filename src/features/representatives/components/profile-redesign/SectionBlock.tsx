@@ -25,9 +25,9 @@ interface SectionBlockProps {
 export function SectionBlock({ id, title, action, source, children }: SectionBlockProps) {
   return (
     <section id={id} className="border-2 border-black bg-white mb-8 scroll-mt-16">
-      <div className="flex items-baseline justify-between gap-4 px-6 py-4 border-b border-gray-300">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-6 py-4 border-b border-gray-300">
         <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        {action && <div className="text-sm font-medium shrink-0">{action}</div>}
+        {action && <div className="text-sm font-medium">{action}</div>}
       </div>
       <div className="p-6">{children}</div>
       {source && (

@@ -1880,12 +1880,13 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
     }
 
     // Calculate years in office
+    // Terms are not guaranteed oldest-first, so use the earliest start year
     const currentYear = new Date().getFullYear();
-    const firstTerm =
-      representative.terms && representative.terms.length > 0
-        ? representative.terms[0]
-        : { startYear: currentYear.toString() };
-    const yearsInOffice = currentYear - parseInt(firstTerm?.startYear || currentYear.toString());
+    const startYears = (representative.terms ?? [])
+      .map(term => parseInt(term.startYear ?? '', 10))
+      .filter(year => !Number.isNaN(year));
+    const firstYear = startYears.length > 0 ? Math.min(...startYears) : currentYear;
+    const yearsInOffice = currentYear - firstYear;
 
     // Cook PVI data requires specialized political analysis
     const cookPVI = 'Data unavailable';
@@ -1991,9 +1992,11 @@ export async function GET(
     logger.info('District details API request', { districtId });
 
     const district = await cachedFetch(
-      `district-details-${districtId}`,
+      `district-details-v2-${districtId}`,
       () => getDistrictDetails(districtId),
-      15552000000 // 6 months - demographics change annually, districts rarely change
+      // Seconds. Was 15552000000 (a ms value) → clamped to 90 days; the payload
+      // also carries the representative, so keep it to a week.
+      7 * 24 * 60 * 60
     );
 
     if (!district) {

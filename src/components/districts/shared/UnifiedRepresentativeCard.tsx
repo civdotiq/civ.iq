@@ -127,9 +127,10 @@ export default function UnifiedRepresentativeCard({
               </span>
 
               {/* Years in Office (federal only) */}
-              {isFederal && representative.yearsInOffice && (
+              {isFederal && !!representative.yearsInOffice && (
                 <span className="text-sm text-gray-500">
-                  {representative.yearsInOffice} years in office
+                  {representative.yearsInOffice}{' '}
+                  {representative.yearsInOffice === 1 ? 'year' : 'years'} in office
                 </span>
               )}
             </div>
