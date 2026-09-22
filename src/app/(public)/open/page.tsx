@@ -200,7 +200,11 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
     description: 'Employment, economic indicators',
   },
   { name: 'CDC Open Data', url: 'https://data.cdc.gov', description: 'Public health statistics' },
-  { name: 'Dept. of Education', url: 'https://api.ed.gov', description: 'School district data' },
+  {
+    name: 'Dept. of Education (College Scorecard)',
+    url: 'https://collegescorecard.ed.gov/data/api/',
+    description: 'Higher-education outcomes',
+  },
   { name: 'FCC Open Data', url: 'https://opendata.fcc.gov', description: 'Broadband deployment' },
   { name: 'OpenStates', url: 'https://openstates.org', description: 'State legislature data' },
   {
