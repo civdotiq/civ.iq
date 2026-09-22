@@ -21,22 +21,14 @@ import type { Hospital, NursingHome } from '@/types/cms';
 // CMS DKAN query endpoint
 const CMS_QUERY_BASE = 'https://data.cms.gov/provider-data/api/1/datastore/query';
 
-// Distribution UUIDs (not dataset UUIDs — CMS DKAN requires these).
-// CMS rotates these when datasets are republished; the previous pair
-// (ae3f2207… / 70aaea3b…) began returning HTTP 400 "No datastore storage
-// found". Re-resolved from the DKAN metastore on 2026-05-30:
-//   Hospital General Information → b0a92ff7…
-//   Nursing-home "Provider Information" → 588f22e8…
+// Stable dataset ids, queried as `{datasetId}/0` (the dataset's first
+// distribution). CMS rotates distribution UUIDs every time it republishes a
+// dataset; hardcoded distribution UUIDs went dead twice (2026-05, 2026-09) and
+// each time every query 404'd. The dataset-id path follows the republish.
 // Note: CMS dropped the *_national_comparison columns from Hospital General
 // Information — transformHospital() degrades those to null (data unavailable).
-const HOSPITAL_DIST_UUID = 'b0a92ff7-a457-54f9-b247-20022db14590';
-// Distribution UUID for "Provider Information" (dataset 4pq5-n9py). CMS rotates
-// these when a dataset is republished, and the previous value had gone dead:
-// every query returned HTTP 400 "No datastore storage found", which this service
-// caught and returned as an empty array, so nursing home counts read 0
-// nationwide rather than reporting an outage. Re-resolve from
-// /provider-data/api/1/metastore/schemas/dataset/items/4pq5-n9py if that recurs.
-const NURSING_HOME_DIST_UUID = '315891b3-d3ad-55e5-b495-6397e2fa657a';
+const HOSPITAL_DATASET_ID = 'xubh-q36u'; // Hospital General Information
+const NURSING_HOME_DATASET_ID = '4pq5-n9py'; // Nursing home "Provider Information"
 
 const MIN_REQUEST_INTERVAL_MS = 200;
 let lastRequestTime = 0;
@@ -68,7 +60,7 @@ function parseNationalComparison(value: string | undefined | null): string | nul
 
 /** Build CMS DKAN query URL with conditions */
 function buildQueryUrl(
-  distUuid: string,
+  datasetId: string,
   conditions: Array<{ property: string; value: string }>,
   limit: number
 ): string {
@@ -85,7 +77,7 @@ function buildQueryUrl(
     params.set(`conditions[${i}][operator]`, '=');
   }
 
-  return `${CMS_QUERY_BASE}/${distUuid}?${params.toString()}`;
+  return `${CMS_QUERY_BASE}/${datasetId}/0?${params.toString()}`;
 }
 
 // Raw record type from DKAN query (field names differ from Socrata)
@@ -205,7 +197,7 @@ export class CmsProviderService {
    */
   async searchHospitalsWithTotal(state: string, city?: string): Promise<CountedResult<Hospital>> {
     const stateUpper = state.toUpperCase();
-    const cacheKey = `cms-hospitals-ct:${stateUpper}:${city ?? ''}`;
+    const cacheKey = `cms-hospitals-ct2:${stateUpper}:${city ?? ''}`;
 
     try {
       return await cachedFetch(
@@ -218,14 +210,14 @@ export class CmsProviderService {
             conditions.push({ property: 'citytown', value: city.toUpperCase() });
           }
 
-          const url = buildQueryUrl(HOSPITAL_DIST_UUID, conditions, 200);
+          const url = buildQueryUrl(HOSPITAL_DATASET_ID, conditions, 200);
           logger.info('CMS hospital search', { state: stateUpper, city });
 
           const response = await rateLimitedFetch(url);
-          if (!response.ok) {
-            if (response.status === 404) return { items: [], totalAvailable: 0 };
-            throw new Error(`CMS API returned ${response.status}`);
-          }
+          // Any non-OK status, 404 included, is an outage. A 404 here means the
+          // dataset path is wrong, not that the state has zero facilities, so
+          // it must not be cached as a count of 0.
+          if (!response.ok) throw new Error(`CMS API returned ${response.status}`);
 
           const data = await response.json();
           const results: RawHospitalDkan[] = data.results ?? [];
@@ -260,7 +252,7 @@ export class CmsProviderService {
     city?: string
   ): Promise<CountedResult<NursingHome>> {
     const stateUpper = state.toUpperCase();
-    const cacheKey = `cms-nursing-homes-ct:${stateUpper}:${city ?? ''}`;
+    const cacheKey = `cms-nursing-homes-ct2:${stateUpper}:${city ?? ''}`;
 
     try {
       return await cachedFetch(
@@ -273,14 +265,14 @@ export class CmsProviderService {
             conditions.push({ property: 'citytown', value: city.toUpperCase() });
           }
 
-          const url = buildQueryUrl(NURSING_HOME_DIST_UUID, conditions, 200);
+          const url = buildQueryUrl(NURSING_HOME_DATASET_ID, conditions, 200);
           logger.info('CMS nursing home search', { state: stateUpper, city });
 
           const response = await rateLimitedFetch(url);
-          if (!response.ok) {
-            if (response.status === 404) return { items: [], totalAvailable: 0 };
-            throw new Error(`CMS API returned ${response.status}`);
-          }
+          // Any non-OK status, 404 included, is an outage. A 404 here means the
+          // dataset path is wrong, not that the state has zero facilities, so
+          // it must not be cached as a count of 0.
+          if (!response.ok) throw new Error(`CMS API returned ${response.status}`);
 
           const data = await response.json();
           const results: RawNursingHomeDkan[] = data.results ?? [];

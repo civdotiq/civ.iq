@@ -260,14 +260,11 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'nih:*',
   },
   {
-    // Verified 2026-05-30: CMS rotated the Hospital General Information (xubh-q36u)
-    // distribution UUID — old ae3f2207-... now 400s ("No datastore storage found").
-    // Current UUID is b0a92ff7-... NOTE: cms-provider-service.ts still hardcodes
-    // the stale UUID and is itself broken upstream — fix the service separately.
+    // Probe the stable dataset-id path, the same one cms-provider-service.ts
+    // queries. Distribution UUIDs rotate on every CMS republish.
     name: 'CMS',
     tier: 'standard',
-    probeUrl:
-      'https://data.cms.gov/provider-data/api/1/datastore/query/b0a92ff7-a457-54f9-b247-20022db14590?limit=1',
+    probeUrl: 'https://data.cms.gov/provider-data/api/1/datastore/query/xubh-q36u/0?limit=1',
     staleTtlHours: 720,
     cacheKeyPattern: 'cms:*',
   },
