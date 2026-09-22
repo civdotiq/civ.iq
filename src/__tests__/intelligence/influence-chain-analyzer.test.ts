@@ -365,7 +365,7 @@ describe('analyzeInfluenceChains', () => {
 
     const setCalls = mockRedisSet.mock.calls;
     const insightCall = setCalls.find(
-      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:${BIO_ID}`
+      (call: unknown[]) => (call[0] as string) === `insight:influence_chain:v2:${BIO_ID}`
     );
 
     if (insightCall) {

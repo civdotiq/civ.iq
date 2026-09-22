@@ -188,7 +188,7 @@ const DISCLAIMER =
 export async function analyzeInfluenceChains(
   bioguideId: string
 ): Promise<InfluenceChainInsight | null> {
-  const cacheKey = `insight:influence_chain:${bioguideId}`;
+  const cacheKey = `insight:influence_chain:v2:${bioguideId}`;
 
   // 1. Check cache
   try {
@@ -312,7 +312,7 @@ async function computeAndCache(
   });
 
   // 9. Generate narrative
-  const { narrative, source } = await generateNarrative(rep, chains, peer);
+  const { narrative, source } = await generateNarrative(rep, chains, peer, totalDetected);
 
   const sc = new SourceCollector();
   sc.add(
@@ -1147,7 +1147,9 @@ function orgLevelTotals(chains: InfluenceChain[]): {
 async function generateNarrative(
   rep: RepData,
   chains: InfluenceChain[],
-  peer: PeerComparison | null
+  peer: PeerComparison | null,
+  // `chains` is capped at MAX_CHAINS; the narrative must report the real total.
+  totalDetected: number
 ): Promise<{ narrative: string; source: 'ai-generated' | 'statistical-fallback' }> {
   const systemContext =
     'You analyze civic data for CIV.IQ. You describe factual patterns in lobbying, ' +
@@ -1160,10 +1162,12 @@ async function generateNarrative(
   const topChainLines = chains
     .slice(0, 5)
     .map(
+      // Spell out who spent and who received: terse "org: $X lobbying" lines
+      // led the model to write that the legislator received or reported it.
       c =>
-        `- ${c.organization}: $${c.lobbyingSpending.toLocaleString()} lobbying, ` +
-        `$${c.contributionAmount.toLocaleString()} contributions, ` +
-        `voted ${c.vote} on ${c.billId} (confidence: ${(c.chainConfidence * 100).toFixed(0)}%)`
+        `- ${c.organization} reported spending $${c.lobbyingSpending.toLocaleString()} on lobbying; ` +
+        `people and PACs linked to it gave $${c.contributionAmount.toLocaleString()} to ${rep.name}'s campaign; ` +
+        `${rep.name} voted ${c.vote} on ${c.billId} (confidence: ${(c.chainConfidence * 100).toFixed(0)}%)`
     )
     .join('\n');
 
@@ -1174,9 +1178,9 @@ async function generateNarrative(
     : 'No peer comparison available yet (insufficient data from other members).';
 
   const userPrompt = `LEGISLATOR: ${rep.name} (${rep.party}-${rep.state}), ${rep.chamber}
-INFLUENCE CHAINS DETECTED: ${chains.length}
+INFLUENCE CHAINS DETECTED: ${totalDetected} (the ${chains.length} strongest are listed below)
 UNIQUE ORGANIZATIONS: ${uniqueOrgs.length}
-TOTAL LOBBYING SPENDING: $${totalLobbyingSpending.toLocaleString()}
+TOTAL LOBBYING SPENDING BY THESE ORGANIZATIONS (not received by the legislator): $${totalLobbyingSpending.toLocaleString()}
 TOTAL EMPLOYEE CONTRIBUTIONS: $${totalContributions.toLocaleString()}
 AVERAGE CHAIN CONFIDENCE: ${(avgConfidence * 100).toFixed(1)}%
 
@@ -1187,9 +1191,12 @@ ${peerLine}
 
 Write a 2-3 sentence plain-language summary. Describe the patterns found between lobbying activity, campaign contributions, and voting records. If peer comparison is available, note how this legislator compares. Do not claim causation. Do not judge.
 
+Lobbying spending is what an organization reported spending to lobby Congress as a whole. The legislator did NOT receive it — never write that the legislator "received" lobbying money. Only the contributions figure went to the legislator's campaign.
+Refer to the legislator by name, never by pronoun.
+
 ${PLAIN_LANGUAGE_RULES}`;
 
-  const fallback = buildStatisticalFallback(rep, chains, peer);
+  const fallback = buildStatisticalFallback(rep, chains, peer, totalDetected);
 
   return generateInsightNarrative(systemContext, userPrompt, fallback, '[InfluenceChain]');
 }
@@ -1197,12 +1204,13 @@ ${PLAIN_LANGUAGE_RULES}`;
 function buildStatisticalFallback(
   rep: RepData,
   chains: InfluenceChain[],
-  peer: PeerComparison | null
+  peer: PeerComparison | null,
+  totalDetected: number
 ): string {
   const { uniqueOrgs, totalLobbyingSpending } = orgLevelTotals(chains);
 
   let summary =
-    `${chains.length} association chains were traced between lobbying organizations, ` +
+    `${totalDetected} association chains were traced between lobbying organizations, ` +
     `campaign contributions, and voting records for ${rep.name}. ` +
     `${uniqueOrgs.length} organizations with $${totalLobbyingSpending.toLocaleString()} in ` +
     `lobbying spending were associated with bills the legislator voted on.`;
