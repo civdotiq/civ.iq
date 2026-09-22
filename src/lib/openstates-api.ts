@@ -1329,10 +1329,18 @@ class OpenStatesAPI {
    * Get a specific committee by ID
    * Note: OpenStates v3 API individual committee endpoint often returns "No such Committee"
    * even for valid IDs, so we use the list endpoint with jurisdiction filter to find the committee.
+   *
+   * With a jurisdiction this delegates to getCommittees() so the request params (and
+   * therefore the cache key) match the committees list page exactly: a detail view
+   * reached from the list costs no extra OpenStates calls. The list endpoint caps
+   * per_page at 20; anything larger is rejected upstream, which is what made every
+   * committee detail page fail when this method asked for 100.
+   *
    * @param committeeId - OpenStates committee ID (e.g., 'ocd-organization/...')
    * @param includeMemberships - Whether to include member roster (default: true)
    * @param jurisdiction - Optional state code to limit search (e.g., 'mi')
-   * @returns Committee details or null if not found
+   * @returns Committee details, or null when upstream answered and the committee is
+   *   not there. Throws when upstream could not answer (quota, outage, timeout).
    */
   async getCommitteeById(
     committeeId: string,
@@ -1340,59 +1348,38 @@ class OpenStatesAPI {
     jurisdiction?: string
   ): Promise<OpenStatesCommittee | null> {
     try {
-      const params: Record<string, string | number> = {
-        per_page: 100,
-        page: 1,
-      };
-
-      if (includeMemberships) {
-        params.include = 'memberships';
-      }
-
-      // If jurisdiction provided, filter to that state for faster lookup
       if (jurisdiction) {
-        params.jurisdiction = jurisdiction.toLowerCase();
+        const committees = await this.getCommittees(
+          jurisdiction,
+          undefined,
+          undefined,
+          includeMemberships
+        );
+        return committees.find(c => c.id === committeeId) ?? null;
       }
 
-      // Try to find the committee (paginated search)
-      let found: OpenStatesCommittee | null = null;
-      let hasMore = true;
-      let page = 1;
-      const maxPages = jurisdiction ? 5 : 20; // Fewer pages needed with jurisdiction filter
+      const params: Record<string, string | number> = { per_page: 20, page: 1 };
+      if (includeMemberships) params.include = 'memberships';
 
-      while (hasMore && page <= maxPages && !found) {
+      interface CommitteeSearchResponse {
+        results: OpenStatesCommittee[];
+        pagination: { per_page: number; page: number; max_page: number; total_items: number };
+      }
+
+      const maxPages = 20;
+      for (let page = 1; page <= maxPages; page++) {
         params.page = page;
-
-        interface CommitteeSearchResponse {
-          results: OpenStatesCommittee[];
-          pagination: {
-            per_page: number;
-            page: number;
-            max_page: number;
-            total_items: number;
-          };
-        }
-
         const response = await this.makeRequest<CommitteeSearchResponse>('/committees', params);
-
-        // Search for our committee in the results
         const match = response.results.find(c => c.id === committeeId);
         if (match) {
-          found = {
-            ...match,
-            chamber: this.normalizeCommitteeChamber(match),
-          };
-          break;
+          return { ...match, chamber: this.normalizeCommitteeChamber(match) };
         }
-
-        // Check if there are more pages
-        hasMore = page < response.pagination.max_page;
-        page++;
+        if (page >= response.pagination.max_page) break;
       }
 
-      return found;
+      return null;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('404')) {
+      if (error instanceof Error && error.message.startsWith('HTTP 404')) {
         return null;
       }
       throw error;
