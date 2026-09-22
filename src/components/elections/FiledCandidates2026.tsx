@@ -94,7 +94,7 @@ export function FiledCandidates2026({
                 >
                   {candidate.party}
                 </span>
-                <span className="font-mono text-xs text-gray-600 tabular-nums">
+                <span className="w-12 text-right font-mono text-xs text-gray-600 tabular-nums">
                   {formatCompactDollars(candidate.totalReceipts)}
                 </span>
               </span>

@@ -146,10 +146,22 @@ export function displayName(name: string): string {
   return titleCase(trimmed);
 }
 
+const ROMAN_SUFFIX = /^(ii|iii|iv|vi|vii|viii)$/;
+
+function capitalizeNamePart(part: string): string {
+  if (!part) return part;
+  if (ROMAN_SUFFIX.test(part)) return part.toUpperCase();
+  const cap = part[0]!.toUpperCase() + part.slice(1);
+  // McKinney, not Mckinney
+  return /^Mc[a-z]/.test(cap) ? `Mc${cap[2]!.toUpperCase()}${cap.slice(3)}` : cap;
+}
+
 export function titleCase(value: string): string {
+  // FEC names are all-caps; capitalize each hyphen/apostrophe segment too
+  // (O'Rourke, Ocasio-Cortez).
   return value
     .toLowerCase()
     .split(/\s+/)
-    .map(p => (p.length > 0 ? p[0]!.toUpperCase() + p.slice(1) : p))
+    .map(word => word.replace(/[^\s'\-]+/g, capitalizeNamePart))
     .join(' ');
 }

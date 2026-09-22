@@ -255,7 +255,7 @@ export default function DistrictPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{district.name}</h1>
             <p className="text-gray-600">
               Congressional District in {district.state} • {district.geography.counties.length}{' '}
-              Counties
+              {district.geography.counties.length === 1 ? 'County' : 'Counties'}
             </p>
           </div>
           <div className="flex items-center gap-2">

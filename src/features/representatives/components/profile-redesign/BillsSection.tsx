@@ -81,10 +81,17 @@ export function BillsSection({ bills, summary, loading, onExplore }: BillsSectio
   const visible = sponsored.slice(0, VISIBLE_BILLS);
   const sponsoredCount = summary?.billsSponsored ?? bills?.totalSponsored ?? sponsored.length;
   const cosponsoredCount = summary?.billsCosponsored ?? bills?.totalCosponsored ?? 0;
+  // Without the summary, the bills endpoint's total is a fetch cap, not a count.
+  const cosponsoredPlus =
+    summary?.billsCosponsored !== undefined
+      ? summary.billsCosponsoredIsLowerBound
+        ? '+'
+        : ''
+      : '+';
 
   const actionLabel =
     sponsoredCount > 0
-      ? `All ${sponsoredCount} sponsored${cosponsoredCount > 0 ? ` · ${cosponsoredCount} cosponsored` : ''} →`
+      ? `All ${sponsoredCount} sponsored${cosponsoredCount > 0 ? ` · ${cosponsoredCount}${cosponsoredPlus} cosponsored` : ''} →`
       : 'All legislation →';
 
   return (
