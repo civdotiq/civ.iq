@@ -4,6 +4,7 @@
  */
 
 import Link from 'next/link';
+import { isBioguideId, voteMeasureBillHref } from '@/lib/votes/vote-links';
 
 export interface VoteFooterProps {
   chamber: 'House' | 'Senate';
@@ -33,6 +34,8 @@ export function VoteFooter({
   bill,
   notableVoters = [],
 }: VoteFooterProps) {
+  const billHref = bill ? voteMeasureBillHref(congress, chamber, bill.type, bill.number) : null;
+  const linkableVoters = notableVoters.filter(voter => isBioguideId(voter.bioguideId));
   return (
     <footer className="mt-12 border-t-2 border-gray-900 pt-8 pb-4">
       <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">
@@ -47,12 +50,19 @@ export function VoteFooter({
           </h3>
           {bill ? (
             <div className="space-y-2">
-              <Link
-                href={`/bill/${congress}-${bill.type?.toLowerCase().replace(/\./g, '') || (chamber === 'House' ? 'hr' : 's')}-${bill.number.replace(/[^\d]/g, '')}`}
-                className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-1"
-              >
-                {bill.number}: {bill.title || 'View Bill Details'}
-              </Link>
+              {billHref ? (
+                <Link
+                  href={billHref}
+                  className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-1"
+                >
+                  {bill.number}: {bill.title || 'View Bill Details'}
+                </Link>
+              ) : (
+                <p className="text-sm text-gray-700 py-1">
+                  {bill.number}
+                  {bill.title ? `: ${bill.title}` : ''}
+                </p>
+              )}
               <Link
                 href="/legislation"
                 className="text-sm text-gray-700 hover:text-[#3ea2d4] hover:underline block py-1"
@@ -78,9 +88,9 @@ export function VoteFooter({
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-3 pb-2 border-b border-gray-200">
             Notable Voters
           </h3>
-          {notableVoters.length > 0 ? (
+          {linkableVoters.length > 0 ? (
             <ul className="space-y-2">
-              {notableVoters.slice(0, 5).map(voter => (
+              {linkableVoters.slice(0, 5).map(voter => (
                 <li key={voter.bioguideId}>
                   <Link
                     href={`/representative/${voter.bioguideId}`}
