@@ -143,5 +143,5 @@ export function formatBillNumber(type: string, number: string): string {
 
 /** Build the route to a bill detail page from the connections.recentBills shape. */
 export function billDetailHref(bill: { congress: number; type: string; number: string }): string {
-  return `/bills/${bill.congress}/${bill.type.toLowerCase()}/${bill.number}`;
+  return `/bill/${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`;
 }

@@ -110,6 +110,26 @@ describe('computeLegislationRollup', () => {
     expect(r.cosponsoredSample.apiTotal).toBe(4000);
   });
 
+  it('marks the current count a lower bound when the cap cuts inside the current Congress', () => {
+    const cosponsored = [
+      bill({ number: '10', relationship: 'cosponsored' }),
+      bill({ number: '11', relationship: 'cosponsored' }),
+    ];
+    const r = computeLegislationRollup('X000001', [], cosponsored, 1616, CURRENT);
+    expect(r.current.cosponsored).toBe(2);
+    expect(r.cosponsoredSample.currentIsLowerBound).toBe(true);
+  });
+
+  it('treats the current count as exact once the sample reaches a prior Congress', () => {
+    const cosponsored = [
+      bill({ number: '10', relationship: 'cosponsored' }),
+      bill({ number: '11', relationship: 'cosponsored', congress: 118 }),
+    ];
+    const r = computeLegislationRollup('X000001', [], cosponsored, 4000, CURRENT);
+    expect(r.cosponsoredSample.truncated).toBe(true);
+    expect(r.cosponsoredSample.currentIsLowerBound).toBe(false);
+  });
+
   it('does not flag truncation when the sample is complete', () => {
     const cosponsored = [
       bill({ number: '10', relationship: 'cosponsored' }),

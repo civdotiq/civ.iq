@@ -271,7 +271,10 @@ function LegislationSection({ data }: { data: RecordCardData }) {
       </div>
       <div className={`${ROW} ${grid}`}>
         <div className="text-[15px] tracking-[0.025em]">Bills cosponsored</div>
-        <Num>{fmtInt(leg.current.cosponsored)}</Num>
+        <Num>
+          {fmtInt(leg.current.cosponsored)}
+          {leg.cosponsoredSample.currentIsLowerBound ? '+' : ''}
+        </Num>
         {!single && <Num dim>{fmtInt(leg.career.cosponsored)}</Num>}
       </div>
 

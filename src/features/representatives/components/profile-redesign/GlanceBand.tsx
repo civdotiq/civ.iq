@@ -55,6 +55,7 @@ export function GlanceBand({ summary, loading, error, committeeCount }: GlanceBa
   const votes = summary?.votesParticipated;
   const sponsored = summary?.billsSponsored;
   const cosponsored = summary?.billsCosponsored;
+  const cosponsoredPlus = summary?.billsCosponsoredIsLowerBound ? '+' : '';
   const raised = formatMoney(summary?.totalRaised);
   const spent = formatMoney(summary?.totalSpent);
   const cycle = summary?.financeCycle;
@@ -72,7 +73,7 @@ export function GlanceBand({ summary, loading, error, committeeCount }: GlanceBa
         value={sponsored && sponsored > 0 ? String(sponsored) : '—'}
         caption={
           sponsored && sponsored > 0
-            ? `${cosponsored && cosponsored > 0 ? `${cosponsored} cosponsored · ` : ''}119th Congress`
+            ? `${cosponsored && cosponsored > 0 ? `${cosponsored}${cosponsoredPlus} cosponsored · ` : ''}119th Congress`
             : unavailable
         }
         loading={loading}

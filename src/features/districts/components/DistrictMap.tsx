@@ -428,81 +428,17 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           return;
         }
 
-        // For regular House districts, fetch from Census TIGER API
-        const stateFipsMap: Record<string, string> = {
-          AL: '01',
-          AK: '02',
-          AZ: '04',
-          AR: '05',
-          CA: '06',
-          CO: '08',
-          CT: '09',
-          DE: '10',
-          FL: '12',
-          GA: '13',
-          HI: '15',
-          ID: '16',
-          IL: '17',
-          IN: '18',
-          IA: '19',
-          KS: '20',
-          KY: '21',
-          LA: '22',
-          ME: '23',
-          MD: '24',
-          MA: '25',
-          MI: '26',
-          MN: '27',
-          MS: '28',
-          MO: '29',
-          MT: '30',
-          NE: '31',
-          NV: '32',
-          NH: '33',
-          NJ: '34',
-          NM: '35',
-          NY: '36',
-          NC: '37',
-          ND: '38',
-          OH: '39',
-          OK: '40',
-          OR: '41',
-          PA: '42',
-          RI: '44',
-          SC: '45',
-          SD: '46',
-          TN: '47',
-          TX: '48',
-          UT: '49',
-          VT: '50',
-          VA: '51',
-          WA: '53',
-          WV: '54',
-          WI: '55',
-          WY: '56',
-        };
-
-        const stateFips = stateFipsMap[state];
-        if (!stateFips) {
-          throw new Error(`Unknown state: ${state}`);
-        }
-
-        logger.info('Fetching district boundary from Census TIGER:', {
-          state,
-          stateFips,
-          district: paddedDistrict,
-        });
-
-        // Fetch directly from Census TIGER API (119th Congress districts)
-        const whereClause = `STATE='${stateFips}' AND CD119='${paddedDistrict}'`;
-        const tigerUrl = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
-
-        const response = await fetch(tigerUrl);
+        // For regular House districts, fetch the 119th-Congress boundary from our
+        // API (server-side TIGERweb lookup, cached) rather than hitting Census from
+        // the browser — Census renumbers its layers each vintage.
+        const response = await fetch(
+          `/api/district-boundaries/${encodeURIComponent(`${state}-${paddedDistrict}`)}`
+        );
 
         if (!response.ok) {
-          logger.error('Census TIGER API error:', {
+          logger.warn('District boundary unavailable:', {
             status: response.status,
-            stateFips,
+            state,
             district: paddedDistrict,
           });
           setError('District boundaries not available');
@@ -510,23 +446,8 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           return;
         }
 
-        const data = await response.json();
-
-        if (!data.features || data.features.length === 0) {
-          logger.warn('No district found in Census TIGER:', {
-            stateFips,
-            district: paddedDistrict,
-          });
-          setError('District boundaries not available');
-          setGeoJsonData(null);
-          return;
-        }
-
-        // Extract the first feature (should be the only one)
-        const boundary = data.features[0];
-        logger.info('District boundary received from Census TIGER:', {
-          hasData: !!boundary,
-          type: boundary?.type,
+        const boundary = await response.json();
+        logger.info('District boundary received:', {
           hasGeometry: !!boundary?.geometry,
           geometryType: boundary?.geometry?.type,
         });

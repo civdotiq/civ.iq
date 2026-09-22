@@ -164,6 +164,7 @@ export default async function RecordCardPrintPage({
                   <span className={NUM}>
                     {fmtInt(legislation.current.introduced)} ·{' '}
                     {fmtInt(legislation.current.cosponsored)}
+                    {legislation.cosponsoredSample.currentIsLowerBound ? '+' : ''}
                     {!legislation.firstTerm && (
                       <span className="font-normal text-gray-700">
                         {'  '}({fmtInt(legislation.career.introduced)} ·{' '}

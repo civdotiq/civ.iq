@@ -665,10 +665,11 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
  * Much faster than full batch requests
  */
 export async function getRepresentativeSummary(bioguideId: string) {
-  const cacheKey = `representative-summary:${bioguideId}`;
+  const cacheKey = `representative-summary:v2:${bioguideId}`;
   const cached = await govCache.get<{
     billsSponsored?: number;
     billsCosponsored?: number;
+    billsCosponsoredIsLowerBound?: boolean;
     totalRaised?: number;
     totalSpent?: number;
     cashOnHand?: number;
@@ -720,6 +721,8 @@ export async function getRepresentativeSummary(bioguideId: string) {
     const result = {
       billsSponsored: record?.legislation?.current.introduced ?? 0,
       billsCosponsored: record?.legislation?.current.cosponsored ?? 0,
+      billsCosponsoredIsLowerBound:
+        record?.legislation?.cosponsoredSample.currentIsLowerBound ?? false,
       totalRaised: finance?.totalRaised ?? 0,
       totalSpent: finance?.totalSpent ?? 0,
       cashOnHand: finance?.cashOnHand ?? 0,

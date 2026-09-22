@@ -8,6 +8,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { VoteLink } from '@/components/shared/links/EntityLinks';
+import { formatBillNumber } from '@/lib/bill-label';
 import type { Vote } from '../VoteRow';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
 
@@ -41,9 +42,9 @@ function formatVoteDate(iso: string): string {
 
 /** Measure label: prefer the bill title, fall back to the roll-call question. */
 function measureLabel(vote: Vote): string {
-  const { number, title } = vote.bill;
+  const { number, title, type } = vote.bill;
   if (title && title !== 'Vote without associated bill') {
-    return number && number !== 'N/A' ? `${number} — ${title}` : title;
+    return number && number !== 'N/A' ? `${formatBillNumber(type, number)} — ${title}` : title;
   }
   return vote.question || `Roll call ${vote.rollNumber || ''}`.trim();
 }

@@ -363,12 +363,15 @@ export async function fetchRecordSummaryCardData(
         ? `advanced past committee: ${fmtInt(legislation.current.advancedPastCommittee)}`
         : `career: ${fmtInt(legislation.career.enacted)} · past committee: ${fmtInt(legislation.current.advancedPastCommittee)}`,
     });
+    const cosponsoredLabel = `${fmtInt(legislation.current.cosponsored)}${
+      legislation.cosponsoredSample.currentIsLowerBound ? '+' : ''
+    }`;
     stats.push({
       value: fmtInt(legislation.current.introduced),
       label: 'Bills introduced',
       baseline: legislation.firstTerm
-        ? `${fmtInt(legislation.current.cosponsored)} cosponsored (first term)`
-        : `career: ${fmtInt(legislation.career.introduced)} · cosponsored: ${fmtInt(legislation.current.cosponsored)}`,
+        ? `${cosponsoredLabel} cosponsored (first term)`
+        : `career: ${fmtInt(legislation.career.introduced)} · cosponsored: ${cosponsoredLabel}`,
     });
   }
 

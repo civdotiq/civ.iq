@@ -41,6 +41,8 @@ export interface ProfileBatchResponse {
 export interface ProfileSummary {
   billsSponsored?: number;
   billsCosponsored?: number;
+  /** Cosponsored fetch hit its cap inside the current Congress — show "N+". */
+  billsCosponsoredIsLowerBound?: boolean;
   totalRaised?: number;
   totalSpent?: number;
   cashOnHand?: number;

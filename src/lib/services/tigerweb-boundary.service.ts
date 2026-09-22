@@ -15,8 +15,11 @@ import type { DistrictBoundary } from '@/types/state-legislature';
 const TIGERWEB_BASE =
   'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
 
-// Layer IDs in TIGERweb Legislative MapServer
-const LAYER_CD119 = 0; // 119th Congressional Districts
+// Layer IDs in TIGERweb Legislative MapServer. Census renumbers congressional
+// layers each vintage (Sept 2026: layer 0 became the 120th Congress), so the
+// 119th layer is resolved by name; this ID is only the fallback.
+const CD119_LAYER_NAME = '119th Congressional Districts';
+const LAYER_CD119_FALLBACK = 4;
 const LAYER_SLDU = 1; // State Senate Districts (upper)
 const LAYER_SLDL = 2; // State House Districts (lower)
 
@@ -77,6 +80,33 @@ const STATE_FIPS: Record<string, string> = {
 
 // 90-day TTL — boundaries only change after redistricting
 const BOUNDARY_CACHE_TTL = 90 * 24 * 60 * 60 * 1000;
+
+let cd119LayerPromise: Promise<number> | null = null;
+
+/** Resolve the 119th-Congress layer ID from the MapServer's layer list. */
+function resolveCd119Layer(): Promise<number> {
+  cd119LayerPromise ??= (async () => {
+    try {
+      const response = await fetch(`${TIGERWEB_BASE}?f=json`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = (await response.json()) as { layers?: Array<{ id: number; name: string }> };
+      const layer = data.layers?.find(l => l.name === CD119_LAYER_NAME);
+      if (layer) return layer.id;
+      logger.warn('TIGERweb 119th CD layer not found by name; using fallback', {
+        fallback: LAYER_CD119_FALLBACK,
+      });
+    } catch (error) {
+      logger.warn('TIGERweb layer list unavailable; using fallback', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      cd119LayerPromise = null; // retry resolution on the next call
+    }
+    return LAYER_CD119_FALLBACK;
+  })();
+  return cd119LayerPromise;
+}
 
 /**
  * Fetch a single district boundary from TIGERweb.
@@ -200,7 +230,7 @@ export async function getCongressionalDistrictBoundary(
     return null;
   }
 
-  const cacheKey = `tigerweb:boundary:cd119:${geoid}:${maxAllowableOffset ?? 'full'}`;
+  const cacheKey = `tigerweb:boundary:cd119v2:${geoid}:${maxAllowableOffset ?? 'full'}`;
 
   try {
     const cached = await govCache.get<DistrictBoundary>(cacheKey);
@@ -217,7 +247,8 @@ export async function getCongressionalDistrictBoundary(
       ...(maxAllowableOffset ? { maxAllowableOffset: String(maxAllowableOffset) } : {}),
     });
 
-    const url = `${TIGERWEB_BASE}/${LAYER_CD119}/query?${queryParams}`;
+    const layer = await resolveCd119Layer();
+    const url = `${TIGERWEB_BASE}/${layer}/query?${queryParams}`;
 
     logger.info('Fetching congressional boundary from TIGERweb', { geoid });
 
