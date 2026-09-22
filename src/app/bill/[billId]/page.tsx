@@ -11,7 +11,7 @@ import { getBillDisplayStatus } from '@/types/bill';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
 import { parseBillSlug } from '@/lib/data/route-slugs';
 import { ClientBillContent } from './ClientBillContent';
-import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { Breadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LegislationSchema, BreadcrumbSchema, SpeakableSchema } from '@/components/seo/JsonLd';
 import { BillDetail } from '@/components/bills/BillDetail';
@@ -137,15 +137,14 @@ async function BillContent({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb navigation */}
-        {fromBioguideId && fromRepName ? (
-          <Breadcrumb
-            currentPage={`Bill ${billId}`}
-            fromBioguideId={fromBioguideId}
-            fromRepName={fromRepName}
-          />
-        ) : (
-          <SimpleBreadcrumb />
-        )}
+        <Breadcrumb
+          currentPage={bill?.number ?? `Bill ${billId}`}
+          fromBioguideId={fromBioguideId}
+          fromRepName={fromRepName}
+          customItems={
+            fromBioguideId && fromRepName ? [] : [{ label: 'Legislation', href: '/legislation' }]
+          }
+        />
 
         {/* Client-side content */}
         <ClientBillContent billId={billId} />
