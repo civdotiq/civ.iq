@@ -6,11 +6,94 @@
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { ApiErrors } from '@/lib/api/error-responses';
+import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
+import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
+import type { CorpusBill } from '@/lib/data-sources/bill-policy-areas/corpus';
 
 export const dynamic = 'force-dynamic';
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+};
+
+function parseLimit(raw: string | null): number {
+  return Math.min(Math.max(parseInt(raw || '50', 10) || 50, 1), 250);
+}
+
+/** Corpus bill → the Congress.gov list-item shape /legislation already renders. */
+function toCongressBill(bill: CorpusBill) {
+  const upper = bill.type.toUpperCase();
+  return {
+    congress: bill.congress,
+    type: upper,
+    number: String(bill.number),
+    title: bill.title,
+    originChamber: bill.type.startsWith('h') ? 'House' : 'Senate',
+    originChamberCode: bill.type.startsWith('h') ? 'H' : 'S',
+    introducedDate: bill.introducedDate,
+    latestAction: bill.latestActionDate
+      ? { actionDate: bill.latestActionDate, text: bill.latestActionText ?? '' }
+      : null,
+    policyArea: { name: bill.policyArea },
+  };
+}
+
+/**
+ * Congress.gov's /bill list never carries policyArea and has no policy-area
+ * filter, so topic-filtered lists come from the GovInfo BILLSTATUS corpus.
+ * totalBills is the area's full count, not the page size.
+ */
+async function policyAreaResponse(policyArea: string, limit: number): Promise<NextResponse> {
+  const mapping = getPolicyAreaMapping(policyArea);
+  if (!mapping) {
+    return ApiErrors.validation(`Unknown policy area: ${policyArea}`);
+  }
+  const result = await getBillsByPolicyArea(mapping.policyArea, limit);
+  const source = 'GovInfo BILLSTATUS bulk data (CRS policy areas)';
+  if (!result) {
+    return NextResponse.json({
+      bills: [],
+      metadata: {
+        congress: null,
+        totalBills: null,
+        policyArea: mapping.policyArea,
+        source,
+        dataAvailable: false,
+        note: 'Bill policy-area data is temporarily unavailable.',
+        generatedAt: new Date().toISOString(),
+        queryParams: { limit, policyArea: mapping.policyArea },
+      },
+    });
+  }
+  return NextResponse.json(
+    {
+      bills: result.bills.map(toCongressBill),
+      metadata: {
+        congress: result.congress,
+        totalBills: result.total,
+        policyArea: mapping.policyArea,
+        source,
+        dataAvailable: true,
+        dataAsOf: result.generatedAt,
+        generatedAt: new Date().toISOString(),
+        queryParams: { limit, policyArea: mapping.policyArea },
+      },
+    },
+    { headers: CACHE_HEADERS }
+  );
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
+    const policyArea = req.nextUrl.searchParams.get('policyArea');
+    if (policyArea) {
+      return await policyAreaResponse(
+        policyArea,
+        parseLimit(req.nextUrl.searchParams.get('limit'))
+      );
+    }
+
     if (!process.env.CONGRESS_API_KEY) {
       return new NextResponse('Congress.gov API key required', { status: 500 });
     }
@@ -21,7 +104,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const validSorts = ['updateDate+desc', 'updateDate+asc', 'number+desc', 'number+asc'];
     const sortParam = searchParams.get('sort') || 'updateDate+desc';
     const sort = validSorts.includes(sortParam) ? sortParam : 'updateDate+desc';
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 250);
+    const limit = parseLimit(searchParams.get('limit'));
 
     const response = await fetch(
       `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&sort=${sort}&format=json`,
@@ -66,11 +149,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           },
         },
       },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-        },
-      }
+      { headers: CACHE_HEADERS }
     );
   } catch (error) {
     logger.error('Latest bills API error', error as Error);
