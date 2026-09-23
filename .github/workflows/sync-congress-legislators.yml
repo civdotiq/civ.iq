@@ -1,0 +1,134 @@
+name: Sync Congress Legislators
+
+# data/legislators-current.yaml was a hand-maintained copy of
+# unitedstates/congress-legislators that went six months without a sync
+# (March -> September 2026). New members were missing, so Senate roll calls
+# stored their LIS ids (S440) where a bioguide id belonged, and the FEC
+# coverage canary could not see that four new House members had no mapping.
+#
+# This rebuilds it weekly from upstream (CC0-1.0) plus
+# data/legislators-overlay.yaml, and writes data/legislators-departed.yaml
+# (members who left since the previous Congress began) so older roll calls
+# still resolve. Static files on GitHub Pages: no secret needed.
+#
+# After a run that seats a new senator, dispatch "Sync Senate Roll-Call Votes"
+# once with reingest=true so rolls holding that senator's LIS id re-parse.
+
+on:
+  schedule:
+    # Weekly, Sunday 13:15 UTC — ahead of the 14:00 bioguide-FEC sync.
+    - cron: '15 13 * * 0'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # The script refuses a truncated upstream (<500 members or <95 senators)
+      # before writing anything.
+      - name: Refresh legislators files
+        run: npx tsx scripts/sync-congress-legislators.ts
+
+      - name: Commit updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml; then
+            echo "No change to the legislators files"
+          else
+            git add data/legislators-current.yaml data/legislators-departed.yaml
+            git commit -m "chore(data): refresh congress legislators [skip ci]"
+            # Rebase and retry rather than merge: main-protection enforces
+            # linear history. Only data/ files are touched here.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
+            git push
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `The app keeps using the last committed legislators files, so this is`,
+              `not an outage — but newly seated members stay unmapped (Senate roll`,
+              `calls fall back to raw LIS ids) until a run succeeds.`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }

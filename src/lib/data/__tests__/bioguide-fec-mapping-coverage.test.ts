@@ -48,7 +48,9 @@ describe('bioguide -> FEC mapping coverage (Campaign Finance tab canary)', () =>
 
   beforeAll(async () => {
     const infoMap = await getLegislatorInfoMap();
-    currentMembers = Array.from(infoMap.values());
+    // The info map also carries recently departed members (for resolving
+    // older roll calls); only sitting members need a Campaign Finance tab.
+    currentMembers = Array.from(infoMap.values()).filter(m => !m.departed);
   });
 
   it('loads a non-empty current-members list and a non-empty mapping table', () => {
