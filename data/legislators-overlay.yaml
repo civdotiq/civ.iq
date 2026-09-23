@@ -1,0 +1,20 @@
+# Local additions merged into data/legislators-current.yaml by
+# scripts/sync-congress-legislators.ts on every refresh.
+#
+# The upstream (unitedstates/congress-legislators) is the source of truth.
+# Keep this file to facts upstream does not carry yet, and delete an entry
+# once upstream has it — the sync skips roles upstream already lists
+# (same title + start), so a stale entry is harmless but noisy.
+#
+# Supported fields: leadership_roles (appended to the member's list).
+
+- bioguide: M001213 # Blake D. Moore
+  leadership_roles:
+    - title: House Republican Conference Vice Chair
+      chamber: house
+      start: '2025-01-03'
+- bioguide: H001093 # Erin Houchin
+  leadership_roles:
+    - title: House Republican Conference Secretary
+      chamber: house
+      start: '2025-01-03'

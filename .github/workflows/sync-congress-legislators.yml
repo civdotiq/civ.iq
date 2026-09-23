@@ -1,35 +1,31 @@
-name: Sync Senate Roll-Call Votes
+name: Sync Congress Legislators
 
-# MR10: senate.gov roll-call XML is Akamai-blocked from cloud IPs (Vercel),
-# but GitHub Actions runners are NOT blocked (verified 2026-07-07). This
-# workflow relays the official XML, unmodified, to the app's authenticated
-# ingest route, which parses it and fills the Redis corpus behind the
-# Record Card's Senate voting baselines. Roll calls are immutable, so each
-# run only fetches votes the server doesn't already have.
+# data/legislators-current.yaml was a hand-maintained copy of
+# unitedstates/congress-legislators that went six months without a sync
+# (March -> September 2026). New members were missing, so Senate roll calls
+# stored their LIS ids (S440) where a bioguide id belonged, and the FEC
+# coverage canary could not see that four new House members had no mapping.
+#
+# This rebuilds it weekly from upstream (CC0-1.0) plus
+# data/legislators-overlay.yaml, and writes data/legislators-departed.yaml
+# (members who left since the previous Congress began) so older roll calls
+# still resolve. Static files on GitHub Pages: no secret needed.
+#
+# After a run that seats a new senator, dispatch "Sync Senate Roll-Call Votes"
+# once with reingest=true so rolls holding that senator's LIS id re-parse.
 
 on:
   schedule:
-    # Daily at 08:15 UTC, ahead of the 09:00 UTC Vercel baselines cron.
-    - cron: '15 8 * * *'
-  workflow_dispatch:
-    inputs:
-      base_url:
-        description: 'Target app base URL'
-        required: false
-        default: 'https://civdotiq.org'
-      reingest:
-        description: >-
-          Re-send every roll call, not only missing ones. Run once after a
-          legislators refresh so rolls holding unresolved senator LIS ids are
-          re-parsed.
-        type: boolean
-        required: false
-        default: false
+    # Weekly, Sunday 13:15 UTC — ahead of the 14:00 bioguide-FEC sync.
+    - cron: '15 13 * * 0'
+  workflow_dispatch: {}
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
+      contents: write
       issues: write
     steps:
       - uses: actions/checkout@v4
@@ -37,14 +33,32 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # Only js-yaml and tsx are needed; no install scripts required.
+      - run: npm ci --ignore-scripts
 
-      - name: Mirror Senate votes into the app corpus
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
-          REINGEST: ${{ inputs.reingest && '--reingest' || '' }}
-        run: ./node_modules/.bin/tsx scripts/sync-senate-votes.ts $REINGEST
+      # The script refuses a truncated upstream (<500 members or <95 senators)
+      # before writing anything.
+      - name: Refresh legislators files
+        run: ./node_modules/.bin/tsx scripts/sync-congress-legislators.ts
+
+      - name: Commit updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/legislators-current.yaml data/legislators-departed.yaml; then
+            echo "No change to the legislators files"
+          else
+            git add data/legislators-current.yaml data/legislators-departed.yaml
+            git commit -m "chore(data): refresh congress legislators [skip ci]"
+            # Rebase and retry rather than merge: main-protection enforces
+            # linear history. Only data/ files are touched here.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
+            git push
+          fi
 
       - name: Notify on failure
         if: failure()
@@ -58,8 +72,9 @@ jobs:
               `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
               ``,
               `Run: ${runUrl}`,
-              `Scheduled trigger: ${context.eventName}`,
-              `SHA: ${context.sha}`,
+              `The app keeps using the last committed legislators files, so this is`,
+              `not an outage — but newly seated members stay unmapped (Senate roll`,
+              `calls fall back to raw LIS ids) until a run succeeds.`,
               ``,
               `This issue auto-closes on the next successful run.`,
             ].join('\n');

@@ -6,6 +6,7 @@
 
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { logger } from '@/lib/logging/logger-edge';
+import { getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 
 // Configuration
 const CONGRESS_API_BASE = 'https://api.congress.gov/v3';
@@ -99,32 +100,11 @@ export class EnhancedCongressDataService {
     if (this.lisToBioguideMap) return;
 
     try {
-      // Load legislators data from congress-legislators
-      const fs = await import('fs/promises');
-      const yaml = await import('js-yaml');
-      const path = await import('path');
-
-      // Use a relative path that works in Next.js environment
-      const legislatorsPath = path.join(process.cwd(), 'data', 'legislators-current.yaml');
-      logger.debug('Attempting to load legislators data', { path: legislatorsPath });
-
-      const legislatorsYaml = await fs.readFile(legislatorsPath, 'utf8');
-      const legislators = yaml.load(legislatorsYaml) as Array<{
-        id: { bioguide: string; lis?: string };
-      }>;
-
-      this.lisToBioguideMap = new Map();
-
-      for (const legislator of legislators) {
-        if (legislator.id.lis && legislator.id.bioguide) {
-          this.lisToBioguideMap.set(legislator.id.lis, legislator.id.bioguide);
-        }
-      }
-
-      logger.info('Initialized LIS to bioguide mapping', {
-        mappingCount: this.lisToBioguideMap.size,
-        sampleMappings: Array.from(this.lisToBioguideMap.entries()).slice(0, 3),
-      });
+      // Shared lookup: current senators plus those who left recently
+      // (data/legislators-departed.yaml), so older roll calls still resolve.
+      const { byLis } = await getSenatorBioguideLookup();
+      this.lisToBioguideMap = byLis;
+      logger.info('Initialized LIS to bioguide mapping', { mappingCount: byLis.size });
     } catch (error) {
       logger.error('Failed to initialize LIS mapping', error as Error);
       this.lisToBioguideMap = new Map(); // Empty fallback
