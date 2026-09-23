@@ -9,24 +9,15 @@
  * the Congress.gov budget.
  */
 
-// The global next/server mock lacks real Headers; use the cron test classes.
-jest.mock('next/server', () =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('./cron-test-helpers').nextServerMock()
-);
-
 const mockGetAllReps = jest.fn();
 const mockWarm = jest.fn();
 
-const cursorStore: { value: number | string | null } = { value: null };
-const mockRedisGet = jest.fn(async () => cursorStore.value);
-const mockRedisSet = jest.fn(async (_key: string, value: number) => {
-  cursorStore.value = value;
-  return true;
-});
-
-jest.mock('@/lib/cache/redis-client', () => ({
-  getRedisCache: () => ({ get: mockRedisGet, set: mockRedisSet }),
+let storedCursor = 0;
+jest.mock('@/lib/cron/cursor', () => ({
+  readCronCursor: async (_key: string, length: number) => storedCursor % length,
+  writeCronCursor: async (_key: string, cursor: number) => {
+    storedCursor = cursor;
+  },
 }));
 
 jest.mock('@/features/representatives/services/congress.service', () => ({
@@ -54,7 +45,7 @@ const makeRequest = (authHeader?: string) =>
 
 beforeEach(() => {
   jest.clearAllMocks();
-  cursorStore.value = null;
+  storedCursor = 0;
   process.env.CRON_SECRET = TEST_SECRET;
   process.env.WARM_MEMBER_BILLS_SLICE_SIZE = '10';
   mockWarm.mockResolvedValue('refreshed');

@@ -12,12 +12,6 @@
  *   - Error isolation (one analyzer throwing does not block the other three)
  */
 
-// The global next/server mock lacks real Headers; use the cron test classes.
-jest.mock('next/server', () =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('./cron-test-helpers').nextServerMock()
-);
-
 const mockGetAllReps = jest.fn();
 const mockAnalyzeFinanceJurisdiction = jest.fn();
 const mockAnalyzeVoteFinance = jest.fn();

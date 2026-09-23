@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { isAuthorizedCron } from '@/lib/cron/auth';
 import { readCronCursor, writeCronCursor } from '@/lib/cron/cursor';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
@@ -150,9 +151,7 @@ function summarize(outcomes: RepOutcome[]) {
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

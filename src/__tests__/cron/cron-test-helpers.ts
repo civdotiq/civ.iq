@@ -4,60 +4,17 @@
  */
 
 /**
- * Shared setup for cron route tests. The global next/server mock has no real
- * Headers, so cron tests swap in these minimal classes:
- *   jest.mock('next/server', () => require('./cron-test-helpers').nextServerMock());
+ * Shared setup for cron route tests. The global next/server mock
+ * (jest.setup.js) covers NextResponse.json; cron routes only read the
+ * Authorization header, so a plain object with real Headers is enough.
  */
 
 import type { NextRequest } from 'next/server';
 
-export function nextServerMock() {
-  class _NextResponse {
-    status: number;
-    headers: Headers;
-    private body: unknown;
-
-    constructor(body?: unknown, init?: { status?: number; headers?: Record<string, string> }) {
-      this.body = body;
-      this.status = init?.status ?? 200;
-      this.headers = new Headers(init?.headers);
-    }
-
-    async json() {
-      return this.body;
-    }
-
-    static json(data: unknown, init?: { status?: number; headers?: Record<string, string> }) {
-      return new _NextResponse(data, init);
-    }
-  }
-
-  class _NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-
-    constructor(
-      urlInput: string | URL,
-      init?: { method?: string; headers?: Record<string, string> }
-    ) {
-      this.url = typeof urlInput === 'string' ? urlInput : urlInput.toString();
-      this.method = init?.method ?? 'GET';
-      this.headers = new Headers(init?.headers);
-      this.nextUrl = new URL(this.url);
-    }
-  }
-
-  return { NextResponse: _NextResponse, NextRequest: _NextRequest };
-}
-
 export function makeCronRequest(path: string, authHeader?: string): NextRequest {
-  const headers: Record<string, string> = {};
-  if (authHeader !== undefined) headers.authorization = authHeader;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { NextRequest: NR } = require('next/server');
-  return new NR(`http://localhost:3000${path}`, { headers }) as NextRequest;
+  const headers = new Headers();
+  if (authHeader !== undefined) headers.set('authorization', authHeader);
+  return { url: `http://localhost:3000${path}`, method: 'GET', headers } as unknown as NextRequest;
 }
 
 export function fakeReps(n: number) {
