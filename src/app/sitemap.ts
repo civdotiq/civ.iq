@@ -17,8 +17,7 @@ import committeesData from '@/data/committees-with-subcommittees.json';
 import { RACES_2026 } from '@/data/elections-2026-races';
 import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
-import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
-import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
+import { getTemplatesByEntityType } from '@/lib/questions/question-registry';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 
@@ -234,15 +233,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Silently fail - other entries will still be generated
   }
 
-  // Topic question pages: topic-bills × all policy areas
-  for (const area of getAllPolicyAreas()) {
-    entries.push({
-      url: `${BASE_URL}/ask/topic-bills/${slugifyPolicyArea(area)}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    });
-  }
+  // Topic question pages (/ask/topic-bills/*) are omitted until a bill →
+  // policy-area source exists: Congress.gov's /bill list carries no policyArea,
+  // so every topic page renders empty and is noindexed (soft 404s in GSC).
 
   // Committee question pages: committee templates × all committees
   const committeeSlugs = getTemplatesByEntityType('committee').map(t => t.slug);
