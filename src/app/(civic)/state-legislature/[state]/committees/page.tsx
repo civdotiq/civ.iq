@@ -9,7 +9,7 @@ import { StateCommitteeCard } from '@/features/state-legislature/components/Stat
 import { getChamberName } from '@/types/state-legislature';
 import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legislature';
 import { Building2, Users } from 'lucide-react';
-import { openStatesAPI } from '@/lib/openstates-api';
+import { openStatesAPI, OpenStatesQuotaExhaustedError } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
 import {
   getStateLegislatureName,
@@ -114,9 +114,11 @@ async function getCommittees(
       total: 0,
       state: state.toUpperCase(),
       error:
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch state committees. Please try again later.',
+        error instanceof OpenStatesQuotaExhaustedError
+          ? 'Committee data from Open States is temporarily unavailable. Please try again later.'
+          : error instanceof Error
+            ? error.message
+            : 'Failed to fetch state committees. Please try again later.',
     };
   }
 }
