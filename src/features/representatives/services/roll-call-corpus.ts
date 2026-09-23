@@ -37,12 +37,14 @@ export const READ_BATCH = 25;
  * Compact persisted form of one roll call — just what analysis needs.
  * (~30 bytes/member instead of the full StandardizedVote's ~80.)
  */
+export type PositionCode = 'Y' | 'N' | 'P' | 'X';
+
 export interface CompactRollCall {
   rollCallNumber: number;
   session: number;
   date: string;
   /** b = bioguide id ('' when unresolved); l = raw Senate LIS id, only when b is ''. */
-  votes: Array<{ b: string; p: string; v: 'Y' | 'N' | 'P' | 'X'; l?: string }>;
+  votes: Array<{ b: string; p: string; v: PositionCode; l?: string }>;
 }
 
 const POSITION_TO_CODE: Record<string, 'Y' | 'N' | 'P' | 'X'> = {

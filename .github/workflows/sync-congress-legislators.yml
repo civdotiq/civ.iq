@@ -33,12 +33,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # Only js-yaml and tsx are needed; no install scripts required.
+      - run: npm ci --ignore-scripts
 
       # The script refuses a truncated upstream (<500 members or <95 senators)
       # before writing anything.
       - name: Refresh legislators files
-        run: npx tsx scripts/sync-congress-legislators.ts
+        run: ./node_modules/.bin/tsx scripts/sync-congress-legislators.ts
 
       - name: Commit updated files
         run: |

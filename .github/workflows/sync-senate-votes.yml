@@ -44,7 +44,7 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
           REINGEST: ${{ inputs.reingest && '--reingest' || '' }}
-        run: npx tsx scripts/sync-senate-votes.ts $REINGEST
+        run: ./node_modules/.bin/tsx scripts/sync-senate-votes.ts $REINGEST
 
       - name: Notify on failure
         if: failure()

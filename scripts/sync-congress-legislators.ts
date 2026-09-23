@@ -18,8 +18,8 @@
  * Usage: npx tsx scripts/sync-congress-legislators.ts
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import yaml from 'js-yaml';
 import {
   applyOverlay,
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     download('legislators-historical.yaml'),
   ]);
 
-  const senators = current.filter(l => l.terms[l.terms.length - 1]?.type === 'sen').length;
+  const senators = current.filter(l => l.terms.at(-1)?.type === 'sen').length;
   if (current.length < MIN_CURRENT || senators < MIN_SENATORS) {
     throw new Error(`Upstream looks truncated: ${current.length} members, ${senators} senators`);
   }
