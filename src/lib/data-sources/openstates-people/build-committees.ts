@@ -59,7 +59,7 @@ export function buildCommitteesCorpus(input: BuildCommitteesInput): CommitteesCo
   const jurisdictions: CommitteesCorpusFile['jurisdictions'] = [];
   let memberships = 0;
 
-  for (const code of [...input.byJurisdiction.keys()].sort()) {
+  for (const code of [...input.byJurisdiction.keys()].sort((a, b) => a.localeCompare(b))) {
     const offset = rows.length;
     const committees = (input.byJurisdiction.get(code) ?? [])
       .filter(c => c.id?.startsWith(ORG_PREFIX) && c.name)
