@@ -27,7 +27,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { getRedisCache } from '@/lib/cache/redis-client';
+import { readCronCursor, writeCronCursor } from '@/lib/cron/cursor';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { warmComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 
@@ -60,8 +60,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const redis = getRedisCache();
-
   try {
     const reps = await getAllEnhancedRepresentatives();
     if (reps.length === 0) {
@@ -71,14 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, warmed: 0, nextCursor: 0, totalReps: 0 });
     }
 
-    const cursorRaw = await redis.get<number | string>(CURSOR_KEY);
-    const cursor =
-      typeof cursorRaw === 'number'
-        ? cursorRaw
-        : typeof cursorRaw === 'string'
-          ? Number.parseInt(cursorRaw, 10) || 0
-          : 0;
-    const start = ((cursor % reps.length) + reps.length) % reps.length;
+    const start = await readCronCursor(CURSOR_KEY, reps.length);
     const sliceSize = Math.min(getSliceSize(), reps.length);
 
     const outcomes: MemberOutcome[] = [];
@@ -103,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const nextCursor = (start + outcomes.length) % reps.length;
-    await redis.set(CURSOR_KEY, nextCursor, 7 * 24 * 60 * 60);
+    await writeCronCursor(CURSOR_KEY, nextCursor);
 
     const count = (status: MemberOutcome['status']) =>
       outcomes.filter(o => o.status === status).length;

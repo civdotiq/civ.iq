@@ -22,7 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { getRedisCache } from '@/lib/cache/redis-client';
+import { readCronCursor, writeCronCursor } from '@/lib/cron/cursor';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
@@ -156,8 +156,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const redis = getRedisCache();
-
   try {
     const reps = await getAllEnhancedRepresentatives();
     if (reps.length === 0) {
@@ -173,15 +171,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const cursorRaw = await redis.get<number | string>(CURSOR_KEY);
-    const cursor =
-      typeof cursorRaw === 'number'
-        ? cursorRaw
-        : typeof cursorRaw === 'string'
-          ? Number.parseInt(cursorRaw, 10) || 0
-          : 0;
     const sliceSize = Math.min(getSliceSize(), reps.length);
-    const start = ((cursor % reps.length) + reps.length) % reps.length;
+    const start = await readCronCursor(CURSOR_KEY, reps.length);
     // Wrap within a single slice so each invocation does the same amount of work,
     // even when the cursor sits near the end of the chamber.
     const slice: { bioguideId: string }[] = [];
@@ -211,7 +202,7 @@ export async function POST(request: NextRequest) {
     );
 
     const nextCursor = end;
-    await redis.set(CURSOR_KEY, nextCursor, 7 * 24 * 60 * 60);
+    await writeCronCursor(CURSOR_KEY, nextCursor);
 
     const totalTime = Date.now() - startTime;
     logger.info('[WARM-INTEL] slice complete', {

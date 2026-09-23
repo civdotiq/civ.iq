@@ -467,15 +467,16 @@ async function readSwrEnvelope<T>(cacheKey: string): Promise<SwrEnvelope<T> | nu
 
 async function writeSwrEnvelope<T>(
   cacheKey: string,
-  data: T,
-  options: SwrOptions
-): Promise<number> {
-  const fetchedAt = Date.now();
+  envelope: SwrEnvelope<T>,
+  maxStaleMs: number
+): Promise<void> {
   // Same rule as unifiedCache.set: an empty array means the upstream failed.
-  if (Array.isArray(data) && data.length === 0) return fetchedAt;
-  const envelope: SwrEnvelope<T> = { data, fetchedAt, source: options.source || 'unknown' };
-  await getRedisCache().set(cacheKey, envelope, Math.ceil(options.maxStaleMs / 1000));
-  return fetchedAt;
+  if (Array.isArray(envelope.data) && envelope.data.length === 0) return;
+  await getRedisCache().set(cacheKey, envelope, Math.ceil(maxStaleMs / 1000));
+}
+
+function toEnvelope<T>(data: T, options: SwrOptions): SwrEnvelope<T> {
+  return { data, fetchedAt: Date.now(), source: options.source || 'unknown' };
 }
 
 /** Run work after the response is sent; outside a request scope, run it now. */
@@ -504,7 +505,7 @@ export async function refreshStaleWhileRevalidate<T>(
   const lockKey = `${cacheKey}:swr-lock`;
   if (!(await redis.setIfAbsent(lockKey, '1', SWR_LOCK_SECONDS))) return 'locked';
   try {
-    await writeSwrEnvelope(cacheKey, await fetcher(), options);
+    await writeSwrEnvelope(cacheKey, toEnvelope(await fetcher(), options), options.maxStaleMs);
     return 'refreshed';
   } finally {
     await redis.delete(lockKey);
@@ -547,9 +548,9 @@ export async function cachedStaleWhileRevalidate<T>(
   }
 
   return requestCoalescer.coalesce(`swr:${cacheKey}`, async () => {
-    const data = await fetcher();
-    const fetchedAt = await writeSwrEnvelope(cacheKey, data, options);
-    return { data, state: 'miss' as const, fetchedAt };
+    const envelope = toEnvelope(await fetcher(), options);
+    await writeSwrEnvelope(cacheKey, envelope, options.maxStaleMs);
+    return { data: envelope.data, state: 'miss' as const, fetchedAt: envelope.fetchedAt };
   });
 }
 
