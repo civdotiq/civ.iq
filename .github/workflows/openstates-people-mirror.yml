@@ -79,6 +79,12 @@ jobs:
             console.log(`${m.people} members across ${m.jurisdictions} jurisdictions, ` +
               `upstream ${m.upstreamCommit.slice(0, 8)} (${m.upstreamCommittedAt}), ` +
               `${m.departed} departed skipped, stale after ${m.staleAfter}`);
+            // Committees come from the same tarball (~2,790 across 52
+            // jurisdictions); the floors only trip on a structural failure.
+            const c = require("./data/openstates-committees.meta.json");
+            if (c.jurisdictions < 45) throw new Error(`only ${c.jurisdictions} committee jurisdictions`);
+            if (c.committees < 2000) throw new Error(`only ${c.committees} committees`);
+            console.log(`${c.committees} committees, ${c.memberships} memberships`);
           '
 
       - name: Commit updated corpus
@@ -90,11 +96,12 @@ jobs:
           # corpus would leave the freshness canary reporting the previous run's
           # date — permanent invisible drift, which is the one failure this
           # canary exists to catch.
-          if git diff --quiet -- data/openstates-people.json.br; then
-            echo "No change to the roster corpus"
+          if git diff --quiet -- data/openstates-people.json.br data/openstates-committees.json.br; then
+            echo "No change to the roster or committee corpus"
           else
-            git add data/openstates-people.json.br data/openstates-people.meta.json
-            git commit -m "chore(state-legislature): refresh OpenStates roster corpus [skip ci]"
+            git add data/openstates-people.json.br data/openstates-people.meta.json \
+              data/openstates-committees.json.br data/openstates-committees.meta.json
+            git commit -m "chore(state-legislature): refresh OpenStates roster and committee corpora [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history, so a merge commit is rejected outright. Only
             # data/ files are touched here, so a rebase conflict would mean
