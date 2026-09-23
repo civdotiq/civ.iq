@@ -1361,6 +1361,15 @@
                         "type": "object"
                       }
                     },
+                    "billsTotal": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Every bill (hr, s, hjres, sjres) CRS filed under this policy area in billsCongress; bills holds at most `limit`. Null when the bill corpus is unavailable."
+                    },
+                    "billsCongress": {
+                      "type": "integer",
+                      "nullable": true
+                    },
                     "regulations": {
                       "type": "array",
                       "items": {

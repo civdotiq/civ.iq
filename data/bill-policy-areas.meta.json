@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-09-23T22:17:12.494Z",
+  "staleAfter": "2026-10-14",
+  "congress": 119,
+  "bills": 16166,
+  "policyAreas": 31,
+  "compressedBytes": 286839,
+  "meta": {
+    "parsed": { "hr": 10523, "s": 5442, "hjres": 217, "sjres": 216 },
+    "unassigned": 232,
+    "sources": [
+      "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hr/BILLSTATUS-119-hr.zip",
+      "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/s/BILLSTATUS-119-s.zip",
+      "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hjres/BILLSTATUS-119-hjres.zip",
+      "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/sjres/BILLSTATUS-119-sjres.zip"
+    ]
+  }
+}
