@@ -142,6 +142,8 @@ export function computeChamberBaselines(
     if (roll.date > newestDate) newestDate = roll.date;
 
     for (const mv of roll.memberVotes) {
+      // Unresolved senators (empty id, raw LIS id kept) are not a member row.
+      if (!mv.bioguideId) continue;
       const entry = (members[mv.bioguideId] ??= {
         name: mv.name,
         party: mv.party,

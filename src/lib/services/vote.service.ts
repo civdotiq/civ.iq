@@ -403,16 +403,16 @@ async function senateVoteFromCorpus(
     ]);
 
     const members: SenatorVote[] = roll.memberVotes.map(mv => {
-      // Ingest keeps the raw LIS ID (e.g. "S440") when the legislator
-      // dataset had no mapping yet (a newly seated senator). Re-resolve at
-      // read time; an ID that still isn't a bioguide ID must never be
-      // linked as one.
-      const lisId = isLisMemberId(mv.bioguideId) ? mv.bioguideId : '';
+      // An unmapped senator is stored with an empty bioguide id and the raw
+      // LIS id alongside (rolls ingested before that kept "S440" in the
+      // bioguide slot). Re-resolve at read time; an ID that still isn't a
+      // bioguide ID must never be linked as one.
+      const lisId = mv.lisId ?? (isLisMemberId(mv.bioguideId) ? mv.bioguideId : '');
       const resolved = lisId ? senatorLookup.byLis.get(lisId) : mv.bioguideId;
       const bioguideId = isBioguideId(resolved) ? resolved : undefined;
       const info = bioguideId ? infoMap.get(bioguideId) : undefined;
       return {
-        id: bioguideId ?? mv.bioguideId,
+        id: bioguideId ?? (lisId || mv.bioguideId),
         lisId,
         bioguideId,
         firstName: info?.firstName ?? '',

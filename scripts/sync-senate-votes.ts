@@ -42,6 +42,14 @@ const BASE_URL = (
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
+/**
+ * Re-send every menu roll call, not just the missing ones. Rolls are
+ * immutable, but how we parse them is not: rolls ingested before a senator's
+ * LIS id was mapped hold that senator under an unresolved id. One manual run
+ * after a legislators refresh re-parses them (~20 min of paced fetches).
+ */
+const REINGEST = process.argv.includes('--reingest');
+
 function currentCongress(year: number): number {
   return Math.floor((year - 1789) / 2) + 1;
 }
@@ -136,9 +144,17 @@ async function main(): Promise<void> {
 
   // 2. The server answers with what it's missing
   const menuResult = await postIngest({ kind: 'menu', congress, sessions: menuSessions });
-  const missing = (menuResult.missing ?? {}) as Record<string, number[]>;
+  const missing = REINGEST
+    ? Object.fromEntries(
+        Object.entries(menuSessions).map(([session, entries]) => [session, entries.map(e => e.n)])
+      )
+    : ((menuResult.missing ?? {}) as Record<string, number[]>);
   const totalMissing = Object.values(missing).reduce((sum, nums) => sum + nums.length, 0);
-  console.log(`  server missing ${totalMissing} roll calls`);
+  console.log(
+    REINGEST
+      ? `  re-ingesting all ${totalMissing} menu roll calls`
+      : `  server missing ${totalMissing} roll calls`
+  );
 
   // 3. Fetch the gaps from senate.gov (paced) and relay in batches
   let persisted = 0;

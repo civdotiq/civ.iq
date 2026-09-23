@@ -17,6 +17,14 @@ on:
         description: 'Target app base URL'
         required: false
         default: 'https://civdotiq.org'
+      reingest:
+        description: >-
+          Re-send every roll call, not only missing ones. Run once after a
+          legislators refresh so rolls holding unresolved senator LIS ids are
+          re-parsed.
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   sync:
@@ -35,7 +43,8 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
-        run: npx tsx scripts/sync-senate-votes.ts
+          REINGEST: ${{ inputs.reingest && '--reingest' || '' }}
+        run: npx tsx scripts/sync-senate-votes.ts $REINGEST
 
       - name: Notify on failure
         if: failure()
