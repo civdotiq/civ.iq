@@ -14,3 +14,12 @@ export type {
 } from './people-corpus';
 // The request-time reader is deliberately absent: it pulls in node:fs, and
 // consumers import './load-people' directly. Same split as the LDA corpus.
+export { buildCommitteesCorpus } from './build-committees';
+export type { BuildCommitteesInput, RawCommitteeYaml } from './build-committees';
+export { decodeCommitteeRow } from './committees-corpus';
+export type {
+  CommitteeChamber,
+  CommitteesCorpusFile,
+  CorpusCommittee,
+  EncodedCommitteeRow,
+} from './committees-corpus';

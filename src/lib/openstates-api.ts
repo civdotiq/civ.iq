@@ -21,6 +21,8 @@ import {
 } from '@/lib/data-sources/openstates-people/load-people';
 import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
 import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
+import { getJurisdictionCommittees } from '@/lib/data-sources/openstates-people/load-committees';
+import type { CorpusCommittee } from '@/lib/data-sources/openstates-people/committees-corpus';
 import {
   OpenStatesQuotaExhaustedError,
   isDailyQuotaBody,
@@ -1303,6 +1305,22 @@ class OpenStatesAPI {
     classification?: 'committee' | 'subcommittee',
     includeMemberships: boolean = true
   ): Promise<OpenStatesCommittee[]> {
+    // The committed committee corpus is the normal path: the /committees
+    // endpoint pages at 20, so a state costs 2-6 requests against the
+    // 1,000/day cap. The API below is the fallback for when the artifact is
+    // missing or does not cover the jurisdiction.
+    const corpus = await getJurisdictionCommittees(state);
+    if (corpus && corpus.length > 0) {
+      const committees = await Promise.all(
+        corpus.map(c => this.corpusCommitteeToOpenStates(c, includeMemberships))
+      );
+      return committees.filter(
+        c =>
+          (!chamber || c.chamber === chamber) &&
+          (!classification || c.classification === classification)
+      );
+    }
+
     const jurisdiction = state.toLowerCase();
 
     let allResults: OpenStatesCommittee[] = [];
@@ -1404,6 +1422,55 @@ class OpenStatesAPI {
       }
       throw error;
     }
+  }
+
+  /**
+   * Shape a corpus committee like a v3 API result. Member party and title
+   * come from the roster corpus (same ocd-person ids); 'legislature' (joint
+   * or unicameral) becomes null and goes through the same chamber inference
+   * as API results.
+   */
+  private async corpusCommitteeToOpenStates(
+    c: CorpusCommittee,
+    includeMemberships: boolean
+  ): Promise<OpenStatesCommittee> {
+    const memberships = includeMemberships
+      ? await Promise.all(
+          c.members.map(async m => {
+            const person = m.personId ? await getCorpusPersonById(m.personId) : null;
+            return {
+              person_name: m.name,
+              role: m.role,
+              ...(m.personId ? { person_id: m.personId } : {}),
+              ...(person
+                ? {
+                    person: {
+                      id: person.id,
+                      name: person.name,
+                      party: person.party || null,
+                      current_role: {
+                        title: person.chamber === 'lower' ? 'Representative' : 'Senator',
+                        district: person.district || null,
+                      },
+                    },
+                  }
+                : {}),
+            };
+          })
+        )
+      : undefined;
+
+    const committee: OpenStatesCommittee = {
+      id: c.id,
+      name: c.name,
+      classification: c.classification,
+      chamber: c.chamber === 'legislature' ? null : c.chamber,
+      parent_id: c.parentId,
+      ...(memberships ? { memberships } : {}),
+      links: c.links.map(url => ({ url, note: null })),
+      sources: c.sources.map(url => ({ url, note: null })),
+    };
+    return { ...committee, chamber: this.normalizeCommitteeChamber(committee) };
   }
 
   /**
