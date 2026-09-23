@@ -79,6 +79,8 @@ export function PolicyAreaCrossDomain({ policyArea }: PolicyAreaCrossDomainProps
   if (!data) return null;
 
   const hasBills = data.bills.length > 0;
+  // Full area count from the corpus; data.bills is capped at the fetch limit.
+  const billsTotal = data.billsTotal ?? data.bills.length;
   const hasRegulations = data.regulations.length > 0;
   const hasSpending = data.spending.totalAmount > 0;
   const hasCommittees = data.committees.length > 0;
@@ -102,7 +104,7 @@ export function PolicyAreaCrossDomain({ policyArea }: PolicyAreaCrossDomainProps
         <div className="border border-gray-200 p-4">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4 text-civiq-blue" aria-hidden="true" />
-            Bills ({data.bills.length})
+            Bills ({billsTotal.toLocaleString('en-US')})
           </h3>
           {hasBills ? (
             <div className="space-y-2">
@@ -115,12 +117,12 @@ export function PolicyAreaCrossDomain({ policyArea }: PolicyAreaCrossDomainProps
                   {bill.title}
                 </Link>
               ))}
-              {data.bills.length > 5 && (
+              {billsTotal > 5 && (
                 <Link
-                  href="/legislation"
+                  href={`/legislation?policyArea=${encodeURIComponent(data.policyArea)}`}
                   className="block text-xs text-civiq-blue hover:underline mt-2"
                 >
-                  View all {data.bills.length} bills
+                  View all {billsTotal.toLocaleString('en-US')} bills
                 </Link>
               )}
             </div>

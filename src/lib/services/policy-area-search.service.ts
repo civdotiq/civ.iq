@@ -11,6 +11,10 @@
  *
  * Cross-domain search by Congress.gov policyArea: bills, regulations,
  * spending, and oversight committees.
+ *
+ * Bills come from the committed GovInfo BILLSTATUS corpus, not the live
+ * Congress.gov /bill list: that list never returns policyArea and the API has
+ * no policy-area filter (PLAN-bill-policy-area-corpus.md).
  */
 
 import { cachedFetch } from '@/lib/cache';
@@ -26,59 +30,11 @@ import type { FederalRegisterAPIResponse, FederalRegisterItem } from '@/types/fe
 import type { PolicyAreaResults, JoinMetadata } from '@/types/joins';
 import type { BillStatus } from '@/types/bill';
 import { mapCongressStatus } from '@/lib/services/bill.service';
+import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
 
 const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 const CACHE_TTL = 2 * 60 * 60; // 2 hours (seconds)
-
-interface CongressBillListItem {
-  congress: number;
-  type: string;
-  number: number;
-  title: string;
-  introducedDate: string;
-  policyArea?: { name: string };
-  latestAction?: { actionDate: string; text: string };
-}
-
-async function fetchBillsByPolicyArea(limit: number): Promise<
-  Array<{
-    id: string;
-    title: string;
-    status: BillStatus;
-    introducedDate: string;
-    policyArea: string | null;
-  }>
-> {
-  if (!process.env.CONGRESS_API_KEY) return [];
-
-  const url = new URL('https://api.congress.gov/v3/bill');
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('limit', Math.min(limit * 5, 250).toString());
-  url.searchParams.set('sort', 'updateDate+desc');
-
-  try {
-    const response = await fetch(url.toString(), {
-      headers: {
-        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-        Accept: 'application/json',
-        'X-API-Key': process.env.CONGRESS_API_KEY,
-      },
-    });
-
-    if (!response.ok) return [];
-    const data = await response.json();
-    return (data.bills || []).map((bill: CongressBillListItem) => ({
-      id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
-      title: bill.title,
-      status: mapCongressStatus(bill.latestAction?.text) ?? ('introduced' as BillStatus),
-      introducedDate: bill.introducedDate,
-      policyArea: bill.policyArea?.name ?? null,
-    }));
-  } catch {
-    return [];
-  }
-}
 
 async function fetchRegulations(
   agencySlugs: string[],
@@ -234,7 +190,7 @@ export async function searchPolicyArea(
   const mapping = getPolicyAreaMapping(policyArea);
   if (!mapping) return null;
 
-  const cacheKey = `service:policy-area-search:${policyArea}:${limit}`;
+  const cacheKey = `service:policy-area-search:v2:${policyArea}:${limit}`;
 
   return cachedFetch(
     cacheKey,
@@ -256,18 +212,20 @@ export async function searchPolicyArea(
       }
       const committees = [...committeeSet.values()];
 
-      const [allBills, regulations, spending] = await Promise.all([
-        fetchBillsByPolicyArea(limit),
+      const [corpus, regulations, spending] = await Promise.all([
+        getBillsByPolicyArea(policyArea, limit),
         fetchRegulations(agencySlugs, mapping.federalRegisterKeywords, limit),
         fetchSpendingByAgencies(agencySlugs),
       ]);
 
-      const bills = allBills
-        .filter(b => b.policyArea?.toLowerCase() === policyArea.toLowerCase())
-        .slice(0, limit)
-        .map(({ id, title, status, introducedDate }) => ({ id, title, status, introducedDate }));
+      const bills = (corpus?.bills ?? []).map(b => ({
+        id: b.id,
+        title: b.title,
+        status: mapCongressStatus(b.latestActionText ?? undefined) ?? ('introduced' as BillStatus),
+        introducedDate: b.introducedDate,
+      }));
 
-      const dataSources: string[] = ['congress.gov'];
+      const dataSources: string[] = corpus ? ['govinfo.gov'] : [];
       if (regulations.length > 0) dataSources.push('federalregister.gov');
       if (spending.totalAmount > 0) dataSources.push('usaspending.gov');
 
@@ -275,12 +233,14 @@ export async function searchPolicyArea(
         generatedAt: new Date().toISOString(),
         dataSources,
         joinType: 'policy-area-search',
-        dataQuality: bills.length > 0 ? 'complete' : 'partial',
+        dataQuality: corpus ? 'complete' : 'partial',
       };
 
       return {
         policyArea,
         bills,
+        billsTotal: corpus?.total ?? null,
+        billsCongress: corpus?.congress ?? null,
         regulations,
         spending,
         committees,

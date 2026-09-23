@@ -85,7 +85,9 @@ export function IssueTopicPage({
     [policyAreaData, leaderboard]
   );
 
-  const billsCount = policyAreaData?.bills.length ?? 0;
+  const billsShown = policyAreaData?.bills.length ?? 0;
+  // The area's full count from the corpus; the list is capped at the fetch limit.
+  const billsCount = policyAreaData?.billsTotal ?? billsShown;
   const regulationsCount = policyAreaData?.regulations.length ?? 0;
   const committeesCount = policyAreaData?.committees.length ?? 0;
   const dPct =
@@ -215,7 +217,8 @@ export function IssueTopicPage({
           >
             <div>
               <CqLabel>
-                Active legislation · {Math.min(8, billsCount)} of {billsCount} shown
+                Active legislation · {Math.min(8, billsShown)} of{' '}
+                {billsCount.toLocaleString('en-US')} shown
               </CqLabel>
               <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
                 Bills filed under {displayName}
@@ -255,7 +258,7 @@ export function IssueTopicPage({
       <div style={{ marginTop: 32 }}>
         <CqPlainReading>
           {policyAreaData
-            ? `${billsCount} bill${billsCount === 1 ? '' : 's'} under "${policyArea}" are tracked in the current Congress${
+            ? `${billsCount.toLocaleString('en-US')} bill${billsCount === 1 ? '' : 's'} under "${policyArea}" are tracked in the current Congress${
                 committeesCount > 0
                   ? `, with ${committeesCount} committee${committeesCount === 1 ? '' : 's'} holding jurisdiction`
                   : ''

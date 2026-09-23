@@ -35,10 +35,7 @@ const nextConfig = {
   // vote-predictor.ts is a runtime lookup the tracer may miss, causing a
   // MODULE_NOT_FOUND on Vercel's read-only fs → 500 on /vote-prediction.
   outputFileTracingIncludes: {
-    '/api/intelligence/**': [
-      './models/**/*',
-      './node_modules/onnxruntime-web/**/*',
-    ],
+    '/api/intelligence/**': ['./models/**/*', './node_modules/onnxruntime-web/**/*'],
     // The LDA corpus status route and the health freshness canary read this
     // sidecar at runtime; the tracer won't infer the fs read, so ship it with
     // those functions explicitly.
@@ -48,15 +45,18 @@ const nextConfig = {
     '/api/representative/[bioguideId]/lobbying': ['./data/lda-aggregates.json'],
     // The industry organizations route reads it for per-sector issue totals.
     '/api/industry/[sector]/organizations': ['./data/lda-aggregates.json'],
-    // The committee ask-page reads it for corpus-backed committee totals.
-    '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json'],
+    // The committee ask-page reads it for corpus-backed committee totals; the
+    // topic-bills ask-page reads the bill → policy-area corpus.
+    '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json', './data/bill-policy-areas.json.br'],
+    // Topic pages fetch bills-by-policy-area through this route.
+    '/api/search/policy-area': ['./data/bill-policy-areas.json.br'],
+    // The sitemap lists only topic pages whose policy area has bills.
+    '/sitemap.xml': ['./data/bill-policy-areas.json.br'],
     // The committee intelligence route's analyzer ranks peers off the corpus.
     '/api/intelligence/committee/[committeeId]': ['./data/lda-aggregates.json'],
     // The influence-chain analyzer reads filing-level rows, not aggregates —
     // it needs the organizations behind a committee's spending, not its total.
-    '/api/intelligence/representative/[bioguideId]/influence-chain': [
-      './data/lda-filings.json.br',
-    ],
+    '/api/intelligence/representative/[bioguideId]/influence-chain': ['./data/lda-filings.json.br'],
     // The district metadata route reads the committed 119th-Congress corpus
     // from disk; the tracer won't infer the fs read.
     '/api/district-boundaries/metadata': ['./data/districts/district_metadata_real.json'],
@@ -68,9 +68,10 @@ const nextConfig = {
   },
   // Remove console logs in production for better performance
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
-      ? { exclude: ['error', 'warn'] } // Keep error and warn for debugging
-      : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] } // Keep error and warn for debugging
+        : false,
   },
   images: {
     remotePatterns: [
