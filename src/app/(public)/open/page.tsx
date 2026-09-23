@@ -109,8 +109,9 @@ const ENDPOINTS: {
   {
     method: 'GET',
     path: '/bills/{billId}/summary',
-    description: 'Cached plain-language bill summary',
-    example: '/bills/119-hr-1/summary',
+    // No example link: this route only serves summaries already in cache and
+    // answers 404 otherwise, so no bill ID is a reliably live example.
+    description: 'Cached plain-language bill summary (404 until one has been generated)',
   },
   {
     method: 'GET',
@@ -200,7 +201,11 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
     description: 'Employment, economic indicators',
   },
   { name: 'CDC Open Data', url: 'https://data.cdc.gov', description: 'Public health statistics' },
-  { name: 'Dept. of Education', url: 'https://api.ed.gov', description: 'School district data' },
+  {
+    name: 'Dept. of Education (College Scorecard)',
+    url: 'https://collegescorecard.ed.gov/data/api/',
+    description: 'Higher-education outcomes',
+  },
   { name: 'FCC Open Data', url: 'https://opendata.fcc.gov', description: 'Broadband deployment' },
   { name: 'OpenStates', url: 'https://openstates.org', description: 'State legislature data' },
   {

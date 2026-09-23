@@ -41461,3 +41461,58 @@
     address: 244 Cannon House Office Building Washington DC 20515-0906
     office: 244 Cannon House Office Building
     phone: 202-225-2706
+- id:
+    bioguide: A000383
+    lis: S440
+    govtrack: 457040
+    wikipedia: Alan S. Armstrong
+    wikidata: Q138781196
+    ballotpedia: Alan Armstrong
+    votesmart: 237497
+  name:
+    first: Alan
+    last: Armstrong
+    official_full: Alan Armstrong
+  bio:
+    gender: M
+    birthday: '1962-07-11'
+  terms:
+  - type: sen
+    start: '2026-03-24'
+    end: '2027-01-03'
+    how: appointment
+    state: OK
+    class: 2
+    party: Republican
+    state_rank: junior
+    url: https://www.armstrong.senate.gov
+    address: 330 Hart Senate Office Building Washington DC 20510
+    office: 330 Hart Senate Office Building
+    phone: 202-224-4721
+    fax: 202-228-0380
+- id:
+    bioguide: G000608
+    lis: S441
+    govtrack: 457044
+    wikipedia: Darline Graham Nordone
+    wikidata: Q140537772
+  name:
+    first: Darline
+    last: Graham Nordone
+    official_full: Darline Graham
+  bio:
+    gender: F
+    birthday: '1964-06-12'
+  terms:
+  - type: sen
+    start: '2026-07-14'
+    end: '2027-01-03'
+    how: appointment
+    state: SC
+    class: 2
+    state_rank: junior
+    party: Republican
+    address: 211 Russell Senate Office Building Washington DC 20510
+    office: 211 Russell Senate Office Building
+    phone: 202-224-5972
+    url: https://www.dgraham.senate.gov

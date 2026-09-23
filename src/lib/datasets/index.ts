@@ -98,7 +98,7 @@ export const DATASET_REGISTRY: DatasetGenerator[] = [
   {
     slug: 'recent-votes',
     name: 'Recent Votes',
-    description: 'The 20 most recent roll-call vote summaries from both chambers.',
+    description: 'The 10 most recent roll-call vote summaries from each chamber.',
     source: 'Congress.gov + Senate.gov',
     sourceUrl: 'https://api.congress.gov',
     approximateRows: '~20',

@@ -20,6 +20,9 @@ import type { DatasetResult, DatasetColumn } from '@/types/dataset';
 
 const FR_API = 'https://www.federalregister.gov/api/v1';
 
+/** Federal Register document type codes: final rules, proposed rules, presidential documents. */
+export const FR_TYPE_CODES = ['RULE', 'PRORULE', 'PRESDOCU'] as const;
+
 const COLUMNS: DatasetColumn[] = [
   {
     key: 'documentNumber',
@@ -91,9 +94,11 @@ async function fetchRecentDocuments(): Promise<FederalRegisterAPIDocument[]> {
         per_page: '100',
         order: 'newest',
       });
-      params.append('conditions[type][]', 'Rule');
-      params.append('conditions[type][]', 'Proposed Rule');
-      params.append('conditions[type][]', 'Presidential Document');
+      // The filter takes FR type CODES. Display names ('Rule', 'Proposed Rule')
+      // are silently ignored and the API answers 200 with count 0.
+      for (const code of FR_TYPE_CODES) {
+        params.append('conditions[type][]', code);
+      }
       for (const f of fields) {
         params.append('fields[]', f);
       }

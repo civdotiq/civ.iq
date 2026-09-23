@@ -40,6 +40,7 @@ import { getLegislatorInfoMap, type LegislatorInfo } from '@/lib/data/legislator
  */
 const NO_FEC_ALLOWLIST: Record<string, string> = {
   // (bioguideId): 'reason (YYYY-MM-DD)'
+  A000383: 'Alan Armstrong (OK), appointed 2026-03-24; no FEC candidate record as of 2026-09-22',
 };
 
 describe('bioguide -> FEC mapping coverage (Campaign Finance tab canary)', () => {
