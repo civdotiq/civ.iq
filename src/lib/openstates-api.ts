@@ -21,6 +21,12 @@ import {
 } from '@/lib/data-sources/openstates-people/load-people';
 import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
 import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
+import {
+  OpenStatesQuotaExhaustedError,
+  isDailyQuotaBody,
+  isDailyQuotaExhausted,
+  markDailyQuotaExhausted,
+} from '@/lib/openstates-quota';
 
 interface OpenStatesConfig {
   apiKey?: string;
@@ -536,6 +542,12 @@ class OpenStatesAPI {
       return cached.data as T;
     }
 
+    // Every rejected call still counts against the 1000/day cap, so once the
+    // daily quota is gone no caller may spend another request until 00:00 UTC.
+    if (await isDailyQuotaExhausted()) {
+      throw new OpenStatesQuotaExhaustedError();
+    }
+
     // Build URL with query parameters
     const url = new URL(endpoint, this.config.baseUrl);
     if (params) {
@@ -579,6 +591,13 @@ class OpenStatesAPI {
 
         if (!response.ok) {
           const errorText = await response.text();
+          // A per-minute 429 is worth the retry below; the daily cap is not.
+          if (response.status === 429 && isDailyQuotaBody(errorText)) {
+            await markDailyQuotaExhausted(errorText.slice(0, 120));
+            throw new OpenStatesQuotaExhaustedError(
+              `HTTP 429: daily quota exhausted - ${errorText.slice(0, 120)}`
+            );
+          }
           throw new Error(
             `HTTP ${response.status}: ${response.statusText} - URL: ${url.toString()} - Response: ${errorText}`
           );
@@ -631,6 +650,7 @@ class OpenStatesAPI {
 
         return data as T;
       } catch (error) {
+        if (error instanceof OpenStatesQuotaExhaustedError) throw error;
         lastError = error as Error;
 
         if (attempt < this.config.retryAttempts) {
@@ -1540,7 +1560,7 @@ class OpenStatesAPI {
 export const openStatesAPI = new OpenStatesAPI();
 
 // Export class for testing
-export { OpenStatesAPI };
+export { OpenStatesAPI, OpenStatesQuotaExhaustedError };
 
 // Export utilities
 export const OpenStatesUtils = {

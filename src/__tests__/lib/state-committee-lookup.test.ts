@@ -13,6 +13,11 @@
 import { openStatesAPI, type OpenStatesCommittee } from '@/lib/openstates-api';
 import { lookupStateCommittee } from '@/lib/state-committee-lookup';
 
+// Keep the daily-quota flag out of the shared cache between tests.
+jest.mock('@/lib/cache', () => ({
+  cache: { get: jest.fn(async () => null), set: jest.fn(async () => true) },
+}));
+
 jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },

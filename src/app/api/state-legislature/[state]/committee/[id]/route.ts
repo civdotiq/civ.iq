@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { openStatesAPI } from '@/lib/openstates-api';
+import { openStatesAPI, OpenStatesQuotaExhaustedError } from '@/lib/openstates-api';
 import type { StateCommittee, StateParty } from '@/types/state-legislature';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
@@ -136,6 +136,12 @@ export async function GET(
       }
     );
   } catch (error) {
+    if (error instanceof OpenStatesQuotaExhaustedError) {
+      return NextResponse.json(
+        { success: false, error: 'State committee data temporarily unavailable.' },
+        { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3600' } }
+      );
+    }
     return NextResponse.json(
       {
         success: false,

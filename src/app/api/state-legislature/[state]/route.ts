@@ -4,9 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch, cache } from '@/lib/cache';
+import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { ApiErrors } from '@/lib/api/error-responses';
+import {
+  isDailyQuotaBody,
+  isDailyQuotaExhausted,
+  markDailyQuotaExhausted,
+} from '@/lib/openstates-quota';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { getStateLegislatureMetadata } from '@/lib/data/static-state-legislatures';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
@@ -101,39 +106,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/**
- * OpenStates enforces 40/min AND 1000/day. A per-minute 429 is worth a retry;
- * a daily-quota 429 is not — every retry is another rejected call that still
- * counts. When the body says the daily limit is gone, remember that until the
- * quota resets at 00:00 UTC and stop calling OpenStates for the rest of the day.
- */
-const OPENSTATES_QUOTA_FLAG = 'openstates:daily-quota-exhausted';
-
-function secondsUntilUtcMidnight(): number {
-  const now = new Date();
-  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-  return Math.max(60, Math.ceil((next - now.getTime()) / 1000));
-}
-
-async function isDailyQuotaExhausted(): Promise<boolean> {
-  try {
-    return (await cache?.get<boolean>(OPENSTATES_QUOTA_FLAG)) === true;
-  } catch {
-    return false;
-  }
-}
-
-async function markDailyQuotaExhausted(detail: string): Promise<void> {
-  logger.warn('OpenStates daily quota exhausted; skipping OpenStates until 00:00 UTC', {
-    detail,
-  });
-  try {
-    await cache?.set(OPENSTATES_QUOTA_FLAG, true, secondsUntilUtcMidnight());
-  } catch {
-    // Flag is an optimisation; failing to store it only costs extra rejected calls.
-  }
-}
-
 // Helper: Retry with exponential backoff for rate limiting
 async function fetchWithRetry(
   url: string,
@@ -153,7 +125,7 @@ async function fetchWithRetry(
       if (response.status === 429) {
         const body =
           typeof response.text === 'function' ? await response.text().catch(() => '') : '';
-        if (/\/day/.test(body)) {
+        if (isDailyQuotaBody(body)) {
           await markDailyQuotaExhausted(body.slice(0, 120));
           return response;
         }
