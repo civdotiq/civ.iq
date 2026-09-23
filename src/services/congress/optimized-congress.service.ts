@@ -5,6 +5,10 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
+import {
+  cachedStaleWhileRevalidate,
+  refreshStaleWhileRevalidate,
+} from '@/services/cache/unified-cache.service';
 
 // Congress.gov API response types
 interface CongressBill {
@@ -320,71 +324,129 @@ export async function fetchAllMemberLegislation(
 }
 
 /**
- * Fetch bills with intelligent pagination and caching
- * Only fetches what's actually needed, not everything
+ * Freshness for a member's bill walk. Within BILLS_FRESH_MS the cache is served
+ * as is; up to BILLS_MAX_STALE_MS it is served while one background refresh
+ * runs. The walk is 3-9 all-time Congress.gov pages (~12s cold), and the
+ * warm-member-bills cron keeps a copy for every sitting member, so a cold ISR
+ * render after a deploy reads Redis instead of walking Congress.gov.
  */
-/**
- * Fetch both sponsored AND cosponsored legislation for comprehensive coverage
- */
-export async function getComprehensiveBillsByMember(
-  request: OptimizedBillsRequest
-): Promise<OptimizedBillsResponse> {
-  const startTime = Date.now();
-  const { bioguideId, limit = 25, page = 1, congress = 119, includeAmendments = false } = request;
+const BILLS_FRESH_MS = 30 * 60 * 1000;
+const BILLS_MAX_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
-  // Check cache first
-  const cacheKey = `comprehensive-bills:${bioguideId}:${congress}:${limit}:${page}:${includeAmendments}`;
-  const cached = await govCache.get<OptimizedBillsResponse>(cacheKey);
+/** The cached part of a member's bill walk; independent of limit and page. */
+interface MemberBillsWalk {
+  bills: ProcessedBill[];
+  sponsoredCount: number;
+  cosponsoredCount: number;
+}
 
-  if (cached) {
-    logger.info('Comprehensive bills cache hit', { bioguideId, congress, cacheKey });
-    return {
-      ...cached,
-      metadata: { ...cached.metadata, cached: true },
-    };
+async function walkMemberBills(
+  bioguideId: string,
+  congress: number,
+  includeAmendments: boolean
+): Promise<MemberBillsWalk> {
+  const apiKey = process.env.CONGRESS_API_KEY;
+  if (!apiKey) {
+    throw new Error('Congress API key not configured');
+  }
+  await rateLimiter.waitIfNeeded();
+
+  // For sponsored: fetch all (usually < 100 bills)
+  // For cosponsored: fetch up to 500 bills (2 pages) by default
+  const [sponsoredData, cosponsoredData] = await Promise.all([
+    fetchSponsoredLegislation(bioguideId, apiKey, congress, 0, 1),
+    fetchCosponsoredLegislation(bioguideId, apiKey, congress, 0, 1),
+  ]);
+
+  // Congress.gov mixes amendments (amendmentNumber, no bill type/number)
+  // into sponsored-legislation; they are not bills and have no bill page.
+  if (!includeAmendments) {
+    sponsoredData.bills = sponsoredData.bills.filter(isBillOrResolution);
+    sponsoredData.total = sponsoredData.bills.length;
+    cosponsoredData.bills = cosponsoredData.bills.filter(isBillOrResolution);
+    cosponsoredData.total = cosponsoredData.bills.length;
   }
 
+  const bills = [...sponsoredData.bills, ...cosponsoredData.bills];
+  // Sort by introduced date (most recent first)
+  bills.sort((a, b) => new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime());
+
+  logger.info('Comprehensive bills fetch complete', {
+    bioguideId,
+    congress,
+    sponsored: sponsoredData.bills.length,
+    cosponsored: cosponsoredData.bills.length,
+    totalBills: bills.length,
+  });
+
+  return {
+    bills,
+    sponsoredCount: sponsoredData.total,
+    cosponsoredCount: cosponsoredData.total,
+  };
+}
+
+function billsWalkCacheKey(bioguideId: string, congress: number, includeAmendments: boolean) {
+  return `comprehensive-bills:v2:${bioguideId}:${congress}:${includeAmendments}`;
+}
+
+/**
+ * Warm one member's bill walk for the warm-member-bills cron. Skips members
+ * whose copy is still fresh; throws on upstream failure (nothing is cached).
+ */
+export async function warmComprehensiveBillsByMember(
+  bioguideId: string,
+  congress: number = 119
+): Promise<'fresh' | 'refreshed' | 'locked'> {
+  return refreshStaleWhileRevalidate(
+    billsWalkCacheKey(bioguideId, congress, false),
+    () => walkMemberBills(bioguideId, congress, false),
+    { freshMs: BILLS_FRESH_MS, maxStaleMs: BILLS_MAX_STALE_MS, source: 'congress.gov' }
+  );
+}
+
+/**
+ * Fetch both sponsored AND cosponsored legislation for comprehensive coverage.
+ * Served stale-while-revalidate from Redis (see BILLS_FRESH_MS). Pass
+ * requireFresh when acting on the result (alerts): a stale copy is refetched.
+ */
+export async function getComprehensiveBillsByMember(
+  request: OptimizedBillsRequest & { requireFresh?: boolean }
+): Promise<OptimizedBillsResponse> {
+  const startTime = Date.now();
+  const {
+    bioguideId,
+    limit = 25,
+    page = 1,
+    congress = 119,
+    includeAmendments = false,
+    requireFresh = false,
+  } = request;
+
   try {
-    await rateLimiter.waitIfNeeded();
-
-    const apiKey = process.env.CONGRESS_API_KEY;
-    if (!apiKey) {
-      throw new Error('Congress API key not configured');
-    }
-
-    // Fetch both sponsored AND cosponsored legislation
-    // For sponsored: fetch all (usually < 100 bills)
-    // For cosponsored: fetch up to 500 bills (2 pages) by default
-    const [sponsoredData, cosponsoredData] = await Promise.all([
-      fetchSponsoredLegislation(bioguideId, apiKey, congress, limit, page),
-      fetchCosponsoredLegislation(bioguideId, apiKey, congress, limit, page),
-    ]);
-
-    // Congress.gov mixes amendments (amendmentNumber, no bill type/number)
-    // into sponsored-legislation; they are not bills and have no bill page.
-    if (!includeAmendments) {
-      sponsoredData.bills = sponsoredData.bills.filter(isBillOrResolution);
-      sponsoredData.total = sponsoredData.bills.length;
-      cosponsoredData.bills = cosponsoredData.bills.filter(isBillOrResolution);
-      cosponsoredData.total = cosponsoredData.bills.length;
-    }
-
-    // Combine and process bills
-    const allBills = [...sponsoredData.bills, ...cosponsoredData.bills];
-
-    // Sort by introduced date (most recent first)
-    allBills.sort(
-      (a, b) => new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime()
+    const { data: walk, state } = await cachedStaleWhileRevalidate(
+      billsWalkCacheKey(bioguideId, congress, includeAmendments),
+      () => walkMemberBills(bioguideId, congress, includeAmendments),
+      {
+        freshMs: BILLS_FRESH_MS,
+        maxStaleMs: BILLS_MAX_STALE_MS,
+        source: 'congress.gov',
+        staleMode: requireFresh ? 'refetch' : 'background',
+      }
     );
+    if (state !== 'miss') {
+      logger.info('Comprehensive bills cache hit', { bioguideId, congress, state });
+    }
 
     // NOTE: Don't apply server-side pagination here - the frontend (BillsTab.tsx) expects
     // ALL bills and handles its own filtering and pagination. Server-side pagination
     // breaks the sponsored/cosponsored separation since we slice before separating.
-    const actualFetchedCount = allBills.length;
-    const totalAvailableCount = sponsoredData.total + cosponsoredData.total;
+    const actualFetchedCount = walk.bills.length;
+    const totalAvailableCount = walk.sponsoredCount + walk.cosponsoredCount;
+    const fetchedSponsored = walk.bills.filter(b => b.relationship === 'sponsored').length;
 
-    const result: OptimizedBillsResponse = {
-      bills: allBills, // Return ALL bills - frontend handles pagination
+    return {
+      bills: walk.bills, // Return ALL bills - frontend handles pagination
       pagination: {
         total: actualFetchedCount, // Use fetched count for accurate pagination
         page,
@@ -394,40 +456,16 @@ export async function getComprehensiveBillsByMember(
       metadata: {
         bioguideId,
         congress,
-        cached: false,
+        cached: state !== 'miss',
         executionTime: Date.now() - startTime,
-        sponsoredCount: sponsoredData.total, // Total available from API
-        cosponsoredCount: cosponsoredData.total, // Total available from API
+        sponsoredCount: walk.sponsoredCount, // Total available from API
+        cosponsoredCount: walk.cosponsoredCount, // Total available from API
         totalCount: totalAvailableCount, // Total available from both APIs
-        fetchedSponsored: sponsoredData.bills.length, // Actually fetched
-        fetchedCosponsored: cosponsoredData.bills.length, // Actually fetched
+        fetchedSponsored, // Actually fetched
+        fetchedCosponsored: actualFetchedCount - fetchedSponsored, // Actually fetched
         fetchedTotal: actualFetchedCount, // Total actually fetched
       },
     };
-
-    // Cache for 30 minutes
-    await govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'congress.gov' });
-
-    // Log important metrics about what we fetched vs what's available
-    if (actualFetchedCount < totalAvailableCount) {
-      logger.warn('Not all bills fetched due to pagination limits', {
-        bioguideId,
-        congress,
-        totalAvailable: totalAvailableCount,
-        actualFetched: actualFetchedCount,
-        percentFetched: Math.round((actualFetchedCount / totalAvailableCount) * 100),
-      });
-    }
-    logger.info('Comprehensive bills fetch complete', {
-      bioguideId,
-      congress,
-      sponsored: sponsoredData.bills.length,
-      cosponsored: cosponsoredData.bills.length,
-      totalBills: allBills.length,
-      executionTime: result.metadata.executionTime,
-    });
-
-    return result;
   } catch (error) {
     logger.error('Comprehensive bills fetch failed', error as Error, {
       bioguideId,
@@ -436,7 +474,8 @@ export async function getComprehensiveBillsByMember(
       limit,
     });
 
-    // Return empty result instead of crashing
+    // Return empty result instead of crashing. Never cached: the SWR helper
+    // only stores what the walk returns, and the walk threw.
     return {
       bills: [],
       pagination: { total: 0, page, limit, pages: 0 },

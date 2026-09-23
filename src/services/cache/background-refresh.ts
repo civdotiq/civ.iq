@@ -111,17 +111,12 @@ async function refreshRepresentative(
           source: 'background-refresh',
         });
 
-        // Cache first page of bills
-        const billsKey = `comprehensive-bills:${bioguideId}:119:25:1`;
-        const billsData = await getComprehensiveBillsByMember({
+        // Warm the member's bill walk (the service caches it itself)
+        await getComprehensiveBillsByMember({
           bioguideId,
           limit: 25,
           page: 1,
           congress: 119,
-        });
-        await govCache.set(billsKey, billsData, {
-          dataType: 'bills',
-          source: 'background-refresh',
         });
 
         cached.bills = 2;

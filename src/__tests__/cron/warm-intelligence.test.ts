@@ -12,49 +12,6 @@
  *   - Error isolation (one analyzer throwing does not block the other three)
  */
 
-// Override the global next/server mock — we need a real Headers object so the
-// route's `request.headers.get('authorization')` works correctly.
-jest.mock('next/server', () => {
-  class _NextResponse {
-    status: number;
-    headers: Headers;
-    private body: unknown;
-
-    constructor(body?: unknown, init?: { status?: number; headers?: Record<string, string> }) {
-      this.body = body;
-      this.status = init?.status ?? 200;
-      this.headers = new Headers(init?.headers);
-    }
-
-    async json() {
-      return this.body;
-    }
-
-    static json(data: unknown, init?: { status?: number; headers?: Record<string, string> }) {
-      return new _NextResponse(data, init);
-    }
-  }
-
-  class _NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-
-    constructor(
-      urlInput: string | URL,
-      init?: { method?: string; headers?: Record<string, string> }
-    ) {
-      this.url = typeof urlInput === 'string' ? urlInput : urlInput.toString();
-      this.method = init?.method ?? 'GET';
-      this.headers = new Headers(init?.headers);
-      this.nextUrl = new URL(this.url);
-    }
-  }
-
-  return { NextResponse: _NextResponse, NextRequest: _NextRequest };
-});
-
 const mockGetAllReps = jest.fn();
 const mockAnalyzeFinanceJurisdiction = jest.fn();
 const mockAnalyzeVoteFinance = jest.fn();
@@ -97,27 +54,15 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-import { NextRequest } from 'next/server';
+import { fakeReps, makeCronRequest } from './cron-test-helpers';
 import { GET } from '@/app/api/cron/warm-intelligence/route';
 
 const TEST_SECRET = 'test-cron-secret';
 const ORIGINAL_SECRET = process.env.CRON_SECRET;
 const ORIGINAL_SLICE = process.env.WARM_INTEL_SLICE_SIZE;
 
-function makeRequest(authHeader?: string): NextRequest {
-  const headers: Record<string, string> = {};
-  if (authHeader !== undefined) headers.authorization = authHeader;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { NextRequest: NR } = require('next/server');
-  return new NR('http://localhost:3000/api/cron/warm-intelligence', { headers }) as NextRequest;
-}
-
-function fakeReps(n: number) {
-  return Array.from({ length: n }, (_, i) => ({
-    bioguideId: `B${String(i).padStart(3, '0')}`,
-    name: `Rep ${i}`,
-  }));
-}
+const makeRequest = (authHeader?: string) =>
+  makeCronRequest('/api/cron/warm-intelligence', authHeader);
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -451,6 +451,64 @@ export class RedisCache {
     }
   }
 
+  /**
+   * SET key value EX ttl NX. Returns true only when this call created the key,
+   * so it works as a short-lived lock. A REST failure degrades to the
+   * in-memory map, which still locks within one instance.
+   */
+  async setIfAbsent(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+    ttlSeconds = clampTtl(key, ttlSeconds);
+
+    if (
+      this.isConnected &&
+      !this.client &&
+      process.env.UPSTASH_REDIS_REST_URL &&
+      process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      try {
+        const response = await fetch(
+          `${process.env.UPSTASH_REDIS_REST_URL}/set/${encodeURIComponent(this.keyPrefix + key)}/${encodeURIComponent(value)}/EX/${ttlSeconds}/NX`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+          }
+        );
+        if (response.ok) {
+          const data = (await response.json()) as { result?: string | null };
+          return data.result === 'OK';
+        }
+        throw new Error(`REST API failed: ${response.status}`);
+      } catch (restError) {
+        this.recordRestFailure('setIfAbsent', restError);
+        logger.warn('[Cache] REST API error on setIfAbsent, falling back to memory', {
+          key,
+          error: (restError as Error).message,
+        });
+      }
+    }
+
+    try {
+      if (this.isConnected && this.client) {
+        return (await this.client.set(key, value, 'EX', ttlSeconds, 'NX')) === 'OK';
+      }
+    } catch (error) {
+      logger.warn('[Cache] setIfAbsent failed, falling back to memory', {
+        key,
+        error: (error as Error).message,
+      });
+    }
+
+    const fallbackKey = this.getFallbackKey(key);
+    const entry = this.fallbackCache.get(fallbackKey);
+    if (entry && Date.now() - entry.timestamp < entry.ttl) return false;
+    this.fallbackCache.set(fallbackKey, {
+      data: value,
+      timestamp: Date.now(),
+      ttl: ttlSeconds * 1000,
+    });
+    return true;
+  }
+
   async delete(key: string): Promise<boolean> {
     const monitor = monitorCache('delete', key);
 
