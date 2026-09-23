@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
 
       - name: Mirror BILLSTATUS into data/
         run: npx tsx scripts/sync-bill-policy-areas.ts --congress "${{ inputs.congress || '119' }}"

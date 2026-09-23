@@ -75,7 +75,8 @@ async function fetchType(type: CorpusBillType, temp: string): Promise<ParsedBill
   writeFileSync(archive, Buffer.from(await res.arrayBuffer()));
   const dir = join(temp, type);
   mkdirSync(dir);
-  execFileSync('unzip', ['-q', archive, '-d', dir]);
+  // Absolute path so a writable PATH entry cannot substitute the binary.
+  execFileSync('/usr/bin/unzip', ['-q', archive, '-d', dir]);
 
   const files = readdirSync(dir).filter(f => f.endsWith('.xml'));
   const bills: ParsedBillStatus[] = [];
