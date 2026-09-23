@@ -10,6 +10,7 @@
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 import { requestCoalescer } from '@/lib/cache/request-coalescer';
+import { after } from 'next/server';
 
 interface CacheEntry<T = unknown> {
   data: T;
@@ -419,43 +420,137 @@ export async function cachedHeavyEndpoint<T>(
 }
 
 /**
- * Stale-while-revalidate caching strategy
- * Serves stale cache immediately while fetching fresh data in background
+ * Stale-while-revalidate envelope. fetchedAt drives freshness; the Redis TTL
+ * is the stale ceiling, so an entry outlives its freshness window and can
+ * still be served while a refresh runs.
+ */
+interface SwrEnvelope<T> {
+  data: T;
+  fetchedAt: number;
+  source: string;
+}
+
+export interface SwrOptions {
+  /** Age in ms under which a cached value is served without revalidating. */
+  freshMs: number;
+  /** Age in ms under which a stale value may still be served. */
+  maxStaleMs: number;
+  source?: string;
+  /**
+   * What to do with a stale entry. 'background' (default) serves it and
+   * refreshes after the response; 'refetch' treats it as a miss, for callers
+   * that must not act on old data.
+   */
+  staleMode?: 'background' | 'refetch';
+}
+
+export interface SwrResult<T> {
+  data: T;
+  state: 'fresh' | 'stale' | 'miss';
+  fetchedAt: number;
+}
+
+const SWR_LOCK_SECONDS = 120;
+
+async function readSwrEnvelope<T>(cacheKey: string): Promise<SwrEnvelope<T> | null> {
+  try {
+    const entry = await getRedisCache().get<SwrEnvelope<T>>(cacheKey);
+    return entry && typeof entry.fetchedAt === 'number' ? entry : null;
+  } catch (error) {
+    logger.warn('[SWR] Read failed, treating as miss', {
+      key: cacheKey,
+      error: (error as Error).message,
+    });
+    return null;
+  }
+}
+
+async function writeSwrEnvelope<T>(
+  cacheKey: string,
+  data: T,
+  options: SwrOptions
+): Promise<number> {
+  const fetchedAt = Date.now();
+  // Same rule as unifiedCache.set: an empty array means the upstream failed.
+  if (Array.isArray(data) && data.length === 0) return fetchedAt;
+  const envelope: SwrEnvelope<T> = { data, fetchedAt, source: options.source || 'unknown' };
+  await getRedisCache().set(cacheKey, envelope, Math.ceil(options.maxStaleMs / 1000));
+  return fetchedAt;
+}
+
+/** Run work after the response is sent; outside a request scope, run it now. */
+function runAfterResponse(task: () => Promise<void>): void {
+  try {
+    after(task);
+  } catch {
+    void task();
+  }
+}
+
+/**
+ * Fetch, store and return fresh data, skipping the fetch when the cached copy
+ * is still fresh. Throws when the fetcher throws, so warmers can see failures.
+ * Returns 'locked' when another instance is already refreshing this key.
+ */
+export async function refreshStaleWhileRevalidate<T>(
+  cacheKey: string,
+  fetcher: () => Promise<T>,
+  options: SwrOptions
+): Promise<'fresh' | 'refreshed' | 'locked'> {
+  const entry = await readSwrEnvelope<T>(cacheKey);
+  if (entry && Date.now() - entry.fetchedAt < options.freshMs) return 'fresh';
+
+  const redis = getRedisCache();
+  const lockKey = `${cacheKey}:swr-lock`;
+  if (!(await redis.setIfAbsent(lockKey, '1', SWR_LOCK_SECONDS))) return 'locked';
+  try {
+    await writeSwrEnvelope(cacheKey, await fetcher(), options);
+    return 'refreshed';
+  } finally {
+    await redis.delete(lockKey);
+  }
+}
+
+/**
+ * Stale-while-revalidate caching.
+ * - fresh (age < freshMs): serve the cache.
+ * - stale (age < maxStaleMs): serve the cache and refresh once in the
+ *   background (after() + a Redis lock, so concurrent hits cost one fetch).
+ * - missing: fetch inline, coalesced within the instance.
+ * Fetcher errors on the inline path propagate and are never cached.
  */
 export async function cachedStaleWhileRevalidate<T>(
   cacheKey: string,
   fetcher: () => Promise<T>,
-  options?: {
-    ttl?: number;
-    source?: string;
-    dataType?: keyof UnifiedCacheService['ttls'];
-    maxStaleTime?: number; // How long to serve stale data (default: 2x TTL)
-  }
-): Promise<T> {
-  const cached = await unifiedCache.get<T>(cacheKey);
+  options: SwrOptions
+): Promise<SwrResult<T>> {
+  const entry = await readSwrEnvelope<T>(cacheKey);
+  const age = entry ? Date.now() - entry.fetchedAt : Infinity;
 
-  // If we have cached data, return it immediately
-  if (cached) {
-    // Trigger background revalidation
-    // Don't await this - let it run in background
-    void (async () => {
+  if (entry && age < options.freshMs) {
+    return { data: entry.data, state: 'fresh', fetchedAt: entry.fetchedAt };
+  }
+
+  if (entry && age < options.maxStaleMs && options.staleMode !== 'refetch') {
+    runAfterResponse(async () => {
       try {
-        const fresh = await fetcher();
-        await unifiedCache.set(cacheKey, fresh, options);
-        logger.debug(`[SWR] Background revalidation complete for ${cacheKey}`);
+        const outcome = await refreshStaleWhileRevalidate(cacheKey, fetcher, options);
+        logger.debug(`[SWR] Background revalidation ${outcome} for ${cacheKey}`);
       } catch (error) {
         logger.warn('[SWR] Background revalidation failed', {
           key: cacheKey,
           error: (error as Error).message,
         });
       }
-    })();
-
-    return cached;
+    });
+    return { data: entry.data, state: 'stale', fetchedAt: entry.fetchedAt };
   }
 
-  // No cache - fetch normally with coalescing
-  return cachedFetch(cacheKey, fetcher, options);
+  return requestCoalescer.coalesce(`swr:${cacheKey}`, async () => {
+    const data = await fetcher();
+    const fetchedAt = await writeSwrEnvelope(cacheKey, data, options);
+    return { data, state: 'miss' as const, fetchedAt };
+  });
 }
 
 // Backwards compatibility exports

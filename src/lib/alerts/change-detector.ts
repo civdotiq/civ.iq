@@ -231,6 +231,8 @@ async function detectBillChanges(
     limit: 10,
     page: 1,
     congress: getCurrentCongressNumber(),
+    // Alerts act on this diff; a stale cached walk would delay them.
+    requireFresh: true,
   });
 
   const bills = result.bills ?? [];

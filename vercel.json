@@ -101,6 +101,10 @@
       "schedule": "*/30 * * * *"
     },
     {
+      "path": "/api/cron/warm-member-bills",
+      "schedule": "15,45 * * * *"
+    },
+    {
       "path": "/api/cron/chamber-baselines",
       "schedule": "0 9 * * *"
     },
