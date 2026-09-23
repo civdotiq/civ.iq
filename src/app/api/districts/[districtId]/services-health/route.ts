@@ -8,6 +8,7 @@ import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 import { fetchDistrictPlacesData } from '@/lib/data-sources/cdc-places-service';
 import { computeDistrictPlacesEstimate } from '@/lib/data-sources/cdc-places-district-estimate';
+import { CCD_YEAR, fetchDistrictStaffing } from '@/lib/data-sources/nces-ccd-service';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
@@ -68,67 +69,6 @@ const STATE_FIPS: Record<string, string> = {
 };
 
 const CACHE_KEY_PREFIX = 'district-services-health';
-
-async function fetchEducationData(
-  stateCode: string
-): Promise<Partial<ServicesHealthProfile['education']>> {
-  try {
-    // Department of Education API for state-level data
-    const edApiUrl = `https://api.ed.gov/data/school-districts?state=${stateCode}&format=json&limit=50`;
-
-    logger.info('Fetching Department of Education data', {
-      stateCode,
-      url: edApiUrl,
-    });
-
-    const response = await fetch(edApiUrl, {
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Education API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.result && data.result.length > 0) {
-      // Calculate averages from district data
-      let totalGradRate = 0;
-      let totalStudents = 0;
-      let totalTeachers = 0;
-      let validDistricts = 0;
-
-      data.result.forEach((district: unknown) => {
-        const districtData = district as Record<string, unknown>;
-        if (districtData.graduation_rate && districtData.enrollment) {
-          totalGradRate += parseFloat(String(districtData.graduation_rate)) || 0;
-          totalStudents += parseInt(String(districtData.total_students)) || 0;
-          totalTeachers += parseInt(String(districtData.total_teachers)) || 0;
-          validDistricts++;
-        }
-      });
-
-      if (validDistricts > 0) {
-        // Only emit metrics this API genuinely provides. collegeEnrollmentRate
-        // (previously derived as enrollment/students capped at 95) and
-        // schoolDistrictPerformance have no real source here — stay null.
-        return {
-          graduationRate: totalGradRate / validDistricts,
-          teacherToStudentRatio: totalTeachers > 0 ? totalStudents / totalTeachers : null,
-        };
-      }
-    }
-
-    logger.warn('Education API returned no usable data', { stateCode });
-    return {};
-  } catch (error) {
-    logger.error('Error fetching education data', error as Error, { stateCode });
-    return {};
-  }
-}
 
 /**
  * CDC PLACES crude prevalence for the counties overlapping the district.
@@ -260,8 +200,8 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
     logger.info('Fetching services health profile for district', { districtId, stateCode });
 
     // Fetch data from real sources in parallel
-    const [educationApiData, censusEducation, publicHealth] = await Promise.all([
-      fetchEducationData(stateCode),
+    const [staffing, censusEducation, publicHealth] = await Promise.all([
+      fetchDistrictStaffing(districtId, STATE_FIPS[stateCode]),
       fetchCensusEducationFunding(stateCode),
       fetchPublicHealthData(districtId),
     ]);
@@ -270,11 +210,14 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
     const servicesProfile: ServicesHealthProfile = {
       education: {
         schoolDistrictPerformance: null, // No real performance framework source
-        graduationRate: educationApiData.graduationRate ?? null,
+        // No current district-level source: EdFacts graduation rates on the
+        // Education Data API end at 2019 and api.ed.gov no longer resolves.
+        graduationRate: null,
         collegeEnrollmentRate: null, // No real source (previous formula was fabricated)
         // Federal revenue to the state's school systems (statewide, Census ASFIN)
         federalEducationFunding: censusEducation.totalFederalRevenue,
-        teacherToStudentRatio: educationApiData.teacherToStudentRatio ?? null,
+        // Students per FTE teacher across public schools in the district (NCES CCD)
+        teacherToStudentRatio: staffing?.studentsPerTeacher ?? null,
       },
       healthcare: getHealthcareData(),
       publicHealth,
@@ -320,7 +263,7 @@ export async function GET(
         metadata: {
           timestamp: new Date().toISOString(),
           dataSources: {
-            education: 'Department of Education - https://api.ed.gov/',
+            education: `NCES Common Core of Data ${CCD_YEAR} school directory, via Urban Institute Education Data API - https://educationdata.urban.org/documentation/schools.html`,
             censusAsfin:
               'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
             cdc: 'CDC PLACES County Data - https://data.cdc.gov/resource/swc5-untb',
@@ -330,7 +273,7 @@ export async function GET(
           },
           notes: [
             'null values mean data is unavailable from real government sources - never estimated',
-            'Education data from Department of Education API when available',
+            'Students per teacher sums enrollment and full-time-equivalent teachers over public schools located in this congressional district that report both (NCES CCD); graduation rate is unavailable because no current district-level source exists',
             'Federal education funding is the statewide federal revenue to school systems (Census ASFIN survey), not district-specific',
             'Public health county table shows CDC PLACES county-level model-based estimates (BRFSS, crude prevalence percentages) for the counties overlapping this district',
             'publicHealth.districtEstimate is a population-weighted district figure aggregated from CDC PLACES census-tract crude prevalence (weighted by tract adult population, Census CD-to-tract crosswalk); null when tract coverage is below 80% of district adult population',
