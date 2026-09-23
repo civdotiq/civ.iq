@@ -18,6 +18,12 @@ jest.mock('@/lib/cache', () => ({
   cache: { get: jest.fn(async () => null), set: jest.fn(async () => true) },
 }));
 
+// These tests pin the live-API fallback; the committed committee corpus
+// would otherwise answer first.
+jest.mock('@/lib/data-sources/openstates-people/load-committees', () => ({
+  getJurisdictionCommittees: jest.fn(async () => null),
+}));
+
 jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
