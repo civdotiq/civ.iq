@@ -410,6 +410,21 @@ function MoneySection({ data }: { data: RecordCardData }) {
   const m = data.money;
   const cycleLabel = m ? `FEC · ${m.cycle - 1}–${String(m.cycle).slice(2)} cycle` : 'FEC';
 
+  if (!m && data.moneyStatus === 'unavailable') {
+    return (
+      <div className="px-grid-3 py-grid-1">
+        <SectionTitle title="Campaign money" source="FEC" />
+        <div className={`${HERO_ROW} ${GRID2}`}>
+          <div className="text-base font-bold tracking-[0.025em]">Total raised this cycle</div>
+          <EmptyCell>Data unavailable</EmptyCell>
+        </div>
+        <Caveat>
+          Campaign finance data is temporarily unavailable from the FEC. Try again shortly.
+        </Caveat>
+      </div>
+    );
+  }
+
   if (!m) {
     return (
       <div className="px-grid-3 py-grid-1">

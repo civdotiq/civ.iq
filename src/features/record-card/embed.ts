@@ -131,7 +131,11 @@ export function renderRecordEmbed(data: RecordCardData): string {
     );
   } else {
     rows.push(
-      `<div class="row"><div class="lbl">Campaign money</div><div class="empty">No FEC filings found this cycle</div></div>`
+      `<div class="row"><div class="lbl">Campaign money</div><div class="empty">${
+        data.moneyStatus === 'unavailable'
+          ? 'FEC data temporarily unavailable'
+          : 'No FEC filings found this cycle'
+      }</div></div>`
     );
   }
 

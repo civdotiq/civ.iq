@@ -33,6 +33,11 @@ import { raceId2026 as buildRaceId2026 } from '@/lib/elections/race-id';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { validateFECMapping } from '@/lib/api/finance-helpers';
+import {
+  cachedStaleWhileRevalidate,
+  refreshStaleWhileRevalidate,
+  type SwrOptions,
+} from '@/services/cache/unified-cache.service';
 import { getDistrictSpending, getStateSpendingTotal } from '@/lib/services/spending.service';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislationRollup, type LegislationRollup } from './legislation-rollup';
@@ -98,6 +103,13 @@ export interface MoneySection {
   dataAsOf: string;
 }
 
+/**
+ * Why `money` is null. 'none' = the FEC answered and the member has no
+ * receipts this cycle (or no FEC id); 'unavailable' = the FEC could not be
+ * reached (usually a 429). The card must never show one as the other.
+ */
+export type MoneyStatus = 'ok' | 'none' | 'unavailable';
+
 export interface DistrictMoneySection {
   /** 'district' for House members; 'state' (statewide) for senators. */
   scope: 'district' | 'state';
@@ -139,6 +151,7 @@ export interface RecordCardData {
   legislation: LegislationRollup | null;
   voting: VotingSection | null;
   money: MoneySection | null;
+  moneyStatus: MoneyStatus;
   districtMoney: DistrictMoneySection | null;
   keyVotes: KeyVote[];
   /** null = lookup failed (omit the line); zeros are true absences. */
@@ -203,58 +216,133 @@ async function fetchVotingSection(
   };
 }
 
-async function fetchMoneySection(bioguideId: string, state: string): Promise<MoneySection | null> {
-  const mapping = validateFECMapping(bioguideId);
-  if (!mapping.success) return null;
-  const candidateId = mapping.mapping.fecId;
+// FEC totals move with monthly and quarterly filings. A cold ISR render reads
+// this Redis copy instead of making ~6 FEC calls against a 60/min key.
+const MONEY_SWR: SwrOptions = {
+  freshMs: 24 * 60 * 60 * 1000,
+  maxStaleMs: 30 * 24 * 60 * 60 * 1000,
+  source: 'fec',
+};
 
+function moneyCacheKey(candidateId: string, cycle: number): string {
+  return `record-card:money:v1:${candidateId}:${cycle}`;
+}
+
+function currentMoneyCycle(): number {
   const year = new Date().getFullYear();
-  const cycle = year % 2 === 0 ? year : year + 1;
+  return year % 2 === 0 ? year : year + 1;
+}
+
+/**
+ * The FEC answered with totals but a breakdown came back empty. The FEC
+ * service turns a throttled breakdown call into [], so this is usually a
+ * 429, not a real absence. The partial section is safe to render (nothing is
+ * invented) but must not be cached as the member's record.
+ */
+class IncompleteMoneyError extends Error {
+  constructor(readonly partial: MoneySection) {
+    super('FEC money breakdowns incomplete');
+  }
+}
+
+/** Throws on FEC errors; resolves null only when the FEC reports no receipts. */
+async function computeMoneySection(
+  candidateId: string,
+  cycle: number,
+  state: string
+): Promise<MoneySection | null> {
+  const [finance, bySize] = await Promise.all([
+    aggregateFinanceDataFromAggregates(candidateId, cycle, state),
+    fecApiService.getContributionsBySize(candidateId, cycle),
+  ]);
+
+  if (!finance || !finance.totalRaised || finance.totalRaised <= 0) return null;
+
+  const total = finance.totalRaised;
+  // FEC schedule_a/by_size: bucket floor 0 is the <=$200 small-donor bucket.
+  const smallBucket = bySize.find(b => b.size === 0)?.total ?? null;
+  const smallDonorPct = smallBucket !== null ? (smallBucket / total) * 100 : null;
+  const pacPct =
+    typeof finance.pacContributions === 'number' ? (finance.pacContributions / total) * 100 : null;
+  const largeIndividualPct =
+    smallBucket !== null && typeof finance.individualContributions === 'number'
+      ? (Math.max(0, finance.individualContributions - smallBucket) / total) * 100
+      : null;
+
+  const home = finance.geographicBreakdown.find(g => g.isHomeState);
+  const inStatePct = home ? home.percentage : null;
+  const outOfStatePct = inStatePct !== null ? 100 - inStatePct : null;
+
+  const topSectors = finance.industryBreakdown
+    .slice(0, 3)
+    .map(i => ({ sector: i.industry, amount: i.amount }));
+
+  const section: MoneySection = {
+    cycle,
+    totalRaised: total,
+    smallDonorPct,
+    pacPct,
+    largeIndividualPct,
+    inStatePct,
+    outOfStatePct,
+    topSectors,
+    fecCandidateId: candidateId,
+    dataAsOf: finance.lastUpdated,
+  };
+
+  const complete =
+    bySize.length > 0 &&
+    finance.geographicBreakdown.length > 0 &&
+    finance.industryBreakdown.length > 0;
+  if (!complete) throw new IncompleteMoneyError(section);
+  return section;
+}
+
+type MoneyResult = { money: MoneySection | null; moneyStatus: MoneyStatus };
+
+async function fetchMoneySection(bioguideId: string, state: string): Promise<MoneyResult> {
+  const mapping = validateFECMapping(bioguideId);
+  if (!mapping.success) return { money: null, moneyStatus: 'none' };
+  const candidateId = mapping.mapping.fecId;
+  const cycle = currentMoneyCycle();
 
   try {
-    const [finance, bySize] = await Promise.all([
-      aggregateFinanceDataFromAggregates(candidateId, cycle, state),
-      fecApiService.getContributionsBySize(candidateId, cycle).catch(() => null),
-    ]);
-
-    if (!finance || !finance.totalRaised || finance.totalRaised <= 0) return null;
-
-    const total = finance.totalRaised;
-    // FEC schedule_a/by_size: bucket floor 0 is the <=$200 small-donor bucket.
-    const smallBucket = bySize?.find(b => b.size === 0)?.total ?? null;
-    const smallDonorPct = smallBucket !== null ? (smallBucket / total) * 100 : null;
-    const pacPct =
-      typeof finance.pacContributions === 'number'
-        ? (finance.pacContributions / total) * 100
-        : null;
-    const largeIndividualPct =
-      smallBucket !== null && typeof finance.individualContributions === 'number'
-        ? (Math.max(0, finance.individualContributions - smallBucket) / total) * 100
-        : null;
-
-    const home = finance.geographicBreakdown.find(g => g.isHomeState);
-    const inStatePct = home ? home.percentage : null;
-    const outOfStatePct = inStatePct !== null ? 100 - inStatePct : null;
-
-    const topSectors = finance.industryBreakdown
-      .slice(0, 3)
-      .map(i => ({ sector: i.industry, amount: i.amount }));
-
-    return {
-      cycle,
-      totalRaised: total,
-      smallDonorPct,
-      pacPct,
-      largeIndividualPct,
-      inStatePct,
-      outOfStatePct,
-      topSectors,
-      fecCandidateId: candidateId,
-      dataAsOf: finance.lastUpdated,
-    };
+    const { data } = await cachedStaleWhileRevalidate(
+      moneyCacheKey(candidateId, cycle),
+      () => computeMoneySection(candidateId, cycle, state),
+      MONEY_SWR
+    );
+    return data ? { money: data, moneyStatus: 'ok' } : { money: null, moneyStatus: 'none' };
   } catch (error) {
+    if (error instanceof IncompleteMoneyError) return { money: error.partial, moneyStatus: 'ok' };
     logger.warn('Record card: money section failed', { bioguideId, error });
-    return null;
+    return { money: null, moneyStatus: 'unavailable' };
+  }
+}
+
+/**
+ * Refresh one member's cached money section for the warming cron. Throws on
+ * FEC errors so the cron stops its slice; an incomplete result is reported,
+ * not cached.
+ */
+export async function warmRecordCardMoney(
+  bioguideId: string,
+  state: string
+): Promise<'fresh' | 'refreshed' | 'locked' | 'none' | 'incomplete'> {
+  const mapping = validateFECMapping(bioguideId);
+  if (!mapping.success) return 'none';
+  const candidateId = mapping.mapping.fecId;
+  const cycle = currentMoneyCycle();
+
+  try {
+    return await refreshStaleWhileRevalidate(
+      moneyCacheKey(candidateId, cycle),
+      () => computeMoneySection(candidateId, cycle, state),
+      MONEY_SWR
+    );
+  } catch (error) {
+    if (error instanceof IncompleteMoneyError) return 'incomplete';
+    throw error;
   }
 }
 
@@ -536,20 +624,22 @@ export async function getRecordCardData(bioguideId: string): Promise<RecordCardD
     currentCongress,
   };
 
-  const [legislation, voting, money, districtMoney, keyVotes, ptr] = await Promise.all([
-    getLegislationRollup(rep.bioguideId),
-    fetchVotingSection(rep.bioguideId, rep.chamber, rep.party),
-    fetchMoneySection(rep.bioguideId, rep.state),
-    fetchDistrictMoneySection(rep.state, rep.district, rep.chamber),
-    fetchKeyVotes(rep.bioguideId, rep.chamber, currentCongress),
-    fetchPtrSection(rep.bioguideId, rep.chamber),
-  ]);
+  const [legislation, voting, { money, moneyStatus }, districtMoney, keyVotes, ptr] =
+    await Promise.all([
+      getLegislationRollup(rep.bioguideId),
+      fetchVotingSection(rep.bioguideId, rep.chamber, rep.party),
+      fetchMoneySection(rep.bioguideId, rep.state),
+      fetchDistrictMoneySection(rep.state, rep.district, rep.chamber),
+      fetchKeyVotes(rep.bioguideId, rep.chamber, currentCongress),
+      fetchPtrSection(rep.bioguideId, rep.chamber),
+    ]);
 
   return {
     member,
     legislation,
     voting,
     money,
+    moneyStatus,
     districtMoney,
     keyVotes,
     ptr,
