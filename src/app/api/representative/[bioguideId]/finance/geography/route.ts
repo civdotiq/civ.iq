@@ -20,6 +20,7 @@ import {
   FEC_SHORT_CACHE_OPTIONS,
 } from '@/lib/api/finance-helpers';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -61,7 +62,8 @@ export async function GET(
   try {
     logger.info('[Geography API] Called', { bioguideId });
 
-    const cacheKey = FinanceCacheKeys.geography(bioguideId);
+    const cycle = getCurrentElectionCycle();
+    const cacheKey = FinanceCacheKeys.geography(bioguideId, cycle);
     const cached = await govCache.get<GeographicAnalysisResponse>(cacheKey);
 
     if (cached) {
@@ -84,7 +86,7 @@ export async function GET(
     const representativeState = 'XX';
     const financeData = await aggregateFinanceDataFromAggregates(
       fecMapping.fecId,
-      2024,
+      cycle,
       representativeState
     );
 
@@ -123,7 +125,7 @@ export async function GET(
       metadata: {
         bioguideId,
         representativeState,
-        cycle: 2024,
+        cycle,
         lastUpdated: new Date().toISOString(),
         fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },

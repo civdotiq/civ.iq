@@ -107,7 +107,11 @@ function buildFaqAnswer(
           finance.totalRaised >= 1_000_000
             ? `$${(finance.totalRaised / 1_000_000).toFixed(1)}M`
             : `$${(finance.totalRaised / 1_000).toFixed(0)}K`;
-        return `${repName} has raised ${amount} in the current cycle, with ${displaySector(topIndustry)} as the largest contributing sector.`;
+        const cycle = `${finance.cycle - 1}–${String(finance.cycle).slice(2)}`;
+        const when = finance.isCurrentCycle
+          ? `in the current ${cycle} cycle`
+          : `in the ${cycle} cycle, the most recent with FEC filings`;
+        return `${repName} has raised ${amount} ${when}, with ${displaySector(topIndustry)} as the largest contributing sector.`;
       }
       return `Campaign finance data for ${repName} is sourced from FEC filings.`;
     }
@@ -213,6 +217,9 @@ function computeConfidence(
           score: 0.74,
           basis: 'Partial FEC data; some breakdowns are not yet filed for this cycle.',
         };
+      }
+      if (data.campaign?.financeUnavailable) {
+        return { score: 0.4, basis: 'The FEC could not be reached for this page render.' };
       }
       return {
         score: 0.4,
@@ -534,6 +541,7 @@ export default async function QuestionPage({ params }: PageProps) {
       {slug === 'campaign-contributions' && campaign && (
         <CampaignContributionsAnswer
           finance={campaign.finance}
+          financeUnavailable={campaign.financeUnavailable}
           industries={campaign.industries}
           voteFinanceInsight={campaign.voteFinance}
         />

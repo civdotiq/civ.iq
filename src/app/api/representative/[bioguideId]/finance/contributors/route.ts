@@ -21,6 +21,7 @@ import {
   withFECCacheHeaders,
 } from '@/lib/api/finance-helpers';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -82,7 +83,8 @@ export async function GET(
   try {
     logger.info('[Contributors API] Called', { bioguideId });
 
-    const cacheKey = FinanceCacheKeys.contributors(bioguideId);
+    const cycle = getCurrentElectionCycle();
+    const cacheKey = FinanceCacheKeys.contributors(bioguideId, cycle);
     const cached = await govCache.get<ContributorAnalysisResponse>(cacheKey);
 
     if (cached) {
@@ -99,7 +101,7 @@ export async function GET(
 
     // Fetch optimized sample of contributions for detailed analysis
     // Reduced from 2000 to 250 for better performance while maintaining data quality
-    const contributions = await fecApiService.getSampleContributions(fecMapping.fecId, 2024, 250);
+    const contributions = await fecApiService.getSampleContributions(fecMapping.fecId, cycle, 250);
 
     const contributorMap = new Map<
       string,
@@ -215,14 +217,14 @@ export async function GET(
     // Get committee ID for better FEC links
     const principalCommitteeId = await fecApiService.getPrincipalCommitteeId(
       fecMapping.fecId,
-      2024
+      cycle
     );
 
     // Take top 50 individual contributors (committees shown separately)
     const topContributors = individualContributors.slice(0, 50).map(contributor => ({
       ...contributor,
       fecTransparencyLink: principalCommitteeId
-        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&contributor_name=${encodeURIComponent(contributor.name)}`
+        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${principalCommitteeId}&contributor_name=${encodeURIComponent(contributor.name)}`
         : `https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=${encodeURIComponent(contributor.name)}&candidate_id=${fecMapping.fecId}`,
     }));
 
@@ -253,7 +255,7 @@ export async function GET(
       contributionTrends,
       metadata: {
         bioguideId,
-        cycle: 2024,
+        cycle,
         totalContributors:
           contributorMap.size +
           (conduitStats.actblue.contributionCount > 0 ? 1 : 0) +
@@ -264,7 +266,7 @@ export async function GET(
         fecCandidateLink: getFECCandidateLink(fecMapping.fecId),
         fecCommitteeId: principalCommitteeId || undefined,
         fecReceiptsLink: principalCommitteeId
-          ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}`
+          ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${principalCommitteeId}`
           : undefined,
       },
     };

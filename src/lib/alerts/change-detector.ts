@@ -11,6 +11,7 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/legislator-mappings';
 import logger from '@/lib/logging/simple-logger';
 import type { AlertType, WatchedEntity } from './subscription-store';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 const STATE_KEY_PREFIX = 'alert:state:';
 const STATE_TTL = 7 * 24 * 60 * 60; // 7 days
@@ -290,9 +291,8 @@ async function detectFinanceChanges(
     };
   }
 
-  // Try current cycle, fall back to previous
-  const currentYear = new Date().getFullYear();
-  const cycle = currentYear % 2 === 0 ? currentYear : currentYear - 1;
+  // An odd year belongs to the following even-year cycle (2025 → 2026).
+  const cycle = getCurrentElectionCycle();
 
   const summary = await fecApiService.getFinancialSummary(fecId, cycle);
   if (!summary) {

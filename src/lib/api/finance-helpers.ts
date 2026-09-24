@@ -14,6 +14,7 @@
 
 import { NextResponse } from 'next/server';
 import { bioguideToFECMapping, FECMapping } from '@/lib/data/bioguide-fec-mapping';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 /**
  * FEC data cache constants
@@ -55,22 +56,22 @@ export const FEC_CACHE_HEADERS = new Headers({
  * Cache key generators for finance endpoints
  */
 export const FinanceCacheKeys = {
-  industries: (bioguideId: string, cycle: number = 2024) =>
+  industries: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-industries:${bioguideId}:${cycle}`,
 
-  contributors: (bioguideId: string, cycle: number = 2024) =>
+  contributors: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-contributors-v2:${bioguideId}:${cycle}`,
 
-  expenditures: (bioguideId: string, cycle: number = 2024) =>
+  expenditures: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-expenditures:${bioguideId}:${cycle}`,
 
-  geography: (bioguideId: string, cycle: number = 2024) =>
+  geography: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-geography:${bioguideId}:${cycle}`,
 
-  fundingSources: (bioguideId: string, cycle: number = 2024) =>
+  fundingSources: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-funding-sources:${bioguideId}:${cycle}`,
 
-  comprehensive: (bioguideId: string, cycle: number = 2024) =>
+  comprehensive: (bioguideId: string, cycle: number = getCurrentElectionCycle()) =>
     `finance-comprehensive:${bioguideId}:${cycle}`,
 } as const;
 
@@ -119,7 +120,7 @@ export function getFECCandidateLink(fecId: string): string {
 export function getFECReceiptsLink(
   fecId: string,
   committeeId?: string,
-  cycle: number = 2024
+  cycle: number = getCurrentElectionCycle()
 ): string {
   if (committeeId) {
     return `https://www.fec.gov/data/receipts/?two_year_transaction_period=${cycle}&committee_id=${committeeId}`;
@@ -133,7 +134,7 @@ export function getFECReceiptsLink(
 export function getFECDisbursementsLink(
   fecId: string,
   committeeId?: string,
-  cycle: number = 2024
+  cycle: number = getCurrentElectionCycle()
 ): string {
   if (committeeId) {
     return `https://www.fec.gov/data/disbursements/?two_year_transaction_period=${cycle}&committee_id=${committeeId}`;
@@ -157,7 +158,7 @@ export interface FinanceMetadata {
 export function createFinanceMetadata(
   bioguideId: string,
   fecId?: string,
-  cycle: number = 2024
+  cycle: number = getCurrentElectionCycle()
 ): FinanceMetadata {
   return {
     bioguideId,
@@ -172,7 +173,7 @@ export function createFinanceMetadata(
  * Used when no FEC mapping exists or no data is available
  */
 export const EmptyFinanceResponses = {
-  industries: (bioguideId: string, cycle: number = 2024) => ({
+  industries: (bioguideId: string, cycle: number = getCurrentElectionCycle()) => ({
     topIndustries: [],
     dataQuality: {
       totalContributionsAnalyzed: 0,
@@ -182,7 +183,7 @@ export const EmptyFinanceResponses = {
     metadata: createFinanceMetadata(bioguideId, undefined, cycle),
   }),
 
-  contributors: (bioguideId: string, cycle: number = 2024) => ({
+  contributors: (bioguideId: string, cycle: number = getCurrentElectionCycle()) => ({
     topContributors: [],
     metadata: {
       bioguideId,
@@ -195,7 +196,11 @@ export const EmptyFinanceResponses = {
     },
   }),
 
-  expenditures: (bioguideId: string, fecId?: string, cycle: number = 2024) => ({
+  expenditures: (
+    bioguideId: string,
+    fecId?: string,
+    cycle: number = getCurrentElectionCycle()
+  ) => ({
     totalDisbursements: 0,
     expenditureCategories: [],
     operatingExpenses: {
@@ -215,7 +220,7 @@ export const EmptyFinanceResponses = {
     },
   }),
 
-  geography: (bioguideId: string, fecId?: string, cycle: number = 2024) => ({
+  geography: (bioguideId: string, fecId?: string, cycle: number = getCurrentElectionCycle()) => ({
     inStateTotal: 0,
     outOfStateTotal: 0,
     inStatePercentage: 0,
@@ -235,7 +240,11 @@ export const EmptyFinanceResponses = {
     },
   }),
 
-  fundingSources: (bioguideId: string, fecId?: string, cycle: number = 2024) => ({
+  fundingSources: (
+    bioguideId: string,
+    fecId?: string,
+    cycle: number = getCurrentElectionCycle()
+  ) => ({
     totalRaised: 0,
     individualContributions: { amount: 0, percentage: 0 },
     pacContributions: { amount: 0, percentage: 0, breakdown: [] },
@@ -253,7 +262,11 @@ export const EmptyFinanceResponses = {
     },
   }),
 
-  comprehensive: (bioguideId: string, fecId?: string, cycle: number = 2024) => ({
+  comprehensive: (
+    bioguideId: string,
+    fecId?: string,
+    cycle: number = getCurrentElectionCycle()
+  ) => ({
     finance: {
       totalRaised: 0,
       totalSpent: 0,

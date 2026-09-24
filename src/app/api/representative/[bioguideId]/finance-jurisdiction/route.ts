@@ -26,6 +26,7 @@ import { getFECMapping } from '@/lib/api/finance-helpers';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { categorizeContributionSmart, type IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { FinanceJurisdictionOverlap } from '@/types/joins';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 export const revalidate = 43200; // 12 hours
 
@@ -72,7 +73,8 @@ export async function GET(
   try {
     logger.info('Finance jurisdiction join request', { bioguideId });
 
-    const cacheKey = `join-finance-jurisdiction:${bioguideId}`;
+    // v2: unversioned entries were built from 2024-cycle contributions.
+    const cacheKey = `join-finance-jurisdiction:v2:${bioguideId}`;
 
     const result = await cachedFetch(
       cacheKey,
@@ -105,7 +107,7 @@ export async function GET(
         if (fecMapping) {
           const contributions = await fecApiService.getSampleContributions(
             fecMapping.fecId,
-            2024,
+            getCurrentElectionCycle(),
             250
           );
 

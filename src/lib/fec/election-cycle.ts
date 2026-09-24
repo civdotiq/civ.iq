@@ -30,3 +30,23 @@ export function getRecentElectionCycles(
   const prior = Array.from({ length: Math.max(0, count - 1) }, (_, i) => current - 2 * (i + 1));
   return [current, ...prior];
 }
+
+/**
+ * Walk `cycles` newest first and return the first one with data. Falls back
+ * only when a cycle has no data. A thrown fetch (a 429, a timeout) propagates:
+ * an unreachable FEC must read as "unavailable", never as the member's
+ * older-cycle totals presented in place of the current ones.
+ *
+ * Sequential on purpose: nearly every sitting member has current-cycle
+ * filings, so this is usually one FEC call against a 60/min key.
+ */
+export async function findNewestCycleWithData<T>(
+  cycles: readonly number[],
+  fetchCycle: (cycle: number) => Promise<T | null>
+): Promise<{ data: T; cycle: number } | null> {
+  for (const cycle of cycles) {
+    const data = await fetchCycle(cycle);
+    if (data) return { data, cycle };
+  }
+  return null;
+}
