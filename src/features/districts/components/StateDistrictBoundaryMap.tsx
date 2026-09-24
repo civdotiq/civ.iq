@@ -22,6 +22,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2, Maximize2, Minimize2 } from 'lucide-react';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { loadMaplibre } from './maplibre-loader';
 import logger from '@/lib/logging/simple-logger';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { isSlowConnection } from '@/lib/utils/mobile-detection';
@@ -140,23 +142,14 @@ export default function StateDistrictBoundaryMap({
       try {
         // Dynamically import MapLibre GL and PMTiles
         logger.info('[StateDistrictBoundaryMap] Loading MapLibre and PMTiles libraries...');
-        const [maplibregl, pmtiles] = await Promise.all([import('maplibre-gl'), import('pmtiles')]);
+        const [maplibregl, pmtiles] = await Promise.all([loadMaplibre(), import('pmtiles')]);
         logger.info('[StateDistrictBoundaryMap] Libraries loaded successfully');
-
-        // Dynamically load CSS
-        if (typeof document !== 'undefined' && !document.getElementById('maplibre-css')) {
-          const link = document.createElement('link');
-          link.id = 'maplibre-css';
-          link.rel = 'stylesheet';
-          link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
-          document.head.appendChild(link);
-        }
 
         // Register PMTiles protocol only once (shared across all map instances)
         // This prevents conflicts when multiple maps are on the same page
         if (!pmtilesProtocolRegistered) {
           const protocol = new pmtiles.Protocol();
-          maplibregl.default.addProtocol('pmtiles', protocol.tile);
+          maplibregl.addProtocol('pmtiles', protocol.tile);
           pmtilesProtocolRegistered = true;
         }
 
@@ -166,7 +159,7 @@ export default function StateDistrictBoundaryMap({
         // Initialize map with only OSM base tiles (PMTiles added after map loads)
         logger.info('[StateDistrictBoundaryMap] Creating MapLibre map instance...');
         map.current = asMapRef(
-          new maplibregl.default.Map({
+          new maplibregl.Map({
             container: mapContainer,
             style: {
               version: 8,

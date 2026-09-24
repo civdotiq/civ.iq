@@ -64,6 +64,7 @@ export const KNOWN_ROUTE_PREFIXES: ReadonlySet<string> = new Set([
   'lobby',
   'local',
   'manifest.json',
+  'maplibre',
   'maplibre-gl.css',
   'mcp',
   'methodology',

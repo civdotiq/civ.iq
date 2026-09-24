@@ -112,7 +112,7 @@ export function InteractiveDistrictMap({
     const initializeMap = async () => {
       try {
         // Dynamic import MapLibre GL
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await import('maplibre-gl');
 
         // Create map instance
         const map = new maplibregl.Map({
