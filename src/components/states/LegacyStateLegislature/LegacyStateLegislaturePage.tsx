@@ -152,6 +152,7 @@ function LegislatorCard({
               alt={legislator.name}
               fill
               sizes="64px"
+              unoptimized
               className="object-cover"
             />
           ) : (
