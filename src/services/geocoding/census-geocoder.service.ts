@@ -16,6 +16,8 @@
 
 import { createHash } from 'crypto';
 import logger from '@/lib/logging/simple-logger';
+import { findCongressionalDistrictLayer } from '@/lib/census-geocoder';
+import { currentOfficeholderVintage } from '@/lib/census-vintage';
 import { govCache } from '@/services/cache';
 import type {
   CensusGeocodeRequest,
@@ -23,6 +25,7 @@ import type {
   ParsedDistrictInfo,
   DistrictGEOID,
   CensusGeography,
+  CensusGeographies,
 } from './census-geocoder.types';
 import { CensusGeocoderException, CensusGeocoderError } from './census-geocoder.types';
 
@@ -30,7 +33,10 @@ export class CensusGeocoderService {
   private static readonly BASE_URL =
     'https://geocoding.geo.census.gov/geocoder/geographies/address';
   private static readonly DEFAULT_BENCHMARK = 'Public_AR_Current';
-  private static readonly DEFAULT_VINTAGE = 'Current_Current';
+  // Newest "<year> State Legislative Districts - Upper/Lower" layer; Census
+  // renames these every vintage, so never match an exact layer name.
+  private static readonly SLD_UPPER_PATTERN = /^(\d{4}) State Legislative Districts? - Upper/;
+  private static readonly SLD_LOWER_PATTERN = /^(\d{4}) State Legislative Districts? - Lower/;
   private static readonly CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds (addresses don't change districts often)
   private static readonly REQUEST_TIMEOUT = 15000; // 15 seconds
 
@@ -43,7 +49,10 @@ export class CensusGeocoderService {
     // Privacy: the raw address must never appear in logs or cache keys
     // (see PRIVACY.md "Address lookups") — key on a one-way hash instead.
     const addressHash = createHash('sha256').update(normalizedAddress).digest('hex').slice(0, 16);
-    const cacheKey = `census:geocode:${addressHash}`;
+    const vintage = request.vintage || currentOfficeholderVintage();
+    // v2: v1 entries were parsed with stale layer names (no state districts).
+    // The vintage is in the key so the 120th-Congress switch invalidates itself.
+    const cacheKey = `census:geocode:v2:${vintage}:${addressHash}`;
 
     try {
       // Check cache first
@@ -59,7 +68,7 @@ export class CensusGeocoderService {
 
       // Make API request
       logger.info('Geocoding address via Census API', { addressHash, state: request.state });
-      const response = await this.makeGeocodeRequest(request);
+      const response = await this.makeGeocodeRequest(request, vintage);
 
       // Validate response
       this.validateResponse(response);
@@ -107,7 +116,8 @@ export class CensusGeocoderService {
    * Make HTTP request to Census Geocoder API
    */
   private static async makeGeocodeRequest(
-    request: CensusGeocodeRequest
+    request: CensusGeocodeRequest,
+    vintage: string
   ): Promise<CensusGeocodeResponse> {
     const url = new URL(this.BASE_URL);
     url.searchParams.set('street', request.street);
@@ -117,7 +127,7 @@ export class CensusGeocoderService {
       url.searchParams.set('zip', request.zip);
     }
     url.searchParams.set('benchmark', request.benchmark || this.DEFAULT_BENCHMARK);
-    url.searchParams.set('vintage', request.vintage || this.DEFAULT_VINTAGE);
+    url.searchParams.set('vintage', vintage);
     url.searchParams.set('format', 'json');
 
     const controller = new AbortController();
@@ -215,21 +225,16 @@ export class CensusGeocoderService {
 
     // Extract upper chamber (State Senate) district
     const upperChamberGeo =
-      geographies['State Legislative District - Upper Chamber']?.[0] ||
-      geographies['2024 State Legislative Districts - Upper']?.[0] ||
-      geographies['2022 State Legislative Districts - Upper']?.[0];
+      this.findNewestYearLayer(geographies, this.SLD_UPPER_PATTERN)?.[0] ||
+      geographies['State Legislative District - Upper Chamber']?.[0];
 
     // Extract lower chamber (State House) district
     const lowerChamberGeo =
-      geographies['State Legislative District - Lower Chamber']?.[0] ||
-      geographies['2024 State Legislative Districts - Lower']?.[0] ||
-      geographies['2022 State Legislative Districts - Lower']?.[0];
+      this.findNewestYearLayer(geographies, this.SLD_LOWER_PATTERN)?.[0] ||
+      geographies['State Legislative District - Lower Chamber']?.[0];
 
     // Extract congressional district (for context)
-    const congressionalGeo =
-      geographies['119th Congressional Districts']?.[0] ||
-      geographies['118th Congressional Districts']?.[0] ||
-      geographies['Congressional Districts']?.[0];
+    const congressionalGeo = findCongressionalDistrictLayer(geographies)?.[0];
 
     // Extract county
     const countyGeo = geographies['Counties']?.[0];
@@ -251,6 +256,25 @@ export class CensusGeocoderService {
       county: countyGeo?.NAME,
       place: placeGeo?.NAME,
     };
+  }
+
+  /**
+   * Entries of the layer whose name matches `pattern` (year in group 1) with
+   * the newest year, or undefined if no such layer has entries.
+   */
+  private static findNewestYearLayer(
+    geographies: CensusGeographies,
+    pattern: RegExp
+  ): CensusGeography[] | undefined {
+    let best: { year: number; entries: CensusGeography[] } | null = null;
+    for (const [layerName, entries] of Object.entries(geographies)) {
+      const match = layerName.match(pattern);
+      if (match?.[1] && entries && entries.length > 0) {
+        const year = parseInt(match[1], 10);
+        if (!best || year > best.year) best = { year, entries };
+      }
+    }
+    return best?.entries;
   }
 
   /**
@@ -321,7 +345,7 @@ export class CensusGeocoderService {
       url.searchParams.set('state', 'DC');
       url.searchParams.set('zip', '20500');
       url.searchParams.set('benchmark', this.DEFAULT_BENCHMARK);
-      url.searchParams.set('vintage', this.DEFAULT_VINTAGE);
+      url.searchParams.set('vintage', currentOfficeholderVintage());
       url.searchParams.set('format', 'json');
 
       const response = await fetch(url.toString(), {

@@ -5,6 +5,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import { currentOfficeholderVintage } from '@/lib/census-vintage';
 
 /** Entry in a Census "<N>th Congressional Districts" geography layer */
 export interface CongressionalDistrictLayerEntry {
@@ -59,7 +60,9 @@ const CD_LAYER_PATTERN = /^(\d+)(?:st|nd|rd|th) Congressional Districts$/;
  * Find the congressional-district entries in a Census geographies object,
  * whatever Congress the layer is named for. Prefers the newest "<N>th
  * Congressional Districts" layer present, falling back to the legacy
- * congressionalDistricts / "Congressional Districts" fields. Generic so the
+ * congressionalDistricts / "Congressional Districts" fields. Callers pin the
+ * Census vintage to the sitting Congress (see census-vintage.ts), so the
+ * newest layer present is the current one. Generic so the
  * census-api and district-lookup response shapes can reuse it.
  */
 export function findCongressionalDistrictLayer<T>(
@@ -161,8 +164,9 @@ export function parseAddressComponents(input: string): {
 export async function geocodeAddress(address: string): Promise<GeocodeResult[] | GeocodeError> {
   const cleanedAddress = cleanAddressInput(address);
 
-  // Check cache
-  const cached = geocodeCache.get(cleanedAddress);
+  // Check cache (keyed by vintage so the 120th-Congress switch misses)
+  const cacheKey = `${currentOfficeholderVintage()}|${cleanedAddress}`;
+  const cached = geocodeCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     logger.debug('Census Geocoder cache hit');
     return cached.data;
@@ -181,7 +185,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     if (components.street && (components.city || components.zip)) {
       params = new URLSearchParams({
         benchmark: 'Public_AR_Current',
-        vintage: 'Current_Current',
+        vintage: currentOfficeholderVintage(),
         layers: 'all', // Get all geographic layers including 119th Congressional Districts
         format: 'json',
       });
@@ -197,7 +201,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       params = new URLSearchParams({
         address: cleanedAddress,
         benchmark: 'Public_AR_Current',
-        vintage: 'Current_Current',
+        vintage: currentOfficeholderVintage(),
         layers: 'all', // Get all geographic layers including 119th Congressional Districts
         format: 'json',
       });
@@ -258,7 +262,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     }
 
     // Cache successful results
-    geocodeCache.set(cleanedAddress, {
+    geocodeCache.set(cacheKey, {
       data: validMatches,
       timestamp: Date.now(),
     });

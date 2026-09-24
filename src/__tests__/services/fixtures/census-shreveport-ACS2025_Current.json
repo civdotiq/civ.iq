@@ -1,0 +1,58 @@
+{
+  "_source": "https://geocoding.geo.census.gov/geocoder/geographies/address?street=505+Travis+St&city=Shreveport&state=LA&zip=71101&benchmark=Public_AR_Current&vintage=ACS2025_Current&format=json (captured 2026-09-24, trimmed)",
+  "result": {
+    "addressMatches": [
+      {
+        "matchedAddress": "505 TRAVIS ST, SHREVEPORT, LA, 71101",
+        "coordinates": {
+          "x": -93.750575451003,
+          "y": 32.513583457768
+        },
+        "geographies": {
+          "States": [
+            {
+              "GEOID": "22",
+              "NAME": "Louisiana",
+              "BASENAME": "Louisiana"
+            }
+          ],
+          "Incorporated Places": [
+            {
+              "GEOID": "2270000",
+              "NAME": "Shreveport city",
+              "BASENAME": "Shreveport"
+            }
+          ],
+          "Counties": [
+            {
+              "GEOID": "22017",
+              "NAME": "Caddo Parish",
+              "BASENAME": "Caddo"
+            }
+          ],
+          "2024 State Legislative Districts - Upper": [
+            {
+              "GEOID": "22039",
+              "NAME": "State Senate District 39",
+              "BASENAME": "39"
+            }
+          ],
+          "2024 State Legislative Districts - Lower": [
+            {
+              "GEOID": "22002",
+              "NAME": "State House District 2",
+              "BASENAME": "2"
+            }
+          ],
+          "119th Congressional Districts": [
+            {
+              "GEOID": "2206",
+              "NAME": "Congressional District 6",
+              "BASENAME": "6"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

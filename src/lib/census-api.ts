@@ -6,6 +6,7 @@
 // Remove React cache import - not available in current Next.js version
 import { ZIP_TO_DISTRICT_MAP } from './data/zip-district-mapping';
 import { findCongressionalDistrictLayer } from '@/lib/census-geocoder';
+import { currentOfficeholderVintage } from '@/lib/census-vintage';
 import { US_STATES } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 
@@ -110,7 +111,7 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
     const params = new URLSearchParams({
       address: zipCode,
       benchmark: 'Public_AR_Current',
-      vintage: 'Current_Current',
+      vintage: currentOfficeholderVintage(),
       layers: 'all', // parser selects the newest Congressional Districts layer
       format: 'json',
     });
@@ -346,7 +347,7 @@ export const getCongressionalDistrictFromAddress = async (
     const params = new URLSearchParams({
       address: cleanAddress,
       benchmark: 'Public_AR_Current',
-      vintage: 'Current_Current',
+      vintage: currentOfficeholderVintage(),
       layers: 'all', // parser selects the newest Congressional Districts layer
       format: 'json',
     });
