@@ -86,8 +86,9 @@ const CONFIG = {
 
   // Directories
   tempDir: path.join(process.cwd(), 'temp', 'state-districts'),
-  dataDir: path.join(process.cwd(), 'data', 'state-districts'),
-  publicDir: path.join(process.cwd(), 'public', 'maps'),
+  // Served paths read by StateDistrictBoundaryMap.tsx
+  dataDir: path.join(process.cwd(), 'public', 'data', 'state-districts'),
+  publicDir: path.join(process.cwd(), 'public', 'data'),
 
   // Output files
   outputPMTiles: 'state_legislative_districts.pmtiles',
@@ -431,15 +432,13 @@ class StateDistrictProcessor {
       await this.runCommand('tippecanoe', [
         '-o', pmTilesPath,
         '--force',
-        '--maximum-zoom=12',
+        '--maximum-zoom=10', // z11-12 add ~70MB with no value at district scale
         '--minimum-zoom=0',
         '--base-zoom=6',
         '--drop-densest-as-needed',
         '--simplification=10',
         '--coalesce-densest-as-needed',
         '--extend-zooms-if-still-dropping',
-        '--layer=sldl',
-        '--layer=sldu',
         '--named-layer=sldl:' + sldlPath,
         '--named-layer=sldu:' + slduPath,
         '--name=State Legislative Districts 2025',
