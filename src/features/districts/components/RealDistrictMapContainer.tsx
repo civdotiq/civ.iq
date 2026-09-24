@@ -12,6 +12,8 @@ import {
   type DistrictBoundary,
 } from '@/lib/helpers/district-boundary-utils';
 import type { Map } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { loadMaplibre } from './maplibre-loader';
 
 // Default center of US - defined outside component to avoid re-creation
 const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
@@ -103,7 +105,7 @@ export function RealDistrictMapContainer({
 
     const initializeMap = async () => {
       try {
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await loadMaplibre();
 
         // Create map with OSM base tiles + Census district boundary overlay
         // Census tiles load on demand per viewport, so the map appears immediately
@@ -178,7 +180,7 @@ export function RealDistrictMapContainer({
           });
         }
 
-        map.on('error', (e: { error: Error }) => {
+        map.on('error', e => {
           logger.error('MapLibre GL error', {
             component: 'RealDistrictMapContainer',
             error: e.error,

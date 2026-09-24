@@ -90,7 +90,7 @@ export function RealDistrictBoundaryMap({
     const initializeMap = async () => {
       try {
         // Dynamic import MapLibre GL
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await import('maplibre-gl');
 
         // Calculate center and bounds for the district
         const district = mapState.district!;
@@ -145,7 +145,7 @@ export function RealDistrictBoundaryMap({
           }
         });
 
-        map.on('error', (e: { error: Error }) => {
+        map.on('error', e => {
           logger.error('MapLibre GL error', {
             component: 'RealDistrictBoundaryMap',
             error: e.error,
@@ -284,12 +284,12 @@ export function RealDistrictBoundaryMap({
       });
 
       // Add district centroid marker
-      const _marker = new (await import('maplibre-gl')).default.Marker({
+      const _marker = new (await import('maplibre-gl')).Marker({
         color: '#000000',
       })
         .setLngLat(district.centroid)
         .setPopup(
-          new (await import('maplibre-gl')).default.Popup().setHTML(`
+          new (await import('maplibre-gl')).Popup().setHTML(`
       <div class="p-2">
        <h3 class="font-semibold text-sm">${district.full_name}</h3>
        <p class="text-xs text-gray-600 mt-1">
