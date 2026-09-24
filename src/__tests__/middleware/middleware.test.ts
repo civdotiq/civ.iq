@@ -248,7 +248,7 @@ describe('Middleware Tests', () => {
     const PRODUCTION_CSP =
       "default-src 'self'; " +
       "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " +
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "img-src 'self' data: https:; " +
       "font-src 'self' data: https://fonts.gstatic.com; " +
       "connect-src 'self' https:; " +
@@ -276,8 +276,8 @@ describe('Middleware Tests', () => {
       expect(PRODUCTION_CSP).toContain('https://fonts.gstatic.com');
     });
 
-    it('should allow MapLibre GL from unpkg.com', () => {
-      expect(PRODUCTION_CSP).toContain('https://unpkg.com');
+    it('should not allow unpkg.com (MapLibre CSS is bundled from the package)', () => {
+      expect(PRODUCTION_CSP).not.toContain('https://unpkg.com');
     });
 
     it('should deny frame-ancestors (clickjacking protection)', () => {

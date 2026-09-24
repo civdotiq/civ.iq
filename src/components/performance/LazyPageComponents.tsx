@@ -33,11 +33,6 @@ const ChartLoader = () => (
 );
 
 // Critical: Split heavy D3 visualizations
-export const LazyInteractiveDistrictMap = lazy(() =>
-  import('@/features/districts/components/InteractiveDistrictMap').then(module => ({
-    default: module.InteractiveDistrictMap,
-  }))
-);
 
 export const LazyBillsTracker = lazy(() =>
   import('@/features/legislation/components/BillsTracker').then(module => ({
@@ -52,11 +47,6 @@ export const LazyVotingTab = lazy(() =>
 );
 
 // Type definitions for proper props
-interface DistrictMapWrapperProps {
-  zipCode: string;
-  className?: string;
-}
-
 interface BillsTrackerWrapperProps {
   bills: SponsoredBill[];
   representative: {
@@ -70,12 +60,6 @@ interface VotingTabWrapperProps {
 }
 
 // Wrapper components with optimized loading and proper props
-export const DistrictMapWithSuspense = ({ zipCode, className }: DistrictMapWrapperProps) => (
-  <Suspense fallback={<SimpleLoader height="500px" />}>
-    <LazyInteractiveDistrictMap zipCode={zipCode} className={className} />
-  </Suspense>
-);
-
 export const BillsTrackerWithSuspense = ({ bills, representative }: BillsTrackerWrapperProps) => (
   <Suspense fallback={<SimpleLoader height="600px" />}>
     <LazyBillsTracker bills={bills} representative={representative} />
