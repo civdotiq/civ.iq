@@ -289,7 +289,9 @@ export default async function RecordCardPrintPage({
               </>
             ) : (
               <div className={`${ROW} ${SMALL}`}>
-                No campaign finance filings found for this cycle.
+                {data.moneyStatus === 'unavailable'
+                  ? 'Campaign finance data is temporarily unavailable from the FEC.'
+                  : 'No campaign finance filings found for this cycle.'}
               </div>
             )}
           </div>

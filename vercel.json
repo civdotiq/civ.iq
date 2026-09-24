@@ -105,6 +105,10 @@
       "schedule": "15,45 * * * *"
     },
     {
+      "path": "/api/cron/warm-record-money",
+      "schedule": "5,35 * * * *"
+    },
+    {
       "path": "/api/cron/chamber-baselines",
       "schedule": "0 9 * * *"
     },
