@@ -20,6 +20,7 @@ import {
   FEC_SHORT_CACHE_OPTIONS,
 } from '@/lib/api/finance-helpers';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -65,7 +66,8 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
-  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || 2024;
+  const cycle =
+    parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || getCurrentElectionCycle();
   const startTime = Date.now();
 
   // Unclamped cycles flow into FEC queries and finance cache keys

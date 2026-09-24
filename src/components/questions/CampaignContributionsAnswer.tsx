@@ -31,6 +31,8 @@ interface FinanceData {
   pacContributions: number;
   partyContributions: number;
   candidateSelfFunding: number;
+  cycle: number;
+  isCurrentCycle: boolean;
 }
 
 interface IndustryData {
@@ -42,6 +44,7 @@ interface IndustryData {
 
 interface CampaignContributionsAnswerProps {
   finance: FinanceData | null;
+  financeUnavailable: boolean;
   industries: IndustryData | null;
   voteFinanceInsight: InsightResponse<VoteFinanceInsight> | null;
 }
@@ -52,7 +55,29 @@ function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function FundingSummaryPod({ finance }: { finance: FinanceData | null }) {
+/** "2025–26" for cycle 2026. */
+function cycleLabel(cycle: number): string {
+  return `${cycle - 1}–${String(cycle).slice(2)}`;
+}
+
+function FundingSummaryPod({
+  finance,
+  unavailable,
+}: {
+  finance: FinanceData | null;
+  unavailable: boolean;
+}) {
+  if (unavailable) {
+    return (
+      <div className="border-2 border-black bg-white p-4 sm:p-6">
+        <h2 className="type-sm font-semibold text-black mb-3">Funding summary</h2>
+        <p className="type-sm text-status-warning">
+          Campaign finance data is temporarily unavailable from the FEC. Try again shortly.
+        </p>
+      </div>
+    );
+  }
+
   if (!finance || finance.totalRaised === 0) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6">
@@ -213,7 +238,14 @@ function VoteFinanceCorrelationPod({
   );
 }
 
-function SourcesPod() {
+function cycleSentence(finance: FinanceData | null): string {
+  if (!finance) return '';
+  return finance.isCurrentCycle
+    ? ` Totals cover the current ${cycleLabel(finance.cycle)} election cycle.`
+    : ` Totals cover the ${cycleLabel(finance.cycle)} election cycle, the most recent with filings.`;
+}
+
+function SourcesPod({ finance }: { finance: FinanceData | null }) {
   return (
     <div className="border-2 border-gray-300 bg-white p-4 sm:p-6 lg:col-span-2">
       <p className="type-xs text-gray-500">
@@ -221,8 +253,8 @@ function SourcesPod() {
         <a href="https://www.fec.gov" className="text-[#3ea2d4] hover:underline">
           FEC.gov
         </a>
-        . Totals reflect the current two-year cycle. Industry breakdown covers only itemized
-        individual donations where the donor listed an employer.{' '}
+        .{cycleSentence(finance)} Industry breakdown covers only itemized individual donations where
+        the donor listed an employer.{' '}
         <Link href="/methodology" className="text-[#3ea2d4] hover:underline">
           Full methodology
         </Link>
@@ -233,15 +265,16 @@ function SourcesPod() {
 
 export function CampaignContributionsAnswer({
   finance,
+  financeUnavailable,
   industries,
   voteFinanceInsight,
 }: CampaignContributionsAnswerProps) {
   return (
     <>
-      <FundingSummaryPod finance={finance} />
+      <FundingSummaryPod finance={finance} unavailable={financeUnavailable} />
       <TopIndustriesPod industries={industries} />
       <VoteFinanceCorrelationPod insight={voteFinanceInsight} />
-      <SourcesPod />
+      <SourcesPod finance={finance} />
     </>
   );
 }

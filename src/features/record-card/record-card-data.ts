@@ -32,6 +32,7 @@ import {
 import { raceId2026 as buildRaceId2026 } from '@/lib/elections/race-id';
 import { aggregateFinanceDataFromAggregates } from '@/lib/fec/finance-aggregator';
 import { fecApiService } from '@/lib/fec/fec-api-service';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 import { validateFECMapping } from '@/lib/api/finance-helpers';
 import {
   cachedStaleWhileRevalidate,
@@ -228,11 +229,6 @@ function moneyCacheKey(candidateId: string, cycle: number): string {
   return `record-card:money:v1:${candidateId}:${cycle}`;
 }
 
-function currentMoneyCycle(): number {
-  const year = new Date().getFullYear();
-  return year % 2 === 0 ? year : year + 1;
-}
-
 /**
  * The FEC answered with totals but a breakdown came back empty. The FEC
  * service turns a throttled breakdown call into [], so this is usually a
@@ -304,7 +300,7 @@ async function fetchMoneySection(bioguideId: string, state: string): Promise<Mon
   const mapping = validateFECMapping(bioguideId);
   if (!mapping.success) return { money: null, moneyStatus: 'none' };
   const candidateId = mapping.mapping.fecId;
-  const cycle = currentMoneyCycle();
+  const cycle = getCurrentElectionCycle();
 
   try {
     const { data } = await cachedStaleWhileRevalidate(
@@ -332,7 +328,7 @@ export async function warmRecordCardMoney(
   const mapping = validateFECMapping(bioguideId);
   if (!mapping.success) return 'none';
   const candidateId = mapping.mapping.fecId;
-  const cycle = currentMoneyCycle();
+  const cycle = getCurrentElectionCycle();
 
   try {
     return await refreshStaleWhileRevalidate(

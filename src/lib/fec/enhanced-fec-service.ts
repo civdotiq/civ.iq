@@ -17,6 +17,7 @@
 import { fecApiService, FECFinancialSummary, FECContribution } from './fec-api-service';
 import { bioguideToFECMapping, getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
 import logger from '@/lib/logging/simple-logger';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // Committee ID cache interface
 interface CachedCommitteeInfo {
@@ -179,7 +180,7 @@ class EnhancedFECService {
    */
   async validateCandidateData(
     bioguideId: string,
-    cycle: number = 2024
+    cycle: number = getCurrentElectionCycle()
   ): Promise<{
     hasFecMapping: boolean;
     fecId: string | null;

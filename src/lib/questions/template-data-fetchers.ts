@@ -36,9 +36,11 @@ import type {
   CommitteeActivityMeeting,
   CommitteeActivityBill,
 } from '@/lib/services/committee-activity.service';
-
-// FEC fallback cycles — most recent completed cycle first
-const FALLBACK_CYCLES = [2024, 2022, 2020] as const;
+import {
+  findNewestCycleWithData,
+  getCurrentElectionCycle,
+  getRecentElectionCycles,
+} from '@/lib/fec/election-cycle';
 
 // Cache TTLs matching API route behavior
 const FINANCE_TTL = 30 * 60; // 30 min (FEC data)
@@ -88,7 +90,13 @@ export interface CampaignContributionsData {
     pacContributions: number;
     partyContributions: number;
     candidateSelfFunding: number;
+    /** FEC cycle the totals come from (the even year it ends in). */
+    cycle: number;
+    /** False when the member had no current-cycle filings and an older cycle is shown. */
+    isCurrentCycle: boolean;
   } | null;
+  /** The FEC could not be reached — not the same as "no filings". */
+  financeUnavailable: boolean;
   industries: {
     // Top classified sectors only. The non-informative bucket (donors who left
     // employer blank, wrote RETIRED/SELF-EMPLOYED, etc.) is separated out as
@@ -160,46 +168,60 @@ function wrapInsight<T>(data: T | null): InsightResponse<T> | null {
   return { data, errors: [], status: 'complete' };
 }
 
-async function getFinancialSummaryWithFallback(fecId: string) {
-  for (const cycle of FALLBACK_CYCLES) {
-    const summary = await fecApiService.getFinancialSummary(fecId, cycle);
-    if (summary) return summary;
-  }
-  return null;
-}
-
 // ── Fetchers ───────────────────────────────────────────────────
+
+function industriesForCycle(bioguideId: string, fecId: string, cycle: number, state: string) {
+  // v2: the unversioned key held 2024-cycle breakdowns.
+  return cachedFetch(
+    `question:industries:v2:${bioguideId}:${cycle}`,
+    () => aggregateFinanceDataFromAggregates(fecId, cycle, state),
+    FINANCE_TTL
+  ).catch(() => null);
+}
 
 export async function fetchCampaignContributionsData(
   bioguideId: string,
   state: string
 ): Promise<CampaignContributionsData> {
   const fecId = getFECIdFromBioguide(bioguideId);
+  const currentCycle = getCurrentElectionCycle();
 
-  const [financialSummary, processedFinance, voteFinanceResult] = await Promise.all([
-    fecId ? getFinancialSummaryWithFallback(fecId).catch(() => null) : null,
+  // Totals walk back from the current cycle only when it has no filings; a
+  // failed call is "unavailable", never an older cycle. The industry
+  // breakdown starts on the current cycle in parallel and is refetched for
+  // the older cycle in the rare fallback case, so both describe one cycle.
+  const [newestResult, currentIndustries, voteFinanceResult] = await Promise.all([
     fecId
-      ? cachedFetch(
-          `question:industries:${bioguideId}`,
-          () => aggregateFinanceDataFromAggregates(fecId, 2024, state),
-          FINANCE_TTL
-        ).catch(() => null)
-      : null,
+      ? findNewestCycleWithData(getRecentElectionCycles(3), cycle =>
+          fecApiService.getFinancialSummary(fecId, cycle)
+        ).then(
+          value => ({ ok: true as const, value }),
+          () => ({ ok: false as const, value: null })
+        )
+      : { ok: true as const, value: null },
+    fecId ? industriesForCycle(bioguideId, fecId, currentCycle, state) : null,
     analyzeVoteFinance(bioguideId).catch(() => null),
   ]);
 
-  const finance = financialSummary
+  const newest = newestResult.value;
+  const processedFinance =
+    fecId && newest && newest.cycle !== currentCycle
+      ? await industriesForCycle(bioguideId, fecId, newest.cycle, state)
+      : currentIndustries;
+
+  const finance = newest
     ? {
-        totalRaised: financialSummary.receipts,
-        totalSpent: financialSummary.disbursements,
-        cashOnHand: financialSummary.last_cash_on_hand_end_period,
-        individualContributions: financialSummary.individual_contributions ?? 0,
-        pacContributions: financialSummary.other_political_committee_contributions ?? 0,
-        partyContributions: financialSummary.political_party_committee_contributions ?? 0,
-        candidateSelfFunding: financialSummary.candidate_contribution ?? 0,
+        totalRaised: newest.data.receipts,
+        totalSpent: newest.data.disbursements,
+        cashOnHand: newest.data.last_cash_on_hand_end_period,
+        individualContributions: newest.data.individual_contributions ?? 0,
+        pacContributions: newest.data.other_political_committee_contributions ?? 0,
+        partyContributions: newest.data.political_party_committee_contributions ?? 0,
+        candidateSelfFunding: newest.data.candidate_contribution ?? 0,
+        cycle: newest.cycle,
+        isCurrentCycle: newest.cycle === currentCycle,
       }
     : null;
-
   const industries = processedFinance?.industryBreakdown?.length
     ? (() => {
         // Buckets that don't represent a real industry — either the donor left
@@ -244,6 +266,7 @@ export async function fetchCampaignContributionsData(
 
   return {
     finance,
+    financeUnavailable: !newestResult.ok,
     industries,
     voteFinance: wrapInsight(voteFinanceResult),
   };

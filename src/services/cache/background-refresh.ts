@@ -12,6 +12,7 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getFECIdFromBioguide } from '@/lib/data/bioguide-fec-mapping';
+import { findNewestCycleWithData, getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 /**
  * Safely extracts an error message from an unknown error value
@@ -134,23 +135,18 @@ async function refreshRepresentative(
         if (!candidateId) {
           logger.debug(`No FEC mapping for ${bioguideId}, skipping finance cache`);
         } else {
-          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018];
-          for (const cycle of FALLBACK_CYCLES) {
-            try {
-              const financeData = await fecApiService.getFinancialSummary(candidateId, cycle);
-              if (financeData) {
-                const financeKey = `finance:${bioguideId}`;
-                await govCache.set(financeKey, financeData, {
-                  dataType: 'finance',
-                  source: 'background-refresh',
-                });
-                cached.finance = 1;
-                logger.debug(`Cached finance data for ${bioguideId} (cycle ${cycle})`);
-                break;
-              }
-            } catch {
-              // Try next cycle
-            }
+          // A failed call lands in the catch below; it must not fall through
+          // to an older cycle's totals.
+          const newest = await findNewestCycleWithData(getRecentElectionCycles(4), cycle =>
+            fecApiService.getFinancialSummary(candidateId, cycle)
+          );
+          if (newest) {
+            await govCache.set(`finance:${bioguideId}`, newest.data, {
+              dataType: 'finance',
+              source: 'background-refresh',
+            });
+            cached.finance = 1;
+            logger.debug(`Cached finance data for ${bioguideId} (cycle ${newest.cycle})`);
           }
         }
       } catch (error) {

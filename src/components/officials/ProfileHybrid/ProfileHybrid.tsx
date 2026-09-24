@@ -335,7 +335,7 @@ export function ProfileHybrid({ representative: r }: ProfileHybridProps) {
               summaryLoading
                 ? 'Loading…'
                 : raisedLabel
-                  ? `${financeCycle ?? 2024} cycle · FEC`
+                  ? `${financeCycle ? `${financeCycle} cycle · ` : ''}FEC`
                   : 'Data unavailable'
             }
           />

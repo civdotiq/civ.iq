@@ -21,6 +21,7 @@ import {
   withFECCacheHeaders,
 } from '@/lib/api/finance-helpers';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -60,7 +61,8 @@ export async function GET(
   try {
     logger.info('[Industries API] Called', { bioguideId });
 
-    const cacheKey = FinanceCacheKeys.industries(bioguideId);
+    const cycle = getCurrentElectionCycle();
+    const cacheKey = FinanceCacheKeys.industries(bioguideId, cycle);
     const cached = await govCache.get<IndustryAnalysisResponse>(cacheKey);
 
     if (cached) {
@@ -75,7 +77,7 @@ export async function GET(
       return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }
 
-    const financeData = await aggregateFinanceDataFromAggregates(fecMapping.fecId, 2024, 'XX');
+    const financeData = await aggregateFinanceDataFromAggregates(fecMapping.fecId, cycle, 'XX');
     if (!financeData) {
       return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }
@@ -91,7 +93,7 @@ export async function GET(
       dataQuality: financeData.dataQuality.industry,
       metadata: {
         bioguideId,
-        cycle: 2024,
+        cycle,
         lastUpdated: new Date().toISOString(),
         fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },
