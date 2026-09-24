@@ -75,7 +75,7 @@ export default function LeafletDistrictMap({
     const initializeMap = async () => {
       try {
         // Dynamic import MapLibre GL
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await import('maplibre-gl');
 
         // Create map instance
         const map = new maplibregl.Map({
@@ -116,7 +116,7 @@ export default function LeafletDistrictMap({
           loadDistricts();
         });
 
-        map.on('error', (e: { error: Error }) => {
+        map.on('error', e => {
           logger.error('MapLibre GL error:', e.error);
           setMapState(prev => ({
             ...prev,
@@ -285,7 +285,7 @@ export default function LeafletDistrictMap({
               (bounds: import('maplibre-gl').LngLatBounds, coord: [number, number]) => {
                 return bounds.extend(coord);
               },
-              new maplibregl.default.LngLatBounds(coords[0], coords[0])
+              new maplibregl.LngLatBounds(coords[0], coords[0])
             );
 
             map.fitBounds(bounds, { padding: 50 });

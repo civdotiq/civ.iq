@@ -66,7 +66,7 @@ export function DistrictMapContainer({
     const initializeMap = async () => {
       try {
         // Dynamic import MapLibre GL
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await import('maplibre-gl');
 
         // Create map instance
         const map = new maplibregl.Map({
@@ -108,7 +108,7 @@ export function DistrictMapContainer({
           loadDistricts();
         });
 
-        map.on('error', (e: { error: Error }) => {
+        map.on('error', e => {
           // eslint-disable-next-line no-console
           console.error('MapLibre GL error:', e.error);
           setMapState(prev => ({
