@@ -9,6 +9,10 @@ import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 import { getServerBaseUrl } from '@/lib/server-url';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
 import type { BackboneResponse } from '@/types/backbone-response';
+import {
+  resolveTigerwebLayer,
+  TIGERWEB_SITTING_LAYERS,
+} from '@/lib/services/tigerweb-boundary.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -295,10 +299,15 @@ async function fetchCongressionalDistrict(
   const monitor = monitorExternalApi('census-tiger', 'congressional-district', '');
 
   try {
-    // Use Census Bureau's TIGERweb REST API for 119th Congressional Districts (Layer 0)
+    // 119th Congressional Districts, resolved by name: Sept 2026 made layer 0
+    // the 120th Congress, where the CD119 field doesn't exist.
+    const layerId = await resolveTigerwebLayer(
+      TIGERWEB_SITTING_LAYERS.cd.name,
+      TIGERWEB_SITTING_LAYERS.cd.fallback
+    );
     const paddedDistrict = district.padStart(2, '0');
     const whereClause = `STATE='${stateFips}' AND CD119='${paddedDistrict}'`;
-    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
+    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
 
     const response = await fetch(url);
 
@@ -337,25 +346,43 @@ async function fetchCongressionalDistrict(
   }
 }
 
+/** District number from a TIGERweb state legislative feature (BASENAME, else SLDU/SLDL). */
+function legislativeDistrictNumber(
+  properties: GeoJSON.GeoJsonProperties,
+  field: 'SLDU' | 'SLDL'
+): string {
+  const basename = properties?.BASENAME;
+  if (typeof basename === 'string' && basename) return basename;
+  const code = properties?.[field];
+  return typeof code === 'string' ? code.replace(/^0+(?=.)/, '') : '';
+}
+
 // Fetch state legislative district boundaries from Census TIGER
 async function fetchStateLegislativeDistrict(
   stateFips: string,
   chamber: 'upper' | 'lower',
-  _coordinates?: { lat: number; lng: number }
+  coordinates: { lat: number; lng: number }
 ): Promise<GeoJSON.Feature | null> {
   const monitor = monitorExternalApi('census-tiger', `${chamber}-legislative`, '');
 
   try {
-    // Use Census Bureau's TIGERweb REST API for State Legislative Districts
-    // Layer 2: State Legislative Districts - Upper Chamber (State Senate)
-    // Layer 3: State Legislative Districts - Lower Chamber (State House)
-    const layerId = chamber === 'upper' ? '2' : '3';
+    // The sitting legislature's lines (2024 layers), resolved by name because
+    // TIGERweb renumbers layers each vintage. Point-in-polygon at the given
+    // coordinates, so the district returned is the one containing that point.
+    const { name, fallback } = TIGERWEB_SITTING_LAYERS[chamber];
+    const layerId = await resolveTigerwebLayer(name, fallback);
 
-    const whereClause = `STATE='${stateFips}'`;
-
-    // If coordinates provided, use spatial query to find the specific district
-    // For now, just get the first district from the state as a fallback
-    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson&resultRecordCount=1`;
+    const params = new URLSearchParams({
+      where: `STATE='${stateFips}'`,
+      geometry: `${coordinates.lng},${coordinates.lat}`,
+      geometryType: 'esriGeometryPoint',
+      inSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects',
+      outFields: '*',
+      outSR: '4326',
+      f: 'geojson',
+    });
+    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?${params}`;
 
     const response = await fetch(url);
 
@@ -406,6 +433,9 @@ export async function GET(request: NextRequest) {
   try {
     // Get ZIP code coordinates and state
     let zipInfo = await getZipCoordinates(zipCode);
+    // True when zipInfo is only the state's center, which says nothing about
+    // which legislative district the ZIP is in.
+    let usingStateCenter = false;
 
     // If geocoding fails, try to get state from representatives and use fallback coordinates
     if (!zipInfo) {
@@ -423,6 +453,7 @@ export async function GET(request: NextRequest) {
             const stateCoordinates = getApproximateStateCoordinates(state);
             if (stateCoordinates) {
               zipInfo = { ...stateCoordinates, state };
+              usingStateCenter = true;
               logger.info('Using fallback state center coordinates', { zipCode, state });
             }
           }
@@ -509,8 +540,12 @@ export async function GET(request: NextRequest) {
 
     const [congressionalBoundary, stateSenateBounder, stateHouseBoundary] = await Promise.all([
       fetchCongressionalDistrict(stateFips, district),
-      fetchStateLegislativeDistrict(stateFips, 'upper', { lat: zipInfo.lat, lng: zipInfo.lng }),
-      fetchStateLegislativeDistrict(stateFips, 'lower', { lat: zipInfo.lat, lng: zipInfo.lng }),
+      usingStateCenter
+        ? null
+        : fetchStateLegislativeDistrict(stateFips, 'upper', { lat: zipInfo.lat, lng: zipInfo.lng }),
+      usingStateCenter
+        ? null
+        : fetchStateLegislativeDistrict(stateFips, 'lower', { lat: zipInfo.lat, lng: zipInfo.lng }),
     ]);
 
     // Create boundaries (use real data if available, otherwise mock)
@@ -541,14 +576,12 @@ export async function GET(request: NextRequest) {
             type: stateSenateBounder.geometry.type,
             coordinates: (stateSenateBounder.geometry as GeoJSON.Polygon).coordinates,
             properties: {
-              district:
-                stateSenateBounder.properties?.SLDUST ||
-                stateSenateBounder.properties?.DISTRICT ||
-                '1',
+              // BASENAME is the display number ("21"); never invent one.
+              district: legislativeDistrictNumber(stateSenateBounder.properties, 'SLDU'),
               state: districtState,
               name:
                 stateSenateBounder.properties?.NAME ||
-                `State Senate District ${stateSenateBounder.properties?.SLDUST || '1'}`,
+                `State Senate District ${legislativeDistrictNumber(stateSenateBounder.properties, 'SLDU')}`,
               type: 'state_senate' as const,
               source: 'census-tiger',
             },
@@ -560,14 +593,12 @@ export async function GET(request: NextRequest) {
             type: stateHouseBoundary.geometry.type,
             coordinates: (stateHouseBoundary.geometry as GeoJSON.Polygon).coordinates,
             properties: {
-              district:
-                stateHouseBoundary.properties?.SLDLST ||
-                stateHouseBoundary.properties?.DISTRICT ||
-                'A',
+              // BASENAME is the display number ("21"); never invent one.
+              district: legislativeDistrictNumber(stateHouseBoundary.properties, 'SLDL'),
               state: districtState,
               name:
                 stateHouseBoundary.properties?.NAME ||
-                `State House District ${stateHouseBoundary.properties?.SLDLST || 'A'}`,
+                `State House District ${legislativeDistrictNumber(stateHouseBoundary.properties, 'SLDL')}`,
               type: 'state_house' as const,
               source: 'census-tiger',
             },
