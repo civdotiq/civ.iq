@@ -77,7 +77,7 @@ export function buildMemberSponsoredCounts(input: BuildCountsInput): MemberSpons
     counts.set(bill.sponsorBioguideId, entry);
   }
 
-  const sorted = [...counts.keys()].sort();
+  const sorted = [...counts.keys()].sort((a, b) => a.localeCompare(b));
   return {
     congress: input.congress,
     generatedAt: input.generatedAt,
