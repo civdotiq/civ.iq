@@ -9,67 +9,20 @@ import { govCache } from '@/services/cache';
 import { fetchDistrictPlacesData } from '@/lib/data-sources/cdc-places-service';
 import { computeDistrictPlacesEstimate } from '@/lib/data-sources/cdc-places-district-estimate';
 import { CCD_YEAR, fetchDistrictStaffing } from '@/lib/data-sources/nces-ccd-service';
+import { STATE_FIPS_TO_CODE, isDelegateJurisdiction } from '@/lib/data/us-states';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 
-// State-to-FIPS mapping for various APIs
-const STATE_FIPS: Record<string, string> = {
-  AL: '01',
-  AK: '02',
-  AZ: '04',
-  AR: '05',
-  CA: '06',
-  CO: '08',
-  CT: '09',
-  DE: '10',
-  FL: '12',
-  GA: '13',
-  HI: '15',
-  ID: '16',
-  IL: '17',
-  IN: '18',
-  IA: '19',
-  KS: '20',
-  KY: '21',
-  LA: '22',
-  ME: '23',
-  MD: '24',
-  MA: '25',
-  MI: '26',
-  MN: '27',
-  MS: '28',
-  MO: '29',
-  MT: '30',
-  NE: '31',
-  NV: '32',
-  NH: '33',
-  NJ: '34',
-  NM: '35',
-  NY: '36',
-  NC: '37',
-  ND: '38',
-  OH: '39',
-  OK: '40',
-  OR: '41',
-  PA: '42',
-  RI: '44',
-  SC: '45',
-  SD: '46',
-  TN: '47',
-  TX: '48',
-  UT: '49',
-  VT: '50',
-  VA: '51',
-  WA: '53',
-  WV: '54',
-  WI: '55',
-  WY: '56',
-};
+// Abbreviation -> two-digit state FIPS (50 states, DC and territories)
+const STATE_FIPS: Record<string, string> = Object.fromEntries(
+  Object.entries(STATE_FIPS_TO_CODE).map(([fips, code]) => [code, fips])
+);
 
-// v2: entries cached while the retired ASFIN endpoint 404'd hold null funding
-const CACHE_KEY_PREFIX = 'district-services-health:v2';
+// v3: v1 entries hold null funding (retired ASFIN endpoint 404'd); v2 entries
+// hold null DC/territory staffing and health (delegate seat looked up as 00)
+const CACHE_KEY_PREFIX = 'district-services-health:v3';
 
 /**
  * CDC PLACES crude prevalence for the counties overlapping the district.
@@ -80,8 +33,10 @@ async function fetchPublicHealthData(
   districtId: string
 ): Promise<ServicesHealthProfile['publicHealth']> {
   const districtPart = districtId.split('-')[1]?.toUpperCase() ?? '';
-  const districtNumber = /^\d+$/.test(districtPart) ? parseInt(districtPart, 10) : 0;
   const stateCode = districtId.split('-')[0]?.toUpperCase() ?? '';
+  let districtNumber = /^\d+$/.test(districtPart) ? parseInt(districtPart, 10) : 0;
+  // Crosswalks key DC/territory delegate seats as district 98, not 00
+  if (isDelegateJurisdiction(stateCode)) districtNumber = 98;
 
   // County table (provenance / drill-down) + population-weighted district
   // estimate (tract aggregation), fetched in parallel. Either may be null.
@@ -151,7 +106,8 @@ async function fetchCensusEducationFunding(stateCode: string): Promise<{
       throw new Error(`Census school finance API error: ${response.status}`);
     }
 
-    const data: unknown = await response.json();
+    // 204 = the survey has no rows for this geography (e.g. territories)
+    const data: unknown = response.status === 204 ? [] : await response.json();
     if (!Array.isArray(data) || data.length < 2) {
       logger.warn('Census school finance API returned no data', { stateCode });
       return unavailable;
@@ -175,7 +131,7 @@ async function fetchCensusEducationFunding(stateCode: string): Promise<{
     // Latest year that reports federal revenue (the headline metric)
     const latestYear = [...byYear.keys()]
       .filter(year => byYear.get(year)?.has(AGG_FEDERAL_REVENUE))
-      .sort()
+      .sort((a, b) => Number(a) - Number(b))
       .pop();
     const latest = latestYear ? byYear.get(latestYear) : undefined;
     if (!latest) {
