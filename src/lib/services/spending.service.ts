@@ -23,6 +23,11 @@ import { censusCongressionalDistrictCode, STATE_FIPS_TO_CODE } from '@/lib/data/
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 
+// USASpending answers repeat queries in ~0.5s but can hang 40s+ on a cold
+// one. Bound each call so a caller's function budget survives; the next
+// request usually lands on USASpending's warm cache.
+const USASPENDING_TIMEOUT_MS = 8000;
+
 const CONTRACT_CODES = ['A', 'B', 'C', 'D'];
 const GRANT_CODES = ['02', '03', '04', '05'];
 
@@ -66,7 +71,7 @@ async function fetchDistrictAwards(
   district: string,
   awardCodes: string[],
   limit: number = 10
-): Promise<FederalAward[]> {
+): Promise<FederalAward[] | null> {
   const { startDate, endDate } = currentFederalFiscalYearWindow();
 
   try {
@@ -96,11 +101,12 @@ async function fetchDistrictAwards(
           award_type_codes: awardCodes,
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) {
       logger.error('USAspending API error', new Error(`HTTP ${response.status}`));
-      return [];
+      return null;
     }
 
     const data: USASpendingAwardResponse = await response.json();
@@ -108,7 +114,7 @@ async function fetchDistrictAwards(
     return data.results.map(award => transformAward(award, type));
   } catch (error) {
     logger.error('Error fetching district awards', error as Error);
-    return [];
+    return null;
   }
 }
 
@@ -139,6 +145,7 @@ async function fetchDistrictAggregate(
           time_period: [{ start_date: startDate, end_date: endDate }],
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) return null;
@@ -429,6 +436,7 @@ async function fetchDistrictAwardCounts(
           time_period: [{ start_date: startDate, end_date: endDate }],
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) return null;
@@ -468,6 +476,8 @@ export interface DistrictSpendingResult {
   aggregate: { total: number; perCapita: number | null; population: number | null } | null;
   contractTotal: number;
   grantTotal: number;
+  /** true when a sub-fetch failed; such results are never cached */
+  incomplete?: boolean;
 }
 
 /**
@@ -490,12 +500,24 @@ export async function getDistrictSpending(
         fetchDistrictAggregate(state, district),
       ]);
 
-      const contractTotal = contracts.reduce((sum, a) => sum + a.amount, 0);
-      const grantTotal = grants.reduce((sum, a) => sum + a.amount, 0);
-
-      return { contracts, grants, aggregate, contractTotal, grantTotal };
+      const contractList = contracts ?? [];
+      const grantList = grants ?? [];
+      const result: DistrictSpendingResult = {
+        contracts: contractList,
+        grants: grantList,
+        aggregate,
+        contractTotal: contractList.reduce((sum, a) => sum + a.amount, 0),
+        grantTotal: grantList.reduce((sum, a) => sum + a.amount, 0),
+      };
+      // A null aggregate is also how "no data" looks, so a district with no
+      // aggregate retries each time; cheap, and never pins a timeout for 6h.
+      if (contracts === null || grants === null || aggregate === null) {
+        result.incomplete = true;
+      }
+      return result;
     },
     // cachedFetch TTL is in seconds; this was previously 6h * 1000 (~250 days)
-    6 * 60 * 60
+    6 * 60 * 60,
+    result => !result.incomplete
   );
 }
