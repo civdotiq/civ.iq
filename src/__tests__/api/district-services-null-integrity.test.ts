@@ -49,7 +49,10 @@ jest.mock('@/lib/data-sources/va-veteran-population-service', () => ({
   fetchVeteranPopulation: jest.fn().mockResolvedValue(null),
 }));
 
+import { NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
+import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
+import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
 
 function makeParams(districtId: string): { params: Promise<{ districtId: string }> } {
   return { params: Promise.resolve({ districtId }) };
@@ -371,6 +374,97 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
     expect(response.status).toBe(200);
     expect(body.government.federalInvestment.totalAnnualSpending).toBeNull();
     expect(body.government.representation.appropriationsSecured).toBeNull();
+  });
+});
+
+describe('/api/districts/[districtId]/government-spending partial failures', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (govCache.get as jest.Mock).mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  // jest.setup's NextResponse mock drops headers; read what the route passed.
+  function cacheControlSent(): string | undefined {
+    const calls = (NextResponse.json as jest.Mock).mock.calls;
+    const init = calls[calls.length - 1]?.[1] as { headers?: Record<string, string> } | undefined;
+    return init?.headers?.['Cache-Control'];
+  }
+
+  function mockCompleteUpstreams() {
+    (fetchMedicaidEnrollment as jest.Mock).mockResolvedValueOnce({
+      totalMedicaidAndChip: 1000,
+      reportingPeriod: '2026-05',
+      preliminary: false,
+    });
+    (fetchVeteranPopulation as jest.Mock).mockResolvedValueOnce({ count: 500, fiscalYear: 2025 });
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      const u = String(url);
+      if (u.includes('spending_by_geography')) {
+        return mockFetchResponse({
+          results: [{ aggregated_amount: 5, per_capita: 1, population: 5 }],
+        });
+      }
+      if (u.includes('spending_by_award_count')) {
+        return mockFetchResponse({ results: { contracts: 1, grants: 1 } });
+      }
+      if (u.includes('spending_by_award')) {
+        return mockFetchResponse({ results: [], page_metadata: { hasNext: false } });
+      }
+      return mockFetchResponse([]);
+    });
+  }
+
+  it('caches a complete profile for a day', async () => {
+    mockCompleteUpstreams();
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
+    );
+
+    expect(govCache.set).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(200);
+    expect(cacheControlSent()).toContain('s-maxage=86400');
+  });
+
+  it('serves but never caches a profile with a failed source', async () => {
+    failAllFetches();
+
+    const response = await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
+    );
+
+    expect(response.status).toBe(200);
+    expect(govCache.set).not.toHaveBeenCalled();
+    expect(cacheControlSent()).toBe('public, s-maxage=300');
+  });
+
+  it('answers within its deadline when USASpending hangs', async () => {
+    jest.useFakeTimers();
+    mockCompleteUpstreams();
+    const answered = jest
+      .fn()
+      .mockImplementation((url: string) =>
+        String(url).includes('usaspending') ? new Promise(() => {}) : mockFetchResponse([])
+      );
+    global.fetch = answered;
+
+    const pending = getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
+    );
+    await jest.advanceTimersByTimeAsync(12000);
+    const response = await pending;
+    const body = await response.json();
+
+    expect(body.government.federalInvestment.totalAnnualSpending).toBeNull();
+    expect(govCache.set).not.toHaveBeenCalled();
+    expect(cacheControlSent()).toBe('public, s-maxage=300');
   });
 });
 

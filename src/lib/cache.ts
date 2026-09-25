@@ -21,7 +21,10 @@ const getCache = (): RedisCache => {
 export async function cachedFetch<T>(
   key: string,
   fetchFn: () => Promise<T>,
-  ttlSeconds: number = 3600
+  ttlSeconds: number = 3600,
+  // Return false to hand a result back uncached (e.g. a partial upstream
+  // failure), so the next request retries instead of serving it for the TTL.
+  shouldCache: (data: T) => boolean = () => true
 ): Promise<T> {
   const monitor = monitorCache('get', key);
   const cache = getCache();
@@ -44,6 +47,10 @@ export async function cachedFetch<T>(
     // recovery when the upstream source comes back.
     if (Array.isArray(data) && data.length === 0) {
       logger.warn('Skipping cache write for empty result', { key });
+      return data;
+    }
+    if (!shouldCache(data)) {
+      logger.warn('Skipping cache write for incomplete result', { key });
       return data;
     }
 

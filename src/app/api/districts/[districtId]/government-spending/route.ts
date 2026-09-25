@@ -31,22 +31,45 @@ const STATE_FIPS: Record<string, string> = Object.fromEntries(
 
 const CACHE_KEY_PREFIX = 'district-government-spending';
 
+// vercel.json gives this route 20s. USASpending can hang 40s+ on a cold
+// query, so every source gets this long, then reports unavailable.
+const SOURCE_DEADLINE_MS = 12000;
+
+/** A source's data plus whether it fully loaded (only complete data is cached). */
+interface SourceResult<T> {
+  data: T;
+  complete: boolean;
+}
+
+function withDeadline<T>(promise: Promise<SourceResult<T>>, fallback: T, label: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<SourceResult<T>>(resolve => {
+    timer = setTimeout(() => {
+      logger.warn('Government spending source hit deadline', { label, ms: SOURCE_DEADLINE_MS });
+      resolve({ data: fallback, complete: false });
+    }, SOURCE_DEADLINE_MS);
+  });
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
 /**
  * District-scoped federal spending from USASpending.gov (place of
  * performance, current federal fiscal year to date), via the shared
  * spending service. null = data unavailable, never a fabricated 0.
  */
+const FEDERAL_INVESTMENT_UNAVAILABLE: GovernmentServicesProfile['federalInvestment'] = {
+  totalAnnualSpending: null,
+  contractsAndGrants: null,
+  spendingPerCapita: null,
+  population: null,
+  majorProjects: [],
+  infrastructureInvestment: null,
+};
+
 async function fetchFederalInvestment(
   districtId: string
-): Promise<GovernmentServicesProfile['federalInvestment']> {
-  const unavailable: GovernmentServicesProfile['federalInvestment'] = {
-    totalAnnualSpending: null,
-    contractsAndGrants: null,
-    spendingPerCapita: null,
-    population: null,
-    majorProjects: [],
-    infrastructureInvestment: null,
-  };
+): Promise<SourceResult<GovernmentServicesProfile['federalInvestment']>> {
+  const unavailable = { data: FEDERAL_INVESTMENT_UNAVAILABLE, complete: false };
 
   const parsed = parseDistrictId(districtId);
   if (!parsed) {
@@ -71,7 +94,7 @@ async function fetchFederalInvestment(
         description: award.description,
       }));
 
-    return {
+    const data = {
       totalAnnualSpending: spending.aggregate?.total ?? null,
       contractsAndGrants: counts ? counts.contracts + counts.grants : null,
       spendingPerCapita: spending.aggregate?.perCapita ?? null,
@@ -82,6 +105,10 @@ async function fetchFederalInvestment(
       // null = queried-but-none or upstream unavailable (see service).
       infrastructureInvestment: infrastructure?.total ?? null,
     };
+    // counts/infrastructure are null only on upstream failure (the service
+    // returns an object for "none found"), so null here means incomplete.
+    const complete = !spending.incomplete && counts !== null && infrastructure !== null;
+    return { data, complete };
   } catch (error) {
     logger.error('Error fetching district federal investment', error as Error, { districtId });
     return unavailable;
@@ -90,7 +117,7 @@ async function fetchFederalInvestment(
 
 async function fetchCongressionalBillsData(
   districtId: string
-): Promise<Partial<GovernmentServicesProfile['representation']>> {
+): Promise<SourceResult<Partial<GovernmentServicesProfile['representation']>>> {
   try {
     // Congress.gov API for bills affecting the district
     const billsUrl = `${getServerBaseUrl()}/api/representative/${districtId.toUpperCase()}/bills`;
@@ -123,16 +150,19 @@ async function fetchCongressionalBillsData(
       });
 
       return {
-        billsAffectingDistrict,
-        appropriationsSecured: null, // Requires CBO appropriations data
+        data: {
+          billsAffectingDistrict,
+          appropriationsSecured: null, // Requires CBO appropriations data
+        },
+        complete: true,
       };
     }
 
     logger.warn('Congressional bills API returned no data', { districtId });
-    return {};
+    return { data: {}, complete: true };
   } catch (error) {
     logger.error('Error fetching Congressional bills data', error as Error, { districtId });
-    return {};
+    return { data: {}, complete: false };
   }
 }
 
@@ -159,15 +189,29 @@ function getFederalFacilitiesData(): GovernmentServicesProfile['representation']
  * (Medicaid/CHIP enrollment from CMS, veteran population from VA). Attached
  * here as explicitly statewide figures, never as district-specific numbers.
  */
+function stateContextUnavailable(stateCode: string): GovernmentServicesProfile['stateContext'] {
+  return {
+    state: stateCode,
+    medicaidChipEnrollment: null,
+    medicaidChipPeriod: null,
+    medicaidChipPreliminary: false,
+    veteranPopulation: null,
+    veteranPopulationFiscalYear: null,
+  };
+}
+
 async function fetchStateContext(
   stateCode: string
-): Promise<GovernmentServicesProfile['stateContext']> {
+): Promise<SourceResult<GovernmentServicesProfile['stateContext']>> {
   const [medicaid, veterans] = await Promise.all([
     fetchMedicaidEnrollment(stateCode),
     fetchVeteranPopulation(stateCode),
   ]);
 
-  return {
+  // Both services return null on failure. Territories with no published
+  // figure also land here and simply aren't cached — cheap, never wrong.
+  const complete = medicaid !== null && veterans !== null;
+  const data = {
     state: stateCode,
     medicaidChipEnrollment: medicaid?.totalMedicaidAndChip ?? null,
     medicaidChipPeriod: medicaid?.reportingPeriod ?? null,
@@ -175,17 +219,18 @@ async function fetchStateContext(
     veteranPopulation: veterans?.count ?? null,
     veteranPopulationFiscalYear: veterans?.fiscalYear ?? null,
   };
+  return { data, complete };
 }
 
 async function getGovernmentServicesProfile(
   districtId: string
-): Promise<GovernmentServicesProfile> {
+): Promise<SourceResult<GovernmentServicesProfile>> {
   const cacheKey = `${CACHE_KEY_PREFIX}:${districtId}`;
   const cached = await govCache.get<GovernmentServicesProfile>(cacheKey);
 
   if (cached) {
     logger.info('Returning cached government services data', { districtId });
-    return cached;
+    return { data: cached, complete: true };
   }
 
   try {
@@ -198,11 +243,18 @@ async function getGovernmentServicesProfile(
     logger.info('Fetching government services profile for district', { districtId, stateCode });
 
     // Fetch data from multiple sources in parallel
-    const [federalInvestment, billsData, stateContext] = await Promise.all([
-      fetchFederalInvestment(districtId),
-      fetchCongressionalBillsData(districtId),
-      fetchStateContext(stateCode),
+    const [federal, bills, state] = await Promise.all([
+      withDeadline(
+        fetchFederalInvestment(districtId),
+        FEDERAL_INVESTMENT_UNAVAILABLE,
+        'usaspending'
+      ),
+      withDeadline(fetchCongressionalBillsData(districtId), {}, 'bills'),
+      withDeadline(fetchStateContext(stateCode), stateContextUnavailable(stateCode), 'state'),
     ]);
+    const federalInvestment = federal.data;
+    const billsData = bills.data;
+    const complete = federal.complete && bills.complete && state.complete;
 
     const socialServicesData = getSocialServicesData();
     const federalFacilitiesData = getFederalFacilitiesData();
@@ -216,36 +268,34 @@ async function getGovernmentServicesProfile(
         federalFacilities: federalFacilitiesData,
         appropriationsSecured: billsData.appropriationsSecured ?? null,
       },
-      stateContext,
+      stateContext: state.data,
     };
 
-    // Cache the result (Redis + memory fallback; shared across instances)
-    await govCache.set(cacheKey, servicesProfile, {
-      dataType: 'heavyEndpoints',
-      source: 'district-government-spending',
-    });
+    // Cache only a complete profile (Redis + memory fallback; shared across
+    // instances). A partial one is served but retried on the next request.
+    if (complete) {
+      await govCache.set(cacheKey, servicesProfile, {
+        dataType: 'heavyEndpoints',
+        source: 'district-government-spending',
+      });
+    }
 
     logger.info('Government services profile compiled successfully', {
       districtId,
       stateCode,
       totalSpending: servicesProfile.federalInvestment.totalAnnualSpending,
       billCount: servicesProfile.representation.billsAffectingDistrict.length,
+      complete,
     });
 
-    return servicesProfile;
+    return { data: servicesProfile, complete };
   } catch (error) {
     logger.error('Error compiling government services profile', error as Error, { districtId });
 
     // Everything failed: all metrics honestly unavailable (never cached)
-    return {
-      federalInvestment: {
-        totalAnnualSpending: null,
-        contractsAndGrants: null,
-        spendingPerCapita: null,
-        population: null,
-        majorProjects: [],
-        infrastructureInvestment: null,
-      },
+    const stateCode = districtId.split('-')[0]?.toUpperCase() ?? '';
+    const data: GovernmentServicesProfile = {
+      federalInvestment: FEDERAL_INVESTMENT_UNAVAILABLE,
       socialServices: {
         snapBeneficiaries: null,
         medicaidEnrollment: null,
@@ -257,15 +307,9 @@ async function getGovernmentServicesProfile(
         federalFacilities: [],
         appropriationsSecured: null,
       },
-      stateContext: {
-        state: districtId.split('-')[0]?.toUpperCase() ?? '',
-        medicaidChipEnrollment: null,
-        medicaidChipPeriod: null,
-        medicaidChipPreliminary: false,
-        veteranPopulation: null,
-        veteranPopulationFiscalYear: null,
-      },
+      stateContext: stateContextUnavailable(stateCode),
     };
+    return { data, complete: false };
   }
 }
 
@@ -278,7 +322,7 @@ export async function GET(
 
     logger.info('Government services profile API request', { districtId });
 
-    const servicesProfile = await getGovernmentServicesProfile(districtId);
+    const { data: servicesProfile, complete } = await getGovernmentServicesProfile(districtId);
 
     return NextResponse.json(
       {
@@ -308,7 +352,11 @@ export async function GET(
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          // A partial profile (some source failed or timed out) must not sit
+          // on the CDN for a day; hold it briefly so a retry can fill it in.
+          'Cache-Control': complete
+            ? 'public, s-maxage=86400, stale-while-revalidate=172800'
+            : 'public, s-maxage=300',
         },
       }
     );
