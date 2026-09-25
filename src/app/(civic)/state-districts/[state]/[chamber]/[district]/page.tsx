@@ -17,6 +17,7 @@ import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
 import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
 import logger from '@/lib/logging/simple-logger';
+import { decodeSegment } from '@/lib/helpers/decode-segment';
 import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
 import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
 import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
@@ -45,7 +46,8 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { state, chamber, district } = await params;
+  const { state, chamber, district: rawDistrict } = await params;
+  const district = decodeSegment(rawDistrict);
   const stateCode = normalizeStateIdentifier(state);
   const stateName = stateCode ? getStateName(stateCode) || state : state;
 
@@ -57,7 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${stateName} ${chamberName} District ${district} - CIV.IQ`,
     description: `View information about ${stateName} ${chamberName} District ${district}, including representatives and demographics.`,
     alternates: {
-      canonical: `https://civdotiq.org/state-districts/${state.toLowerCase()}/${validChamber}/${district}`,
+      canonical: `https://civdotiq.org/state-districts/${state.toLowerCase()}/${validChamber}/${encodeURIComponent(district)}`,
     },
   };
 }
@@ -66,7 +68,9 @@ export default async function StateDistrictPage({
   params,
   searchParams,
 }: PageProps & { searchParams?: Promise<{ address?: string; from?: string }> }) {
-  const { state, chamber: rawChamber, district } = await params;
+  const { state, chamber: rawChamber, district: rawDistrict } = await params;
+  // Named districts ("1st Barnstable", "Belknap 1") arrive percent-encoded.
+  const district = decodeSegment(rawDistrict);
   const search = searchParams ? await searchParams : {};
 
   // Normalize state parameter (handles both full names like "South Carolina" and codes like "SC")
