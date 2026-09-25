@@ -372,7 +372,8 @@ async function fetchStateOfficial(
     party: result.partyLabel?.value,
     termStart: (result as Record<string, { value: string }>).startTime?.value,
     termEnd: undefined, // Current holder has no end date
-    photoUrl: result.photo?.value,
+    // Wikidata returns http:// Commons URLs; https avoids mixed content on our pages.
+    photoUrl: result.photo?.value.replace(/^http:\/\//, 'https://'),
     wikipediaUrl: result.wikipediaUrl?.value,
   };
 }

@@ -31,6 +31,7 @@ export const JusticeCard: React.FC<JusticeCardProps> = ({ justice, isChief = fal
               width={80}
               height={80}
               className="w-20 h-20 object-cover border-2 border-gray-300"
+              unoptimized
               onError={() => setImageError(true)}
             />
           ) : (
