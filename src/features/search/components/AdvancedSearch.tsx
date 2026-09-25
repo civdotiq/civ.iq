@@ -8,9 +8,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, Filter, MapPin, Users, Calendar, X } from 'lucide-react';
+import { Search, Filter, MapPin, Users, Calendar, FileText, DollarSign, X } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { formatCurrency } from '@/lib/utils';
 
 interface SearchFilters {
   query: string;
@@ -19,6 +20,63 @@ interface SearchFilters {
   state: string;
   committee: string;
   experienceYears: [number, number];
+  /** Raw input text; '' means no bound. */
+  billsIntroducedMin: string;
+  billsIntroducedMax: string;
+  /** Raw dollar input text; '' means no bound. */
+  raisedMin: string;
+  raisedMax: string;
+  sort: SortOption;
+}
+
+type SortOption = 'name' | 'yearsInOffice' | 'billsIntroduced' | 'raised';
+
+// Counts read best high-to-low; names A-Z.
+const SORT_ORDER: Record<SortOption, 'asc' | 'desc'> = {
+  name: 'asc',
+  yearsInOffice: 'desc',
+  billsIntroduced: 'desc',
+  raised: 'desc',
+};
+
+const DEFAULT_FILTERS: SearchFilters = {
+  query: '',
+  party: 'all',
+  chamber: 'all',
+  state: '',
+  committee: '',
+  experienceYears: [0, 30],
+  billsIntroducedMin: '',
+  billsIntroducedMax: '',
+  raisedMin: '',
+  raisedMax: '',
+  sort: 'name',
+};
+
+/** A whole, non-negative number from a text input, or null for blank/invalid. */
+function parseCount(raw: string): number | null {
+  if (!/^\d+$/.test(raw.trim())) return null;
+  return Number(raw.trim());
+}
+
+/** Whole dollars from input like "1,000,000" or "$250000"; null for blank/invalid. */
+function parseDollars(raw: string): number | null {
+  return parseCount(raw.replace(/[$,\s]/g, ''));
+}
+
+interface FundraisingMeta {
+  cycle: number;
+  membersCovered: number;
+  totalMembers: number;
+}
+
+function formatAsOf(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 interface Representative {
@@ -29,6 +87,11 @@ interface Representative {
   district?: string;
   chamber: 'House' | 'Senate';
   yearsInOffice: number;
+  /** Null when the bills corpus is unavailable, never a stand-in zero. */
+  billsIntroduced: number | null;
+  /** FEC receipts this cycle; null when unknown or none, never a stand-in zero. */
+  raisedThisCycle: number | null;
+  raisedThroughDate: string | null;
   committees: string[];
   imageUrl?: string;
 }
@@ -38,15 +101,13 @@ export function AdvancedSearch() {
   const initialQuery = searchParams.get('q') ?? '';
 
   const [filters, setFilters] = useState<SearchFilters>({
+    ...DEFAULT_FILTERS,
     query: initialQuery,
-    party: 'all',
-    chamber: 'all',
-    state: '',
-    committee: '',
-    experienceYears: [0, 30],
   });
 
   const [results, setResults] = useState<Representative[]>([]);
+  const [billsAsOf, setBillsAsOf] = useState<string | null>(null);
+  const [fundraising, setFundraising] = useState<FundraisingMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [resultCount, setResultCount] = useState(0);
@@ -146,6 +207,19 @@ export function AdvancedSearch() {
       params.append('experienceYearsMin', filters.experienceYears[0].toString());
       params.append('experienceYearsMax', filters.experienceYears[1].toString());
 
+      const billsMin = parseCount(filters.billsIntroducedMin);
+      const billsMax = parseCount(filters.billsIntroducedMax);
+      if (billsMin !== null) params.append('billsIntroducedMin', billsMin.toString());
+      if (billsMax !== null) params.append('billsIntroducedMax', billsMax.toString());
+
+      const raisedMin = parseDollars(filters.raisedMin);
+      const raisedMax = parseDollars(filters.raisedMax);
+      if (raisedMin !== null) params.append('raisedMin', raisedMin.toString());
+      if (raisedMax !== null) params.append('raisedMax', raisedMax.toString());
+
+      params.append('sort', filters.sort);
+      params.append('order', SORT_ORDER[filters.sort]);
+
       // Fetch from API
       const response = await fetch(`/api/search?${params.toString()}`);
 
@@ -157,6 +231,8 @@ export function AdvancedSearch() {
 
       setResults(data.data?.results || []);
       setResultCount(data.data?.totalResults || 0);
+      setBillsAsOf(data.data?.metadata?.billsIntroducedAsOf ?? null);
+      setFundraising(data.data?.metadata?.fundraising ?? null);
     } catch (error) {
       logger.error('Advanced search error', {
         component: 'AdvancedSearch',
@@ -179,14 +255,7 @@ export function AdvancedSearch() {
   };
 
   const clearFilters = () => {
-    setFilters({
-      query: '',
-      party: 'all',
-      chamber: 'all',
-      state: '',
-      committee: '',
-      experienceYears: [0, 30],
-    });
+    setFilters(DEFAULT_FILTERS);
   };
 
   return (
@@ -196,7 +265,8 @@ export function AdvancedSearch() {
           Advanced Representative Search
         </h2>
         <p className="aicher-heading-wide text-gray-600">
-          Find representatives by party, chamber, state, committee membership and years in office
+          Find representatives by party, chamber, state, committee membership, years in office and
+          bills introduced
         </p>
       </div>
 
@@ -264,7 +334,14 @@ export function AdvancedSearch() {
       </div>
 
       {/* Clear All Button */}
-      {(filters.query || filters.party !== 'all' || filters.chamber !== 'all' || filters.state) && (
+      {(filters.query ||
+        filters.party !== 'all' ||
+        filters.chamber !== 'all' ||
+        filters.state ||
+        filters.billsIntroducedMin ||
+        filters.billsIntroducedMax ||
+        filters.raisedMin ||
+        filters.raisedMax) && (
         <div className="mb-6">
           <button
             onClick={clearFilters}
@@ -333,6 +410,82 @@ export function AdvancedSearch() {
                 />
               </div>
             </div>
+
+            {/* Bills Introduced Range */}
+            <div>
+              <label
+                htmlFor="bills-introduced-min"
+                className="aicher-heading-wide block text-sm text-gray-700 mb-2"
+              >
+                Bills introduced
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="bills-introduced-min"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  placeholder="Min"
+                  aria-label="Minimum bills introduced"
+                  value={filters.billsIntroducedMin}
+                  onChange={e => updateFilter('billsIntroducedMin', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  placeholder="Max"
+                  aria-label="Maximum bills introduced"
+                  value={filters.billsIntroducedMax}
+                  onChange={e => updateFilter('billsIntroducedMax', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                Bills and resolutions sponsored in the 119th Congress, amendments excluded. Source:
+                GovInfo bill status data
+                {billsAsOf ? `, as of ${formatAsOf(billsAsOf)}` : ' (currently unavailable)'}.
+              </p>
+            </div>
+
+            {/* Raised This Cycle Range */}
+            <div>
+              <label
+                htmlFor="raised-min"
+                className="aicher-heading-wide block text-sm text-gray-700 mb-2"
+              >
+                Raised this cycle ($)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="raised-min"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Min"
+                  aria-label="Minimum raised this cycle, in dollars"
+                  value={filters.raisedMin}
+                  onChange={e => updateFilter('raisedMin', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Max"
+                  aria-label="Maximum raised this cycle, in dollars"
+                  value={filters.raisedMax}
+                  onChange={e => updateFilter('raisedMax', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                {fundraising
+                  ? `Total receipts in FEC filings for the ${fundraising.cycle - 1}–${String(fundraising.cycle).slice(2)} cycle, as on each Record Card. Senators not up for election file twice a year, so their latest report can be older. Source: FEC. Covers ${fundraising.membersCovered} of ${fundraising.totalMembers} members; the rest are left out of this filter until their data is refreshed.`
+                  : 'Total receipts in FEC filings this cycle. Fundraising data is currently unavailable.'}
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -345,13 +498,19 @@ export function AdvancedSearch() {
             : `${resultCount} representative${resultCount !== 1 ? 's' : ''} found`}
         </h3>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">Sort by:</span>
-          <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue">
-            <option>Relevance</option>
-            <option>Name (A-Z)</option>
-            <option>Years in Office</option>
-            <option>Voting Score</option>
-            <option>Fundraising Total</option>
+          <label htmlFor="search-sort" className="text-sm text-gray-600">
+            Sort by:
+          </label>
+          <select
+            id="search-sort"
+            value={filters.sort}
+            onChange={e => updateFilter('sort', e.target.value as SortOption)}
+            className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
+          >
+            <option value="name">Name (A-Z)</option>
+            <option value="yearsInOffice">Years in office</option>
+            <option value="billsIntroduced">Bills introduced</option>
+            <option value="raised">Raised this cycle</option>
           </select>
         </div>
       </div>
@@ -425,6 +584,22 @@ export function AdvancedSearch() {
                           <Calendar className="w-4 h-4" />
                           {rep.yearsInOffice} years
                         </span>
+                        {rep.billsIntroduced !== null && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-4 h-4" />
+                            {rep.billsIntroduced} bill{rep.billsIntroduced !== 1 ? 's' : ''}{' '}
+                            introduced
+                          </span>
+                        )}
+                        {rep.raisedThisCycle !== null && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {formatCurrency(rep.raisedThisCycle)} raised this cycle
+                            {rep.raisedThroughDate
+                              ? ` (FEC, through ${formatAsOf(rep.raisedThroughDate)})`
+                              : ' (FEC)'}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <button className="min-h-[44px] px-4 py-3 bg-civiq-blue text-white hover:bg-civiq-blue transition-colors font-medium">

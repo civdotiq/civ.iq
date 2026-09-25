@@ -12,6 +12,11 @@
 const cacheStore = new Map<string, unknown>();
 const mockAggregate = jest.fn();
 const mockBySize = jest.fn();
+const mockIndexWrite = jest.fn();
+
+jest.mock('@/features/record-card/money-index', () => ({
+  writeMoneyIndexEntry: (...args: unknown[]) => mockIndexWrite(...args),
+}));
 
 jest.mock('@/services/cache/unified-cache.service', () => ({
   cachedStaleWhileRevalidate: async (key: string, fetcher: () => Promise<unknown>) => {
@@ -93,6 +98,7 @@ function finance(overrides: Record<string, unknown> = {}) {
     geographicBreakdown: [{ state: 'WA', percentage: 60, isHomeState: true }],
     industryBreakdown: [{ industry: 'Technology', amount: 90_000 }],
     lastUpdated: '2026-09-23T00:00:00.000Z',
+    coverageEndDate: '2026-06-30',
     ...overrides,
   };
 }
@@ -101,6 +107,7 @@ beforeEach(() => {
   cacheStore.clear();
   mockAggregate.mockReset().mockResolvedValue(finance());
   mockBySize.mockReset().mockResolvedValue([{ size: 0, total: 200_000, count: 5000 }]);
+  mockIndexWrite.mockReset().mockResolvedValue(undefined);
 });
 
 describe('Record Card money section', () => {
@@ -173,5 +180,50 @@ describe('warmRecordCardMoney', () => {
     mockBySize.mockResolvedValue([]);
     await expect(warmRecordCardMoney('C000127', 'WA')).resolves.toBe('incomplete');
     expect(cacheStore.size).toBe(0);
+  });
+
+  test('indexes the card headline on refresh and on a fresh visit', async () => {
+    await warmRecordCardMoney('C000127', 'WA');
+    await warmRecordCardMoney('C000127', 'WA');
+    expect(mockIndexWrite).toHaveBeenCalledTimes(2);
+    for (const [bioguideId, entry] of mockIndexWrite.mock.calls) {
+      expect(bioguideId).toBe('C000127');
+      expect(entry).toMatchObject({
+        raised: 1_000_000,
+        status: 'ok',
+        cycle: expect.any(Number),
+        coverageEnd: '2026-06-30',
+      });
+    }
+  });
+
+  test('indexes no receipts and no FEC id as none, never $0', async () => {
+    mockAggregate.mockResolvedValue(null);
+    await warmRecordCardMoney('C000127', 'WA');
+    await warmRecordCardMoney('NOFEC1', 'WA');
+    expect(mockIndexWrite.mock.calls.map(c => c[1])).toEqual([
+      expect.objectContaining({ raised: null, status: 'none' }),
+      expect.objectContaining({ raised: null, status: 'none' }),
+    ]);
+  });
+
+  test('indexes the totals of an incomplete result', async () => {
+    mockBySize.mockResolvedValue([]);
+    await warmRecordCardMoney('C000127', 'WA');
+    expect(mockIndexWrite).toHaveBeenCalledWith(
+      'C000127',
+      expect.objectContaining({ raised: 1_000_000, status: 'ok' })
+    );
+  });
+
+  test('never touches the index when the FEC fails', async () => {
+    mockAggregate.mockRejectedValue(new Error('429'));
+    await expect(warmRecordCardMoney('C000127', 'WA')).rejects.toThrow('429');
+    expect(mockIndexWrite).not.toHaveBeenCalled();
+  });
+
+  test('an index write failure does not fail the warm', async () => {
+    mockIndexWrite.mockRejectedValue(new Error('redis down'));
+    await expect(warmRecordCardMoney('C000127', 'WA')).resolves.toBe('refreshed');
   });
 });
