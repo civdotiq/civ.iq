@@ -56,6 +56,19 @@ describe('fetchDistrictStaffing', () => {
     expect(fetchMock.mock.calls[1]?.[0]).toContain('fips=1&congress_district_id=107');
   });
 
+  it('encodes DC and territory delegate seats as 98, not 00', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(page([{ enrollment: 100, teachers_fte: 10 }]));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await fetchDistrictStaffing('DC-00', '11');
+    await fetchDistrictStaffing('DC-AL', '11');
+    await fetchDistrictStaffing('PR-AL', '72');
+
+    expect(fetchMock.mock.calls[0]?.[0]).toContain('fips=11&congress_district_id=1198');
+    expect(fetchMock.mock.calls[1]?.[0]).toContain('fips=11&congress_district_id=1198');
+    expect(fetchMock.mock.calls[2]?.[0]).toContain('fips=72&congress_district_id=7298');
+  });
+
   it('sums schools reporting both enrollment and teachers; skips missing and CCD negative codes', async () => {
     global.fetch = jest.fn().mockResolvedValue(
       page([

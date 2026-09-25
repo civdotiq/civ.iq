@@ -19,6 +19,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { parseDistrictId } from '@/lib/services/spending.service';
+import { isDelegateJurisdiction } from '@/lib/data/us-states';
 
 export const CCD_YEAR = 2024;
 const BASE_URL = 'https://educationdata.urban.org/api/v1/schools/ccd/directory';
@@ -56,8 +57,10 @@ export async function fetchDistrictStaffing(
   const parsed = parseDistrictId(districtId);
   if (!parsed) return null;
 
-  // Urban encodes the district as state FIPS + 2-digit district; at-large is 00.
-  const congressDistrictId = `${Number(stateFips)}${parsed.district}`;
+  // Urban encodes the district as state FIPS + 2-digit district (Census CD
+  // codes): at-large is 00, but DC and territory delegate seats are 98.
+  const districtCode = isDelegateJurisdiction(parsed.state) ? '98' : parsed.district;
+  const congressDistrictId = `${Number(stateFips)}${districtCode}`;
   let url: string | null =
     `${BASE_URL}/${CCD_YEAR}/?fips=${Number(stateFips)}&congress_district_id=${congressDistrictId}`;
 
