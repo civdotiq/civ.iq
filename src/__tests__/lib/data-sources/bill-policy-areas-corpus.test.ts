@@ -12,11 +12,16 @@ import { decodeBillRow } from '@/lib/data-sources/bill-policy-areas/corpus';
 
 // Trimmed from BILLSTATUS-119hjres1.xml. The relatedBills item carries its own
 // title and latestAction ahead of the bill's, which the parser must skip.
-function billXml(opts: { type?: string; policyArea?: string | null } = {}): string {
+function billXml(
+  opts: { type?: string; policyArea?: string | null; sponsors?: string } = {}
+): string {
   const area =
     opts.policyArea === null
       ? ''
       : `<policyArea><name>${opts.policyArea ?? 'Law'}</name></policyArea>`;
+  const sponsors =
+    opts.sponsors ??
+    `<sponsors><item><bioguideId>B001234</bioguideId><fullName>Rep. B</fullName></item></sponsors>`;
   return `<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <billStatus>
   <version>3.0.0</version>
@@ -37,6 +42,12 @@ function billXml(opts: { type?: string; policyArea?: string | null } = {}): stri
         </latestAction>
       </item>
     </relatedBills>
+    <amendments>
+      <amendment>
+        <sponsors><item><bioguideId>Z999999</bioguideId></item></sponsors>
+      </amendment>
+    </amendments>
+    ${sponsors}
     ${area}
     <title>Proposing an amendment to the Constitution &amp; more.</title>
     <latestAction>
@@ -58,16 +69,35 @@ describe('parseBillStatusXml', () => {
       introducedDate: '2025-01-03',
       latestActionDate: '2026-09-02',
       latestActionText: 'On motion to suspend the rules and pass the resolution Failed.',
+      sponsorBioguideId: 'B001234',
     });
+  });
+
+  it('takes the first sponsor when <sponsors> lists several items', () => {
+    const sponsors =
+      '<sponsors><item><bioguideId>A000001</bioguideId></item>' +
+      '<item><bioguideId>A000002</bioguideId></item></sponsors>';
+    expect(parseBillStatusXml(billXml({ sponsors }))?.sponsorBioguideId).toBe('A000001');
+  });
+
+  it('returns null sponsor when the bill names none', () => {
+    expect(parseBillStatusXml(billXml({ sponsors: '' }))?.sponsorBioguideId).toBeNull();
+    expect(
+      parseBillStatusXml(billXml({ sponsors: '<sponsors></sponsors>' }))?.sponsorBioguideId
+    ).toBeNull();
   });
 
   it('returns null policyArea when CRS has not assigned one', () => {
     expect(parseBillStatusXml(billXml({ policyArea: null }))?.policyArea).toBeNull();
   });
 
-  it('drops simple and concurrent resolutions', () => {
-    expect(parseBillStatusXml(billXml({ type: 'HRES' }))).toBeNull();
-    expect(parseBillStatusXml(billXml({ type: 'SCONRES' }))).toBeNull();
+  it('parses simple and concurrent resolutions (for sponsor counts)', () => {
+    expect(parseBillStatusXml(billXml({ type: 'HRES' }))?.type).toBe('hres');
+    expect(parseBillStatusXml(billXml({ type: 'SCONRES' }))?.type).toBe('sconres');
+  });
+
+  it('drops unknown types', () => {
+    expect(parseBillStatusXml(billXml({ type: 'HAMDT' }))).toBeNull();
   });
 
   it('returns null for a document without a bill', () => {
@@ -85,6 +115,7 @@ describe('buildBillPolicyAreaCorpus', () => {
     introducedDate: '2025-01-03',
     latestActionDate: '2025-07-04',
     latestActionText: 'Became Public Law No: 119-21.',
+    sponsorBioguideId: 'B001234',
   };
 
   it('dictionary-encodes areas, counts unassigned, and round-trips', () => {
@@ -97,6 +128,8 @@ describe('buildBillPolicyAreaCorpus', () => {
         { ...base, number: 2 },
         { ...base, number: 3, policyArea: null },
         { ...base, congress: 118, number: 9 },
+        // Resolutions feed sponsor counts only, never this corpus's rows.
+        { ...base, type: 'hres', number: 4 },
       ],
     });
 

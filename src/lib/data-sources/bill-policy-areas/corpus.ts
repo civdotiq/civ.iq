@@ -27,6 +27,20 @@ export const CORPUS_BILL_TYPES = ['hr', 's', 'hjres', 'sjres'] as const;
 export type CorpusBillType = (typeof CORPUS_BILL_TYPES)[number];
 
 /**
+ * Every BILLSTATUS collection type: the corpus types plus simple and concurrent
+ * resolutions. The parser accepts all of them so the member sponsored-counts
+ * build (which counts resolutions, as the Record Card does) shares one pass.
+ */
+export const BILLSTATUS_TYPES = [
+  ...CORPUS_BILL_TYPES,
+  'hres',
+  'sres',
+  'hconres',
+  'sconres',
+] as const;
+export type BillStatusType = (typeof BILLSTATUS_TYPES)[number];
+
+/**
  * One encoded bill. Slots, in order:
  *
  *   0  type              — lowercase, one of CORPUS_BILL_TYPES

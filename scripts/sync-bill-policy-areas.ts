@@ -5,7 +5,9 @@
 
 /**
  * Mirror GovInfo BILLSTATUS bulk data into a bill → policy-area corpus
- * (data/bill-policy-areas.json.br). See PLAN-bill-policy-area-corpus.md.
+ * (data/bill-policy-areas.json.br), and from the same pass derive per-member
+ * bills-and-resolutions-introduced counts (data/member-sponsored-counts.json)
+ * for the search filter. See PLAN-bill-policy-area-corpus.md.
  *
  * Why: Congress.gov's /v3/bill list carries no policyArea field and has no
  * policy-area filter, so every /ask/topic-bills/* page rendered empty. The
@@ -13,10 +15,11 @@
  *
  * Usage:
  *   npx tsx scripts/sync-bill-policy-areas.ts [--congress 119] [--out PATH]
+ *                                            [--counts-out PATH]
  *                                            [--types hr,s] [--keep-temp]
  *
  * --types limits the build for smoke tests; a partial corpus must never be
- * committed, so the script refuses to write the default path when it is set.
+ * committed, so the script refuses to write either default path when it is set.
  * No API key is involved — these are public bulk zips.
  */
 
@@ -30,10 +33,15 @@ import {
   parseBillStatusXml,
 } from '../src/lib/data-sources/bill-policy-areas/build';
 import type { ParsedBillStatus } from '../src/lib/data-sources/bill-policy-areas/build';
-import { CORPUS_BILL_TYPES } from '../src/lib/data-sources/bill-policy-areas/corpus';
-import type { CorpusBillType } from '../src/lib/data-sources/bill-policy-areas/corpus';
+import {
+  BILLSTATUS_TYPES,
+  CORPUS_BILL_TYPES,
+} from '../src/lib/data-sources/bill-policy-areas/corpus';
+import type { BillStatusType } from '../src/lib/data-sources/bill-policy-areas/corpus';
+import { buildMemberSponsoredCounts } from '../src/lib/data-sources/member-sponsored-counts/corpus';
 
 const OUT_PATH_DEFAULT = 'data/bill-policy-areas.json.br';
+const COUNTS_OUT_PATH_DEFAULT = 'data/member-sponsored-counts.json';
 
 /**
  * GovInfo refreshes BILLSTATUS daily and the mirror runs weekly, so three
@@ -52,9 +60,10 @@ const ONLY = arg('--types')
   .map(s => s.trim().toLowerCase())
   .filter(Boolean);
 const OUT_PATH = resolve(process.cwd(), arg('--out') ?? OUT_PATH_DEFAULT);
+const COUNTS_OUT_PATH = resolve(process.cwd(), arg('--counts-out') ?? COUNTS_OUT_PATH_DEFAULT);
 const KEEP_TEMP = process.argv.includes('--keep-temp');
 
-function zipUrl(type: CorpusBillType): string {
+function zipUrl(type: BillStatusType): string {
   return `https://www.govinfo.gov/bulkdata/BILLSTATUS/${CONGRESS}/${type}/BILLSTATUS-${CONGRESS}-${type}.zip`;
 }
 
@@ -66,7 +75,7 @@ function staleAfterFrom(generatedAt: string): string {
 }
 
 /** Download one type's zip (hr is ~32 MB) and parse every XML in it. */
-async function fetchType(type: CorpusBillType, temp: string): Promise<ParsedBillStatus[]> {
+async function fetchType(type: BillStatusType, temp: string): Promise<ParsedBillStatus[]> {
   const url = zipUrl(type);
   const res = await fetch(url, { signal: AbortSignal.timeout(300_000) });
   if (!res.ok) throw new Error(`BILLSTATUS ${res.status} from ${url}`);
@@ -92,21 +101,29 @@ async function fetchType(type: CorpusBillType, temp: string): Promise<ParsedBill
 }
 
 async function main(): Promise<void> {
-  if (ONLY && OUT_PATH === resolve(process.cwd(), OUT_PATH_DEFAULT)) {
-    throw new Error('--types builds a partial corpus; pass --out to a scratch path');
+  if (
+    ONLY &&
+    (OUT_PATH === resolve(process.cwd(), OUT_PATH_DEFAULT) ||
+      COUNTS_OUT_PATH === resolve(process.cwd(), COUNTS_OUT_PATH_DEFAULT))
+  ) {
+    throw new Error(
+      '--types builds a partial corpus; pass --out and --counts-out to scratch paths'
+    );
   }
-  const types = CORPUS_BILL_TYPES.filter(t => !ONLY || ONLY.includes(t));
+  const types = BILLSTATUS_TYPES.filter(t => !ONLY || ONLY.includes(t));
   const temp = mkdtempSync(join(tmpdir(), 'billstatus-'));
 
   try {
     const bills: ParsedBillStatus[] = [];
     for (const type of types) bills.push(...(await fetchType(type, temp)));
 
+    const generatedAt = new Date().toISOString();
+    // The policy-area corpus only reads the bill and joint-resolution zips.
     const corpus = buildBillPolicyAreaCorpus({
       congress: CONGRESS,
       bills,
-      generatedAt: new Date().toISOString(),
-      sources: types.map(zipUrl),
+      generatedAt,
+      sources: CORPUS_BILL_TYPES.filter(t => types.includes(t)).map(zipUrl),
     });
 
     const json = JSON.stringify(corpus);
@@ -138,6 +155,34 @@ async function main(): Promise<void> {
         `(${(Buffer.byteLength(json) / 1_000_000).toFixed(2)}MB raw) · ` +
         `${corpus.rows.length} bills · ${corpus.policyAreas.length} policy areas · ` +
         `${corpus.meta.unassigned} unassigned`
+    );
+
+    const counts = buildMemberSponsoredCounts({
+      congress: CONGRESS,
+      bills,
+      generatedAt,
+      staleAfter: staleAfterFrom(generatedAt),
+      sources: types.map(zipUrl),
+    });
+    // Plain indented JSON: ~535 members is small, and weekly diffs stay readable.
+    const countsJson = JSON.stringify(counts, null, 2) + '\n';
+    mkdirSync(dirname(COUNTS_OUT_PATH), { recursive: true });
+    writeFileSync(COUNTS_OUT_PATH, countsJson);
+    const members = Object.keys(counts.counts).length;
+    writeFileSync(
+      COUNTS_OUT_PATH.replace(/\.json$/, '.meta.json'),
+      JSON.stringify({
+        generatedAt: counts.generatedAt,
+        staleAfter: counts.staleAfter,
+        congress: counts.congress,
+        members,
+        bytes: Buffer.byteLength(countsJson),
+        meta: counts.meta,
+      })
+    );
+    console.log(
+      `Wrote ${COUNTS_OUT_PATH} — ${members} members · ` +
+        `${counts.meta.noSponsor} bills without a sponsor`
     );
   } finally {
     if (!KEEP_TEMP) rmSync(temp, { recursive: true, force: true });

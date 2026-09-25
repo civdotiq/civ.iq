@@ -11,6 +11,8 @@ import {
 import logger from '@/lib/logging/simple-logger';
 import { cache } from '@/lib/cache';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getMemberSponsoredCounts } from '@/lib/data-sources/member-sponsored-counts/load';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
@@ -31,9 +33,11 @@ interface SearchFilters {
   committee?: string;
   experienceYearsMin?: number;
   experienceYearsMax?: number;
+  billsIntroducedMin?: number;
+  billsIntroducedMax?: number;
   page?: number;
   limit?: number;
-  sort?: 'name' | 'state' | 'party' | 'yearsInOffice';
+  sort?: 'name' | 'state' | 'party' | 'yearsInOffice' | 'billsIntroduced';
   order?: 'asc' | 'desc';
 }
 
@@ -46,6 +50,12 @@ interface SearchResult {
   chamber: 'House' | 'Senate';
   /** Years in the current chamber, from congress-legislators terms. */
   yearsInOffice: number;
+  /**
+   * Bills and resolutions sponsored this Congress (amendments excluded), as of
+   * the corpus build — the Record Card's "introduced" count. Null when the
+   * GovInfo-derived corpus is unavailable, never a stand-in zero.
+   */
+  billsIntroduced: number | null;
   committees: string[];
   imageUrl?: string;
   socialMedia?: {
@@ -65,20 +75,52 @@ function isAddressQuery(query: string): boolean {
   return addressPatterns.some(pattern => pattern.test(query));
 }
 
-// Perform address-based search using geocoding
-async function performAddressSearch(filters: SearchFilters): Promise<{
+interface SearchOutcome {
   results: SearchResult[];
   totalResults: number;
   page: number;
   totalPages: number;
-}> {
-  if (!filters.query) {
-    return { results: [], totalResults: 0, page: 1, totalPages: 0 };
-  }
+  /** When the bills-introduced counts were built; null when unavailable. */
+  billsIntroducedAsOf: string | null;
+}
 
+interface BillsIntroducedLookup {
+  of: (bioguideId: string) => number | null;
+  asOf: string | null;
+}
+
+/**
+ * Per-member introduced counts from the committed BILLSTATUS corpus. The
+ * corpus lists every member who sponsored anything, so a member absent from a
+ * current-Congress corpus genuinely had introduced zero as of its build. A
+ * missing corpus, or one from a past Congress, makes every count null.
+ */
+async function getBillsIntroducedLookup(): Promise<BillsIntroducedLookup> {
+  const corpus = await getMemberSponsoredCounts();
+  if (!corpus || corpus.congress !== getCurrentCongressNumber()) {
+    return { of: () => null, asOf: null };
+  }
+  return {
+    of: bioguideId => corpus.counts[bioguideId]?.introduced ?? 0,
+    asOf: corpus.generatedAt,
+  };
+}
+
+// Perform address-based search using geocoding
+async function performAddressSearch(filters: SearchFilters): Promise<SearchOutcome> {
+  const none = (asOf: string | null): SearchOutcome => ({
+    results: [],
+    totalResults: 0,
+    page: 1,
+    totalPages: 0,
+    billsIntroducedAsOf: asOf,
+  });
+  if (!filters.query) return none(null);
+
+  const bills = await getBillsIntroducedLookup();
   try {
     const committeesByMember = await getCommitteeNamesByMember();
-    const toResult = (rep: unknown) => transformToSearchResult(rep, committeesByMember);
+    const toResult = (rep: unknown) => transformToSearchResult(rep, committeesByMember, bills);
 
     // Try to extract ZIP code first for faster lookup
     const addressComponents = parseAddressComponents(filters.query);
@@ -100,6 +142,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
               totalResults: zipReps.length,
               page: 1,
               totalPages: 1,
+              billsIntroducedAsOf: bills.asOf,
             };
           }
         }
@@ -118,7 +161,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
         query: filters.query,
         error: geocodeResult.error,
       });
-      return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+      return none(bills.asOf);
     }
 
     // Extract district information from geocode results
@@ -127,7 +170,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
       .filter((district): district is NonNullable<typeof district> => district !== null);
 
     if (districts.length === 0) {
-      return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+      return none(bills.asOf);
     }
 
     // Get representatives for the found districts
@@ -164,17 +207,19 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
       totalResults: results.length,
       page: 1,
       totalPages: 1,
+      billsIntroducedAsOf: bills.asOf,
     };
   } catch (error) {
     logger.error('Address search error', error as Error, { query: filters.query });
-    return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+    return none(bills.asOf);
   }
 }
 
 // Transform representative to search result format
 function transformToSearchResult(
   rep: unknown,
-  committeesByMember: Map<string, string[]>
+  committeesByMember: Map<string, string[]>,
+  bills: BillsIntroducedLookup
 ): SearchResult {
   const representative = rep as SearchResult;
   return {
@@ -185,18 +230,14 @@ function transformToSearchResult(
     district: representative.district,
     chamber: representative.chamber,
     yearsInOffice: representative.yearsInOffice || 0,
+    billsIntroduced: bills.of(representative.bioguideId),
     committees: committeesByMember.get(representative.bioguideId) ?? [],
     imageUrl: representative.imageUrl,
     socialMedia: representative.socialMedia,
   };
 }
 
-async function performSearch(filters: SearchFilters): Promise<{
-  results: SearchResult[];
-  totalResults: number;
-  page: number;
-  totalPages: number;
-}> {
+async function performSearch(filters: SearchFilters): Promise<SearchOutcome> {
   try {
     const startTime = Date.now();
     logger.info('Performing representative search', { filters });
@@ -207,14 +248,21 @@ async function performSearch(filters: SearchFilters): Promise<{
     }
 
     // The bulk roster carries no committees; join them from the membership roster.
-    const [representatives, committeesByMember] = await Promise.all([
+    const [representatives, committeesByMember, bills] = await Promise.all([
       getAllEnhancedRepresentatives(),
       getCommitteeNamesByMember(),
+      getBillsIntroducedLookup(),
     ]);
     const committeesOf = (bioguideId: string) => committeesByMember.get(bioguideId) ?? [];
 
     if (!representatives || representatives.length === 0) {
-      return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+      return {
+        results: [],
+        totalResults: 0,
+        page: 1,
+        totalPages: 0,
+        billsIntroducedAsOf: bills.asOf,
+      };
     }
 
     // Apply filters
@@ -325,6 +373,18 @@ async function performSearch(filters: SearchFilters): Promise<{
         return false;
       }
 
+      // Bills-introduced filter. An unknown count never satisfies a bound.
+      if (filters.billsIntroducedMin !== undefined || filters.billsIntroducedMax !== undefined) {
+        const introduced = bills.of(rep.bioguideId);
+        if (introduced === null) return false;
+        if (filters.billsIntroducedMin !== undefined && introduced < filters.billsIntroducedMin) {
+          return false;
+        }
+        if (filters.billsIntroducedMax !== undefined && introduced > filters.billsIntroducedMax) {
+          return false;
+        }
+      }
+
       return true;
     });
 
@@ -333,6 +393,16 @@ async function performSearch(filters: SearchFilters): Promise<{
     const sortOrder = filters.order || 'asc';
 
     filtered.sort((a, b) => {
+      if (sortField === 'billsIntroduced') {
+        // Unknown counts sort last in either direction.
+        const aBills = bills.of(a.bioguideId);
+        const bBills = bills.of(b.bioguideId);
+        if (aBills === null || bBills === null) {
+          return (aBills === null ? 1 : 0) - (bBills === null ? 1 : 0);
+        }
+        return sortOrder === 'asc' ? aBills - bBills : bBills - aBills;
+      }
+
       let aVal: unknown, bVal: unknown;
 
       switch (sortField) {
@@ -388,6 +458,7 @@ async function performSearch(filters: SearchFilters): Promise<{
       district: rep.district,
       chamber: rep.chamber as 'House' | 'Senate',
       yearsInOffice: rep.yearsInOffice ?? 0,
+      billsIntroduced: bills.of(rep.bioguideId),
       committees: committeesOf(rep.bioguideId),
       imageUrl: rep.imageUrl,
       socialMedia: rep.socialMedia,
@@ -406,6 +477,7 @@ async function performSearch(filters: SearchFilters): Promise<{
       totalResults: filtered.length,
       page,
       totalPages: Math.ceil(filtered.length / limit),
+      billsIntroducedAsOf: bills.asOf,
     };
   } catch (error) {
     logger.error('Search error', error as Error, { filters });
@@ -436,6 +508,8 @@ export async function GET(request: NextRequest) {
       committee: searchParams.get('committee') || undefined,
       experienceYearsMin: intParam('experienceYearsMin'),
       experienceYearsMax: intParam('experienceYearsMax'),
+      billsIntroducedMin: intParam('billsIntroducedMin'),
+      billsIntroducedMax: intParam('billsIntroducedMax'),
       page: Math.max(intParam('page') ?? 1, 1),
       limit: Math.max(intParam('limit') ?? 20, 1),
       sort: (searchParams.get('sort') as SearchFilters['sort']) || 'name',
@@ -444,13 +518,14 @@ export async function GET(request: NextRequest) {
 
     // Create cache key from filters
     // v2: results no longer carry placeholder bills/voting/finance zeros.
-    const cacheKey = `search:v2:${JSON.stringify(filters)}`;
+    // v3: results carry billsIntroduced from the BILLSTATUS corpus.
+    const cacheKey = `search:v3:${JSON.stringify(filters)}`;
 
     // Read cache directly — and treat zero-result hits as a miss. Zero is
     // almost always an upstream failure (the dataset has ~535 reps), so a
     // cached empty result would poison subsequent identical queries until
     // TTL expires.
-    let searchResults = await cache.get<Awaited<ReturnType<typeof performSearch>>>(cacheKey);
+    let searchResults = await cache.get<SearchOutcome>(cacheKey);
     if (!searchResults || (searchResults.results?.length ?? 0) === 0) {
       searchResults = await performSearch(filters);
       // Only cache non-empty results.
@@ -491,6 +566,7 @@ export async function GET(request: NextRequest) {
           metadata: {
             cacheHit: false, // Would need to track this in cachedFetch
             dataSource: 'congress-legislators',
+            billsIntroducedAsOf: searchResults.billsIntroducedAsOf,
           },
         },
         dataQuality,

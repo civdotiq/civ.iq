@@ -4,8 +4,10 @@ name: Mirror Bill Policy Areas
 # /v3/bill list never returns policyArea and has no policy-area filter, so that
 # question cannot be answered live. GovInfo BILLSTATUS bulk data carries the
 # CRS-assigned <policyArea> for every bill; this mirrors it into
-# data/bill-policy-areas.json.br (~300 KB). No secret is needed — public bulk
-# zips, not an API. See PLAN-bill-policy-area-corpus.md.
+# data/bill-policy-areas.json.br (~300 KB). The same pass also derives
+# data/member-sponsored-counts.json (bills and resolutions each member introduced,
+# for the /api/search filter). No secret is needed — public bulk zips, not an
+# API. See PLAN-bill-policy-area-corpus.md.
 
 on:
   schedule:
@@ -23,7 +25,7 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
-    # Four zips (hr is ~32 MB) and ~16k small XML parses; the build is well under
+    # Eight zips (hr is ~32 MB) and ~19k small XML parses; the build is well under
     # a minute locally. The timeout catches a hang.
     timeout-minutes: 20
     permissions:
@@ -52,6 +54,11 @@ jobs:
             if (m.bills < 10000) throw new Error(`only ${m.bills} bills`);
             console.log(`${m.bills} bills across ${m.policyAreas} policy areas, ` +
               `${m.meta.unassigned} unassigned, stale after ${m.staleAfter}`);
+            // ~550 sponsors in the 119th (Sept 2026), departed members included.
+            const c = require("./data/member-sponsored-counts.meta.json");
+            if (c.members < 400) throw new Error(`only ${c.members} sponsoring members`);
+            if (c.meta.parsed.hres < 100) throw new Error(`only ${c.meta.parsed.hres} hres`);
+            console.log(`${c.members} members with sponsored-bill counts`);
           '
 
       - name: Commit updated corpus
@@ -60,10 +67,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Stage the corpus and its sidecar together so the freshness date never
           # drifts from the data it describes.
-          if git diff --quiet -- data/bill-policy-areas.json.br; then
-            echo "No change to the bill policy-area corpus"
+          if git diff --quiet -- data/bill-policy-areas.json.br data/member-sponsored-counts.json; then
+            echo "No change to the bill policy-area or sponsored-counts corpus"
           else
-            git add data/bill-policy-areas.json.br data/bill-policy-areas.meta.json
+            git add data/bill-policy-areas.json.br data/bill-policy-areas.meta.json \
+              data/member-sponsored-counts.json data/member-sponsored-counts.meta.json
             git commit -m "chore(bills): refresh bill policy-area corpus [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history. Only data/ files are touched here.

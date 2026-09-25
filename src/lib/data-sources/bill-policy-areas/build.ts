@@ -10,12 +10,17 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { CORPUS_BILL_TYPES } from './corpus';
-import type { BillPolicyAreaCorpusFile, CorpusBillType, EncodedBillRow } from './corpus';
+import { BILLSTATUS_TYPES, CORPUS_BILL_TYPES } from './corpus';
+import type {
+  BillPolicyAreaCorpusFile,
+  BillStatusType,
+  CorpusBillType,
+  EncodedBillRow,
+} from './corpus';
 
 export interface ParsedBillStatus {
   congress: number;
-  type: CorpusBillType;
+  type: BillStatusType;
   number: number;
   title: string;
   /** null until CRS assigns one, which lags introduction by weeks. */
@@ -23,6 +28,8 @@ export interface ParsedBillStatus {
   introducedDate: string;
   latestActionDate: string;
   latestActionText: string;
+  /** Bioguide id of the (first) sponsor; null when the file names none. */
+  sponsorBioguideId: string | null;
 }
 
 // Heavy subtrees kept as raw strings rather than parsed: only direct children
@@ -55,7 +62,7 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-/** Parse one BILLSTATUS XML. Null for out-of-scope types or malformed files. */
+/** Parse one BILLSTATUS XML. Null for unknown types (amendments) or malformed files. */
 export function parseBillStatusXml(xml: string): ParsedBillStatus | null {
   const doc = parser.parse(xml) as {
     billStatus?: { bill?: Record<string, unknown> };
@@ -63,8 +70,8 @@ export function parseBillStatusXml(xml: string): ParsedBillStatus | null {
   const bill = doc.billStatus?.bill;
   if (!bill) return null;
 
-  const type = text(bill.type).toLowerCase() as CorpusBillType;
-  if (!CORPUS_BILL_TYPES.includes(type)) return null;
+  const type = text(bill.type).toLowerCase() as BillStatusType;
+  if (!BILLSTATUS_TYPES.includes(type)) return null;
 
   const number = Number(text(bill.number));
   const congress = Number(text(bill.congress));
@@ -72,6 +79,11 @@ export function parseBillStatusXml(xml: string): ParsedBillStatus | null {
 
   const area = bill.policyArea as { name?: unknown } | undefined;
   const latest = bill.latestAction as { actionDate?: unknown; text?: unknown } | undefined;
+  // <sponsors> holds one <item> (parsed as an object) or, rarely, several (an array).
+  const sponsorItems = (bill.sponsors as { item?: unknown } | undefined)?.item;
+  const firstSponsor = (Array.isArray(sponsorItems) ? sponsorItems[0] : sponsorItems) as
+    | { bioguideId?: unknown }
+    | undefined;
 
   return {
     congress,
@@ -82,7 +94,12 @@ export function parseBillStatusXml(xml: string): ParsedBillStatus | null {
     introducedDate: text(bill.introducedDate),
     latestActionDate: text(latest?.actionDate),
     latestActionText: text(latest?.text),
+    sponsorBioguideId: text(firstSponsor?.bioguideId) || null,
   };
+}
+
+function isCorpusType(type: BillStatusType): type is CorpusBillType {
+  return (CORPUS_BILL_TYPES as readonly string[]).includes(type);
 }
 
 export interface BuildInput {
@@ -102,8 +119,13 @@ export function buildBillPolicyAreaCorpus(input: BuildInput): BillPolicyAreaCorp
   let unassigned = 0;
 
   // Stable order (type, then number) so weekly rebuilds diff cleanly.
+  // The parser also yields simple/concurrent resolutions (for sponsor counts);
+  // this corpus's row set stays bills and joint resolutions only.
   const sorted = [...input.bills]
-    .filter(b => b.congress === input.congress)
+    .filter(
+      (b): b is ParsedBillStatus & { type: CorpusBillType } =>
+        b.congress === input.congress && isCorpusType(b.type)
+    )
     .sort(
       (a, b) =>
         CORPUS_BILL_TYPES.indexOf(a.type) - CORPUS_BILL_TYPES.indexOf(b.type) || a.number - b.number
