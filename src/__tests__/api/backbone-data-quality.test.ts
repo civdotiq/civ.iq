@@ -28,6 +28,7 @@ jest.mock('@/lib/cache', () => ({
 
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getEnhancedRepresentative: jest.fn(),
+  fetchCommitteeMemberships: jest.fn(),
 }));
 
 jest.mock('@/lib/data-sources/senate-lobbying-api', () => ({
@@ -45,11 +46,17 @@ import { createMockRequest } from '../utils/test-helpers';
 import { GET as committeesGET } from '@/app/api/representative/[bioguideId]/committees/route';
 import { GET as lobbyingGET } from '@/app/api/representative/[bioguideId]/lobbying/route';
 import { GET as spendingGET } from '@/app/api/spending/district/[districtId]/route';
-import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import {
+  fetchCommitteeMemberships,
+  getEnhancedRepresentative,
+} from '@/features/representatives/services/congress.service';
 import { parseDistrictId, getDistrictSpending } from '@/lib/services/spending.service';
 
 const mockGetEnhanced = getEnhancedRepresentative as jest.MockedFunction<
   typeof getEnhancedRepresentative
+>;
+const mockMemberships = fetchCommitteeMemberships as jest.MockedFunction<
+  typeof fetchCommitteeMemberships
 >;
 const mockParseDistrict = parseDistrictId as jest.MockedFunction<typeof parseDistrictId>;
 const mockGetSpending = getDistrictSpending as jest.MockedFunction<typeof getDistrictSpending>;
@@ -67,21 +74,27 @@ describe('BackboneResponse dataQuality contract', () => {
   });
 
   describe('/api/representative/[bioguideId]/committees', () => {
-    it('returns dataQuality: unavailable when Congress.gov API fails', async () => {
-      global.fetch = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+    const ROSTER = [{ bioguide: 'K000367', committees: [{ thomas_id: 'SSJU' }] }];
 
+    async function call() {
       const request = createMockRequest(
         'http://localhost:3000/api/representative/K000367/committees'
       );
       const response = await committeesGET(request, {
         params: Promise.resolve({ bioguideId: 'K000367' }),
       });
-      const data = await response.json();
+      return { response, data: await response.json() };
+    }
+
+    it('returns dataQuality: unavailable when the membership roster fails', async () => {
+      mockMemberships.mockRejectedValue(new Error('ECONNREFUSED'));
+      mockGetEnhanced.mockResolvedValue(null);
+      const { data } = await call();
 
       expect(data.dataQuality).toBe('unavailable');
       expect(data.sourceStatus).toEqual([
         expect.objectContaining({
-          source: 'congress.gov',
+          source: 'congress-legislators',
           status: 'error',
           errorMessage: expect.stringContaining('ECONNREFUSED'),
         }),
@@ -89,35 +102,10 @@ describe('BackboneResponse dataQuality contract', () => {
       expect(data.committees).toEqual([]);
     });
 
-    it('returns dataQuality: unavailable when API key is missing', async () => {
-      process.env.CONGRESS_API_KEY = '';
-      delete process.env.CONGRESS_API_KEY;
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/K000367/committees'
-      );
-      const response = await committeesGET(request, {
-        params: Promise.resolve({ bioguideId: 'K000367' }),
-      });
-      const data = await response.json();
-
-      expect(data.dataQuality).toBe('unavailable');
-      expect(data.sourceStatus[0].status).toBe('not-configured');
-    });
-
     it('returns dataQuality: empty when member has no committees', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ member: { committees: [] } }),
-      });
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/K000367/committees'
-      );
-      const response = await committeesGET(request, {
-        params: Promise.resolve({ bioguideId: 'K000367' }),
-      });
-      const data = await response.json();
+      mockMemberships.mockResolvedValue(ROSTER);
+      mockGetEnhanced.mockResolvedValue({ committees: [] } as never);
+      const { response, data } = await call();
 
       expect(response.status).toBe(200);
       expect(data.dataQuality).toBe('empty');
@@ -125,36 +113,20 @@ describe('BackboneResponse dataQuality contract', () => {
     });
 
     it('returns dataQuality: complete when member has committees', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            member: { committees: [{ name: 'Judiciary', code: 'HSJU' }] },
-          }),
-      });
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/K000367/committees'
-      );
-      const response = await committeesGET(request, {
-        params: Promise.resolve({ bioguideId: 'K000367' }),
-      });
-      const data = await response.json();
+      mockMemberships.mockResolvedValue(ROSTER);
+      mockGetEnhanced.mockResolvedValue({
+        committees: [{ name: 'Senate Committee on the Judiciary', role: 'Member', id: 'SSJU' }],
+      } as never);
+      const { response, data } = await call();
 
       expect(response.status).toBe(200);
       expect(data.dataQuality).toBe('complete');
     });
 
     it('returns dataQuality: unavailable with timeout source status', async () => {
-      global.fetch = jest.fn().mockRejectedValue(new Error('AbortError: signal timed out'));
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/K000367/committees'
-      );
-      const response = await committeesGET(request, {
-        params: Promise.resolve({ bioguideId: 'K000367' }),
-      });
-      const data = await response.json();
+      mockMemberships.mockRejectedValue(new Error('AbortError: signal timed out'));
+      mockGetEnhanced.mockResolvedValue(null);
+      const { data } = await call();
 
       expect(data.dataQuality).toBe('unavailable');
       expect(data.sourceStatus[0].status).toBe('timeout');
