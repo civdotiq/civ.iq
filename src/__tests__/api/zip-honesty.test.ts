@@ -116,6 +116,7 @@ jest.mock('@/services/core/representatives-core.service', () => ({
 jest.mock('@/features/representatives/services/congress.service', () => ({
   getAllEnhancedRepresentatives: jest.fn(() => Promise.resolve(mockRepresentatives)),
   getEnhancedRepresentative: jest.fn(),
+  getCommitteeNamesByMember: jest.fn(() => Promise.resolve(new Map())),
 }));
 
 jest.mock('@/lib/census-api', () => ({

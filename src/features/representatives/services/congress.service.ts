@@ -389,6 +389,37 @@ export interface CongressCommittee {
 }
 
 /**
+ * Display name for a committee or subcommittee thomas_id. Subcommittees
+ * ("HSHM09") are nested under their parent in committees-current.yaml; the
+ * thomas_id map alone falls back to the PARENT's name, which listed
+ * subcommittee seats as duplicate full-committee seats.
+ */
+export function resolveCommitteeName(committees: CongressCommittee[], thomasId: string): string {
+  return (
+    committees.find(c => c.thomas_id === thomasId)?.name ||
+    subcommitteeName(committees, thomasId) ||
+    getCommitteeName(thomasId)
+  );
+}
+
+/**
+ * Committee and subcommittee names per member, from the current membership
+ * roster. Empty map when the roster is unavailable.
+ */
+export async function getCommitteeNamesByMember(): Promise<Map<string, string[]>> {
+  const [memberships, committees] = await Promise.all([
+    fetchCommitteeMemberships(),
+    fetchCommittees(),
+  ]);
+  return new Map(
+    memberships.map(m => [
+      m.bioguide,
+      m.committees.map(c => resolveCommitteeName(committees, c.thomas_id)).filter(Boolean),
+    ])
+  );
+}
+
+/**
  * Resolve a subcommittee thomas_id ("HSHM09" = parent "HSHM" + sub "09") to
  * "Subcommittee on <name>", or null when it isn't a known subcommittee.
  */
@@ -848,16 +879,8 @@ export async function getEnhancedRepresentative(
     const representativeCommittees =
       memberCommittees?.committees
         ?.map(membership => {
-          const committee = committees.find(c => c.thomas_id === membership.thomas_id);
           return {
-            // Subcommittees ("HSHM09") are nested under their parent committee
-            // in committees-current.yaml. Resolve the real subcommittee name;
-            // the thomas_id map falls back to the PARENT's name, which listed
-            // subcommittee seats as duplicate full-committee seats.
-            name:
-              committee?.name ||
-              subcommitteeName(committees, membership.thomas_id) ||
-              getCommitteeName(membership.thomas_id),
+            name: resolveCommitteeName(committees, membership.thomas_id),
             role: membership.title || 'Member',
             thomas_id: membership.thomas_id,
             // The thomas_id is the site-wide committee URL key; membership
