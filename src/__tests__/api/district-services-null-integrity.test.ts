@@ -87,13 +87,16 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     expect(publicHealth).toBeNull();
   });
 
-  it('uses Census ASFIN federal revenue (not per-pupil expenditure) for federalEducationFunding', async () => {
+  it('uses the latest year of Census federal school revenue (thousands -> dollars) for federalEducationFunding', async () => {
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (String(url).includes('api.census.gov')) {
-        // ASFIN row: [PPEXPGN, TFEDREV, ENROLLM]
+      if (String(url).includes('api.census.gov/data/timeseries/govsschfin')) {
+        // Long format: one row per aggregate per year; totals in $ thousands
         return mockFetchResponse([
-          ['PPEXPGN', 'TFEDREV', 'ENROLLM', 'state'],
-          ['12000', '5500000000', '5400000', '48'],
+          ['AMOUNT', 'time', 'AGG_DESC', 'state'],
+          ['4100000', '2023', 'SS0201', '48'],
+          ['5500000', '2024', 'SS0201', '48'],
+          ['12000', '2024', 'SS1105', '48'],
+          ['5400000', '2024', 'SS1903', '48'],
         ]);
       }
       return Promise.reject(new Error('unreachable'));

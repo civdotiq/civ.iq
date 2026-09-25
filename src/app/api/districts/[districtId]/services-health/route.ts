@@ -68,7 +68,8 @@ const STATE_FIPS: Record<string, string> = {
   WY: '56',
 };
 
-const CACHE_KEY_PREFIX = 'district-services-health';
+// v2: entries cached while the retired ASFIN endpoint 404'd hold null funding
+const CACHE_KEY_PREFIX = 'district-services-health:v2';
 
 /**
  * CDC PLACES crude prevalence for the counties overlapping the district.
@@ -111,11 +112,20 @@ function getHealthcareData(): ServicesHealthProfile['healthcare'] {
   };
 }
 
+// Census Annual Survey of School System Finances, state level. The old
+// data/{year}/asfin endpoint 404s; the survey now lives in this long-format
+// timeseries (one row per AGG_DESC aggregate per year).
+const SCHOOL_FINANCE_URL = 'https://api.census.gov/data/timeseries/govsschfin';
+const AGG_FEDERAL_REVENUE = 'SS0201'; // Total revenue from federal sources ($ thousands)
+const AGG_SPENDING_PER_PUPIL = 'SS1105'; // Total current spending per pupil ($)
+const AGG_ENROLLMENT = 'SS1903'; // Fall enrollment (students)
+
 async function fetchCensusEducationFunding(stateCode: string): Promise<{
   perPupilExpenditure: number | null;
   totalFederalRevenue: number | null;
   enrollment: number | null;
 }> {
+  const unavailable = { perPupilExpenditure: null, totalFederalRevenue: null, enrollment: null };
   try {
     const stateFips = STATE_FIPS[stateCode];
     if (!stateFips) {
@@ -124,46 +134,67 @@ async function fetchCensusEducationFunding(stateCode: string): Promise<{
 
     const apiKey = process.env.CENSUS_API_KEY || '';
     const keyParam = apiKey && !apiKey.startsWith('your_') ? `&key=${apiKey}` : '';
-    const url = `https://api.census.gov/data/2022/asfin?get=PPEXPGN,TFEDREV,ENROLLM&for=state:${stateFips}${keyParam}`;
+    // Survey lags ~2 years; a 5-year window always contains the latest release
+    const fromYear = new Date().getFullYear() - 5;
+    const aggs = [AGG_FEDERAL_REVENUE, AGG_SPENDING_PER_PUPIL, AGG_ENROLLMENT]
+      .map(code => `&AGG_DESC=${code}`)
+      .join('');
+    const url = `${SCHOOL_FINANCE_URL}?get=AMOUNT&for=state:${stateFips}&time=from+${fromYear}${aggs}${keyParam}`;
 
-    logger.info('Fetching Census ASFIN education funding', { stateCode, stateFips });
+    logger.info('Fetching Census school system finances', { stateCode, stateFips });
 
     const response = await fetch(url, {
       signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
-      throw new Error(`Census ASFIN API error: ${response.status}`);
+      throw new Error(`Census school finance API error: ${response.status}`);
     }
 
-    const data = await response.json();
-
-    if (data && data.length > 1) {
-      const [, values] = data;
-      // NaN/unparseable → null (unavailable), never 0
-      const parseValue = (raw: unknown): number | null => {
-        const parsed = parseInt(String(raw));
-        return Number.isFinite(parsed) ? parsed : null;
-      };
-      const perPupilExpenditure = parseValue(values[0]);
-      const totalFederalRevenue = parseValue(values[1]);
-      const enrollment = parseValue(values[2]);
-
-      logger.info('Census ASFIN data received', {
-        stateCode,
-        perPupilExpenditure,
-        totalFederalRevenue,
-        enrollment,
-      });
-
-      return { perPupilExpenditure, totalFederalRevenue, enrollment };
+    const data: unknown = await response.json();
+    if (!Array.isArray(data) || data.length < 2) {
+      logger.warn('Census school finance API returned no data', { stateCode });
+      return unavailable;
     }
 
-    logger.warn('Census ASFIN API returned no data', { stateCode });
-    return { perPupilExpenditure: null, totalFederalRevenue: null, enrollment: null };
+    const header = data[0] as string[];
+    const amountIdx = header.indexOf('AMOUNT');
+    const timeIdx = header.indexOf('time');
+    const aggIdx = header.indexOf('AGG_DESC');
+    // year -> aggregate code -> amount; NaN/unparseable -> absent, never 0
+    const byYear = new Map<string, Map<string, number>>();
+    for (const row of data.slice(1) as unknown[][]) {
+      const amount = Number.parseInt(String(row[amountIdx]), 10);
+      if (!Number.isFinite(amount)) continue;
+      const year = String(row[timeIdx]);
+      const yearAggs = byYear.get(year) ?? new Map<string, number>();
+      yearAggs.set(String(row[aggIdx]), amount);
+      byYear.set(year, yearAggs);
+    }
+
+    // Latest year that reports federal revenue (the headline metric)
+    const latestYear = [...byYear.keys()]
+      .filter(year => byYear.get(year)?.has(AGG_FEDERAL_REVENUE))
+      .sort()
+      .pop();
+    const latest = latestYear ? byYear.get(latestYear) : undefined;
+    if (!latest) {
+      logger.warn('Census school finance API returned no federal revenue', { stateCode });
+      return unavailable;
+    }
+
+    const federalThousands = latest.get(AGG_FEDERAL_REVENUE);
+    const result = {
+      perPupilExpenditure: latest.get(AGG_SPENDING_PER_PUPIL) ?? null,
+      totalFederalRevenue: federalThousands != null ? federalThousands * 1000 : null,
+      enrollment: latest.get(AGG_ENROLLMENT) ?? null,
+    };
+
+    logger.info('Census school finance data received', { stateCode, year: latestYear, ...result });
+    return result;
   } catch (error) {
-    logger.error('Error fetching Census ASFIN data', error as Error, { stateCode });
-    return { perPupilExpenditure: null, totalFederalRevenue: null, enrollment: null };
+    logger.error('Error fetching Census school finance data', error as Error, { stateCode });
+    return unavailable;
   }
 }
 
@@ -214,7 +245,7 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
         // Education Data API end at 2019 and api.ed.gov no longer resolves.
         graduationRate: null,
         collegeEnrollmentRate: null, // No real source (previous formula was fabricated)
-        // Federal revenue to the state's school systems (statewide, Census ASFIN)
+        // Federal revenue to the state's school systems (statewide, Census school finances)
         federalEducationFunding: censusEducation.totalFederalRevenue,
         // Students per FTE teacher across public schools in the district (NCES CCD)
         teacherToStudentRatio: staffing?.studentsPerTeacher ?? null,
@@ -265,7 +296,7 @@ export async function GET(
           dataSources: {
             education: `NCES Common Core of Data ${CCD_YEAR} school directory, via Urban Institute Education Data API - https://educationdata.urban.org/documentation/schools.html`,
             censusAsfin:
-              'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
+              'Census Annual Survey of School System Finances - https://api.census.gov/data/timeseries/govsschfin',
             cdc: 'CDC PLACES County Data - https://data.cdc.gov/resource/swc5-untb',
             cdcTract:
               'CDC PLACES Census Tract Data - https://data.cdc.gov/resource/cwsq-ngmh (district estimate)',
@@ -274,7 +305,7 @@ export async function GET(
           notes: [
             'null values mean data is unavailable from real government sources - never estimated',
             'Students per teacher sums enrollment and full-time-equivalent teachers over public schools located in this congressional district that report both (NCES CCD); graduation rate is unavailable because no current district-level source exists',
-            'Federal education funding is the statewide federal revenue to school systems (Census ASFIN survey), not district-specific',
+            'Federal education funding is the statewide federal revenue to school systems (Census Annual Survey of School System Finances, latest available year), not district-specific',
             'Public health county table shows CDC PLACES county-level model-based estimates (BRFSS, crude prevalence percentages) for the counties overlapping this district',
             'publicHealth.districtEstimate is a population-weighted district figure aggregated from CDC PLACES census-tract crude prevalence (weighted by tract adult population, Census CD-to-tract crosswalk); null when tract coverage is below 80% of district adult population',
             'Healthcare data unavailable - real government APIs needed',
