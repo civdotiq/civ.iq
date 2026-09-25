@@ -103,7 +103,7 @@ export default function DistrictProfileCard({ districtId }: DistrictProfileCardP
               <SectorBar key={sector.sector} sector={sector} />
             ))}
           </div>
-          {profile.federalSpendingTotal > 0 && (
+          {profile.federalSpendingTotal !== null && profile.federalSpendingTotal > 0 && (
             <p className="text-xs text-gray-500 mt-2">
               Your district receives ${(profile.federalSpendingTotal / 1e6).toFixed(1)}M in federal
               spending

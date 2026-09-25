@@ -219,6 +219,11 @@ export const STATE_FIPS_TO_CODE: Record<string, StateCode> = {
   '78': 'VI',
 };
 
+/** Abbreviation → two-digit Census state FIPS code (inverse of STATE_FIPS_TO_CODE). */
+export const STATE_CODE_TO_FIPS: Partial<Record<string, string>> = Object.fromEntries(
+  Object.entries(STATE_FIPS_TO_CODE).map(([fips, code]) => [code, fips])
+);
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================

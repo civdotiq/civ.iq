@@ -64,7 +64,7 @@ jest.mock('@/lib/intelligence/analyzers/shared', () => ({
   })),
 }));
 
-import { cosineSimilarity } from '@/lib/mesh/district-profile';
+import { cosineSimilarity, fetchDistrictSpending } from '@/lib/mesh/district-profile';
 import type {
   DistrictProfile,
   RepresentationAlignment,
@@ -201,6 +201,71 @@ describe('District Profile', () => {
       };
       expect(profile.confidence).toBeGreaterThanOrEqual(0);
       expect(profile.confidence).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('fetchDistrictSpending', () => {
+    type Body = { geo_layer_filters?: string[]; filters?: { award_type_codes?: string[] } };
+    const bodies: Body[] = [];
+
+    function mockUsaSpending(geoResults: unknown[], ok = true) {
+      bodies.length = 0;
+      global.fetch = jest.fn().mockImplementation((url: string, init?: RequestInit) => {
+        bodies.push(JSON.parse(String(init?.body)) as Body);
+        const results = String(url).includes('spending_by_geography')
+          ? geoResults
+          : [{ 'Awarding Agency': 'Department of Defense', 'Award Amount': 10 }];
+        return Promise.resolve({
+          ok,
+          status: ok ? 200 : 400,
+          json: () => Promise.resolve({ results }),
+        });
+      }) as jest.Mock;
+    }
+
+    it.each([
+      ['MI', '05', '2605'],
+      ['WY', 'AL', '5600'],
+      ['DC', 'AL', '1198'],
+    ])('queries %s-%s by FIPS shape code %s', async (state, district, shapeCode) => {
+      mockUsaSpending([{ aggregated_amount: 4e9, per_capita: 5000 }]);
+
+      const result = await fetchDistrictSpending(state, district);
+
+      expect(bodies[0]?.geo_layer_filters).toEqual([shapeCode]);
+      expect(result?.total).toBe(4e9);
+      expect(result?.perCapita).toBe(5000);
+    });
+
+    it('never mixes contract and grant award types in one request', async () => {
+      mockUsaSpending([{ aggregated_amount: 1 }]);
+
+      const result = await fetchDistrictSpending('MI', '05');
+
+      const groups = bodies.slice(1).map(b => b.filters?.award_type_codes);
+      expect(groups).toEqual([
+        ['A', 'B', 'C', 'D'],
+        ['02', '03', '04', '05'],
+      ]);
+      // One agency row per request, merged
+      expect(result?.agencies).toEqual([
+        { name: 'Department of Defense', slug: 'department-of-defense', amount: 20 },
+      ]);
+    });
+
+    it('reports a missing aggregate as null, never $0', async () => {
+      mockUsaSpending([]);
+
+      const result = await fetchDistrictSpending('MI', '05');
+
+      expect(result?.total).toBeNull();
+      expect(result?.perCapita).toBeNull();
+    });
+
+    it('returns null when USASpending rejects a request', async () => {
+      mockUsaSpending([], false);
+
+      expect(await fetchDistrictSpending('MI', '05')).toBeNull();
     });
   });
 });
