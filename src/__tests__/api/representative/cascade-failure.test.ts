@@ -26,110 +26,62 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   },
 }));
 
+const mockMemberships = jest.fn();
+jest.mock('@/features/representatives/services/congress.service', () => ({
+  fetchCommitteeMemberships: () => mockMemberships(),
+  getEnhancedRepresentative: jest.fn(async () => ({ bioguideId: 'P000197', committees: [] })),
+}));
+
 import { GET } from '@/app/api/representative/[bioguideId]/committees/route';
 import { createMockRequest } from '../../utils/test-helpers';
 
 describe('representative-detail cascade-failure contract', () => {
-  const originalEnv = process.env;
-
   afterEach(() => {
-    process.env = originalEnv;
     jest.restoreAllMocks();
   });
 
   describe('/api/representative/[bioguideId]/committees', () => {
-    it('returns BackboneResponse with dataQuality=unavailable when CONGRESS_API_KEY is missing', async () => {
-      process.env = { ...originalEnv };
-      delete process.env.CONGRESS_API_KEY;
-
+    async function call() {
       const request = createMockRequest(
         'http://localhost:3000/api/representative/P000197/committees'
       );
       const response = await GET(request, {
         params: Promise.resolve({ bioguideId: 'P000197' }),
       });
-      const data = await response.json();
+      return { response, data: await response.json() };
+    }
 
-      expect(response.status).toBe(503);
-      expect(data.dataQuality).toBe('unavailable');
-      expect(data.committees).toEqual([]);
-      expect(Array.isArray(data.sourceStatus)).toBe(true);
-      expect(data.sourceStatus[0]).toMatchObject({
-        source: 'congress.gov',
-        status: 'not-configured',
-      });
-    });
-
-    it('returns BackboneResponse with dataQuality=unavailable when fetch rejects (network error)', async () => {
-      process.env = { ...originalEnv, CONGRESS_API_KEY: 'test-api-key' };
-      global.fetch = jest.fn().mockRejectedValue(new Error('network error'));
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/P000197/committees'
-      );
-
-      const response = await GET(request, {
-        params: Promise.resolve({ bioguideId: 'P000197' }),
-      });
-      const data = await response.json();
+    it('returns BackboneResponse with dataQuality=unavailable when the roster fetch rejects', async () => {
+      mockMemberships.mockRejectedValue(new Error('network error'));
+      const { response, data } = await call();
 
       expect(response.status).toBe(503);
       expect(data.dataQuality).toBe('unavailable');
       expect(data.committees).toEqual([]);
       expect(data.sourceStatus[0]).toMatchObject({
-        source: 'congress.gov',
+        source: 'congress-legislators',
         status: 'error',
       });
       expect(data.sourceStatus[0].errorMessage).toContain('network error');
     });
 
-    it('returns BackboneResponse with dataQuality=unavailable when upstream returns HTTP 500', async () => {
-      process.env = { ...originalEnv, CONGRESS_API_KEY: 'test-api-key' };
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        json: () => Promise.resolve({ error: 'upstream down' }),
-      });
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/P000197/committees'
-      );
-      const response = await GET(request, {
-        params: Promise.resolve({ bioguideId: 'P000197' }),
-      });
-      const data = await response.json();
+    it('returns BackboneResponse with dataQuality=unavailable when the roster comes back empty', async () => {
+      mockMemberships.mockResolvedValue([]);
+      const { response, data } = await call();
 
       expect(response.status).toBe(503);
       expect(data.dataQuality).toBe('unavailable');
       expect(data.committees).toEqual([]);
-      expect(data.sourceStatus[0]).toMatchObject({
-        source: 'congress.gov',
-        status: 'error',
-      });
-      expect(data.sourceStatus[0].errorMessage).toContain('500');
     });
 
     it('returns BackboneResponse with dataQuality=unavailable on request timeout', async () => {
-      process.env = { ...originalEnv, CONGRESS_API_KEY: 'test-api-key' };
-      global.fetch = jest.fn().mockRejectedValue(
-        Object.assign(new Error('The operation was aborted due to timeout'), {
-          name: 'TimeoutError',
-        })
-      );
-
-      const request = createMockRequest(
-        'http://localhost:3000/api/representative/P000197/committees'
-      );
-      const response = await GET(request, {
-        params: Promise.resolve({ bioguideId: 'P000197' }),
-      });
-      const data = await response.json();
+      mockMemberships.mockRejectedValue(new Error('The operation was aborted due to timeout'));
+      const { response, data } = await call();
 
       expect(response.status).toBe(503);
       expect(data.dataQuality).toBe('unavailable');
       expect(data.sourceStatus[0]).toMatchObject({
-        source: 'congress.gov',
+        source: 'congress-legislators',
         status: 'timeout',
       });
     });
