@@ -353,8 +353,10 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             <div className="text-2xl font-bold text-violet-900">
               {government.representation.billsAffectingDistrict.length}
             </div>
-            <p className="text-sm text-violet-700 mt-1">Active Bills</p>
-            <p className="text-xs text-violet-600 mt-1">Affecting this district</p>
+            <p className="text-sm text-violet-700 mt-1">Relevant bills shown</p>
+            <p className="text-xs text-violet-600 mt-1">
+              Recent bills that best match this district, not a total
+            </p>
           </div>
 
           {government.representation.appropriationsSecured != null && (

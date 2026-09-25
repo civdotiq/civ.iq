@@ -3,11 +3,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { STATE_FIPS_TO_CODE } from '@/lib/data/us-states';
 import { govCache } from '@/services/cache';
-import { getServerBaseUrl } from '@/lib/server-url';
 import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
 import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
 import {
@@ -16,6 +15,10 @@ import {
   getDistrictInfrastructureSpending,
   parseDistrictId,
 } from '@/lib/services/spending.service';
+import {
+  getDistrictBills,
+  parseDistrictId as parseDistrictBillsId,
+} from '@/lib/services/district-bills.service';
 import type { FederalAward } from '@/types/spending';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
@@ -29,10 +32,13 @@ const STATE_FIPS: Record<string, string> = Object.fromEntries(
   Object.entries(STATE_FIPS_TO_CODE).map(([fips, code]) => [code, fips])
 );
 
-const CACHE_KEY_PREFIX = 'district-government-spending';
+// v2: v1 profiles could be built from failed sub-fetches cached as "no data"
+const CACHE_KEY_PREFIX = 'district-government-spending:v2';
+const BILLS_LIMIT = 10;
 
-// vercel.json gives this route 20s. USASpending can hang 40s+ on a cold
-// query, so every source gets this long, then reports unavailable.
+// USASpending can hang 40s+ on a cold query, so the response waits this long
+// per source, then reports it unavailable. vercel.json gives the route 60s so
+// work still running can finish in after() and warm the caches.
 const SOURCE_DEADLINE_MS = 12000;
 
 /** A source's data plus whether it fully loaded (only complete data is cached). */
@@ -41,12 +47,13 @@ interface SourceResult<T> {
   complete: boolean;
 }
 
-function withDeadline<T>(promise: Promise<SourceResult<T>>, fallback: T, label: string) {
+/** Resolves to `fallback` if `promise` hasn't settled by the deadline. */
+function withDeadline<T>(promise: Promise<T>, fallback: T, label: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<SourceResult<T>>(resolve => {
+  const deadline = new Promise<T>(resolve => {
     timer = setTimeout(() => {
       logger.warn('Government spending source hit deadline', { label, ms: SOURCE_DEADLINE_MS });
-      resolve({ data: fallback, complete: false });
+      resolve(fallback);
     }, SOURCE_DEADLINE_MS);
   });
   return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
@@ -78,11 +85,29 @@ async function fetchFederalInvestment(
   }
 
   try {
-    const [spending, counts, infrastructure] = await Promise.all([
-      getDistrictSpending(parsed.state, parsed.district),
-      getDistrictAwardCounts(parsed.state, parsed.district),
-      getDistrictInfrastructureSpending(parsed.state, parsed.district),
+    const spendingP = getDistrictSpending(parsed.state, parsed.district);
+    const countsP = getDistrictAwardCounts(parsed.state, parsed.district);
+    const infraP = getDistrictInfrastructureSpending(parsed.state, parsed.district);
+    // Anything still running past the deadline finishes after the response
+    // and fills its 6h cache, so the next request is complete. (Big districts
+    // like DC page through many infrastructure results sequentially.)
+    after(() => Promise.allSettled([spendingP, countsP, infraP]));
+
+    // A separate deadline per call, so a slow infrastructure sum doesn't
+    // discard spending and counts that already loaded. null = timed out/failed.
+    const [spendingResult, counts, infrastructure] = await Promise.all([
+      withDeadline(spendingP, null, 'usaspending-spending'),
+      withDeadline(countsP, null, 'usaspending-counts'),
+      withDeadline(infraP, null, 'usaspending-infrastructure'),
     ]);
+    const spending = spendingResult ?? {
+      contracts: [],
+      grants: [],
+      aggregate: null,
+      contractTotal: 0,
+      grantTotal: 0,
+      incomplete: true,
+    };
 
     const majorProjects = [...spending.contracts, ...spending.grants]
       .sort((a, b) => b.amount - a.amount)
@@ -115,53 +140,38 @@ async function fetchFederalInvestment(
   }
 }
 
+/**
+ * Bills most relevant to the district, from the district-bills join
+ * (Congress.gov bills scored against the member's committees and the
+ * district's USASpending agencies). This used to call
+ * /api/representative/{districtId}/bills — a district ID where a bioguide ID
+ * belongs — so the list was always empty.
+ */
 async function fetchCongressionalBillsData(
   districtId: string
 ): Promise<SourceResult<Partial<GovernmentServicesProfile['representation']>>> {
+  const parsed = parseDistrictBillsId(districtId);
+  if (!parsed) return { data: {}, complete: false };
+
   try {
-    // Congress.gov API for bills affecting the district
-    const billsUrl = `${getServerBaseUrl()}/api/representative/${districtId.toUpperCase()}/bills`;
+    const result = await getDistrictBills(parsed.state, parsed.district, BILLS_LIMIT);
+    if (!result) return { data: {}, complete: false };
 
-    logger.info('Fetching Congressional bills data', {
-      districtId,
-      url: billsUrl,
-    });
-
-    const response = await fetch(billsUrl, {
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Congressional bills API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data && Array.isArray(data)) {
-      const billsAffectingDistrict = data.slice(0, 10).map((bill: unknown) => {
-        const billData = bill as Record<string, unknown>;
-        return {
-          billNumber: String(billData.number || 'Unknown'),
-          title: String(billData.title || 'Federal Legislation'),
-          status: String(billData.latestAction || 'In Progress'),
+    return {
+      data: {
+        billsAffectingDistrict: result.bills.map(bill => ({
+          billNumber: `${bill.type} ${bill.number}`,
+          title: bill.title,
+          status: bill.latestActionText,
           // No real impact classification exists — never fabricate one
           impactLevel: null,
-        };
-      });
-
-      return {
-        data: {
-          billsAffectingDistrict,
-          appropriationsSecured: null, // Requires CBO appropriations data
-        },
-        complete: true,
-      };
-    }
-
-    logger.warn('Congressional bills API returned no data', { districtId });
-    return { data: {}, complete: true };
+        })),
+        appropriationsSecured: null, // Requires CBO appropriations data
+      },
+      complete: !result.incomplete,
+    };
   } catch (error) {
-    logger.error('Error fetching Congressional bills data', error as Error, { districtId });
+    logger.error('Error fetching district bills', error as Error, { districtId });
     return { data: {}, complete: false };
   }
 }
@@ -244,13 +254,14 @@ async function getGovernmentServicesProfile(
 
     // Fetch data from multiple sources in parallel
     const [federal, bills, state] = await Promise.all([
+      // Each USASpending call has its own deadline inside
+      fetchFederalInvestment(districtId),
+      withDeadline(fetchCongressionalBillsData(districtId), { data: {}, complete: false }, 'bills'),
       withDeadline(
-        fetchFederalInvestment(districtId),
-        FEDERAL_INVESTMENT_UNAVAILABLE,
-        'usaspending'
+        fetchStateContext(stateCode),
+        { data: stateContextUnavailable(stateCode), complete: false },
+        'state'
       ),
-      withDeadline(fetchCongressionalBillsData(districtId), {}, 'bills'),
-      withDeadline(fetchStateContext(stateCode), stateContextUnavailable(stateCode), 'state'),
     ]);
     const federalInvestment = federal.data;
     const billsData = bills.data;
@@ -332,7 +343,7 @@ export async function GET(
           timestamp: new Date().toISOString(),
           dataSources: {
             usaspending: 'USASpending.gov - https://api.usaspending.gov/',
-            congress: 'Congress.gov enhanced API access',
+            congress: 'Congress.gov - bills scored for relevance to this district',
             socialServices: 'Data unavailable - no real district-level API source',
             federalFacilities: 'Data unavailable - no real API source',
             medicaidChip: 'CMS - data.medicaid.gov (statewide Medicaid + CHIP enrollment, monthly)',
@@ -343,7 +354,7 @@ export async function GET(
             'Federal spending figures are DISTRICT-scoped (USASpending.gov place of performance), current federal fiscal year to date',
             'Contracts & grants count covers awards with a place of performance in the district, current fiscal year',
             'Infrastructure investment = federal construction & infrastructure obligations from a documented code set: procurement for construction and real-property work (PSC Y & Z) plus DOT/EPA-SRF infrastructure grants (assistance listings 20.106/20.205/20.500/20.507, 66.458, 66.468), place of performance in district, current FY to date; null = none found or upstream unavailable',
-            'Congressional bills from enhanced Congress.gov access; no impact classification is available (impactLevel is null)',
+            "billsAffectingDistrict = up to 10 recent Congress.gov bills most relevant to this district (matched to the member's committees and the district's top federal spending agencies); a ranked sample, not a count. No impact classification is available (impactLevel is null)",
             'District-level social services data unavailable - real government APIs needed',
             'Federal facilities data unavailable - real government APIs needed',
             'stateContext figures are STATEWIDE, not district-specific (Medicaid/CHIP and veteran population are published only at the state level)',

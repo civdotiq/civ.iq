@@ -177,6 +177,37 @@ describe('/api/district/[districtId]/bills', () => {
     expect(Array.isArray(data.topAgencies)).toBe(true);
   });
 
+  it('queries contracts and grants separately (USASpending 400s on mixed groups)', async () => {
+    const request = createMockRequest('http://localhost:3000/api/district/MI-05/bills');
+    await GET(request, { params: Promise.resolve({ districtId: 'MI-05' }) });
+
+    const groups = (global.fetch as jest.Mock).mock.calls
+      .filter(([url]) => String(url).includes('usaspending.gov'))
+      .map(([, init]) => JSON.parse(String(init.body)).filters.award_type_codes);
+    expect(groups).toEqual([
+      ['A', 'B', 'C', 'D'],
+      ['02', '03', '04', '05'],
+    ]);
+  });
+
+  it('marks the result incomplete when USASpending fails', async () => {
+    const baseFetch = global.fetch as jest.Mock;
+    global.fetch = jest
+      .fn()
+      .mockImplementation((url: string | URL, init?: RequestInit) =>
+        String(url).includes('usaspending.gov')
+          ? Promise.resolve({ ok: false, status: 400, json: () => Promise.resolve({}) })
+          : baseFetch(url, init)
+      );
+
+    const request = createMockRequest('http://localhost:3000/api/district/MI-05/bills');
+    const response = await GET(request, { params: Promise.resolve({ districtId: 'MI-05' }) });
+    const data = await response.json();
+
+    expect(data.topAgencies).toEqual([]);
+    expect(data.incomplete).toBe(true);
+  });
+
   it('should include relevanceScore on bills', async () => {
     const request = createMockRequest('http://localhost:3000/api/district/MI-05/bills');
     const response = await GET(request, { params: Promise.resolve({ districtId: 'MI-05' }) });

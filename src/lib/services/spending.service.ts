@@ -210,30 +210,46 @@ async function sumDistrictAwardObligations(
   const { startDate, endDate } = currentFederalFiscalYearWindow();
   let total = 0;
 
+  const fetchPageOnce = (page: number) =>
+    fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+      },
+      body: JSON.stringify({
+        subawards: false,
+        limit: 100,
+        page,
+        fields: ['Award ID', 'Award Amount'],
+        sort: 'Award Amount',
+        order: 'desc',
+        filters: {
+          place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
+          time_period: [{ start_date: startDate, end_date: endDate }],
+          award_type_codes: awardTypeCodes,
+          ...codeFilter,
+        },
+      }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
+    });
+
+  // Deep pages intermittently 503 (or hang) and succeed on a retry; one
+  // failure used to void the whole district total.
+  const fetchPage = async (page: number, attempt = 0): Promise<Response> => {
+    try {
+      const response = await fetchPageOnce(page);
+      if (response.status >= 500 && attempt === 0) return fetchPage(page, 1);
+      return response;
+    } catch (error) {
+      if (attempt === 0) return fetchPage(page, 1);
+      throw error;
+    }
+  };
+
   for (let page = 1; page <= INFRA_MAX_PAGES; page++) {
     try {
-      const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
-        },
-        body: JSON.stringify({
-          subawards: false,
-          limit: 100,
-          page,
-          fields: ['Award ID', 'Award Amount'],
-          sort: 'Award Amount',
-          order: 'desc',
-          filters: {
-            place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
-            time_period: [{ start_date: startDate, end_date: endDate }],
-            award_type_codes: awardTypeCodes,
-            ...codeFilter,
-          },
-        }),
-        signal: AbortSignal.timeout(25000),
-      });
+      const response = await fetchPage(page);
 
       if (!response.ok) {
         logger.warn('Infrastructure award page failed', {
@@ -489,7 +505,8 @@ export async function getDistrictSpending(
   state: string,
   district: string
 ): Promise<DistrictSpendingResult> {
-  const cacheKey = `spending-district-${state}-${district}`;
+  // v2: v1 entries could hold a failed fetch cached as "no aggregate"
+  const cacheKey = `spending-district-v2-${state}-${district}`;
 
   return cachedFetch(
     cacheKey,
