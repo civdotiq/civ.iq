@@ -122,8 +122,9 @@ function normalizeDistrictId(districtId: string): string | null {
   // Remove any whitespace
   const cleaned = districtId.trim().toUpperCase();
 
-  // Pattern 1: State-District (CA-12, NY-14)
-  const stateDistrictMatch = cleaned.match(/^([A-Z]{2})-(\d{1,2})$/);
+  // Pattern 1: State-District (CA-12, NY-14, WY-00, WY-AL, DC-AL). The
+  // Census code handles at-large ("00") and delegate seats ("98").
+  const stateDistrictMatch = cleaned.match(/^([A-Z]{2})-(\d{1,2}|AL)$/);
   if (stateDistrictMatch && stateDistrictMatch[1] && stateDistrictMatch[2]) {
     const stateCode = stateDistrictMatch[1];
     const district = stateDistrictMatch[2];
@@ -145,28 +146,6 @@ function normalizeDistrictId(districtId: string): string | null {
   const fullFipsMatch = cleaned.match(/^(\d{4})$/);
   if (fullFipsMatch) {
     return cleaned;
-  }
-
-  // Pattern 4: Handle special territories and at-large districts
-  const specialCodes: Record<string, string> = {
-    'AK-00': '0200',
-    'DE-00': '1000',
-    'MT-00': '3000',
-    'ND-00': '3800',
-    'SD-00': '4600',
-    'VT-00': '5000',
-    'WY-00': '5600',
-    // Delegate seats are Census district 98, not 00.
-    'DC-00': '1198',
-    'PR-00': '7298',
-    'VI-00': '7898',
-    'GU-00': '6698',
-    'AS-00': '6098',
-    'MP-00': '6998',
-  };
-
-  if (specialCodes[cleaned]) {
-    return specialCodes[cleaned];
   }
 
   return null;
