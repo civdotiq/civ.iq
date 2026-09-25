@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, Filter, MapPin, Users, Calendar, DollarSign, FileText, X } from 'lucide-react';
+import { Search, Filter, MapPin, Users, Calendar, X } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 
@@ -18,10 +18,7 @@ interface SearchFilters {
   chamber: 'all' | 'House' | 'Senate';
   state: string;
   committee: string;
-  votingPattern: 'all' | 'progressive' | 'conservative' | 'moderate';
   experienceYears: [number, number];
-  campaignFinance: [number, number];
-  billsSponsoredRange: [number, number];
 }
 
 interface Representative {
@@ -33,9 +30,6 @@ interface Representative {
   chamber: 'House' | 'Senate';
   yearsInOffice: number;
   committees: string[];
-  billsSponsored: number;
-  votingScore: number;
-  fundraisingTotal: number;
   imageUrl?: string;
 }
 
@@ -49,10 +43,7 @@ export function AdvancedSearch() {
     chamber: 'all',
     state: '',
     committee: '',
-    votingPattern: 'all',
     experienceYears: [0, 30],
-    campaignFinance: [0, 10000000],
-    billsSponsoredRange: [0, 500],
   });
 
   const [results, setResults] = useState<Representative[]>([]);
@@ -151,14 +142,9 @@ export function AdvancedSearch() {
       if (filters.chamber !== 'all') params.append('chamber', filters.chamber);
       if (filters.state) params.append('state', filters.state);
       if (filters.committee) params.append('committee', filters.committee);
-      if (filters.votingPattern !== 'all') params.append('votingPattern', filters.votingPattern);
 
       params.append('experienceYearsMin', filters.experienceYears[0].toString());
       params.append('experienceYearsMax', filters.experienceYears[1].toString());
-      params.append('campaignFinanceMin', filters.campaignFinance[0].toString());
-      params.append('campaignFinanceMax', filters.campaignFinance[1].toString());
-      params.append('billsSponsoredMin', filters.billsSponsoredRange[0].toString());
-      params.append('billsSponsoredMax', filters.billsSponsoredRange[1].toString());
 
       // Fetch from API
       const response = await fetch(`/api/search?${params.toString()}`);
@@ -199,20 +185,8 @@ export function AdvancedSearch() {
       chamber: 'all',
       state: '',
       committee: '',
-      votingPattern: 'all',
       experienceYears: [0, 30],
-      campaignFinance: [0, 10000000],
-      billsSponsoredRange: [0, 500],
     });
-  };
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    } else if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
-    return `$${amount}`;
   };
 
   return (
@@ -222,8 +196,7 @@ export function AdvancedSearch() {
           Advanced Representative Search
         </h2>
         <p className="aicher-heading-wide text-gray-600">
-          Find representatives by multiple criteria including voting patterns, committee membership,
-          and more
+          Find representatives by party, chamber, state, committee membership and years in office
         </p>
       </div>
 
@@ -326,23 +299,6 @@ export function AdvancedSearch() {
               </select>
             </div>
 
-            {/* Voting Pattern */}
-            <div>
-              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
-                Voting Pattern
-              </label>
-              <select
-                value={filters.votingPattern}
-                onChange={e => updateFilter('votingPattern', e.target.value)}
-                className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
-              >
-                <option value="all">All Patterns</option>
-                <option value="progressive">Progressive (80%+ liberal votes)</option>
-                <option value="moderate">Moderate (40-80% liberal votes)</option>
-                <option value="conservative">Conservative (40%+ conservative votes)</option>
-              </select>
-            </div>
-
             {/* Years in Office Range */}
             <div>
               <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
@@ -370,79 +326,6 @@ export function AdvancedSearch() {
                   onChange={e =>
                     updateFilter('experienceYears', [
                       filters.experienceYears[0],
-                      parseInt(e.target.value),
-                    ])
-                  }
-                  className="flex-1"
-                />
-              </div>
-            </div>
-
-            {/* Campaign Finance Range */}
-            <div>
-              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
-                Campaign Fundraising: {formatCurrency(filters.campaignFinance[0])} -{' '}
-                {formatCurrency(filters.campaignFinance[1])}
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="10000000"
-                  step="100000"
-                  value={filters.campaignFinance[0]}
-                  onChange={e =>
-                    updateFilter('campaignFinance', [
-                      parseInt(e.target.value),
-                      filters.campaignFinance[1],
-                    ])
-                  }
-                  className="flex-1"
-                />
-                <input
-                  type="range"
-                  min="0"
-                  max="10000000"
-                  step="100000"
-                  value={filters.campaignFinance[1]}
-                  onChange={e =>
-                    updateFilter('campaignFinance', [
-                      filters.campaignFinance[0],
-                      parseInt(e.target.value),
-                    ])
-                  }
-                  className="flex-1"
-                />
-              </div>
-            </div>
-
-            {/* Bills Sponsored Range */}
-            <div>
-              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
-                Bills Sponsored: {filters.billsSponsoredRange[0]} - {filters.billsSponsoredRange[1]}
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="500"
-                  value={filters.billsSponsoredRange[0]}
-                  onChange={e =>
-                    updateFilter('billsSponsoredRange', [
-                      parseInt(e.target.value),
-                      filters.billsSponsoredRange[1],
-                    ])
-                  }
-                  className="flex-1"
-                />
-                <input
-                  type="range"
-                  min="0"
-                  max="500"
-                  value={filters.billsSponsoredRange[1]}
-                  onChange={e =>
-                    updateFilter('billsSponsoredRange', [
-                      filters.billsSponsoredRange[0],
                       parseInt(e.target.value),
                     ])
                   }
@@ -549,28 +432,15 @@ export function AdvancedSearch() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span>{rep.billsSponsored} bills sponsored</span>
+                  {rep.committees.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Committees:</span>{' '}
+                      {rep.committees.slice(0, 3).join(', ')}
+                      {rep.committees.length > 3 && (
+                        <span> and {rep.committees.length - 3} more</span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="w-4 h-4 text-gray-400" />
-                      <span>{formatCurrency(rep.fundraisingTotal)} raised</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-4 h-4 bg-civiq-blue"></div>
-                      <span>{rep.votingScore}% voting score</span>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Committees:</span>{' '}
-                    {rep.committees.slice(0, 3).join(', ')}
-                    {rep.committees.length > 3 && (
-                      <span> and {rep.committees.length - 3} more</span>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
