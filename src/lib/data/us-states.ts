@@ -313,6 +313,16 @@ export function isDelegateJurisdiction(code: string): boolean {
 }
 
 /**
+ * Two-digit Census congressional-district code for a House seat, as Census,
+ * TIGER, USASpending and the crosswalks key it: '98' for delegate seats,
+ * '00' for at-large states ('AL', '0', '00'), otherwise zero-padded.
+ */
+export function censusCongressionalDistrictCode(state: string, district: string): string {
+  if (isDelegateJurisdiction(state)) return '98';
+  return /^\d+$/.test(district) ? district.padStart(2, '0') : '00';
+}
+
+/**
  * Normalize state identifier to code (handles both codes and full names)
  * @param identifier - State code or full name (case-insensitive)
  * @returns Normalized state code or undefined

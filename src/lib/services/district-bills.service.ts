@@ -30,6 +30,7 @@ import {
 import { mapCongressStatus } from '@/lib/services/bill.service';
 import type { BillStatus } from '@/types/bill';
 import type { JoinMetadata } from '@/types/joins';
+import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 
@@ -90,7 +91,7 @@ export function parseDistrictId(districtId: string): { state: string; district: 
 
 async function fetchTopAgenciesForDistrict(state: string, district: string): Promise<string[]> {
   const { startDate, endDate } = currentFederalFiscalYearWindow();
-  const districtCode = district === 'AL' ? '00' : district;
+  const districtCode = censusCongressionalDistrictCode(state, district);
 
   try {
     const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
