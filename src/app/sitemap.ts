@@ -20,6 +20,7 @@ import { EDUCATION_CURRICULUM } from '@/lib/data/education-curriculum';
 import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/question-registry';
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
+import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 
@@ -660,8 +661,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   });
 
-  const chambers = ['upper', 'lower'] as const;
-  for (const state of STATES_ONLY) {
+  const stateDistricts = await Promise.all(STATES_ONLY.map(firstDistrictPerChamber));
+  STATES_ONLY.forEach((state, i) => {
     const stateLower = state.toLowerCase();
 
     // State bills by state
@@ -672,18 +673,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     });
 
-    for (const chamber of chambers) {
-      // Route is /state-districts/[state]/[chamber]/[district]; district 1 is the
-      // canonical entry point used by the state-districts index page. Omitting the
-      // district segment 404s (no /state-districts/[state]/[chamber] route exists).
+    // Route is /state-districts/[state]/[chamber]/[district] (no chamber-level
+    // route). One real district per chamber from the roster corpus — district
+    // names vary by state, so "1" does not exist everywhere.
+    for (const { chamber, district } of stateDistricts[i] ?? []) {
       entries.push({
-        url: `${BASE_URL}/state-districts/${stateLower}/${chamber}/1`,
+        url: `${BASE_URL}/state-districts/${stateLower}/${chamber}/${encodeURIComponent(district)}`,
         lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.4,
       });
     }
-  }
+  });
 
   return entries;
 }
