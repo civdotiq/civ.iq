@@ -310,6 +310,8 @@ describe('/api/spending/district/[districtId]', () => {
         .filter(Boolean)
         .map(b => String(b));
       expect(bodies.some(b => b.includes('"district_current":"98"'))).toBe(true);
+      // Aggregate (per-capita, population) lookup needs DC's FIPS too.
+      expect(bodies.some(b => b.includes('"geo_layer_filters":["1198"]'))).toBe(true);
       expect(data.summary?.displayName).toBe('DC-AL');
     });
 
