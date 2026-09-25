@@ -23,6 +23,7 @@ import { parseDistrictId } from '@/lib/services/spending.service';
 export const CCD_YEAR = 2024;
 const BASE_URL = 'https://educationdata.urban.org/api/v1/schools/ccd/directory';
 const MAX_PAGES = 10;
+const WALK_BUDGET_MS = 10_000;
 
 interface CcdSchool {
   enrollment: number | null;
@@ -60,12 +61,17 @@ export async function fetchDistrictStaffing(
   let url: string | null =
     `${BASE_URL}/${CCD_YEAR}/?fips=${Number(stateFips)}&congress_district_id=${congressDistrictId}`;
 
+  // One budget for the whole walk: the API can take 50s+ per page, and the
+  // services-health route runs under a 20s maxDuration. Past the budget,
+  // staffing is reported unavailable rather than 504ing the route.
+  const signal = AbortSignal.timeout(WALK_BUDGET_MS);
+
   try {
     const schools: CcdSchool[] = [];
     let total = 0;
     for (let page = 0; url && page < MAX_PAGES; page++) {
       const response = await fetch(url, {
-        signal: AbortSignal.timeout(20000),
+        signal,
         // The API answers 403 to Node's default "node" User-Agent.
         headers: {
           Accept: 'application/json',
