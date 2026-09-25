@@ -4,6 +4,7 @@
  */
 
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
@@ -12,7 +13,7 @@ import {
   type StateDistrictDemographics,
 } from '@/lib/services/state-census-api.service';
 import { getChamberName } from '@/types/state-legislature';
-import { MapPin, Users, Home } from 'lucide-react';
+import { MapPin, Users } from 'lucide-react';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
 import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
@@ -23,6 +24,19 @@ import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDem
 import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
 import { fetchDistrictBiography } from '@/lib/api/wikipedia';
 import type { WikipediaBiography } from '@/lib/api/wikipedia';
+import DistrictBackLink from './DistrictBackLink';
+
+// On-demand ISR: rendered once per district, then served from the CDN.
+// Rosters come from the committed corpus; Census/Wikipedia change rarely.
+export const revalidate = 3600;
+
+// Empty generateStaticParams activates on-demand ISR — without it a
+// dynamic-segment route renders per-request and `revalidate` is ignored.
+export async function generateStaticParams(): Promise<
+  Array<{ state: string; chamber: string; district: string }>
+> {
+  return [];
+}
 
 function CiviqLogo() {
   return (
@@ -64,14 +78,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function StateDistrictPage({
-  params,
-  searchParams,
-}: PageProps & { searchParams?: Promise<{ address?: string; from?: string }> }) {
+export default async function StateDistrictPage({ params }: PageProps) {
   const { state, chamber: rawChamber, district: rawDistrict } = await params;
   // Named districts ("1st Barnstable", "Belknap 1") arrive percent-encoded.
   const district = decodeSegment(rawDistrict);
-  const search = searchParams ? await searchParams : {};
 
   // Normalize state parameter (handles both full names like "South Carolina" and codes like "SC")
   const stateCode = normalizeStateIdentifier(state);
@@ -85,62 +95,39 @@ export default async function StateDistrictPage({
     notFound();
   }
 
-  // Get address from query params for breadcrumb
-  const fromAddress = search?.address || search?.from;
-
-  // Try to fetch legislators for this district
-  // Note: This may fail due to API rate limits, but we still want to show the map
-  let districtLegislators: EnhancedStateLegislator[] = [];
-
-  try {
-    // Fetch all legislators for the state
-    const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(stateCode);
-
-    // Filter legislators by BOTH district AND chamber
-    districtLegislators = allLegislators.filter(
-      leg => leg.district === district && leg.chamber === chamber
-    );
-  } catch (error) {
-    // API rate limit or other error - continue rendering without legislator data
-    logger.warn('Failed to fetch legislators (continuing without data)', {
-      stateCode,
-      district,
-      chamber,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  // Fetch demographics (also handle errors gracefully)
-  let demographics: StateDistrictDemographics | null = null;
-  try {
-    demographics = await getStateDistrictDemographics(stateCode, district, chamber);
-  } catch (error) {
-    logger.warn('Failed to fetch demographics', {
-      stateCode,
-      district,
-      chamber,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  // Get chamber info
+  // Get chamber info and full state name for display
   const chamberName = getChamberName(stateCode, chamber);
-
-  // Get full state name for display
   const stateName = getStateName(stateCode) || stateCode;
 
-  // Fetch Wikipedia biography for the district (graceful fallback - shows nothing if not available)
-  let wikipediaBio: WikipediaBiography | null = null;
-  try {
-    wikipediaBio = await fetchDistrictBiography(stateName, parseInt(district, 10), chamber);
-  } catch {
-    // Silently fail - Wikipedia data is optional enhancement
-    logger.debug('Wikipedia data not available for this district', {
-      stateName,
-      district,
-      chamber,
-    });
-  }
+  // The three sources are independent; each degrades to empty on failure
+  // (legislators may hit rate limits, Census and Wikipedia are optional).
+  const [districtLegislators, demographics, wikipediaBio] = await Promise.all([
+    StateLegislatureCoreService.getAllStateLegislators(stateCode)
+      .then(all => all.filter(leg => leg.district === district && leg.chamber === chamber))
+      .catch((error: unknown): EnhancedStateLegislator[] => {
+        logger.warn('Failed to fetch legislators (continuing without data)', {
+          stateCode,
+          district,
+          chamber,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return [];
+      }),
+    getStateDistrictDemographics(stateCode, district, chamber).catch(
+      (error: unknown): StateDistrictDemographics | null => {
+        logger.warn('Failed to fetch demographics', {
+          stateCode,
+          district,
+          chamber,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null;
+      }
+    ),
+    fetchDistrictBiography(stateName, parseInt(district, 10), chamber).catch(
+      (): WikipediaBiography | null => null
+    ),
+  ]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -167,19 +154,18 @@ export default async function StateDistrictPage({
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="mb-6">
-          <Link
-            href={
-              fromAddress
-                ? `/representatives?address=${encodeURIComponent(fromAddress)}`
-                : `/state-legislature/${stateCode}`
+          <Suspense
+            fallback={
+              <Link
+                href={`/state-legislature/${stateCode}`}
+                className="inline-flex items-center gap-2 text-civiq-blue"
+              >
+                Back to {stateName} Legislature
+              </Link>
             }
-            className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
           >
-            <Home className="w-4 h-4" />
-            <span>
-              {fromAddress ? `Back to All Representatives` : `Back to ${stateName} Legislature`}
-            </span>
-          </Link>
+            <DistrictBackLink stateCode={stateCode} stateName={stateName} />
+          </Suspense>
         </nav>
 
         {/* Page Title */}

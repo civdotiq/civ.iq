@@ -30,7 +30,7 @@ jest.mock('@/components/districts/shared/UnifiedRepresentativeCard', () => () =>
 jest.mock('@/components/districts/shared/UnifiedDemographicsDisplay', () => () => null);
 jest.mock('@/components/districts/shared/UnifiedDistrictSidebar', () => () => null);
 
-import StateDistrictPage, { generateMetadata } from '../page';
+import StateDistrictPage, { generateMetadata, generateStaticParams, revalidate } from '../page';
 
 /** Collect the `representative` prop of every element in a React tree. */
 function representatives(node: ReactNode, out: Array<{ id: string }> = []) {
@@ -48,8 +48,15 @@ const params = Promise.resolve({ state: 'ma', chamber: 'lower', district: '1st%2
 
 describe('/state-districts/[state]/[chamber]/[district]', () => {
   it('matches a named district that arrives percent-encoded', async () => {
-    const tree = await StateDistrictPage({ params, searchParams: Promise.resolve({}) });
+    const tree = await StateDistrictPage({ params });
     expect(representatives(tree).map(r => r.id)).toEqual(['ocd-person/1']);
+  });
+
+  it('is served via on-demand ISR rather than rendered per request', async () => {
+    // Empty generateStaticParams + revalidate is what makes a dynamic-segment
+    // route cacheable; reading searchParams on the server would undo it.
+    expect(revalidate).toBe(3600);
+    expect(await generateStaticParams()).toEqual([]);
   });
 
   it('encodes the canonical URL exactly once', async () => {
