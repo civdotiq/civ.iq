@@ -41,6 +41,11 @@ jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn((_key: string, fetchFn: () => Promise<unknown>) => fetchFn()),
 }));
 
+jest.mock('@/lib/services/district-bills.service', () => ({
+  ...jest.requireActual('@/lib/services/district-bills.service'),
+  getDistrictBills: jest.fn(),
+}));
+
 jest.mock('@/lib/data-sources/cms-medicaid-enrollment-service', () => ({
   fetchMedicaidEnrollment: jest.fn().mockResolvedValue(null),
 }));
@@ -51,6 +56,7 @@ jest.mock('@/lib/data-sources/va-veteran-population-service', () => ({
 
 import { NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
+import { getDistrictBills } from '@/lib/services/district-bills.service';
 import { fetchMedicaidEnrollment } from '@/lib/data-sources/cms-medicaid-enrollment-service';
 import { fetchVeteranPopulation } from '@/lib/data-sources/va-veteran-population-service';
 
@@ -229,10 +235,13 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
   });
 });
 
+const emptyBillsJoin = { bills: [] };
+
 describe('/api/districts/[districtId]/government-spending null integrity', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (govCache.get as jest.Mock).mockResolvedValue(null);
+    (getDistrictBills as jest.Mock).mockResolvedValue(emptyBillsJoin);
   });
 
   it('emits null (never 0) for federal investment when USASpending fails', async () => {
@@ -338,28 +347,28 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
     expect(federalInvestment.infrastructureInvestment).toBe(12000000 + 3000000);
   });
 
-  it('never fabricates an impactLevel classification for bills', async () => {
-    global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (String(url).includes('/bills')) {
-        return mockFetchResponse([
-          { number: 'HR 1234', title: 'A Real Bill', latestAction: 'Referred to committee' },
-          { number: 'S 99', title: 'Another Bill', latestAction: 'Passed Senate' },
-        ]);
-      }
-      return Promise.reject(new Error('unreachable'));
+  it('lists district-relevant bills without fabricating an impactLevel', async () => {
+    failAllFetches();
+    (getDistrictBills as jest.Mock).mockResolvedValue({
+      bills: [
+        { type: 'HR', number: '1234', title: 'A Real Bill', latestActionText: 'Referred' },
+        { type: 'S', number: '99', title: 'Another Bill', latestActionText: 'Passed Senate' },
+      ],
     });
 
     const response = await getGovernmentSpending(
-      createMockRequest('http://localhost:3000/api/districts/TX-10/government-spending'),
-      makeParams('TX-10')
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
     );
     const body = await response.json();
 
+    // The district, not a bioguide ID, drives the lookup
+    expect(getDistrictBills).toHaveBeenCalledWith('DC', 'AL', 10);
     const bills = body.government.representation.billsAffectingDistrict;
-    expect(bills.length).toBeGreaterThan(0);
-    for (const bill of bills) {
-      expect(bill.impactLevel).toBeNull();
-    }
+    expect(bills).toEqual([
+      { billNumber: 'HR 1234', title: 'A Real Bill', status: 'Referred', impactLevel: null },
+      { billNumber: 'S 99', title: 'Another Bill', status: 'Passed Senate', impactLevel: null },
+    ]);
   });
 
   it('returns all-null profile (not zeros) for an unrecognized state prefix', async () => {
@@ -381,6 +390,7 @@ describe('/api/districts/[districtId]/government-spending partial failures', () 
   beforeEach(() => {
     jest.clearAllMocks();
     (govCache.get as jest.Mock).mockResolvedValue(null);
+    (getDistrictBills as jest.Mock).mockResolvedValue(emptyBillsJoin);
   });
 
   afterEach(() => {
@@ -440,6 +450,47 @@ describe('/api/districts/[districtId]/government-spending partial failures', () 
     );
 
     expect(response.status).toBe(200);
+    expect(govCache.set).not.toHaveBeenCalled();
+    expect(cacheControlSent()).toBe('public, s-maxage=300');
+  });
+
+  it('does not cache when the bills join is incomplete', async () => {
+    mockCompleteUpstreams();
+    (getDistrictBills as jest.Mock).mockResolvedValue({ bills: [], incomplete: true });
+
+    await getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
+    );
+
+    expect(govCache.set).not.toHaveBeenCalled();
+    expect(cacheControlSent()).toBe('public, s-maxage=300');
+  });
+
+  it('keeps spending totals when only the infrastructure sum is slow', async () => {
+    jest.useFakeTimers();
+    mockCompleteUpstreams();
+    const answered = global.fetch as jest.Mock;
+    global.fetch = jest.fn().mockImplementation((url: string, init?: RequestInit) => {
+      const body = String(init?.body ?? '');
+      // Infrastructure pages (PSC / assistance-listing filters) never answer
+      if (body.includes('psc_codes') || body.includes('program_numbers')) {
+        return new Promise(() => {});
+      }
+      return answered(url, init);
+    });
+
+    const pending = getGovernmentSpending(
+      createMockRequest('http://localhost:3000/api/districts/DC-AL/government-spending'),
+      makeParams('DC-AL')
+    );
+    await jest.advanceTimersByTimeAsync(12000);
+    const body = await (await pending).json();
+
+    const { federalInvestment } = body.government;
+    expect(federalInvestment.totalAnnualSpending).toBe(5);
+    expect(federalInvestment.contractsAndGrants).toBe(2);
+    expect(federalInvestment.infrastructureInvestment).toBeNull();
     expect(govCache.set).not.toHaveBeenCalled();
     expect(cacheControlSent()).toBe('public, s-maxage=300');
   });

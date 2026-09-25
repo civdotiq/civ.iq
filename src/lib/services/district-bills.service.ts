@@ -33,6 +33,14 @@ import type { JoinMetadata } from '@/types/joins';
 import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
+// USASpending can hang 40s+ on a cold query; callers have ~20s budgets.
+const USASPENDING_TIMEOUT_MS = 8000;
+// USASpending rejects award_type_codes that mix groups (HTTP 400), so
+// contracts and grants are separate requests.
+const AWARD_TYPE_GROUPS = [
+  ['A', 'B', 'C', 'D'],
+  ['02', '03', '04', '05'],
+];
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -61,6 +69,8 @@ export interface DistrictBillsResult {
   relevantPolicyAreas: string[];
   bills: DistrictBill[];
   metadata: JoinMetadata;
+  /** true when an upstream fetch failed; such results are never cached */
+  incomplete?: boolean;
 }
 
 interface CongressBillListItem {
@@ -89,43 +99,60 @@ export function parseDistrictId(districtId: string): { state: string; district: 
   };
 }
 
-async function fetchTopAgenciesForDistrict(state: string, district: string): Promise<string[]> {
+/** Top awarding agencies by award amount; null = a USASpending request failed. */
+async function fetchTopAgenciesForDistrict(
+  state: string,
+  district: string
+): Promise<string[] | null> {
   const { startDate, endDate } = currentFederalFiscalYearWindow();
   const districtCode = censusCongressionalDistrictCode(state, district);
 
   try {
-    const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
-      },
-      body: JSON.stringify({
-        subawards: false,
-        limit: 20,
-        fields: ['Awarding Agency', 'Award Amount'],
-        sort: 'Award Amount',
-        order: 'desc',
-        filters: {
-          place_of_performance_locations: [
-            { country: 'USA', state, district_current: districtCode },
-          ],
-          time_period: [{ start_date: startDate, end_date: endDate }],
-          award_type_codes: ['A', 'B', 'C', 'D', '02', '03', '04', '05'],
-        },
-      }),
-    });
+    const responses = await Promise.all(
+      AWARD_TYPE_GROUPS.map(codes =>
+        fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+          },
+          body: JSON.stringify({
+            subawards: false,
+            limit: 20,
+            fields: ['Awarding Agency', 'Award Amount'],
+            sort: 'Award Amount',
+            order: 'desc',
+            filters: {
+              place_of_performance_locations: [
+                { country: 'USA', state, district_current: districtCode },
+              ],
+              time_period: [{ start_date: startDate, end_date: endDate }],
+              award_type_codes: codes,
+            },
+          }),
+          signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
+        })
+      )
+    );
 
-    if (!response.ok) return [];
+    if (responses.some(r => !r.ok)) return null;
 
-    const data = await response.json();
-    const agencies = new Set<string>();
-    for (const r of data.results ?? []) {
-      if (r['Awarding Agency']) agencies.add(r['Awarding Agency']);
+    const totals = new Map<string, number>();
+    for (const response of responses) {
+      const data = await response.json();
+      for (const r of data.results ?? []) {
+        const agency = r['Awarding Agency'];
+        const amount = Number(r['Award Amount']);
+        if (agency)
+          totals.set(agency, (totals.get(agency) ?? 0) + (Number.isFinite(amount) ? amount : 0));
+      }
     }
-    return [...agencies].slice(0, 10);
+    return [...totals.entries()]
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([name]) => name);
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -216,13 +243,14 @@ export async function getDistrictBills(
     return null;
   }
 
-  const cacheKey = `join-district-bills:${state}-${district}:${limit}`;
+  // v2: v1 entries were built with no spending agencies (mixed award-type 400)
+  const cacheKey = `join-district-bills:v2:${state}-${district}:${limit}`;
 
   return cachedFetch(
     cacheKey,
     async () => {
       // Step 1: Fetch district spending agencies + district rep in parallel
-      const [topAgencyNames, allReps] = await Promise.all([
+      const [topAgencyResult, allReps] = await Promise.all([
         fetchTopAgenciesForDistrict(state, district),
         getAllEnhancedRepresentatives(),
       ]);
@@ -237,6 +265,8 @@ export async function getDistrictBills(
         if (district === 'AL') return true;
         return normalizeDistrict(r.district) === normalizeDistrict(district);
       });
+
+      const topAgencyNames = topAgencyResult ?? [];
 
       // Step 2: Map spending agencies → slugs → committees → topics
       const agencySlugs = topAgencyNames.map(agencyNameToSlug);
@@ -273,15 +303,17 @@ export async function getDistrictBills(
         ? getRepCommitteeNames(rep.bioguideId)
         : Promise.resolve([] as string[]);
 
+      // null = Congress.gov failed (vs. a real empty list)
       const billsFetch = fetch(billUrl.toString(), { headers: congressHeaders })
         .then(async res => {
-          if (!res.ok) return [];
+          if (!res.ok) return null;
           const data = await res.json();
           return (data.bills || []) as CongressBillListItem[];
         })
-        .catch(() => [] as CongressBillListItem[]);
+        .catch(() => null);
 
-      const [repCommitteeNames, allBills] = await Promise.all([memberCommitteesFetch, billsFetch]);
+      const [repCommitteeNames, billList] = await Promise.all([memberCommitteesFetch, billsFetch]);
+      const allBills = billList ?? [];
 
       // Build rep committee topics for +2 scoring path
       const repTopics = new Set<string>();
@@ -398,8 +430,10 @@ export async function getDistrictBills(
           joinType: 'district-bills',
           dataQuality: bills.length > 0 ? 'complete' : 'partial',
         },
+        ...(topAgencyResult === null || billList === null ? { incomplete: true } : {}),
       };
     },
-    6 * 60 * 60
+    6 * 60 * 60,
+    result => !result?.incomplete
   );
 }
