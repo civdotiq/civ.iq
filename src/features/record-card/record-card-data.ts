@@ -42,6 +42,7 @@ import {
 import { getDistrictSpending, getStateSpendingTotal } from '@/lib/services/spending.service';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislationRollup, type LegislationRollup } from './legislation-rollup';
+import { writeMoneyIndexEntry } from './money-index';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -101,7 +102,14 @@ export interface MoneySection {
   outOfStatePct: number | null;
   topSectors: Array<{ sector: string; amount: number }>;
   fecCandidateId: string;
+  /** When these totals were fetched from the FEC. */
   dataAsOf: string;
+  /**
+   * End of the latest FEC report period in totalRaised (YYYY-MM-DD). Senators
+   * not on the ballot file semiannually, so this can trail House members by a
+   * quarter. Absent on cache entries written before this field existed.
+   */
+  coverageEnd?: string | null;
 }
 
 /**
@@ -284,6 +292,7 @@ async function computeMoneySection(
     topSectors,
     fecCandidateId: candidateId,
     dataAsOf: finance.lastUpdated,
+    coverageEnd: finance.coverageEndDate ?? null,
   };
 
   const complete =
@@ -325,20 +334,57 @@ export async function warmRecordCardMoney(
   bioguideId: string,
   state: string
 ): Promise<'fresh' | 'refreshed' | 'locked' | 'none' | 'incomplete'> {
-  const mapping = validateFECMapping(bioguideId);
-  if (!mapping.success) return 'none';
-  const candidateId = mapping.mapping.fecId;
   const cycle = getCurrentElectionCycle();
+  const mapping = validateFECMapping(bioguideId);
+  if (!mapping.success) {
+    await indexMoney(bioguideId, cycle, null);
+    return 'none';
+  }
+  const candidateId = mapping.mapping.fecId;
+  const key = moneyCacheKey(candidateId, cycle);
+  const compute = () => computeMoneySection(candidateId, cycle, state);
 
+  let computed: MoneySection | null = null;
   try {
-    return await refreshStaleWhileRevalidate(
-      moneyCacheKey(candidateId, cycle),
-      () => computeMoneySection(candidateId, cycle, state),
+    const status = await refreshStaleWhileRevalidate(
+      key,
+      async () => (computed = await compute()),
       MONEY_SWR
     );
+    if (status === 'refreshed') {
+      await indexMoney(bioguideId, cycle, computed);
+    } else if (status === 'fresh') {
+      // A fresh entry is served from Redis without an FEC call.
+      const { data } = await cachedStaleWhileRevalidate(key, compute, MONEY_SWR);
+      await indexMoney(bioguideId, cycle, data);
+    }
+    return status;
   } catch (error) {
-    if (error instanceof IncompleteMoneyError) return 'incomplete';
+    if (error instanceof IncompleteMoneyError) {
+      // Totals are real FEC numbers and the card shows them; only breakdowns are missing.
+      await indexMoney(bioguideId, cycle, error.partial);
+      return 'incomplete';
+    }
     throw error;
+  }
+}
+
+/** Mirror the card's money headline into the search index; never throws. */
+async function indexMoney(
+  bioguideId: string,
+  cycle: number,
+  money: MoneySection | null
+): Promise<void> {
+  try {
+    await writeMoneyIndexEntry(bioguideId, {
+      raised: money ? money.totalRaised : null,
+      status: money ? 'ok' : 'none',
+      cycle,
+      coverageEnd: money?.coverageEnd ?? null,
+      asOf: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.warn('Record card: money index write failed', { bioguideId, error });
   }
 }
 

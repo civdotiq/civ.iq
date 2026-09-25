@@ -36,6 +36,10 @@ jest.mock('@/features/representatives/services/congress.service', () => ({
   getCommitteeNamesByMember: jest.fn(() => Promise.resolve(new Map())),
 }));
 
+jest.mock('@/features/record-card/money-index', () => ({
+  getFundraisingIndex: () => Promise.resolve(null),
+}));
+
 const mockCounts = jest.fn();
 jest.mock('@/lib/data-sources/member-sponsored-counts/load', () => ({
   getMemberSponsoredCounts: () => mockCounts(),

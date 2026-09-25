@@ -56,6 +56,17 @@ function card(moneyStatus: MoneyStatus): RecordCardData {
 }
 
 describe('Record Card money wording', () => {
+  test('provenance names the FEC report period when known, else the fetch date', () => {
+    const withPeriod = card('ok');
+    if (withPeriod.money) withPeriod.money.coverageEnd = '2026-06-30';
+    const { container, unmount } = render(<RecordCardLabel data={withPeriod} />);
+    expect(container.innerHTML).toContain('Filings through Jun 30, 2026');
+    unmount();
+
+    const { container: legacy } = render(<RecordCardLabel data={card('ok')} />);
+    expect(legacy.innerHTML).toContain('Filings as of Sep');
+  });
+
   test('ok shows the total', () => {
     render(<RecordCardLabel data={card('ok')} />);
     expect(screen.getByText('$789,841')).toBeTruthy();
