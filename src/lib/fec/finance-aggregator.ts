@@ -71,6 +71,8 @@ export interface ProcessedFinanceData {
   candidateId: string;
   cycle: number;
   lastUpdated: string;
+  /** End of the latest FEC report period in these totals (YYYY-MM-DD); set by the aggregates path. */
+  coverageEndDate?: string | null;
   fecDataSources: {
     financialSummary: string;
     contributions: string;
@@ -823,6 +825,7 @@ export async function aggregateFinanceDataFromAggregates(
       candidateId,
       cycle,
       lastUpdated: new Date().toISOString(),
+      coverageEndDate: financialSummary.coverage_end_date?.slice(0, 10) || null,
       fecDataSources: {
         financialSummary: `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/?cycle=${cycle}`,
         contributions: committeeId

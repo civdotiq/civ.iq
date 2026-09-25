@@ -8,9 +8,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, Filter, MapPin, Users, Calendar, FileText, X } from 'lucide-react';
+import { Search, Filter, MapPin, Users, Calendar, FileText, DollarSign, X } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { formatCurrency } from '@/lib/utils';
 
 interface SearchFilters {
   query: string;
@@ -22,16 +23,20 @@ interface SearchFilters {
   /** Raw input text; '' means no bound. */
   billsIntroducedMin: string;
   billsIntroducedMax: string;
+  /** Raw dollar input text; '' means no bound. */
+  raisedMin: string;
+  raisedMax: string;
   sort: SortOption;
 }
 
-type SortOption = 'name' | 'yearsInOffice' | 'billsIntroduced';
+type SortOption = 'name' | 'yearsInOffice' | 'billsIntroduced' | 'raised';
 
 // Counts read best high-to-low; names A-Z.
 const SORT_ORDER: Record<SortOption, 'asc' | 'desc'> = {
   name: 'asc',
   yearsInOffice: 'desc',
   billsIntroduced: 'desc',
+  raised: 'desc',
 };
 
 const DEFAULT_FILTERS: SearchFilters = {
@@ -43,6 +48,8 @@ const DEFAULT_FILTERS: SearchFilters = {
   experienceYears: [0, 30],
   billsIntroducedMin: '',
   billsIntroducedMax: '',
+  raisedMin: '',
+  raisedMax: '',
   sort: 'name',
 };
 
@@ -50,6 +57,17 @@ const DEFAULT_FILTERS: SearchFilters = {
 function parseCount(raw: string): number | null {
   if (!/^\d+$/.test(raw.trim())) return null;
   return Number(raw.trim());
+}
+
+/** Whole dollars from input like "1,000,000" or "$250000"; null for blank/invalid. */
+function parseDollars(raw: string): number | null {
+  return parseCount(raw.replace(/[$,\s]/g, ''));
+}
+
+interface FundraisingMeta {
+  cycle: number;
+  membersCovered: number;
+  totalMembers: number;
 }
 
 function formatAsOf(iso: string): string {
@@ -71,6 +89,9 @@ interface Representative {
   yearsInOffice: number;
   /** Null when the bills corpus is unavailable, never a stand-in zero. */
   billsIntroduced: number | null;
+  /** FEC receipts this cycle; null when unknown or none, never a stand-in zero. */
+  raisedThisCycle: number | null;
+  raisedThroughDate: string | null;
   committees: string[];
   imageUrl?: string;
 }
@@ -86,6 +107,7 @@ export function AdvancedSearch() {
 
   const [results, setResults] = useState<Representative[]>([]);
   const [billsAsOf, setBillsAsOf] = useState<string | null>(null);
+  const [fundraising, setFundraising] = useState<FundraisingMeta | null>(null);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [resultCount, setResultCount] = useState(0);
@@ -190,6 +212,11 @@ export function AdvancedSearch() {
       if (billsMin !== null) params.append('billsIntroducedMin', billsMin.toString());
       if (billsMax !== null) params.append('billsIntroducedMax', billsMax.toString());
 
+      const raisedMin = parseDollars(filters.raisedMin);
+      const raisedMax = parseDollars(filters.raisedMax);
+      if (raisedMin !== null) params.append('raisedMin', raisedMin.toString());
+      if (raisedMax !== null) params.append('raisedMax', raisedMax.toString());
+
       params.append('sort', filters.sort);
       params.append('order', SORT_ORDER[filters.sort]);
 
@@ -205,6 +232,7 @@ export function AdvancedSearch() {
       setResults(data.data?.results || []);
       setResultCount(data.data?.totalResults || 0);
       setBillsAsOf(data.data?.metadata?.billsIntroducedAsOf ?? null);
+      setFundraising(data.data?.metadata?.fundraising ?? null);
     } catch (error) {
       logger.error('Advanced search error', {
         component: 'AdvancedSearch',
@@ -311,7 +339,9 @@ export function AdvancedSearch() {
         filters.chamber !== 'all' ||
         filters.state ||
         filters.billsIntroducedMin ||
-        filters.billsIntroducedMax) && (
+        filters.billsIntroducedMax ||
+        filters.raisedMin ||
+        filters.raisedMax) && (
         <div className="mb-6">
           <button
             onClick={clearFilters}
@@ -419,6 +449,43 @@ export function AdvancedSearch() {
                 {billsAsOf ? `, as of ${formatAsOf(billsAsOf)}` : ' (currently unavailable)'}.
               </p>
             </div>
+
+            {/* Raised This Cycle Range */}
+            <div>
+              <label
+                htmlFor="raised-min"
+                className="aicher-heading-wide block text-sm text-gray-700 mb-2"
+              >
+                Raised this cycle ($)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="raised-min"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Min"
+                  aria-label="Minimum raised this cycle, in dollars"
+                  value={filters.raisedMin}
+                  onChange={e => updateFilter('raisedMin', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Max"
+                  aria-label="Maximum raised this cycle, in dollars"
+                  value={filters.raisedMax}
+                  onChange={e => updateFilter('raisedMax', e.target.value)}
+                  className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
+                />
+              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                {fundraising
+                  ? `Total receipts in FEC filings for the ${fundraising.cycle - 1}–${String(fundraising.cycle).slice(2)} cycle, as on each Record Card. Senators not up for election file twice a year, so their latest report can be older. Source: FEC. Covers ${fundraising.membersCovered} of ${fundraising.totalMembers} members; the rest are left out of this filter until their data is refreshed.`
+                  : 'Total receipts in FEC filings this cycle. Fundraising data is currently unavailable.'}
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -443,6 +510,7 @@ export function AdvancedSearch() {
             <option value="name">Name (A-Z)</option>
             <option value="yearsInOffice">Years in office</option>
             <option value="billsIntroduced">Bills introduced</option>
+            <option value="raised">Raised this cycle</option>
           </select>
         </div>
       </div>
@@ -521,6 +589,15 @@ export function AdvancedSearch() {
                             <FileText className="w-4 h-4" />
                             {rep.billsIntroduced} bill{rep.billsIntroduced !== 1 ? 's' : ''}{' '}
                             introduced
+                          </span>
+                        )}
+                        {rep.raisedThisCycle !== null && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {formatCurrency(rep.raisedThisCycle)} raised this cycle
+                            {rep.raisedThroughDate
+                              ? ` (FEC, through ${formatAsOf(rep.raisedThroughDate)})`
+                              : ' (FEC)'}
                           </span>
                         )}
                       </div>

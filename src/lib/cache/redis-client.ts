@@ -509,6 +509,105 @@ export class RedisCache {
     return true;
   }
 
+  /**
+   * HSET key field value, with no expiry: a hash holds one small row per
+   * member, and readers judge freshness from each row. A REST failure
+   * degrades to the in-memory map, which only this instance can read.
+   */
+  async hashSet(key: string, field: string, value: string): Promise<boolean> {
+    if (
+      this.isConnected &&
+      !this.client &&
+      process.env.UPSTASH_REDIS_REST_URL &&
+      process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      try {
+        const response = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+          body: JSON.stringify(['HSET', this.keyPrefix + key, field, value]),
+        });
+        if (response.ok) return true;
+        throw new Error(`REST API failed: ${response.status}`);
+      } catch (restError) {
+        this.recordRestFailure('hashSet', restError);
+        logger.warn('[Cache] REST API error on hashSet, falling back to memory', {
+          key,
+          error: (restError as Error).message,
+        });
+      }
+    }
+
+    try {
+      if (this.isConnected && this.client) {
+        await this.client.hset(key, field, value);
+        return true;
+      }
+    } catch (error) {
+      logger.warn('[Cache] hashSet failed, falling back to memory', {
+        key,
+        error: (error as Error).message,
+      });
+    }
+
+    const fallbackKey = this.getFallbackKey(key);
+    const entry = this.fallbackCache.get(fallbackKey);
+    const fields = (entry?.data as Record<string, string> | undefined) ?? {};
+    this.fallbackCache.set(fallbackKey, {
+      data: { ...fields, [field]: value },
+      timestamp: Date.now(),
+      ttl: MAX_TTL_SECONDS * 1000,
+    });
+    return true;
+  }
+
+  /**
+   * HGETALL key as a field → value map. Returns null when Redis could not be
+   * read, so callers can tell "unavailable" from an empty hash ({}).
+   */
+  async hashGetAll(key: string): Promise<Record<string, string> | null> {
+    if (
+      this.isConnected &&
+      !this.client &&
+      process.env.UPSTASH_REDIS_REST_URL &&
+      process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      try {
+        const response = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+          body: JSON.stringify(['HGETALL', this.keyPrefix + key]),
+        });
+        if (!response.ok) throw new Error(`REST API failed: ${response.status}`);
+        // Upstash REST returns HGETALL as a flat [field, value, ...] array.
+        const data = (await response.json()) as { result?: string[] | null };
+        const flat = data.result ?? [];
+        const out: Record<string, string> = {};
+        for (let i = 0; i + 1 < flat.length; i += 2) out[flat[i]!] = flat[i + 1]!;
+        return out;
+      } catch (restError) {
+        this.recordRestFailure('hashGetAll', restError);
+        logger.warn('[Cache] REST API error on hashGetAll', {
+          key,
+          error: (restError as Error).message,
+        });
+        return null;
+      }
+    }
+
+    if (this.isConnected && this.client) {
+      try {
+        return await this.client.hgetall(key);
+      } catch (error) {
+        logger.warn('[Cache] hashGetAll failed', { key, error: (error as Error).message });
+        return null;
+      }
+    }
+
+    const entry = this.fallbackCache.get(this.getFallbackKey(key));
+    return (entry?.data as Record<string, string> | undefined) ?? {};
+  }
+
   async delete(key: string): Promise<boolean> {
     const monitor = monitorCache('delete', key);
 

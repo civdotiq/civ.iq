@@ -457,7 +457,11 @@ function MoneySection({ data }: { data: RecordCardData }) {
           <ProvenancePopover
             info={{
               source: 'FEC',
-              asOf: `Filings as of ${fmtDate(m.dataAsOf)}`,
+              // Name the FEC report period when known (noon UTC keeps the
+              // calendar date in every US zone), not the day we fetched it.
+              asOf: m.coverageEnd
+                ? `Filings through ${fmtDate(`${m.coverageEnd}T12:00:00Z`)}`
+                : `Filings as of ${fmtDate(m.dataAsOf)}`,
               href: `https://www.fec.gov/data/candidate/${m.fecCandidateId}/`,
               linkLabel: 'View filings at FEC.gov',
             }}
