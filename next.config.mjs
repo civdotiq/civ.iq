@@ -50,6 +50,8 @@ const nextConfig = {
     '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json', './data/bill-policy-areas.json.br'],
     // Topic pages fetch bills-by-policy-area through this route.
     '/api/search/policy-area': ['./data/bill-policy-areas.json.br'],
+    // Representative search reads per-member bills-introduced counts.
+    '/api/search': ['./data/member-sponsored-counts.json'],
     // The sitemap lists only topic pages whose policy area has bills.
     '/sitemap.xml': ['./data/bill-policy-areas.json.br'],
     // The committee intelligence route's analyzer ranks peers off the corpus.
