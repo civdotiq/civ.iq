@@ -300,6 +300,19 @@ describe('/api/spending/district/[districtId]', () => {
       expect(data.summary?.districtNumber).toBe('10');
     });
 
+    it('queries DC as delegate district 98 but labels it at-large', async () => {
+      const request = createMockRequest('http://localhost:3000/api/spending/district/DC-AL');
+      const response = await GET(request, { params: Promise.resolve({ districtId: 'DC-AL' }) });
+      const data = await response.json();
+
+      const bodies = (global.fetch as jest.Mock).mock.calls
+        .map(([, init]) => (init as RequestInit | undefined)?.body)
+        .filter(Boolean)
+        .map(b => String(b));
+      expect(bodies.some(b => b.includes('"district_current":"98"'))).toBe(true);
+      expect(data.summary?.displayName).toBe('DC-AL');
+    });
+
     it('should handle all valid state codes', async () => {
       const validStates = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
 
