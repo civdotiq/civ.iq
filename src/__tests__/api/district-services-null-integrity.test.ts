@@ -87,13 +87,16 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     expect(publicHealth).toBeNull();
   });
 
-  it('uses Census ASFIN federal revenue (not per-pupil expenditure) for federalEducationFunding', async () => {
+  it('uses the latest year of Census federal school revenue (thousands -> dollars) for federalEducationFunding', async () => {
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (String(url).includes('api.census.gov')) {
-        // ASFIN row: [PPEXPGN, TFEDREV, ENROLLM]
+      if (String(url).includes('api.census.gov/data/timeseries/govsschfin')) {
+        // Long format: one row per aggregate per year; totals in $ thousands
         return mockFetchResponse([
-          ['PPEXPGN', 'TFEDREV', 'ENROLLM', 'state'],
-          ['12000', '5500000000', '5400000', '48'],
+          ['AMOUNT', 'time', 'AGG_DESC', 'state'],
+          ['4100000', '2023', 'SS0201', '48'],
+          ['5500000', '2024', 'SS0201', '48'],
+          ['12000', '2024', 'SS1105', '48'],
+          ['5400000', '2024', 'SS1903', '48'],
         ]);
       }
       return Promise.reject(new Error('unreachable'));
@@ -110,6 +113,39 @@ describe('/api/districts/[districtId]/services-health null integrity', () => {
     expect(body.services.education.schoolDistrictPerformance).toBeNull();
     expect(body.services.education.collegeEnrollmentRate).toBeNull();
   });
+
+  it.each(['DC-00', 'DC-AL'])(
+    'resolves %s to DC (FIPS 11) instead of rejecting it',
+    async districtId => {
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (String(url).includes('api.census.gov/data/timeseries/govsschfin')) {
+          return mockFetchResponse([
+            ['AMOUNT', 'time', 'AGG_DESC', 'state'],
+            ['267152', '2024', 'SS0201', '11'],
+          ]);
+        }
+        return Promise.reject(new Error('unreachable'));
+      });
+
+      const response = await getServicesHealth(
+        createMockRequest(`http://localhost:3000/api/districts/${districtId}/services-health`),
+        makeParams(districtId)
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.services.education.federalEducationFunding).toBe(267152000);
+      const censusCall = (global.fetch as jest.Mock).mock.calls
+        .map(([url]) => String(url))
+        .find(url => url.includes('govsschfin'));
+      expect(censusCall).toContain('for=state:11');
+      // Delegate seat resolves through the DC-98 crosswalk (county 11001)
+      const placesCall = (global.fetch as jest.Mock).mock.calls
+        .map(([url]) => decodeURIComponent(String(url)))
+        .find(url => url.includes('data.cdc.gov') && url.includes('locationid'));
+      expect(placesCall).toContain("'11001'");
+    }
+  );
 
   it('emits null healthcare and public health when upstream responses are unusable', async () => {
     global.fetch = jest.fn().mockImplementation(() => mockFetchResponse({ result: [] }));

@@ -305,6 +305,14 @@ export function isTerritory(code: string): boolean {
 }
 
 /**
+ * DC and the territories elect a non-voting delegate rather than a
+ * representative; Census codes that seat as congressional district 98.
+ */
+export function isDelegateJurisdiction(code: string): boolean {
+  return code.toUpperCase() === 'DC' || isTerritory(code);
+}
+
+/**
  * Normalize state identifier to code (handles both codes and full names)
  * @param identifier - State code or full name (case-insensitive)
  * @returns Normalized state code or undefined
