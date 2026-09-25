@@ -41,6 +41,7 @@ import type {
 } from './district-profile-types';
 import type { TemporalBucket } from './temporal-types';
 import type { IndustryCorrelation } from '@/lib/intelligence/types';
+import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 
 const CACHE_TTL = 86400; // 24 hours
 const ANALYZER_TIMEOUT = 30_000;
@@ -389,9 +390,9 @@ async function fetchDistrictSpending(
     const { startDate, endDate } = currentFederalFiscalYearWindow();
 
     // Normalize district for USASpending API (expects numeric codes)
-    // At-large (AL) -> "00", STATE -> statewide query, numeric -> padded
+    // At-large -> "00", delegate seats -> "98", STATE -> statewide query
     const spendingDistrict =
-      district === 'AL' ? '00' : district === 'STATE' ? '90' : district.padStart(2, '0');
+      district === 'STATE' ? '90' : censusCongressionalDistrictCode(state, district);
 
     // For STATE-level queries, use state-only filter (no district constraint)
     const locationFilter =

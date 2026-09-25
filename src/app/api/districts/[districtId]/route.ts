@@ -11,7 +11,7 @@ import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
-import { US_STATES } from '@/lib/data/us-states';
+import { US_STATES, censusCongressionalDistrictCode } from '@/lib/data/us-states';
 import { getHouseResult2024 } from '@/lib/services/election-results.service';
 
 // Type for Census Gazetteer data
@@ -212,7 +212,10 @@ function buildCensusGeoParams(
   if (isStatewideQuery) {
     params.append('for', `state:${getStateFipsCode(state)}`);
   } else {
-    params.append('for', `congressional district:${district.padStart(2, '0')}`);
+    params.append(
+      'for',
+      `congressional district:${censusCongressionalDistrictCode(state, district)}`
+    );
     params.append('in', `state:${getStateFipsCode(state)}`);
   }
   if (apiKey && !apiKey.startsWith('your_')) {
@@ -495,7 +498,10 @@ async function getDistrictDemographics(
       });
     } else {
       // For House district queries, get congressional district data
-      params.append('for', `congressional district:${district.padStart(2, '0')}`);
+      params.append(
+        'for',
+        `congressional district:${censusCongressionalDistrictCode(state, district)}`
+      );
       params.append('in', `state:${getStateFipsCode(state)}`);
     }
 
@@ -901,8 +907,9 @@ async function getDistrictGeography(
   const { counties, cities } = getPost2023DistrictData(state, district);
 
   // Get area from Census Gazetteer (real data)
-  const normalizedDistrict =
-    district === '00' || district === 'AL' ? '01' : district.padStart(2, '0');
+  // Gazetteer keys at-large states as 01 and delegate seats as 98.
+  const censusCode = censusCongressionalDistrictCode(state, district);
+  const normalizedDistrict = censusCode === '00' ? '01' : censusCode;
   const gazetteerKey = `${state}-${normalizedDistrict}`;
   const gazetteerDistrict = typedGazetteerData.districts[gazetteerKey];
   const area = gazetteerDistrict ? Math.round(gazetteerDistrict.landAreaSqMi) : 0;

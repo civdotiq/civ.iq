@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSecureCorsOrigin } from '@/config/api.config';
 import { getCongressionalDistrictBoundary } from '@/lib/services/tigerweb-boundary.service';
+import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,7 @@ interface DistrictGeoJSON {
 
 // State FIPS code mapping for district ID normalization
 const STATE_FIPS_MAP: Record<string, string> = {
+  DC: '11',
   AL: '01',
   AK: '02',
   AZ: '04',
@@ -127,7 +129,7 @@ function normalizeDistrictId(districtId: string): string | null {
     const district = stateDistrictMatch[2];
     const fips = STATE_FIPS_MAP[stateCode];
     if (fips) {
-      return fips + district.padStart(2, '0');
+      return fips + censusCongressionalDistrictCode(stateCode, district);
     }
   }
 
@@ -154,12 +156,13 @@ function normalizeDistrictId(districtId: string): string | null {
     'SD-00': '4600',
     'VT-00': '5000',
     'WY-00': '5600',
-    'DC-00': '1100',
-    'PR-00': '7200',
-    'VI-00': '7800',
-    'GU-00': '6600',
-    'AS-00': '6000',
-    'MP-00': '6900',
+    // Delegate seats are Census district 98, not 00.
+    'DC-00': '1198',
+    'PR-00': '7298',
+    'VI-00': '7898',
+    'GU-00': '6698',
+    'AS-00': '6098',
+    'MP-00': '6998',
   };
 
   if (specialCodes[cleaned]) {

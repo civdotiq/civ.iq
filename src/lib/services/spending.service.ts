@@ -19,6 +19,7 @@ import type {
   USASpendingAwardResponse,
   USASpendingAwardResult,
 } from '@/types/spending';
+import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 
@@ -87,11 +88,8 @@ const STATE_FIPS: Record<string, string> = {
 export function parseDistrictId(districtId: string): { state: string; district: string } | null {
   const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|00)$/i);
   if (!match) return null;
-  const district = match[2] ?? '';
-  return {
-    state: match[1]?.toUpperCase() ?? '',
-    district: district.match(/^\d+$/) ? district.padStart(2, '0') : '00',
-  };
+  const state = match[1]?.toUpperCase() ?? '';
+  return { state, district: censusCongressionalDistrictCode(state, match[2] ?? '') };
 }
 
 function transformAward(award: USASpendingAwardResult, type: 'contract' | 'grant'): FederalAward {
