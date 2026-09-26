@@ -46,6 +46,10 @@ export async function GET(
   const state = (parts[0] ?? '').toUpperCase();
   const districtPart = parts.slice(1).join('-');
   const isSenate = districtPart.toLowerCase() === 'senate';
+  // Rosters store "5" and "0" (at-large / delegate); URLs say "05", "00" or "AL".
+  const houseSeat = (d: string | undefined): number =>
+    !d || /^AL$/i.test(d) ? 0 : /^\d{1,2}$/.test(d) ? Number(d) : NaN;
+  const targetSeat = houseSeat(districtPart);
 
   try {
     logger.info('[Intelligence] District intelligence request', { districtId });
@@ -57,7 +61,7 @@ export async function GET(
     const matchedReps = allReps.filter(rep => {
       if (rep.state !== state) return false;
       if (isSenate) return rep.chamber === 'Senate';
-      return rep.chamber === 'House' && rep.district === districtPart;
+      return rep.chamber === 'House' && houseSeat(rep.district) === targetSeat;
     });
 
     if (matchedReps.length === 0) {

@@ -432,5 +432,39 @@ describe('Intelligence API Routes', () => {
       expect(data.districtId).toBe('CA-11');
       expect(data.representatives.length).toBeGreaterThan(0);
     });
+
+    it.each([
+      ['MI-05', '5'],
+      ['WY-AL', '0'],
+      ['WY-00', '0'],
+      ['DC-AL', '0'],
+    ])('matches %s to a rep stored as district "%s"', async (districtId, stored) => {
+      const state = districtId.slice(0, 2);
+      mockGetAllEnhancedRepresentatives.mockResolvedValue([
+        {
+          bioguideId: 'X000001',
+          name: 'Rep',
+          party: 'Independent',
+          state,
+          chamber: 'House',
+          district: stored,
+        },
+        {
+          bioguideId: 'X000002',
+          name: 'Other',
+          party: 'Independent',
+          state,
+          chamber: 'House',
+          district: '6',
+        },
+      ]);
+
+      const res = await GET(mockRequest('http://localhost/') as never, mockParams({ districtId }));
+      const data = await res.json();
+      expect(res.status).toBe(200);
+      expect(data.representatives.map((r: { bioguideId: string }) => r.bioguideId)).toEqual([
+        'X000001',
+      ]);
+    });
   });
 });

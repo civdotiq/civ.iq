@@ -1803,8 +1803,9 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       stateCode = resolvedStateCode;
     }
 
-    // Normalize district number (remove leading zeros for comparison, but preserve format)
-    const normalizedDistrict = district?.replace(/^0+/, '') || '0';
+    // Normalize district number (remove leading zeros for comparison, but preserve format).
+    // "AL" (at-large / delegate seat) is the same seat as "00".
+    const normalizedDistrict = /^AL$/i.test(district) ? '0' : district.replace(/^0+/, '') || '0';
 
     logger.info('Parsing district details', {
       districtId,
