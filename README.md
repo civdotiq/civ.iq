@@ -17,7 +17,7 @@
 
 ## What this is
 
-A civic intelligence platform. Enter an address to find your federal and state representatives, with voting records, federal campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns. Local-government coverage is limited to a pilot list of 5 cities.
+A civic intelligence platform. Enter an address to find your federal and state representatives, with voting records, federal campaign finance, committee assignments, legislative activity, and machine-learning-powered analysis of money-in-politics patterns. Local (city/county) government: not covered. Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
 All data comes from government APIs. All analysis is statistical, with confidence scores and methodology disclosed. If data is unavailable, the interface and the response payload say so explicitly. Nothing is fabricated.
 
@@ -41,7 +41,7 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 
 **State Legislatures**: All 50 states via OpenStates — legislators, bills, committees, votes, and calendars. Interactive district boundary maps for all 7,383 state legislative districts. State-level campaign finance, lobbying, and stock-trade data are **not** part of state coverage.
 
-**Local Government**: City council data for 5 pilot cities (Boston, Denver, Oakland, Seattle via Legistar; Detroit from a verified roster). Outside this list, and whenever Legistar itself fails, routes return `dataQuality: 'unavailable'` rather than empty arrays. There is no national local-government API; coverage expands one city at a time.
+**Local Government**: Not covered (city/county). Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
 **District Intelligence**: Demographics, economic indicators (BLS employment data), federal spending (USASpending), infrastructure metrics, and bills ranked by relevance to each congressional district.
 

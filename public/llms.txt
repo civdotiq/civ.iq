@@ -15,7 +15,7 @@ Reach for CIV.IQ when an agent needs, without an API key:
 - Congressional district demographics, economics, and boundaries
 - Bill search and status tracking for the current Congress
 
-Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), nationwide local government (5 pilot cities only), live election-night results, or non-U.S. data. When CIV.IQ lacks data it says so — responses carry a `dataQuality` field instead of silently returning empty arrays.
+Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), local (city/county) government (not covered), live election-night results, or non-U.S. data. When CIV.IQ lacks data it says so — responses carry a `dataQuality` field instead of silently returning empty arrays.
 
 How to call it:
 
@@ -37,7 +37,7 @@ How to call it:
 - **Districts**: Demographics, economics, boundaries for all 435 congressional districts and 7,383 state legislative districts
 - **Committees**: Membership, jurisdiction, activity tracking
 - **Federal Register**: Rules, notices, executive orders search
-- **Local government**: Limited to a pilot list of 10 cities (Austin, Boston, Chicago, Denver, Detroit, Minneapolis, Oakland, Philadelphia, Portland, Seattle) via Legistar. No nationwide local coverage
+- **Local (city/county) government**: Not covered. Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
 ## Coverage Honesty
 

@@ -48,14 +48,13 @@ const COMMITMENTS: ReadonlyArray<{
 const HEADLINE_STATS: ReadonlyArray<{ value: string; label: string; caption: string }> = [
   { value: '535', label: 'Members of Congress', caption: '435 House · 100 Senate' },
   { value: '50', label: 'State legislatures', caption: '7,383 legislators' },
-  { value: '10', label: 'Pilot cities', caption: 'Local government' },
   { value: '26', label: 'Government data sources', caption: '8 core · 18 supplementary' },
 ] as const;
 
 const COVERAGE: ReadonlyArray<{
   scope: string;
   body: string;
-  status: 'complete' | 'partial';
+  status: 'complete' | 'partial' | 'none';
 }> = [
   {
     scope: 'Federal',
@@ -69,8 +68,8 @@ const COVERAGE: ReadonlyArray<{
   },
   {
     scope: 'Local',
-    body: '5 pilot cities via Legistar — Boston, Denver, Detroit, Oakland, Seattle. Outside this list, local routes return "data unavailable" rather than empty arrays.',
-    status: 'partial',
+    body: 'Local (city and county) government is not covered. It is the hardest layer to organize: local records lack a shared standard or central source. CIV.IQ intends to add them only once a verified public source exists.',
+    status: 'none',
   },
 ] as const;
 
@@ -405,10 +404,19 @@ export function AboutHybrid() {
                   letterSpacing: 'var(--tracking-label)',
                   textTransform: 'uppercase',
                   textAlign: 'right',
-                  color: c.status === 'complete' ? 'var(--civiq-blue)' : 'var(--color-warning)',
+                  color:
+                    c.status === 'complete'
+                      ? 'var(--civiq-blue)'
+                      : c.status === 'partial'
+                        ? 'var(--color-warning)'
+                        : 'var(--fg2)',
                 }}
               >
-                {c.status === 'complete' ? 'Complete' : 'Partial'}
+                {c.status === 'complete'
+                  ? 'Complete'
+                  : c.status === 'partial'
+                    ? 'Partial'
+                    : 'Not covered'}
               </span>
             </li>
           ))}

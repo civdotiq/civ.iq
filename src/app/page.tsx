@@ -186,19 +186,6 @@ function buildFeatureCards(counts: HomeCounts): FeatureCard[] {
         </svg>
       ),
     },
-    {
-      href: '/local',
-      iconClass: styles.cardIconGreen,
-      title: 'Local Government',
-      desc: 'Local government coverage — expanding incrementally',
-      stat: 'Roadmap',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-      ),
-    },
   ];
 }
 
@@ -360,8 +347,8 @@ export default async function HomePage() {
             bills, committee seats, contributions by industry, and district-level spending for all
             535 members of Congress. State coverage is thinner — legislator rosters and bills for
             all 50 states via <Link href="/states">state legislatures</Link>, but no state-level
-            campaign finance. Local coverage is a ten-city pilot. Each page labels what its sources
-            can and cannot show.
+            campaign finance. City and county government is not covered. Each page labels what its
+            sources can and cannot show.
           </p>
           <p>
             <strong>Nonpartisan by construction.</strong> CIV.IQ publishes the record, not ratings:

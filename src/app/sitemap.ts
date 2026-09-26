@@ -278,7 +278,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/representatives', priority: 0.8, freq: 'weekly' as const },
     { path: '/districts', priority: 0.75, freq: 'weekly' as const },
     { path: '/education', priority: 0.7, freq: 'monthly' as const },
-    { path: '/local', priority: 0.5, freq: 'monthly' as const },
     { path: '/data-sources', priority: 0.5, freq: 'monthly' as const },
   ];
 

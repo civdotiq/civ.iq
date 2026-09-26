@@ -368,7 +368,7 @@ export function AskEntryPage({ initialQuery = '', asof }: AskEntryPageProps) {
             <li>Closed-door committee deliberations — only recorded floor votes are tracked.</li>
             <li>State campaign finance — federal only.</li>
             <li>Free-text questions outside the supported templates (v1 limitation).</li>
-            <li>Local government below state legislatures (expanding incrementally).</li>
+            <li>Local (city and county) government is not covered.</li>
           </ul>
         </div>
       </div>

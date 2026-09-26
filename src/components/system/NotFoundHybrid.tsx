@@ -24,7 +24,7 @@ const SHORTCUTS: ReadonlyArray<{
     href: '/',
     eyebrow: 'Officials',
     title: 'Find your representative',
-    body: 'Enter your full street address. Returns federal and state officials, plus 5 pilot cities for local government.',
+    body: 'Enter your full street address. Returns federal and state officials.',
   },
   {
     href: '/legislation',

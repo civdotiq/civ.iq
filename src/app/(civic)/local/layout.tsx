@@ -3,11 +3,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Local Government',
   description:
-    'Find your local government officials and services. City councils, county boards, school districts, and more.',
+    'Local (city and county) government is not covered on CIV.IQ. Why local records are the hardest layer to organize, and where to find your federal and state representatives.',
   openGraph: {
     title: 'Local Government | CIV.IQ',
     description:
-      'Find your local government officials and services. City councils, county boards, school districts, and more.',
+      'Local (city and county) government is not covered on CIV.IQ. Why local records are the hardest layer to organize, and where to find your federal and state representatives.',
     url: 'https://civdotiq.org/local',
     siteName: 'CIV.IQ',
     type: 'website',

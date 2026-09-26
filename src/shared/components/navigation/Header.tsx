@@ -93,10 +93,8 @@ const navigationSections: NavSection[] = [
       { name: 'Bills', href: '/state-bills' },
     ],
   },
-  {
-    name: 'Local',
-    items: [{ name: 'Officials', href: '/local' }],
-  },
+  // No "Local" section: city/county government is not covered (2026-09-25).
+  // /local stays reachable by URL and explains why.
 ];
 
 // Flat navigation for mobile and simple links
@@ -255,7 +253,7 @@ function NavDropdown({
               )}
             </>
           ) : (
-            /* Flat list (State, Local) */
+            /* Flat list (State) */
             <div className="py-2">
               {section.items.map(item => {
                 const isCurrentPage = currentPath === item.href;
@@ -307,7 +305,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-6" aria-label="Main navigation">
-            {/* Dropdown sections: Federal, State, Local */}
+            {/* Dropdown sections: Federal, State */}
             {navigationSections.map(section => {
               const isActive =
                 section.items.some(item => pathname.startsWith(item.href)) ||
