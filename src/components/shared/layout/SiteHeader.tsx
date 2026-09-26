@@ -7,7 +7,7 @@
  * - 2px black border bottom (Aicher's Lufthansa approach)
  * - Logo positioned with 16px padding (grid-aligned)
  * - Functions as navigation home link
- * - Includes Federal/State/Local dropdown navigation
+ * - Includes Federal/State dropdown navigation
  */
 
 import { Header } from '@/shared/components/navigation/Header';

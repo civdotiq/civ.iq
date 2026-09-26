@@ -126,9 +126,9 @@ export function LegacyAboutPage() {
             <div className="border-b border-gray-100 pb-grid-2">
               <span className="font-medium text-black">Local:</span>{' '}
               <span className="text-gray-600 text-sm">
-                5 pilot cities via Legistar — Boston, Denver, Detroit, Oakland, Seattle. Outside
-                this list, local routes return &ldquo;data unavailable&rdquo; rather than empty
-                arrays.
+                Local (city and county) government is not covered. It is the hardest layer to
+                organize: local records lack a shared standard or central source. CIV.IQ intends to
+                add them only once a verified public source exists.
               </span>
             </div>
             <div className="text-sm text-gray-500 mt-grid-2">

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import useSWR from 'swr';
-import { DollarSign, Calendar, MessageSquare, Users, Building2 } from 'lucide-react';
+import { DollarSign, Calendar, MessageSquare, Users } from 'lucide-react';
 
 interface ConnectionsTabProps {
   bioguideId: string;
@@ -60,15 +60,6 @@ interface ConnectionsResponse {
       chamber: string;
       district: string;
       party: string;
-    }>;
-    cityCouncils: Array<{
-      city: string;
-      members: Array<{
-        id: number;
-        name: string;
-        city: string;
-        title: string | null;
-      }>;
     }>;
   };
   civicActions: {
@@ -134,8 +125,7 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
     (connections.districtSpending && connections.districtSpending.totalSpending > 0) ||
     connections.relevantHearings.length > 0 ||
     connections.openCommentPeriods.length > 0 ||
-    connections.stateLegislators.length > 0 ||
-    connections.cityCouncils.length > 0;
+    connections.stateLegislators.length > 0;
 
   if (!hasContent) {
     return (
@@ -338,31 +328,6 @@ const ConnectionsTabComponent = React.memo(({ bioguideId }: ConnectionsTabProps)
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* City Councils */}
-      {connections.cityCouncils.length > 0 && (
-        <div className="border-2 border-black p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="w-5 h-5 text-civiq-blue" />
-            <h3 className="text-lg font-semibold text-gray-900">City Council</h3>
-          </div>
-          {connections.cityCouncils.map(council => (
-            <div key={council.city} className="mb-4 last:mb-0">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">{council.city}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                {council.members.map(member => (
-                  <div key={member.id} className="text-sm text-gray-700 py-1">
-                    {member.name}
-                    {member.title && (
-                      <span className="text-xs text-gray-500 ml-1">· {member.title}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       )}
     </div>
