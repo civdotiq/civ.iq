@@ -41,12 +41,20 @@ import type {
 } from './district-profile-types';
 import type { TemporalBucket } from './temporal-types';
 import type { IndustryCorrelation } from '@/lib/intelligence/types';
-import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
+import { censusCongressionalDistrictCode, STATE_CODE_TO_FIPS } from '@/lib/data/us-states';
 
 const CACHE_TTL = 86400; // 24 hours
 const ANALYZER_TIMEOUT = 30_000;
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
+// USASpending can hang 40s+ on a cold query; the mesh route has 20s.
+const USASPENDING_TIMEOUT_MS = 8000;
+// USASpending rejects award_type_codes that mix groups, so contracts and
+// grants are separate requests.
+const AWARD_TYPE_GROUPS = [
+  ['A', 'B', 'C', 'D'],
+  ['02', '03', '04', '05'],
+];
 
 const DISCLAIMER =
   'This profile uses public data from USASpending.gov, FEC, Congress.gov, and BLS. ' +
@@ -78,7 +86,8 @@ export async function buildDistrictProfile(districtId: string): Promise<District
   if (!parsed) return null;
 
   const { state, district } = parsed;
-  const cacheKey = `mesh:district_profile:${state}:${district}`;
+  // v2: v1 entries hold the $0 spending from the pre-FIPS shape-code bug
+  const cacheKey = `mesh:district_profile:v2:${state}:${district}`;
   const cache = getRedisCache();
 
   // Check cache
@@ -122,7 +131,7 @@ export async function buildDistrictProfile(districtId: string): Promise<District
 
   // Step 2: Build economic DNA from spending data
   const topAgencies = spendingData?.agencies ?? [];
-  const federalSpendingTotal = spendingData?.total ?? 0;
+  const federalSpendingTotal = spendingData?.total ?? null;
   const federalSpendingPerCapita = spendingData?.perCapita ?? null;
 
   // Build sector concentrations from spending agencies + bill data
@@ -183,7 +192,9 @@ export async function buildDistrictProfile(districtId: string): Promise<District
         .slice(0, 5)
         .map(s => `${s.sector} (${(s.economicShare * 100).toFixed(0)}%)`)
         .join(', ')}. ` +
-      `Federal spending: $${(federalSpendingTotal / 1e6).toFixed(1)}M.`,
+      (federalSpendingTotal !== null
+        ? `Federal spending: $${(federalSpendingTotal / 1e6).toFixed(1)}M.`
+        : 'Federal spending: data unavailable.'),
     statisticalFallback,
     '[DistrictProfile]'
   );
@@ -228,6 +239,9 @@ export async function buildDistrictProfile(districtId: string): Promise<District
     lastAnalyzedAt: new Date().toISOString(),
     source,
   };
+
+  // Don't pin a failed spending fetch for 24h; serve it, retry next time.
+  if (spendingData === null) return profile;
 
   // Cache result
   await cache.set(cacheKey, profile, CACHE_TTL).catch(err => {
@@ -377,38 +391,59 @@ function computeFundingAlignment(
 // ── Economic Data ──────────────────────────────────────────────────
 
 interface SpendingResult {
-  total: number;
+  /** null = USASpending has no aggregate for this district (never a fabricated $0) */
+  total: number | null;
   perCapita: number | null;
   agencies: Array<{ name: string; slug: string; amount: number }>;
 }
 
-async function fetchDistrictSpending(
+/** null = a USASpending request failed (unavailable, not cached upstream). */
+export async function fetchDistrictSpending(
   state: string,
   district: string
 ): Promise<SpendingResult | null> {
   try {
     const { startDate, endDate } = currentFederalFiscalYearWindow();
+    const isStateLevel = district === 'STATE';
 
-    // Normalize district for USASpending API (expects numeric codes)
-    // At-large -> "00", delegate seats -> "98", STATE -> statewide query
-    const spendingDistrict =
-      district === 'STATE' ? '90' : censusCongressionalDistrictCode(state, district);
-
-    // For STATE-level queries, use state-only filter (no district constraint)
+    // For STATE-level queries, use state-only filter (no district constraint).
+    // At-large -> "00", delegate seats -> "98".
+    const spendingDistrict = isStateLevel ? null : censusCongressionalDistrictCode(state, district);
     const locationFilter =
-      district === 'STATE'
+      spendingDistrict === null
         ? { country: 'USA', state }
         : { country: 'USA', state, district_current: spendingDistrict };
 
-    // Fetch top agencies and aggregate in parallel
-    const [agencyResponse, aggregateResponse] = await Promise.all([
-      fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+    // The district geo layer is keyed by FIPS shape code (MI-05 = "2605");
+    // the postal form ("MI05") silently matches nothing. The state layer
+    // takes the postal code.
+    const stateFips = STATE_CODE_TO_FIPS[state];
+    if (spendingDistrict !== null && !stateFips) {
+      logger.warn('[DistrictProfile] No FIPS code for state', { state });
+      return null;
+    }
+    const geoFilter = spendingDistrict === null ? state : `${stateFips}${spendingDistrict}`;
+
+    const post = (endpoint: string, body: unknown) =>
+      fetch(`${USASPENDING_API}/search/${endpoint}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
         },
-        body: JSON.stringify({
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
+      });
+
+    const [aggregateResponse, ...awardResponses] = await Promise.all([
+      post('spending_by_geography', {
+        scope: 'place_of_performance',
+        geo_layer: isStateLevel ? 'state' : 'district',
+        geo_layer_filters: [geoFilter],
+        filters: { time_period: [{ start_date: startDate, end_date: endDate }] },
+      }),
+      ...AWARD_TYPE_GROUPS.map(codes =>
+        post('spending_by_award', {
           subawards: false,
           limit: 50,
           fields: ['Award Amount', 'Awarding Agency'],
@@ -417,35 +452,29 @@ async function fetchDistrictSpending(
           filters: {
             place_of_performance_locations: [locationFilter],
             time_period: [{ start_date: startDate, end_date: endDate }],
-            award_type_codes: ['A', 'B', 'C', 'D', '02', '03', '04', '05'],
+            award_type_codes: codes,
           },
-        }),
-      }),
-      fetch(`${USASPENDING_API}/search/spending_by_geography/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
-        },
-        body: JSON.stringify({
-          scope: 'place_of_performance',
-          geo_layer: district === 'STATE' ? 'state' : 'district',
-          geo_layer_filters: [district === 'STATE' ? state : `${state}${spendingDistrict}`],
-          filters: {
-            time_period: [{ start_date: startDate, end_date: endDate }],
-          },
-        }),
-      }),
+        })
+      ),
     ]);
 
-    // Aggregate by agency from award results
+    if (!aggregateResponse.ok || awardResponses.some(r => !r.ok)) {
+      logger.warn('[DistrictProfile] USASpending request failed', {
+        state,
+        district,
+        statuses: [aggregateResponse, ...awardResponses].map(r => r.status),
+      });
+      return null;
+    }
+
+    // Aggregate by agency across the top contract and grant awards
     const agencies = new Map<string, number>();
-    if (agencyResponse.ok) {
-      const data = await agencyResponse.json();
+    for (const response of awardResponses) {
+      const data = await response.json();
       for (const result of data.results ?? []) {
         const agency = result['Awarding Agency'] as string;
         const amount = result['Award Amount'] as number;
-        if (agency) {
+        if (agency && Number.isFinite(amount)) {
           agencies.set(agency, (agencies.get(agency) ?? 0) + amount);
         }
       }
@@ -459,16 +488,10 @@ async function fetchDistrictSpending(
         amount,
       }));
 
-    let total = 0;
-    let perCapita: number | null = null;
-    if (aggregateResponse.ok) {
-      const aggData = await aggregateResponse.json();
-      const result = aggData.results?.[0];
-      if (result) {
-        total = result.aggregated_amount ?? 0;
-        perCapita = result.per_capita ?? null;
-      }
-    }
+    const aggData = await aggregateResponse.json();
+    const result = aggData.results?.[0];
+    const total = typeof result?.aggregated_amount === 'number' ? result.aggregated_amount : null;
+    const perCapita = typeof result?.per_capita === 'number' ? result.per_capita : null;
 
     return { total, perCapita, agencies: sortedAgencies };
   } catch (error) {
