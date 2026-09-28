@@ -37,11 +37,14 @@ export const READ_BATCH = 25;
  * Compact persisted form of one roll call — just what analysis needs.
  * (~30 bytes/member instead of the full StandardizedVote's ~80.)
  */
+export type PositionCode = 'Y' | 'N' | 'P' | 'X';
+
 export interface CompactRollCall {
   rollCallNumber: number;
   session: number;
   date: string;
-  votes: Array<{ b: string; p: string; v: 'Y' | 'N' | 'P' | 'X' }>;
+  /** b = bioguide id ('' when unresolved); l = raw Senate LIS id, only when b is ''. */
+  votes: Array<{ b: string; p: string; v: PositionCode; l?: string }>;
 }
 
 const POSITION_TO_CODE: Record<string, 'Y' | 'N' | 'P' | 'X'> = {
@@ -69,6 +72,7 @@ export function compactRoll(roll: StandardizedVote): CompactRollCall {
       b: mv.bioguideId,
       p: mv.party,
       v: POSITION_TO_CODE[mv.position] ?? 'X',
+      ...(mv.lisId ? { l: mv.lisId } : {}),
     })),
   };
 }
@@ -101,6 +105,7 @@ export function expandRoll(
     totals,
     memberVotes: c.votes.map(v => ({
       bioguideId: v.b,
+      ...(v.l ? { lisId: v.l } : {}),
       name: '',
       party: v.p,
       state: '',

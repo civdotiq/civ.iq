@@ -86,6 +86,11 @@ export interface LegislationRollup {
     fetched: number;
     apiTotal: number;
     truncated: boolean;
+    /**
+     * True when the capped sample never reached a prior-Congress bill, so
+     * `current.cosponsored` is a floor, not a count. Render it as "N+".
+     */
+    currentIsLowerBound?: boolean;
   };
   dataAsOf: string;
 }
@@ -191,6 +196,10 @@ export function computeLegislationRollup(
   career.cosponsored = Math.max(career.cosponsored, cosponsoredApiTotal);
 
   const truncated = cosponsored.length < cosponsoredApiTotal;
+  // The sample is newest-first: once it contains an older-Congress bill, every
+  // current-Congress cosponsorship was fetched and the current count is exact.
+  const currentIsLowerBound =
+    truncated && !cosponsored.some(bill => bill.congress < currentCongress);
 
   const firstTerm =
     career.introduced === current.introduced &&
@@ -208,6 +217,7 @@ export function computeLegislationRollup(
       fetched: cosponsored.length,
       apiTotal: cosponsoredApiTotal,
       truncated,
+      currentIsLowerBound,
     },
     dataAsOf: now.toISOString(),
   };
@@ -220,7 +230,7 @@ export function computeLegislationRollup(
  */
 export async function getLegislationRollup(bioguideId: string): Promise<LegislationRollup | null> {
   const currentCongress = getCurrentCongressNumber();
-  const cacheKey = `record-card:legislation-rollup:${bioguideId}:${currentCongress}`;
+  const cacheKey = `record-card:legislation-rollup:v2:${bioguideId}:${currentCongress}`;
 
   const cached = await govCache.get<LegislationRollup>(cacheKey);
   if (cached) return cached;

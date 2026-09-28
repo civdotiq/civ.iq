@@ -185,7 +185,7 @@ export function billDetailHref(id: string): string | null {
   const type = parts[1];
   const number = parts.slice(2).join('-');
   if (!congress || !type || !number) return null;
-  return `/bills/${congress}/${type.toLowerCase()}/${number}`;
+  return `/bill/${congress}-${type.toLowerCase()}-${number}`;
 }
 
 /**

@@ -578,9 +578,9 @@ Unified search across representatives, bills, committees, and districts.
 
 ## Comparison
 
-### GET /api/compare?ids={bioguideId1},{bioguideId2}
+### GET /api/compare?bioguideId={bioguideId}
 
-Side-by-side legislator comparison (voting, finance, committees).
+One side of a side-by-side comparison: roll-call totals and party alignment from chamber baselines, plus current-Congress and career sponsored/enacted/cosponsored counts from the record-card rollup. Call once per official. Sections that cannot be computed are null, never zero. Campaign finance lives at /api/representative/{bioguideId}/finance.
 
 ---
 

@@ -9,6 +9,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislatorInfoMap, getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
+import { isBioguideId, isLisMemberId } from '@/lib/votes/vote-links';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { isSenateXmlDisabled } from '@/features/representatives/services/batch-voting-service';
 import {
@@ -396,17 +397,27 @@ async function senateVoteFromCorpus(
     const entry = menu?.sessions[String(session)]?.find(e => e.n === rollNumber);
 
     const roll = expandRoll(compact, congressNum, 'Senate');
-    const infoMap = await getLegislatorInfoMap();
+    const [infoMap, senatorLookup] = await Promise.all([
+      getLegislatorInfoMap(),
+      getSenatorBioguideLookup(),
+    ]);
 
     const members: SenatorVote[] = roll.memberVotes.map(mv => {
-      const info = infoMap.get(mv.bioguideId);
+      // An unmapped senator is stored with an empty bioguide id and the raw
+      // LIS id alongside (rolls ingested before that kept "S440" in the
+      // bioguide slot). Re-resolve at read time; an ID that still isn't a
+      // bioguide ID must never be linked as one.
+      const lisId = mv.lisId ?? (isLisMemberId(mv.bioguideId) ? mv.bioguideId : '');
+      const resolved = lisId ? senatorLookup.byLis.get(lisId) : mv.bioguideId;
+      const bioguideId = isBioguideId(resolved) ? resolved : undefined;
+      const info = bioguideId ? infoMap.get(bioguideId) : undefined;
       return {
-        id: mv.bioguideId,
-        lisId: '',
-        bioguideId: mv.bioguideId,
+        id: bioguideId ?? (lisId || mv.bioguideId),
+        lisId,
+        bioguideId,
         firstName: info?.firstName ?? '',
         lastName: info?.lastName ?? '',
-        fullName: info?.fullName ?? mv.bioguideId,
+        fullName: info?.fullName ?? (lisId ? `Senator (LIS ID ${lisId})` : mv.bioguideId),
         state: info?.state ?? '',
         party: mv.party === 'D' || mv.party === 'R' ? mv.party : 'I',
         position: mv.position,

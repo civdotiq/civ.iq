@@ -51,7 +51,10 @@ const customJestConfig = {
     '<rootDir>/src/.*test-helpers.*',
     '<rootDir>/packages/',
   ],
-  // Add explicit ignore for the duplicate package.json
+  // Agent worktrees under .claude/worktrees/ carry full copies of packages/*;
+  // without this the haste map sees duplicate @civiq/* packages and suites
+  // that jest.mock them fail to run.
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
   rootDir: '.',
   testEnvironmentOptions: {
     customExportConditions: [''],

@@ -8,8 +8,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { VoteLink } from '@/components/shared/links/EntityLinks';
+import { formatBillNumber } from '@/lib/bill-label';
 import type { Vote } from '../VoteRow';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
+import { formatDateOnly } from '@/lib/utils/date-only';
 
 interface RecentVotesSectionProps {
   bioguideId: string;
@@ -34,16 +36,14 @@ function positionChipClass(position: string): string {
 }
 
 function formatVoteDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatDateOnly(iso, { month: 'short', day: 'numeric' }) || iso;
 }
 
 /** Measure label: prefer the bill title, fall back to the roll-call question. */
 function measureLabel(vote: Vote): string {
-  const { number, title } = vote.bill;
+  const { number, title, type } = vote.bill;
   if (title && title !== 'Vote without associated bill') {
-    return number && number !== 'N/A' ? `${number} — ${title}` : title;
+    return number && number !== 'N/A' ? `${formatBillNumber(type, number)} — ${title}` : title;
   }
   return vote.question || `Roll call ${vote.rollNumber || ''}`.trim();
 }

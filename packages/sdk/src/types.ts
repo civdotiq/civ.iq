@@ -71,10 +71,37 @@ export interface FullRepresentativeProfile {
   metadata?: Record<string, unknown>;
 }
 
+export interface CompareLegislationSlice {
+  billsSponsored: number;
+  billsEnacted: number;
+  billsCosponsored: number;
+}
+
 export interface CompareResponse {
-  votingRecord: Record<string, unknown>;
-  campaignFinance: Record<string, unknown>;
-  effectiveness: Record<string, unknown>;
+  bioguideId: string;
+  chamber: 'House' | 'Senate';
+  congress: number;
+  /** null when chamber baselines are unavailable for this member. */
+  votingRecord: {
+    totalVotes: number;
+    appearances: number;
+    missedPct: number;
+    /** 0-100, or null below the vote floor / for independents. */
+    partyLoyaltyScore: number | null;
+    rollCallsAnalyzed: number;
+    fullCoverage: boolean;
+    dataAsOf: string;
+  } | null;
+  /** null when the legislation rollup could not be built. */
+  effectiveness: {
+    current: CompareLegislationSlice;
+    career: CompareLegislationSlice;
+    /** True when `current.billsCosponsored` is a floor, not a count. */
+    billsCosponsoredIsLowerBound: boolean;
+    committeeMemberships: number | null;
+    dataAsOf: string;
+  } | null;
+  methodology: string;
 }
 
 // ── Bills ─────────────────────────────────────────────────────────────

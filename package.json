@@ -12,14 +12,17 @@
     "postcss": "$postcss",
     "node-gyp": "^11",
     "adm-zip": "^0.6.0",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "fflate": "^0.8.3"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
+    "predev": "node scripts/copy-maplibre-worker.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-maplibre-worker.mjs",
     "build": "next build",
     "seed-data": "tsx scripts/seed-congress-data.ts",
     "sync:bioguide-fec": "tsx scripts/sync-bioguide-fec.ts",
@@ -83,7 +86,7 @@
     "perf:baseline": "npm run perf:benchmark && mv performance-results-*.json performance-baseline.json"
   },
   "dependencies": {
-    "@ai-sdk/google": "3.0.29",
+    "@ai-sdk/google": "3.0.86",
     "@heroicons/react": "2.2.0",
     "@huggingface/transformers": "4.1.0",
     "@modelcontextprotocol/sdk": "1.26.0",
@@ -92,23 +95,23 @@
     "@upstash/ratelimit": "2.0.7",
     "@upstash/redis": "1.35.8",
     "@vercel/analytics": "2.0.1",
-    "ai": "6.0.90",
+    "ai": "6.0.214",
     "autoprefixer": "^10.4.21",
     "cli-progress": "3.12.0",
     "clsx": "^2.1.1",
-    "csv-parse": "6.1.0",
+    "csv-parse": "7.0.2",
     "d3": "^7.9.0",
     "fast-xml-parser": "5.8.0",
     "fuse.js": "7.1.0",
     "ioredis": "^5.6.1",
     "isomorphic-dompurify": "2.16.0",
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
     "jszip": "3.10.1",
     "limiter": "3.0.0",
     "lucide-react": "^0.525.0",
-    "maplibre-gl": "5.7.0",
+    "maplibre-gl": "6.11.2",
     "mcp-handler": "1.1.0",
-    "next": "16.2.12",
+    "next": "16.3.6",
     "nostr-tools": "2.23.1",
     "pmtiles": "4.3.0",
     "qrcode.react": "4.2.0",
@@ -167,7 +170,7 @@
     "terser-webpack-plugin": "5.3.17",
     "tsx": "4.20.5",
     "typescript": "5.8.3",
-    "vitest": "4.1.8"
+    "vitest": "4.1.11"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

@@ -8,34 +8,26 @@
  *
  * GET /api/local-government/[location]
  *
- * There is no national local-government API in the United States. CIV.IQ
- * supports a pilot list of cities via Legistar (see `lib/local-government/pilot-cities.ts`).
- * For everything else, this route returns dataQuality: 'unavailable' and
- * lists the supported pilot cities. It does not fabricate officials.
+ * CIV.IQ does not offer local (city/county) government data. There is no
+ * national local-government API: roughly 90,000 local governments publish
+ * records in their own formats, or not at all, with no shared standard.
+ * CIV.IQ intends to add local officials only once a verified public source
+ * exists. Until then this route answers every location with
+ * dataQuality: 'unavailable' and HTTP 503. It never fabricates officials.
  *
- * See docs/COVERAGE.md for the canonical coverage matrix.
+ * See docs/COVERAGE.md for the coverage matrix.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import logger from '@/lib/logging/simple-logger';
-import { CITY_CONFIGS, getPilotCitySummaries } from '@/lib/local-government/pilot-cities';
 import type { DataQuality, SourceStatus } from '@/types/backbone-response';
 
 export const dynamic = 'force-dynamic';
 
-interface PilotCityLink {
-  id: string;
-  name: string;
-  state: string;
-  councilEndpoint: string;
-}
-
 interface LocalGovernmentResponse {
   location: string;
-  resolvedCity: { name: string; state: string } | null;
+  resolvedCity: null;
   dataQuality: DataQuality;
   sourceStatus: SourceStatus[];
-  pilotCities: PilotCityLink[];
   metadata: {
     dataSource: string;
     lastUpdated: string;
@@ -46,21 +38,8 @@ interface LocalGovernmentResponse {
 
 const COVERAGE_DOC_URL = 'https://github.com/civdotiq/civ.iq/blob/main/docs/COVERAGE.md';
 
-function buildPilotCityLinks(): PilotCityLink[] {
-  return getPilotCitySummaries().map(city => ({
-    id: city.id,
-    name: city.name,
-    state: city.state,
-    councilEndpoint: `/api/city/${city.id}/council`,
-  }));
-}
-
-function parseLocationKey(location: string): string | null {
-  const parts = location.toLowerCase().split('-');
-  if (parts.length === 0) return null;
-  const candidate = parts.slice(0, parts.length > 1 ? -1 : undefined).join('');
-  return candidate.replace(/[^a-z]/g, '') || null;
-}
+const NOT_COVERED_NOTE =
+  'Local (city/county) government is not covered. Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists. Use /api/representatives for federal officials and /api/states/{state}/legislators for state legislators.';
 
 export async function GET(
   _request: NextRequest,
@@ -72,40 +51,7 @@ export async function GET(
     return NextResponse.json({ error: 'Location identifier is required' }, { status: 400 });
   }
 
-  const lookupKey = parseLocationKey(location);
-  const matchedConfig = lookupKey ? CITY_CONFIGS[lookupKey] : undefined;
   const fetchedAt = new Date().toISOString();
-
-  if (matchedConfig) {
-    const response: LocalGovernmentResponse = {
-      location,
-      resolvedCity: { name: matchedConfig.name, state: matchedConfig.state },
-      dataQuality: 'partial',
-      sourceStatus: [
-        {
-          source: `legistar:${matchedConfig.apiClient}`,
-          status: 'ok',
-          fetchedAt,
-        },
-      ],
-      pilotCities: buildPilotCityLinks(),
-      metadata: {
-        dataSource: 'legistar.com',
-        lastUpdated: fetchedAt,
-        note: `${matchedConfig.name}, ${matchedConfig.state} is a CIV.IQ pilot city. Fetch council data from /api/city/${matchedConfig.id}/council. This catch-all route does not return officials directly.`,
-        coverageDoc: COVERAGE_DOC_URL,
-      },
-    };
-
-    return NextResponse.json(response);
-  }
-
-  logger.info('Local government lookup outside pilot list', {
-    location,
-    lookupKey,
-    pilotCityCount: Object.keys(CITY_CONFIGS).length,
-  });
-
   const response: LocalGovernmentResponse = {
     location,
     resolvedCity: null,
@@ -115,15 +61,14 @@ export async function GET(
         source: 'civiq:local-government',
         status: 'not-configured',
         errorMessage:
-          'No local government data source is wired for this location. CIV.IQ covers a pilot list of cities only.',
+          'No local government data source is wired. CIV.IQ does not cover local government.',
         fetchedAt,
       },
     ],
-    pilotCities: buildPilotCityLinks(),
     metadata: {
       dataSource: 'civiq:local-government',
       lastUpdated: fetchedAt,
-      note: 'CIV.IQ does not have local-government data for this location. There is no national local-government API; coverage is limited to a pilot list of cities. See pilotCities in this response, or docs/COVERAGE.md.',
+      note: NOT_COVERED_NOTE,
       coverageDoc: COVERAGE_DOC_URL,
     },
   };

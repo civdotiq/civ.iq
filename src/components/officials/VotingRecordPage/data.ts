@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { formatBillNumber } from '@/lib/bill-label';
 import type { ApiVote, FilterState, VoteCategory, VotePosition } from './types';
 
 const CATEGORY_ORDER: VoteCategory[] = [
@@ -129,7 +130,7 @@ export function shortResult(result: string | undefined): string {
 export function billLabel(vote: ApiVote): string {
   const num = vote.bill?.number;
   if (!num || num === 'N/A') return `Roll #${vote.rollNumber || '—'}`;
-  return num;
+  return formatBillNumber(vote.bill?.type, num);
 }
 
 export function tabularZero(n: number): string {

@@ -71,7 +71,7 @@ export function RelatedAwardsAside({ related, loading }: RelatedAwardsAsideProps
             related.map((row, i) => (
               <Link
                 key={row.generated_internal_id}
-                href={`/spending/awards/${encodeURIComponent(row.generated_internal_id)}?v=new`}
+                href={`/spending/awards/${encodeURIComponent(row.generated_internal_id)}`}
                 style={{
                   display: 'block',
                   padding: '12px 14px',

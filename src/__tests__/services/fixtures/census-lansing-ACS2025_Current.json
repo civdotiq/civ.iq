@@ -1,0 +1,58 @@
+{
+  "_source": "https://geocoding.geo.census.gov/geocoder/geographies/address?street=100+N+Capitol+Ave&city=Lansing&state=MI&zip=48933&benchmark=Public_AR_Current&vintage=ACS2025_Current&format=json (captured 2026-09-24, trimmed)",
+  "result": {
+    "addressMatches": [
+      {
+        "matchedAddress": "100 S CAPITOL AVE, LANSING, MI, 48933",
+        "coordinates": {
+          "x": -84.553968454462,
+          "y": 42.733619774672
+        },
+        "geographies": {
+          "States": [
+            {
+              "GEOID": "26",
+              "NAME": "Michigan",
+              "BASENAME": "Michigan"
+            }
+          ],
+          "Incorporated Places": [
+            {
+              "GEOID": "2646000",
+              "NAME": "Lansing city",
+              "BASENAME": "Lansing"
+            }
+          ],
+          "Counties": [
+            {
+              "GEOID": "26065",
+              "NAME": "Ingham County",
+              "BASENAME": "Ingham"
+            }
+          ],
+          "2024 State Legislative Districts - Upper": [
+            {
+              "GEOID": "26021",
+              "NAME": "State Senate District 21",
+              "BASENAME": "21"
+            }
+          ],
+          "2024 State Legislative Districts - Lower": [
+            {
+              "GEOID": "26077",
+              "NAME": "State House District 77",
+              "BASENAME": "77"
+            }
+          ],
+          "119th Congressional Districts": [
+            {
+              "GEOID": "2607",
+              "NAME": "Congressional District 7",
+              "BASENAME": "7"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

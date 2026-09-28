@@ -12,6 +12,8 @@ import {
   type DistrictBoundary,
 } from '@/lib/helpers/district-boundary-utils';
 import type { Map } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { loadMaplibre } from './maplibre-loader';
 
 // Default center of US - defined outside component to avoid re-creation
 const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
@@ -100,10 +102,15 @@ export function RealDistrictMapContainer({
     // Prevent multiple initializations
     if (!mapContainer.current || mapRef.current || mapInitializedRef.current) return;
     mapInitializedRef.current = true;
+    // Set by cleanup. Without it, an init still awaiting the import when the
+    // effect is torn down (React StrictMode's double mount in dev, or a fast
+    // unmount) built a second map on the same container.
+    let cancelled = false;
 
     const initializeMap = async () => {
       try {
-        const maplibregl = (await import('maplibre-gl')).default;
+        const maplibregl = await loadMaplibre();
+        if (cancelled || !mapContainer.current) return;
 
         // Create map with OSM base tiles + Census district boundary overlay
         // Census tiles load on demand per viewport, so the map appears immediately
@@ -178,7 +185,7 @@ export function RealDistrictMapContainer({
           });
         }
 
-        map.on('error', (e: { error: Error }) => {
+        map.on('error', e => {
           logger.error('MapLibre GL error', {
             component: 'RealDistrictMapContainer',
             error: e.error,
@@ -200,6 +207,7 @@ export function RealDistrictMapContainer({
 
     // Cleanup
     return () => {
+      cancelled = true;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -286,7 +294,7 @@ export function RealDistrictMapContainer({
 
       {/* Map legend */}
       {showControls && (
-        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 p-3 border-2 border-black z-10">
+        <div className="absolute top-4 left-4 sm:top-auto sm:bottom-4 bg-white bg-opacity-90 p-3 border-2 border-black z-10">
           <div className="text-xs font-medium text-gray-700 mb-2">Congressional Districts</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">

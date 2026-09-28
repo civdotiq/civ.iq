@@ -1361,6 +1361,15 @@
                         "type": "object"
                       }
                     },
+                    "billsTotal": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Every bill (hr, s, hjres, sjres) CRS filed under this policy area in billsCongress; bills holds at most `limit`. Null when the bill corpus is unavailable."
+                    },
+                    "billsCongress": {
+                      "type": "integer",
+                      "nullable": true
+                    },
                     "regulations": {
                       "type": "array",
                       "items": {
@@ -1778,8 +1787,8 @@
     },
     "/compare": {
       "get": {
-        "summary": "Compare legislators",
-        "description": "Side-by-side comparison of voting record, campaign finance, and effectiveness for two or more legislators.",
+        "summary": "Compare one legislator (one side of a comparison)",
+        "description": "One side of a side-by-side comparison: roll-call totals and party alignment from chamber baselines, plus current-Congress and career sponsored / enacted / cosponsored counts from the record-card rollup. Call once per legislator. Sections that cannot be computed are null, never zero. Campaign finance is served by /representative/{bioguideId}/finance.",
         "operationId": "compareLegislators",
         "tags": ["Representatives"],
         "parameters": [
@@ -1788,10 +1797,11 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^[A-Za-z][0-9]{6}$"
             },
-            "description": "Comma-separated bioguide IDs to compare (2-4)",
-            "example": "P000197,M000312"
+            "description": "Bioguide ID of one legislator (a letter followed by six digits)",
+            "example": "P000197"
           }
         ],
         "responses": {
@@ -1802,14 +1812,95 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "votingRecord": {
-                      "type": "object"
+                    "bioguideId": {
+                      "type": "string"
                     },
-                    "campaignFinance": {
-                      "type": "object"
+                    "chamber": {
+                      "type": "string",
+                      "enum": ["House", "Senate"]
+                    },
+                    "congress": {
+                      "type": "integer"
+                    },
+                    "votingRecord": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "null when chamber baselines are unavailable for this member.",
+                      "properties": {
+                        "totalVotes": {
+                          "type": "integer",
+                          "description": "Yea + Nay + Present across the analyzed roll calls"
+                        },
+                        "appearances": {
+                          "type": "integer"
+                        },
+                        "missedPct": {
+                          "type": "number"
+                        },
+                        "partyLoyaltyScore": {
+                          "type": "number",
+                          "nullable": true,
+                          "description": "Party-majority alignment 0-100; null below the vote floor or for independents"
+                        },
+                        "rollCallsAnalyzed": {
+                          "type": "integer"
+                        },
+                        "fullCoverage": {
+                          "type": "boolean"
+                        },
+                        "dataAsOf": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "effectiveness": {
-                      "type": "object"
+                      "type": "object",
+                      "nullable": true,
+                      "description": "null when the legislation rollup could not be built.",
+                      "properties": {
+                        "current": {
+                          "type": "object",
+                          "properties": {
+                            "billsSponsored": {
+                              "type": "integer"
+                            },
+                            "billsEnacted": {
+                              "type": "integer"
+                            },
+                            "billsCosponsored": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "career": {
+                          "type": "object",
+                          "properties": {
+                            "billsSponsored": {
+                              "type": "integer"
+                            },
+                            "billsEnacted": {
+                              "type": "integer"
+                            },
+                            "billsCosponsored": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "billsCosponsoredIsLowerBound": {
+                          "type": "boolean",
+                          "description": "True when current.billsCosponsored is a floor, not a count"
+                        },
+                        "committeeMemberships": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "dataAsOf": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "methodology": {
+                      "type": "string"
                     }
                   }
                 }
@@ -1824,6 +1915,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ApiInternalError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiNotFound"
           }
         }
       }

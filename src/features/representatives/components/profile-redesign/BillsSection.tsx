@@ -10,6 +10,7 @@ import { BillLink } from '@/components/shared/links/EntityLinks';
 import type { BillsResponse } from '../BillsTab';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
 import type { ProfileSummary } from './types';
+import { formatDateOnly } from '@/lib/utils/date-only';
 
 type SponsoredBill = BillsResponse['sponsored']['bills'][number];
 
@@ -51,9 +52,7 @@ function billCitation(bill: SponsoredBill): string {
 }
 
 function formatIntroduced(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return formatDateOnly(iso, { month: 'short', day: 'numeric', year: 'numeric' }) || iso;
 }
 
 function BillRow({ bill }: { bill: SponsoredBill }) {
@@ -81,10 +80,17 @@ export function BillsSection({ bills, summary, loading, onExplore }: BillsSectio
   const visible = sponsored.slice(0, VISIBLE_BILLS);
   const sponsoredCount = summary?.billsSponsored ?? bills?.totalSponsored ?? sponsored.length;
   const cosponsoredCount = summary?.billsCosponsored ?? bills?.totalCosponsored ?? 0;
+  // Without the summary, the bills endpoint's total is a fetch cap, not a count.
+  const cosponsoredPlus =
+    summary?.billsCosponsored !== undefined
+      ? summary.billsCosponsoredIsLowerBound
+        ? '+'
+        : ''
+      : '+';
 
   const actionLabel =
     sponsoredCount > 0
-      ? `All ${sponsoredCount} sponsored${cosponsoredCount > 0 ? ` · ${cosponsoredCount} cosponsored` : ''} →`
+      ? `All ${sponsoredCount} sponsored${cosponsoredCount > 0 ? ` · ${cosponsoredCount}${cosponsoredPlus} cosponsored` : ''} →`
       : 'All legislation →';
 
   return (

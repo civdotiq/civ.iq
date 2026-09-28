@@ -25,27 +25,21 @@ jest.mock('@/lib/services/bill.service', () => ({
   mapCongressStatus: jest.fn().mockReturnValue('introduced'),
 }));
 
-const mockCongressResponse = {
-  bills: [
-    {
-      congress: 119,
-      type: 'HR',
-      number: 100,
-      title: 'National Defense Authorization Act',
-      introducedDate: '2025-01-15',
-      policyArea: { name: 'Armed Forces and National Security' },
-      latestAction: { actionDate: '2025-02-01', text: 'Referred to Committee' },
-    },
-    {
-      congress: 119,
-      type: 'S',
-      number: 50,
-      title: 'Education Improvement Act',
-      introducedDate: '2025-01-20',
-      policyArea: { name: 'Education' },
-      latestAction: { actionDate: '2025-02-05', text: 'Introduced' },
-    },
-  ],
+const mockGetBillsByPolicyArea = jest.fn();
+jest.mock('@/lib/data-sources/bill-policy-areas/load', () => ({
+  getBillsByPolicyArea: (...args: unknown[]) => mockGetBillsByPolicyArea(...args),
+}));
+
+const defenseBill = {
+  id: '119-hr-100',
+  congress: 119,
+  type: 'hr',
+  number: 100,
+  title: 'National Defense Authorization Act',
+  policyArea: 'Armed Forces and National Security',
+  introducedDate: '2025-01-15',
+  latestActionDate: '2025-02-01',
+  latestActionText: 'Referred to Committee',
 };
 
 const mockFedRegResponse = {
@@ -87,12 +81,15 @@ describe('/api/search/policy-area', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...originalEnv, CONGRESS_API_KEY: 'test-key' };
+    process.env = { ...originalEnv };
+    mockGetBillsByPolicyArea.mockResolvedValue({
+      total: 1366,
+      bills: [defenseBill],
+      congress: 119,
+      generatedAt: '2026-09-23T00:00:00.000Z',
+    });
     // Mock fetch to return different responses based on URL
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('congress.gov')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockCongressResponse) });
-      }
       if (typeof url === 'string' && url.includes('federalregister.gov')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(mockFedRegResponse) });
       }
@@ -135,7 +132,7 @@ describe('/api/search/policy-area', () => {
     expect(response.status).toBe(200);
     expect(data.policyArea).toBe('Armed Forces and National Security');
     expect(data.metadata.joinType).toBe('policy-area-search');
-    expect(data.metadata.dataSources).toContain('congress.gov');
+    expect(data.metadata.dataSources).toContain('govinfo.gov');
   });
 
   it('should include all four domain sections', async () => {
@@ -154,19 +151,36 @@ describe('/api/search/policy-area', () => {
     expect(Array.isArray(data.committees)).toBe(true);
   });
 
-  it('should filter bills by matching policyArea', async () => {
+  it('serves bills and the full area count from the corpus', async () => {
     const request = createMockRequest(
-      'http://localhost:3000/api/search/policy-area?policyArea=Armed%20Forces%20and%20National%20Security'
+      'http://localhost:3000/api/search/policy-area?policyArea=Armed%20Forces%20and%20National%20Security&limit=5'
     );
     const response = await GET(request);
     const data = await response.json();
 
-    // Only the defense bill should match, not the education bill
-    for (const bill of data.bills) {
-      expect(bill).toHaveProperty('id');
-      expect(bill).toHaveProperty('title');
-      expect(bill).toHaveProperty('status');
-    }
+    expect(mockGetBillsByPolicyArea).toHaveBeenCalledWith('Armed Forces and National Security', 5);
+    expect(data.bills).toEqual([
+      {
+        id: '119-hr-100',
+        title: 'National Defense Authorization Act',
+        status: 'introduced',
+        introducedDate: '2025-01-15',
+      },
+    ]);
+    expect(data.billsTotal).toBe(1366);
+    expect(data.billsCongress).toBe(119);
+  });
+
+  it('reports bills as unavailable, not zero, when the corpus is missing', async () => {
+    mockGetBillsByPolicyArea.mockResolvedValue(null);
+    const request = createMockRequest(
+      'http://localhost:3000/api/search/policy-area?policyArea=Armed%20Forces%20and%20National%20Security'
+    );
+    const data = await (await GET(request)).json();
+
+    expect(data.bills).toEqual([]);
+    expect(data.billsTotal).toBeNull();
+    expect(data.metadata.dataQuality).toBe('partial');
   });
 
   it('should handle API errors gracefully', async () => {
@@ -179,6 +193,8 @@ describe('/api/search/policy-area', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.bills).toEqual([]);
+    expect(data.regulations).toEqual([]);
+    // Bills come from the committed corpus, so upstream outages don't blank them.
+    expect(data.bills).toHaveLength(1);
   });
 });

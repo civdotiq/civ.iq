@@ -293,7 +293,7 @@ class FECPerformanceMonitor {
       suggestedActions: string[];
     };
   }> {
-    const validation = await enhancedFECService.validateCandidateData(bioguideId, 2024);
+    const validation = await enhancedFECService.validateCandidateData(bioguideId);
     const potentialIssues: string[] = [];
     const suggestedActions: string[] = [];
 

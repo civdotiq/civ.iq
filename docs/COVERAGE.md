@@ -10,12 +10,12 @@ This page is the canonical answer to "what does CIV.IQ actually cover?" It super
 
 ## TL;DR
 
-| Level                  | Coverage                             | One-line reality                                                                                  |
-| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| **Federal**            | Complete across all wired domains    | 535 members, all bills, all roll calls, full FEC + LDA + USASpending + Federal Register.          |
-| **State legislatures** | Complete for legislators/bills/votes | All 50 states via OpenStates. Campaign finance is **not currently available** (see below).        |
-| **State executives**   | Partial                              | Governors and AGs sourced from Wikidata SPARQL.                                                   |
-| **Local government**   | 5 pilot cities                       | Council data for 5 named cities. Everywhere else, and on Legistar failure, returns `unavailable`. |
+| Level                  | Coverage                             | One-line reality                                                                           |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Federal**            | Complete across all wired domains    | 535 members, all bills, all roll calls, full FEC + LDA + USASpending + Federal Register.   |
+| **State legislatures** | Complete for legislators/bills/votes | All 50 states via OpenStates. Campaign finance is **not currently available** (see below). |
+| **State executives**   | Partial                              | Governors and AGs sourced from Wikidata SPARQL.                                            |
+| **Local government**   | Not covered                          | No city/county data. Local records lack a shared standard or central source.               |
 
 If you came here expecting "all 50 states + every city in America," that does not exist anywhere — and CIV.IQ is honest enough not to pretend it does.
 
@@ -84,31 +84,9 @@ All 50 states. Approximately 7,383 state legislators. Wikidata-sourced executive
 
 ### Reality
 
-CIV.IQ supports city council data for **5 pilot cities** — four through their open Legistar APIs, plus Detroit from a hand-verified roster corpus (its Legistar database froze in 2018). Outside of these cities, no local government data is wired — the routes return `dataQuality: 'unavailable'` instead of empty arrays. The council route also returns `dataQuality: 'unavailable'` with HTTP 503 when Legistar itself fails, so an empty roster is never served as a real answer.
+Local (city/county) government: not covered. Local records lack a shared standard or central source; CIV.IQ intends to add them only once a verified public source exists.
 
-**Removed 2026-09-17:** Austin, Chicago, Minneapolis, Philadelphia, Portland. Legistar's web API returns HTTP 500 for those clients (`LegistarConnectionString setting is not set up in InSite`), and the route had been serving `success: true` with zero members. They can return once `webapi.legistar.com/v1/<client>/OfficeRecords` answers again.
-
-| City    | State | Source                 | Endpoint                    |
-| ------- | ----- | ---------------------- | --------------------------- |
-| Boston  | MA    | Legistar (boston)      | `/api/city/boston/council`  |
-| Denver  | CO    | Legistar (denver)      | `/api/city/denver/council`  |
-| Detroit | MI    | Verified roster corpus | `/api/city/detroit/council` |
-| Oakland | CA    | Legistar (oakland)     | `/api/city/oakland/council` |
-| Seattle | WA    | Legistar (seattle)     | `/api/city/seattle/council` |
-
-Detroit additionally supports address → council district → members lookup at `/api/city/detroit/district?address=<full street address>` (Census Geocoder + the city's own district boundary layer, boundaries effective 2026-01-01). Other cities return 501 from that endpoint.
-
-`CITY_CONFIGS` in `src/app/api/city/[cityId]/council/route.ts` is the source of truth. Any city not in that list is genuinely unsupported — calling its endpoint returns the supported-city list.
-
-### Why coverage is small
-
-There is no national local-government API. Over 90,000 local jurisdictions in the U.S. each publish records in different formats (or not at all). Legistar gives us ~100 cities for free, and we have currently wired 4 (plus Detroit's corpus). Expanding the list is straightforward configuration work, but each city requires verification that the Legistar endpoint is live and the body-name keywords match local conventions.
-
-### Roadmap
-
-- **Short-term (Phase 4 — done):** Be honest. Routes return `unavailable` outside the pilot list. Public-facing text matches the 5-city reality.
-- **Medium-term (separate roadmap):** Expand Legistar coverage incrementally. Goal is to add cities only after verifying the endpoint and naming conventions, not to bulk-import broken configs.
-- **Out-of-scope:** Building per-city scrapers for jurisdictions without open APIs. That is a different product.
+There is no national local-government API. Over 90,000 local jurisdictions in the U.S. each publish records in different formats, or not at all. CIV.IQ does not serve city or county officials, councils, or district lookups, and does not advertise partial city coverage, city lists, or a local roadmap. When a verified public source with a shared standard exists, this page will record the date and link the integration PR.
 
 ---
 
@@ -164,7 +142,7 @@ This page is updated whenever:
 
 1. A new data source is wired in (add a row).
 2. An upstream API status changes (e.g., FollowTheMoney returns to service).
-3. A pilot city is added or removed.
+3. A verified public source for local (city/county) government becomes available.
 4. A coverage-shaped claim is made elsewhere in the repo and we discover it disagrees with this page (the page wins; the other claim gets fixed).
 
 Anyone who finds a CIV.IQ claim that contradicts this page should open an issue tagged `coverage-honesty`.

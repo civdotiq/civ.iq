@@ -10,7 +10,7 @@
 
 import { logger } from '@/lib/logging/logger-edge';
 import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
-import { getAllMappings } from '@/lib/data/legislator-mappings';
+import { getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 import { circuitBreakers } from '@/lib/circuit-breaker';
 import { getSenateCorpusRollCalls } from './roll-call-corpus';
 
@@ -289,7 +289,11 @@ export interface StandardizedVote {
     notVoting: number;
   };
   memberVotes: Array<{
+    /** Empty when a senator's LIS id could not be mapped; see lisId. */
     bioguideId: string;
+    /** Raw Senate LIS id (e.g. "S440"), kept only when bioguideId is unresolved
+     *  so the member still counts in totals and can be re-resolved at read time. */
+    lisId?: string;
     name: string;
     party: string;
     state: string;
@@ -414,7 +418,6 @@ export class BatchVotingService {
   private cache = new InMemoryCache();
   private circuitBreaker = new CircuitBreaker();
   private limiter = new ConcurrencyLimiter(5); // Max 5 concurrent requests
-  private lisToGuideMappingPromise: Promise<Map<string, string>> | null = null;
 
   // Read API key lazily so dotenv has time to load in scripts
   private get apiKey(): string | undefined {
@@ -1320,13 +1323,16 @@ export class BatchVotingService {
         const getMemberTag = (tag: string) =>
           memberXml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() || '';
 
+        const lisId = getMemberTag('lis_member_id');
         const bioguideId =
-          getMemberTag('bioguide_id') ||
-          (await this.convertLisToBioguide(getMemberTag('lis_member_id')));
+          getMemberTag('bioguide_id') || (lisId ? await this.convertLisToBioguide(lisId) : null);
 
-        if (bioguideId) {
+        if (bioguideId || lisId) {
           memberVotes.push({
-            bioguideId,
+            // An unmapped LIS id is never stored as a bioguide id (the vote
+            // page used to link /representative/S440).
+            bioguideId: bioguideId ?? '',
+            ...(bioguideId ? {} : { lisId }),
             name: getMemberTag('member_full'),
             party: getMemberTag('party'),
             state: getMemberTag('state'),
@@ -1380,59 +1386,16 @@ export class BatchVotingService {
   }
 
   /**
-   * Get LIS-to-bioguide mapping (cached)
+   * Convert a Senate LIS member id to a bioguide id, or null when neither the
+   * current nor the recently-departed roster maps it.
    */
-  private async getLisToGuidMapping(): Promise<Map<string, string>> {
-    if (!this.lisToGuideMappingPromise) {
-      this.lisToGuideMappingPromise = this.buildLisToGuideMapping();
+  private async convertLisToBioguide(lisId: string): Promise<string | null> {
+    const { byLis } = await getSenatorBioguideLookup();
+    const bioguideId = byLis.get(lisId) ?? null;
+    if (!bioguideId) {
+      logger.warn('No bioguide mapping for Senate LIS id', { lisId });
     }
-    return this.lisToGuideMappingPromise;
-  }
-
-  /**
-   * Build LIS-to-bioguide mapping from legislator data
-   */
-  private async buildLisToGuideMapping(): Promise<Map<string, string>> {
-    try {
-      const legislatorMappings = await getAllMappings();
-      const lisToGuideMap = new Map<string, string>();
-
-      for (const [bioguideId, ids] of legislatorMappings.entries()) {
-        if (ids.lis && bioguideId) {
-          lisToGuideMap.set(ids.lis, bioguideId);
-        }
-      }
-
-      logger.info('LIS-to-bioguide mapping built', {
-        totalMappings: lisToGuideMap.size,
-      });
-
-      return lisToGuideMap;
-    } catch (error) {
-      logger.error('Failed to build LIS-to-bioguide mapping', error as Error);
-      return new Map();
-    }
-  }
-
-  /**
-   * Convert LIS member ID to bioguide ID using real mapping data
-   */
-  private async convertLisToBioguide(lisId: string): Promise<string> {
-    try {
-      const mapping = await this.getLisToGuidMapping();
-      const bioguideId = mapping.get(lisId);
-
-      if (bioguideId) {
-        return bioguideId;
-      }
-
-      // Fallback: return the lisId if no mapping found
-      logger.debug('No bioguide mapping found for LIS ID', { lisId });
-      return lisId;
-    } catch (error) {
-      logger.error('Error converting LIS to bioguide', error as Error, { lisId });
-      return lisId;
-    }
+    return bioguideId;
   }
 
   /**

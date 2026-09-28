@@ -14,16 +14,18 @@ import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Bill, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
+import { formatBillNumber } from '@/lib/bill-label';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { parseRollCallXML } from '@/features/legislation/services/rollcall-parser';
 import DOMPurify from 'isomorphic-dompurify';
 
 // ── Congress.gov API response types ────────────────────────────────────
 
-interface CongressAction {
+export interface CongressAction {
   actionDate: string;
   text: string;
   actionCode?: string;
+  sourceSystem?: { code?: number; name?: string };
   recordedVotes?: Array<{
     chamber?: string;
     congress?: number;
@@ -32,6 +34,23 @@ interface CongressAction {
     url?: string;
     result?: string;
   }>;
+}
+
+/**
+ * Chamber an action happened in. Congress.gov marks it via sourceSystem
+ * ("House floor actions", "Senate") or a chamber-prefixed actionCode
+ * (H11100, Intro-H). Library of Congress codes are chamber-neutral, so
+ * unknown stays undefined rather than defaulting to Senate.
+ */
+export function actionChamber(action: CongressAction | undefined): 'House' | 'Senate' | undefined {
+  if (!action) return undefined;
+  const source = action.sourceSystem?.name ?? '';
+  if (source.startsWith('House')) return 'House';
+  if (source.startsWith('Senate')) return 'Senate';
+  const code = action.actionCode ?? '';
+  if (/^H\d/.test(code) || code.endsWith('-H')) return 'House';
+  if (/^S\d/.test(code) || code.endsWith('-S')) return 'Senate';
+  return undefined;
 }
 
 interface CongressSponsor {
@@ -620,7 +639,8 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
  */
 export async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
   const { type, number, congress } = parseBillNumber(billId);
-  const cacheKey = `bill-${type}-${number}-${congress}`;
+  // v2: standard bill labels (H.R.) and per-action chamber — bump drops stale entries
+  const cacheKey = `bill-v2-${type}-${number}-${congress}`;
 
   return cachedFetch(
     cacheKey,
@@ -682,8 +702,8 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
           // an uppercase type (119-HR-8814) is only "recoverable" and 308-redirects,
           // which is wrong for a value used as a canonical URL.
           id: `${bill.congress}-${bill.type.toLowerCase()}-${bill.number}`,
-          number: `${bill.type.toUpperCase()}. ${bill.number}`,
-          title: bill.title || `${bill.type.toUpperCase()}. ${bill.number}`,
+          number: formatBillNumber(bill.type, bill.number),
+          title: bill.title || formatBillNumber(bill.type, bill.number),
           shortTitle: bill.shortTitle,
           congress: bill.congress.toString(),
           session: bill.congress.toString(),
@@ -695,12 +715,19 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
             lastAction: {
               date: bill.latestAction?.actionDate || bill.introducedDate,
               description: bill.latestAction?.text || 'Introduced',
-              chamber: bill.latestAction?.actionCode?.startsWith('H') ? 'House' : 'Senate',
+              // latestAction carries no chamber info; borrow it from the matching action
+              chamber: actionChamber(
+                billActions.find(
+                  (a: CongressAction) =>
+                    a.actionDate === bill.latestAction?.actionDate &&
+                    a.text === bill.latestAction?.text
+                )
+              ),
             },
             timeline: billActions.map((action: CongressAction) => ({
               date: action.actionDate,
               description: action.text,
-              chamber: action.actionCode?.startsWith('H') ? 'House' : 'Senate',
+              chamber: actionChamber(action),
               actionCode: action.actionCode,
               type: 'action' as const,
             })),
@@ -831,7 +858,7 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
           relatedBills: Array.isArray(bill.relatedBills)
             ? bill.relatedBills.map((related: CongressRelatedBill) => ({
-                number: `${related.type.toUpperCase()}. ${related.number}`,
+                number: formatBillNumber(related.type, related.number),
                 title: related.title,
                 relationship:
                   (related.relationshipDetails?.identifiedBy as
