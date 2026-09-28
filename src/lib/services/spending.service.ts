@@ -63,6 +63,7 @@ function transformAward(award: USASpendingAwardResult, type: 'contract' | 'grant
     startDate: award['Start Date'],
     description: award.Description || 'No description available',
     url: `https://www.usaspending.gov/award/${award.generated_internal_id}`,
+    generatedId: award.generated_internal_id,
   };
 }
 
@@ -506,7 +507,9 @@ export async function getDistrictSpending(
   district: string
 ): Promise<DistrictSpendingResult> {
   // v2: v1 entries could hold a failed fetch cached as "no aggregate"
-  const cacheKey = `spending-district-v2-${state}-${district}`;
+  // v3: awards gained `generatedId` (the /spending/awards/[id] link key);
+  //     v2 entries would serve link-less rows for up to 6h after deploy
+  const cacheKey = `spending-district-v3-${state}-${district}`;
 
   return cachedFetch(
     cacheKey,

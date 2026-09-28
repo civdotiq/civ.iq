@@ -10,6 +10,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import { CqLabel } from '@/components/cq';
 import { formatCompactDollars } from './data';
 import type { MajorProject } from './types';
@@ -133,7 +134,20 @@ function ProjectsTable({ projects }: { projects: MajorProject[] }) {
                 }}
                 title={p.title}
               >
-                {p.title}
+                {p.awardId ? (
+                  <Link
+                    href={`/spending/awards/${encodeURIComponent(p.awardId)}`}
+                    style={{
+                      color: 'var(--civiq-blue-active)',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: 3,
+                    }}
+                  >
+                    {p.title}
+                  </Link>
+                ) : (
+                  p.title
+                )}
               </div>
               <div
                 style={{
