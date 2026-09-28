@@ -21,6 +21,14 @@ import {
 } from '@/lib/data-sources/openstates-people/load-people';
 import { chamberBucket } from '@/lib/data-sources/openstates-people/adapt';
 import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
+import { getJurisdictionCommittees } from '@/lib/data-sources/openstates-people/load-committees';
+import type { CorpusCommittee } from '@/lib/data-sources/openstates-people/committees-corpus';
+import {
+  OpenStatesQuotaExhaustedError,
+  isDailyQuotaBody,
+  isDailyQuotaExhausted,
+  markDailyQuotaExhausted,
+} from '@/lib/openstates-quota';
 
 interface OpenStatesConfig {
   apiKey?: string;
@@ -536,6 +544,12 @@ class OpenStatesAPI {
       return cached.data as T;
     }
 
+    // Every rejected call still counts against the 1000/day cap, so once the
+    // daily quota is gone no caller may spend another request until 00:00 UTC.
+    if (await isDailyQuotaExhausted()) {
+      throw new OpenStatesQuotaExhaustedError();
+    }
+
     // Build URL with query parameters
     const url = new URL(endpoint, this.config.baseUrl);
     if (params) {
@@ -579,6 +593,13 @@ class OpenStatesAPI {
 
         if (!response.ok) {
           const errorText = await response.text();
+          // A per-minute 429 is worth the retry below; the daily cap is not.
+          if (response.status === 429 && isDailyQuotaBody(errorText)) {
+            await markDailyQuotaExhausted(errorText.slice(0, 120));
+            throw new OpenStatesQuotaExhaustedError(
+              `HTTP 429: daily quota exhausted - ${errorText.slice(0, 120)}`
+            );
+          }
           throw new Error(
             `HTTP ${response.status}: ${response.statusText} - URL: ${url.toString()} - Response: ${errorText}`
           );
@@ -631,6 +652,7 @@ class OpenStatesAPI {
 
         return data as T;
       } catch (error) {
+        if (error instanceof OpenStatesQuotaExhaustedError) throw error;
         lastError = error as Error;
 
         if (attempt < this.config.retryAttempts) {
@@ -1283,6 +1305,22 @@ class OpenStatesAPI {
     classification?: 'committee' | 'subcommittee',
     includeMemberships: boolean = true
   ): Promise<OpenStatesCommittee[]> {
+    // The committed committee corpus is the normal path: the /committees
+    // endpoint pages at 20, so a state costs 2-6 requests against the
+    // 1,000/day cap. The API below is the fallback for when the artifact is
+    // missing or does not cover the jurisdiction.
+    const corpus = await getJurisdictionCommittees(state);
+    if (corpus && corpus.length > 0) {
+      const committees = await Promise.all(
+        corpus.map(c => this.corpusCommitteeToOpenStates(c, includeMemberships))
+      );
+      return committees.filter(
+        c =>
+          (!chamber || c.chamber === chamber) &&
+          (!classification || c.classification === classification)
+      );
+    }
+
     const jurisdiction = state.toLowerCase();
 
     let allResults: OpenStatesCommittee[] = [];
@@ -1329,10 +1367,18 @@ class OpenStatesAPI {
    * Get a specific committee by ID
    * Note: OpenStates v3 API individual committee endpoint often returns "No such Committee"
    * even for valid IDs, so we use the list endpoint with jurisdiction filter to find the committee.
+   *
+   * With a jurisdiction this delegates to getCommittees() so the request params (and
+   * therefore the cache key) match the committees list page exactly: a detail view
+   * reached from the list costs no extra OpenStates calls. The list endpoint caps
+   * per_page at 20; anything larger is rejected upstream, which is what made every
+   * committee detail page fail when this method asked for 100.
+   *
    * @param committeeId - OpenStates committee ID (e.g., 'ocd-organization/...')
    * @param includeMemberships - Whether to include member roster (default: true)
    * @param jurisdiction - Optional state code to limit search (e.g., 'mi')
-   * @returns Committee details or null if not found
+   * @returns Committee details, or null when upstream answered and the committee is
+   *   not there. Throws when upstream could not answer (quota, outage, timeout).
    */
   async getCommitteeById(
     committeeId: string,
@@ -1340,63 +1386,91 @@ class OpenStatesAPI {
     jurisdiction?: string
   ): Promise<OpenStatesCommittee | null> {
     try {
-      const params: Record<string, string | number> = {
-        per_page: 100,
-        page: 1,
-      };
-
-      if (includeMemberships) {
-        params.include = 'memberships';
-      }
-
-      // If jurisdiction provided, filter to that state for faster lookup
       if (jurisdiction) {
-        params.jurisdiction = jurisdiction.toLowerCase();
+        const committees = await this.getCommittees(
+          jurisdiction,
+          undefined,
+          undefined,
+          includeMemberships
+        );
+        return committees.find(c => c.id === committeeId) ?? null;
       }
 
-      // Try to find the committee (paginated search)
-      let found: OpenStatesCommittee | null = null;
-      let hasMore = true;
-      let page = 1;
-      const maxPages = jurisdiction ? 5 : 20; // Fewer pages needed with jurisdiction filter
+      const params: Record<string, string | number> = { per_page: 20, page: 1 };
+      if (includeMemberships) params.include = 'memberships';
 
-      while (hasMore && page <= maxPages && !found) {
+      interface CommitteeSearchResponse {
+        results: OpenStatesCommittee[];
+        pagination: { per_page: number; page: number; max_page: number; total_items: number };
+      }
+
+      const maxPages = 20;
+      for (let page = 1; page <= maxPages; page++) {
         params.page = page;
-
-        interface CommitteeSearchResponse {
-          results: OpenStatesCommittee[];
-          pagination: {
-            per_page: number;
-            page: number;
-            max_page: number;
-            total_items: number;
-          };
-        }
-
         const response = await this.makeRequest<CommitteeSearchResponse>('/committees', params);
-
-        // Search for our committee in the results
         const match = response.results.find(c => c.id === committeeId);
         if (match) {
-          found = {
-            ...match,
-            chamber: this.normalizeCommitteeChamber(match),
-          };
-          break;
+          return { ...match, chamber: this.normalizeCommitteeChamber(match) };
         }
-
-        // Check if there are more pages
-        hasMore = page < response.pagination.max_page;
-        page++;
+        if (page >= response.pagination.max_page) break;
       }
 
-      return found;
+      return null;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('404')) {
+      if (error instanceof Error && error.message.startsWith('HTTP 404')) {
         return null;
       }
       throw error;
     }
+  }
+
+  /**
+   * Shape a corpus committee like a v3 API result. Member party and title
+   * come from the roster corpus (same ocd-person ids); 'legislature' (joint
+   * or unicameral) becomes null and goes through the same chamber inference
+   * as API results.
+   */
+  private async corpusCommitteeToOpenStates(
+    c: CorpusCommittee,
+    includeMemberships: boolean
+  ): Promise<OpenStatesCommittee> {
+    const memberships = includeMemberships
+      ? await Promise.all(
+          c.members.map(async m => {
+            const person = m.personId ? await getCorpusPersonById(m.personId) : null;
+            return {
+              person_name: m.name,
+              role: m.role,
+              ...(m.personId ? { person_id: m.personId } : {}),
+              ...(person
+                ? {
+                    person: {
+                      id: person.id,
+                      name: person.name,
+                      party: person.party || null,
+                      current_role: {
+                        title: person.chamber === 'lower' ? 'Representative' : 'Senator',
+                        district: person.district || null,
+                      },
+                    },
+                  }
+                : {}),
+            };
+          })
+        )
+      : undefined;
+
+    const committee: OpenStatesCommittee = {
+      id: c.id,
+      name: c.name,
+      classification: c.classification,
+      chamber: c.chamber === 'legislature' ? null : c.chamber,
+      parent_id: c.parentId,
+      ...(memberships ? { memberships } : {}),
+      links: c.links.map(url => ({ url, note: null })),
+      sources: c.sources.map(url => ({ url, note: null })),
+    };
+    return { ...committee, chamber: this.normalizeCommitteeChamber(committee) };
   }
 
   /**
@@ -1553,7 +1627,7 @@ class OpenStatesAPI {
 export const openStatesAPI = new OpenStatesAPI();
 
 // Export class for testing
-export { OpenStatesAPI };
+export { OpenStatesAPI, OpenStatesQuotaExhaustedError };
 
 // Export utilities
 export const OpenStatesUtils = {

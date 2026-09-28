@@ -164,6 +164,7 @@ export default async function RecordCardPrintPage({
                   <span className={NUM}>
                     {fmtInt(legislation.current.introduced)} ·{' '}
                     {fmtInt(legislation.current.cosponsored)}
+                    {legislation.cosponsoredSample.currentIsLowerBound ? '+' : ''}
                     {!legislation.firstTerm && (
                       <span className="font-normal text-gray-700">
                         {'  '}({fmtInt(legislation.career.introduced)} ·{' '}
@@ -288,7 +289,9 @@ export default async function RecordCardPrintPage({
               </>
             ) : (
               <div className={`${ROW} ${SMALL}`}>
-                No campaign finance filings found for this cycle.
+                {data.moneyStatus === 'unavailable'
+                  ? 'Campaign finance data is temporarily unavailable from the FEC.'
+                  : 'No campaign finance filings found for this cycle.'}
               </div>
             )}
           </div>

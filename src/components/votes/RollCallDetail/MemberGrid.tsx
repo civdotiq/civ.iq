@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, X as XIcon, Minus, Circle } from 'lucide-react';
 import { CqButton, CqChip, CqLabel } from '@/components/cq';
+import { isBioguideId } from '@/lib/votes/vote-links';
 import type { Position, RollCallMember } from './types';
 
 const PAGE_SIZE = 50;
@@ -100,7 +101,7 @@ function initialsFor(member: RollCallMember): string {
 }
 
 function memberHref(member: RollCallMember): string | null {
-  if (!member.bioguideId) return null;
+  if (!isBioguideId(member.bioguideId)) return null;
   return `/representative/${member.bioguideId}`;
 }
 

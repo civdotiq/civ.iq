@@ -53,6 +53,7 @@ import {
   withFECCacheHeaders,
 } from '@/lib/api/finance-helpers';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -344,7 +345,8 @@ export async function GET(
   // already cycle-aware, so the headline/industry/geography data must respect
   // the same param instead of being pinned to a single cycle. Mirrors the
   // validation used by the sibling finance routes.
-  const cycle = parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || 2024;
+  const cycle =
+    parseInt(request.nextUrl.searchParams.get('cycle') ?? '', 10) || getCurrentElectionCycle();
   if (cycle < 1980 || cycle > 2030) {
     return NextResponse.json(
       { error: 'cycle must be a year between 1980 and 2030' },

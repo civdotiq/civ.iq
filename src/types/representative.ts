@@ -42,6 +42,8 @@ export interface BaseRepresentative {
     name: string;
     role?: string;
     title?: string; // Alias for role for news services compatibility
+    id?: string; // thomas_id; subcommittees end in digits ("HSHM09")
+    thomas_id?: string;
   }>;
   yearsInOffice?: number;
   nextElection?: string;

@@ -32,45 +32,38 @@ export default function LocalPage() {
           <h1 className="text-4xl font-bold text-center mb-8">Local Government</h1>
 
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Local government officials are your closest representatives, handling daily community
-            services and decisions that directly impact your neighborhood.
+            Local officials are your closest representatives. CIV.IQ does not cover them yet, and
+            this page explains why.
           </p>
 
-          {/* Roadmap Notice */}
-          <div className="max-w-2xl mx-auto border-2 border-black p-8 mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Pilot Cities (5)</h2>
-            <p className="text-gray-700 mb-4">
-              Today CIV.IQ supports city council data for five cities: four through their open
-              Legistar APIs, plus Detroit from a hand-verified roster:
+          {/* Coverage notice: local data is not offered. Honest empty state, no timeline. */}
+          <div
+            className="max-w-2xl mx-auto border-2 border-black p-8 mb-12"
+            role="status"
+            aria-labelledby="local-coverage-heading"
+          >
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+              Coverage
             </p>
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-gray-700 mb-4 list-disc list-inside">
-              <li>Boston, MA</li>
-              <li>Denver, CO</li>
-              <li>Detroit, MI</li>
-              <li>Oakland, CA</li>
-              <li>Seattle, WA</li>
-            </ul>
+            <h2 id="local-coverage-heading" className="text-2xl font-semibold mb-4">
+              Local government data is not available on CIV.IQ
+            </h2>
             <p className="text-gray-700 mb-4">
-              Outside this list, local-government routes return &ldquo;data unavailable&rdquo;
-              rather than empty arrays — there is no national local-government API, and CIV.IQ does
-              not pretend to have data it doesn&apos;t have.
-            </p>
-            <p className="text-gray-700 mb-4">
-              There is no single API for local government data in the United States. Over 90,000
-              local jurisdictions each publish records in different formats, or not at all. CIV.IQ
-              is expanding coverage one city at a time, after verifying each Legistar endpoint. Five
-              earlier pilot cities (Austin, Chicago, Minneapolis, Philadelphia, Portland) were
-              removed in September 2026 when their Legistar APIs stopped answering.
+              Local government is the hardest layer to organize. The United States has roughly
+              90,000 local governments, and there is no shared data standard, no central API, and no
+              common format for who holds office, how they voted, or what they spent. Each city,
+              county, and school board publishes its own way, if at all.
             </p>
             <p className="text-gray-700">
-              For everywhere else, use our address search to find your federal and state
-              representatives.
+              CIV.IQ wants to cover it eventually, but only from verified public records, the same
+              way federal and state data are covered today. Until that source exists, this page will
+              not show local officials.
             </p>
             <Link
               href="/"
               className="inline-block mt-6 border-2 border-black px-6 py-3 font-medium hover:bg-black hover:text-white transition-colors"
             >
-              Search Representatives
+              Search your federal and state representatives →
             </Link>
           </div>
 

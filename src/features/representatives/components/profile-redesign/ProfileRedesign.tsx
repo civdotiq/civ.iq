@@ -27,6 +27,7 @@ import { InfluenceSection } from './InfluenceSection';
 import { NewsSection } from './NewsSection';
 import { ProfileSidebar } from './ProfileSidebar';
 import type { ProfileBatchResponse, ProfileSummaryResponse } from './types';
+import { isSubcommitteeId } from '@/lib/committee-id';
 
 interface ProfileRedesignProps {
   representative: EnhancedRepresentative;
@@ -153,6 +154,13 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
     return null;
   }, [representative.chamber, representative.currentTerm?.end]);
 
+  // Subcommittee seats ("HSHM09") are separate assignments, not extra committees.
+  const fullCommitteeCount = useMemo(
+    () =>
+      (representative.committees ?? []).filter(c => !isSubcommitteeId(c.id || c.thomas_id)).length,
+    [representative.committees]
+  );
+
   const intelligenceAvailable = useMemo(
     () =>
       hasIntelligenceData({
@@ -215,7 +223,8 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                   summary={summary}
                   loading={summaryLoading}
                   error={Boolean(summaryError)}
-                  committeeCount={representative.committees?.length ?? 0}
+                  committeeCount={fullCommitteeCount}
+                  subcommitteeCount={(representative.committees?.length ?? 0) - fullCommitteeCount}
                 />
               </div>
 

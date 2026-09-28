@@ -171,3 +171,6 @@ AUDIT-federal-demo-readiness.md
 # Local-only design references and talk decks (not app code)
 design-refs/
 presentation/
+
+# maplibre-gl v6 worker, copied from node_modules at predev/prebuild
+/public/maplibre/

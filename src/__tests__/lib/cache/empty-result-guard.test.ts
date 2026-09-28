@@ -98,6 +98,23 @@ describe('Empty-result cache poisoning guard', () => {
       expect(setKey).toBe('representatives-key');
       expect(setValue).toEqual(fresh);
     });
+
+    test('skips the cache write when shouldCache rejects the result', async () => {
+      mockGet.mockResolvedValue(null);
+      const partial = { total: null, incomplete: true };
+      const fetchFn = jest.fn().mockResolvedValue(partial);
+
+      const { cachedFetch } = require('@/lib/cache');
+      const result = await cachedFetch(
+        'spending-key',
+        fetchFn,
+        3600,
+        (data: typeof partial) => !data.incomplete
+      );
+
+      expect(result).toEqual(partial);
+      expect(mockSet).not.toHaveBeenCalled();
+    });
   });
 
   describe('UnifiedCacheService (src/services/cache/unified-cache.service.ts)', () => {

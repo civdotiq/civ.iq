@@ -89,7 +89,7 @@ export function MobileNav({
         className="md:hidden absolute top-full left-0 w-full aicher-card aicher-no-radius z-50 animate-slide-down"
       >
         <nav className="container mx-auto px-4 py-4" aria-label="Mobile navigation">
-          {/* Accordion sections: Federal, State, Local */}
+          {/* Accordion sections: Federal, State */}
           <div className="space-y-1" role="list">
             {sections.map((section, sectionIndex) => {
               const isExpanded = expandedSection === section.name;

@@ -9,6 +9,7 @@ import { getCachedRepresentative } from '@/lib/questions/get-representative';
 import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
+import { fetchTopicBillsData } from '@/lib/questions/template-data-fetchers';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 interface LayoutProps {
@@ -29,6 +30,7 @@ export async function generateMetadata({
   try {
     let title: string;
     let description: string;
+    let robots: Metadata['robots'];
     const url = `https://civdotiq.org/ask/${slug}/${entityId}`;
 
     if (template.entityType === 'topic') {
@@ -36,6 +38,10 @@ export async function generateMetadata({
       if (!policyArea) return { title: 'Topic not found' };
       title = fillPattern(template.questionPattern, { name: policyArea });
       description = fillPattern(template.descriptionPattern, { name: policyArea });
+      // An empty topic page reads as a soft 404 to Google. Shares the page's
+      // cached searchPolicyArea result, so this adds no upstream calls.
+      const topicBills = await fetchTopicBillsData(policyArea);
+      if (!topicBills.results?.bills.length) robots = { index: false, follow: true };
     } else if (template.entityType === 'committee') {
       const committee = await getCachedCommittee(entityId);
       if (!committee?.name) return { title: 'Committee not found' };
@@ -54,6 +60,7 @@ export async function generateMetadata({
       title,
       description,
       alternates: { canonical: url },
+      ...(robots ? { robots } : {}),
       openGraph: {
         title,
         description,

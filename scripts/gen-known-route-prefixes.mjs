@@ -70,6 +70,8 @@ export async function collectPrefixes() {
   // Framework/platform paths that never come from src/app or public/:
   // Next internals, metadata routes, and next.config rewrite sources
   // (rewrites run AFTER middleware, so /lite/* must be claimed here).
+  // public/maplibre/ is gitignored and written at predev/prebuild by
+  // scripts/copy-maplibre-worker.mjs, so it must be claimed here too.
   for (const extra of [
     '_next',
     '.well-known',
@@ -80,6 +82,7 @@ export async function collectPrefixes() {
     'icon-512.png',
     'monitoring',
     'lite',
+    'maplibre',
   ]) {
     prefixes.add(extra);
   }

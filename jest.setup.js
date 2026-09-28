@@ -108,6 +108,10 @@ jest.mock('next/server', () => ({
       ...init,
     };
   }),
+  // after() needs a request scope; in tests just run the callback.
+  after: jest.fn(fn => {
+    void Promise.resolve().then(fn);
+  }),
   NextResponse: {
     json: jest.fn().mockImplementation((data, init) => ({
       json: () => Promise.resolve(data),

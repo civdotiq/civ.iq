@@ -120,6 +120,7 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
                 width={96}
                 height={96}
                 className="w-24 h-24 object-cover border-2 border-gray-300"
+                unoptimized
                 onError={() => setImageError(true)}
               />
             ) : (

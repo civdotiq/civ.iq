@@ -37,6 +37,17 @@ async function fetchInsight(url: string): Promise<InfluenceChainInsight | null> 
   return response.json();
 }
 
+type InfluenceChain = InfluenceChainInsight['chains'][number];
+
+/** Collapse per-bill chains to one entry per organization, preserving order. */
+export function groupChainsByOrganization(chains: InfluenceChain[]): InfluenceChain[] {
+  const byOrg = new Map<string, InfluenceChain>();
+  for (const chain of chains) {
+    if (!byOrg.has(chain.organization)) byOrg.set(chain.organization, chain);
+  }
+  return [...byOrg.values()];
+}
+
 export function InfluenceSection({
   bioguideId,
   onExploreLobbying,
@@ -49,7 +60,10 @@ export function InfluenceSection({
   );
 
   const insight = data && data.confidence >= MIN_CONFIDENCE ? data : null;
-  const topChains = insight?.chains.slice(0, 3) ?? [];
+  // Chains are one-per-bill, so one organization can fill every slot. Show
+  // each organization once. (No per-org vote count: the analyzer caps the
+  // chain list, so a count here would be the cap, not the total.)
+  const topOrgs = groupChainsByOrganization(insight?.chains ?? []).slice(0, 3);
   const confidencePct = insight ? Math.round(insight.confidence * 100) : 0;
   const dataAsOf = insight
     ? new Date(insight.dataAsOf).toLocaleDateString('en-US', {
@@ -88,10 +102,10 @@ export function InfluenceSection({
         <div className="border-l-[3px] border-civiq-blue pl-4">
           <p className="text-[15px] font-medium text-gray-900">{insight.narrative}</p>
 
-          {topChains.length > 0 && (
+          {topOrgs.length > 0 && (
             <div className="mt-4 space-y-1">
-              {topChains.map(chain => (
-                <p key={`${chain.organization}-${chain.billId}`} className="text-sm text-gray-700">
+              {topOrgs.map(chain => (
+                <p key={chain.organization} className="text-sm text-gray-700">
                   <LobbyLink registrantId={chain.registrantId} name={chain.organization} /> —{' '}
                   {formatMoney(chain.lobbyingSpending) ?? '$0'} lobbying
                   {chain.hasContributionEvidence && chain.contributionAmount > 0

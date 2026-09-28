@@ -93,12 +93,15 @@ export default function UnifiedRepresentativeCard({
               className="w-[100px] h-[100px] border-2 border-gray-300"
             />
           ) : (
+            // OpenStates photos live on ~385 legislature hosts; unoptimized skips the
+            // next.config remotePatterns allowlist (CSP img-src already allows https:).
             representative.photo_url && (
               <Image
                 src={representative.photo_url}
                 alt={name}
                 width={100}
                 height={100}
+                unoptimized
                 className="border-2 border-gray-300"
               />
             )
@@ -127,9 +130,10 @@ export default function UnifiedRepresentativeCard({
               </span>
 
               {/* Years in Office (federal only) */}
-              {isFederal && representative.yearsInOffice && (
+              {isFederal && !!representative.yearsInOffice && (
                 <span className="text-sm text-gray-500">
-                  {representative.yearsInOffice} years in office
+                  {representative.yearsInOffice}{' '}
+                  {representative.yearsInOffice === 1 ? 'year' : 'years'} in office
                 </span>
               )}
             </div>

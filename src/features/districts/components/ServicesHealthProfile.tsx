@@ -252,7 +252,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             No education or healthcare data is available for this district.
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            The federal sources for these metrics (Department of Education, CDC, Census school
+            The federal sources for these metrics (NCES Common Core of Data, CDC, Census school
             finance survey) are not currently providing usable data. CIV.IQ shows real government
             data only — never estimates.
           </p>
@@ -326,7 +326,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
                 <div className="text-2xl font-bold text-cyan-900">
                   {services.education.teacherToStudentRatio.toFixed(1)}:1
                 </div>
-                <p className="text-sm text-cyan-700 mt-1">Teacher-Student Ratio</p>
+                <p className="text-sm text-cyan-700 mt-1">Students per Teacher</p>
                 <p className="text-xs text-cyan-600 mt-1">
                   {services.education.teacherToStudentRatio <= 15
                     ? 'Excellent'

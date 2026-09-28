@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { isDelegateJurisdiction } from '@/lib/data/us-states';
 import { parseDistrictId, getDistrictSpending } from '@/lib/services/spending.service';
 import {
   fetchWithSourceStatus,
@@ -96,7 +97,8 @@ export async function GET(
       success: true,
       summary: {
         districtId: districtId.toUpperCase(),
-        displayName: `${state}-${district}`,
+        // Delegate seats query USASpending as district 98, but readers know them as at-large.
+        displayName: isDelegateJurisdiction(state) ? `${state}-AL` : `${state}-${district}`,
         state,
         districtNumber: district,
         fiscalYear,

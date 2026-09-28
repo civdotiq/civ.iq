@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { sanitizeBillHtml } from '@/utils/sanitize';
+import { formatDateOnly } from '@/lib/utils/date-only';
 import Link from 'next/link';
 import { PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
 import {
@@ -30,7 +31,6 @@ import { BillJourneyTimeline } from '@/features/legislation/components/BillJourn
 import {
   BillSummary as BillSummaryDisplay,
   BillSummaryStreaming,
-  BillSummaryError,
 } from '@/features/legislation/components/BillSummary';
 import { useBillSummaryStream } from '@/features/legislation/hooks/useBillSummaryStream';
 import {
@@ -210,7 +210,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
       <div className="bg-white border-2 border-black p-4 sm:p-8" data-speakable="bill-summary">
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-            <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>
+            <h1 className="text-3xl accent-title-underline-blue text-gray-900">{bill.number}</h1>
             <span
               className={`px-3 py-1 text-sm font-medium ${getBillStatusColor(bill.status.current)}`}
             >
@@ -220,7 +220,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
           <div className="flex flex-wrap items-center gap-y-1 text-gray-600 mb-4">
             <Calendar className="w-5 h-5 mr-2" />
-            <span>Introduced {new Date(bill.introducedDate).toLocaleDateString()}</span>
+            <span>Introduced {formatDateOnly(bill.introducedDate)}</span>
             <span className="mx-2">•</span>
             <span>{bill.congress}th Congress</span>
             <span className="mx-2">•</span>
@@ -257,7 +257,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           <h3 className="font-medium text-gray-900 mb-2">Latest Action</h3>
           <p className="text-gray-700 mb-1">{bill.status.lastAction.description}</p>
           <p className="text-sm text-gray-500">
-            {new Date(bill.status.lastAction.date).toLocaleDateString()}
+            {formatDateOnly(bill.status.lastAction.date)}
             {bill.status.lastAction.chamber && ` • ${bill.status.lastAction.chamber}`}
           </p>
         </div>
@@ -265,52 +265,33 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Summary */}
-          <div className="bg-white border-2 border-black p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {bill.summary ? 'Summary' : 'Bill Information'}
-            </h3>
-            {bill.summary ? (
-              <>
-                <p className="text-gray-700 leading-relaxed mb-3">{bill.summary.text}</p>
-                <p className="text-sm text-gray-500">
-                  {bill.summary.version} • {new Date(bill.summary.date).toLocaleDateString()}
-                </p>
-              </>
-            ) : (
-              <div className="space-y-3">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          {/* Summary: official CRS summary, or one empty state covering both sources */}
+          {bill.summary ? (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary</h3>
+              <p className="text-gray-700 leading-relaxed mb-3">{bill.summary.text}</p>
+              <p className="text-sm text-gray-500">
+                {bill.summary.version} • {formatDateOnly(bill.summary.date)}
+              </p>
+            </div>
+          ) : (
+            !aiSummary &&
+            !aiIsStreaming && (
+              <div className="bg-white border-2 border-black p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Summary</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  This is {bill.type.toUpperCase()}. {bill.number}, &ldquo;{bill.title}&rdquo;
-                </p>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="bg-white p-3">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Congress
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {bill.congress}th Congress
-                    </div>
-                  </div>
-                  <div className="bg-white p-3">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Chamber
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">{bill.chamber}</div>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-3">
-                  Summary not yet available from Congress.gov
+                  Congress.gov has not published an official summary of this bill yet.
+                  {aiSummaryError && ' A plain-language summary is also unavailable right now.'}
                 </p>
               </div>
-            )}
-          </div>
+            )
+          )}
 
           {/* AI-Generated Plain English Summary */}
           {aiIsStreaming && aiStreamingText && (
             <BillSummaryStreaming streamingText={aiStreamingText} />
           )}
-          {aiSummaryError && !aiIsStreaming && <BillSummaryError error={aiSummaryError} />}
           {aiSummary && !aiIsStreaming && <BillSummaryDisplay summary={aiSummary} />}
 
           {/* Legislative Process Explainer */}
@@ -399,7 +380,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.cboCostEstimates && bill.cboCostEstimates.length > 0 && (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-civiq-green" />
+                <DollarSign className="w-5 h-5 text-civiq-blue" />
                 CBO Cost Estimates ({bill.cboCostEstimates.length})
               </h3>
               <div className="space-y-3">
@@ -409,7 +390,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={estimate.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block p-4 border border-gray-200 hover:border-civiq-green hover:bg-civiq-green/10 transition-all"
+                    className="block p-4 border border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -417,14 +398,14 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         <p className="text-sm text-gray-600 line-clamp-2">{estimate.description}</p>
                         <p className="text-xs text-gray-500 mt-2">
                           Published:{' '}
-                          {new Date(estimate.pubDate).toLocaleDateString('en-US', {
+                          {formatDateOnly(estimate.pubDate, {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                           })}
                         </p>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-civiq-green flex-shrink-0 ml-2" />
+                      <ExternalLink className="w-4 h-4 text-civiq-blue flex-shrink-0 ml-2" />
                     </div>
                   </a>
                 ))}
@@ -436,10 +417,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.amendments && bill.amendments.count > 0 && (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <ScrollText className="w-5 h-5 text-civiq-red" />
+                <ScrollText className="w-5 h-5 text-civiq-blue" />
                 Amendments ({bill.amendments.count})
               </h3>
-              <div className="p-4 bg-civiq-red/10 border border-civiq-red">
+              <div className="p-4 border border-gray-300">
                 <p className="text-gray-700">
                   This bill has <span className="font-bold">{bill.amendments.count}</span> amendment
                   {bill.amendments.count === 1 ? '' : 's'} proposed or adopted.
@@ -449,7 +430,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     href={`${bill.url}/amendments`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-sm text-civiq-red hover:text-civiq-red font-medium"
+                    className="inline-flex items-center gap-1 mt-2 text-sm text-civiq-blue hover:underline font-medium"
                   >
                     View all amendments on Congress.gov
                     <ExternalLink className="w-3 h-3" />
@@ -496,7 +477,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           </div>
                           <p className="text-gray-800 font-medium">{vote.question}</p>
                           <p className="text-sm text-gray-500 mt-1">
-                            {new Date(vote.date).toLocaleDateString('en-US', {
+                            {formatDateOnly(vote.date, {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -508,15 +489,13 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       {/* Vote Breakdown */}
                       {vote.votes ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
-                          <div className="text-center p-2 bg-civiq-green/10">
-                            <div className="text-lg font-bold text-civiq-green">
-                              {vote.votes.yea}
-                            </div>
-                            <div className="text-xs text-civiq-green">Yea</div>
+                          <div className="text-center p-2 border-2 border-black">
+                            <div className="text-lg font-bold text-gray-900">{vote.votes.yea}</div>
+                            <div className="text-xs text-gray-900">Yea</div>
                           </div>
-                          <div className="text-center p-2 bg-civiq-red/10">
-                            <div className="text-lg font-bold text-civiq-red">{vote.votes.nay}</div>
-                            <div className="text-xs text-civiq-red">Nay</div>
+                          <div className="text-center p-2 border-2 border-dashed border-black">
+                            <div className="text-lg font-bold text-gray-900">{vote.votes.nay}</div>
+                            <div className="text-xs text-gray-900">Nay</div>
                           </div>
                           <div className="text-center p-2 bg-gray-100">
                             <div className="text-lg font-bold text-gray-600">
@@ -669,7 +648,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       `-${bill.sponsor.representative.district}`}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Sponsored {new Date(bill.sponsor.date).toLocaleDateString()}
+                    Sponsored {formatDateOnly(bill.sponsor.date)}
                   </p>
                 </div>
               </div>
@@ -715,7 +694,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         <p className="text-xs text-gray-400">
                           {cosponsor.withdrawn
                             ? 'Withdrawn'
-                            : `Joined ${new Date(cosponsor.date).toLocaleDateString()}`}
+                            : `Joined ${formatDateOnly(cosponsor.date)}`}
                         </p>
                       </div>
                     </div>
@@ -785,9 +764,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   <div key={index} className="p-3 bg-gray-50 border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-900">{version.type}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(version.date).toLocaleDateString()}
-                      </span>
+                      <span className="text-xs text-gray-500">{formatDateOnly(version.date)}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {version.formats.map((format, fIndex) => (
@@ -867,17 +844,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                             {relatedBill.title}
                           </p>
                           <div className="mt-2 flex items-center justify-between">
-                            <span
-                              className={`inline-flex items-center px-2 py-1 text-xs font-medium ${
-                                relatedBill.relationship === 'identical'
-                                  ? 'bg-civiq-green/10 text-civiq-green'
-                                  : relatedBill.relationship === 'supersedes'
-                                    ? 'bg-civiq-red/10 text-civiq-red'
-                                    : relatedBill.relationship === 'superseded'
-                                      ? 'bg-civiq-red/10 text-civiq-red'
-                                      : 'bg-civiq-blue/10 text-civiq-blue'
-                              }`}
-                            >
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
                               {relatedBill.relationship === 'identical'
                                 ? 'Identical'
                                 : relatedBill.relationship === 'supersedes'
@@ -1099,7 +1066,7 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm text-gray-500">
               Version: {fullText.version} •{' '}
-              {new Date(fullText.date).toLocaleDateString('en-US', {
+              {formatDateOnly(fullText.date, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',

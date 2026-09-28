@@ -6,6 +6,7 @@
 import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
+import { isSubcommitteeId } from '@/lib/committee-id';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
@@ -366,7 +367,8 @@ export default async function RepresentativeProfilePage({
 
   // Build committee links for contextual footer
   const committeeLinks: CommitteeLink[] = (representative.committees || [])
-    .filter(c => c.id || c.thomas_id)
+    // Explore lists full committees; subcommittee seats show in the profile sidebar.
+    .filter(c => (c.id || c.thomas_id) && !isSubcommitteeId(c.id || c.thomas_id))
     .map(committee => ({
       name: committee.name,
       href: `/committee/${committee.id || committee.thomas_id}`,
@@ -429,7 +431,7 @@ export default async function RepresentativeProfilePage({
             state={representative.state}
             chamber={representative.chamber}
             committees={committeeLinks}
-            totalCommittees={representative.committees?.length}
+            totalCommittees={committeeLinks.length}
             dataSource="Congress.gov API"
           />
           <OpenDataStrip

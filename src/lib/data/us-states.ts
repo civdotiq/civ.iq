@@ -219,6 +219,11 @@ export const STATE_FIPS_TO_CODE: Record<string, StateCode> = {
   '78': 'VI',
 };
 
+/** Abbreviation → two-digit Census state FIPS code (inverse of STATE_FIPS_TO_CODE). */
+export const STATE_CODE_TO_FIPS: Partial<Record<string, string>> = Object.fromEntries(
+  Object.entries(STATE_FIPS_TO_CODE).map(([fips, code]) => [code, fips])
+);
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -302,6 +307,24 @@ export function getTerritoriesOnly(): readonly StateCode[] {
 export function isTerritory(code: string): boolean {
   const upperCode = code.toUpperCase();
   return ['PR', 'VI', 'GU', 'AS', 'MP'].includes(upperCode);
+}
+
+/**
+ * DC and the territories elect a non-voting delegate rather than a
+ * representative; Census codes that seat as congressional district 98.
+ */
+export function isDelegateJurisdiction(code: string): boolean {
+  return code.toUpperCase() === 'DC' || isTerritory(code);
+}
+
+/**
+ * Two-digit Census congressional-district code for a House seat, as Census,
+ * TIGER, USASpending and the crosswalks key it: '98' for delegate seats,
+ * '00' for at-large states ('AL', '0', '00'), otherwise zero-padded.
+ */
+export function censusCongressionalDistrictCode(state: string, district: string): string {
+  if (isDelegateJurisdiction(state)) return '98';
+  return /^\d+$/.test(district) ? district.padStart(2, '0') : '00';
 }
 
 /**

@@ -10,7 +10,6 @@ import { CompareSection } from './CompareSection';
 import { CompareRow } from './CompareRow';
 import { SwapButton } from './SwapButton';
 import { fetchSide, formatCount, formatDollars, pacSharePercent, smallDonorPercent } from './data';
-import { DEFAULT_PAIR } from './types';
 import type { CompareSidePayload } from './types';
 
 interface ComparePageProps {
@@ -52,7 +51,6 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
       const params = new URLSearchParams(searchParams?.toString() ?? '');
       params.set('a', nextA);
       params.set('b', nextB);
-      if (params.get('v') !== 'new') params.set('v', 'new');
       router.replace(`/compare?${params.toString()}`, { scroll: false });
     },
     [router, searchParams]
@@ -81,7 +79,7 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
     return `119th Congress · ${a.official.chamber} vs ${b.official.chamber}`;
   })();
 
-  const numericA = (val: number | undefined) =>
+  const numericA = (val: number | null | undefined) =>
     typeof val === 'number' && Number.isFinite(val) ? val : undefined;
 
   const billsSponsoredA = a.voting?.billsSponsored;
@@ -254,8 +252,8 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
           />
           <CompareRow
             label="Party loyalty"
-            la={partyLoyaltyA && partyLoyaltyA > 0 ? `${Math.round(partyLoyaltyA)}%` : '—'}
-            lb={partyLoyaltyB && partyLoyaltyB > 0 ? `${Math.round(partyLoyaltyB)}%` : '—'}
+            la={typeof partyLoyaltyA === 'number' ? `${Math.round(partyLoyaltyA)}%` : '—'}
+            lb={typeof partyLoyaltyB === 'number' ? `${Math.round(partyLoyaltyB)}%` : '—'}
             loading={loading && !a.voting && !b.voting}
             accent="party"
             partyA={a.official?.party}
@@ -369,5 +367,3 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
     </div>
   );
 }
-
-export { DEFAULT_PAIR };
