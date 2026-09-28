@@ -13,17 +13,33 @@
 import Link from 'next/link';
 import type { PolicyAreaResults } from '@/types/joins';
 
+function ordinal(n: number): string {
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 13) return `${n}th`;
+  return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+}
+
 interface TopicBillsAnswerProps {
   results: PolicyAreaResults;
 }
 
-function RecentBillsPod({ bills }: { bills: PolicyAreaResults['bills'] }) {
+function RecentBillsPod({
+  bills,
+  total,
+  congress,
+}: {
+  bills: PolicyAreaResults['bills'];
+  total: number | null;
+  congress: number | null;
+}) {
   if (!bills.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
         <h2 className="type-sm font-semibold text-black mb-3">Recent bills</h2>
         <p className="type-sm text-gray-500">
-          No bills found for this policy area in the current Congress.
+          {total === null
+            ? 'Bill data is unavailable right now.'
+            : 'No bills have been filed under this policy area in the current Congress.'}
         </p>
       </div>
     );
@@ -56,8 +72,11 @@ function RecentBillsPod({ bills }: { bills: PolicyAreaResults['bills'] }) {
           </li>
         ))}
       </ul>
-      {bills.length > 10 && (
-        <p className="type-xs text-gray-500 mt-3">Showing 10 of {bills.length} bills.</p>
+      {total !== null && congress !== null && (
+        <p className="type-xs text-gray-500 mt-3">
+          Showing the {Math.min(bills.length, 10)} most recently active of{' '}
+          {total.toLocaleString('en-US')} bills in the {ordinal(congress)} Congress.
+        </p>
       )}
     </div>
   );
@@ -217,7 +236,11 @@ function SourcesPod({ dataSources }: { dataSources: string[] }) {
 export function TopicBillsAnswer({ results }: TopicBillsAnswerProps) {
   return (
     <>
-      <RecentBillsPod bills={results.bills} />
+      <RecentBillsPod
+        bills={results.bills}
+        total={results.billsTotal ?? null}
+        congress={results.billsCongress ?? null}
+      />
       <RegulationsPod regulations={results.regulations} />
       <CommitteesPod committees={results.committees} />
       <SpendingPod spending={results.spending} />

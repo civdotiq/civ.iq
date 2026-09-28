@@ -56,6 +56,7 @@ function collectFromFilesystem(): string[] {
     'icon-512.png',
     'monitoring',
     'lite',
+    'maplibre',
   ]) {
     prefixes.add(extra);
   }

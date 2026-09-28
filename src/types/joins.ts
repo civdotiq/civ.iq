@@ -92,6 +92,10 @@ export interface PolicyAreaResults {
     status: BillStatus;
     introducedDate: string;
   }>;
+  /** Every bill in the area this Congress (bills holds at most `limit`); null when unavailable. */
+  billsTotal: number | null;
+  /** Congress the bill counts cover; null when unavailable. */
+  billsCongress: number | null;
   regulations: FederalRegisterItem[];
   spending: {
     totalAmount: number;

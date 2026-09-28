@@ -17,6 +17,14 @@ on:
         description: 'Target app base URL'
         required: false
         default: 'https://civdotiq.org'
+      reingest:
+        description: >-
+          Re-send every roll call, not only missing ones. Run once after a
+          legislators refresh so rolls holding unresolved senator LIS ids are
+          re-parsed.
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   sync:
@@ -24,8 +32,8 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -35,11 +43,12 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASE_URL: ${{ inputs.base_url || 'https://civdotiq.org' }}
-        run: npx tsx scripts/sync-senate-votes.ts
+          REINGEST: ${{ inputs.reingest && '--reingest' || '' }}
+        run: ./node_modules/.bin/tsx scripts/sync-senate-votes.ts $REINGEST
 
       - name: Notify on failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const workflow = '${{ github.workflow }}';
@@ -82,7 +91,7 @@ jobs:
 
       - name: Close stale failure issue on success
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const workflow = '${{ github.workflow }}';

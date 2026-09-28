@@ -1,0 +1,4081 @@
+{
+  "congress": 119,
+  "generatedAt": "2026-09-25T18:26:02.016Z",
+  "staleAfter": "2026-10-16",
+  "sources": [
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hr/BILLSTATUS-119-hr.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/s/BILLSTATUS-119-s.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hjres/BILLSTATUS-119-hjres.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/sjres/BILLSTATUS-119-sjres.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hres/BILLSTATUS-119-hres.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/sres/BILLSTATUS-119-sres.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hconres/BILLSTATUS-119-hconres.zip",
+    "https://www.govinfo.gov/bulkdata/BILLSTATUS/119/sconres/BILLSTATUS-119-sconres.zip"
+  ],
+  "counts": {
+    "A000055": {
+      "introduced": 12,
+      "byType": {
+        "hr": 9,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "A000148": {
+      "introduced": 12,
+      "byType": {
+        "hr": 12
+      }
+    },
+    "A000369": {
+      "introduced": 11,
+      "byType": {
+        "hr": 10,
+        "hres": 1
+      }
+    },
+    "A000370": {
+      "introduced": 31,
+      "byType": {
+        "hr": 20,
+        "hres": 9,
+        "hconres": 2
+      }
+    },
+    "A000371": {
+      "introduced": 17,
+      "byType": {
+        "hr": 2,
+        "hres": 15
+      }
+    },
+    "A000372": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "A000375": {
+      "introduced": 59,
+      "byType": {
+        "hr": 48,
+        "hjres": 3,
+        "hres": 5,
+        "hconres": 3
+      }
+    },
+    "A000379": {
+      "introduced": 28,
+      "byType": {
+        "hr": 21,
+        "hres": 7
+      }
+    },
+    "A000380": {
+      "introduced": 23,
+      "byType": {
+        "hr": 18,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "A000381": {
+      "introduced": 32,
+      "byType": {
+        "hr": 22,
+        "hres": 10
+      }
+    },
+    "A000382": {
+      "introduced": 38,
+      "byType": {
+        "s": 33,
+        "sjres": 1,
+        "sres": 3,
+        "sconres": 1
+      }
+    },
+    "A000383": {
+      "introduced": 1,
+      "byType": {
+        "s": 1
+      }
+    },
+    "B000490": {
+      "introduced": 8,
+      "byType": {
+        "hr": 5,
+        "hres": 3
+      }
+    },
+    "B000668": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "B000740": {
+      "introduced": 33,
+      "byType": {
+        "hr": 28,
+        "hjres": 2,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "B000825": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "B001230": {
+      "introduced": 53,
+      "byType": {
+        "s": 46,
+        "sjres": 2,
+        "sres": 5
+      }
+    },
+    "B001236": {
+      "introduced": 24,
+      "byType": {
+        "s": 18,
+        "sres": 6
+      }
+    },
+    "B001243": {
+      "introduced": 143,
+      "byType": {
+        "s": 126,
+        "sres": 17
+      }
+    },
+    "B001257": {
+      "introduced": 36,
+      "byType": {
+        "hr": 32,
+        "hres": 4
+      }
+    },
+    "B001260": {
+      "introduced": 46,
+      "byType": {
+        "hr": 45,
+        "hjres": 1
+      }
+    },
+    "B001261": {
+      "introduced": 58,
+      "byType": {
+        "s": 49,
+        "sres": 8,
+        "sconres": 1
+      }
+    },
+    "B001267": {
+      "introduced": 82,
+      "byType": {
+        "s": 70,
+        "sjres": 1,
+        "sres": 11
+      }
+    },
+    "B001277": {
+      "introduced": 128,
+      "byType": {
+        "s": 106,
+        "sjres": 2,
+        "sres": 19,
+        "sconres": 1
+      }
+    },
+    "B001278": {
+      "introduced": 67,
+      "byType": {
+        "hr": 49,
+        "hjres": 2,
+        "hres": 15,
+        "hconres": 1
+      }
+    },
+    "B001281": {
+      "introduced": 23,
+      "byType": {
+        "hr": 14,
+        "hjres": 1,
+        "hres": 7,
+        "hconres": 1
+      }
+    },
+    "B001282": {
+      "introduced": 60,
+      "byType": {
+        "hr": 55,
+        "hjres": 2,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "B001285": {
+      "introduced": 54,
+      "byType": {
+        "hr": 49,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "B001287": {
+      "introduced": 26,
+      "byType": {
+        "hr": 17,
+        "hres": 9
+      }
+    },
+    "B001288": {
+      "introduced": 125,
+      "byType": {
+        "s": 95,
+        "sjres": 3,
+        "sres": 26,
+        "sconres": 1
+      }
+    },
+    "B001291": {
+      "introduced": 17,
+      "byType": {
+        "hr": 16,
+        "hres": 1
+      }
+    },
+    "B001292": {
+      "introduced": 63,
+      "byType": {
+        "hr": 57,
+        "hjres": 1,
+        "hres": 5
+      }
+    },
+    "B001295": {
+      "introduced": 25,
+      "byType": {
+        "hr": 22,
+        "hres": 3
+      }
+    },
+    "B001296": {
+      "introduced": 21,
+      "byType": {
+        "hr": 17,
+        "hres": 3,
+        "hconres": 1
+      }
+    },
+    "B001298": {
+      "introduced": 51,
+      "byType": {
+        "hr": 49,
+        "hconres": 2
+      }
+    },
+    "B001299": {
+      "introduced": 99,
+      "byType": {
+        "s": 97,
+        "sres": 2
+      }
+    },
+    "B001300": {
+      "introduced": 41,
+      "byType": {
+        "hr": 27,
+        "hres": 14
+      }
+    },
+    "B001301": {
+      "introduced": 28,
+      "byType": {
+        "hr": 24,
+        "hres": 4
+      }
+    },
+    "B001302": {
+      "introduced": 110,
+      "byType": {
+        "hr": 99,
+        "hjres": 3,
+        "hres": 8
+      }
+    },
+    "B001303": {
+      "introduced": 43,
+      "byType": {
+        "s": 37,
+        "sjres": 1,
+        "sres": 2,
+        "sconres": 3
+      }
+    },
+    "B001305": {
+      "introduced": 61,
+      "byType": {
+        "s": 57,
+        "sres": 4
+      }
+    },
+    "B001306": {
+      "introduced": 23,
+      "byType": {
+        "hr": 20,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "B001307": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "B001309": {
+      "introduced": 65,
+      "byType": {
+        "hr": 62,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "B001313": {
+      "introduced": 26,
+      "byType": {
+        "hr": 20,
+        "hres": 5,
+        "hconres": 1
+      }
+    },
+    "B001314": {
+      "introduced": 25,
+      "byType": {
+        "hr": 24,
+        "hres": 1
+      }
+    },
+    "B001315": {
+      "introduced": 19,
+      "byType": {
+        "hr": 19
+      }
+    },
+    "B001316": {
+      "introduced": 26,
+      "byType": {
+        "hr": 23,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "B001317": {
+      "introduced": 12,
+      "byType": {
+        "hr": 11,
+        "hres": 1
+      }
+    },
+    "B001318": {
+      "introduced": 24,
+      "byType": {
+        "hr": 18,
+        "hjres": 1,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "B001319": {
+      "introduced": 30,
+      "byType": {
+        "s": 27,
+        "sres": 2,
+        "sconres": 1
+      }
+    },
+    "B001321": {
+      "introduced": 53,
+      "byType": {
+        "hr": 47,
+        "hjres": 5,
+        "hres": 1
+      }
+    },
+    "B001322": {
+      "introduced": 24,
+      "byType": {
+        "hr": 21,
+        "hres": 3
+      }
+    },
+    "B001323": {
+      "introduced": 41,
+      "byType": {
+        "hr": 38,
+        "hjres": 3
+      }
+    },
+    "B001324": {
+      "introduced": 34,
+      "byType": {
+        "hr": 26,
+        "hres": 8
+      }
+    },
+    "B001325": {
+      "introduced": 16,
+      "byType": {
+        "hr": 16
+      }
+    },
+    "B001326": {
+      "introduced": 24,
+      "byType": {
+        "hr": 19,
+        "hjres": 2,
+        "hres": 3
+      }
+    },
+    "B001327": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "B001328": {
+      "introduced": 1,
+      "byType": {
+        "hr": 1
+      }
+    },
+    "C000059": {
+      "introduced": 26,
+      "byType": {
+        "hr": 23,
+        "hres": 3
+      }
+    },
+    "C000127": {
+      "introduced": 25,
+      "byType": {
+        "s": 23,
+        "sres": 2
+      }
+    },
+    "C000537": {
+      "introduced": 3,
+      "byType": {
+        "hr": 3
+      }
+    },
+    "C000880": {
+      "introduced": 30,
+      "byType": {
+        "s": 24,
+        "sres": 5,
+        "sconres": 1
+      }
+    },
+    "C001035": {
+      "introduced": 30,
+      "byType": {
+        "s": 22,
+        "sres": 8
+      }
+    },
+    "C001039": {
+      "introduced": 27,
+      "byType": {
+        "hr": 21,
+        "hres": 6
+      }
+    },
+    "C001047": {
+      "introduced": 28,
+      "byType": {
+        "s": 21,
+        "sjres": 3,
+        "sres": 4
+      }
+    },
+    "C001051": {
+      "introduced": 4,
+      "byType": {
+        "hr": 4
+      }
+    },
+    "C001053": {
+      "introduced": 17,
+      "byType": {
+        "hr": 15,
+        "hres": 2
+      }
+    },
+    "C001055": {
+      "introduced": 32,
+      "byType": {
+        "hr": 27,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "C001056": {
+      "introduced": 137,
+      "byType": {
+        "s": 126,
+        "sres": 11
+      }
+    },
+    "C001059": {
+      "introduced": 29,
+      "byType": {
+        "hr": 23,
+        "hres": 5,
+        "hconres": 1
+      }
+    },
+    "C001061": {
+      "introduced": 22,
+      "byType": {
+        "hr": 18,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "C001063": {
+      "introduced": 4,
+      "byType": {
+        "hr": 3,
+        "hres": 1
+      }
+    },
+    "C001066": {
+      "introduced": 27,
+      "byType": {
+        "hr": 23,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "C001067": {
+      "introduced": 22,
+      "byType": {
+        "hr": 17,
+        "hres": 5
+      }
+    },
+    "C001068": {
+      "introduced": 58,
+      "byType": {
+        "hr": 50,
+        "hjres": 1,
+        "hres": 7
+      }
+    },
+    "C001069": {
+      "introduced": 14,
+      "byType": {
+        "hr": 11,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "C001072": {
+      "introduced": 16,
+      "byType": {
+        "hr": 9,
+        "hjres": 1,
+        "hres": 6
+      }
+    },
+    "C001075": {
+      "introduced": 121,
+      "byType": {
+        "s": 106,
+        "sres": 14,
+        "sconres": 1
+      }
+    },
+    "C001078": {
+      "introduced": 27,
+      "byType": {
+        "hr": 24,
+        "hres": 3
+      }
+    },
+    "C001080": {
+      "introduced": 42,
+      "byType": {
+        "hr": 31,
+        "hres": 11
+      }
+    },
+    "C001087": {
+      "introduced": 19,
+      "byType": {
+        "hr": 17,
+        "hres": 2
+      }
+    },
+    "C001088": {
+      "introduced": 64,
+      "byType": {
+        "s": 52,
+        "sjres": 1,
+        "sres": 11
+      }
+    },
+    "C001091": {
+      "introduced": 24,
+      "byType": {
+        "hr": 16,
+        "hres": 8
+      }
+    },
+    "C001095": {
+      "introduced": 97,
+      "byType": {
+        "s": 93,
+        "sres": 4
+      }
+    },
+    "C001096": {
+      "introduced": 31,
+      "byType": {
+        "s": 27,
+        "sjres": 1,
+        "sres": 3
+      }
+    },
+    "C001098": {
+      "introduced": 133,
+      "byType": {
+        "s": 123,
+        "sjres": 6,
+        "sres": 4
+      }
+    },
+    "C001101": {
+      "introduced": 3,
+      "byType": {
+        "hr": 3
+      }
+    },
+    "C001103": {
+      "introduced": 63,
+      "byType": {
+        "hr": 44,
+        "hres": 19
+      }
+    },
+    "C001108": {
+      "introduced": 12,
+      "byType": {
+        "hr": 10,
+        "hres": 2
+      }
+    },
+    "C001110": {
+      "introduced": 22,
+      "byType": {
+        "hr": 14,
+        "hres": 8
+      }
+    },
+    "C001112": {
+      "introduced": 37,
+      "byType": {
+        "hr": 34,
+        "hres": 3
+      }
+    },
+    "C001113": {
+      "introduced": 122,
+      "byType": {
+        "s": 109,
+        "sjres": 3,
+        "sres": 10
+      }
+    },
+    "C001114": {
+      "introduced": 52,
+      "byType": {
+        "s": 47,
+        "sjres": 2,
+        "sres": 3
+      }
+    },
+    "C001115": {
+      "introduced": 29,
+      "byType": {
+        "hr": 24,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "C001116": {
+      "introduced": 33,
+      "byType": {
+        "hr": 12,
+        "hjres": 18,
+        "hres": 3
+      }
+    },
+    "C001117": {
+      "introduced": 50,
+      "byType": {
+        "hr": 47,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "C001118": {
+      "introduced": 29,
+      "byType": {
+        "hr": 28,
+        "hconres": 1
+      }
+    },
+    "C001119": {
+      "introduced": 21,
+      "byType": {
+        "hr": 16,
+        "hres": 5
+      }
+    },
+    "C001120": {
+      "introduced": 24,
+      "byType": {
+        "hr": 22,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "C001121": {
+      "introduced": 35,
+      "byType": {
+        "hr": 27,
+        "hjres": 2,
+        "hres": 6
+      }
+    },
+    "C001123": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "C001125": {
+      "introduced": 30,
+      "byType": {
+        "hr": 24,
+        "hres": 6
+      }
+    },
+    "C001126": {
+      "introduced": 31,
+      "byType": {
+        "hr": 29,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "C001127": {
+      "introduced": 20,
+      "byType": {
+        "hr": 17,
+        "hres": 3
+      }
+    },
+    "C001129": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "C001130": {
+      "introduced": 19,
+      "byType": {
+        "hr": 16,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "C001131": {
+      "introduced": 10,
+      "byType": {
+        "hr": 9,
+        "hres": 1
+      }
+    },
+    "C001132": {
+      "introduced": 22,
+      "byType": {
+        "hr": 19,
+        "hres": 3
+      }
+    },
+    "C001133": {
+      "introduced": 32,
+      "byType": {
+        "hr": 31,
+        "hres": 1
+      }
+    },
+    "C001136": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "C001137": {
+      "introduced": 10,
+      "byType": {
+        "hr": 7,
+        "hres": 3
+      }
+    },
+    "D000032": {
+      "introduced": 28,
+      "byType": {
+        "hr": 27,
+        "hres": 1
+      }
+    },
+    "D000096": {
+      "introduced": 22,
+      "byType": {
+        "hr": 17,
+        "hres": 5
+      }
+    },
+    "D000197": {
+      "introduced": 16,
+      "byType": {
+        "hr": 14,
+        "hres": 2
+      }
+    },
+    "D000216": {
+      "introduced": 39,
+      "byType": {
+        "hr": 32,
+        "hres": 7
+      }
+    },
+    "D000230": {
+      "introduced": 30,
+      "byType": {
+        "hr": 27,
+        "hres": 3
+      }
+    },
+    "D000399": {
+      "introduced": 27,
+      "byType": {
+        "hr": 24,
+        "hres": 3
+      }
+    },
+    "D000530": {
+      "introduced": 36,
+      "byType": {
+        "hr": 36
+      }
+    },
+    "D000563": {
+      "introduced": 138,
+      "byType": {
+        "s": 107,
+        "sjres": 3,
+        "sres": 28
+      }
+    },
+    "D000594": {
+      "introduced": 36,
+      "byType": {
+        "hr": 33,
+        "hres": 3
+      }
+    },
+    "D000600": {
+      "introduced": 12,
+      "byType": {
+        "hr": 10,
+        "hres": 2
+      }
+    },
+    "D000616": {
+      "introduced": 1,
+      "byType": {
+        "hr": 1
+      }
+    },
+    "D000617": {
+      "introduced": 16,
+      "byType": {
+        "hr": 14,
+        "hres": 2
+      }
+    },
+    "D000618": {
+      "introduced": 65,
+      "byType": {
+        "s": 48,
+        "sjres": 2,
+        "sres": 14,
+        "sconres": 1
+      }
+    },
+    "D000622": {
+      "introduced": 65,
+      "byType": {
+        "s": 55,
+        "sjres": 2,
+        "sres": 8
+      }
+    },
+    "D000623": {
+      "introduced": 29,
+      "byType": {
+        "hr": 28,
+        "hjres": 1
+      }
+    },
+    "D000624": {
+      "introduced": 79,
+      "byType": {
+        "hr": 54,
+        "hres": 23,
+        "hconres": 2
+      }
+    },
+    "D000626": {
+      "introduced": 43,
+      "byType": {
+        "hr": 37,
+        "hjres": 2,
+        "hres": 4
+      }
+    },
+    "D000628": {
+      "introduced": 28,
+      "byType": {
+        "hr": 25,
+        "hjres": 2,
+        "hres": 1
+      }
+    },
+    "D000629": {
+      "introduced": 29,
+      "byType": {
+        "hr": 24,
+        "hres": 5
+      }
+    },
+    "D000631": {
+      "introduced": 22,
+      "byType": {
+        "hr": 19,
+        "hres": 3
+      }
+    },
+    "D000634": {
+      "introduced": 27,
+      "byType": {
+        "hr": 26,
+        "hjres": 1
+      }
+    },
+    "D000635": {
+      "introduced": 20,
+      "byType": {
+        "hr": 18,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "E000071": {
+      "introduced": 4,
+      "byType": {
+        "hr": 2,
+        "hres": 2
+      }
+    },
+    "E000235": {
+      "introduced": 29,
+      "byType": {
+        "hr": 24,
+        "hjres": 1,
+        "hres": 1,
+        "hconres": 3
+      }
+    },
+    "E000246": {
+      "introduced": 15,
+      "byType": {
+        "hr": 14,
+        "hres": 1
+      }
+    },
+    "E000294": {
+      "introduced": 10,
+      "byType": {
+        "hr": 10
+      }
+    },
+    "E000295": {
+      "introduced": 99,
+      "byType": {
+        "s": 87,
+        "sres": 11,
+        "sconres": 1
+      }
+    },
+    "E000296": {
+      "introduced": 14,
+      "byType": {
+        "hr": 10,
+        "hres": 4
+      }
+    },
+    "E000297": {
+      "introduced": 47,
+      "byType": {
+        "hr": 31,
+        "hres": 16
+      }
+    },
+    "E000298": {
+      "introduced": 20,
+      "byType": {
+        "hr": 16,
+        "hres": 3,
+        "hconres": 1
+      }
+    },
+    "E000299": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "E000300": {
+      "introduced": 26,
+      "byType": {
+        "hr": 21,
+        "hres": 5
+      }
+    },
+    "E000301": {
+      "introduced": 17,
+      "byType": {
+        "hr": 16,
+        "hres": 1
+      }
+    },
+    "F000110": {
+      "introduced": 9,
+      "byType": {
+        "hr": 7,
+        "hjres": 2
+      }
+    },
+    "F000246": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "F000446": {
+      "introduced": 35,
+      "byType": {
+        "hr": 35
+      }
+    },
+    "F000450": {
+      "introduced": 32,
+      "byType": {
+        "hr": 15,
+        "hres": 17
+      }
+    },
+    "F000454": {
+      "introduced": 38,
+      "byType": {
+        "hr": 28,
+        "hjres": 1,
+        "hres": 9
+      }
+    },
+    "F000459": {
+      "introduced": 8,
+      "byType": {
+        "hr": 8
+      }
+    },
+    "F000462": {
+      "introduced": 15,
+      "byType": {
+        "hr": 8,
+        "hres": 2,
+        "hconres": 5
+      }
+    },
+    "F000463": {
+      "introduced": 34,
+      "byType": {
+        "s": 29,
+        "sjres": 1,
+        "sres": 4
+      }
+    },
+    "F000466": {
+      "introduced": 86,
+      "byType": {
+        "hr": 63,
+        "hjres": 6,
+        "hres": 17
+      }
+    },
+    "F000468": {
+      "introduced": 13,
+      "byType": {
+        "hr": 9,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "F000469": {
+      "introduced": 19,
+      "byType": {
+        "hr": 17,
+        "hjres": 2
+      }
+    },
+    "F000470": {
+      "introduced": 29,
+      "byType": {
+        "hr": 18,
+        "hres": 10,
+        "hconres": 1
+      }
+    },
+    "F000471": {
+      "introduced": 32,
+      "byType": {
+        "hr": 30,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "F000472": {
+      "introduced": 15,
+      "byType": {
+        "hr": 14,
+        "hres": 1
+      }
+    },
+    "F000474": {
+      "introduced": 30,
+      "byType": {
+        "hr": 26,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "F000475": {
+      "introduced": 35,
+      "byType": {
+        "hr": 33,
+        "hres": 2
+      }
+    },
+    "F000476": {
+      "introduced": 27,
+      "byType": {
+        "hr": 27
+      }
+    },
+    "F000477": {
+      "introduced": 38,
+      "byType": {
+        "hr": 30,
+        "hres": 7,
+        "hconres": 1
+      }
+    },
+    "F000478": {
+      "introduced": 19,
+      "byType": {
+        "hr": 17,
+        "hres": 2
+      }
+    },
+    "F000479": {
+      "introduced": 28,
+      "byType": {
+        "s": 26,
+        "sres": 2
+      }
+    },
+    "F000480": {
+      "introduced": 16,
+      "byType": {
+        "hr": 14,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "F000481": {
+      "introduced": 26,
+      "byType": {
+        "hr": 25,
+        "hres": 1
+      }
+    },
+    "F000482": {
+      "introduced": 16,
+      "byType": {
+        "hr": 12,
+        "hjres": 2,
+        "hres": 2
+      }
+    },
+    "F000483": {
+      "introduced": 11,
+      "byType": {
+        "hr": 11
+      }
+    },
+    "F000484": {
+      "introduced": 30,
+      "byType": {
+        "hr": 28,
+        "hres": 2
+      }
+    },
+    "F000485": {
+      "introduced": 14,
+      "byType": {
+        "hr": 8,
+        "hjres": 2,
+        "hres": 4
+      }
+    },
+    "G000359": {
+      "introduced": 37,
+      "byType": {
+        "s": 23,
+        "sjres": 1,
+        "sres": 11,
+        "sconres": 2
+      }
+    },
+    "G000386": {
+      "introduced": 93,
+      "byType": {
+        "s": 65,
+        "sres": 28
+      }
+    },
+    "G000546": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hres": 3
+      }
+    },
+    "G000551": {
+      "introduced": 2,
+      "byType": {
+        "hr": 2
+      }
+    },
+    "G000553": {
+      "introduced": 53,
+      "byType": {
+        "hr": 21,
+        "hjres": 3,
+        "hres": 29
+      }
+    },
+    "G000555": {
+      "introduced": 68,
+      "byType": {
+        "s": 64,
+        "sjres": 2,
+        "sres": 1,
+        "sconres": 1
+      }
+    },
+    "G000558": {
+      "introduced": 11,
+      "byType": {
+        "hr": 10,
+        "hres": 1
+      }
+    },
+    "G000559": {
+      "introduced": 15,
+      "byType": {
+        "hr": 12,
+        "hres": 1,
+        "hconres": 2
+      }
+    },
+    "G000565": {
+      "introduced": 26,
+      "byType": {
+        "hr": 24,
+        "hjres": 2
+      }
+    },
+    "G000568": {
+      "introduced": 37,
+      "byType": {
+        "hr": 26,
+        "hjres": 1,
+        "hres": 9,
+        "hconres": 1
+      }
+    },
+    "G000574": {
+      "introduced": 61,
+      "byType": {
+        "s": 50,
+        "sjres": 2,
+        "sres": 8,
+        "sconres": 1
+      }
+    },
+    "G000576": {
+      "introduced": 36,
+      "byType": {
+        "hr": 35,
+        "hjres": 1
+      }
+    },
+    "G000581": {
+      "introduced": 12,
+      "byType": {
+        "hr": 11,
+        "hjres": 1
+      }
+    },
+    "G000583": {
+      "introduced": 93,
+      "byType": {
+        "hr": 84,
+        "hres": 8,
+        "hconres": 1
+      }
+    },
+    "G000585": {
+      "introduced": 16,
+      "byType": {
+        "hr": 11,
+        "hres": 5
+      }
+    },
+    "G000586": {
+      "introduced": 9,
+      "byType": {
+        "hr": 7,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "G000587": {
+      "introduced": 20,
+      "byType": {
+        "hr": 12,
+        "hjres": 2,
+        "hres": 6
+      }
+    },
+    "G000589": {
+      "introduced": 14,
+      "byType": {
+        "hr": 14
+      }
+    },
+    "G000590": {
+      "introduced": 23,
+      "byType": {
+        "hr": 20,
+        "hres": 3
+      }
+    },
+    "G000591": {
+      "introduced": 13,
+      "byType": {
+        "hr": 4,
+        "hres": 9
+      }
+    },
+    "G000592": {
+      "introduced": 14,
+      "byType": {
+        "hr": 13,
+        "hres": 1
+      }
+    },
+    "G000593": {
+      "introduced": 12,
+      "byType": {
+        "hr": 9,
+        "hres": 3
+      }
+    },
+    "G000594": {
+      "introduced": 29,
+      "byType": {
+        "hr": 26,
+        "hres": 3
+      }
+    },
+    "G000596": {
+      "introduced": 15,
+      "byType": {
+        "hr": 11,
+        "hres": 4
+      }
+    },
+    "G000597": {
+      "introduced": 40,
+      "byType": {
+        "hr": 32,
+        "hres": 8
+      }
+    },
+    "G000598": {
+      "introduced": 21,
+      "byType": {
+        "hr": 18,
+        "hres": 3
+      }
+    },
+    "G000599": {
+      "introduced": 46,
+      "byType": {
+        "hr": 43,
+        "hres": 3
+      }
+    },
+    "G000600": {
+      "introduced": 27,
+      "byType": {
+        "hr": 22,
+        "hres": 5
+      }
+    },
+    "G000601": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "G000602": {
+      "introduced": 21,
+      "byType": {
+        "hr": 21
+      }
+    },
+    "G000603": {
+      "introduced": 26,
+      "byType": {
+        "hr": 23,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "G000604": {
+      "introduced": 13,
+      "byType": {
+        "hr": 12,
+        "hres": 1
+      }
+    },
+    "G000605": {
+      "introduced": 8,
+      "byType": {
+        "hr": 8
+      }
+    },
+    "G000606": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hres": 3
+      }
+    },
+    "G000607": {
+      "introduced": 6,
+      "byType": {
+        "hr": 5,
+        "hjres": 1
+      }
+    },
+    "G000608": {
+      "introduced": 2,
+      "byType": {
+        "s": 1,
+        "sres": 1
+      }
+    },
+    "H000273": {
+      "introduced": 36,
+      "byType": {
+        "s": 32,
+        "sjres": 2,
+        "sres": 2
+      }
+    },
+    "H000601": {
+      "introduced": 27,
+      "byType": {
+        "s": 24,
+        "sjres": 2,
+        "sres": 1
+      }
+    },
+    "H000874": {
+      "introduced": 1,
+      "byType": {
+        "hr": 1
+      }
+    },
+    "H001042": {
+      "introduced": 62,
+      "byType": {
+        "s": 38,
+        "sjres": 1,
+        "sres": 19,
+        "sconres": 4
+      }
+    },
+    "H001046": {
+      "introduced": 59,
+      "byType": {
+        "s": 52,
+        "sres": 7
+      }
+    },
+    "H001047": {
+      "introduced": 6,
+      "byType": {
+        "hr": 6
+      }
+    },
+    "H001052": {
+      "introduced": 6,
+      "byType": {
+        "hr": 5,
+        "hconres": 1
+      }
+    },
+    "H001058": {
+      "introduced": 35,
+      "byType": {
+        "hr": 33,
+        "hres": 2
+      }
+    },
+    "H001061": {
+      "introduced": 25,
+      "byType": {
+        "s": 20,
+        "sjres": 1,
+        "sres": 4
+      }
+    },
+    "H001066": {
+      "introduced": 33,
+      "byType": {
+        "hr": 32,
+        "hres": 1
+      }
+    },
+    "H001067": {
+      "introduced": 17,
+      "byType": {
+        "hr": 17
+      }
+    },
+    "H001068": {
+      "introduced": 29,
+      "byType": {
+        "hr": 25,
+        "hres": 2,
+        "hconres": 2
+      }
+    },
+    "H001072": {
+      "introduced": 33,
+      "byType": {
+        "hr": 27,
+        "hjres": 1,
+        "hres": 5
+      }
+    },
+    "H001076": {
+      "introduced": 57,
+      "byType": {
+        "s": 54,
+        "sres": 3
+      }
+    },
+    "H001077": {
+      "introduced": 39,
+      "byType": {
+        "hr": 36,
+        "hjres": 1,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "H001079": {
+      "introduced": 44,
+      "byType": {
+        "s": 31,
+        "sres": 13
+      }
+    },
+    "H001081": {
+      "introduced": 40,
+      "byType": {
+        "hr": 32,
+        "hres": 6,
+        "hconres": 2
+      }
+    },
+    "H001082": {
+      "introduced": 18,
+      "byType": {
+        "hr": 14,
+        "hres": 4
+      }
+    },
+    "H001085": {
+      "introduced": 36,
+      "byType": {
+        "hr": 27,
+        "hres": 8,
+        "hconres": 1
+      }
+    },
+    "H001086": {
+      "introduced": 37,
+      "byType": {
+        "hr": 33,
+        "hjres": 2,
+        "hres": 2
+      }
+    },
+    "H001089": {
+      "introduced": 51,
+      "byType": {
+        "s": 47,
+        "sres": 4
+      }
+    },
+    "H001090": {
+      "introduced": 44,
+      "byType": {
+        "hr": 43,
+        "hres": 1
+      }
+    },
+    "H001091": {
+      "introduced": 35,
+      "byType": {
+        "hr": 32,
+        "hres": 3
+      }
+    },
+    "H001093": {
+      "introduced": 49,
+      "byType": {
+        "hr": 37,
+        "hres": 12
+      }
+    },
+    "H001094": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "H001095": {
+      "introduced": 17,
+      "byType": {
+        "hr": 15,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "H001096": {
+      "introduced": 58,
+      "byType": {
+        "hr": 53,
+        "hjres": 3,
+        "hres": 2
+      }
+    },
+    "H001098": {
+      "introduced": 35,
+      "byType": {
+        "hr": 29,
+        "hres": 5,
+        "hconres": 1
+      }
+    },
+    "H001099": {
+      "introduced": 5,
+      "byType": {
+        "hr": 5
+      }
+    },
+    "H001100": {
+      "introduced": 27,
+      "byType": {
+        "hr": 26,
+        "hres": 1
+      }
+    },
+    "H001101": {
+      "introduced": 30,
+      "byType": {
+        "hr": 28,
+        "hres": 2
+      }
+    },
+    "H001102": {
+      "introduced": 17,
+      "byType": {
+        "hr": 17
+      }
+    },
+    "H001103": {
+      "introduced": 31,
+      "byType": {
+        "hr": 28,
+        "hres": 3
+      }
+    },
+    "H001104": {
+      "introduced": 56,
+      "byType": {
+        "s": 46,
+        "sjres": 4,
+        "sres": 6
+      }
+    },
+    "I000056": {
+      "introduced": 54,
+      "byType": {
+        "hr": 46,
+        "hjres": 2,
+        "hres": 6
+      }
+    },
+    "I000058": {
+      "introduced": 3,
+      "byType": {
+        "hr": 3
+      }
+    },
+    "J000288": {
+      "introduced": 22,
+      "byType": {
+        "hr": 13,
+        "hjres": 1,
+        "hres": 8
+      }
+    },
+    "J000289": {
+      "introduced": 1,
+      "byType": {
+        "hres": 1
+      }
+    },
+    "J000293": {
+      "introduced": 22,
+      "byType": {
+        "s": 19,
+        "sres": 2,
+        "sconres": 1
+      }
+    },
+    "J000294": {
+      "introduced": 1,
+      "byType": {
+        "hres": 1
+      }
+    },
+    "J000295": {
+      "introduced": 21,
+      "byType": {
+        "hr": 18,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "J000298": {
+      "introduced": 51,
+      "byType": {
+        "hr": 34,
+        "hjres": 6,
+        "hres": 10,
+        "hconres": 1
+      }
+    },
+    "J000299": {
+      "introduced": 7,
+      "byType": {
+        "hr": 5,
+        "hres": 2
+      }
+    },
+    "J000301": {
+      "introduced": 39,
+      "byType": {
+        "hr": 35,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "J000302": {
+      "introduced": 25,
+      "byType": {
+        "hr": 21,
+        "hjres": 2,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "J000304": {
+      "introduced": 35,
+      "byType": {
+        "hr": 31,
+        "hjres": 1,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "J000305": {
+      "introduced": 32,
+      "byType": {
+        "hr": 27,
+        "hres": 2,
+        "hconres": 3
+      }
+    },
+    "J000307": {
+      "introduced": 27,
+      "byType": {
+        "hr": 22,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "J000309": {
+      "introduced": 8,
+      "byType": {
+        "hr": 5,
+        "hjres": 1,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "J000310": {
+      "introduced": 27,
+      "byType": {
+        "hr": 25,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "J000311": {
+      "introduced": 9,
+      "byType": {
+        "hr": 3,
+        "hres": 6
+      }
+    },
+    "J000312": {
+      "introduced": 16,
+      "byType": {
+        "s": 14,
+        "sres": 2
+      }
+    },
+    "K000009": {
+      "introduced": 23,
+      "byType": {
+        "hr": 17,
+        "hres": 6
+      }
+    },
+    "K000367": {
+      "introduced": 96,
+      "byType": {
+        "s": 79,
+        "sres": 16,
+        "sconres": 1
+      }
+    },
+    "K000375": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "K000376": {
+      "introduced": 34,
+      "byType": {
+        "hr": 30,
+        "hres": 4
+      }
+    },
+    "K000377": {
+      "introduced": 57,
+      "byType": {
+        "s": 51,
+        "sjres": 1,
+        "sres": 5
+      }
+    },
+    "K000383": {
+      "introduced": 38,
+      "byType": {
+        "s": 34,
+        "sjres": 1,
+        "sres": 3
+      }
+    },
+    "K000384": {
+      "introduced": 109,
+      "byType": {
+        "s": 56,
+        "sjres": 17,
+        "sres": 36
+      }
+    },
+    "K000385": {
+      "introduced": 22,
+      "byType": {
+        "hr": 19,
+        "hres": 3
+      }
+    },
+    "K000388": {
+      "introduced": 8,
+      "byType": {
+        "hr": 8
+      }
+    },
+    "K000389": {
+      "introduced": 52,
+      "byType": {
+        "hr": 41,
+        "hres": 9,
+        "hconres": 2
+      }
+    },
+    "K000391": {
+      "introduced": 42,
+      "byType": {
+        "hr": 37,
+        "hres": 5
+      }
+    },
+    "K000392": {
+      "introduced": 31,
+      "byType": {
+        "hr": 28,
+        "hres": 1,
+        "hconres": 2
+      }
+    },
+    "K000393": {
+      "introduced": 84,
+      "byType": {
+        "s": 70,
+        "sjres": 6,
+        "sres": 8
+      }
+    },
+    "K000394": {
+      "introduced": 47,
+      "byType": {
+        "s": 40,
+        "sjres": 3,
+        "sres": 3,
+        "sconres": 1
+      }
+    },
+    "K000397": {
+      "introduced": 55,
+      "byType": {
+        "hr": 43,
+        "hres": 12
+      }
+    },
+    "K000398": {
+      "introduced": 37,
+      "byType": {
+        "hr": 33,
+        "hres": 4
+      }
+    },
+    "K000399": {
+      "introduced": 56,
+      "byType": {
+        "hr": 50,
+        "hres": 6
+      }
+    },
+    "K000400": {
+      "introduced": 36,
+      "byType": {
+        "hr": 29,
+        "hres": 7
+      }
+    },
+    "K000401": {
+      "introduced": 23,
+      "byType": {
+        "hr": 23
+      }
+    },
+    "K000402": {
+      "introduced": 32,
+      "byType": {
+        "hr": 30,
+        "hres": 2
+      }
+    },
+    "K000403": {
+      "introduced": 36,
+      "byType": {
+        "hr": 34,
+        "hres": 2
+      }
+    },
+    "K000404": {
+      "introduced": 21,
+      "byType": {
+        "hr": 21
+      }
+    },
+    "K000405": {
+      "introduced": 6,
+      "byType": {
+        "hr": 6
+      }
+    },
+    "L000273": {
+      "introduced": 38,
+      "byType": {
+        "hr": 35,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "L000397": {
+      "introduced": 25,
+      "byType": {
+        "hr": 22,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "L000491": {
+      "introduced": 14,
+      "byType": {
+        "hr": 14
+      }
+    },
+    "L000557": {
+      "introduced": 20,
+      "byType": {
+        "hr": 13,
+        "hres": 7
+      }
+    },
+    "L000560": {
+      "introduced": 12,
+      "byType": {
+        "hr": 12
+      }
+    },
+    "L000562": {
+      "introduced": 15,
+      "byType": {
+        "hr": 10,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "L000566": {
+      "introduced": 19,
+      "byType": {
+        "hr": 19
+      }
+    },
+    "L000570": {
+      "introduced": 86,
+      "byType": {
+        "s": 81,
+        "sjres": 1,
+        "sres": 4
+      }
+    },
+    "L000571": {
+      "introduced": 47,
+      "byType": {
+        "s": 40,
+        "sjres": 3,
+        "sres": 4
+      }
+    },
+    "L000575": {
+      "introduced": 78,
+      "byType": {
+        "s": 58,
+        "sres": 20
+      }
+    },
+    "L000577": {
+      "introduced": 138,
+      "byType": {
+        "s": 126,
+        "sjres": 5,
+        "sres": 7
+      }
+    },
+    "L000578": {
+      "introduced": 19,
+      "byType": {
+        "hr": 18,
+        "hjres": 1
+      }
+    },
+    "L000582": {
+      "introduced": 46,
+      "byType": {
+        "hr": 40,
+        "hres": 6
+      }
+    },
+    "L000583": {
+      "introduced": 17,
+      "byType": {
+        "hr": 15,
+        "hres": 2
+      }
+    },
+    "L000585": {
+      "introduced": 38,
+      "byType": {
+        "hr": 30,
+        "hres": 7,
+        "hconres": 1
+      }
+    },
+    "L000590": {
+      "introduced": 26,
+      "byType": {
+        "hr": 25,
+        "hres": 1
+      }
+    },
+    "L000593": {
+      "introduced": 25,
+      "byType": {
+        "hr": 25
+      }
+    },
+    "L000595": {
+      "introduced": 20,
+      "byType": {
+        "hr": 18,
+        "hres": 2
+      }
+    },
+    "L000596": {
+      "introduced": 41,
+      "byType": {
+        "hr": 26,
+        "hjres": 1,
+        "hres": 14
+      }
+    },
+    "L000597": {
+      "introduced": 30,
+      "byType": {
+        "hr": 27,
+        "hjres": 2,
+        "hres": 1
+      }
+    },
+    "L000598": {
+      "introduced": 27,
+      "byType": {
+        "hr": 22,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "L000599": {
+      "introduced": 125,
+      "byType": {
+        "hr": 116,
+        "hres": 9
+      }
+    },
+    "L000600": {
+      "introduced": 49,
+      "byType": {
+        "hr": 41,
+        "hres": 8
+      }
+    },
+    "L000601": {
+      "introduced": 33,
+      "byType": {
+        "hr": 29,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "L000602": {
+      "introduced": 24,
+      "byType": {
+        "hr": 19,
+        "hres": 5
+      }
+    },
+    "L000603": {
+      "introduced": 22,
+      "byType": {
+        "hr": 21,
+        "hres": 1
+      }
+    },
+    "L000606": {
+      "introduced": 10,
+      "byType": {
+        "hr": 9,
+        "hres": 1
+      }
+    },
+    "L000607": {
+      "introduced": 17,
+      "byType": {
+        "hr": 17
+      }
+    },
+    "M000133": {
+      "introduced": 164,
+      "byType": {
+        "s": 140,
+        "sjres": 2,
+        "sres": 22
+      }
+    },
+    "M000194": {
+      "introduced": 103,
+      "byType": {
+        "hr": 89,
+        "hjres": 3,
+        "hres": 10,
+        "hconres": 1
+      }
+    },
+    "M000312": {
+      "introduced": 36,
+      "byType": {
+        "hr": 19,
+        "hjres": 2,
+        "hres": 13,
+        "hconres": 2
+      }
+    },
+    "M000317": {
+      "introduced": 55,
+      "byType": {
+        "hr": 51,
+        "hjres": 1,
+        "hres": 3
+      }
+    },
+    "M000355": {
+      "introduced": 14,
+      "byType": {
+        "s": 7,
+        "sres": 6,
+        "sconres": 1
+      }
+    },
+    "M000687": {
+      "introduced": 16,
+      "byType": {
+        "hr": 12,
+        "hres": 4
+      }
+    },
+    "M000871": {
+      "introduced": 28,
+      "byType": {
+        "hr": 22,
+        "hres": 6
+      }
+    },
+    "M000934": {
+      "introduced": 85,
+      "byType": {
+        "s": 70,
+        "sres": 15
+      }
+    },
+    "M001111": {
+      "introduced": 47,
+      "byType": {
+        "s": 38,
+        "sjres": 2,
+        "sres": 7
+      }
+    },
+    "M001136": {
+      "introduced": 19,
+      "byType": {
+        "hr": 16,
+        "hres": 3
+      }
+    },
+    "M001137": {
+      "introduced": 44,
+      "byType": {
+        "hr": 19,
+        "hjres": 10,
+        "hres": 11,
+        "hconres": 4
+      }
+    },
+    "M001143": {
+      "introduced": 13,
+      "byType": {
+        "hr": 9,
+        "hres": 4
+      }
+    },
+    "M001153": {
+      "introduced": 61,
+      "byType": {
+        "s": 51,
+        "sjres": 2,
+        "sres": 8
+      }
+    },
+    "M001157": {
+      "introduced": 13,
+      "byType": {
+        "hr": 10,
+        "hres": 3
+      }
+    },
+    "M001160": {
+      "introduced": 34,
+      "byType": {
+        "hr": 24,
+        "hres": 9,
+        "hconres": 1
+      }
+    },
+    "M001163": {
+      "introduced": 29,
+      "byType": {
+        "hr": 26,
+        "hres": 3
+      }
+    },
+    "M001169": {
+      "introduced": 51,
+      "byType": {
+        "s": 42,
+        "sjres": 6,
+        "sres": 3
+      }
+    },
+    "M001176": {
+      "introduced": 128,
+      "byType": {
+        "s": 100,
+        "sjres": 4,
+        "sres": 22,
+        "sconres": 2
+      }
+    },
+    "M001177": {
+      "introduced": 26,
+      "byType": {
+        "hr": 22,
+        "hjres": 3,
+        "hres": 1
+      }
+    },
+    "M001184": {
+      "introduced": 29,
+      "byType": {
+        "hr": 24,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "M001188": {
+      "introduced": 40,
+      "byType": {
+        "hr": 25,
+        "hjres": 1,
+        "hres": 14
+      }
+    },
+    "M001190": {
+      "introduced": 23,
+      "byType": {
+        "s": 17,
+        "sjres": 2,
+        "sres": 3,
+        "sconres": 1
+      }
+    },
+    "M001194": {
+      "introduced": 49,
+      "byType": {
+        "hr": 39,
+        "hres": 10
+      }
+    },
+    "M001196": {
+      "introduced": 22,
+      "byType": {
+        "hr": 21,
+        "hconres": 1
+      }
+    },
+    "M001198": {
+      "introduced": 73,
+      "byType": {
+        "s": 62,
+        "sjres": 1,
+        "sres": 10
+      }
+    },
+    "M001199": {
+      "introduced": 44,
+      "byType": {
+        "hr": 35,
+        "hres": 5,
+        "hconres": 4
+      }
+    },
+    "M001204": {
+      "introduced": 20,
+      "byType": {
+        "hr": 17,
+        "hres": 3
+      }
+    },
+    "M001205": {
+      "introduced": 30,
+      "byType": {
+        "hr": 28,
+        "hres": 2
+      }
+    },
+    "M001206": {
+      "introduced": 37,
+      "byType": {
+        "hr": 28,
+        "hjres": 1,
+        "hres": 7,
+        "hconres": 1
+      }
+    },
+    "M001208": {
+      "introduced": 22,
+      "byType": {
+        "hr": 17,
+        "hres": 5
+      }
+    },
+    "M001210": {
+      "introduced": 41,
+      "byType": {
+        "hr": 36,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "M001211": {
+      "introduced": 36,
+      "byType": {
+        "hr": 31,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "M001212": {
+      "introduced": 31,
+      "byType": {
+        "hr": 28,
+        "hres": 3
+      }
+    },
+    "M001213": {
+      "introduced": 43,
+      "byType": {
+        "hr": 41,
+        "hres": 2
+      }
+    },
+    "M001214": {
+      "introduced": 3,
+      "byType": {
+        "hr": 3
+      }
+    },
+    "M001215": {
+      "introduced": 54,
+      "byType": {
+        "hr": 51,
+        "hres": 3
+      }
+    },
+    "M001216": {
+      "introduced": 30,
+      "byType": {
+        "hr": 23,
+        "hres": 7
+      }
+    },
+    "M001217": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 2
+      }
+    },
+    "M001218": {
+      "introduced": 22,
+      "byType": {
+        "hr": 20,
+        "hres": 2
+      }
+    },
+    "M001219": {
+      "introduced": 31,
+      "byType": {
+        "hr": 23,
+        "hres": 8
+      }
+    },
+    "M001220": {
+      "introduced": 20,
+      "byType": {
+        "hr": 18,
+        "hres": 2
+      }
+    },
+    "M001222": {
+      "introduced": 27,
+      "byType": {
+        "hr": 24,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "M001223": {
+      "introduced": 27,
+      "byType": {
+        "hr": 25,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "M001224": {
+      "introduced": 25,
+      "byType": {
+        "hr": 24,
+        "hjres": 1
+      }
+    },
+    "M001225": {
+      "introduced": 33,
+      "byType": {
+        "hr": 31,
+        "hres": 2
+      }
+    },
+    "M001226": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 2
+      }
+    },
+    "M001227": {
+      "introduced": 27,
+      "byType": {
+        "hr": 21,
+        "hres": 6
+      }
+    },
+    "M001228": {
+      "introduced": 24,
+      "byType": {
+        "hr": 20,
+        "hjres": 3,
+        "hres": 1
+      }
+    },
+    "M001229": {
+      "introduced": 19,
+      "byType": {
+        "hr": 17,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "M001230": {
+      "introduced": 32,
+      "byType": {
+        "hr": 29,
+        "hres": 3
+      }
+    },
+    "M001231": {
+      "introduced": 10,
+      "byType": {
+        "hr": 10
+      }
+    },
+    "M001232": {
+      "introduced": 29,
+      "byType": {
+        "hr": 29
+      }
+    },
+    "M001233": {
+      "introduced": 17,
+      "byType": {
+        "hr": 15,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "M001234": {
+      "introduced": 17,
+      "byType": {
+        "hr": 14,
+        "hres": 3
+      }
+    },
+    "M001235": {
+      "introduced": 18,
+      "byType": {
+        "hr": 13,
+        "hres": 5
+      }
+    },
+    "M001236": {
+      "introduced": 32,
+      "byType": {
+        "hr": 28,
+        "hres": 4
+      }
+    },
+    "M001237": {
+      "introduced": 19,
+      "byType": {
+        "hr": 19
+      }
+    },
+    "M001238": {
+      "introduced": 10,
+      "byType": {
+        "hr": 10
+      }
+    },
+    "M001239": {
+      "introduced": 21,
+      "byType": {
+        "hr": 18,
+        "hres": 3
+      }
+    },
+    "M001240": {
+      "introduced": 20,
+      "byType": {
+        "hr": 15,
+        "hres": 5
+      }
+    },
+    "M001241": {
+      "introduced": 30,
+      "byType": {
+        "hr": 29,
+        "hconres": 1
+      }
+    },
+    "M001242": {
+      "introduced": 29,
+      "byType": {
+        "s": 22,
+        "sjres": 1,
+        "sres": 6
+      }
+    },
+    "M001243": {
+      "introduced": 47,
+      "byType": {
+        "s": 43,
+        "sjres": 1,
+        "sres": 3
+      }
+    },
+    "M001244": {
+      "introduced": 55,
+      "byType": {
+        "s": 45,
+        "sjres": 1,
+        "sres": 9
+      }
+    },
+    "M001245": {
+      "introduced": 4,
+      "byType": {
+        "hr": 4
+      }
+    },
+    "M001246": {
+      "introduced": 4,
+      "byType": {
+        "hr": 3,
+        "hres": 1
+      }
+    },
+    "N000002": {
+      "introduced": 15,
+      "byType": {
+        "hr": 14,
+        "hres": 1
+      }
+    },
+    "N000015": {
+      "introduced": 5,
+      "byType": {
+        "hr": 5
+      }
+    },
+    "N000026": {
+      "introduced": 31,
+      "byType": {
+        "hr": 29,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "N000147": {
+      "introduced": 114,
+      "byType": {
+        "hr": 95,
+        "hres": 19
+      }
+    },
+    "N000188": {
+      "introduced": 22,
+      "byType": {
+        "hr": 19,
+        "hres": 3
+      }
+    },
+    "N000189": {
+      "introduced": 29,
+      "byType": {
+        "hr": 22,
+        "hres": 7
+      }
+    },
+    "N000190": {
+      "introduced": 22,
+      "byType": {
+        "hr": 16,
+        "hjres": 3,
+        "hres": 3
+      }
+    },
+    "N000191": {
+      "introduced": 92,
+      "byType": {
+        "hr": 87,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "N000193": {
+      "introduced": 61,
+      "byType": {
+        "hr": 51,
+        "hjres": 1,
+        "hres": 8,
+        "hconres": 1
+      }
+    },
+    "O000019": {
+      "introduced": 31,
+      "byType": {
+        "hr": 27,
+        "hjres": 3,
+        "hres": 1
+      }
+    },
+    "O000086": {
+      "introduced": 28,
+      "byType": {
+        "hr": 25,
+        "hres": 3
+      }
+    },
+    "O000172": {
+      "introduced": 11,
+      "byType": {
+        "hr": 11
+      }
+    },
+    "O000173": {
+      "introduced": 19,
+      "byType": {
+        "hr": 14,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "O000174": {
+      "introduced": 23,
+      "byType": {
+        "s": 20,
+        "sres": 3
+      }
+    },
+    "O000175": {
+      "introduced": 50,
+      "byType": {
+        "hr": 42,
+        "hjres": 1,
+        "hres": 7
+      }
+    },
+    "O000176": {
+      "introduced": 18,
+      "byType": {
+        "hr": 15,
+        "hjres": 2,
+        "hres": 1
+      }
+    },
+    "O000177": {
+      "introduced": 19,
+      "byType": {
+        "hr": 19
+      }
+    },
+    "P000034": {
+      "introduced": 22,
+      "byType": {
+        "hr": 17,
+        "hres": 5
+      }
+    },
+    "P000048": {
+      "introduced": 62,
+      "byType": {
+        "hr": 56,
+        "hjres": 3,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "P000145": {
+      "introduced": 111,
+      "byType": {
+        "s": 100,
+        "sjres": 2,
+        "sres": 9
+      }
+    },
+    "P000595": {
+      "introduced": 84,
+      "byType": {
+        "s": 75,
+        "sres": 9
+      }
+    },
+    "P000597": {
+      "introduced": 24,
+      "byType": {
+        "hr": 21,
+        "hres": 3
+      }
+    },
+    "P000603": {
+      "introduced": 57,
+      "byType": {
+        "s": 45,
+        "sjres": 6,
+        "sres": 3,
+        "sconres": 3
+      }
+    },
+    "P000605": {
+      "introduced": 54,
+      "byType": {
+        "hr": 49,
+        "hjres": 3,
+        "hconres": 2
+      }
+    },
+    "P000607": {
+      "introduced": 25,
+      "byType": {
+        "hr": 19,
+        "hres": 6
+      }
+    },
+    "P000608": {
+      "introduced": 38,
+      "byType": {
+        "hr": 34,
+        "hres": 4
+      }
+    },
+    "P000609": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hjres": 3
+      }
+    },
+    "P000610": {
+      "introduced": 20,
+      "byType": {
+        "hr": 18,
+        "hres": 2
+      }
+    },
+    "P000613": {
+      "introduced": 55,
+      "byType": {
+        "hr": 51,
+        "hres": 4
+      }
+    },
+    "P000614": {
+      "introduced": 59,
+      "byType": {
+        "hr": 57,
+        "hres": 2
+      }
+    },
+    "P000617": {
+      "introduced": 42,
+      "byType": {
+        "hr": 32,
+        "hjres": 2,
+        "hres": 6,
+        "hconres": 2
+      }
+    },
+    "P000620": {
+      "introduced": 46,
+      "byType": {
+        "hr": 38,
+        "hjres": 2,
+        "hres": 6
+      }
+    },
+    "P000621": {
+      "introduced": 15,
+      "byType": {
+        "hr": 15
+      }
+    },
+    "P000622": {
+      "introduced": 18,
+      "byType": {
+        "hr": 15,
+        "hres": 3
+      }
+    },
+    "Q000023": {
+      "introduced": 13,
+      "byType": {
+        "hr": 9,
+        "hres": 4
+      }
+    },
+    "R000122": {
+      "introduced": 44,
+      "byType": {
+        "s": 34,
+        "sjres": 3,
+        "sres": 7
+      }
+    },
+    "R000305": {
+      "introduced": 35,
+      "byType": {
+        "hr": 31,
+        "hjres": 1,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "R000395": {
+      "introduced": 5,
+      "byType": {
+        "hr": 3,
+        "hres": 2
+      }
+    },
+    "R000575": {
+      "introduced": 12,
+      "byType": {
+        "hr": 9,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "R000579": {
+      "introduced": 22,
+      "byType": {
+        "hr": 22
+      }
+    },
+    "R000584": {
+      "introduced": 61,
+      "byType": {
+        "s": 49,
+        "sres": 12
+      }
+    },
+    "R000599": {
+      "introduced": 36,
+      "byType": {
+        "hr": 31,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "R000600": {
+      "introduced": 8,
+      "byType": {
+        "hr": 8
+      }
+    },
+    "R000603": {
+      "introduced": 30,
+      "byType": {
+        "hr": 25,
+        "hres": 5
+      }
+    },
+    "R000605": {
+      "introduced": 63,
+      "byType": {
+        "s": 60,
+        "sjres": 1,
+        "sres": 2
+      }
+    },
+    "R000606": {
+      "introduced": 37,
+      "byType": {
+        "hr": 28,
+        "hjres": 1,
+        "hres": 8
+      }
+    },
+    "R000608": {
+      "introduced": 77,
+      "byType": {
+        "s": 63,
+        "sjres": 2,
+        "sres": 12
+      }
+    },
+    "R000609": {
+      "introduced": 9,
+      "byType": {
+        "hr": 9
+      }
+    },
+    "R000610": {
+      "introduced": 6,
+      "byType": {
+        "hr": 6
+      }
+    },
+    "R000612": {
+      "introduced": 15,
+      "byType": {
+        "hr": 13,
+        "hres": 2
+      }
+    },
+    "R000614": {
+      "introduced": 68,
+      "byType": {
+        "hr": 62,
+        "hres": 6
+      }
+    },
+    "R000617": {
+      "introduced": 28,
+      "byType": {
+        "hr": 19,
+        "hres": 8,
+        "hconres": 1
+      }
+    },
+    "R000618": {
+      "introduced": 67,
+      "byType": {
+        "s": 52,
+        "sjres": 2,
+        "sres": 13
+      }
+    },
+    "R000619": {
+      "introduced": 21,
+      "byType": {
+        "hr": 17,
+        "hres": 4
+      }
+    },
+    "R000620": {
+      "introduced": 16,
+      "byType": {
+        "hr": 13,
+        "hres": 3
+      }
+    },
+    "R000621": {
+      "introduced": 14,
+      "byType": {
+        "hr": 12,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "R000622": {
+      "introduced": 18,
+      "byType": {
+        "hr": 18
+      }
+    },
+    "S000033": {
+      "introduced": 56,
+      "byType": {
+        "s": 36,
+        "sjres": 18,
+        "sres": 2
+      }
+    },
+    "S000148": {
+      "introduced": 34,
+      "byType": {
+        "s": 24,
+        "sjres": 1,
+        "sres": 9
+      }
+    },
+    "S000168": {
+      "introduced": 19,
+      "byType": {
+        "hr": 17,
+        "hconres": 2
+      }
+    },
+    "S000185": {
+      "introduced": 18,
+      "byType": {
+        "hr": 16,
+        "hres": 2
+      }
+    },
+    "S000250": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "S000344": {
+      "introduced": 13,
+      "byType": {
+        "hr": 13
+      }
+    },
+    "S000510": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 2
+      }
+    },
+    "S000522": {
+      "introduced": 61,
+      "byType": {
+        "hr": 45,
+        "hjres": 2,
+        "hres": 13,
+        "hconres": 1
+      }
+    },
+    "S000929": {
+      "introduced": 17,
+      "byType": {
+        "hr": 17
+      }
+    },
+    "S001145": {
+      "introduced": 40,
+      "byType": {
+        "hr": 33,
+        "hres": 6,
+        "hconres": 1
+      }
+    },
+    "S001148": {
+      "introduced": 5,
+      "byType": {
+        "hr": 5
+      }
+    },
+    "S001150": {
+      "introduced": 97,
+      "byType": {
+        "s": 82,
+        "sjres": 8,
+        "sres": 7
+      }
+    },
+    "S001156": {
+      "introduced": 21,
+      "byType": {
+        "hr": 16,
+        "hjres": 2,
+        "hres": 3
+      }
+    },
+    "S001157": {
+      "introduced": 18,
+      "byType": {
+        "hr": 12,
+        "hres": 6
+      }
+    },
+    "S001159": {
+      "introduced": 28,
+      "byType": {
+        "hr": 28
+      }
+    },
+    "S001172": {
+      "introduced": 26,
+      "byType": {
+        "hr": 26
+      }
+    },
+    "S001176": {
+      "introduced": 3,
+      "byType": {
+        "hr": 1,
+        "hres": 2
+      }
+    },
+    "S001181": {
+      "introduced": 99,
+      "byType": {
+        "s": 76,
+        "sjres": 1,
+        "sres": 21,
+        "sconres": 1
+      }
+    },
+    "S001183": {
+      "introduced": 35,
+      "byType": {
+        "hr": 34,
+        "hres": 1
+      }
+    },
+    "S001184": {
+      "introduced": 66,
+      "byType": {
+        "s": 54,
+        "sjres": 2,
+        "sres": 10
+      }
+    },
+    "S001185": {
+      "introduced": 15,
+      "byType": {
+        "hr": 14,
+        "hres": 1
+      }
+    },
+    "S001188": {
+      "introduced": 16,
+      "byType": {
+        "hr": 14,
+        "hres": 2
+      }
+    },
+    "S001189": {
+      "introduced": 22,
+      "byType": {
+        "hr": 11,
+        "hres": 11
+      }
+    },
+    "S001190": {
+      "introduced": 29,
+      "byType": {
+        "hr": 22,
+        "hres": 7
+      }
+    },
+    "S001193": {
+      "introduced": 10,
+      "byType": {
+        "hr": 10
+      }
+    },
+    "S001194": {
+      "introduced": 63,
+      "byType": {
+        "s": 46,
+        "sres": 15,
+        "sconres": 2
+      }
+    },
+    "S001195": {
+      "introduced": 9,
+      "byType": {
+        "hr": 7,
+        "hres": 2
+      }
+    },
+    "S001196": {
+      "introduced": 29,
+      "byType": {
+        "hr": 28,
+        "hres": 1
+      }
+    },
+    "S001198": {
+      "introduced": 72,
+      "byType": {
+        "s": 58,
+        "sjres": 3,
+        "sres": 11
+      }
+    },
+    "S001199": {
+      "introduced": 32,
+      "byType": {
+        "hr": 32
+      }
+    },
+    "S001200": {
+      "introduced": 18,
+      "byType": {
+        "hr": 15,
+        "hres": 3
+      }
+    },
+    "S001201": {
+      "introduced": 26,
+      "byType": {
+        "hr": 19,
+        "hres": 6,
+        "hconres": 1
+      }
+    },
+    "S001203": {
+      "introduced": 46,
+      "byType": {
+        "s": 41,
+        "sres": 5
+      }
+    },
+    "S001205": {
+      "introduced": 25,
+      "byType": {
+        "hr": 22,
+        "hjres": 1,
+        "hres": 2
+      }
+    },
+    "S001207": {
+      "introduced": 21,
+      "byType": {
+        "hr": 21
+      }
+    },
+    "S001208": {
+      "introduced": 30,
+      "byType": {
+        "s": 29,
+        "sres": 1
+      }
+    },
+    "S001211": {
+      "introduced": 27,
+      "byType": {
+        "hr": 24,
+        "hres": 3
+      }
+    },
+    "S001212": {
+      "introduced": 24,
+      "byType": {
+        "hr": 22,
+        "hjres": 1,
+        "hconres": 1
+      }
+    },
+    "S001213": {
+      "introduced": 35,
+      "byType": {
+        "hr": 22,
+        "hres": 13
+      }
+    },
+    "S001214": {
+      "introduced": 115,
+      "byType": {
+        "hr": 106,
+        "hjres": 1,
+        "hres": 8
+      }
+    },
+    "S001215": {
+      "introduced": 60,
+      "byType": {
+        "hr": 52,
+        "hres": 7,
+        "hconres": 1
+      }
+    },
+    "S001216": {
+      "introduced": 23,
+      "byType": {
+        "hr": 23
+      }
+    },
+    "S001217": {
+      "introduced": 185,
+      "byType": {
+        "s": 150,
+        "sjres": 2,
+        "sres": 31,
+        "sconres": 2
+      }
+    },
+    "S001218": {
+      "introduced": 28,
+      "byType": {
+        "hr": 26,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "S001220": {
+      "introduced": 16,
+      "byType": {
+        "hr": 14,
+        "hres": 2
+      }
+    },
+    "S001221": {
+      "introduced": 52,
+      "byType": {
+        "hr": 50,
+        "hres": 2
+      }
+    },
+    "S001223": {
+      "introduced": 39,
+      "byType": {
+        "hr": 32,
+        "hjres": 1,
+        "hres": 6
+      }
+    },
+    "S001224": {
+      "introduced": 57,
+      "byType": {
+        "hr": 53,
+        "hjres": 1,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "S001225": {
+      "introduced": 12,
+      "byType": {
+        "hr": 12
+      }
+    },
+    "S001226": {
+      "introduced": 40,
+      "byType": {
+        "hr": 36,
+        "hres": 4
+      }
+    },
+    "S001227": {
+      "introduced": 57,
+      "byType": {
+        "s": 45,
+        "sjres": 2,
+        "sres": 10
+      }
+    },
+    "S001228": {
+      "introduced": 17,
+      "byType": {
+        "hr": 17
+      }
+    },
+    "S001229": {
+      "introduced": 18,
+      "byType": {
+        "hr": 16,
+        "hres": 2
+      }
+    },
+    "S001230": {
+      "introduced": 44,
+      "byType": {
+        "hr": 42,
+        "hres": 2
+      }
+    },
+    "S001231": {
+      "introduced": 12,
+      "byType": {
+        "hr": 10,
+        "hres": 2
+      }
+    },
+    "S001232": {
+      "introduced": 77,
+      "byType": {
+        "s": 76,
+        "sres": 1
+      }
+    },
+    "T000165": {
+      "introduced": 17,
+      "byType": {
+        "hr": 15,
+        "hjres": 1,
+        "hconres": 1
+      }
+    },
+    "T000193": {
+      "introduced": 15,
+      "byType": {
+        "hr": 10,
+        "hres": 5
+      }
+    },
+    "T000250": {
+      "introduced": 57,
+      "byType": {
+        "s": 21,
+        "sres": 33,
+        "sconres": 3
+      }
+    },
+    "T000278": {
+      "introduced": 41,
+      "byType": {
+        "s": 36,
+        "sres": 5
+      }
+    },
+    "T000460": {
+      "introduced": 27,
+      "byType": {
+        "hr": 20,
+        "hres": 6,
+        "hconres": 1
+      }
+    },
+    "T000463": {
+      "introduced": 11,
+      "byType": {
+        "hr": 10,
+        "hres": 1
+      }
+    },
+    "T000467": {
+      "introduced": 49,
+      "byType": {
+        "hr": 31,
+        "hres": 17,
+        "hconres": 1
+      }
+    },
+    "T000468": {
+      "introduced": 57,
+      "byType": {
+        "hr": 49,
+        "hjres": 1,
+        "hres": 7
+      }
+    },
+    "T000469": {
+      "introduced": 29,
+      "byType": {
+        "hr": 23,
+        "hres": 6
+      }
+    },
+    "T000472": {
+      "introduced": 27,
+      "byType": {
+        "hr": 23,
+        "hres": 4
+      }
+    },
+    "T000474": {
+      "introduced": 42,
+      "byType": {
+        "hr": 29,
+        "hres": 12,
+        "hconres": 1
+      }
+    },
+    "T000476": {
+      "introduced": 59,
+      "byType": {
+        "s": 51,
+        "sres": 8
+      }
+    },
+    "T000478": {
+      "introduced": 80,
+      "byType": {
+        "hr": 69,
+        "hjres": 1,
+        "hres": 10
+      }
+    },
+    "T000480": {
+      "introduced": 14,
+      "byType": {
+        "hr": 11,
+        "hjres": 1,
+        "hres": 1,
+        "hconres": 1
+      }
+    },
+    "T000481": {
+      "introduced": 48,
+      "byType": {
+        "hr": 29,
+        "hjres": 5,
+        "hres": 11,
+        "hconres": 3
+      }
+    },
+    "T000482": {
+      "introduced": 18,
+      "byType": {
+        "hr": 15,
+        "hres": 3
+      }
+    },
+    "T000486": {
+      "introduced": 52,
+      "byType": {
+        "hr": 45,
+        "hjres": 1,
+        "hres": 6
+      }
+    },
+    "T000487": {
+      "introduced": 42,
+      "byType": {
+        "hr": 32,
+        "hres": 10
+      }
+    },
+    "T000488": {
+      "introduced": 41,
+      "byType": {
+        "hr": 27,
+        "hres": 14
+      }
+    },
+    "T000489": {
+      "introduced": 2,
+      "byType": {
+        "hr": 2
+      }
+    },
+    "T000490": {
+      "introduced": 36,
+      "byType": {
+        "hr": 32,
+        "hres": 4
+      }
+    },
+    "T000491": {
+      "introduced": 17,
+      "byType": {
+        "hr": 12,
+        "hres": 4,
+        "hconres": 1
+      }
+    },
+    "U000040": {
+      "introduced": 38,
+      "byType": {
+        "hr": 37,
+        "hres": 1
+      }
+    },
+    "V000081": {
+      "introduced": 45,
+      "byType": {
+        "hr": 31,
+        "hjres": 3,
+        "hres": 8,
+        "hconres": 3
+      }
+    },
+    "V000128": {
+      "introduced": 74,
+      "byType": {
+        "s": 62,
+        "sjres": 4,
+        "sres": 8
+      }
+    },
+    "V000129": {
+      "introduced": 36,
+      "byType": {
+        "hr": 29,
+        "hres": 7
+      }
+    },
+    "V000130": {
+      "introduced": 14,
+      "byType": {
+        "hr": 9,
+        "hjres": 1,
+        "hres": 4
+      }
+    },
+    "V000131": {
+      "introduced": 14,
+      "byType": {
+        "hr": 7,
+        "hres": 7
+      }
+    },
+    "V000133": {
+      "introduced": 57,
+      "byType": {
+        "hr": 51,
+        "hres": 6
+      }
+    },
+    "V000134": {
+      "introduced": 48,
+      "byType": {
+        "hr": 45,
+        "hres": 3
+      }
+    },
+    "V000135": {
+      "introduced": 30,
+      "byType": {
+        "hr": 28,
+        "hjres": 1,
+        "hres": 1
+      }
+    },
+    "V000136": {
+      "introduced": 35,
+      "byType": {
+        "hr": 35
+      }
+    },
+    "V000138": {
+      "introduced": 73,
+      "byType": {
+        "hr": 71,
+        "hres": 2
+      }
+    },
+    "V000139": {
+      "introduced": 8,
+      "byType": {
+        "hr": 7,
+        "hres": 1
+      }
+    },
+    "W000187": {
+      "introduced": 44,
+      "byType": {
+        "hr": 35,
+        "hjres": 2,
+        "hres": 7
+      }
+    },
+    "W000437": {
+      "introduced": 46,
+      "byType": {
+        "s": 34,
+        "sres": 10,
+        "sconres": 2
+      }
+    },
+    "W000779": {
+      "introduced": 95,
+      "byType": {
+        "s": 80,
+        "sjres": 6,
+        "sres": 9
+      }
+    },
+    "W000788": {
+      "introduced": 58,
+      "byType": {
+        "hr": 42,
+        "hjres": 2,
+        "hres": 10,
+        "hconres": 4
+      }
+    },
+    "W000790": {
+      "introduced": 27,
+      "byType": {
+        "s": 19,
+        "sjres": 3,
+        "sres": 5
+      }
+    },
+    "W000795": {
+      "introduced": 35,
+      "byType": {
+        "hr": 32,
+        "hres": 3
+      }
+    },
+    "W000797": {
+      "introduced": 28,
+      "byType": {
+        "hr": 21,
+        "hres": 6,
+        "hconres": 1
+      }
+    },
+    "W000798": {
+      "introduced": 27,
+      "byType": {
+        "hr": 23,
+        "hres": 4
+      }
+    },
+    "W000800": {
+      "introduced": 84,
+      "byType": {
+        "s": 68,
+        "sjres": 1,
+        "sres": 15
+      }
+    },
+    "W000802": {
+      "introduced": 100,
+      "byType": {
+        "s": 51,
+        "sjres": 23,
+        "sres": 26
+      }
+    },
+    "W000804": {
+      "introduced": 23,
+      "byType": {
+        "hr": 20,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "W000805": {
+      "introduced": 59,
+      "byType": {
+        "s": 57,
+        "sjres": 2
+      }
+    },
+    "W000806": {
+      "introduced": 10,
+      "byType": {
+        "hr": 10
+      }
+    },
+    "W000808": {
+      "introduced": 29,
+      "byType": {
+        "hr": 25,
+        "hres": 4
+      }
+    },
+    "W000809": {
+      "introduced": 11,
+      "byType": {
+        "hr": 9,
+        "hjres": 1,
+        "hconres": 1
+      }
+    },
+    "W000812": {
+      "introduced": 20,
+      "byType": {
+        "hr": 18,
+        "hres": 2
+      }
+    },
+    "W000814": {
+      "introduced": 23,
+      "byType": {
+        "hr": 19,
+        "hres": 4
+      }
+    },
+    "W000816": {
+      "introduced": 40,
+      "byType": {
+        "hr": 32,
+        "hres": 8
+      }
+    },
+    "W000817": {
+      "introduced": 85,
+      "byType": {
+        "s": 62,
+        "sjres": 17,
+        "sres": 6
+      }
+    },
+    "W000821": {
+      "introduced": 12,
+      "byType": {
+        "hr": 8,
+        "hres": 4
+      }
+    },
+    "W000822": {
+      "introduced": 53,
+      "byType": {
+        "hr": 46,
+        "hres": 7
+      }
+    },
+    "W000829": {
+      "introduced": 21,
+      "byType": {
+        "hr": 19,
+        "hres": 2
+      }
+    },
+    "W000830": {
+      "introduced": 23,
+      "byType": {
+        "hr": 21,
+        "hres": 2
+      }
+    },
+    "W000831": {
+      "introduced": 24,
+      "byType": {
+        "hr": 21,
+        "hres": 2,
+        "hconres": 1
+      }
+    },
+    "Y000064": {
+      "introduced": 65,
+      "byType": {
+        "s": 56,
+        "sres": 9
+      }
+    },
+    "Y000067": {
+      "introduced": 32,
+      "byType": {
+        "hr": 26,
+        "hres": 6
+      }
+    },
+    "Z000018": {
+      "introduced": 15,
+      "byType": {
+        "hr": 14,
+        "hres": 1
+      }
+    }
+  },
+  "meta": {
+    "parsed": {
+      "hr": 10608,
+      "s": 5551,
+      "hjres": 217,
+      "sjres": 217,
+      "hres": 1585,
+      "sres": 910,
+      "hconres": 121,
+      "sconres": 40
+    },
+    "noSponsor": 0
+  }
+}

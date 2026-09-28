@@ -42,6 +42,8 @@ export interface FederalAward {
   startDate: string;
   description: string;
   url: string;
+  /** USASpending generated_unique_award_id — the key /spending/awards/[id] resolves. */
+  generatedId: string;
 }
 
 // District spending summary

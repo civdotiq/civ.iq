@@ -19,66 +19,25 @@ import type {
   USASpendingAwardResponse,
   USASpendingAwardResult,
 } from '@/types/spending';
+import { censusCongressionalDistrictCode, STATE_FIPS_TO_CODE } from '@/lib/data/us-states';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
+
+// USASpending answers repeat queries in ~0.5s but can hang 40s+ on a cold
+// one. Bound each call so a caller's function budget survives; the next
+// request usually lands on USASpending's warm cache.
+const USASPENDING_TIMEOUT_MS = 8000;
 
 const CONTRACT_CODES = ['A', 'B', 'C', 'D'];
 const GRANT_CODES = ['02', '03', '04', '05'];
 
 // The spending_by_geography endpoint identifies districts by FIPS-based
 // shape codes (e.g. TX-10 = "4810"), not by state postal codes.
-const STATE_FIPS: Record<string, string> = {
-  AL: '01',
-  AK: '02',
-  AZ: '04',
-  AR: '05',
-  CA: '06',
-  CO: '08',
-  CT: '09',
-  DE: '10',
-  FL: '12',
-  GA: '13',
-  HI: '15',
-  ID: '16',
-  IL: '17',
-  IN: '18',
-  IA: '19',
-  KS: '20',
-  KY: '21',
-  LA: '22',
-  ME: '23',
-  MD: '24',
-  MA: '25',
-  MI: '26',
-  MN: '27',
-  MS: '28',
-  MO: '29',
-  MT: '30',
-  NE: '31',
-  NV: '32',
-  NH: '33',
-  NJ: '34',
-  NM: '35',
-  NY: '36',
-  NC: '37',
-  ND: '38',
-  OH: '39',
-  OK: '40',
-  OR: '41',
-  PA: '42',
-  RI: '44',
-  SC: '45',
-  SD: '46',
-  TN: '47',
-  TX: '48',
-  UT: '49',
-  VT: '50',
-  VA: '51',
-  WA: '53',
-  WV: '54',
-  WI: '55',
-  WY: '56',
-};
+// All 50 states + DC + territories, from the shared table (a local copy
+// omitted DC, which made every DC lookup through it fail).
+const STATE_FIPS: Record<string, string> = Object.fromEntries(
+  Object.entries(STATE_FIPS_TO_CODE).map(([fips, code]) => [code, fips])
+);
 
 /**
  * Parse district ID (e.g., "MI-05", "CA-5", "AK-AL") into state and district number.
@@ -87,11 +46,8 @@ const STATE_FIPS: Record<string, string> = {
 export function parseDistrictId(districtId: string): { state: string; district: string } | null {
   const match = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|00)$/i);
   if (!match) return null;
-  const district = match[2] ?? '';
-  return {
-    state: match[1]?.toUpperCase() ?? '',
-    district: district.match(/^\d+$/) ? district.padStart(2, '0') : '00',
-  };
+  const state = match[1]?.toUpperCase() ?? '';
+  return { state, district: censusCongressionalDistrictCode(state, match[2] ?? '') };
 }
 
 function transformAward(award: USASpendingAwardResult, type: 'contract' | 'grant'): FederalAward {
@@ -107,6 +63,7 @@ function transformAward(award: USASpendingAwardResult, type: 'contract' | 'grant
     startDate: award['Start Date'],
     description: award.Description || 'No description available',
     url: `https://www.usaspending.gov/award/${award.generated_internal_id}`,
+    generatedId: award.generated_internal_id,
   };
 }
 
@@ -115,7 +72,7 @@ async function fetchDistrictAwards(
   district: string,
   awardCodes: string[],
   limit: number = 10
-): Promise<FederalAward[]> {
+): Promise<FederalAward[] | null> {
   const { startDate, endDate } = currentFederalFiscalYearWindow();
 
   try {
@@ -145,11 +102,12 @@ async function fetchDistrictAwards(
           award_type_codes: awardCodes,
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) {
       logger.error('USAspending API error', new Error(`HTTP ${response.status}`));
-      return [];
+      return null;
     }
 
     const data: USASpendingAwardResponse = await response.json();
@@ -157,7 +115,7 @@ async function fetchDistrictAwards(
     return data.results.map(award => transformAward(award, type));
   } catch (error) {
     logger.error('Error fetching district awards', error as Error);
-    return [];
+    return null;
   }
 }
 
@@ -188,6 +146,7 @@ async function fetchDistrictAggregate(
           time_period: [{ start_date: startDate, end_date: endDate }],
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) return null;
@@ -252,30 +211,46 @@ async function sumDistrictAwardObligations(
   const { startDate, endDate } = currentFederalFiscalYearWindow();
   let total = 0;
 
+  const fetchPageOnce = (page: number) =>
+    fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+      },
+      body: JSON.stringify({
+        subawards: false,
+        limit: 100,
+        page,
+        fields: ['Award ID', 'Award Amount'],
+        sort: 'Award Amount',
+        order: 'desc',
+        filters: {
+          place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
+          time_period: [{ start_date: startDate, end_date: endDate }],
+          award_type_codes: awardTypeCodes,
+          ...codeFilter,
+        },
+      }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
+    });
+
+  // Deep pages intermittently 503 (or hang) and succeed on a retry; one
+  // failure used to void the whole district total.
+  const fetchPage = async (page: number, attempt = 0): Promise<Response> => {
+    try {
+      const response = await fetchPageOnce(page);
+      if (response.status >= 500 && attempt === 0) return fetchPage(page, 1);
+      return response;
+    } catch (error) {
+      if (attempt === 0) return fetchPage(page, 1);
+      throw error;
+    }
+  };
+
   for (let page = 1; page <= INFRA_MAX_PAGES; page++) {
     try {
-      const response = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
-        },
-        body: JSON.stringify({
-          subawards: false,
-          limit: 100,
-          page,
-          fields: ['Award ID', 'Award Amount'],
-          sort: 'Award Amount',
-          order: 'desc',
-          filters: {
-            place_of_performance_locations: [{ country: 'USA', state, district_current: district }],
-            time_period: [{ start_date: startDate, end_date: endDate }],
-            award_type_codes: awardTypeCodes,
-            ...codeFilter,
-          },
-        }),
-        signal: AbortSignal.timeout(25000),
-      });
+      const response = await fetchPage(page);
 
       if (!response.ok) {
         logger.warn('Infrastructure award page failed', {
@@ -478,6 +453,7 @@ async function fetchDistrictAwardCounts(
           time_period: [{ start_date: startDate, end_date: endDate }],
         },
       }),
+      signal: AbortSignal.timeout(USASPENDING_TIMEOUT_MS),
     });
 
     if (!response.ok) return null;
@@ -517,6 +493,8 @@ export interface DistrictSpendingResult {
   aggregate: { total: number; perCapita: number | null; population: number | null } | null;
   contractTotal: number;
   grantTotal: number;
+  /** true when a sub-fetch failed; such results are never cached */
+  incomplete?: boolean;
 }
 
 /**
@@ -528,7 +506,10 @@ export async function getDistrictSpending(
   state: string,
   district: string
 ): Promise<DistrictSpendingResult> {
-  const cacheKey = `spending-district-${state}-${district}`;
+  // v2: v1 entries could hold a failed fetch cached as "no aggregate"
+  // v3: awards gained `generatedId` (the /spending/awards/[id] link key);
+  //     v2 entries would serve link-less rows for up to 6h after deploy
+  const cacheKey = `spending-district-v3-${state}-${district}`;
 
   return cachedFetch(
     cacheKey,
@@ -539,12 +520,24 @@ export async function getDistrictSpending(
         fetchDistrictAggregate(state, district),
       ]);
 
-      const contractTotal = contracts.reduce((sum, a) => sum + a.amount, 0);
-      const grantTotal = grants.reduce((sum, a) => sum + a.amount, 0);
-
-      return { contracts, grants, aggregate, contractTotal, grantTotal };
+      const contractList = contracts ?? [];
+      const grantList = grants ?? [];
+      const result: DistrictSpendingResult = {
+        contracts: contractList,
+        grants: grantList,
+        aggregate,
+        contractTotal: contractList.reduce((sum, a) => sum + a.amount, 0),
+        grantTotal: grantList.reduce((sum, a) => sum + a.amount, 0),
+      };
+      // A null aggregate is also how "no data" looks, so a district with no
+      // aggregate retries each time; cheap, and never pins a timeout for 6h.
+      if (contracts === null || grants === null || aggregate === null) {
+        result.incomplete = true;
+      }
+      return result;
     },
     // cachedFetch TTL is in seconds; this was previously 6h * 1000 (~250 days)
-    6 * 60 * 60
+    6 * 60 * 60,
+    result => !result.incomplete
   );
 }

@@ -11,6 +11,7 @@ import { VoteLink } from '@/components/shared/links/EntityLinks';
 import { formatBillNumber } from '@/lib/bill-label';
 import type { Vote } from '../VoteRow';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
+import { formatDateOnly } from '@/lib/utils/date-only';
 
 interface RecentVotesSectionProps {
   bioguideId: string;
@@ -35,9 +36,7 @@ function positionChipClass(position: string): string {
 }
 
 function formatVoteDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatDateOnly(iso, { month: 'short', day: 'numeric' }) || iso;
 }
 
 /** Measure label: prefer the bill title, fall back to the roll-call question. */

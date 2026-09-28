@@ -15,13 +15,15 @@ import type { DistrictBoundary } from '@/types/state-legislature';
 const TIGERWEB_BASE =
   'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
 
-// Layer IDs in TIGERweb Legislative MapServer. Census renumbers congressional
-// layers each vintage (Sept 2026: layer 0 became the 120th Congress), so the
-// 119th layer is resolved by name; this ID is only the fallback.
-const CD119_LAYER_NAME = '119th Congressional Districts';
-const LAYER_CD119_FALLBACK = 4;
-const LAYER_SLDU = 1; // State Senate Districts (upper)
-const LAYER_SLDL = 2; // State House Districts (lower)
+// Layers in TIGERweb Legislative MapServer for the SITTING bodies' lines
+// (see src/lib/census-vintage.ts). Census renumbers layers each vintage
+// (Sept 2026: layers 0-2 became the 120th Congress / 2026 legislatures), so
+// they are resolved by name; the IDs are only fallbacks.
+export const TIGERWEB_SITTING_LAYERS = {
+  cd: { name: '119th Congressional Districts', fallback: 4 },
+  upper: { name: '2024 State Legislative Districts - Upper', fallback: 5 },
+  lower: { name: '2024 State Legislative Districts - Lower', fallback: 6 },
+} as const;
 
 // State FIPS codes for TIGERweb queries
 const STATE_FIPS: Record<string, string> = {
@@ -81,31 +83,36 @@ const STATE_FIPS: Record<string, string> = {
 // 90-day TTL — boundaries only change after redistricting
 const BOUNDARY_CACHE_TTL = 90 * 24 * 60 * 60 * 1000;
 
-let cd119LayerPromise: Promise<number> | null = null;
+const layerIdPromises = new Map<string, Promise<number>>();
 
-/** Resolve the 119th-Congress layer ID from the MapServer's layer list. */
-function resolveCd119Layer(): Promise<number> {
-  cd119LayerPromise ??= (async () => {
-    try {
-      const response = await fetch(`${TIGERWEB_BASE}?f=json`, {
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = (await response.json()) as { layers?: Array<{ id: number; name: string }> };
-      const layer = data.layers?.find(l => l.name === CD119_LAYER_NAME);
-      if (layer) return layer.id;
-      logger.warn('TIGERweb 119th CD layer not found by name; using fallback', {
-        fallback: LAYER_CD119_FALLBACK,
-      });
-    } catch (error) {
-      logger.warn('TIGERweb layer list unavailable; using fallback', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      cd119LayerPromise = null; // retry resolution on the next call
-    }
-    return LAYER_CD119_FALLBACK;
-  })();
-  return cd119LayerPromise;
+/** Resolve a Legislative MapServer layer ID from its name, memoized per name. */
+export function resolveTigerwebLayer(name: string, fallback: number): Promise<number> {
+  let promise = layerIdPromises.get(name);
+  if (!promise) {
+    promise = (async () => {
+      try {
+        const response = await fetch(`${TIGERWEB_BASE}?f=json`, {
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = (await response.json()) as {
+          layers?: Array<{ id: number; name: string }>;
+        };
+        const layer = data.layers?.find(l => l.name === name);
+        if (layer) return layer.id;
+        logger.warn('TIGERweb layer not found by name; using fallback', { name, fallback });
+      } catch (error) {
+        logger.warn('TIGERweb layer list unavailable; using fallback', {
+          name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        layerIdPromises.delete(name); // retry resolution on the next call
+      }
+      return fallback;
+    })();
+    layerIdPromises.set(name, promise);
+  }
+  return promise;
 }
 
 /**
@@ -122,7 +129,8 @@ export async function getDistrictBoundary(
   district: string
 ): Promise<DistrictBoundary | null> {
   const stateUpper = state.toUpperCase();
-  const cacheKey = `tigerweb:boundary:${stateUpper}:${chamber}:${district}`;
+  // v2: v1 entries came from the 2026 (ballot) layers, not the sitting 2024 ones
+  const cacheKey = `tigerweb:boundary:v2:${stateUpper}:${chamber}:${district}`;
 
   try {
     // Check cache first
@@ -138,7 +146,8 @@ export async function getDistrictBoundary(
       return null;
     }
 
-    const layer = chamber === 'upper' ? LAYER_SLDU : LAYER_SLDL;
+    const { name, fallback } = TIGERWEB_SITTING_LAYERS[chamber];
+    const layer = await resolveTigerwebLayer(name, fallback);
     const districtPadded = district.padStart(3, '0');
 
     // Build ArcGIS REST query. The 2024 TIGERweb Legislative layers expose the
@@ -247,7 +256,10 @@ export async function getCongressionalDistrictBoundary(
       ...(maxAllowableOffset ? { maxAllowableOffset: String(maxAllowableOffset) } : {}),
     });
 
-    const layer = await resolveCd119Layer();
+    const layer = await resolveTigerwebLayer(
+      TIGERWEB_SITTING_LAYERS.cd.name,
+      TIGERWEB_SITTING_LAYERS.cd.fallback
+    );
     const url = `${TIGERWEB_BASE}/${layer}/query?${queryParams}`;
 
     logger.info('Fetching congressional boundary from TIGERweb', { geoid });

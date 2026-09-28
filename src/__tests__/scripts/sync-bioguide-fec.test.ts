@@ -10,6 +10,7 @@ import {
   buildMappingFromLegislators,
   mergeWithExisting,
   summarizeDiff,
+  preserveSeatedMembers,
   serialize,
   scoreFecMatch,
   pickBestFecMatch,
@@ -212,6 +213,37 @@ describe('summarizeDiff', () => {
     const fresh: MappingFile = { A: entry({ lastUpdated: '2026-04-16' }) };
     const diff = summarizeDiff(fresh, existing);
     expect(diff.updated).toEqual([]);
+  });
+});
+
+describe('preserveSeatedMembers', () => {
+  const entry = {
+    fecId: 'S6SC04437',
+    name: 'GRAHAM, DARLINE',
+    state: 'SC',
+    office: 'S' as const,
+    lastUpdated: '2026-09-22',
+  };
+
+  it('carries forward a seated member missing from fresh', () => {
+    const fresh: MappingFile = {};
+    const preserved = preserveSeatedMembers(fresh, { G000608: entry }, ['G000608']);
+    expect(preserved).toEqual(['G000608']);
+    expect(fresh.G000608).toEqual(entry);
+  });
+
+  it('does not override a fresh entry or invent one without prior data', () => {
+    const newer = { ...entry, fecId: 'S6SC99999' };
+    const fresh: MappingFile = { G000608: newer };
+    expect(preserveSeatedMembers(fresh, { G000608: entry }, ['G000608', 'A000383'])).toEqual([]);
+    expect(fresh.G000608).toEqual(newer);
+    expect(fresh.A000383).toBeUndefined();
+  });
+
+  it('does not preserve members who are no longer seated', () => {
+    const fresh: MappingFile = {};
+    expect(preserveSeatedMembers(fresh, { G000608: entry }, [])).toEqual([]);
+    expect(fresh).toEqual({});
   });
 });
 

@@ -91,8 +91,8 @@ export function GlanceBand({
         caption={
           raised
             ? `${cycle ? `${cycle} cycle` : 'Latest cycle'}${spent ? ` · ${spent} spent` : ''}`
-            : failed
-              ? unavailable
+            : failed || summary?.financeUnavailable
+              ? 'Could not load — retry shortly'
               : 'No FEC filings found'
         }
         loading={loading}

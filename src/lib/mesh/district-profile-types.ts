@@ -71,7 +71,8 @@ export interface DistrictProfile extends InsightBase {
 
   /** Economic DNA */
   topSectors: SectorConcentration[];
-  federalSpendingTotal: number;
+  /** null = unavailable from USASpending (never a fabricated $0) */
+  federalSpendingTotal: number | null;
   federalSpendingPerCapita: number | null;
   topAgencies: Array<{ name: string; slug: string; amount: number }>;
 

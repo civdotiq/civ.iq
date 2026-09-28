@@ -72,7 +72,7 @@ export function MoneyPanel({ representative: r }: MoneyPanelProps) {
   );
 
   const finance = batch?.data?.finance;
-  const cycle = finance?.cycle ?? finance?.metadata?.dataFromCycle ?? 2024;
+  const cycle = finance?.cycle ?? finance?.metadata?.dataFromCycle;
   const total = finance?.totalRaised;
 
   const sources =
@@ -113,7 +113,7 @@ export function MoneyPanel({ representative: r }: MoneyPanelProps) {
       <PanelHeader
         eyebrow={
           finance && total
-            ? `${cycle} cycle · FEC filings · ${formatCurrency(total)} raised`
+            ? `${cycle ? `${cycle} cycle · ` : ''}FEC filings · ${formatCurrency(total)} raised`
             : 'FEC filings'
         }
         title="Where the money came from"
@@ -143,7 +143,7 @@ export function MoneyPanel({ representative: r }: MoneyPanelProps) {
             fontFamily: 'var(--font-mono)',
           }}
         >
-          Data unavailable — no FEC summary returned for the {cycle} cycle.
+          Data unavailable — no FEC summary returned{cycle ? ` for the ${cycle} cycle` : ''}.
         </div>
       ) : (
         <>
@@ -200,7 +200,7 @@ export function MoneyPanel({ representative: r }: MoneyPanelProps) {
               {finance && (
                 <div style={{ marginTop: 16 }}>
                   <CqPlainReading>
-                    {`${formatCurrency(total)} raised in the ${cycle} cycle. Cash on hand: ${formatCurrency(finance.cashOnHand)}. Spent: ${formatCurrency(finance.totalSpent)}.`}
+                    {`${formatCurrency(total)} raised${cycle ? ` in the ${cycle} cycle` : ''}. Cash on hand: ${formatCurrency(finance.cashOnHand)}. Spent: ${formatCurrency(finance.totalSpent)}.`}
                   </CqPlainReading>
                 </div>
               )}

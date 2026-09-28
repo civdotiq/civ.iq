@@ -9,6 +9,7 @@ import logger from '@/lib/logging/simple-logger';
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import { getServerBaseUrl } from '@/lib/server-url';
 import type { CivicAlignmentInput } from '@/types/ai';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,8 @@ export async function GET(
 
   try {
     const alignmentData = await cachedFetch(
-      `civic-alignment-${bioguideId}`,
+      // v2: unversioned entries were built from 2024-cycle FEC data.
+      `civic-alignment-v2-${bioguideId}`,
       async () => {
         // 1. Get representative info
         const { getEnhancedRepresentative } = await import(
@@ -267,7 +269,7 @@ async function fetchFinanceProfile(bioguideId: string): Promise<CivicAlignmentIn
     const { fecApiService } = await import('@/lib/fec/fec-api-service');
     const { aggregateByIndustrySector } = await import('@/lib/fec/industry-taxonomy');
 
-    const cycle = 2024;
+    const cycle = getCurrentElectionCycle();
 
     // Fetch financial summary and contributions in parallel
     const [summary, contributions] = await Promise.all([

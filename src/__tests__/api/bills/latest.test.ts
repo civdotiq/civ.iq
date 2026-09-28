@@ -18,6 +18,11 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   },
 }));
 
+const mockGetBillsByPolicyArea = jest.fn();
+jest.mock('@/lib/data-sources/bill-policy-areas/load', () => ({
+  getBillsByPolicyArea: (...args: unknown[]) => mockGetBillsByPolicyArea(...args),
+}));
+
 // Mock Congress.gov API response
 const mockBillsResponse = {
   bills: [
@@ -256,6 +261,76 @@ describe('/api/bills/latest', () => {
       const data = await response.json();
 
       expect(data.metadata.congress).toBe(119);
+    });
+  });
+
+  describe('policyArea filter (GovInfo corpus)', () => {
+    const healthBill = {
+      id: '119-sjres-7',
+      congress: 119,
+      type: 'sjres',
+      number: 7,
+      title: 'A joint resolution on health',
+      policyArea: 'Health',
+      introducedDate: '2025-02-01',
+      latestActionDate: '2025-03-01',
+      latestActionText: 'Read twice.',
+    };
+
+    it('answers from the corpus without calling Congress.gov', async () => {
+      mockGetBillsByPolicyArea.mockResolvedValue({
+        total: 1841,
+        bills: [healthBill],
+        congress: 119,
+        generatedAt: '2026-09-20T00:00:00Z',
+      });
+      const request = createMockRequest(
+        'http://localhost:3000/api/bills/latest?policyArea=health&limit=5'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(mockGetBillsByPolicyArea).toHaveBeenCalledWith('Health', 5);
+      expect(data.metadata.totalBills).toBe(1841);
+      expect(data.metadata.policyArea).toBe('Health');
+      expect(data.bills[0]).toEqual({
+        congress: 119,
+        type: 'SJRES',
+        number: '7',
+        title: 'A joint resolution on health',
+        originChamber: 'Senate',
+        originChamberCode: 'S',
+        introducedDate: '2025-02-01',
+        latestAction: { actionDate: '2025-03-01', text: 'Read twice.' },
+        policyArea: { name: 'Health' },
+      });
+    });
+
+    it('rejects an unknown policy area with a 400 ApiError', async () => {
+      const request = createMockRequest(
+        'http://localhost:3000/api/bills/latest?policyArea=Not%20A%20Topic'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe('VALIDATION_ERROR');
+      expect(mockGetBillsByPolicyArea).not.toHaveBeenCalled();
+    });
+
+    it('reports unavailable rather than zero when the corpus is missing', async () => {
+      mockGetBillsByPolicyArea.mockResolvedValue(null);
+      const request = createMockRequest('http://localhost:3000/api/bills/latest?policyArea=Health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.bills).toEqual([]);
+      expect(data.metadata.totalBills).toBeNull();
+      expect(data.metadata.dataAvailable).toBe(false);
     });
   });
 });

@@ -11,7 +11,7 @@ import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
-import { US_STATES } from '@/lib/data/us-states';
+import { US_STATES, censusCongressionalDistrictCode } from '@/lib/data/us-states';
 import { getHouseResult2024 } from '@/lib/services/election-results.service';
 
 // Type for Census Gazetteer data
@@ -212,7 +212,10 @@ function buildCensusGeoParams(
   if (isStatewideQuery) {
     params.append('for', `state:${getStateFipsCode(state)}`);
   } else {
-    params.append('for', `congressional district:${district.padStart(2, '0')}`);
+    params.append(
+      'for',
+      `congressional district:${censusCongressionalDistrictCode(state, district)}`
+    );
     params.append('in', `state:${getStateFipsCode(state)}`);
   }
   if (apiKey && !apiKey.startsWith('your_')) {
@@ -495,7 +498,10 @@ async function getDistrictDemographics(
       });
     } else {
       // For House district queries, get congressional district data
-      params.append('for', `congressional district:${district.padStart(2, '0')}`);
+      params.append(
+        'for',
+        `congressional district:${censusCongressionalDistrictCode(state, district)}`
+      );
       params.append('in', `state:${getStateFipsCode(state)}`);
     }
 
@@ -901,8 +907,9 @@ async function getDistrictGeography(
   const { counties, cities } = getPost2023DistrictData(state, district);
 
   // Get area from Census Gazetteer (real data)
-  const normalizedDistrict =
-    district === '00' || district === 'AL' ? '01' : district.padStart(2, '0');
+  // Gazetteer keys at-large states as 01 and delegate seats as 98.
+  const censusCode = censusCongressionalDistrictCode(state, district);
+  const normalizedDistrict = censusCode === '00' ? '01' : censusCode;
   const gazetteerKey = `${state}-${normalizedDistrict}`;
   const gazetteerDistrict = typedGazetteerData.districts[gazetteerKey];
   const area = gazetteerDistrict ? Math.round(gazetteerDistrict.landAreaSqMi) : 0;
@@ -1796,8 +1803,9 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       stateCode = resolvedStateCode;
     }
 
-    // Normalize district number (remove leading zeros for comparison, but preserve format)
-    const normalizedDistrict = district?.replace(/^0+/, '') || '0';
+    // Normalize district number (remove leading zeros for comparison, but preserve format).
+    // "AL" (at-large / delegate seat) is the same seat as "00".
+    const normalizedDistrict = /^AL$/i.test(district) ? '0' : district.replace(/^0+/, '') || '0';
 
     logger.info('Parsing district details', {
       districtId,
@@ -1880,12 +1888,13 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
     }
 
     // Calculate years in office
+    // Terms are not guaranteed oldest-first, so use the earliest start year
     const currentYear = new Date().getFullYear();
-    const firstTerm =
-      representative.terms && representative.terms.length > 0
-        ? representative.terms[0]
-        : { startYear: currentYear.toString() };
-    const yearsInOffice = currentYear - parseInt(firstTerm?.startYear || currentYear.toString());
+    const startYears = (representative.terms ?? [])
+      .map(term => parseInt(term.startYear ?? '', 10))
+      .filter(year => !Number.isNaN(year));
+    const firstYear = startYears.length > 0 ? Math.min(...startYears) : currentYear;
+    const yearsInOffice = currentYear - firstYear;
 
     // Cook PVI data requires specialized political analysis
     const cookPVI = 'Data unavailable';
@@ -1991,9 +2000,11 @@ export async function GET(
     logger.info('District details API request', { districtId });
 
     const district = await cachedFetch(
-      `district-details-${districtId}`,
+      `district-details-v2-${districtId}`,
       () => getDistrictDetails(districtId),
-      15552000000 // 6 months - demographics change annually, districts rarely change
+      // Seconds. Was 15552000000 (a ms value) → clamped to 90 days; the payload
+      // also carries the representative, so keep it to a week.
+      7 * 24 * 60 * 60
     );
 
     if (!district) {

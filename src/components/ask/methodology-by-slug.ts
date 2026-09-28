@@ -247,21 +247,27 @@ export const METHODOLOGY_BY_SLUG: Record<string, SlugMethodology> = {
   },
   'topic-bills': {
     sources: [
-      { name: 'Congress.gov', note: 'Bill index, subject tagging' },
+      { name: 'GovInfo BILLSTATUS', note: 'Bills and their CRS policy area' },
       { name: 'Federal Register', note: 'Rules, notices, and executive actions' },
       { name: 'USAspending.gov', note: 'Federal awards tagged to program areas' },
     ],
     retrieval:
-      'Topic-scoped query: policy-area slug matched against Congress.gov subject headings and Federal Register topic tags.',
+      'Bills: every House and Senate bill and joint resolution in the current Congress whose Congressional Research Service policy area matches the topic, most recent action first. Rules: Federal Register documents from the agencies mapped to the topic.',
     generation: EXTRACTIVE_GENERATION,
-    refresh: 'Congress.gov daily; Federal Register daily; USAspending updates weekly.',
+    refresh:
+      'Bill corpus rebuilt weekly from GovInfo; Federal Register daily; USAspending updates weekly.',
     limitations: [
-      'Subject tagging is editorial — adjacent topics filed under tax, banking, or appropriations may not surface.',
-      'Topic pages aggregate, they do not curate. A relevant bill missing a subject tag will not appear.',
+      'Each bill gets exactly one policy area, chosen by CRS. A bill that touches this topic but was filed under tax, banking, or appropriations will not appear here.',
+      'New bills have no policy area until CRS assigns one, which can take weeks. The newest bills may be missing.',
+      'Simple and concurrent resolutions are left out because they cannot become law.',
       'Federal Register rules are notices, not enacted policy; comment periods are surfaced separately.',
     ],
     citations: [
-      { source: 'Congress.gov', entity: 'Bill subject index', href: 'https://api.congress.gov/' },
+      {
+        source: 'GovInfo',
+        entity: 'BILLSTATUS bulk data',
+        href: 'https://www.govinfo.gov/bulkdata/BILLSTATUS',
+      },
       {
         source: 'Federal Register',
         entity: 'Rules and notices by topic',

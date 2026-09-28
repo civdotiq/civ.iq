@@ -44,6 +44,11 @@ export interface WikipediaBiography {
   lastUpdated: string;
 }
 
+/** Retry only server errors and rate limits; other 4xx are final answers. */
+export function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 /**
  * Fetch with timeout and retry logic
  */
@@ -68,7 +73,9 @@ async function fetchWithRetry(
 
     clearTimeout(timeoutId);
 
-    if (!response.ok && retries > 0) {
+    // A 404 for a guessed title is an answer, not a transient failure —
+    // retrying it only sleeps (1s + 2s + 4s) before returning the same 404.
+    if (isRetryableStatus(response.status) && retries > 0) {
       const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchWithRetry(url, options, retries - 1);

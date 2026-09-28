@@ -48,6 +48,8 @@ export interface ProfileSummary {
   cashOnHand?: number;
   votesParticipated?: number;
   financeCycle?: number;
+  /** The FEC could not be reached; money fields are absent, not zero. */
+  financeUnavailable?: boolean;
 }
 
 export interface ProfileSummaryResponse {

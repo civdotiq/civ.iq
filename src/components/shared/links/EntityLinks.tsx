@@ -54,10 +54,12 @@ export function BillLink({ billId, title, className }: BillLinkProps) {
   // Normalize any accepted slug shape (e.g. the type-first "hr8814-119" that
   // callers like the influence-chain analyzer produce) to the canonical
   // <congress>-<type>-<number> form so the link resolves without a 308 hop.
+  // An unparseable slug (e.g. "119-unknown-Unknown") has no bill page —
+  // render plain text rather than a link that 404s.
   const parsed = parseBillSlug(billId);
-  const slug = parsed.kind === 'invalid' ? billId : parsed.canonical;
+  if (parsed.kind === 'invalid') return <span className={className}>{title}</span>;
   return (
-    <Link href={`/bill/${slug}`} className={`${linkClass} ${className ?? ''}`}>
+    <Link href={`/bill/${parsed.canonical}`} className={`${linkClass} ${className ?? ''}`}>
       {title}
     </Link>
   );

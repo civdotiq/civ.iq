@@ -635,7 +635,7 @@ function ResultsContent() {
         </div>
 
         {/* Tab Navigation */}
-        {(zipCode || query) && (
+        {(zipCode || query || address) && (
           <div className="bg-white border border-gray-200 overflow-hidden mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex flex-wrap">
@@ -823,7 +823,7 @@ function ResultsContent() {
                 </>
               )}
 
-              {activeTab === 'state' && (zipCode || query) && (
+              {activeTab === 'state' && (zipCode || query || address) && (
                 <>
                   <Suspense
                     fallback={
@@ -850,7 +850,7 @@ function ResultsContent() {
               )}
 
               {activeTab === 'federal-map' &&
-                (zipCode || query) &&
+                (zipCode || query || address) &&
                 (districtInfo || selectedDistrict) && (
                   <div className="space-y-4">
                     <div className="bg-civiq-blue/10 border border-civiq-blue p-4 mb-4">
@@ -889,7 +889,7 @@ function ResultsContent() {
                 )}
 
               {activeTab === 'state-map' &&
-                (zipCode || query) &&
+                (zipCode || query || address) &&
                 unifiedGeocodeResult?.districts && (
                   <div className="space-y-4">
                     <div className="bg-civiq-green/10 border border-civiq-green p-4 mb-4">

@@ -25,6 +25,12 @@ import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb'
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { VoteFooter } from '@/components/seo/VoteFooter';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
+import {
+  isBioguideId,
+  nominationUrlForVote,
+  officialVoteRecordUrl,
+  voteMeasureBillHref,
+} from '@/lib/votes/vote-links';
 
 interface LegacyVoteDetailPageProps {
   voteId: string;
@@ -69,6 +75,19 @@ export function LegacyVoteDetailPage({
       </div>
     );
   }
+
+  const officialRecordUrl = officialVoteRecordUrl(voteDetail.metadata?.xmlUrl);
+  const billHref = voteDetail.bill
+    ? voteMeasureBillHref(
+        voteDetail.congress,
+        voteDetail.chamber,
+        voteDetail.bill.type,
+        voteDetail.bill.number
+      )
+    : null;
+  const nominationUrl = voteDetail.bill
+    ? nominationUrlForVote(voteDetail.congress, voteDetail.bill.type, voteDetail.bill.number)
+    : null;
 
   const votesByPosition = {
     Yea: voteDetail.members.filter(member => member.position === 'Yea'),
@@ -281,10 +300,10 @@ export function LegacyVoteDetailPage({
                 {voteDetail.requiredMajority === '1/2' && ' (51 votes, or 50 + VP)'}
               </p>
             )}
-            {voteDetail.metadata?.xmlUrl && (
+            {officialRecordUrl && (
               <div className="mt-3 pt-3 border-t border-civiq-blue">
                 <a
-                  href={voteDetail.metadata.xmlUrl.replace('.xml', '.htm')}
+                  href={officialRecordUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-civiq-blue hover:text-civiq-blue hover:underline transition-colors"
@@ -313,13 +332,26 @@ export function LegacyVoteDetailPage({
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase().replace(/\./g, '') || (voteDetail.chamber === 'House' ? 'hr' : 's')}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
-                  className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
-                >
-                  <FileText className="h-4 w-4" />
-                  View Full Bill Details →
-                </Link>
+                {billHref && (
+                  <Link
+                    href={billHref}
+                    className="inline-flex items-center gap-2 bg-civiq-blue text-white px-4 py-2 hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Full Bill Details →
+                  </Link>
+                )}
+                {nominationUrl && (
+                  <a
+                    href={nominationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 border-2 border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:border-civiq-blue hover:text-civiq-blue transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Nomination on Congress.gov
+                  </a>
+                )}
                 {voteDetail.bill.url && (
                   <a
                     href={voteDetail.bill.url}
@@ -332,9 +364,11 @@ export function LegacyVoteDetailPage({
                   </a>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                See sponsors, cosponsors, summary, and legislative timeline
-              </p>
+              {billHref && (
+                <p className="text-xs text-gray-500 mt-2">
+                  See sponsors, cosponsors, summary, and legislative timeline
+                </p>
+              )}
             </div>
           )}
 
@@ -539,10 +573,14 @@ export function LegacyVoteDetailPage({
                               lastName: senator.lastName,
                               fullName: senator.fullName,
                               state: senator.state,
-                              bioguideId: senator.bioguideId,
+                              bioguideId: isBioguideId(senator.bioguideId)
+                                ? senator.bioguideId
+                                : undefined,
                             });
+                            const displayName =
+                              `${senator.firstName} ${senator.lastName}`.trim() || senator.fullName;
 
-                            if (!senator.bioguideId && !bioguideId) {
+                            if (!isBioguideId(bioguideId)) {
                               logger.warn('No bioguide ID found for senator', {
                                 firstName: senator.firstName,
                                 lastName: senator.lastName,
@@ -552,18 +590,16 @@ export function LegacyVoteDetailPage({
                               });
                             }
 
-                            return bioguideId ? (
+                            return isBioguideId(bioguideId) ? (
                               <Link
                                 href={`/representative/${bioguideId}`}
                                 className="text-civiq-blue hover:text-civiq-blue hover:underline transition-colors"
-                                title={`View ${senator.firstName} ${senator.lastName}'s profile`}
+                                title={`View ${displayName}'s profile`}
                               >
-                                {senator.firstName} {senator.lastName}
+                                {displayName}
                               </Link>
                             ) : (
-                              <span>
-                                {senator.firstName} {senator.lastName}
-                              </span>
+                              <span>{displayName}</span>
                             );
                           })()}
                         </div>
@@ -640,7 +676,7 @@ export function LegacyVoteDetailPage({
                 state: member.state,
                 bioguideId: member.bioguideId,
               });
-              if (!bioguideId) continue;
+              if (!isBioguideId(bioguideId)) continue;
 
               const partyMajority =
                 member.party === 'D' ? dMajority : member.party === 'R' ? rMajority : null;

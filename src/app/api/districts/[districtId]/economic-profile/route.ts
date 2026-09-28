@@ -13,6 +13,7 @@ export const revalidate = 86400;
 
 // State-to-FIPS mapping for BLS API
 const STATE_FIPS: Record<string, string> = {
+  DC: '11',
   AL: '01',
   AK: '02',
   AZ: '04',

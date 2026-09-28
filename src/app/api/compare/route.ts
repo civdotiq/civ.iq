@@ -1,200 +1,148 @@
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
+ *
+ * GET /api/compare?bioguideId=X — one side of a two-official comparison.
+ *
+ * Numbers come from the record-card headline (the one canonical per-member
+ * stats source, so this endpoint agrees with /representative/[id] and
+ * /record). Earlier versions of this route returned hard-coded zeros for
+ * bills and finance and a page-capped vote count; both are gone. A section
+ * that cannot be computed is null, never zero. Campaign finance is served
+ * by /api/representative/[id]/finance and is not duplicated here.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { ApiErrors } from '@/lib/api/error-responses';
+import { getRecordCardHeadline } from '@/features/record-card/record-card-data';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { votingDataService } from '@/features/representatives/services/voting-data-service';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 
 export const dynamic = 'force-dynamic';
 
-interface ComparisonData {
+const BIOGUIDE_RX = /^[A-Z][0-9]{6}$/;
+
+interface LegislationSlice {
+  billsSponsored: number;
+  billsEnacted: number;
+  billsCosponsored: number;
+}
+
+export interface ComparisonData {
+  bioguideId: string;
+  chamber: 'House' | 'Senate';
+  congress: number;
+  /** null when chamber baselines are unavailable for this member. */
   votingRecord: {
+    /** Yea + Nay + Present across the analyzed roll calls. */
     totalVotes: number;
-    votesWithParty: number;
-    partyLoyaltyScore: number;
-    keyVotes: Array<{
-      bill: string;
-      position: 'For' | 'Against' | 'Not Voting';
-      description: string;
-    }>;
-  };
-  campaignFinance: {
-    totalRaised: number;
-    totalSpent: number;
-    cashOnHand: number;
-    individualContributions: number;
-    pacContributions: number;
-    topDonors: Array<{
-      name: string;
-      amount: number;
-      type: 'Individual' | 'PAC' | 'Organization';
-    }>;
-  };
+    appearances: number;
+    missedPct: number;
+    /** Party-majority alignment 0–100; null below the minimum vote floor or for independents. */
+    partyLoyaltyScore: number | null;
+    rollCallsAnalyzed: number;
+    fullCoverage: boolean;
+    dataAsOf: string;
+  } | null;
+  /** null when the legislation rollup could not be built. */
   effectiveness: {
-    billsSponsored: number;
-    billsEnacted: number;
-    amendmentsAdopted: number;
-    committeeMemberships: number;
-    effectivenessScore: number;
-    ranking: {
-      overall: number;
-      party: number;
-      state: number;
-    };
-  };
+    /** Current-Congress counts (what the profile stat band shows). */
+    current: LegislationSlice;
+    career: LegislationSlice;
+    /** True when the cosponsored sample was truncated: treat `current.billsCosponsored` as a floor. */
+    billsCosponsoredIsLowerBound: boolean;
+    /** null when the committee roster could not be resolved for this member. */
+    committeeMemberships: number | null;
+    dataAsOf: string;
+  } | null;
+  methodology: string;
 }
 
-// Get real voting record data from Congress.gov
-async function getRealVotingRecord(
-  bioguideId: string,
-  chamber: 'House' | 'Senate'
-): Promise<ComparisonData['votingRecord']> {
-  try {
-    logger.info('Fetching real voting data for comparison', { bioguideId, chamber });
-
-    const votingResult = await votingDataService.getVotingRecords(bioguideId, chamber, 50);
-
-    if (votingResult.votes.length === 0) {
-      logger.warn('No real voting data available for comparison', { bioguideId });
-      // Return fallback data with clear labeling
-      return {
-        totalVotes: 0,
-        votesWithParty: 0,
-        partyLoyaltyScore: 0,
-        keyVotes: [],
-      };
-    }
-
-    const votes = votingResult.votes;
-    const totalVotes = votes.length;
-
-    // Party loyalty requires party-line vote data which is not available
-    const partyLoyaltyScore = 0;
-
-    const keyVotes = votes
-      .filter(vote => vote.isKeyVote || vote.category !== 'Other')
-      .slice(0, 6)
-      .map(vote => ({
-        bill: vote.bill.number,
-        position:
-          vote.position === 'Yea'
-            ? ('For' as const)
-            : vote.position === 'Nay'
-              ? ('Against' as const)
-              : ('Not Voting' as const),
-        description: vote.bill.title || vote.description || vote.question,
-      }));
-
-    logger.info('Successfully calculated real voting record for comparison', {
-      bioguideId,
-      totalVotes,
-      keyVotesCount: keyVotes.length,
-      dataSource: votingResult.source,
-    });
-
-    return {
-      totalVotes,
-      votesWithParty: 0, // Requires party-line vote data
-      partyLoyaltyScore,
-      keyVotes,
-    };
-  } catch (error) {
-    logger.error('Error fetching real voting data for comparison', error as Error, {
-      bioguideId,
-    });
-
-    // Return empty data rather than mock data
-    return {
-      totalVotes: 0,
-      votesWithParty: 0,
-      partyLoyaltyScore: 0,
-      keyVotes: [],
-    };
-  }
-}
-
-// Returns empty campaign finance data - real FEC integration would be needed
-function getEmptyCampaignFinance(): ComparisonData['campaignFinance'] {
-  return {
-    totalRaised: 0,
-    totalSpent: 0,
-    cashOnHand: 0,
-    individualContributions: 0,
-    pacContributions: 0,
-    topDonors: [],
-  };
-}
-
-// Returns empty effectiveness data - real legislative effectiveness data would be needed
-function getEmptyEffectiveness(): ComparisonData['effectiveness'] {
-  return {
-    billsSponsored: 0,
-    billsEnacted: 0,
-    amendmentsAdopted: 0,
-    committeeMemberships: 0,
-    effectivenessScore: 0,
-    ranking: {
-      overall: 0,
-      party: 0,
-      state: 0,
-    },
-  };
-}
+const METHODOLOGY =
+  'Sponsored and cosponsored counts from Congress.gov member bill lists; enacted counts from bill status. ' +
+  'Vote totals and party alignment from chamber roll-call baselines. ' +
+  'Counts describe a record; they do not measure influence.';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const bioguideId = searchParams.get('bioguideId');
-
-  if (!bioguideId) {
+  const raw = request.nextUrl.searchParams.get('bioguideId');
+  if (!raw) {
     return ApiErrors.validation('bioguideId is required');
+  }
+  const bioguideId = raw.toUpperCase();
+  if (!BIOGUIDE_RX.test(bioguideId)) {
+    return ApiErrors.validation('bioguideId must be a letter followed by six digits');
   }
 
   try {
-    logger.info('Fetching real comparison data', { bioguideId });
-
-    // Get enhanced representative data to determine chamber
     const representative = await getEnhancedRepresentative(bioguideId);
     if (!representative) {
-      logger.warn('Representative not found for comparison', { bioguideId });
       return ApiErrors.notFound('Representative', bioguideId);
     }
 
-    const chamber = representative.chamber;
-    logger.info('Representative found for comparison', {
+    const headline = await getRecordCardHeadline(bioguideId, representative);
+    const legislation = headline?.legislation ?? null;
+    const voting = headline?.voting ?? null;
+
+    const data: ComparisonData = {
       bioguideId,
-      name: representative.name,
-      chamber,
-    });
-
-    // Fetch real data using our services
-    const [votingRecord, campaignFinance, effectiveness] = await Promise.all([
-      getRealVotingRecord(bioguideId, chamber),
-      getEmptyCampaignFinance(), // Real FEC API integration needed
-      getEmptyEffectiveness(), // Real legislative effectiveness data needed
-    ]);
-
-    const comparisonData: ComparisonData = {
-      votingRecord,
-      campaignFinance,
-      effectiveness,
+      chamber: representative.chamber,
+      congress: getCurrentCongressNumber(),
+      votingRecord: voting
+        ? {
+            totalVotes: voting.stats.cast,
+            appearances: voting.stats.appearances,
+            missedPct: voting.stats.missedPct,
+            partyLoyaltyScore: voting.stats.partyAlignmentPct,
+            rollCallsAnalyzed: voting.rollCallsAnalyzed,
+            fullCoverage: voting.fullCoverage,
+            dataAsOf: voting.dataAsOf,
+          }
+        : null,
+      effectiveness: legislation
+        ? {
+            current: {
+              billsSponsored: legislation.current.introduced,
+              billsEnacted: legislation.current.enactedFromSponsored,
+              billsCosponsored: legislation.current.cosponsored,
+            },
+            career: {
+              billsSponsored: legislation.career.introduced,
+              billsEnacted: legislation.career.enactedFromSponsored,
+              billsCosponsored: legislation.career.cosponsored,
+            },
+            billsCosponsoredIsLowerBound:
+              legislation.cosponsoredSample.currentIsLowerBound ?? false,
+            committeeMemberships: representative.committees
+              ? representative.committees.length
+              : null,
+            dataAsOf: legislation.dataAsOf,
+          }
+        : null,
+      methodology: METHODOLOGY,
     };
 
-    logger.info('Successfully generated comparison data', {
-      bioguideId,
-      hasRealVotingData: votingRecord.totalVotes > 0,
-    });
-
-    return NextResponse.json(comparisonData, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-      },
-    });
+    // A missing legislation rollup is a cold-start gap (the walk is still
+    // running): don't let the CDN pin it. A missing voting section can be
+    // structural (delegates cast no floor roll calls), so cache it briefly
+    // rather than never. Note: next.config's global /api header rule
+    // currently overrides this with s-maxage=300 on every API route; the
+    // values here state intent and take effect if that rule is narrowed.
+    const cacheControl =
+      data.effectiveness === null
+        ? 'no-store'
+        : data.votingRecord === null
+          ? 'public, s-maxage=600, stale-while-revalidate=3600'
+          : 'public, s-maxage=3600, stale-while-revalidate=86400';
+    return NextResponse.json(data, { headers: { 'Cache-Control': cacheControl } });
   } catch (error) {
-    logger.error('Comparison API Error', error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      'Comparison API Error',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        bioguideId,
+      }
+    );
     return ApiErrors.serverError();
   }
 }
