@@ -17,6 +17,7 @@
  */
 
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import type { EnhancedRepresentative } from '@/types/representative';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import {
   getChamberBaselines,
@@ -603,9 +604,11 @@ export interface RecordCardHeadline {
  * which pushed long-tenured members past the 30s function ceiling.
  */
 export async function getRecordCardHeadline(
-  bioguideId: string
+  bioguideId: string,
+  /** Pass an already-resolved member to skip the second corpus lookup. */
+  resolved?: EnhancedRepresentative | null
 ): Promise<RecordCardHeadline | null> {
-  const rep = await getEnhancedRepresentative(bioguideId.toUpperCase());
+  const rep = resolved ?? (await getEnhancedRepresentative(bioguideId.toUpperCase()));
   if (!rep) return null;
 
   const [legislation, voting] = await Promise.all([

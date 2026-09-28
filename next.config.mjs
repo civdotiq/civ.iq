@@ -246,6 +246,13 @@ const nextConfig = {
         destination: '/your-reps',
         permanent: true,
       },
+      // The redesigned PAC page was never shipped; the FEC committee page
+      // carries the same data. Anything that isn't a committee id 404s.
+      {
+        source: '/pacs/:id(C\\d{8})',
+        destination: '/influence/:id',
+        permanent: true,
+      },
       // Predictable developer-resource URLs: agents and search engines try
       // these names first, so they must land somewhere real.
       {

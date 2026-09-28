@@ -132,24 +132,35 @@ function toOfficial(envelope: RepProfileEnvelope | null): CompareOfficial | null
 interface ComparisonEnvelope {
   votingRecord?: {
     totalVotes?: number;
-    partyLoyaltyScore?: number;
-  };
+    partyLoyaltyScore?: number | null;
+  } | null;
   effectiveness?: {
-    billsSponsored?: number;
-    billsEnacted?: number;
-    amendmentsAdopted?: number;
-  };
+    current?: {
+      billsSponsored?: number;
+      billsEnacted?: number;
+    };
+  } | null;
   error?: string;
 }
 
+function countOrNull(value: number | null | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Null sections stay null so the row shows "—". A zero from the API is a
+ * real zero (the record-card rollup never substitutes zeros for gaps).
+ */
 function toVoting(envelope: ComparisonEnvelope | null): CompareVoting | null {
   if (!envelope || envelope.error) return null;
+  const voting = envelope.votingRecord ?? null;
+  const current = envelope.effectiveness?.current ?? null;
+  if (!voting && !current) return null;
   return {
-    totalVotes: envelope.votingRecord?.totalVotes ?? 0,
-    partyLoyaltyScore: envelope.votingRecord?.partyLoyaltyScore ?? 0,
-    billsSponsored: envelope.effectiveness?.billsSponsored ?? 0,
-    billsEnacted: envelope.effectiveness?.billsEnacted ?? 0,
-    billsCosponsored: 0,
+    totalVotes: countOrNull(voting?.totalVotes),
+    partyLoyaltyScore: countOrNull(voting?.partyLoyaltyScore),
+    billsSponsored: countOrNull(current?.billsSponsored),
+    billsEnacted: countOrNull(current?.billsEnacted),
   };
 }
 
@@ -222,7 +233,7 @@ export function formatPercent(numerator: number, denominator: number): string {
   return `${Math.round((numerator / denominator) * 100)}%`;
 }
 
-export function formatCount(value: number | undefined, fallbackZero = false): string {
+export function formatCount(value: number | null | undefined, fallbackZero = false): string {
   if (value === undefined || value === null || !Number.isFinite(value)) return '—';
   if (value === 0 && !fallbackZero) return '—';
   return value.toLocaleString('en-US');
