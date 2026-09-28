@@ -11,7 +11,6 @@ import { getServerBaseUrl } from '@/lib/server-url';
 import {
   getAgenciesForCommittees,
   getTopicsForCommittees,
-  getCitiesForState,
   type AgencyInfo,
 } from '@/lib/connections/committee-agency-map';
 
@@ -27,13 +26,12 @@ export const dynamic = 'force-dynamic';
  * - Representative → District → Spending
  * - Representative → Committees → Agencies → Regulations
  * - Representative → State → State Legislators
- * - Representative → State → City Councils
  *
  * A citizen looking at their rep should understand:
  * 1. Where their tax money goes (district spending)
  * 2. What agencies their rep oversees (committee connections)
  * 3. What regulations they can comment on (civic participation)
- * 4. Who else represents them (state/local officials)
+ * 4. Who else represents them (state officials)
  */
 
 interface DistrictSpending {
@@ -81,13 +79,6 @@ interface StateLegislator {
   party: string;
 }
 
-interface CityCouncilMember {
-  id: number;
-  name: string;
-  city: string;
-  title: string | null;
-}
-
 interface ConnectionsResponse {
   success: boolean;
   representative: {
@@ -104,10 +95,6 @@ interface ConnectionsResponse {
     relevantHearings: RelevantHearing[];
     openCommentPeriods: OpenCommentPeriod[];
     stateLegislators: StateLegislator[];
-    cityCouncils: Array<{
-      city: string;
-      members: CityCouncilMember[];
-    }>;
   };
   civicActions: {
     canComment: number; // Number of open comment periods
@@ -315,49 +302,6 @@ async function fetchStateLegislators(state: string): Promise<StateLegislator[]> 
   }
 }
 
-/**
- * Fetch city council members for major cities in the state
- */
-async function fetchCityCouncils(
-  state: string
-): Promise<Array<{ city: string; members: CityCouncilMember[] }>> {
-  const cities = getCitiesForState(state);
-  if (cities.length === 0) return [];
-
-  // Each city's council lookup is independent, so fetch them concurrently
-  // instead of serially. Per-city failures resolve to null and are filtered
-  // out, preserving the previous "skip on error" behavior.
-  const settled = await Promise.all(
-    cities.map(async (city): Promise<{ city: string; members: CityCouncilMember[] } | null> => {
-      try {
-        const response = await fetch(`${getServerBaseUrl()}/api/city/${city}/council?active=true`);
-
-        if (!response.ok) return null;
-
-        const data = await response.json();
-        if (!data.success) return null;
-
-        return {
-          city: data.city?.name || city,
-          members: (data.members || [])
-            .slice(0, 10)
-            .map((m: { id: number; name: string; title: string | null }) => ({
-              id: m.id,
-              name: m.name,
-              city: data.city?.name || city,
-              title: m.title,
-            })),
-        };
-      } catch (error) {
-        logger.error('Error fetching city council', error as Error, { city });
-        return null;
-      }
-    })
-  );
-
-  return settled.filter((r): r is { city: string; members: CityCouncilMember[] } => r !== null);
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
@@ -390,19 +334,13 @@ export async function GET(
         const relevantTopics = getTopicsForCommittees(committeeNames);
 
         // Step 4: Fetch all connected data in parallel
-        const [
-          districtSpending,
-          relevantHearings,
-          openCommentPeriods,
-          stateLegislators,
-          cityCouncils,
-        ] = await Promise.all([
-          fetchDistrictSpending(rep.state, rep.district?.toString() || null),
-          fetchRelevantHearings(relevantTopics, rep.chamber),
-          fetchRelevantCommentPeriods(relevantAgencies, relevantTopics),
-          fetchStateLegislators(rep.state),
-          fetchCityCouncils(rep.state),
-        ]);
+        const [districtSpending, relevantHearings, openCommentPeriods, stateLegislators] =
+          await Promise.all([
+            fetchDistrictSpending(rep.state, rep.district?.toString() || null),
+            fetchRelevantHearings(relevantTopics, rep.chamber),
+            fetchRelevantCommentPeriods(relevantAgencies, relevantTopics),
+            fetchStateLegislators(rep.state),
+          ]);
 
         return {
           representative: {
@@ -419,7 +357,6 @@ export async function GET(
             relevantHearings,
             openCommentPeriods,
             stateLegislators,
-            cityCouncils,
           },
           civicActions: {
             canComment: openCommentPeriods.length,
@@ -448,7 +385,6 @@ export async function GET(
             relevantHearings: [],
             openCommentPeriods: [],
             stateLegislators: [],
-            cityCouncils: [],
           },
           civicActions: { canComment: 0, upcomingDeadlines: [] },
           metadata: {
@@ -476,7 +412,6 @@ export async function GET(
             'govinfo.gov',
             'federalregister.gov',
             'openstates.org',
-            'legistar.com',
           ],
         },
       },
@@ -502,7 +437,6 @@ export async function GET(
           relevantHearings: [],
           openCommentPeriods: [],
           stateLegislators: [],
-          cityCouncils: [],
         },
         civicActions: { canComment: 0, upcomingDeadlines: [] },
         metadata: {

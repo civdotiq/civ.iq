@@ -33,11 +33,19 @@ import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { load as parseYaml } from 'js-yaml';
-import { buildPeopleCorpus } from '../src/lib/data-sources/openstates-people/index';
-import type { RawPersonYaml } from '../src/lib/data-sources/openstates-people/index';
+import {
+  buildCommitteesCorpus,
+  buildPeopleCorpus,
+} from '../src/lib/data-sources/openstates-people/index';
+import type {
+  RawCommitteeYaml,
+  RawPersonYaml,
+} from '../src/lib/data-sources/openstates-people/index';
 
 const REPO = 'openstates/people';
 const OUT_PATH_DEFAULT = 'data/openstates-people.json.br';
+/** Committees ride the same tarball; written next to the roster corpus. */
+const COMMITTEES_FILE = 'openstates-committees.json.br';
 
 /**
  * Upstream is a roster: it moves when members change, which is on election
@@ -138,6 +146,35 @@ function readJurisdictions(dataDir: string): Map<string, RawPersonYaml[]> {
   return byJurisdiction;
 }
 
+function readCommittees(dataDir: string): Map<string, RawCommitteeYaml[]> {
+  const byJurisdiction = new Map<string, RawCommitteeYaml[]>();
+  for (const jurisdiction of readdirSync(dataDir).sort()) {
+    if (SKIP_JURISDICTIONS.has(jurisdiction)) continue;
+    if (ONLY && !ONLY.includes(jurisdiction)) continue;
+    const dir = join(dataDir, jurisdiction, 'committees');
+    let files: string[];
+    try {
+      files = readdirSync(dir).filter(f => f.endsWith('.yml'));
+    } catch {
+      continue;
+    }
+    byJurisdiction.set(
+      jurisdiction.toUpperCase(),
+      files.map(file => parseYaml(readFileSync(join(dir, file), 'utf8')) as RawCommitteeYaml)
+    );
+  }
+  return byJurisdiction;
+}
+
+function brotli(json: string): Buffer {
+  return brotliCompressSync(Buffer.from(json), {
+    params: {
+      [zlibConstants.BROTLI_PARAM_QUALITY]: 11,
+      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: Buffer.byteLength(json),
+    },
+  });
+}
+
 async function main(): Promise<void> {
   if (ONLY && OUT_PATH === resolve(process.cwd(), OUT_PATH_DEFAULT)) {
     throw new Error('--jurisdictions builds a partial corpus; pass --out to a scratch path');
@@ -184,6 +221,36 @@ async function main(): Promise<void> {
         compressedBytes: compressed.length,
         meta: corpus.meta,
       })
+    );
+
+    // Committee corpus: same tarball, same upstream commit.
+    const committees = buildCommitteesCorpus({
+      byJurisdiction: readCommittees(dataDir),
+      generatedAt: corpus.generatedAt,
+      upstreamCommit: head.sha,
+      upstreamCommittedAt: head.committedAt,
+    });
+    const committeesPath = join(dirname(OUT_PATH), COMMITTEES_FILE);
+    const committeesBytes = brotli(JSON.stringify(committees));
+    writeFileSync(committeesPath, committeesBytes);
+    writeFileSync(
+      committeesPath.replace(/\.json\.br$/, '.meta.json'),
+      JSON.stringify({
+        generatedAt: committees.generatedAt,
+        staleAfter: staleAfterFrom(committees.generatedAt),
+        upstreamCommit: committees.upstreamCommit,
+        upstreamCommittedAt: committees.upstreamCommittedAt,
+        jurisdictions: committees.jurisdictions.length,
+        committees: committees.rows.length,
+        memberships: committees.meta.memberships,
+        compressedBytes: committeesBytes.length,
+        meta: committees.meta,
+      })
+    );
+    console.log(
+      `Wrote ${committeesPath} — ${(committeesBytes.length / 1_000_000).toFixed(2)}MB brotli · ` +
+        `${committees.rows.length} committees · ${committees.meta.memberships} memberships · ` +
+        `${committees.jurisdictions.length} jurisdictions`
     );
 
     console.log(

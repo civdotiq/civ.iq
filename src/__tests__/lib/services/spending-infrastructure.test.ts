@@ -99,14 +99,23 @@ describe('getDistrictInfrastructureSpending', () => {
     expect(result?.total).toBe(360);
   });
 
+  it('retries a page once after a 5xx and keeps summing', async () => {
+    route([awardPage([100], true), pageFail, awardPage([200], false)], [awardPage([5], false)]);
+
+    const result = await getDistrictInfrastructureSpending('TX', '10');
+    expect(result?.contractObligations).toBe(300);
+    expect(result?.total).toBe(305);
+  });
+
   it('returns null (not 0) when the contract query fails on a page', async () => {
-    route([pageFail], [awardPage([500], false)]);
+    // Fails on the first try and the retry
+    route([pageFail, pageFail], [awardPage([500], false)]);
     const result = await getDistrictInfrastructureSpending('TX', '10');
     expect(result).toBeNull();
   });
 
   it('returns null when a grant award page fails (incomplete sum)', async () => {
-    route([awardPage([100], false)], [pageFail]);
+    route([awardPage([100], false)], [pageFail, pageFail]);
     const result = await getDistrictInfrastructureSpending('TX', '10');
     expect(result).toBeNull();
   });

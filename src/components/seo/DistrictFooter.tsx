@@ -173,7 +173,7 @@ export function DistrictFooter({
 
       {/* Data Sources */}
       <div className="mt-10 pt-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4 text-[11px] text-gray-400">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="uppercase tracking-wider">Data</span>
           <a
             href="https://census.gov"

@@ -67,6 +67,8 @@ export interface MajorProject {
   amount: number;
   agency: string;
   description: string;
+  /** Links to /spending/awards/[awardId]; absent or null when USASpending omitted the id. */
+  awardId?: string | null;
 }
 
 export interface GovernmentSpendingResponse {

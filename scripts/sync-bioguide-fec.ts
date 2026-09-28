@@ -204,6 +204,29 @@ export function mergeWithExisting(fresh: MappingFile, existing: MappingFile | nu
   return merged;
 }
 
+/**
+ * Carry forward existing entries for members Congress.gov says are seated but
+ * that neither the YAML nor the FEC fallback resolved this run. A seated
+ * member's verified mapping must never be dropped just because upstream lags
+ * or a fallback key is missing. Mutates `fresh`; returns the preserved IDs.
+ */
+export function preserveSeatedMembers(
+  fresh: MappingFile,
+  existing: MappingFile | null,
+  seatedBioguideIds: string[]
+): string[] {
+  if (!existing) return [];
+  const preserved: string[] = [];
+  for (const id of seatedBioguideIds) {
+    const prior = existing[id];
+    if (!fresh[id] && prior) {
+      fresh[id] = prior;
+      preserved.push(id);
+    }
+  }
+  return preserved;
+}
+
 export function summarizeDiff(
   fresh: MappingFile,
   existing: MappingFile | null
@@ -532,7 +555,11 @@ async function searchFecCandidates(
   const res = await fetch(url);
   if (!res.ok) {
     if (res.status === 429) {
-      // Treat 429 as empty — weekly sync can tolerate transient rate limits.
+      // Treat 429 as empty — weekly sync can tolerate transient rate limits —
+      // but say so, so a NONE proposal isn't mistaken for "no FEC candidate".
+      console.warn(
+        `[sync] FEC rate-limited (429) for ${member.bioguideId}; result below is NOT a real miss.`
+      );
       return [];
     }
     throw new Error(`FEC candidate search ${res.status}: ${await res.text()}`);
@@ -630,6 +657,7 @@ async function main(): Promise<void> {
   const congressKey = process.env.CONGRESS_API_KEY || process.env.CONGRESS_GOV_API_KEY;
   const fecKey = process.env.FEC_API_KEY;
   let fallbackProposals: FallbackProposal[] = [];
+  const existing = readExisting(PACKAGE_JSON_PATH);
 
   if (!skipCongressCheck && congressKey) {
     try {
@@ -661,6 +689,15 @@ async function main(): Promise<void> {
             `These bioguide IDs will not resolve until congress-legislators catches up.`
         );
       }
+
+      const preserved = preserveSeatedMembers(
+        fresh,
+        existing,
+        missing.map(m => m.bioguideId)
+      );
+      if (preserved.length > 0) {
+        console.log(`  Preserved existing mapping for seated member(s): ${preserved.join(', ')}`);
+      }
     } catch (error) {
       console.warn(
         `Congress.gov membership check failed — continuing with YAML-only sync. ` +
@@ -674,7 +711,6 @@ async function main(): Promise<void> {
     );
   }
 
-  const existing = readExisting(PACKAGE_JSON_PATH);
   const merged = mergeWithExisting(fresh, existing);
   const diff = summarizeDiff(merged, existing);
 

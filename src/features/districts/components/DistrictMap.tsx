@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import type { Map } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { loadMaplibre } from './maplibre-loader';
 import type { GeoJSON } from 'geojson';
 import logger from '@/lib/logging/simple-logger';
 
@@ -37,18 +39,9 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Ensure we're on the client side and load MapLibre CSS
+  // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
-
-    // Dynamically load MapLibre CSS only when map component mounts
-    if (typeof document !== 'undefined' && !document.getElementById('maplibre-css')) {
-      const link = document.createElement('link');
-      link.id = 'maplibre-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
-      document.head.appendChild(link);
-    }
   }, []);
 
   // Initialize MapLibre map
@@ -86,7 +79,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           logger.info('Attempting to initialize MapLibre map...');
 
           // Dynamic import MapLibre GL
-          const maplibregl = (await import('maplibre-gl')).default;
+          const maplibregl = await loadMaplibre();
 
           const mapCenter = STATE_CENTERS[state] || STATE_CENTERS.DEFAULT;
 

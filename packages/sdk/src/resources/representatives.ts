@@ -27,9 +27,14 @@ export class RepresentativesResource {
     return this.http.get(`/representative/${encodeURIComponent(bioguideId)}`);
   }
 
-  /** Side-by-side comparison of 2-4 legislators. */
-  compare(bioguideIds: string[]): Promise<CompareResponse> {
-    return this.http.get('/compare', { bioguideId: bioguideIds.join(',') });
+  /**
+   * One side of a side-by-side comparison: roll-call totals, party
+   * alignment, and sponsored / enacted / cosponsored counts. Call once per
+   * legislator. Sections that cannot be computed are null, never zero.
+   * Campaign finance is served by `finance()`.
+   */
+  compare(bioguideId: string): Promise<CompareResponse> {
+    return this.http.get('/compare', { bioguideId });
   }
 
   /** List all 535 current members. */

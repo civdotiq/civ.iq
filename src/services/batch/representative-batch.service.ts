@@ -11,6 +11,7 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { createLegacyResponse } from '@/services/congress/bill-response-utils';
 import { fecApiService } from '@/lib/fec/fec-api-service';
+import { findNewestCycleWithData, getRecentElectionCycles } from '@/lib/fec/election-cycle';
 
 export interface BatchRequest {
   bioguideId: string;
@@ -400,35 +401,15 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             break;
           }
 
-          // Call FEC API with the mapped ID — try all cycles concurrently, pick newest with data
+          // Current cycle first; an older cycle only when the member has no
+          // filings in it. A failed call throws to the catch below
+          // ("temporarily unavailable"), never an older cycle's totals.
           const candidateId = fecMapping.fecId;
-          const FALLBACK_CYCLES = [2024, 2022, 2020, 2018] as const;
-
-          let summaryData = null;
-          let matchedCycle: number | undefined;
-
-          const cycleResults = await Promise.allSettled(
-            FALLBACK_CYCLES.map(cycle =>
-              fecApiService
-                .getFinancialSummary(candidateId, cycle)
-                .then(data => (data ? { data, cycle } : null))
-            )
+          const newest = await findNewestCycleWithData(getRecentElectionCycles(4), cycle =>
+            fecApiService.getFinancialSummary(candidateId, cycle)
           );
-
-          // Pick the most recent cycle that returned data (array is already ordered newest-first)
-          for (const [i, cycleResult] of cycleResults.entries()) {
-            if (cycleResult.status === 'fulfilled' && cycleResult.value) {
-              summaryData = cycleResult.value.data;
-              matchedCycle = cycleResult.value.cycle;
-              logger.info(`FEC API found data in cycle`, { candidateId, cycle: matchedCycle });
-              break;
-            }
-            if (cycleResult.status === 'rejected') {
-              logger.warn(`FEC API cycle ${FALLBACK_CYCLES[i]} failed for ${candidateId}`, {
-                error: cycleResult.reason instanceof Error ? cycleResult.reason.message : 'Unknown',
-              });
-            }
-          }
+          const summaryData = newest?.data ?? null;
+          const matchedCycle = newest?.cycle;
 
           if (!summaryData) {
             logger.warn(`No financial data returned from FEC for ${candidateId} (${bioguideId})`);
@@ -572,6 +553,10 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
     return { result, cacheable };
   };
 
+  // An endpoint that failed (e.g. an FEC 429) must not ride into the
+  // whole-response cache either, or the failure is served for 30 minutes.
+  let batchCacheable = true;
+
   const processEndpoint = async (endpointName: string): Promise<void> => {
     const epCacheKey = endpointCacheKey(bioguideId, endpointName, options);
 
@@ -583,7 +568,9 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
     } else {
       const inFlight = epCacheKey ? inFlightEndpointFetches.get(epCacheKey) : undefined;
       if (inFlight) {
-        result = (await inFlight).result;
+        const computed = await inFlight;
+        if (!computed.cacheable) batchCacheable = false;
+        result = computed.result;
       } else {
         const computation = computeEndpoint(endpointName).then(computed => {
           if (epCacheKey && computed.cacheable) {
@@ -603,7 +590,9 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             .finally(() => inFlightEndpointFetches.delete(epCacheKey))
             .catch(() => undefined);
         }
-        result = (await computation).result;
+        const computed = await computation;
+        if (!computed.cacheable) batchCacheable = false;
+        result = computed.result;
       }
     }
 
@@ -644,7 +633,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
   };
 
   // Cache successful results for 5 minutes using heavy endpoint TTL
-  if (successfulEndpoints.length > 0) {
+  if (successfulEndpoints.length > 0 && batchCacheable) {
     govCache.set(cacheKey, result, { dataType: 'batch', source: 'batch-service' });
   }
 
@@ -665,7 +654,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
  * Much faster than full batch requests
  */
 export async function getRepresentativeSummary(bioguideId: string) {
-  const cacheKey = `representative-summary:v2:${bioguideId}`;
+  // v3: v2 entries could hold 2024-cycle money (hardcoded cycle list).
+  const cacheKey = `representative-summary:v3:${bioguideId}`;
   const cached = await govCache.get<{
     billsSponsored?: number;
     billsCosponsored?: number;
@@ -675,6 +665,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     cashOnHand?: number;
     votesParticipated?: number;
     financeCycle?: number;
+    financeUnavailable?: boolean;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -716,22 +707,28 @@ export async function getRepresentativeSummary(bioguideId: string) {
       totalRaised?: number;
       totalSpent?: number;
       cashOnHand?: number;
-      metadata?: { matchedCycle?: number };
+      metadata?: { matchedCycle?: number; error?: string };
     } | null;
+    // A failed FEC call is not "no filings": leave money undefined so the
+    // band says unavailable, and don't cache the gap.
+    const financeUnavailable = !finance || Boolean(finance.metadata?.error);
     const result = {
       billsSponsored: record?.legislation?.current.introduced ?? 0,
       billsCosponsored: record?.legislation?.current.cosponsored ?? 0,
       billsCosponsoredIsLowerBound:
         record?.legislation?.cosponsoredSample.currentIsLowerBound ?? false,
-      totalRaised: finance?.totalRaised ?? 0,
-      totalSpent: finance?.totalSpent ?? 0,
-      cashOnHand: finance?.cashOnHand ?? 0,
+      totalRaised: financeUnavailable ? undefined : (finance?.totalRaised ?? 0),
+      totalSpent: financeUnavailable ? undefined : (finance?.totalSpent ?? 0),
+      cashOnHand: financeUnavailable ? undefined : (finance?.cashOnHand ?? 0),
       votesParticipated: record?.voting?.stats.cast,
       financeCycle: finance?.metadata?.matchedCycle,
+      financeUnavailable,
       lastUpdated: new Date().toISOString(),
     };
 
-    govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'summary-service' }); // Cache for 30 minutes
+    if (!financeUnavailable) {
+      govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'summary-service' }); // Cache for 30 minutes
+    }
     return result;
   } catch (error) {
     logger.error('Representative summary failed', error as Error, { bioguideId });

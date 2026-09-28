@@ -26,65 +26,11 @@ import {
   categorizeContribution,
 } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
-
-// Current year for cycle calculations
-const CURRENT_YEAR = new Date().getFullYear();
-// Calculate current election cycle (even years only)
-const _CURRENT_CYCLE = CURRENT_YEAR % 2 === 0 ? CURRENT_YEAR : CURRENT_YEAR + 1;
-
-// Election cycles to try in order (most recent first)
-// Using 2024 as primary since that's the most recent completed cycle
-const FALLBACK_CYCLES: [number, ...number[]] = [2024, 2022, 2020, 2018];
-
-/**
- * Determine Senate class and next election year from FEC candidate ID
- * Senate classes: Class 1 (2024), Class 2 (2026), Class 3 (2028)
- * FEC IDs: S = Senate, first digit after state = class indicator
- */
-function getSenateElectionInfo(
-  fecId: string
-): { nextElection: number; explanation: string } | null {
-  // FEC Senate candidate IDs start with state code + S (e.g., "H8MI12345" for House, "S6MI00123" for Senate)
-  // The digit after 'S' indicates the cycle year of first election
-  if (!fecId || fecId.length < 2) return null;
-
-  // Check if it's a Senate candidate (FEC ID contains 'S' in position for chamber)
-  const chamberIndicator = fecId.charAt(0);
-  if (chamberIndicator !== 'S') return null;
-
-  // Calculate next election based on 6-year Senate terms
-  // Senate elections: 2024, 2026, 2028 (then repeats)
-  // Class 1: 2024, 2030, 2036...
-  // Class 2: 2026, 2032, 2038...
-  // Class 3: 2028, 2034, 2040...
-
-  // Simplified: Cycle digit in FEC ID gives hint, but we'll calculate from known patterns
-  const cycleDigit = parseInt(fecId.charAt(1), 10);
-
-  // FEC IDs encode the first election cycle in positions 1-2
-  // e.g., S2 = first elected in a cycle ending in 2 (2022, 2012, etc.)
-  let nextElection: number;
-
-  // Calculate based on the cycle digit pattern
-  if (cycleDigit % 6 === 0 || cycleDigit % 6 === 4) {
-    // Class 1 pattern (2024)
-    nextElection = 2024;
-    while (nextElection < CURRENT_YEAR) nextElection += 6;
-  } else if (cycleDigit % 6 === 2) {
-    // Class 2 pattern (2026)
-    nextElection = 2026;
-    while (nextElection < CURRENT_YEAR) nextElection += 6;
-  } else {
-    // Class 3 pattern (2028)
-    nextElection = 2028;
-    while (nextElection < CURRENT_YEAR) nextElection += 6;
-  }
-
-  return {
-    nextElection,
-    explanation: `Senators serve 6-year terms. This senator is next up for election in ${nextElection}.`,
-  };
-}
+import {
+  findNewestCycleWithData,
+  getCurrentElectionCycle,
+  getRecentElectionCycles,
+} from '@/lib/fec/election-cycle';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -241,7 +187,9 @@ export async function GET(
     logger.info('[Finance API] Optimized endpoint called', { bioguideId });
 
     // Check cache first - uses multi-cycle key since we may fallback to older cycles
-    const cacheKey = `finance:${bioguideId}:multi-cycle`;
+    // v2: entries under the old key were built from a hardcoded 2024-first
+    // cycle list and hold up to 30 days; the new key stops them serving.
+    const cacheKey = `finance:${bioguideId}:multi-cycle-v2`;
     const cached = await govCache.get<FinanceResponse>(cacheKey);
 
     if (cached) {
@@ -302,7 +250,7 @@ export async function GET(
           overallDataConfidence: 'low',
         },
         candidateId: '',
-        cycle: 2024,
+        cycle: getCurrentElectionCycle(),
         lastUpdated: new Date().toISOString(),
         fecDataSources: {
           financialSummary: 'No FEC mapping available',
@@ -351,32 +299,25 @@ export async function GET(
 
     // MULTI-CYCLE FALLBACK: Try cycles in order until data is found
     // This ensures Senators not up for re-election still show their last campaign data
-    let financialSummary = null;
-    let dataFromCycle = FALLBACK_CYCLES[0]; // Start with most recent (2024)
+    // Current cycle first; older cycles only when the member has no filings in it.
+    const FALLBACK_CYCLES = getRecentElectionCycles(4);
     const requestedCycle = FALLBACK_CYCLES[0];
-
-    for (const cycle of FALLBACK_CYCLES) {
-      logger.info('[Finance API] Trying cycle', { bioguideId, cycle });
-      financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, cycle);
-      if (financialSummary) {
-        dataFromCycle = cycle;
-        logger.info('[Finance API] Found data in cycle', { bioguideId, cycle });
-        break;
-      }
-    }
+    // A thrown FEC call propagates to the 500 below, never to an older cycle.
+    const newest = await findNewestCycleWithData(FALLBACK_CYCLES, cycle =>
+      fecApiService.getFinancialSummary(fecMapping.fecId, cycle)
+    );
+    const financialSummary = newest?.data ?? null;
+    const dataFromCycle = newest?.cycle ?? requestedCycle;
 
     // Determine if this is historical data and get election context
     const isHistoricalData = dataFromCycle !== requestedCycle;
-    const senateInfo = getSenateElectionInfo(fecMapping.fecId);
-    const isSenator = fecMapping.fecId.charAt(0) === 'S';
 
     // Build cycle explanation for transparency
-    let cycleExplanation: string | undefined;
-    if (isHistoricalData && isSenator && senateInfo) {
-      cycleExplanation = senateInfo.explanation;
-    } else if (isHistoricalData) {
-      cycleExplanation = `Showing data from ${dataFromCycle} election cycle. No campaign activity in more recent cycles.`;
-    }
+    // Say which cycle is shown. (A guessed Senate class from the FEC id
+    // digit used to name the wrong next election, e.g. 2026 for a 2030 seat.)
+    const cycleExplanation = isHistoricalData
+      ? `Showing data from ${dataFromCycle} election cycle. No campaign activity in more recent cycles.`
+      : undefined;
 
     if (!financialSummary) {
       logger.warn('[Finance API] No FEC financial data found in any cycle', {
@@ -436,7 +377,6 @@ export async function GET(
           suggestedCycles: [],
           isHistoricalData: false,
           requestedCycle,
-          nextElectionYear: senateInfo?.nextElection,
         },
         // Phase 1 fields
         pacContributionsByType: {
@@ -888,7 +828,6 @@ export async function GET(
         dataFromCycle,
         requestedCycle,
         cycleExplanation,
-        nextElectionYear: senateInfo?.nextElection,
         contributionCoverage,
       },
 

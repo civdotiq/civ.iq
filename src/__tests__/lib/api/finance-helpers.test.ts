@@ -18,6 +18,10 @@ import {
   FEC_CACHE_OPTIONS,
   FEC_SHORT_CACHE_OPTIONS,
 } from '@/lib/api/finance-helpers';
+import { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
+
+// Defaults follow the clock, never a hardcoded cycle.
+const CYCLE = getCurrentElectionCycle();
 
 describe('FEC_CACHE constants', () => {
   it('has correct TTL values', () => {
@@ -55,30 +59,34 @@ describe('FinanceCacheKeys', () => {
   const bioguideId = 'K000367';
 
   it('generates correct industries cache key', () => {
-    expect(FinanceCacheKeys.industries(bioguideId)).toBe('finance-industries:K000367:2024');
+    expect(FinanceCacheKeys.industries(bioguideId)).toBe(`finance-industries:K000367:${CYCLE}`);
     expect(FinanceCacheKeys.industries(bioguideId, 2022)).toBe('finance-industries:K000367:2022');
   });
 
   it('generates correct contributors cache key', () => {
-    expect(FinanceCacheKeys.contributors(bioguideId)).toBe('finance-contributors-v2:K000367:2024');
+    expect(FinanceCacheKeys.contributors(bioguideId)).toBe(
+      `finance-contributors-v2:K000367:${CYCLE}`
+    );
   });
 
   it('generates correct expenditures cache key', () => {
-    expect(FinanceCacheKeys.expenditures(bioguideId)).toBe('finance-expenditures:K000367:2024');
+    expect(FinanceCacheKeys.expenditures(bioguideId)).toBe(`finance-expenditures:K000367:${CYCLE}`);
   });
 
   it('generates correct geography cache key', () => {
-    expect(FinanceCacheKeys.geography(bioguideId)).toBe('finance-geography:K000367:2024');
+    expect(FinanceCacheKeys.geography(bioguideId)).toBe(`finance-geography:K000367:${CYCLE}`);
   });
 
   it('generates correct fundingSources cache key', () => {
     expect(FinanceCacheKeys.fundingSources(bioguideId)).toBe(
-      'finance-funding-sources:K000367:2024'
+      `finance-funding-sources:K000367:${CYCLE}`
     );
   });
 
   it('generates correct comprehensive cache key', () => {
-    expect(FinanceCacheKeys.comprehensive(bioguideId)).toBe('finance-comprehensive:K000367:2024');
+    expect(FinanceCacheKeys.comprehensive(bioguideId)).toBe(
+      `finance-comprehensive:K000367:${CYCLE}`
+    );
   });
 });
 
@@ -130,7 +138,7 @@ describe('FEC link generators', () => {
     it('generates receipts URL with committee ID', () => {
       const url = getFECReceiptsLink(fecId, committeeId);
       expect(url).toContain('committee_id=C00123456');
-      expect(url).toContain('two_year_transaction_period=2024');
+      expect(url).toContain(`two_year_transaction_period=${CYCLE}`);
     });
 
     it('generates receipts URL without committee ID', () => {
@@ -156,7 +164,7 @@ describe('createFinanceMetadata', () => {
   it('creates metadata with basic fields', () => {
     const metadata = createFinanceMetadata('K000367');
     expect(metadata.bioguideId).toBe('K000367');
-    expect(metadata.cycle).toBe(2024);
+    expect(metadata.cycle).toBe(CYCLE);
     expect(metadata.lastUpdated).toBeDefined();
     expect(metadata.fecTransparencyLink).toBeUndefined();
   });

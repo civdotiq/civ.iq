@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { DollarSign, FileText, Building2, Users } from 'lucide-react';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
@@ -212,7 +213,18 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
                   <div key={index} className="bg-white p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h6 className="font-medium text-gray-900">{project.title}</h6>
+                        <h6 className="font-medium text-gray-900">
+                          {project.awardId ? (
+                            <Link
+                              href={`/spending/awards/${encodeURIComponent(project.awardId)}`}
+                              className="text-civiq-blue hover:underline"
+                            >
+                              {project.title}
+                            </Link>
+                          ) : (
+                            project.title
+                          )}
+                        </h6>
                         <p className="text-sm text-gray-600 mt-1">{project.description}</p>
                         <p className="text-xs text-gray-500 mt-1">{project.agency}</p>
                       </div>
@@ -353,8 +365,10 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
             <div className="text-2xl font-bold text-violet-900">
               {government.representation.billsAffectingDistrict.length}
             </div>
-            <p className="text-sm text-violet-700 mt-1">Active Bills</p>
-            <p className="text-xs text-violet-600 mt-1">Affecting this district</p>
+            <p className="text-sm text-violet-700 mt-1">Relevant bills shown</p>
+            <p className="text-xs text-violet-600 mt-1">
+              Recent bills that best match this district, not a total
+            </p>
           </div>
 
           {government.representation.appropriationsSecured != null && (

@@ -40,6 +40,7 @@ import { getLegislatorInfoMap, type LegislatorInfo } from '@/lib/data/legislator
  */
 const NO_FEC_ALLOWLIST: Record<string, string> = {
   // (bioguideId): 'reason (YYYY-MM-DD)'
+  A000383: 'Alan Armstrong (OK), appointed 2026-03-24; no FEC candidate record as of 2026-09-22',
 };
 
 describe('bioguide -> FEC mapping coverage (Campaign Finance tab canary)', () => {
@@ -47,7 +48,9 @@ describe('bioguide -> FEC mapping coverage (Campaign Finance tab canary)', () =>
 
   beforeAll(async () => {
     const infoMap = await getLegislatorInfoMap();
-    currentMembers = Array.from(infoMap.values());
+    // The info map also carries recently departed members (for resolving
+    // older roll calls); only sitting members need a Campaign Finance tab.
+    currentMembers = Array.from(infoMap.values()).filter(m => !m.departed);
   });
 
   it('loads a non-empty current-members list and a non-empty mapping table', () => {

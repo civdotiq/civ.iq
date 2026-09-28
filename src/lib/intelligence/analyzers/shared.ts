@@ -279,14 +279,7 @@ export { classifyError, insufficientDataError } from '../error-utils';
 
 // ── FEC Election Cycle ──────────────────────────────────────────────
 
-/**
- * Returns the current FEC election cycle year.
- * FEC cycles are even years — contributions in odd years belong to the next even year.
- */
-export function getCurrentElectionCycle(): number {
-  const year = new Date().getFullYear();
-  return year % 2 === 0 ? year : year + 1;
-}
+export { getCurrentElectionCycle } from '@/lib/fec/election-cycle';
 
 // ── Committee Fuzzy Matching ────────────────────────────────────────
 

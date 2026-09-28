@@ -172,6 +172,7 @@ export function computeChamberAlignment(
     if (!majority) continue;
 
     for (const mv of roll.memberVotes) {
+      if (!mv.bioguideId) continue; // unresolved senator: counted in the majority, not a row
       if (normalizePartyLabel(mv.party) !== targetParty) continue;
       if (!isBinaryPosition(mv.position)) continue; // Present/Not Voting excluded
 

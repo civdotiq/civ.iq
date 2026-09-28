@@ -687,38 +687,69 @@ GET /api/search?query={searchTerm}&party={party}&chamber={chamber}&state={state}
 - `committee` (optional): Committee name or keyword
 - `experienceYearsMin` (optional): Minimum years in office
 - `experienceYearsMax` (optional): Maximum years in office
-- `billsSponsoredMin` (optional): Minimum bills sponsored
-- `billsSponsoredMax` (optional): Maximum bills sponsored
+- `billsIntroducedMin` (optional): Minimum bills and resolutions introduced this Congress
+- `billsIntroducedMax` (optional): Maximum bills and resolutions introduced this Congress
+- `raisedMin` (optional): Minimum FEC receipts this cycle, in whole dollars
+- `raisedMax` (optional): Maximum FEC receipts this cycle, in whole dollars
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Results per page (max: 100, default: 20)
-- `sort` (optional): Sort field (`name`, `state`, `party`, `yearsInOffice`)
+- `sort` (optional): Sort field (`name`, `state`, `party`, `yearsInOffice`, `billsIntroduced`, `raised`; unknown values sort last)
 - `order` (optional): Sort order (`asc`, `desc`)
 
 **Response:**
 
+`billsIntroduced` counts every bill and resolution (hr, s, hjres, sjres, hres,
+sres, hconres, sconres; amendments excluded) the member sponsored in the current
+Congress — the same definition as the Record Card's "introduced". It comes from
+GovInfo BILLSTATUS bulk data mirrored weekly into
+`data/member-sponsored-counts.json`, so it is as of
+`metadata.billsIntroducedAsOf`. It is `null` when that corpus is unavailable;
+a member with `null` never matches a `billsIntroducedMin`/`Max` filter.
+
+`raisedThisCycle` is the Record Card's "Total raised this cycle": FEC total
+receipts for the current 2-year cycle (`/candidate/{id}/totals/?cycle=N`). The
+FEC returns the 2-year row for senators too, so both chambers cover the same
+window. Senators not on the ballot file semiannually, so `raisedThroughDate`
+(the end of the latest report period) can trail House members by a quarter.
+Values come from an index the `warm-record-money` cron refreshes about every
+14h per member. `null` means no FEC receipts or not yet indexed, never $0, and
+never matches a `raisedMin`/`Max` filter. `metadata.fundraising` reports the
+cycle and how many sitting members the index covers; it is `null` when the
+index could not be read.
+
 ```json
 {
-  "results": [
-    {
-      "bioguideId": "P000595",
-      "name": "Gary Peters",
-      "party": "D",
-      "state": "MI",
-      "chamber": "Senate",
-      "yearsInOffice": 12,
-      "committees": ["Armed Services", "Commerce"],
-      "billsSponsored": 145,
-      "votingScore": 72.5,
-      "fundraisingTotal": 8500000
+  "data": {
+    "results": [
+      {
+        "bioguideId": "P000595",
+        "name": "Gary Peters",
+        "party": "D",
+        "state": "MI",
+        "chamber": "Senate",
+        "yearsInOffice": 12,
+        "billsIntroduced": 58,
+        "raisedThisCycle": 248405.08,
+        "raisedThroughDate": "2026-06-30",
+        "committees": ["Armed Services", "Commerce"]
+      }
+    ],
+    "totalResults": 45,
+    "page": 1,
+    "totalPages": 3,
+    "filters": { "party": "D", "chamber": "Senate" },
+    "metadata": {
+      "dataSource": "congress-legislators",
+      "billsIntroducedAsOf": "2026-09-25T18:21:46.475Z",
+      "fundraising": {
+        "source": "FEC",
+        "cycle": 2026,
+        "membersCovered": 531,
+        "totalMembers": 535
+      }
     }
-  ],
-  "totalResults": 45,
-  "page": 1,
-  "totalPages": 3,
-  "filters": {
-    "party": "D",
-    "chamber": "Senate"
-  }
+  },
+  "dataQuality": "complete"
 }
 ```
 

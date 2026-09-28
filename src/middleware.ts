@@ -175,7 +175,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const PRODUCTION_CSP =
   "default-src 'self'; " +
   "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " + // unsafe-inline required for Next.js App Router hydration, Google Analytics; va.vercel-scripts.com for Vercel Web Analytics
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unsafe-inline for styled-components/CSS-in-JS, unpkg.com for MapLibre GL
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // unsafe-inline for styled-components/CSS-in-JS; MapLibre CSS is bundled from the package
   "img-src 'self' data: https:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https:; " +
@@ -189,7 +189,7 @@ const PRODUCTION_CSP =
 const DEVELOPMENT_CSP =
   "default-src 'self'; " +
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; " + // Google Analytics, Vercel Web Analytics
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unpkg.com for MapLibre GL
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "img-src 'self' data: https: blob:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https: ws: wss:; " + // WebSocket for hot reload

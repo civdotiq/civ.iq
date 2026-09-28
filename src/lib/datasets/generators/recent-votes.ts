@@ -7,16 +7,18 @@
  * Recent Votes Dataset Generator
  *
  * Generates two datasets:
- * 1. Vote summaries — the 20 most recent roll-call votes
+ * 1. Vote summaries — the most recent roll-call votes (10 per chamber)
  * 2. Vote positions — individual member votes for those roll calls (~10K rows)
  *
  * Both generators share a single cached fetch to avoid duplicate API calls.
  *
- * Sources: Congress.gov API v3 + Senate XML + House Clerk XML
+ * Sources: Congress.gov house-vote API + House Clerk XML (House);
+ * mirrored senate.gov vote menu + roll calls (Senate).
  */
 
 import logger from '@/lib/logging/simple-logger';
 import { getVoteDetailsService, UnifiedVoteDetail } from '@/lib/services/vote.service';
+import { getSenateVoteMenu } from '@/features/representatives/services/roll-call-corpus';
 import type { DatasetResult, DatasetColumn } from '@/types/dataset';
 
 // --- Vote Summaries ---
@@ -95,14 +97,97 @@ const POSITION_COLUMNS: DatasetColumn[] = [
   },
 ];
 
-interface CongressVoteListItem {
-  congress: number;
-  chamber: string;
-  rollNumber: number;
-  date: string;
-  question: string;
-  result: string;
-  url: string;
+/** Roll calls taken per chamber. Both chambers together make ~20 rows. */
+export const VOTES_PER_CHAMBER = 10;
+
+const CONGRESS_API = 'https://api.congress.gov/v3';
+
+interface HouseVoteListResponse {
+  pagination?: { count?: number };
+}
+
+/** Congress number for a date: the 119th began Jan 2025. */
+export function congressForDate(now: Date): number {
+  return Math.floor((now.getUTCFullYear() - 1789) / 2) + 1;
+}
+
+/** House sessions map to calendar years: odd year = session 1, even = 2. */
+export function sessionForDate(now: Date): number {
+  return now.getUTCFullYear() % 2 === 0 ? 2 : 1;
+}
+
+/**
+ * Latest House roll number in a session. The house-vote list endpoint ignores
+ * sort parameters, but roll numbers are sequential per session, so
+ * pagination.count IS the latest roll number (same approach as the Nostr
+ * vote detector).
+ */
+async function fetchLatestHouseRoll(
+  apiKey: string,
+  congress: number,
+  session: number
+): Promise<number> {
+  const url = `${CONGRESS_API}/house-vote/${congress}/${session}?limit=1&format=json`;
+  const response = await fetch(url, {
+    headers: { 'X-API-Key': apiKey },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) {
+    logger.error('Failed to fetch House vote list', new Error(`HTTP ${response.status}`), {
+      congress,
+      session,
+    });
+    return 0;
+  }
+  const json = (await response.json()) as HouseVoteListResponse;
+  return json.pagination?.count ?? 0;
+}
+
+/**
+ * Vote IDs for the most recent House roll calls. Early in a second session
+ * there may be fewer than `limit` rolls, so the tail of session 1 fills in.
+ */
+export async function listRecentHouseVoteIds(
+  apiKey: string,
+  now: Date,
+  limit: number = VOTES_PER_CHAMBER
+): Promise<string[]> {
+  const congress = congressForDate(now);
+  const ids: string[] = [];
+  for (let session = sessionForDate(now); session >= 1 && ids.length < limit; session--) {
+    const latest = await fetchLatestHouseRoll(apiKey, congress, session);
+    for (let roll = latest; roll >= 1 && ids.length < limit; roll--) {
+      ids.push(`house-${congress}-${session}-${roll}`);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Vote IDs for the most recent Senate roll calls, read from the mirrored
+ * senate.gov vote menu (senate.gov is Akamai-blocked from Vercel, MR10).
+ * Returns [] when the mirror has not run.
+ */
+export async function listRecentSenateVoteIds(
+  now: Date,
+  limit: number = VOTES_PER_CHAMBER
+): Promise<string[]> {
+  const congress = congressForDate(now);
+  const menu = await getSenateVoteMenu(congress);
+  if (!menu) {
+    logger.warn('Senate vote menu absent — recent-votes dataset has no Senate rows', {
+      congress,
+    });
+    return [];
+  }
+  return Object.entries(menu.sessions)
+    .flatMap(([session, entries]) =>
+      entries.map(entry => ({ session: parseInt(session, 10), n: entry.n }))
+    )
+    .filter(({ session, n }) => Number.isFinite(session) && Number.isFinite(n))
+    .sort((a, b) => b.session - a.session || b.n - a.n)
+    .slice(0, limit)
+    .map(({ session, n }) => `senate-${congress}-${session}-${n}`);
 }
 
 // --- Shared fetch with module-level cache ---
@@ -111,32 +196,25 @@ interface CongressVoteListItem {
 
 let cachedVoteDetails: Promise<UnifiedVoteDetail[]> | null = null;
 
-async function fetchVoteDetails(): Promise<UnifiedVoteDetail[]> {
+export async function fetchVoteDetails(now: Date = new Date()): Promise<UnifiedVoteDetail[]> {
   const congressApiKey = process.env.CONGRESS_API_KEY;
   if (!congressApiKey) return [];
 
-  const url = `https://api.congress.gov/v3/vote?limit=20&sort=date+desc&format=json`;
-  const response = await fetch(url, {
-    headers: { 'X-API-Key': congressApiKey },
-    signal: AbortSignal.timeout(30000),
-  });
-
-  if (!response.ok) {
-    logger.error('Failed to fetch vote list', new Error(`${response.status}`));
-    return [];
-  }
-
-  const json = await response.json();
-  const voteList = (json.votes || []) as CongressVoteListItem[];
+  const [houseIds, senateIds] = await Promise.all([
+    listRecentHouseVoteIds(congressApiKey, now).catch(error => {
+      logger.error('Failed to list recent House votes', error as Error);
+      return [] as string[];
+    }),
+    listRecentSenateVoteIds(now),
+  ]);
 
   const details = await Promise.all(
-    voteList.map(async vote => {
-      const voteId =
-        vote.chamber === 'House'
-          ? `house-${vote.congress}-${vote.rollNumber}`
-          : `senate-${vote.congress}-${vote.rollNumber}`;
+    [...houseIds, ...senateIds].map(async voteId => {
       try {
-        return await getVoteDetailsService(voteId);
+        const detail = await getVoteDetailsService(voteId);
+        // The service returns Senate IDs as a bare padded roll ("00238"),
+        // which collides across sessions. Keep the session-qualified ID.
+        return detail ? { ...detail, voteId } : null;
       } catch (error) {
         logger.warn('Failed to fetch vote details', { voteId, error });
         return null;
@@ -144,7 +222,15 @@ async function fetchVoteDetails(): Promise<UnifiedVoteDetail[]> {
     })
   );
 
-  return details.filter((v): v is UnifiedVoteDetail => v !== null);
+  return details
+    .filter((v): v is UnifiedVoteDetail => v !== null)
+    .sort((a, b) => voteTime(b) - voteTime(a));
+}
+
+/** Sortable timestamp; unparseable dates sort last. */
+function voteTime(vote: UnifiedVoteDetail): number {
+  const t = new Date(vote.date).getTime();
+  return Number.isNaN(t) ? Number.NEGATIVE_INFINITY : t;
 }
 
 function getSharedVoteDetails(): Promise<UnifiedVoteDetail[]> {
@@ -181,7 +267,7 @@ export async function generateRecentVotes(): Promise<DatasetResult> {
     metadata: {
       name: 'Recent Votes (119th Congress)',
       slug: 'recent-votes',
-      description: 'The 20 most recent roll-call vote summaries from both chambers of Congress.',
+      description: 'The 10 most recent roll-call vote summaries from each chamber of Congress.',
       source: 'Congress.gov API + Senate.gov XML',
       sourceUrl: 'https://api.congress.gov',
       generated: new Date().toISOString(),
@@ -218,7 +304,7 @@ export async function generateVotePositions(): Promise<DatasetResult> {
       name: 'Recent Vote Positions (119th Congress)',
       slug: 'vote-positions',
       description:
-        'Individual member voting positions for the 20 most recent roll-call votes. One row per member per vote.',
+        'Individual member voting positions for the 10 most recent roll-call votes in each chamber. One row per member per vote.',
       source: 'Congress.gov API + Senate.gov XML + House Clerk XML',
       sourceUrl: 'https://api.congress.gov',
       generated: new Date().toISOString(),

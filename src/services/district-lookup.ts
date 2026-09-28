@@ -10,6 +10,7 @@ import {
   type DistrictBoundary,
 } from '@/lib/helpers/district-boundary-utils';
 import { findCongressionalDistrictLayer } from '@/lib/census-geocoder';
+import { currentOfficeholderVintage } from '@/lib/census-vintage';
 import logger from '@/lib/logging/simple-logger';
 
 interface GeocodeResult {
@@ -121,7 +122,7 @@ class DistrictLookupService {
       const url =
         `https://geocoding.geo.census.gov/geocoder/geographies/coordinates` +
         `?x=${longitude}&y=${latitude}` +
-        `&benchmark=Public_AR_Current&vintage=Current_Current` +
+        `&benchmark=Public_AR_Current&vintage=${currentOfficeholderVintage()}` +
         `&layers=all` +
         `&format=json`;
 

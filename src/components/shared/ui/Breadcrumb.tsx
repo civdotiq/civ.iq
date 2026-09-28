@@ -55,7 +55,10 @@ export function Breadcrumb({
   breadcrumbs.push(...customItems);
 
   return (
-    <nav aria-label="Breadcrumb" className={`flex items-center gap-2 text-sm mb-6 ${className}`}>
+    <nav
+      aria-label="Breadcrumb"
+      className={`flex flex-wrap items-center gap-2 text-sm mb-6 ${className}`}
+    >
       {breadcrumbs.map((item, index) => (
         <React.Fragment key={`${item.href}-${index}`}>
           {index > 0 && (
