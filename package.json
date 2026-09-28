@@ -106,7 +106,7 @@
     "ioredis": "^5.6.1",
     "isomorphic-dompurify": "2.16.0",
     "js-yaml": "4.3.2",
-    "jszip": "3.10.1",
+    "jszip": "3.10.2",
     "limiter": "3.0.0",
     "lucide-react": "^0.525.0",
     "maplibre-gl": "6.11.2",
@@ -124,9 +124,9 @@
     "simple-statistics": "7.8.8",
     "swr": "2.3.4",
     "tailwind-merge": "^3.3.1",
-    "ws": "8.21.0",
+    "ws": "8.21.3",
     "zod": "4.1.11",
-    "zustand": "5.0.6"
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@eslint/compat": "2.0.0",
