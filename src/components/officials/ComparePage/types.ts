@@ -18,12 +18,15 @@ export interface CompareOfficial {
   caucusesCount: number;
 }
 
+/** null = that section could not be computed; the row renders "—". */
 export interface CompareVoting {
-  totalVotes: number;
-  partyLoyaltyScore: number;
-  billsSponsored: number;
-  billsEnacted: number;
-  billsCosponsored: number;
+  totalVotes: number | null;
+  partyLoyaltyScore: number | null;
+  billsSponsored: number | null;
+  billsEnacted: number | null;
+  billsCosponsored: number | null;
+  /** True when the cosponsored sample was truncated (count is a floor). */
+  billsCosponsoredIsLowerBound: boolean;
 }
 
 export interface CompareFinance {
@@ -46,8 +49,3 @@ export interface CompareSidePayload {
     finance: boolean;
   };
 }
-
-export const DEFAULT_PAIR = {
-  a: 'J000294',
-  b: 'J000299',
-} as const;

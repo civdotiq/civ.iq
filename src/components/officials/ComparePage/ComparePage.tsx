@@ -10,7 +10,6 @@ import { CompareSection } from './CompareSection';
 import { CompareRow } from './CompareRow';
 import { SwapButton } from './SwapButton';
 import { fetchSide, formatCount, formatDollars, pacSharePercent, smallDonorPercent } from './data';
-import { DEFAULT_PAIR } from './types';
 import type { CompareSidePayload } from './types';
 
 interface ComparePageProps {
@@ -81,7 +80,7 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
     return `119th Congress · ${a.official.chamber} vs ${b.official.chamber}`;
   })();
 
-  const numericA = (val: number | undefined) =>
+  const numericA = (val: number | null | undefined) =>
     typeof val === 'number' && Number.isFinite(val) ? val : undefined;
 
   const billsSponsoredA = a.voting?.billsSponsored;
@@ -369,5 +368,3 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
     </div>
   );
 }
-
-export { DEFAULT_PAIR };
