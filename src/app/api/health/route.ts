@@ -203,10 +203,12 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'noaa:*',
   },
   {
-    // Verified: eia-service.ts uses api_key query param on /seds/data/ path
+    // Same shape eia-service.ts queries, cut to one row. The bare /seds/data/
+    // path asks for the whole dataset and times out, reading as an outage.
     name: 'EIA',
     tier: 'standard',
-    probeUrl: 'https://api.eia.gov/v2/seds/data/',
+    probeUrl:
+      'https://api.eia.gov/v2/seds/data/?frequency=annual&data[0]=value&facets[stateId][]=MI&facets[seriesId][]=TETCB&length=1',
     requiresKey: 'EIA_API_KEY',
     keyMethod: 'query',
     keyParam: 'api_key',
@@ -293,10 +295,12 @@ const DATA_SOURCES: SourceDefinition[] = [
     cacheKeyPattern: 'nhtsa:*',
   },
   {
-    // Verified: uses data.gov rate limiter with API_KEY param
+    // Same endpoint and MM-YYYY date format fbi-ucr-service.ts uses. A bare
+    // year (from=2020) is rejected with 400, which read as an outage.
     name: 'FBI UCR',
     tier: 'standard',
-    probeUrl: 'https://api.usa.gov/crime/fbi/cde/arrest/national/all?from=2020&to=2020',
+    probeUrl:
+      'https://api.usa.gov/crime/fbi/cde/summarized/state/MI/violent-crime?from=01-2023&to=12-2023',
     requiresKey: 'DATA_GOV_API_KEY',
     keyMethod: 'query',
     keyParam: 'API_KEY',
