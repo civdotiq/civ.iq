@@ -33,7 +33,9 @@ const STATE_FIPS: Record<string, string> = Object.fromEntries(
 );
 
 // v2: v1 profiles could be built from failed sub-fetches cached as "no data"
-const CACHE_KEY_PREFIX = 'district-government-spending:v2';
+// v3: majorProjects rows gained `awardId`; v2 profiles would serve link-less
+// rows for up to a day after deploy.
+const CACHE_KEY_PREFIX = 'district-government-spending:v3';
 const BILLS_LIMIT = 10;
 
 // USASpending can hang 40s+ on a cold query, so the response waits this long
@@ -117,6 +119,7 @@ async function fetchFederalInvestment(
         amount: award.amount,
         agency: award.agency,
         description: award.description,
+        awardId: award.generatedId || null,
       }));
 
     const data = {

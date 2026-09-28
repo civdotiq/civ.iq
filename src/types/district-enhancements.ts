@@ -112,6 +112,8 @@ export interface GovernmentServicesProfile {
       amount: number;
       agency: string;
       description: string;
+      /** Links to /spending/awards/[awardId]; null when USASpending omitted the id. */
+      awardId: string | null;
     }>;
     // null: no honest source — the old value was a keyword heuristic over a
     // 10-award sample, not a measured total. Pending a PSC/NAICS-coded query.

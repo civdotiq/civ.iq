@@ -340,6 +340,7 @@ describe('/api/districts/[districtId]/government-spending null integrity', () =>
       title: 'RDZM, LLC',
       amount: 48315012,
       agency: 'Department of Defense',
+      awardId: 'CONT_AWD_1',
     });
     // Infrastructure obligations = PSC Y+Z contract total (12M) + DOT/EPA-SRF
     // grant total (3M), from the documented INFRASTRUCTURE_CODE_SET — a real,

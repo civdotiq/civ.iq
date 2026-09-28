@@ -46,6 +46,7 @@ function transformAward(award: USASpendingAwardResult): FederalAward {
     startDate: award['Start Date'],
     description: award.Description || 'No description available',
     url: `https://www.usaspending.gov/award/${award.generated_internal_id}`,
+    generatedId: award.generated_internal_id,
   };
 }
 
