@@ -52,7 +52,8 @@ export interface ComparisonData {
     career: LegislationSlice;
     /** True when the cosponsored sample was truncated: treat `current.billsCosponsored` as a floor. */
     billsCosponsoredIsLowerBound: boolean;
-    committeeMemberships: number;
+    /** null when the committee roster could not be resolved for this member. */
+    committeeMemberships: number | null;
     dataAsOf: string;
   } | null;
   methodology: string;
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       return ApiErrors.notFound('Representative', bioguideId);
     }
 
-    const headline = await getRecordCardHeadline(bioguideId);
+    const headline = await getRecordCardHeadline(bioguideId, representative);
     const legislation = headline?.legislation ?? null;
     const voting = headline?.voting ?? null;
 
@@ -112,23 +113,28 @@ export async function GET(request: NextRequest) {
             },
             billsCosponsoredIsLowerBound:
               legislation.cosponsoredSample.currentIsLowerBound ?? false,
-            committeeMemberships: representative.committees?.length ?? 0,
+            committeeMemberships: representative.committees
+              ? representative.committees.length
+              : null,
             dataAsOf: legislation.dataAsOf,
           }
         : null,
       methodology: METHODOLOGY,
     };
 
-    // A member with neither section is a transient upstream gap; don't let
-    // the CDN pin it for an hour.
-    const complete = data.votingRecord !== null && data.effectiveness !== null;
-    return NextResponse.json(data, {
-      headers: {
-        'Cache-Control': complete
-          ? 'public, s-maxage=3600, stale-while-revalidate=86400'
-          : 'no-store',
-      },
-    });
+    // A missing legislation rollup is a cold-start gap (the walk is still
+    // running): don't let the CDN pin it. A missing voting section can be
+    // structural (delegates cast no floor roll calls), so cache it briefly
+    // rather than never. Note: next.config's global /api header rule
+    // currently overrides this with s-maxage=300 on every API route; the
+    // values here state intent and take effect if that rule is narrowed.
+    const cacheControl =
+      data.effectiveness === null
+        ? 'no-store'
+        : data.votingRecord === null
+          ? 'public, s-maxage=600, stale-while-revalidate=3600'
+          : 'public, s-maxage=3600, stale-while-revalidate=86400';
+    return NextResponse.json(data, { headers: { 'Cache-Control': cacheControl } });
   } catch (error) {
     logger.error(
       'Comparison API Error',

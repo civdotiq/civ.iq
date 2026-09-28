@@ -138,9 +138,7 @@ interface ComparisonEnvelope {
     current?: {
       billsSponsored?: number;
       billsEnacted?: number;
-      billsCosponsored?: number;
     };
-    billsCosponsoredIsLowerBound?: boolean;
   } | null;
   error?: string;
 }
@@ -163,8 +161,6 @@ function toVoting(envelope: ComparisonEnvelope | null): CompareVoting | null {
     partyLoyaltyScore: countOrNull(voting?.partyLoyaltyScore),
     billsSponsored: countOrNull(current?.billsSponsored),
     billsEnacted: countOrNull(current?.billsEnacted),
-    billsCosponsored: countOrNull(current?.billsCosponsored),
-    billsCosponsoredIsLowerBound: envelope.effectiveness?.billsCosponsoredIsLowerBound ?? false,
   };
 }
 

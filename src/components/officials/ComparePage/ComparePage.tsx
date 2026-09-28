@@ -51,7 +51,6 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
       const params = new URLSearchParams(searchParams?.toString() ?? '');
       params.set('a', nextA);
       params.set('b', nextB);
-      if (params.get('v') !== 'new') params.set('v', 'new');
       router.replace(`/compare?${params.toString()}`, { scroll: false });
     },
     [router, searchParams]
@@ -253,8 +252,8 @@ export function ComparePage({ bioguideA, bioguideB }: ComparePageProps) {
           />
           <CompareRow
             label="Party loyalty"
-            la={partyLoyaltyA && partyLoyaltyA > 0 ? `${Math.round(partyLoyaltyA)}%` : '—'}
-            lb={partyLoyaltyB && partyLoyaltyB > 0 ? `${Math.round(partyLoyaltyB)}%` : '—'}
+            la={typeof partyLoyaltyA === 'number' ? `${Math.round(partyLoyaltyA)}%` : '—'}
+            lb={typeof partyLoyaltyB === 'number' ? `${Math.round(partyLoyaltyB)}%` : '—'}
             loading={loading && !a.voting && !b.voting}
             accent="party"
             partyA={a.official?.party}

@@ -24,9 +24,6 @@ export interface CompareVoting {
   partyLoyaltyScore: number | null;
   billsSponsored: number | null;
   billsEnacted: number | null;
-  billsCosponsored: number | null;
-  /** True when the cosponsored sample was truncated (count is a floor). */
-  billsCosponsoredIsLowerBound: boolean;
 }
 
 export interface CompareFinance {

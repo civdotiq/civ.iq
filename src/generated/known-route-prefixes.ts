@@ -72,7 +72,6 @@ export const KNOWN_ROUTE_PREFIXES: ReadonlySet<string> = new Set([
   'open',
   'openapi.json',
   'opengraph-image',
-  'pacs',
   'photos',
   'privacy',
   'regulations',
