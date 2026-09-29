@@ -26,18 +26,20 @@ interface GlanceCellProps {
 
 function GlanceCell({ label, value, caption, loading }: GlanceCellProps) {
   return (
-    <div className="px-6 py-4 border-b sm:border-b-0 border-gray-300 [&:not(:first-child)]:sm:border-l">
-      <span className="block text-[11px] uppercase tracking-wider text-gray-500">{label}</span>
+    <div className="px-6 sm:px-7 py-5 border-b sm:border-b-0 border-gray-300 [&:not(:first-child)]:sm:border-l">
+      <span className="block text-[11px] font-medium uppercase tracking-wider text-civiq-blue-dark">
+        {label}
+      </span>
       {loading ? (
         <div className="animate-pulse mt-1" aria-hidden="true">
-          <div className="h-7 w-16 bg-gray-100 border border-gray-200" />
+          <div className="h-10 w-20 bg-gray-100 border border-gray-200" />
         </div>
       ) : (
         <>
-          <span className="block text-2xl sm:text-3xl font-bold leading-tight text-gray-900 tabular-nums">
+          <span className="block text-3xl sm:text-4xl font-bold leading-tight text-gray-900 tabular-nums mt-1">
             {value}
           </span>
-          <span className="block text-xs text-gray-700 mt-1">{caption}</span>
+          <span className="block text-[13px] text-gray-600 mt-1">{caption}</span>
         </>
       )}
     </div>
@@ -68,7 +70,7 @@ export function GlanceBand({
   const cycle = summary?.financeCycle;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-black bg-white mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-2 border-black border-t-4 border-t-civiq-blue bg-white mb-10">
       <GlanceCell
         label="Roll-call votes"
         value={votes && votes > 0 ? String(votes) : '—'}

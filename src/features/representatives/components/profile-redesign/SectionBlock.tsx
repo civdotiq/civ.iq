@@ -19,19 +19,25 @@ interface SectionBlockProps {
 }
 
 /**
- * Bordered content section for the profile overview.
- * 2px structural border, 1px internal dividers (Aicher border hierarchy).
+ * Content section for the profile overview. Border hierarchy: the hero and
+ * glance band carry the 2px black structure; sections step down to a 1px
+ * gray frame marked by a 3px interactive-blue top rule.
  */
 export function SectionBlock({ id, title, action, source, children }: SectionBlockProps) {
   return (
-    <section id={id} className="border-2 border-black bg-white mb-8 scroll-mt-16">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-6 py-4 border-b border-gray-300">
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+    <section
+      id={id}
+      className="border border-gray-300 border-t-[3px] border-t-civiq-blue bg-white mb-10 scroll-mt-32"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-6 sm:px-8 pt-6 pb-4">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         {action && <div className="text-sm font-medium">{action}</div>}
       </div>
-      <div className="p-6">{children}</div>
+      <div className="px-6 sm:px-8 pb-6">{children}</div>
       {source && (
-        <div className="px-6 py-2 border-t border-gray-300 text-xs text-gray-500">{source}</div>
+        <div className="mx-6 sm:mx-8 py-3 border-t border-gray-200 text-xs text-gray-600">
+          {source}
+        </div>
       )}
     </section>
   );

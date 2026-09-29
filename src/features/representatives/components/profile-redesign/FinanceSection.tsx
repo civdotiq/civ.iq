@@ -60,7 +60,7 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div>
-              <span className="block text-[11px] uppercase tracking-wider text-gray-500">
+              <span className="block text-[11px] font-medium uppercase tracking-wider text-civiq-blue-dark">
                 Raised
               </span>
               <span className="block text-3xl font-bold text-gray-900 tabular-nums">
@@ -68,7 +68,7 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
               </span>
             </div>
             <div>
-              <span className="block text-[11px] uppercase tracking-wider text-gray-500">
+              <span className="block text-[11px] font-medium uppercase tracking-wider text-civiq-blue-dark">
                 Spent
               </span>
               <span className="block text-3xl font-bold text-gray-900 tabular-nums">
@@ -76,7 +76,7 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
               </span>
             </div>
             <div>
-              <span className="block text-[11px] uppercase tracking-wider text-gray-500">
+              <span className="block text-[11px] font-medium uppercase tracking-wider text-civiq-blue-dark">
                 Cash on hand
               </span>
               <span className="block text-3xl font-bold text-gray-900 tabular-nums">
@@ -86,17 +86,17 @@ export function FinanceSection({ finance, loading, onExplore }: FinanceSectionPr
           </div>
 
           {bars.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3 pt-6 border-t border-gray-200">
               {bars.map(bar => {
                 const pct = Math.min(100, Math.round((bar.amount / totalRaised) * 100));
                 return (
                   <div
                     key={bar.label}
-                    className="grid grid-cols-[10rem_1fr_5rem] gap-3 items-center text-sm"
+                    className="grid grid-cols-[10rem_1fr_5rem] gap-4 items-center text-[15px]"
                   >
                     <span className="text-gray-900">{bar.label}</span>
-                    <div className="h-4 bg-gray-100 border border-gray-300">
-                      <div className="h-full bg-gray-700" style={{ width: `${pct}%` }} />
+                    <div className="h-5 bg-civiq-blue/10">
+                      <div className="h-full bg-civiq-blue-dark" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-right tabular-nums text-gray-700">
                       {formatMoney(bar.amount)}

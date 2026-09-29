@@ -26,13 +26,22 @@ const VISIBLE_VOTES = 5;
 
 function positionChipClass(position: string): string {
   const p = position.toLowerCase();
+  // Filled vs outlined, not dashed vs solid: distinguishable at a glance.
+  // Neutral black — never party or success/error colors for a vote position.
   if (p === 'yea' || p === 'yes' || p === 'aye') {
-    return 'border-2 border-black text-gray-900';
+    return 'border-2 border-black bg-black text-white';
   }
   if (p === 'nay' || p === 'no') {
-    return 'border-2 border-dashed border-gray-500 text-gray-700';
+    return 'border-2 border-black bg-white text-gray-900';
   }
-  return 'border border-gray-300 text-gray-500';
+  return 'border border-gray-300 text-gray-600';
+}
+
+/** Adopted outcomes get an interactive-blue tint; everything else stays gray. */
+function resultChipClass(result: string): string {
+  const r = result.toLowerCase();
+  const adopted = /\b(passed|agreed|confirmed|adopted)\b/.test(r) && !/\bnot\b/.test(r);
+  return adopted ? 'bg-civiq-blue/15 text-civiq-blue-dark' : 'bg-gray-100 text-gray-700';
 }
 
 function formatVoteDate(iso: string): string {
@@ -90,9 +99,9 @@ export function RecentVotesSection({
           }
         />
       ) : (
-        <table className="w-full text-sm">
+        <table className="w-full text-[15px]">
           <thead>
-            <tr className="border-b-2 border-black">
+            <tr className="border-b border-b-black">
               <th className="text-left pb-2 pr-4 text-[11px] uppercase tracking-wider font-medium text-gray-500">
                 Date
               </th>
@@ -110,21 +119,29 @@ export function RecentVotesSection({
           <tbody>
             {visible.map(vote => (
               <tr key={vote.voteId} className="border-b border-gray-300 last:border-b-0">
-                <td className="py-3 pr-4 whitespace-nowrap text-gray-700 align-top">
+                <td className="py-3.5 pr-4 whitespace-nowrap text-gray-700 align-top">
                   {formatVoteDate(vote.date)}
                 </td>
-                <td className="py-3 pr-4 align-top">
+                <td className="py-3.5 pr-4 align-top">
                   <VoteLink voteId={vote.voteId} label={measureLabel(vote)} />
                 </td>
-                <td className="py-3 pr-4 align-top">
+                <td className="py-3.5 pr-4 align-top">
                   <span
                     className={`inline-block rounded-[2px] px-2 py-0.5 text-[11px] font-bold tracking-wider uppercase ${positionChipClass(vote.position)}`}
                   >
                     {vote.position}
                   </span>
                 </td>
-                <td className="py-3 align-top text-gray-700 hidden sm:table-cell">
-                  {vote.result || '—'}
+                <td className="py-3.5 align-top hidden sm:table-cell">
+                  {vote.result ? (
+                    <span
+                      className={`inline-block rounded-[2px] px-2 py-0.5 text-[13px] font-medium ${resultChipClass(vote.result)}`}
+                    >
+                      {vote.result}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  )}
                 </td>
               </tr>
             ))}

@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
-import { partyChipClasses } from './types';
+import { partyFillClasses } from './types';
 
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
@@ -29,6 +29,16 @@ function computeAge(birthday: string | undefined): number | null {
   const monthDelta = now.getMonth() - birth.getMonth();
   if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < birth.getDate())) age -= 1;
   return age >= 0 && age < 120 ? age : null;
+}
+
+function Fact({ label, value, caption }: { label: string; value: string; caption?: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-gray-600">{label}</dt>
+      <dd className="text-lg font-medium text-gray-900 mt-0.5">{value}</dd>
+      {caption && <dd className="text-[13px] text-gray-600">{caption}</dd>}
+    </div>
+  );
 }
 
 export function IdentityHeader({
@@ -53,12 +63,17 @@ export function IdentityHeader({
   const sinceYear = terms[terms.length - 1]?.startYear;
   const termRange = terms[0] ? `${terms[0].startYear}–${terms[0].endYear}` : null;
   const termCount = terms.length;
+  const showElection = nextElection && r.status !== 'resigned' && r.status !== 'deceased';
+  const partyClasses = partyFillClasses(r.party);
 
   const roleTitle =
     r.chamber === 'Senate' ? (
       <>
         U.S. Senator from{' '}
-        <Link href={`/states/${r.state}`} className="font-bold text-civiq-blue hover:underline">
+        <Link
+          href={`/states/${r.state}`}
+          className="font-bold text-civiq-blue-dark hover:underline"
+        >
           {r.state}
         </Link>
       </>
@@ -67,7 +82,7 @@ export function IdentityHeader({
         U.S. Representative,{' '}
         <Link
           href={`/districts/${r.state}-${r.district}`}
-          className="font-bold text-civiq-blue hover:underline"
+          className="font-bold text-civiq-blue-dark hover:underline"
         >
           {r.state}-{r.district}
         </Link>
@@ -75,23 +90,30 @@ export function IdentityHeader({
     ) : (
       <>
         U.S. Representative from{' '}
-        <Link href={`/states/${r.state}`} className="font-bold text-civiq-blue hover:underline">
+        <Link
+          href={`/states/${r.state}`}
+          className="font-bold text-civiq-blue-dark hover:underline"
+        >
           {r.state}
         </Link>
       </>
     );
 
   return (
-    <header className="border-2 border-black bg-white p-6">
-      <div className="grid grid-cols-[96px_1fr] sm:grid-cols-[128px_1fr] lg:grid-cols-[128px_1fr_auto] gap-6 items-start">
+    <header className="border-2 border-black bg-civiq-blue/5">
+      {/* Party identity band — party colors identify party ONLY. */}
+      <div className={`h-2 ${partyClasses}`} aria-hidden="true" />
+      {/* Mobile: portrait + name share a row; facts span full width beneath.
+          sm+: facts sit under the name. lg+: actions take a third column. */}
+      <div className="p-6 lg:p-8 grid grid-cols-[80px_1fr] sm:grid-cols-[160px_1fr] lg:grid-cols-[160px_1fr_auto] gap-x-5 gap-y-5 sm:gap-x-8 items-start">
         {/* Portrait */}
-        <div className="w-24 sm:w-32">
+        <div className="w-20 sm:w-40 sm:row-span-2">
           {!imageError ? (
             <Image
               src={photoUrl}
               alt={`Official photo of ${displayName}`}
-              width={128}
-              height={160}
+              width={160}
+              height={200}
               className="border border-black object-cover w-full h-auto"
               onError={() => setImageError(true)}
             />
@@ -107,81 +129,64 @@ export function IdentityHeader({
 
         {/* Identity */}
         <div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
-            {displayName}
-          </h1>
-          <p className="text-lg font-medium mt-1 text-gray-900">{roleTitle}</p>
-
-          <div className="flex flex-wrap items-center gap-2 mt-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span
-              className={`border-2 rounded-[2px] px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${partyChipClasses(r.party)}`}
+              className={`rounded-[2px] px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${partyClasses}`}
             >
               {r.party}
             </span>
-            {age !== null && (
-              <span className="border border-gray-300 rounded-[2px] px-2.5 py-1 text-xs font-medium text-gray-700">
-                Age {age}
-              </span>
+            <p className="text-base font-medium text-gray-800">{roleTitle}</p>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-gray-900 mt-3">
+            {displayName}
+          </h1>
+        </div>
+
+        {/* Facts + focus areas */}
+        <div className="col-span-2 sm:col-span-1 sm:col-start-2">
+          <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 pt-4 border-t border-civiq-blue/30">
+            {termRange && <Fact label="Current term" value={termRange} />}
+            {sinceYear && (
+              <Fact
+                label="In Congress"
+                value={termCount === 1 ? '1st term' : `Since ${sinceYear}`}
+                caption={`${termCount} ${termCount === 1 ? 'term' : 'terms'} served`}
+              />
             )}
-            {nextElection && r.status !== 'resigned' && r.status !== 'deceased' && (
-              <span className="border border-gray-300 rounded-[2px] px-2.5 py-1 text-xs font-medium text-gray-700">
-                Up for re-election {nextElection}
-              </span>
-            )}
+            {showElection && <Fact label="Next election" value={`November ${nextElection}`} />}
+            {age !== null && <Fact label="Age" value={String(age)} />}
+          </dl>
+
+          <div className="flex flex-wrap items-center gap-2 mt-5 text-[13px]">
+            {focusAreas.length > 0 && <span className="text-gray-600 mr-1">Focus areas</span>}
             {focusAreas.map(area => (
               <span
                 key={area}
-                className="border border-gray-300 rounded-[2px] px-2.5 py-1 text-xs font-medium text-gray-700"
+                className="border border-civiq-blue/40 bg-white rounded-[2px] px-2.5 py-1 font-medium text-civiq-blue-dark"
               >
                 {area}
               </span>
             ))}
+            <button
+              type="button"
+              onClick={onOpenBio}
+              className="ml-2 font-medium text-civiq-blue-dark hover:underline"
+            >
+              Full biography & contact →
+            </button>
           </div>
-
-          <dl className="flex flex-wrap gap-x-8 gap-y-2 mt-4 text-sm">
-            {termRange && (
-              <div>
-                <dd className="font-bold text-gray-900">{termRange}</dd>
-                <dt className="text-[11px] uppercase tracking-wider text-gray-500">Current term</dt>
-              </div>
-            )}
-            {sinceYear && (
-              <div>
-                <dd className="font-bold text-gray-900">
-                  {termCount === 1 ? '1st term' : `In Congress since ${sinceYear}`}
-                </dd>
-                <dt className="text-[11px] uppercase tracking-wider text-gray-500">
-                  {termCount} {termCount === 1 ? 'term' : 'terms'} served
-                </dt>
-              </div>
-            )}
-            <div>
-              <dd>
-                <button
-                  type="button"
-                  onClick={onOpenBio}
-                  className="font-bold text-civiq-blue hover:underline"
-                >
-                  Full biography & contact →
-                </button>
-              </dd>
-              <dt className="text-[11px] uppercase tracking-wider text-gray-500">
-                Offices, service history
-              </dt>
-            </div>
-          </dl>
         </div>
 
         {/* Actions */}
-        <div className="col-span-2 lg:col-span-1 flex lg:flex-col gap-2 lg:min-w-[192px]">
+        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2 flex lg:flex-col gap-2 lg:min-w-[224px]">
           {contactHref && (
             <a
               href={contactHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 lg:flex-none text-center border-2 border-black rounded-[2px] bg-black text-white px-4 py-2.5 text-sm font-bold hover:bg-gray-800"
+              className="flex-1 lg:flex-none text-center border-2 border-civiq-blue-dark rounded-[2px] bg-civiq-blue-dark text-white px-4 py-3 text-[15px] font-bold hover:bg-black"
             >
-              Contact
+              Contact office
             </a>
           )}
           {!r.isHistorical && (
@@ -192,15 +197,14 @@ export function IdentityHeader({
               className="flex-1 lg:flex-none"
             />
           )}
-          <p className="hidden lg:block text-xs text-center text-gray-700 mt-1">
-            {phone}
-            {phone && websiteHost ? ' · ' : ''}
+          <p className="hidden lg:flex flex-col gap-1 text-sm text-gray-800 mt-2">
+            {phone && <span>{phone}</span>}
             {r.website && websiteHost && (
               <a
                 href={r.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-civiq-blue hover:underline"
+                className="text-civiq-blue-dark hover:underline"
               >
                 {websiteHost}
               </a>

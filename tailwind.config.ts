@@ -29,6 +29,9 @@ export default {
         'civiq-green': '#0a9338',
         'civiq-blue': '#3ea2d4',
         'civiq-blue-cool': '#2d8fc9',
+        // Interactive blue dark enough for white text / small text on white (5.0:1);
+        // civiq-blue itself is 2.7:1 and fails AA for text.
+        'civiq-blue-dark': '#1a74a6',
         // Status semantic colors (not party colors)
         'status-info': '#4b5563',
         'status-warning': '#d97706',
