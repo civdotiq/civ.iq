@@ -44,6 +44,15 @@ const tasks = [
     critical: true,
   },
   {
+    // Every function that ships onnxruntime-node's native binding must also
+    // ship libonnxruntime.so.1, or transformers fails at dlopen on Vercel and
+    // the ML pipelines silently fall back to keywords. Reads the build output;
+    // the fix is the ONNX_NODE_SHARED_LIB include in next.config.mjs.
+    name: 'ONNX Trace Check',
+    command: 'npm run check:onnx-trace',
+    critical: true,
+  },
+  {
     // Loads the real @huggingface/transformers WASM pipeline in pure Node
     // (no jest, no jsdom, no mocks). Catches regressions like the silent
     // 3.8.1-on-Node-25 breakage that mocked unit tests cannot detect.

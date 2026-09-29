@@ -22,6 +22,15 @@
 // If you want the interactive treemap, `next experimental-analyze` is the
 // upstream direction — it just could not be verified on this machine.
 
+// onnxruntime-node's `onnxruntime_binding.node` dynamically links this shared
+// library. The tracer ships the `.node` file but not the `.so` beside it, so on
+// Vercel `import('@huggingface/transformers')` failed at dlopen and every ML
+// pipeline (embeddings, zero-shot, NER) silently fell back to keywords.
+// Vercel builds and runs on linux/x64. This must be an include, applied inside
+// `next build`: Vercel's build adapter collects each function's files from the
+// traces before any postbuild script runs.
+const ONNX_NODE_SHARED_LIB = './node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1';
+
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
@@ -35,7 +44,22 @@ const nextConfig = {
   // vote-predictor.ts is a runtime lookup the tracer may miss, causing a
   // MODULE_NOT_FOUND on Vercel's read-only fs → 500 on /vote-prediction.
   outputFileTracingIncludes: {
-    '/api/intelligence/**': ['./models/**/*', './node_modules/onnxruntime-web/**/*'],
+    '/api/intelligence/**': [
+      './models/**/*',
+      './node_modules/onnxruntime-web/**/*',
+      ONNX_NODE_SHARED_LIB,
+    ],
+    // Every other function that imports @huggingface/transformers (via the
+    // analyzers) needs the shared library too. `npm run check:onnx-trace`
+    // fails validate:all if a new route loads the binding without it.
+    '/api/mesh/**': [ONNX_NODE_SHARED_LIB],
+    '/api/graph/**': [ONNX_NODE_SHARED_LIB],
+    '/api/lobby/**': [ONNX_NODE_SHARED_LIB],
+    '/lobby/**': [ONNX_NODE_SHARED_LIB],
+    '/api/mcp': [ONNX_NODE_SHARED_LIB],
+    '/api/cache/warm': [ONNX_NODE_SHARED_LIB],
+    '/api/cron/warm-intelligence': [ONNX_NODE_SHARED_LIB],
+    '/api/debug/calibrate-lobbying': [ONNX_NODE_SHARED_LIB],
     // The LDA corpus status route and the health freshness canary read this
     // sidecar at runtime; the tracer won't infer the fs read, so ship it with
     // those functions explicitly.
@@ -47,7 +71,13 @@ const nextConfig = {
     '/api/industry/[sector]/organizations': ['./data/lda-aggregates.json'],
     // The committee ask-page reads it for corpus-backed committee totals; the
     // topic-bills ask-page reads the bill → policy-area corpus.
-    '/ask/[slug]/[entityId]': ['./data/lda-aggregates.json', './data/bill-policy-areas.json.br'],
+    // Turbopack matches these keys as globs, where `[slug]` is a character
+    // class — the literal '/ask/[slug]/[entityId]' key never matched.
+    '/ask/**': [
+      './data/lda-aggregates.json',
+      './data/bill-policy-areas.json.br',
+      ONNX_NODE_SHARED_LIB,
+    ],
     // Topic pages fetch bills-by-policy-area through this route.
     '/api/search/policy-area': ['./data/bill-policy-areas.json.br'],
     // Representative search reads per-member bills-introduced counts.

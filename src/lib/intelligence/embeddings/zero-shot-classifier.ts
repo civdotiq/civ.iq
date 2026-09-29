@@ -16,6 +16,7 @@
 
 import { createHash } from 'crypto';
 import logger from '@/lib/logging/simple-logger';
+import { configureTransformersEnv } from './transformers-env';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorClassification, ZeroShotResult } from './types';
@@ -170,7 +171,7 @@ async function getOrCreatePipeline(): Promise<ZeroShotPipeline | null> {
 async function loadPipeline(): Promise<ZeroShotPipeline | null> {
   try {
     const { pipeline, env } = await import('@huggingface/transformers');
-    env.allowLocalModels = false;
+    configureTransformersEnv(env);
 
     const t0 = performance.now();
     const classifier = await pipeline('zero-shot-classification', MODEL_ID, {

@@ -43,6 +43,7 @@
     "test:llm-eval": "tsx scripts/llm-eval.ts",
     "test:causation-eval": "tsx scripts/causation-eval.ts",
     "smoke:embedding": "tsx scripts/smoke-embedding-pipeline.ts",
+    "check:onnx-trace": "node scripts/validation/check-onnx-trace.mjs",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
