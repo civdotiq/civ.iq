@@ -50,6 +50,8 @@ export interface ProfileSummary {
   financeCycle?: number;
   /** The FEC could not be reached; money fields are absent, not zero. */
   financeUnavailable?: boolean;
+  /** Congress.gov could not be reached; bill counts are absent, not zero. */
+  legislationUnavailable?: boolean;
 }
 
 export interface ProfileSummaryResponse {

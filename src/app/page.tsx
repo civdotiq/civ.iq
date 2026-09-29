@@ -198,7 +198,7 @@ const askCards = [
   {
     tag: 'How',
     q: 'How does Jim Jordan vote?',
-    href: '/ask/voting-record/J000302',
+    href: '/ask/voting-record/J000289',
   },
   {
     tag: 'Why',

@@ -11,6 +11,7 @@
 
 const mockSummary = jest.fn();
 const mockCacheSet = jest.fn();
+const mockHeadline = jest.fn();
 
 jest.mock('@/services/cache', () => ({
   govCache: {
@@ -25,7 +26,7 @@ jest.mock('@/lib/data/bioguide-fec-mapping', () => ({
   bioguideToFECMapping: { C001035: { fecId: 'S6ME00159', name: 'Collins' } },
 }));
 jest.mock('@/features/record-card/record-card-data', () => ({
-  getRecordCardHeadline: async () => null,
+  getRecordCardHeadline: (...a: unknown[]) => mockHeadline(...a),
 }));
 jest.mock('@/services/congress/optimized-congress.service', () => ({}));
 jest.mock('@/services/congress/bill-response-utils', () => ({ createLegacyResponse: jest.fn() }));
@@ -42,6 +43,8 @@ const CURRENT = getCurrentElectionCycle();
 beforeEach(() => {
   mockSummary.mockReset();
   mockCacheSet.mockReset();
+  mockHeadline.mockReset();
+  mockHeadline.mockResolvedValue(null);
 });
 
 describe('getRepresentativeSummary finance', () => {
@@ -68,5 +71,39 @@ describe('getRepresentativeSummary finance', () => {
     const writes = mockCacheSet.mock.calls.map(c => String(c[0]));
     expect(writes.filter(k => k.startsWith('representative-summary'))).toHaveLength(0);
     expect(writes.filter(k => k.startsWith('batch:'))).toHaveLength(0);
+  });
+});
+
+describe('getRepresentativeSummary legislation', () => {
+  const summaryWrites = () =>
+    mockCacheSet.mock.calls
+      .map(c => String(c[0]))
+      .filter(k => k.startsWith('representative-summary'));
+
+  beforeEach(() => {
+    mockSummary.mockResolvedValue({ receipts: 1, disbursements: 1 });
+  });
+
+  test('a failed rollup is unavailable, not zero bills, and is not cached', async () => {
+    const result = await getRepresentativeSummary('C001035');
+    expect(result.legislationUnavailable).toBe(true);
+    expect(result.billsSponsored).toBeUndefined();
+    expect(result.billsCosponsored).toBeUndefined();
+    expect(summaryWrites()).toHaveLength(0);
+  });
+
+  test('a real zero is reported as zero and cached', async () => {
+    mockHeadline.mockResolvedValue({
+      legislation: {
+        current: { introduced: 0, cosponsored: 12 },
+        cosponsoredSample: { currentIsLowerBound: false },
+      },
+      voting: null,
+    });
+    const result = await getRepresentativeSummary('C001035');
+    expect(result.legislationUnavailable).toBe(false);
+    expect(result.billsSponsored).toBe(0);
+    expect(result.billsCosponsored).toBe(12);
+    expect(summaryWrites()).toHaveLength(1);
   });
 });

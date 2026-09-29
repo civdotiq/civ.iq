@@ -77,11 +77,13 @@ export function GlanceBand({
       />
       <GlanceCell
         label="Bills sponsored"
-        value={sponsored && sponsored > 0 ? String(sponsored) : '—'}
+        value={typeof sponsored === 'number' ? String(sponsored) : '—'}
         caption={
-          sponsored && sponsored > 0
+          typeof sponsored === 'number'
             ? `${cosponsored && cosponsored > 0 ? `${cosponsored}${cosponsoredPlus} cosponsored · ` : ''}119th Congress`
-            : unavailable
+            : summary?.legislationUnavailable
+              ? 'Could not load — retry shortly'
+              : unavailable
         }
         loading={loading}
       />
