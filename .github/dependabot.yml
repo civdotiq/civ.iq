@@ -46,6 +46,12 @@ updates:
       # react-window@1.8.x still requires @types/react-window@1.8.x
       - dependency-name: '@types/react-window'
         update-types: ['version-update:semver-major']
+      # mapshaper >=0.6.115 depends on @ngageoint/geopackage, which pins vulnerable
+      # file-type (GHSA-5v7r-6r5c-r473) and image-size (GHSA-w3rx-r6r6-pgpr).
+      # Only one-off boundary scripts use it (applyCommands on GeoJSON), so stay
+      # on 0.6.113 until geopackage ships patched deps.
+      - dependency-name: 'mapshaper'
+        versions: ['>=0.6.115']
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions'
