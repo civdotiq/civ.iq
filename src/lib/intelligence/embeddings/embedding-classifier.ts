@@ -21,6 +21,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { configureTransformersEnv } from './transformers-env';
 import { classifySectors } from './cosine-similarity';
 import type { SectorClassification, SectorEmbeddingEntry } from './types';
 
@@ -136,8 +137,7 @@ async function loadPipeline(): Promise<FeatureExtractionPipeline | null> {
     // Dynamic import — the library is only loaded when first needed
     const { pipeline, env } = await import('@huggingface/transformers');
 
-    // Prefer WASM backend, disable local model search
-    env.allowLocalModels = false;
+    configureTransformersEnv(env);
 
     const t0 = performance.now();
     const extractor = await pipeline('feature-extraction', MODEL_ID, {

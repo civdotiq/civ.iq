@@ -43,3 +43,14 @@ The `@huggingface/transformers@4.1.0` upgrade was deferred in Phase 1 (2026-04-1
 (Historical — kept here so anyone reading prior commits understands what happened.)
 
 Before the upgrade landed, calibration data was captured by running `next dev --webpack` and symlinking the non-jsep WASM files into `node_modules/@huggingface/transformers/dist/`. The symlinks were removed after capture and never committed. With `@huggingface/transformers@4.1.0` the workaround is unnecessary; the calibration endpoint at `src/app/api/debug/calibrate-lobbying/route.ts` runs against the standard dev server.
+
+## Recurrence: broken again on Vercel only (found 2026-09-29)
+
+The 4.1.0 fix held in pure Node, but production was still silently on keywords. Evidence: `/api/intelligence/federal-register/2026-19945` returned only regex MONEY/DATE entities, while `extractEntities()` locally on the same text found 117 model entities (37 ORG, 11 LOC). The smoke test could not catch this because it runs where `node_modules` is writable and fully installed.
+
+Two independent causes, each sufficient on its own:
+
+1. **Missing shared library.** Next's tracer ships `onnxruntime-node/.../onnxruntime_binding.node` but not the `libonnxruntime.so.1` it dynamically links, so `import('@huggingface/transformers')` throws at dlopen. Fix: a `postbuild` step (`scripts/onnx-trace.mjs --fix`) adds the `.so` to every `.nft.json` trace that contains the binding (44 functions); `npm run check:onnx-trace` in `validate:all` verifies it. `outputFileTracingIncludes` was tried first and is not enough: Next skips it for SSG pages, and `/ask/[slug]/[entityId]` (SSG via an empty `generateStaticParams`) runs the analyzers.
+2. **Read-only cache dir.** The default cache is `node_modules/@huggingface/transformers/.cache/`, under read-only `/var/task`. The library does not catch the failed cache write, so `pipeline()` rejects after downloading. Fix: `configureTransformersEnv()` (`src/lib/intelligence/embeddings/transformers-env.ts`) moves the cache to `os.tmpdir()`.
+
+Also note: `compiler.removeConsole` strips `console.log` in production builds, so the `[...] Pipeline loaded` info lines never reach Vercel logs. Only the `Pipeline load failed` warnings do. Verify ML in production by output shape (e.g. ORG/LOC entities on a Federal Register document), not by log search.
