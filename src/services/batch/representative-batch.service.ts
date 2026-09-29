@@ -261,37 +261,11 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
             await import('@/features/representatives/services/batch-voting-service');
 
           if (chamber === 'Senate') {
-            const memberVotes = await batchVotingService.getSenateMemberVotes(
-              bioguideId,
-              119, // 119th Congress
-              1, // Session 1
-              limit
-            );
-
-            // Transform to the same Vote format as the direct endpoint
-            votes = memberVotes.map(vote => ({
-              voteId: vote.voteId,
-              bill: vote.bill || {
-                number: 'N/A',
-                title: 'Vote without associated bill',
-                congress: '119',
-                type: 'Senate Resolution',
-              },
-              question: vote.question || 'Unknown Question',
-              result: vote.result || 'Unknown',
-              date: vote.date,
-              position: vote.position,
-              chamber: 'Senate' as const,
-              rollNumber: vote.rollCallNumber || 0,
-              description: vote.question || 'Unknown Question',
-              category: 'Other',
-              isKeyVote: false,
-              metadata: {
-                source: 'senate-xml-feed',
-                confidence: 'high',
-                processingDate: new Date().toISOString(),
-              },
-            }));
+            // Shared with /api/representative/[id]/votes so both carry the
+            // amendment, nomination, majority requirement and display title.
+            const { getSenateApiVotes } =
+              await import('@/features/representatives/services/member-api-votes');
+            votes = await getSenateApiVotes(bioguideId, limit);
             dataSource = 'senate-xml-feed';
           } else {
             const memberVotes = await batchVotingService.getHouseMemberVotes(
