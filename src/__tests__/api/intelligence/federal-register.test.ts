@@ -120,6 +120,26 @@ describe('GET /api/intelligence/federal-register/[documentNumber]', () => {
     expect(body.timelines).toHaveLength(1);
   });
 
+  it('reports partial with a civic-ner error when entity extraction did not finish', async () => {
+    mockExtractPreambleFacts.mockResolvedValue({ ...MOCK_INSIGHT, entitiesComplete: false });
+    const [request, context] = makeRequest('2025-12345');
+    const response = await GET(request, context);
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe('partial');
+    expect(body.errors).toEqual([expect.objectContaining({ source: 'civic-ner' })]);
+  });
+
+  it('treats insights cached before entitiesComplete existed as complete', async () => {
+    mockExtractPreambleFacts.mockResolvedValue(MOCK_INSIGHT);
+    const [request, context] = makeRequest('2025-12345');
+    const body = await (await GET(request, context)).json();
+
+    expect(body.status).toBe('complete');
+    expect(body.errors).toEqual([]);
+  });
+
   // Cache-Control header (s-maxage=86400) tested via source-level contract check.
   // jsdom NextResponse does not expose custom headers reliably.
 

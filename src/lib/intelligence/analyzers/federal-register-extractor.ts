@@ -27,7 +27,7 @@ import {
   classifySignal,
   SourceCollector,
 } from './shared';
-import { extractEntities } from '@/lib/intelligence/embeddings/civic-ner';
+import { extractEntitiesDetailed } from '@/lib/intelligence/embeddings/civic-ner';
 import type { CivicEntity } from '@/lib/intelligence/embeddings/types';
 import {
   getDocumentMetadata,
@@ -47,6 +47,11 @@ import type {
 } from '@/types/federal-register';
 
 const CACHE_TTL = 30 * 24 * 60 * 60; // 30 days — preamble content is immutable
+// When NER did not complete (cold-start model load outlasted its timeout, or
+// the model failed), the insight's `entities` are incomplete. Cache it briefly
+// so the next request after warm-up recomputes, without re-running the LLM
+// extraction on every request during a sustained NER outage.
+const INCOMPLETE_NER_CACHE_TTL = 60 * 60; // 1 hour
 // v2: v1 insights were cached while NER failed to load on Vercel (2026-09),
 // so their `entities` hold regex MONEY/DATE matches only.
 const CACHE_PREFIX = 'insight:preamble:v2';
@@ -129,8 +134,12 @@ async function computeAndCache(
 
   // 5a. NER entity extraction (non-critical, best-effort)
   let entities: CivicEntity[] = [];
+  let nerComplete = false;
   try {
-    entities = await extractEntities(truncatedText, documentNumber);
+    ({ entities, complete: nerComplete } = await extractEntitiesDetailed(
+      truncatedText,
+      documentNumber
+    ));
   } catch {
     // NER is non-critical — continue without entities
   }
@@ -171,6 +180,7 @@ async function computeAndCache(
     facts: extraction.facts,
     narrative,
     entities: entities.length > 0 ? entities : undefined,
+    entitiesComplete: nerComplete,
     confidence,
     dataAsOf: doc.publication_date,
     methodology: methodologyParts.join(' '),
@@ -186,11 +196,14 @@ async function computeAndCache(
 
   // 9. Cache result
   try {
-    await cache.set(cacheKey, insight, CACHE_TTL);
+    const ttl = nerComplete ? CACHE_TTL : INCOMPLETE_NER_CACHE_TTL;
+    await cache.set(cacheKey, insight, ttl);
     logger.info('[PreambleExtractor] Cached insight', {
       documentNumber,
       confidence,
       facts: extraction.facts.length,
+      nerComplete,
+      ttl,
     });
   } catch {
     // Non-fatal

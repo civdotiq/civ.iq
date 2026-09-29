@@ -59,6 +59,24 @@ export async function GET(
       );
     }
 
+    // NER can miss a cold start (model download + load outlasts its timeout).
+    // Report that as partial and keep it off the 24-hour CDN cache, or the
+    // edge would pin a response with missing entities for a day.
+    if (insight.entitiesComplete === false) {
+      const errors: InsightError[] = [
+        {
+          source: 'civic-ner',
+          type: 'internal_error',
+          message: 'Entity extraction did not finish; entities may be missing. Retry shortly.',
+          timestamp: new Date().toISOString(),
+        },
+      ];
+      return NextResponse.json(
+        { ...insight, errors, status: 'partial' as const },
+        { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' } }
+      );
+    }
+
     return NextResponse.json(
       { ...insight, errors: [] as InsightError[], status: 'complete' as const },
       {

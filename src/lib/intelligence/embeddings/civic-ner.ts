@@ -58,6 +58,17 @@ const DATE_REGEX =
 
 // ── Public API ──────────────────────────────────────────────────────
 
+/** Entities plus whether the NER model actually produced them. */
+export interface EntityExtraction {
+  entities: CivicEntity[];
+  /**
+   * False when the model did not run (load failure, cold-start timeout, error)
+   * and `entities` is regex-only or empty. Callers that cache derived results
+   * should keep incomplete ones short-lived.
+   */
+  complete: boolean;
+}
+
 /**
  * Extract named entities from text using BERT NER + regex augmentation.
  *
@@ -69,13 +80,23 @@ export async function extractEntities(
   text: string,
   documentNumber?: string
 ): Promise<CivicEntity[]> {
-  if (!text.trim()) return [];
+  return (await extractEntitiesDetailed(text, documentNumber)).entities;
+}
 
-  // Check Redis cache
+/**
+ * Like {@link extractEntities}, but also reports whether the model ran.
+ */
+export async function extractEntitiesDetailed(
+  text: string,
+  documentNumber?: string
+): Promise<EntityExtraction> {
+  if (!text.trim()) return { entities: [], complete: true };
+
+  // Check Redis cache — only model results are ever written, so a hit is complete
   if (documentNumber) {
     try {
       const cached = await getRedisCache().get<CivicEntity[]>(`${CACHE_PREFIX}:${documentNumber}`);
-      if (cached) return cached;
+      if (cached) return { entities: cached, complete: true };
     } catch {
       // Cache miss — continue
     }
@@ -97,13 +118,15 @@ export async function extractEntities(
       }
     }
 
-    return results;
+    return { entities: results, complete: usedModel };
   } catch (error) {
+    // Includes the cold-start case: the model download + load outlasts
+    // EXTRACT_TIMEOUT_MS. The load keeps going, so later calls succeed.
     logger.warn('[CivicNER] Extraction failed', {
       error: (error as Error).message,
       textLength: text.length,
     });
-    return [];
+    return { entities: [], complete: false };
   }
 }
 
