@@ -208,9 +208,9 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
           </div>
         ) : (
           <>
-            <div className="mt-8">
-              <SectionNav items={NAV_ITEMS} />
-            </div>
+            {/* No wrapper: a sticky element only sticks within its parent, and a
+                wrapper exactly the nav's height let it scroll away with the page. */}
+            <SectionNav items={NAV_ITEMS} />
 
             {/* The overview anchor wraps ONLY the glance band. It used to wrap
                 every section below it, which made it an ancestor of #votes,
@@ -218,7 +218,7 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                 intersecting at every scroll position and it beat its own
                 children on every comparison. */}
             <div className="pt-8">
-              <div id="overview" className="scroll-mt-16">
+              <div id="overview" className="scroll-mt-32">
                 <GlanceBand
                   summary={summary}
                   loading={summaryLoading}

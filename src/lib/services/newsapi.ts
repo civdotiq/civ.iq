@@ -246,9 +246,10 @@ export async function fetchRepresentativeNewsAPI(
     // For prominent politicians, use full name first for better coverage
     let combinedQuery: string;
 
-    // For well-known politicians (2-word names), try full name first
+    // For well-known politicians (2-word names), try full name first — OR'd
+    // with any nickname, since press rarely writes "Bernard Sanders".
     if (nameParts.length === 2 && firstName && lastName) {
-      combinedQuery = `"${firstName} ${lastName}"`;
+      combinedQuery = [...nicknames, `${firstName} ${lastName}`].map(n => `"${n}"`).join(' OR ');
     } else if (nicknames.length > 0 && chamber) {
       // If nickname exists, use it with title (e.g., "Rep. Will Timmons")
       const nickname = nicknames[0];
@@ -282,6 +283,9 @@ export async function fetchRepresentativeNewsAPI(
       language: 'en',
       sortBy: 'publishedAt',
       pageSize: options.pageSize || 50, // Fetch more for better filtering
+      // Body-text matches surface unrelated stories (a sports preview on a
+      // senator's profile); require the name in the headline or summary.
+      searchIn: 'title,description',
       from,
       to,
       ...options,
