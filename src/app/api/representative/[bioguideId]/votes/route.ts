@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
+import type { SenateAmendmentRef, SenateNominationRef } from '@/lib/senate-vote-fields';
 
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment
@@ -52,6 +53,10 @@ interface Vote {
     congress: string;
     type: string;
     url?: string;
+    /** Congress.gov's display title (the short title when the bill has one,
+     *  e.g. "Protect College Sports Act of 2026"). Senate only; set when it
+     *  differs from `title`. */
+    displayTitle?: string;
   };
   question: string;
   result: string;
@@ -60,6 +65,12 @@ interface Vote {
   chamber: 'House' | 'Senate';
   rollNumber: number;
   description: string;
+  /** Senate only: the amendment voted on (`bill` is the measure it amends). */
+  amendment?: SenateAmendmentRef;
+  /** Senate only: the nomination voted on. */
+  nomination?: SenateNominationRef;
+  /** Senate only: "1/2" or "3/5" (rolls mirrored since 2026-09-29). */
+  majorityRequirement?: string;
   congressUrl?: string; // Direct link to Congress.gov vote page
   // Phase 3: Additional standardized fields for consistency
   category?: 'Budget' | 'Healthcare' | 'Defense' | 'Judiciary' | 'Foreign Affairs' | 'Other';
@@ -214,9 +225,8 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
     });
 
     // Use the optimized batch voting service
-    const { batchVotingService } = await import(
-      '@/features/representatives/services/batch-voting-service'
-    );
+    const { batchVotingService } =
+      await import('@/features/representatives/services/batch-voting-service');
 
     // Congressional sessions: odd years = Session 1, even years = Session 2
     const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
@@ -234,12 +244,31 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
       method: 'batch-voting-service',
     });
 
+    // Congress.gov display titles for the bills in this list (a handful of
+    // distinct bills; cached 24h in-process by fetchBillDetails).
+    const billKeys = new Map<string, { congress: number; type: string; number: string }>();
+    for (const v of memberVotes) {
+      if (v.bill) billKeys.set(`${v.bill.congress}-${v.bill.type}-${v.bill.number}`, v.bill);
+    }
+    const displayTitles = new Map(
+      await Promise.all(
+        [...billKeys].map(
+          async ([key, b]) =>
+            [key, (await fetchBillDetails(b.congress, b.type, b.number))?.title] as const
+        )
+      )
+    );
+
     // Transform to standardized Vote format
     const transformedVotes: Vote[] = memberVotes.map(vote => {
       const question = vote.question || 'Unknown Question';
       const result = vote.result || 'Unknown';
       const category = categorizeVote(question);
       const isKeyVote = determineKeyVote(question, result);
+
+      const displayTitle = vote.bill
+        ? displayTitles.get(`${vote.bill.congress}-${vote.bill.type}-${vote.bill.number}`)
+        : undefined;
 
       return {
         voteId: vote.voteId,
@@ -250,12 +279,13 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
               congress: String(vote.bill.congress),
               type: vote.bill.type,
               url: vote.bill.url,
+              ...(displayTitle && displayTitle !== vote.bill.title ? { displayTitle } : {}),
             }
           : {
               number: 'N/A',
-              title: 'Vote without associated bill',
+              title: vote.nomination?.description ?? 'Vote without associated bill',
               congress: String(getCurrentCongressNumber()),
-              type: 'Senate Resolution',
+              type: vote.nomination ? 'Nomination' : 'Senate Resolution',
               url: undefined,
             },
         question,
@@ -265,6 +295,9 @@ async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<V
         chamber: 'Senate' as const,
         rollNumber: vote.rollCallNumber || 0,
         description: question,
+        ...(vote.amendment ? { amendment: vote.amendment } : {}),
+        ...(vote.nomination ? { nomination: vote.nomination } : {}),
+        ...(vote.majorityRequirement ? { majorityRequirement: vote.majorityRequirement } : {}),
         category,
         isKeyVote,
         metadata: {
@@ -479,9 +512,8 @@ async function getHouseVotes(
     });
 
     // Step 1: Get basic vote list from batch service
-    const { batchVotingService } = await import(
-      '@/features/representatives/services/batch-voting-service'
-    );
+    const { batchVotingService } =
+      await import('@/features/representatives/services/batch-voting-service');
 
     // Congressional sessions: odd years = Session 1, even years = Session 2
     const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;

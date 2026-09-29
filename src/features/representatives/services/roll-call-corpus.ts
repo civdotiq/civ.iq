@@ -25,6 +25,16 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import type { StandardizedVote } from './batch-voting-service';
+import {
+  amendmentNumberFromText,
+  amendmentSponsorLabel,
+  cleanAmendmentPurpose,
+  isNominationNumber,
+  nominationDescriptionFromTitle,
+  parseBillMeasure,
+  splitMenuTitle,
+  stripMeasureTags,
+} from '@/lib/senate-vote-fields';
 
 /** Roll calls are immutable once cast — keep them 120 days and refresh TTL
  *  on rebuilds so an active Congress never ages out. */
@@ -45,6 +55,9 @@ export interface CompactRollCall {
   date: string;
   /** b = bioguide id ('' when unresolved); l = raw Senate LIS id, only when b is ''. */
   votes: Array<{ b: string; p: string; v: PositionCode; l?: string }>;
+  /** Senate measure fields parsed from the roll-call XML. Absent on rolls
+   *  ingested before 2026-09-29 — readers fall back to the vote menu. */
+  meta?: Pick<StandardizedVote, 'amendment' | 'nomination' | 'majorityRequirement'>;
 }
 
 const POSITION_TO_CODE: Record<string, 'Y' | 'N' | 'P' | 'X'> = {
@@ -64,6 +77,11 @@ const CODE_TO_POSITION: Record<
 };
 
 export function compactRoll(roll: StandardizedVote): CompactRollCall {
+  const meta: NonNullable<CompactRollCall['meta']> = {
+    ...(roll.amendment ? { amendment: roll.amendment } : {}),
+    ...(roll.nomination ? { nomination: roll.nomination } : {}),
+    ...(roll.majorityRequirement ? { majorityRequirement: roll.majorityRequirement } : {}),
+  };
   return {
     rollCallNumber: roll.rollCallNumber,
     session: roll.session,
@@ -74,6 +92,7 @@ export function compactRoll(roll: StandardizedVote): CompactRollCall {
       v: POSITION_TO_CODE[mv.position] ?? 'X',
       ...(mv.lisId ? { l: mv.lisId } : {}),
     })),
+    ...(Object.keys(meta).length > 0 ? { meta } : {}),
   };
 }
 
@@ -113,6 +132,7 @@ export function expandRoll(
     })),
     sourceUrl: '',
     processedAt: c.date,
+    ...c.meta,
   };
 }
 
@@ -156,9 +176,21 @@ function senateMenuKey(congress: number): string {
   return `record-card:roll:senate:${congress}:menu`;
 }
 
+/** Menus are mirrored verbatim, so questions keep senate.gov's markup
+ *  ("On the Amendment <measure>S.Amdt. 6835</measure>"). Readers get the
+ *  inner text ("On the Amendment S.Amdt. 6835"). */
+function normalizeMenu(menu: SenateVoteMenu): SenateVoteMenu {
+  const sessions: SenateVoteMenu['sessions'] = {};
+  for (const [session, entries] of Object.entries(menu.sessions ?? {})) {
+    sessions[session] = entries.map(e => ({ ...e, q: stripMeasureTags(e.q ?? '') }));
+  }
+  return { ...menu, sessions };
+}
+
 export async function getSenateVoteMenu(congress: number): Promise<SenateVoteMenu | null> {
   try {
-    return await getRedisCache().get<SenateVoteMenu>(senateMenuKey(congress));
+    const menu = await getRedisCache().get<SenateVoteMenu>(senateMenuKey(congress));
+    return menu ? normalizeMenu(menu) : null;
   } catch (error) {
     logger.warn('Senate vote menu read failed', { congress, error });
     return null;
@@ -214,28 +246,81 @@ export async function persistSenateRoll(roll: StandardizedVote): Promise<void> {
 
 // ── Enriched Senate corpus reads ─────────────────────────────────────
 
-/** Measure prefixes that identify a bill/resolution in the menu's issue
- *  field ("H.R. 3424", "S.J.Res. 185"). Normalized by stripping everything
- *  but letters. Nominations (PN…) and treaty documents are not bills. */
-const BILL_TYPES = new Set(['S', 'HR', 'SJRES', 'HJRES', 'SCONRES', 'HCONRES', 'SRES', 'HRES']);
+/** Official measure titles by menu issue ("S. 4668" → "A bill to protect …"),
+ *  taken from the menu's non-amendment votes on that measure. An amendment
+ *  vote's own title tail is the amendment's purpose, not the measure's. */
+export function measureTitlesFromMenu(menu: SenateVoteMenu): Map<string, string> {
+  const titles = new Map<string, string>();
+  for (const entries of Object.values(menu.sessions)) {
+    for (const entry of entries) {
+      const issue = entry.i.trim();
+      if (titles.has(issue) || amendmentNumberFromText(entry.q) || !parseBillMeasure(issue)) {
+        continue;
+      }
+      const { tail } = splitMenuTitle(entry.t);
+      if (tail) titles.set(issue, tail);
+    }
+  }
+  return titles;
+}
 
 /** Derive StandardizedVote.bill from a menu entry, or undefined for
- *  nominations/treaties. Type matches Congress.gov's ("HR", "SJRES"). */
+ *  nominations/treaties. Type matches Congress.gov's ("HR", "SJRES").
+ *  For an amendment vote the bill is the measure being amended; its title
+ *  comes from `measureTitles` (see measureTitlesFromMenu), else the bill
+ *  number — never the amendment's purpose. */
 export function billFromMenuEntry(
   entry: SenateMenuEntry,
-  congress: number
+  congress: number,
+  measureTitles?: ReadonlyMap<string, string>
 ): StandardizedVote['bill'] | undefined {
-  const match = entry.i.trim().match(/^([A-Za-z.\s]+?)\s*(\d+)$/);
-  if (!match || !match[1] || !match[2]) return undefined;
-  const type = match[1].replace(/[^A-Za-z]/g, '').toUpperCase();
-  if (!BILL_TYPES.has(type)) return undefined;
+  const measure = parseBillMeasure(entry.i);
+  if (!measure) return undefined;
 
+  const issue = entry.i.trim();
   // Menu titles for measures read "Motion to …; <measure title>" — the
   // tail after the first "; " is the measure's own title.
-  const semi = entry.t.indexOf('; ');
-  const title = semi > -1 ? entry.t.slice(semi + 2).trim() : entry.t.trim();
+  const { tail } = splitMenuTitle(entry.t);
+  const title = amendmentNumberFromText(entry.q)
+    ? (measureTitles?.get(issue) ?? issue)
+    : (tail ?? entry.t.trim());
 
-  return { congress, type, number: match[2], title };
+  return { congress, type: measure.type, number: measure.number, title };
+}
+
+/** Question, bill, amendment and nomination for one vote-menu entry. */
+export function senateVoteFromMenu(
+  entry: SenateMenuEntry,
+  congress: number,
+  measureTitles?: ReadonlyMap<string, string>
+): Pick<StandardizedVote, 'question' | 'bill' | 'amendment' | 'nomination'> {
+  const out: Pick<StandardizedVote, 'question' | 'bill' | 'amendment' | 'nomination'> = {
+    question: stripMeasureTags(entry.q),
+  };
+
+  const bill = billFromMenuEntry(entry, congress, measureTitles);
+  if (bill) out.bill = bill;
+
+  const amendmentNumber = amendmentNumberFromText(entry.q);
+  if (amendmentNumber) {
+    const { head, tail } = splitMenuTitle(entry.t);
+    const purpose = cleanAmendmentPurpose(tail);
+    const sponsorLabel = amendmentSponsorLabel(head);
+    out.amendment = {
+      number: amendmentNumber,
+      ...(purpose ? { purpose } : {}),
+      ...(sponsorLabel ? { sponsorLabel } : {}),
+    };
+  }
+
+  if (isNominationNumber(entry.i)) {
+    out.nomination = {
+      number: entry.i.trim(),
+      description: nominationDescriptionFromTitle(entry.t),
+    };
+  }
+
+  return out;
 }
 
 function senateSourceUrl(congress: number, session: number, rollCallNumber: number): string {
@@ -258,6 +343,7 @@ export async function getSenateCorpusRollCalls(
   if (!menu) return [];
 
   const redis = getRedisCache();
+  const measureTitles = measureTitlesFromMenu(menu);
 
   // Newest first across sessions: later session wins, then higher number.
   const flat = Object.entries(menu.sessions)
@@ -279,9 +365,14 @@ export async function getSenateCorpusRollCalls(
       const item = batch[j];
       if (!c || !item) return;
       const roll = expandRoll(c, congress, 'Senate');
-      roll.question = item.entry.q;
+      const fromMenu = senateVoteFromMenu(item.entry, congress, measureTitles);
+      roll.question = fromMenu.question;
       roll.result = item.entry.r;
-      roll.bill = billFromMenuEntry(item.entry, congress);
+      roll.bill = fromMenu.bill;
+      // Fields parsed from the roll-call XML (in `meta`) win; rolls ingested
+      // before they were persisted fall back to the menu-derived ones.
+      if (!roll.amendment && fromMenu.amendment) roll.amendment = fromMenu.amendment;
+      if (!roll.nomination && fromMenu.nomination) roll.nomination = fromMenu.nomination;
       roll.sourceUrl = senateSourceUrl(congress, item.session, item.entry.n);
       rolls.push(roll);
     });

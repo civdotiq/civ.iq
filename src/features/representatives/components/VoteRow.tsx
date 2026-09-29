@@ -13,6 +13,7 @@
 'use client';
 
 import React, { useCallback, KeyboardEvent } from 'react';
+import type { SenateAmendmentRef, SenateNominationRef } from '@/lib/senate-vote-fields';
 
 export interface Vote {
   voteId: string;
@@ -22,6 +23,8 @@ export interface Vote {
     congress: string;
     type: string;
     url?: string;
+    /** Congress.gov display title (short title when the bill has one). Senate only. */
+    displayTitle?: string;
   };
   question: string;
   result: string;
@@ -32,6 +35,12 @@ export interface Vote {
   description: string;
   category?: string;
   isKeyVote?: boolean;
+  /** Senate only: the amendment voted on (`bill` is the measure it amends). */
+  amendment?: SenateAmendmentRef;
+  /** Senate only: the nomination voted on. */
+  nomination?: SenateNominationRef;
+  /** Senate only: "1/2" or "3/5". */
+  majorityRequirement?: string;
 }
 
 export interface VoteRowProps {

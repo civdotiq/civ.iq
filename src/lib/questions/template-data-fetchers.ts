@@ -128,6 +128,8 @@ export interface VotingRecordTemplateData {
       result: string;
       date: string;
       position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+      amendment?: { number: string; purpose?: string };
+      nomination?: { number: string; description: string };
     }>;
     totalResults: number;
   } | null;
@@ -304,6 +306,8 @@ export async function fetchVotingRecordData(
           result: v.result,
           date: v.date,
           position: v.position as 'Yea' | 'Nay' | 'Present' | 'Not Voting',
+          ...(v.amendment ? { amendment: v.amendment } : {}),
+          ...(v.nomination ? { nomination: v.nomination } : {}),
         })),
         totalResults: rawVotes.length,
       }

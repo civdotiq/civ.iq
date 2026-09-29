@@ -6,6 +6,7 @@
 'use client';
 
 import { CqChip, CqLabel } from '@/components/cq';
+import { voteMeasureLabel } from '@/lib/bill-label';
 import { billLabel, categoryOf, formatVoteDate, shortResult } from './data';
 import type { ApiVote, VotePosition } from './types';
 
@@ -74,6 +75,11 @@ function Header() {
 function Row({ vote }: { vote: ApiVote }) {
   const positionMeta = POSITION_VARIANT[vote.position] ?? POSITION_VARIANT['Not Voting'];
   const billHref = vote.bill?.url ?? vote.congressUrl;
+  // Senate amendment/nomination votes: say what was voted on, not the bill title.
+  const measureText =
+    vote.amendment || vote.nomination
+      ? voteMeasureLabel(vote)
+      : (vote.bill?.title ?? vote.question);
 
   return (
     <div
@@ -127,9 +133,9 @@ function Row({ vote }: { vote: ApiVote }) {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}
-        title={vote.bill?.title ?? vote.question}
+        title={measureText}
       >
-        {vote.bill?.title ?? vote.question ?? '—'}
+        {measureText || '—'}
         {vote.isKeyVote && (
           <span
             style={{
