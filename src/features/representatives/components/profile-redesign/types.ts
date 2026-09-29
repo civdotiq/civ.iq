@@ -78,10 +78,13 @@ export function formatMoney(amount: number | undefined | null): string | null {
   return `$${Math.round(amount).toLocaleString()}`;
 }
 
-/** Party chip border/text classes — party colors are for party identity ONLY. */
-export function partyChipClasses(party: string | undefined): string {
+/**
+ * Solid party fill (badge + identity band) — party colors are for party
+ * identity ONLY. Independents have no party color, so they read as gray.
+ */
+export function partyFillClasses(party: string | undefined): string {
   const p = (party ?? '').toLowerCase();
-  if (p.startsWith('d')) return 'border-party-dem text-party-dem';
-  if (p.startsWith('r')) return 'border-civiq-red text-civiq-red';
-  return 'border-gray-400 text-gray-700';
+  if (p.startsWith('d')) return 'bg-party-dem text-white';
+  if (p.startsWith('r')) return 'bg-party-rep text-white';
+  return 'bg-party-ind text-white';
 }

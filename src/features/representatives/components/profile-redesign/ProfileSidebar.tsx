@@ -11,6 +11,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { CommitteeLink } from '@/components/shared/links/EntityLinks';
 import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
 import { getStateName } from '@/lib/data/us-states';
+import { isSubcommitteeId } from '@/lib/committee-id';
 import type { ProfileCommittee } from './types';
 
 interface SidebarCardProps {
@@ -20,13 +21,50 @@ interface SidebarCardProps {
 
 function SidebarCard({ title, children }: SidebarCardProps) {
   return (
-    <div className="border-2 border-black bg-white mb-6">
-      <h3 className="px-4 py-3 border-b border-gray-300 text-xs font-bold uppercase tracking-widest text-gray-900">
-        {title}
-      </h3>
-      <div className="p-4 text-sm">{children}</div>
-    </div>
+    <section className="border-t-2 border-t-black pt-4 mb-10">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-900 mb-4">{title}</h3>
+      <div className="text-[15px]">{children}</div>
+    </section>
   );
+}
+
+function RoleChip({ role }: { role: string | undefined }) {
+  if (!role || role === 'Member') return null;
+  return (
+    <span className="block w-fit mt-1 rounded-[2px] bg-civiq-blue/15 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-civiq-blue-dark">
+      {role}
+    </span>
+  );
+}
+
+export interface CommitteeGroup {
+  committee: ProfileCommittee;
+  subcommittees: ProfileCommittee[];
+}
+
+/**
+ * Nest subcommittee seats under their parent committee. Subcommittee codes
+ * are the parent's code plus digits ("SSFI10" → "SSFI"); a subcommittee
+ * whose parent seat is absent stays top-level rather than disappearing.
+ */
+export function groupCommittees(committees: ProfileCommittee[]): CommitteeGroup[] {
+  const groups: CommitteeGroup[] = [];
+  const byCode = new Map<string, CommitteeGroup>();
+  for (const committee of committees) {
+    const code = committee.id || committee.thomas_id;
+    if (isSubcommitteeId(code)) continue;
+    const group: CommitteeGroup = { committee, subcommittees: [] };
+    groups.push(group);
+    if (code) byCode.set(code, group);
+  }
+  for (const committee of committees) {
+    const code = committee.id || committee.thomas_id;
+    if (!code || !isSubcommitteeId(code)) continue;
+    const parent = byCode.get(code.replace(/\d+$/, ''));
+    if (parent) parent.subcommittees.push(committee);
+    else groups.push({ committee, subcommittees: [] });
+  }
+  return groups;
 }
 
 interface ProfileSidebarProps {
@@ -58,19 +96,24 @@ export function ProfileSidebar({
             No current committee assignments listed by congress-legislators.
           </p>
         ) : (
-          <ul id="committees">
-            {committees.map(committee => (
-              <li
-                key={committee.name}
-                className="py-2 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0"
-              >
+          <ul id="committees" className="space-y-5">
+            {groupCommittees(committees).map(({ committee, subcommittees }) => (
+              <li key={committee.name}>
                 <CommitteeLink
                   code={committee.id || committee.thomas_id}
                   name={committee.name}
-                  className="font-medium"
+                  className="font-medium text-gray-900"
                 />
-                {committee.role && committee.role !== 'Member' && (
-                  <span className="block text-xs text-gray-500">{committee.role}</span>
+                <RoleChip role={committee.role} />
+                {subcommittees.length > 0 && (
+                  <ul className="mt-2 space-y-2 border-l-2 border-civiq-blue/30 pl-3.5 text-sm">
+                    {subcommittees.map(sub => (
+                      <li key={sub.name}>
+                        <CommitteeLink code={sub.id || sub.thomas_id} name={sub.name} />
+                        <RoleChip role={sub.role} />
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}

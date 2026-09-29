@@ -99,8 +99,8 @@ export function InfluenceSection({
           }
         />
       ) : (
-        <div className="border-l-[3px] border-civiq-blue pl-4">
-          <p className="text-[15px] font-medium text-gray-900">{insight.narrative}</p>
+        <div>
+          <p className="text-base leading-relaxed text-gray-900">{insight.narrative}</p>
 
           {topOrgs.length > 0 && (
             <div className="mt-4 space-y-1">
@@ -121,7 +121,7 @@ export function InfluenceSection({
               Confidence
               <span className="inline-block w-24 h-2 bg-gray-100 border border-gray-300 align-middle">
                 <span
-                  className="block h-full bg-civiq-blue"
+                  className="block h-full bg-civiq-blue-dark"
                   style={{ width: `${confidencePct}%` }}
                 />
               </span>
@@ -142,7 +142,28 @@ export function InfluenceSection({
             )}
           </div>
 
-          <p className="text-xs text-gray-500 mt-3">{insight.disclaimer}</p>
+          {/* Amber = data caveat (design system). Correlation-not-causation
+              framing stays visible, not fine print. */}
+          <div
+            role="note"
+            className="flex gap-3 items-start mt-5 px-4 py-3 bg-civiq-amber/10 border border-civiq-amber/40 text-[13px] leading-relaxed text-amber-900"
+          >
+            <svg
+              aria-hidden="true"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="flex-shrink-0 mt-0.5 text-civiq-amber"
+            >
+              <path d="M12 3 2 21h20L12 3z" />
+              <line x1="12" y1="10" x2="12" y2="14" />
+              <line x1="12" y1="17.5" x2="12" y2="17.6" />
+            </svg>
+            <span>{insight.disclaimer}</span>
+          </div>
         </div>
       )}
     </SectionBlock>
