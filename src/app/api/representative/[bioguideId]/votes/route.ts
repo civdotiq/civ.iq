@@ -17,7 +17,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
-import type { SenateAmendmentRef, SenateNominationRef } from '@/lib/senate-vote-fields';
+import {
+  categorizeVote,
+  determineKeyVote,
+  fetchBillDetails,
+  getSenateApiVotes,
+  type MemberApiVote as Vote,
+} from '@/features/representatives/services/member-api-votes';
 
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment
@@ -44,86 +50,6 @@ interface VoteResponse {
   };
 }
 
-// Phase 3: Standardized Vote interface for both House and Senate
-interface Vote {
-  voteId: string;
-  bill: {
-    number: string;
-    title: string;
-    congress: string;
-    type: string;
-    url?: string;
-    /** Congress.gov's display title (the short title when the bill has one,
-     *  e.g. "Protect College Sports Act of 2026"). Senate only; set when it
-     *  differs from `title`. */
-    displayTitle?: string;
-  };
-  question: string;
-  result: string;
-  date: string;
-  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
-  chamber: 'House' | 'Senate';
-  rollNumber: number;
-  description: string;
-  /** Senate only: the amendment voted on (`bill` is the measure it amends). */
-  amendment?: SenateAmendmentRef;
-  /** Senate only: the nomination voted on. */
-  nomination?: SenateNominationRef;
-  /** Senate only: "1/2" or "3/5" (rolls mirrored since 2026-09-29). */
-  majorityRequirement?: string;
-  congressUrl?: string; // Direct link to Congress.gov vote page
-  // Phase 3: Additional standardized fields for consistency
-  category?: 'Budget' | 'Healthcare' | 'Defense' | 'Judiciary' | 'Foreign Affairs' | 'Other';
-  isKeyVote?: boolean;
-  // Enhanced context fields for meaningful political insight
-  total?: {
-    yes: number;
-    no: number;
-    not_voting: number;
-    present: number;
-  };
-  party_breakdown?: {
-    democratic: { yes: number; no: number; not_voting: number; present: number };
-    republican: { yes: number; no: number; not_voting: number; present: number };
-    independent?: { yes: number; no: number; not_voting: number; present: number };
-  };
-  metadata: {
-    source: 'house-congress-api' | 'senate-xml-feed';
-    confidence: 'high' | 'medium' | 'low';
-    processingDate: string;
-  };
-}
-
-/**
- * Phase 3: Standardized vote categorization for both House and Senate
- */
-function categorizeVote(question: string): Vote['category'] {
-  const text = question.toLowerCase();
-
-  if (text.includes('budget') || text.includes('appropriation') || text.includes('spending')) {
-    return 'Budget';
-  }
-  if (text.includes('health') || text.includes('medicare') || text.includes('medicaid')) {
-    return 'Healthcare';
-  }
-  if (text.includes('defense') || text.includes('military') || text.includes('armed forces')) {
-    return 'Defense';
-  }
-  if (
-    text.includes('court') ||
-    text.includes('judge') ||
-    text.includes('confirmation') ||
-    text.includes('nomination')
-  ) {
-    return 'Judiciary';
-  }
-  if (text.includes('foreign') || text.includes('treaty') || text.includes('ambassador')) {
-    return 'Foreign Affairs';
-  }
-
-  return 'Other';
-}
-
 /**
  * Generate Congress.gov URL for a vote
  */
@@ -141,28 +67,6 @@ function generateCongressUrl(
 
   // Fallback to general votes page
   return `https://www.congress.gov/search?q={"source":["rollcallvote"],"congress":"${congressNum}","chamber":"${chamber.toLowerCase()}"}`;
-}
-
-/**
- * Phase 3: Standardized key vote determination for both House and Senate
- */
-function determineKeyVote(question: string, result: string): boolean {
-  const text = `${question} ${result}`.toLowerCase();
-
-  const keyIndicators = [
-    'final passage',
-    'override',
-    'veto',
-    'impeachment',
-    'confirmation',
-    'budget resolution',
-    'debt ceiling',
-    'continuing resolution',
-    'supreme court',
-    'cabinet',
-  ];
-
-  return keyIndicators.some(indicator => text.includes(indicator));
 }
 
 /**
@@ -218,97 +122,13 @@ async function getMemberInfo(bioguideId: string): Promise<{
  */
 async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<Vote[]> {
   try {
-    logger.info('Fetching Senate votes using optimized batch service', {
-      bioguideId,
-      limit,
-      method: 'batch-voting-service',
-    });
-
-    // Use the optimized batch voting service
-    const { batchVotingService } =
-      await import('@/features/representatives/services/batch-voting-service');
-
-    // Congressional sessions: odd years = Session 1, even years = Session 2
-    const currentSession = new Date().getFullYear() % 2 === 1 ? 1 : 2;
-
-    const memberVotes = await batchVotingService.getSenateMemberVotes(
-      bioguideId,
-      119, // 119th Congress
-      currentSession,
-      limit // Limit votes
-    );
-
+    const votes = await getSenateApiVotes(bioguideId, limit);
     logger.info('Optimized Senate votes retrieved successfully', {
       bioguideId,
-      votesCount: memberVotes.length,
+      votesCount: votes.length,
       method: 'batch-voting-service',
     });
-
-    // Congress.gov display titles for the bills in this list (a handful of
-    // distinct bills; cached 24h in-process by fetchBillDetails).
-    const billKeys = new Map<string, { congress: number; type: string; number: string }>();
-    for (const v of memberVotes) {
-      if (v.bill) billKeys.set(`${v.bill.congress}-${v.bill.type}-${v.bill.number}`, v.bill);
-    }
-    const displayTitles = new Map(
-      await Promise.all(
-        [...billKeys].map(
-          async ([key, b]) =>
-            [key, (await fetchBillDetails(b.congress, b.type, b.number))?.title] as const
-        )
-      )
-    );
-
-    // Transform to standardized Vote format
-    const transformedVotes: Vote[] = memberVotes.map(vote => {
-      const question = vote.question || 'Unknown Question';
-      const result = vote.result || 'Unknown';
-      const category = categorizeVote(question);
-      const isKeyVote = determineKeyVote(question, result);
-
-      const displayTitle = vote.bill
-        ? displayTitles.get(`${vote.bill.congress}-${vote.bill.type}-${vote.bill.number}`)
-        : undefined;
-
-      return {
-        voteId: vote.voteId,
-        bill: vote.bill
-          ? {
-              number: String(vote.bill.number),
-              title: vote.bill.title,
-              congress: String(vote.bill.congress),
-              type: vote.bill.type,
-              url: vote.bill.url,
-              ...(displayTitle && displayTitle !== vote.bill.title ? { displayTitle } : {}),
-            }
-          : {
-              number: 'N/A',
-              title: vote.nomination?.description ?? 'Vote without associated bill',
-              congress: String(getCurrentCongressNumber()),
-              type: vote.nomination ? 'Nomination' : 'Senate Resolution',
-              url: undefined,
-            },
-        question,
-        result,
-        date: vote.date,
-        position: vote.position as Vote['position'],
-        chamber: 'Senate' as const,
-        rollNumber: vote.rollCallNumber || 0,
-        description: question,
-        ...(vote.amendment ? { amendment: vote.amendment } : {}),
-        ...(vote.nomination ? { nomination: vote.nomination } : {}),
-        ...(vote.majorityRequirement ? { majorityRequirement: vote.majorityRequirement } : {}),
-        category,
-        isKeyVote,
-        metadata: {
-          source: 'senate-xml-feed',
-          confidence: 'high',
-          processingDate: new Date().toISOString(),
-        },
-      };
-    });
-
-    return transformedVotes;
+    return votes;
   } catch (error) {
     logger.error('Error fetching optimized Senate votes', error as Error, { bioguideId });
     return [];
@@ -332,12 +152,7 @@ type VoteDetailCache = {
   legislationNumber?: string;
 };
 
-type BillDetailCache = {
-  title?: string;
-  policyArea?: { name: string };
-};
-
-const voteCache = new Map<string, VoteDetailCache | BillDetailCache>();
+const voteCache = new Map<string, VoteDetailCache>();
 
 /**
  * Fetch enriched roll-call vote data from Congress.gov API
@@ -439,58 +254,6 @@ async function fetchRollCallVoteDetails(
       session,
       errorType: error?.constructor?.name,
     });
-    return null;
-  }
-}
-
-/**
- * Fetch enriched bill details from Congress.gov API
- */
-async function fetchBillDetails(
-  congress: number,
-  billType: string,
-  billNumber: string
-): Promise<{ title?: string; policyArea?: { name: string } } | null> {
-  const cacheKey = `bill:${congress}:${billType}:${billNumber}`;
-
-  // Check cache first
-  if (voteCache.has(cacheKey)) {
-    return voteCache.get(cacheKey) as BillDetailCache;
-  }
-
-  try {
-    const normalizedType = billType.toLowerCase().replace(/[^a-z]/g, '');
-    const url = `https://api.congress.gov/v3/bill/${congress}/${normalizedType}/${billNumber}?format=json`;
-    const response = await fetch(url, {
-      headers: {
-        'X-API-Key': process.env.CONGRESS_API_KEY || '',
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-    const billData = data.bill;
-
-    if (billData) {
-      const enrichedBill = {
-        title: billData.title,
-        policyArea: billData.policyArea,
-      };
-      // Cache for 24 hours
-      setTimeout(() => voteCache.delete(cacheKey), 86400000);
-      voteCache.set(cacheKey, enrichedBill);
-      return enrichedBill;
-    }
-
-    return null;
-  } catch (error) {
-    logger.debug('Error fetching bill details', { error: (error as Error).message, billNumber });
     return null;
   }
 }
