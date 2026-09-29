@@ -226,9 +226,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           logger.info(`Batch votes: Starting for ${bioguideId}`);
 
           // Get representative chamber info for proper API routing
-          const { getEnhancedRepresentative } = await import(
-            '@/features/representatives/services/congress.service'
-          );
+          const { getEnhancedRepresentative } =
+            await import('@/features/representatives/services/congress.service');
           const representative = await getEnhancedRepresentative(bioguideId);
           if (!representative) {
             logger.error('Representative not found for votes', { bioguideId });
@@ -258,9 +257,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           let votes = [];
           let dataSource = '';
 
-          const { batchVotingService } = await import(
-            '@/features/representatives/services/batch-voting-service'
-          );
+          const { batchVotingService } =
+            await import('@/features/representatives/services/batch-voting-service');
 
           if (chamber === 'Senate') {
             const memberVotes = await batchVotingService.getSenateMemberVotes(
@@ -488,9 +486,8 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           logger.info(`Batch committees: Starting for ${bioguideId}`);
 
           // Use the existing enhanced representative service which has real committee data
-          const { getEnhancedRepresentative } = await import(
-            '@/features/representatives/services/congress.service'
-          );
+          const { getEnhancedRepresentative } =
+            await import('@/features/representatives/services/congress.service');
 
           const representative = await getEnhancedRepresentative(bioguideId);
 
@@ -666,6 +663,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
     votesParticipated?: number;
     financeCycle?: number;
     financeUnavailable?: boolean;
+    legislationUnavailable?: boolean;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -712,33 +710,40 @@ export async function getRepresentativeSummary(bioguideId: string) {
     // A failed FEC call is not "no filings": leave money undefined so the
     // band says unavailable, and don't cache the gap.
     const financeUnavailable = !finance || Boolean(finance.metadata?.error);
+    // Same rule for bills: the rollup returns null when a Congress.gov page
+    // times out. Reading that as 0 cached "0 sponsored" for 30 minutes on
+    // members with a long cosponsor walk (Jeffries: 4 pages of 250).
+    const legislation = record?.legislation ?? null;
+    const legislationUnavailable = legislation === null;
     const result = {
-      billsSponsored: record?.legislation?.current.introduced ?? 0,
-      billsCosponsored: record?.legislation?.current.cosponsored ?? 0,
-      billsCosponsoredIsLowerBound:
-        record?.legislation?.cosponsoredSample.currentIsLowerBound ?? false,
+      billsSponsored: legislation?.current.introduced,
+      billsCosponsored: legislation?.current.cosponsored,
+      billsCosponsoredIsLowerBound: legislation?.cosponsoredSample.currentIsLowerBound ?? false,
       totalRaised: financeUnavailable ? undefined : (finance?.totalRaised ?? 0),
       totalSpent: financeUnavailable ? undefined : (finance?.totalSpent ?? 0),
       cashOnHand: financeUnavailable ? undefined : (finance?.cashOnHand ?? 0),
       votesParticipated: record?.voting?.stats.cast,
       financeCycle: finance?.metadata?.matchedCycle,
       financeUnavailable,
+      legislationUnavailable,
       lastUpdated: new Date().toISOString(),
     };
 
-    if (!financeUnavailable) {
+    if (!financeUnavailable && !legislationUnavailable) {
       govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'summary-service' }); // Cache for 30 minutes
     }
     return result;
   } catch (error) {
     logger.error('Representative summary failed', error as Error, { bioguideId });
     return {
-      billsSponsored: 0,
-      billsCosponsored: 0,
-      totalRaised: 0,
-      totalSpent: 0,
-      cashOnHand: 0,
+      billsSponsored: undefined,
+      billsCosponsored: undefined,
+      totalRaised: undefined,
+      totalSpent: undefined,
+      cashOnHand: undefined,
       votesParticipated: undefined,
+      financeUnavailable: true,
+      legislationUnavailable: true,
       lastUpdated: new Date().toISOString(),
     };
   }

@@ -19,7 +19,14 @@ interface RepBriefSummaryProps {
   className?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(r => (r.ok ? r.json() : null));
+// A cold brief is computed on demand (11-18s observed, up to the 55s analyzer
+// budget). Cap the wait so the card settles on its empty state instead of an
+// endless skeleton. Generous on purpose: an early abort can cancel the server
+// run before it caches, keeping the brief cold for the next visitor.
+const BRIEF_TIMEOUT_MS = 30_000;
+
+const fetcher = (url: string) =>
+  fetch(url, { signal: AbortSignal.timeout(BRIEF_TIMEOUT_MS) }).then(r => (r.ok ? r.json() : null));
 
 function partyLabel(party: string): string {
   if (party === 'D') return 'Democrat';
@@ -46,7 +53,7 @@ export function RepBriefSummary({
   const { data: insight, isLoading } = useSWR<CivicBriefInsight>(
     `/api/intelligence/representative/${bioguideId}/brief`,
     fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 300_000 }
+    { revalidateOnFocus: false, dedupingInterval: 300_000, shouldRetryOnError: false }
   );
 
   const location = district ? `${state}-${district}` : state;
@@ -70,7 +77,10 @@ export function RepBriefSummary({
 
       {/* Brief content — loads progressively */}
       {isLoading && (
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-4" role="status">
+          <p className="type-xs text-gray-500">
+            Building summary from Congress.gov and FEC records…
+          </p>
           <div className="h-3 bg-gray-200 w-full animate-pulse" />
           <div className="h-3 bg-gray-200 w-4/5 animate-pulse" />
           <div className="h-3 bg-gray-200 w-3/5 animate-pulse" />
