@@ -32,7 +32,11 @@ jest.mock('@huggingface/transformers', () => ({
   env: { allowLocalModels: true },
 }));
 
-import { extractEntities, _resetForTesting } from '@/lib/intelligence/embeddings/civic-ner';
+import {
+  extractEntities,
+  extractEntitiesDetailed,
+  _resetForTesting,
+} from '@/lib/intelligence/embeddings/civic-ner';
 
 describe('civic NER', () => {
   beforeEach(() => {
@@ -166,6 +170,25 @@ describe('civic NER', () => {
     // Regex MONEY still comes back to the caller, but is never pinned in Redis.
     expect(entities.some(e => e.type === 'MONEY')).toBe(true);
     expect(mockRedisSet).not.toHaveBeenCalled();
+  });
+
+  it('reports incomplete when the model fails to load', async () => {
+    mockPipeline.mockRejectedValue(new Error('libonnxruntime.so.1: cannot open shared object file'));
+
+    const result = await extractEntitiesDetailed('EPA fines $1,000,000', '2025-12345');
+
+    expect(result.complete).toBe(false);
+    expect(result.entities.some(e => e.type === 'MONEY')).toBe(true);
+  });
+
+  it('reports complete for a Redis hit (only model results are cached)', async () => {
+    mockRedisGet.mockResolvedValueOnce([
+      { text: 'EPA', type: 'ORG', confidence: 0.9, start: 0, end: 3 },
+    ]);
+
+    const result = await extractEntitiesDetailed('EPA issues rule', '2025-12345');
+
+    expect(result.complete).toBe(true);
   });
 
   it('returns cached results from Redis', async () => {

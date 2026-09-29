@@ -64,6 +64,11 @@ jest.mock('@/lib/data-sources/federal-register-service', () => ({
 
 // ── Imports ───────────────────────────────────────────────────────
 
+const mockExtractEntitiesDetailed = jest.fn();
+jest.mock('@/lib/intelligence/embeddings/civic-ner', () => ({
+  extractEntitiesDetailed: (...args: unknown[]) => mockExtractEntitiesDetailed(...args),
+}));
+
 import { extractPreambleFacts } from '@/lib/intelligence/analyzers/federal-register-extractor';
 import { computeTextStats } from '@/lib/data-sources/federal-register-service';
 import type { FederalRegisterAPIDocument } from '@/types/federal-register';
@@ -193,6 +198,10 @@ describe('Federal Register Preamble Extractor', () => {
     mockCacheSet.mockResolvedValue(true);
     mockGetDocumentMetadata.mockResolvedValue(MOCK_DOC);
     mockGetPreambleText.mockResolvedValue(MOCK_PREAMBLE);
+    mockExtractEntitiesDetailed.mockResolvedValue({
+      entities: [{ text: 'EPA', type: 'ORG', confidence: 0.9, start: 0, end: 3 }],
+      complete: true,
+    });
   });
 
   describe('extractPreambleFacts', () => {
@@ -288,6 +297,21 @@ describe('Federal Register Preamble Extractor', () => {
         'insight:preamble:v2:2025-12345',
         expect.objectContaining({ documentNumber: '2025-12345' }),
         30 * 24 * 60 * 60
+      );
+    });
+
+    it('caches for only an hour when NER did not complete (cold-start timeout)', async () => {
+      mockExtractEntitiesDetailed.mockResolvedValue({ entities: [], complete: false });
+      mockGenerateAIText
+        .mockResolvedValueOnce(MOCK_AI_EXTRACTION)
+        .mockResolvedValueOnce('Summary narrative.');
+
+      await extractPreambleFacts('2025-12345');
+
+      expect(mockCacheSet).toHaveBeenCalledWith(
+        'insight:preamble:v2:2025-12345',
+        expect.objectContaining({ documentNumber: '2025-12345' }),
+        60 * 60
       );
     });
 

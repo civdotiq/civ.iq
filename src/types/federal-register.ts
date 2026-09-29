@@ -253,4 +253,10 @@ export interface PreambleExtractionInsight extends InsightBase {
   narrative: string;
   /** Named entities extracted via local BERT NER model, if available. */
   entities?: import('@/lib/intelligence/embeddings/types').CivicEntity[];
+  /**
+   * False when the NER model did not run (cold-start load outlasted its
+   * timeout, or the model failed), so `entities` is regex-only or missing.
+   * Absent on insights cached before this field existed.
+   */
+  entitiesComplete?: boolean;
 }
