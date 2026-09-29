@@ -79,13 +79,13 @@ function stripRefs(s: string): string {
 }
 
 function extractSortname(cell: string): string | null {
-  const m = cell.match(/\{\{Sortname\|([^|}]+)\|([^|}]+)(?:\|[^}]*)?\}\}/);
+  const m = cell.match(/\{\{Sortname\|([^|}]+)\|([^|}]+)(?:\|[^}]*)?\}\}/i);
   if (!m) return null;
   return `${m[1].trim()} ${m[2].trim()}`;
 }
 
 function extractParty(cell: string): string | null {
-  const m = cell.match(/\{\{Party shading\/([A-Za-z]+)/);
+  const m = cell.match(/\{\{Party shading\/([A-Za-z]+)/i);
   if (!m) return null;
   return m[1] === 'Democratic' ? 'Democrat' : m[1];
 }
@@ -227,7 +227,7 @@ function inferReason(reasonCell: string): {
 }
 
 function isPartySwitch(reasonCell: string): boolean {
-  return /\bchanged party\b|\bparty switch\b/i.test(stripRefs(reasonCell));
+  return /\bchanged part(?:y|ies)\b|\bparty switch\b/i.test(stripRefs(reasonCell));
 }
 
 function parseSpecialElection(reasonCell: string): Vacancy['specialElection'] | undefined {
@@ -235,13 +235,17 @@ function parseSpecialElection(reasonCell: string): Vacancy['specialElection'] | 
   const primary = text.match(
     /special election\s+(?:was|will be)\s+held(?:\s+on)?\s+((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})/i
   );
+  // Wikipedia often omits the runoff's year ("a runoff was held on August 18");
+  // it falls in the same year as the special election.
   const runoff = text.match(
-    /runoff\s+(?:was|will be)\s+held(?:\s+on)?\s+((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})/i
+    /runoff\s+(?:(?:was|will be)\s+)?held(?:\s+on)?\s+((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})(?:,?\s+(\d{4}))?/i
   );
   if (!primary && !runoff) return undefined;
+  const date = primary ? parseDate(primary[1]) : null;
+  const runoffYear = runoff?.[2] ?? date?.slice(0, 4);
   return {
-    date: primary ? parseDate(primary[1]) : null,
-    runoffDate: runoff ? parseDate(runoff[1]) : null,
+    date,
+    runoffDate: runoff && runoffYear ? parseDate(`${runoff[1]}, ${runoffYear}`) : null,
   };
 }
 
@@ -342,7 +346,9 @@ function extractSection(wikitext: string, heading: string): string {
   return m ? m[1] : '';
 }
 
-function parseWikitext(wikitext: string): Vacancy[] {
+function parseWikitext(raw: string): Vacancy[] {
+  // Editors park unconfirmed rows in HTML comments; those are not published.
+  const wikitext = raw.replace(/<!--[\s\S]*?-->/g, '');
   const senateSection = extractSection(wikitext, 'Senate membership changes');
   const houseSection = extractSection(wikitext, 'House membership changes');
 
@@ -361,30 +367,70 @@ function parseWikitext(wikitext: string): Vacancy[] {
   return vacancies;
 }
 
+function sameSeat(a: Vacancy, b: Vacancy): boolean {
+  return (
+    a.chamber === b.chamber &&
+    a.state === b.state &&
+    (a.district ?? '') === (b.district ?? '') &&
+    (a.senateClass ?? '') === (b.senateClass ?? '') &&
+    a.previousMember.name.toLowerCase() === b.previousMember.name.toLowerCase()
+  );
+}
+
+/**
+ * Wikipedia is authoritative for what it states, but the parser only sees part
+ * of each row, so a field it could not read falls back to the curated value
+ * instead of being deleted. Curated notes and speculative election details
+ * ("runoff if no majority") are dropped once the seat's status moves on —
+ * a vacancy date appears or a successor is sworn in — because they describe
+ * the earlier state.
+ */
 function mergeWithExisting(parsed: Vacancy[], existing: VacanciesFile): Vacancy[] {
-  return parsed.map(p => {
-    const match = existing.vacancies.find(
-      e =>
-        e.chamber === p.chamber &&
-        e.state === p.state &&
-        (e.district ?? '') === (p.district ?? '') &&
-        (e.senateClass ?? '') === (p.senateClass ?? '') &&
-        e.previousMember.name.toLowerCase() === p.previousMember.name.toLowerCase()
-    );
+  const merged = parsed.map(p => {
+    const match = existing.vacancies.find(e => sameSeat(e, p));
     if (!match) return p;
-    return {
+    const statusMoved =
+      (!match.vacantSince && !!p.vacantSince) ||
+      (!match.successor?.installedDate && !!p.successor?.installedDate);
+    const successor = p.successor ?? match.successor;
+    const out: Vacancy = {
       ...p,
+      vacantSince: p.vacantSince ?? match.vacantSince,
+      reasonDetail: p.reasonDetail ?? match.reasonDetail,
       previousMember: {
         ...p.previousMember,
         bioguideId: match.previousMember.bioguideId ?? p.previousMember.bioguideId,
       },
-      successor:
-        p.successor && match.successor
-          ? { ...p.successor, bioguideId: match.successor.bioguideId ?? p.successor.bioguideId }
-          : p.successor,
-      notes: match.notes ?? p.notes,
     };
+    const specialElection = statusMoved
+      ? p.specialElection
+      : p.specialElection
+        ? {
+            ...match.specialElection,
+            date: p.specialElection.date ?? match.specialElection?.date ?? null,
+            runoffDate: p.specialElection.runoffDate ?? match.specialElection?.runoffDate ?? null,
+          }
+        : match.specialElection;
+    if (specialElection) out.specialElection = specialElection;
+    else delete out.specialElection;
+    if (successor) {
+      out.successor = {
+        ...successor,
+        bioguideId: match.successor?.bioguideId ?? successor.bioguideId,
+      };
+    }
+    const notes = statusMoved ? p.notes : (match.notes ?? p.notes);
+    if (notes) out.notes = notes;
+    else delete out.notes;
+    return out;
   });
+
+  // Keep curated announcements Wikipedia does not list yet (e.g. a member who
+  // has announced a resignation with no date). They drop out once dated.
+  const pending = existing.vacancies.filter(
+    e => !e.vacantSince && !e.successor && !merged.some(m => sameSeat(m, e))
+  );
+  return [...merged, ...pending];
 }
 
 async function main(): Promise<void> {
