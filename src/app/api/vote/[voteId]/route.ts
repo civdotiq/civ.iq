@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getVoteDetailsService, type UnifiedVoteDetail } from '@/lib/services/vote.service';
+import { summarizeVoteTally } from '@/lib/vote-tally';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,6 +78,20 @@ export async function GET(
         metadata: buildMetadata(startTime),
       };
       return NextResponse.json(notFoundResponse, { status: 404 });
+    }
+
+    // ?view=tally: totals + party breakdown only. The member list is 17KB for
+    // a Senate roll call and ~75KB for a House one — too heavy to fetch per
+    // row just to draw a tally bar.
+    if (request.nextUrl.searchParams.get('view') === 'tally') {
+      return NextResponse.json(
+        {
+          tally: summarizeVoteTally(voteDetail),
+          success: true,
+          metadata: buildMetadata(startTime),
+        },
+        { status: 200, headers: { 'Cache-Control': 'public, max-age=3600' } }
+      );
     }
 
     const successResponse: VoteResponse = {
