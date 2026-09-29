@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-22T11:32:46.473Z",
-  "staleAfter": "2026-10-13",
-  "upstreamCommit": "677c6d0a566ad9bd62b6324e502af76acc3d22f3",
-  "upstreamCommittedAt": "2026-09-10T22:57:12Z",
+  "generatedAt": "2026-09-29T12:46:43.638Z",
+  "staleAfter": "2026-10-20",
+  "upstreamCommit": "bf4caf105dc0e4fbd52d06e970ec264540f5da97",
+  "upstreamCommittedAt": "2026-09-24T16:35:09Z",
   "jurisdictions": 52,
-  "people": 7430,
+  "people": 7420,
   "departed": 0,
-  "compressedBytes": 520096,
+  "compressedBytes": 519622,
   "meta": {
-    "people": 7430,
+    "people": 7420,
     "departed": 0,
     "source": "https://github.com/openstates/people (CC0-1.0)",
     "methodology": "Every data/<jurisdiction>/legislature/*.yml record whose current role is a chamber seat (upper, lower, or the unicameral legislature). Statewide executives, municipal officials and retired members are excluded, as are members whose every chamber role has an end date in the past. The current role is the one with no end date, or failing that the latest future-dated one."
