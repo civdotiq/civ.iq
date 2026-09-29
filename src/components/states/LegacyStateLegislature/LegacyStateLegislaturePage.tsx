@@ -26,6 +26,17 @@ import { StateExecutivesTab } from '@/features/state-government/components/State
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 
+/**
+ * "Michigan Legislature", "Ohio General Assembly", or "Michigan" + suffix.
+ * The API's stateName is the official body name when known (which already
+ * ends in Legislature / Assembly / Court / Council) and the bare state name
+ * otherwise, so appending a suffix unconditionally read
+ * "Michigan Legislature State Legislature".
+ */
+function legislatureTitle(name: string): string {
+  return /\b(Legislature|Assembly|Court|Council)$/.test(name) ? name : `${name} Legislature`;
+}
+
 interface StateLegislator {
   id: string;
   name: string;
@@ -475,7 +486,7 @@ export function LegacyStateLegislaturePage() {
             { label: 'Home', href: '/' },
             { label: 'States', href: '/states' },
             {
-              label: `${legislatureData.stateName} Legislature`,
+              label: legislatureTitle(legislatureData.stateName),
               href: `/state-legislature/${state}`,
             },
           ]}
@@ -490,7 +501,7 @@ export function LegacyStateLegislaturePage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-                {legislatureData.stateName} State Legislature
+                {legislatureTitle(legislatureData.stateName)}
               </h1>
               <p className="text-civiq-blue">
                 {legislatureData.session.name} • {legislatureData.legislators.length} Total

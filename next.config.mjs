@@ -271,6 +271,14 @@ const nextConfig = {
   // Redirects for deprecated routes
   async redirects() {
     return [
+      // One host for search engines. www served the whole site with a 200
+      // until 2026-09-29, a duplicate copy of every page.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.civdotiq.org' }],
+        destination: 'https://civdotiq.org/:path*',
+        permanent: true,
+      },
       {
         source: '/money-report',
         destination: '/your-reps',
@@ -362,6 +370,19 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+        ],
+      },
+      // The *.vercel.app aliases serve the full site. Keep them out of search
+      // indexes rather than redirecting, so crons and tooling that call them
+      // keep working. Pages already carry a civdotiq.org canonical.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: '.+\\.vercel\\.app' }],
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex',
           },
         ],
       },

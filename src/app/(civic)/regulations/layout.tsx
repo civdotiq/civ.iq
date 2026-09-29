@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Federal Regulations',
+  title: { default: 'Federal Regulations', template: '%s | CIV.IQ' },
   description:
     'Search and browse federal regulations from the Federal Register. Filter by agency, type, and date.',
   openGraph: {

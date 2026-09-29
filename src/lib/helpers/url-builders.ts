@@ -298,13 +298,13 @@ export function buildVoteUrl(voteId: string): string {
  * Build a state delegation URL
  *
  * @param state - 2-letter state code
- * @returns Delegation URL (lowercase state)
+ * @returns Delegation URL (uppercase state — the canonical and sitemap form)
  *
  * @example
- * buildDelegationUrl("MI")  // "/delegation/mi"
+ * buildDelegationUrl("mi")  // "/delegation/MI"
  */
 export function buildDelegationUrl(state: string): string {
-  return `/delegation/${state.toLowerCase()}`;
+  return `/delegation/${state.toUpperCase()}`;
 }
 
 // ============================================================================
@@ -328,4 +328,45 @@ export function buildStateDistrictUrl(
   district: string
 ): string {
   return `/state-districts/${state.toLowerCase()}/${chamber}/${district}`;
+}
+
+// ============================================================================
+// CANONICAL CASING
+// ============================================================================
+
+/** Routes whose first segment is a state code, and the case it is canonical in. */
+const STATE_SEGMENT_CASE: Record<string, 'lower' | 'upper'> = {
+  states: 'lower',
+  'state-legislature': 'lower',
+  'state-bills': 'lower',
+  'state-districts': 'lower',
+  delegation: 'upper',
+};
+
+/**
+ * The canonical-case form of a path, or `null` when it is already canonical.
+ *
+ * Route params are matched case-insensitively downstream, so `/states/MI` and
+ * `/states/mi` both served a 200 — two indexable copies of one page. Only the
+ * ID segment is recased; anything after it (e.g. a base64 legislator ID) is
+ * case-sensitive and left untouched.
+ *
+ * @example
+ * canonicalCasePath("/representative/t000481")          // "/representative/T000481"
+ * canonicalCasePath("/state-legislature/MI/committees") // "/state-legislature/mi/committees"
+ * canonicalCasePath("/delegation/mi")                   // "/delegation/MI"
+ * canonicalCasePath("/states/mi")                       // null
+ */
+export function canonicalCasePath(pathname: string): string | null {
+  const rep = pathname.match(/^\/representative\/([A-Za-z]\d{6})(\/.*)?$/);
+  if (rep?.[1]) {
+    const upper = rep[1].toUpperCase();
+    return upper === rep[1] ? null : `/representative/${upper}${rep[2] ?? ''}`;
+  }
+
+  const state = pathname.match(/^\/([a-z-]+)\/([A-Za-z]{2})(\/.*)?$/);
+  const wanted = state?.[1] ? STATE_SEGMENT_CASE[state[1]] : undefined;
+  if (!state?.[2] || !wanted) return null;
+  const code = wanted === 'lower' ? state[2].toLowerCase() : state[2].toUpperCase();
+  return code === state[2] ? null : `/${state[1]}/${code}${state[3] ?? ''}`;
 }

@@ -32,6 +32,16 @@ import {
   voteMeasureBillHref,
 } from '@/lib/votes/vote-links';
 
+/**
+ * "HR 1234", but "PN12-1" rather than "PN PN12-1": Senate roll calls carry a
+ * document_name that already starts with its document_type.
+ */
+export function documentLabel(type: string | undefined, number: string): string {
+  const squash = (s: string) => s.replace(/[\s.]/g, '').toUpperCase();
+  if (!type || squash(number).startsWith(squash(type))) return number;
+  return `${type} ${number}`;
+}
+
 interface LegacyVoteDetailPageProps {
   voteId: string;
   voteDetail: UnifiedVoteDetail | null;
@@ -164,10 +174,11 @@ export function LegacyVoteDetailPage({
               <h1 className="aicher-heading text-2xl sm:text-3xl text-gray-900 mb-2">
                 {voteDetail.title}
                 {voteDetail.bill?.number &&
-                  `: ${voteDetail.bill.type || ''} ${voteDetail.bill.number}`}
+                  `: ${documentLabel(voteDetail.bill.type, voteDetail.bill.number)}`}
               </h1>
               {voteDetail.bill?.title &&
-                voteDetail.bill.title !== `${voteDetail.bill.type} ${voteDetail.bill.number}` && (
+                voteDetail.bill.title !==
+                  documentLabel(voteDetail.bill.type, voteDetail.bill.number) && (
                   <p className="text-lg text-civiq-blue font-medium mb-2">
                     {voteDetail.bill.title}
                   </p>
@@ -239,7 +250,7 @@ export function LegacyVoteDetailPage({
                   </a>
                   {voteDetail.bill?.number && (
                     <span className="text-sm text-gray-500">
-                      Amends {voteDetail.bill.type || ''} {voteDetail.bill.number}
+                      Amends {documentLabel(voteDetail.bill.type, voteDetail.bill.number)}
                     </span>
                   )}
                 </div>

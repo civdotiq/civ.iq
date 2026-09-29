@@ -4,7 +4,7 @@
  */
 
 import type { Metadata } from 'next';
-import { BreadcrumbSchema, GovernmentOrganizationSchema } from '@/components/seo/JsonLd';
+
 import { getStateName } from '@/lib/data/us-states';
 
 interface LayoutProps {
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
 
   return {
-    title: `${stateName} Legislature`,
+    title: { default: `${stateName} Legislature`, template: '%s | CIV.IQ' },
     description: `${stateName} state legislators, committees, bills, and votes. Browse the full roster and track legislative activity.`,
     openGraph: {
       title: `${stateName} Legislature | CIV.IQ`,
@@ -29,27 +29,9 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   };
 }
 
-export default async function StateLegislatureLayout({ children, params }: LayoutProps) {
-  const { state } = await params;
-  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
-
-  return (
-    <>
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://civdotiq.org' },
-          { name: stateName, url: `https://civdotiq.org/states/${state}` },
-          { name: 'Legislature', url: `https://civdotiq.org/state-legislature/${state}` },
-        ]}
-      />
-      <GovernmentOrganizationSchema
-        name={`${stateName} State Legislature`}
-        description={`State legislators, committees, bills, and votes for ${stateName}.`}
-        url={`https://civdotiq.org/state-legislature/${state.toLowerCase()}`}
-        parentOrganization={`State of ${stateName}`}
-        areaServed={stateName}
-      />
-      {children}
-    </>
-  );
+// The hub's canonical and JSON-LD live in page.tsx, not here: a layout's
+// metadata and schema are inherited by every legislator, committee and vote
+// page below it, which gave each of them a second BreadcrumbList.
+export default function StateLegislatureLayout({ children }: LayoutProps) {
+  return <>{children}</>;
 }

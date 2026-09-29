@@ -10,7 +10,7 @@ import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
 import { incrementCrawlerHit } from '@/lib/analytics/crawler-counter';
-import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { canonicalCasePath, canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 import { LOCAL_PHOTO_IDS } from '@/generated/local-photo-ids';
 import { KNOWN_ROUTE_PREFIXES } from '@/generated/known-route-prefixes';
 import { addVersionHeaders } from '@/lib/api/v1-versioning';
@@ -293,6 +293,16 @@ export async function middleware(request: NextRequest) {
         redirectUrl.search = request.nextUrl.search;
         return NextResponse.redirect(redirectUrl, 308);
       }
+    }
+
+    // Canonical-case redirect: /representative/t000481, /states/MI and friends
+    // all rendered a 200, a second indexable copy of the page. Pure string
+    // work, no Redis.
+    const recased = canonicalCasePath(request.nextUrl.pathname);
+    if (recased) {
+      const redirectUrl = new URL(recased, request.nextUrl);
+      redirectUrl.search = request.nextUrl.search;
+      return NextResponse.redirect(redirectUrl, 308);
     }
 
     // Legacy digest redirect: the digest is now per-state at

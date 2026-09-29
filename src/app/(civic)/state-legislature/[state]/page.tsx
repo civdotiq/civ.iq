@@ -4,7 +4,9 @@
  */
 
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BreadcrumbSchema, GovernmentOrganizationSchema } from '@/components/seo/JsonLd';
 import {
   StateLegislaturePage,
   loadStateLegislaturePageData,
@@ -17,8 +19,55 @@ interface PageProps {
   searchParams: Promise<{ v?: string }>;
 }
 
+// Canonical lives on the page, not the layout, so the legislator, committee
+// and vote pages below don't inherit the hub's URL.
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { state } = await params;
+  return {
+    alternates: { canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}` },
+  };
+}
+
+function HubSchemas({ state }: { state: string }) {
+  const code = state.toLowerCase();
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+  return (
+    <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/states/${code}` },
+          { name: 'Legislature', url: `https://civdotiq.org/state-legislature/${code}` },
+        ]}
+      />
+      <GovernmentOrganizationSchema
+        name={`${stateName} State Legislature`}
+        description={`State legislators, committees, bills, and votes for ${stateName}.`}
+        url={`https://civdotiq.org/state-legislature/${code}`}
+        parentOrganization={`State of ${stateName}`}
+        areaServed={stateName}
+      />
+    </>
+  );
+}
+
 export default async function StateLegislatureRoute({ params, searchParams }: PageProps) {
   const { state } = await params;
+  return (
+    <>
+      <HubSchemas state={state} />
+      <StateLegislatureBody state={state} searchParams={searchParams} />
+    </>
+  );
+}
+
+async function StateLegislatureBody({
+  state,
+  searchParams,
+}: {
+  state: string;
+  searchParams: PageProps['searchParams'];
+}) {
   const { v } = await searchParams;
 
   const isPreviewEnv =

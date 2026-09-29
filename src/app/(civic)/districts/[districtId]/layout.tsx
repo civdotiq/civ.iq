@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { getStateName } from '@/lib/data/us-states';
 import { AdministrativeAreaSchema } from '@/components/seo/JsonLd';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 
 // Parse district ID - supports multiple formats:
 // - Hyphenated: "MI-12", "CA-04", "AK-AL" (canonical format)
@@ -50,11 +51,14 @@ export async function generateMetadata({
 
   // Build canonical feed URL for hyphenated format
   const feedDistrictId = `${parsed.state}-${parsed.district}`;
+  // Middleware 308s every variant to this form, so it is the page's own URL.
+  const canonicalId = canonicalizeDistrictId(districtId)?.canonical ?? feedDistrictId;
 
   return {
     title,
     description,
     alternates: {
+      canonical: `https://civdotiq.org/districts/${canonicalId}`,
       types: {
         'application/atom+xml': `/api/feed/district/${feedDistrictId}`,
       },
@@ -63,7 +67,7 @@ export async function generateMetadata({
       title,
       description,
       type: 'website',
-      url: `https://civdotiq.org/districts/${districtId}`,
+      url: `https://civdotiq.org/districts/${canonicalId}`,
     },
     twitter: {
       card: 'summary',

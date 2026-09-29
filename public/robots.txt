@@ -1,13 +1,17 @@
 # /api/v1/ is the public, documented, rate-limited agent API — always allowed
 # (longest-match wins over Disallow: /api/). Bare /api/ stays blocked: those
 # are internal UI routes backed by rate-limited upstream government APIs.
+# Keeping /api/ blocked also means a crawler rendering a page never spends
+# upstream quota through the page's client-side fetches.
+# /api/card/ is allowed because og:image share cards live there.
+# Never block /_next/: search engines need its CSS, JS and images to render pages.
 
 User-agent: *
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -20,8 +24,8 @@ User-agent: GPTBot
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -33,8 +37,8 @@ User-agent: OAI-SearchBot
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -43,8 +47,8 @@ User-agent: ClaudeBot
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -53,8 +57,8 @@ User-agent: Claude-User
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -63,8 +67,8 @@ User-agent: Claude-SearchBot
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -73,8 +77,8 @@ User-agent: PerplexityBot
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -83,8 +87,8 @@ User-agent: Perplexity-User
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -93,8 +97,8 @@ User-agent: Applebot-Extended
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/
@@ -103,8 +107,8 @@ User-agent: Google-Extended
 Allow: /
 Allow: /api/v1/
 Allow: /api/representative-photo/
+Allow: /api/card/
 Disallow: /api/
-Disallow: /_next/
 Disallow: /admin/
 # State committee pages are rendered from the live OpenStates API (1000 req/day).
 Disallow: /state-legislature/*/committee/

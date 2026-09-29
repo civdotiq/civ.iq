@@ -230,8 +230,7 @@ export default async function HomePage() {
           CIV<span className={styles.dot}>.</span>IQ
         </p>
         <h1 className={styles.title}>
-          Know your
-          <br />
+          Know your <br />
           Representatives
         </h1>
         <p className={styles.lede}>
@@ -261,7 +260,7 @@ export default async function HomePage() {
           .
           <br />
           All data available via <Link href="/open">open API</Link>,{' '}
-          <a href="https://www.civdotiq.org/feeds/bills" target="_blank" rel="noopener noreferrer">
+          <a href="https://civdotiq.org/feeds/bills" target="_blank" rel="noopener noreferrer">
             RSS
           </a>
           , and{' '}

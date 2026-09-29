@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Congressional Districts',
+  title: { default: 'Congressional Districts', template: '%s | CIV.IQ' },
   description:
     'Browse all 435 U.S. congressional districts with demographics, spending data, and representative profiles.',
   openGraph: {

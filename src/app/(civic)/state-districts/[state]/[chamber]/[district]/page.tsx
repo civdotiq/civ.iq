@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const chamberName = stateCode ? getChamberName(stateCode, validChamber) : 'Legislature';
 
   return {
-    title: `${stateName} ${chamberName} District ${district} - CIV.IQ`,
+    title: `${stateName} ${chamberName} District ${district}`,
     description: `View information about ${stateName} ${chamberName} District ${district}, including representatives and demographics.`,
     alternates: {
       canonical: `https://civdotiq.org/state-districts/${state.toLowerCase()}/${validChamber}/${encodeURIComponent(district)}`,

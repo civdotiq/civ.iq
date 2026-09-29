@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: `${stateName} Congressional Delegation | CIV.IQ`,
       description: `View all U.S. Senators and Representatives from ${stateName}. Complete federal delegation with contact information and committee assignments.`,
-      url: `https://civdotiq.org/delegation/${stateCode.toLowerCase()}`,
+      url: `https://civdotiq.org/delegation/${stateCode.toUpperCase()}`,
       siteName: 'CIV.IQ',
       type: 'website',
     },
@@ -190,7 +190,7 @@ export default async function StateDelegationPage({ params }: PageProps) {
       <GovernmentOrganizationSchema
         name={`${stateName} Congressional Delegation`}
         description={`All ${stateReps.length} members of the ${stateName} federal congressional delegation: ${senators.length} Senators and ${houseMembers.length} Representatives in the 119th Congress.`}
-        url={`https://civdotiq.org/delegation/${normalizedCode.toLowerCase()}`}
+        url={`https://civdotiq.org/delegation/${normalizedCode.toUpperCase()}`}
         parentOrganization="United States Congress"
         member={delegationData.map(m => ({
           name: m.name,
@@ -204,7 +204,7 @@ export default async function StateDelegationPage({ params }: PageProps) {
           { name: 'Representatives', url: 'https://civdotiq.org/representatives' },
           {
             name: `${stateName} Delegation`,
-            url: `https://civdotiq.org/delegation/${normalizedCode.toLowerCase()}`,
+            url: `https://civdotiq.org/delegation/${normalizedCode.toUpperCase()}`,
           },
         ]}
       />

@@ -84,7 +84,7 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
     category: 'who',
     questionPattern: 'How do I contact {name}?',
     descriptionPattern:
-      "Find {name}'s ({party}-{state}) office phone number, mailing address, contact form, website, and social media accounts.",
+      "Find {name}'s ({party}-{state}) Washington office phone number, mailing address, and official website.",
     entityType: 'representative',
     dataSources: ['/api/representative/[id]'],
     relatedSlugs: ['voting-record', 'campaign-contributions'],

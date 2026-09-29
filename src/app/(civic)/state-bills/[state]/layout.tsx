@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
 
   return {
-    title: `${stateName} Bills`,
+    title: { default: `${stateName} Bills`, template: '%s | CIV.IQ' },
     description: `Browse current and recent bills in the ${stateName} state legislature. Search by topic, sponsor, or status.`,
     openGraph: {
       title: `${stateName} Bills | CIV.IQ`,
