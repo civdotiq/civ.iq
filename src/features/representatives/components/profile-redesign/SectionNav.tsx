@@ -74,7 +74,9 @@ export function SectionNav({ items }: SectionNavProps) {
   return (
     <nav
       aria-label="Page sections"
-      className="sticky top-0 z-10 bg-white border-b border-gray-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
+      // top-[61px]: sits flush below the fixed site header (61px tall) instead
+      // of sliding underneath it.
+      className="sticky top-[61px] z-40 mt-8 bg-white border-b border-gray-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8"
     >
       <div className="flex overflow-x-auto">
         {items.map(item => {
@@ -85,7 +87,7 @@ export function SectionNav({ items }: SectionNavProps) {
               href={`#${item.id}`}
               aria-current={active ? 'true' : undefined}
               onClick={e => handleClick(e, item.id)}
-              className={`px-5 py-3.5 text-sm whitespace-nowrap border-b-[3px] hover:bg-gray-50 ${
+              className={`px-5 py-3.5 text-[15px] whitespace-nowrap border-b-[3px] hover:bg-gray-50 ${
                 active
                   ? 'border-civiq-blue font-bold text-gray-900'
                   : 'border-transparent font-medium text-gray-900'
