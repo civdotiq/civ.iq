@@ -67,6 +67,14 @@ export function amendmentSponsorLabel(voteTitle: string): string | undefined {
   return /^(?:[A-Z][\w'’.\- ]*\s)?Amdt\. No\. \d+$/.test(trimmed) ? trimmed : undefined;
 }
 
+/** The sponsor's name from a sponsor label: "Booker Amdt. No. 6835" gives
+ *  "Booker", "Van Hollen Amdt. No. 5632" gives "Van Hollen". Undefined for a
+ *  label with no sponsor ("Amdt. No. 6776"). */
+export function amendmentSponsorName(sponsorLabel: string | undefined): string | undefined {
+  const match = sponsorLabel?.trim().match(/^(.+?)\s+Amdt\. No\. \d+$/);
+  return match?.[1];
+}
+
 /** Split a vote-menu title "<head>; <tail>" at the first "; ". */
 export function splitMenuTitle(title: string): { head: string; tail?: string } {
   const semi = title.indexOf('; ');

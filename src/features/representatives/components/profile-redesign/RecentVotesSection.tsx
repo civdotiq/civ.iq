@@ -8,7 +8,7 @@
 import React, { useId, useState } from 'react';
 import Link from 'next/link';
 import { VoteLink } from '@/components/shared/links/EntityLinks';
-import { stripMeasureTags } from '@/lib/senate-vote-fields';
+import { amendmentSponsorName, stripMeasureTags } from '@/lib/senate-vote-fields';
 import { partyAlignment } from '@/lib/vote-tally';
 import type { Vote } from '../VoteRow';
 import { SectionBlock, SectionEmptyState, SectionSkeleton } from './SectionBlock';
@@ -81,6 +81,7 @@ function RollCallRow({ vote, memberParty }: { vote: Vote; memberParty: string | 
       ? `${vote.amendment.number} — ${vote.amendment.purpose}`
       : vote.amendment.number
     : stripMeasureTags(vote.question);
+  const sponsor = amendmentSponsorName(vote.amendment?.sponsorLabel);
 
   return (
     <li className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 py-4 border-t border-gray-200 first:border-t-0 sm:grid-cols-[auto_1fr_10rem]">
@@ -89,9 +90,7 @@ function RollCallRow({ vote, memberParty }: { vote: Vote; memberParty: string | 
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <KindTag vote={vote} />
           <span className="text-xs text-gray-600">{formatVoteDate(vote.date)}</span>
-          {vote.amendment?.sponsorLabel && (
-            <span className="text-xs text-gray-600">{vote.amendment.sponsorLabel}</span>
-          )}
+          {sponsor && <span className="text-xs text-gray-600">Sen. {sponsor}</span>}
         </div>
         <VoteLink voteId={vote.voteId} label={label} className="mt-1 block text-[15px]" />
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
