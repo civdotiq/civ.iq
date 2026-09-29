@@ -74,14 +74,18 @@ export function isVacancyFilled(vacancy: CongressionalVacancy): boolean {
   return hasSuccessorInstalled(vacancy);
 }
 
+/**
+ * A seat is open only between its vacancy date and the successor's swearing-in.
+ * An announced resignation with no date yet (or a future date) leaves the
+ * member in office, so it is not a vacancy.
+ */
+function isOpenSeat(v: CongressionalVacancy): boolean {
+  if (!v.vacantSince || new Date(v.vacantSince) > new Date()) return false;
+  return !hasSuccessorInstalled(v);
+}
+
 export function isDistrictVacant(state: string, district: string | null): boolean {
-  return CONGRESSIONAL_VACANCIES.some(
-    v =>
-      v.chamber === 'House' &&
-      v.state === state &&
-      v.district === district &&
-      !hasSuccessorInstalled(v)
-  );
+  return getVacancyInfo(state, district) !== undefined;
 }
 
 export function getVacancyInfo(
@@ -89,11 +93,7 @@ export function getVacancyInfo(
   district: string | null
 ): CongressionalVacancy | undefined {
   return CONGRESSIONAL_VACANCIES.find(
-    v =>
-      v.chamber === 'House' &&
-      v.state === state &&
-      v.district === district &&
-      !hasSuccessorInstalled(v)
+    v => v.chamber === 'House' && v.state === state && v.district === district && isOpenSeat(v)
   );
 }
 
@@ -103,15 +103,12 @@ export function getSenateVacancy(
 ): CongressionalVacancy | undefined {
   return CONGRESSIONAL_VACANCIES.find(
     v =>
-      v.chamber === 'Senate' &&
-      v.state === state &&
-      v.senateClass === senateClass &&
-      !hasSuccessorInstalled(v)
+      v.chamber === 'Senate' && v.state === state && v.senateClass === senateClass && isOpenSeat(v)
   );
 }
 
 export function getAllVacancies(): CongressionalVacancy[] {
-  return CONGRESSIONAL_VACANCIES.filter(v => !hasSuccessorInstalled(v));
+  return CONGRESSIONAL_VACANCIES.filter(isOpenSeat);
 }
 
 export function getVacancyHistory(state: string, district: string | null): CongressionalVacancy[] {
