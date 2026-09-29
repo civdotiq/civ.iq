@@ -17,6 +17,7 @@ const mockAnalyzeFinanceJurisdiction = jest.fn();
 const mockAnalyzeVoteFinance = jest.fn();
 const mockAnalyzeVotePrediction = jest.fn();
 const mockAnalyzeInfluenceChains = jest.fn();
+const mockAssembleCivicBrief = jest.fn();
 
 const cursorStore: { value: number | string | null } = { value: null };
 const mockRedisGet = jest.fn(async () => cursorStore.value);
@@ -49,6 +50,10 @@ jest.mock('@/lib/intelligence/analyzers/influence-chain-analyzer', () => ({
   analyzeInfluenceChains: (id: string) => mockAnalyzeInfluenceChains(id),
 }));
 
+jest.mock('@/lib/intelligence/analyzers/civic-brief-assembler', () => ({
+  assembleCivicBrief: (id: string, opts: unknown) => mockAssembleCivicBrief(id, opts),
+}));
+
 jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -73,6 +78,7 @@ beforeEach(() => {
   mockAnalyzeVoteFinance.mockResolvedValue(null);
   mockAnalyzeVotePrediction.mockResolvedValue(null);
   mockAnalyzeInfluenceChains.mockResolvedValue(null);
+  mockAssembleCivicBrief.mockResolvedValue(null);
 });
 
 afterAll(() => {
@@ -170,11 +176,56 @@ describe('GET /api/cron/warm-intelligence — error isolation', () => {
     expect(mockAnalyzeVotePrediction).toHaveBeenCalledTimes(1);
     expect(mockAnalyzeInfluenceChains).toHaveBeenCalledTimes(1);
 
-    expect(body.ok).toBe(3);
+    expect(body.ok).toBe(4);
     expect(body.errors).toBe(1);
     expect(body.perAnalyzer.vote_finance.error).toBe(1);
     expect(body.perAnalyzer.finance_jurisdiction.ok).toBe(1);
     expect(body.perAnalyzer.vote_prediction.ok).toBe(1);
     expect(body.perAnalyzer.influence_chain.ok).toBe(1);
+  });
+});
+
+describe('GET /api/cron/warm-intelligence — civic brief', () => {
+  it('refreshes the brief after the four analyzers finish', async () => {
+    mockGetAllReps.mockResolvedValue(fakeReps(1));
+    const order: string[] = [];
+    mockAnalyzeFinanceJurisdiction.mockImplementation(async () => {
+      order.push('finance_jurisdiction');
+      return null;
+    });
+    mockAnalyzeInfluenceChains.mockImplementation(async () => {
+      order.push('influence_chain');
+      return null;
+    });
+    mockAssembleCivicBrief.mockImplementation(async () => {
+      order.push('civic_brief');
+      return null;
+    });
+
+    const res = await GET(makeRequest(`Bearer ${TEST_SECRET}`));
+    const body = await res.json();
+
+    expect(mockAssembleCivicBrief).toHaveBeenCalledWith(expect.any(String), { refresh: true });
+    // The brief reads these two analyzers' caches, so it must run last.
+    expect(order[order.length - 1]).toBe('civic_brief');
+    expect(body.perAnalyzer.civic_brief.ok).toBe(1);
+  });
+
+  it('skips the brief once the invocation passes its deadline', async () => {
+    mockGetAllReps.mockResolvedValue(fakeReps(1));
+    const realNow = Date.now;
+    const t0 = realNow();
+    let calls = 0;
+    // First read is the invocation start; every later read is 4 minutes on.
+    jest.spyOn(Date, 'now').mockImplementation(() => (calls++ === 0 ? t0 : t0 + 240_000));
+    try {
+      const res = await GET(makeRequest(`Bearer ${TEST_SECRET}`));
+      const body = await res.json();
+      expect(mockAssembleCivicBrief).not.toHaveBeenCalled();
+      expect(body.perAnalyzer.civic_brief.skipped).toBe(1);
+      expect(body.errors).toBe(0);
+    } finally {
+      jest.restoreAllMocks();
+    }
   });
 });
