@@ -13,6 +13,7 @@
 import Link from 'next/link';
 
 import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { voteMeasureLabel } from '@/lib/bill-label';
 
 interface Vote {
   voteId: string;
@@ -21,6 +22,15 @@ interface Vote {
   result: string;
   date: string;
   position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+  amendment?: { number: string; purpose?: string };
+  nomination?: { number: string; description: string };
+}
+
+/** Senate amendment/nomination votes are labeled by what was voted on
+ *  ("S.Amdt. 6835 to S. 4668 — …"); everything else by bill title. */
+function voteRowTitle(v: Vote): string {
+  if (v.amendment || v.nomination) return voteMeasureLabel(v);
+  return v.bill?.title ?? v.question ?? 'Untitled vote';
 }
 
 interface VotesData {
@@ -101,7 +111,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
   // the vote's question to disambiguate; leave single-occurrence bills alone.
   const titleCounts = new Map<string, number>();
   for (const v of recent) {
-    const key = v.bill?.title ?? v.question ?? 'Untitled vote';
+    const key = voteRowTitle(v);
     titleCounts.set(key, (titleCounts.get(key) ?? 0) + 1);
   }
 
@@ -113,7 +123,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
           const billId = vote.bill?.number
             ? `${vote.bill.congress ?? 119}-${(vote.bill.type ?? 'hr').toLowerCase()}-${vote.bill.number}`
             : null;
-          const baseTitle = vote.bill?.title ?? vote.question ?? 'Untitled vote';
+          const baseTitle = voteRowTitle(vote);
           const duplicated = (titleCounts.get(baseTitle) ?? 0) > 1;
           const billTitle =
             duplicated && vote.bill?.title && vote.question

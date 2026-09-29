@@ -21,6 +21,7 @@ import {
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { voteMeasureLabel } from '@/lib/bill-label';
 
 // ISR: Revalidate every 30 minutes
 export const dynamic = 'force-dynamic';
@@ -34,12 +35,16 @@ interface Vote {
   bill: {
     number: string;
     title: string;
+    type?: string;
+    displayTitle?: string;
   };
   question: string;
   result: string;
   date: string;
   position: string;
   chamber: string;
+  amendment?: { number: string; purpose?: string };
+  nomination?: { number: string; description: string };
 }
 
 interface Bill {
@@ -148,7 +153,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
   // Build entries from votes
   const voteEntries: AtomEntry[] = votes.map(vote => ({
     id: `${baseUrl}/vote/${vote.voteId}`,
-    title: `Voted ${vote.position} on ${vote.bill.number}: ${vote.bill.title}`,
+    title: `Voted ${vote.position} on ${voteMeasureLabel(vote)}`,
     link: `${baseUrl}/representative/${bioguideId}?tab=votes`,
     updated: new Date(vote.date),
     published: new Date(vote.date),

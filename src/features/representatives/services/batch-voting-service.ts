@@ -13,6 +13,15 @@ import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 import { circuitBreakers } from '@/lib/circuit-breaker';
 import { getSenateCorpusRollCalls } from './roll-call-corpus';
+import {
+  amendmentSponsorLabel,
+  cleanAmendmentPurpose,
+  isNominationNumber,
+  parseBillMeasure,
+  stripMeasureTags,
+  type SenateAmendmentRef,
+  type SenateNominationRef,
+} from '@/lib/senate-vote-fields';
 
 // Connection pooling with HTTP keep-alive for performance optimization
 class HttpClient {
@@ -261,6 +270,56 @@ class InMemoryCache {
   }
 }
 
+/**
+ * What a senate.gov roll-call XML voted on: the bill (for an amendment vote,
+ * the measure it amends — <amendment_to_document_number>), the amendment,
+ * the nomination, and the majority requirement. The bill title comes only
+ * from <document_title>; an amendment vote's XML carries none, so it falls
+ * back to the bill number rather than borrowing the amendment's purpose.
+ */
+export function senateXmlMeasure(
+  getTag: (tag: string) => string,
+  congress: number
+): Pick<StandardizedVote, 'bill' | 'amendment' | 'nomination' | 'majorityRequirement'> {
+  const out: Pick<StandardizedVote, 'bill' | 'amendment' | 'nomination' | 'majorityRequirement'> =
+    {};
+
+  const majority = getTag('majority_requirement');
+  if (majority) out.majorityRequirement = majority;
+
+  const amendmentNumber = getTag('amendment_number');
+  if (amendmentNumber) {
+    const purpose = cleanAmendmentPurpose(getTag('amendment_purpose'));
+    const sponsorLabel = amendmentSponsorLabel(getTag('vote_title'));
+    out.amendment = {
+      number: amendmentNumber,
+      ...(purpose ? { purpose } : {}),
+      ...(sponsorLabel ? { sponsorLabel } : {}),
+    };
+  }
+
+  const documentName = getTag('document_name');
+  if (isNominationNumber(documentName)) {
+    out.nomination = {
+      number: documentName,
+      description: getTag('document_title') || getTag('vote_document_text') || documentName,
+    };
+    return out;
+  }
+
+  const measureName = documentName || getTag('amendment_to_document_number');
+  const measure = parseBillMeasure(measureName);
+  if (measure) {
+    out.bill = {
+      congress,
+      type: measure.type,
+      number: measure.number,
+      title: (documentName && getTag('document_title')) || measureName,
+    };
+  }
+  return out;
+}
+
 // Standardized vote data structure
 export interface StandardizedVote {
   voteId: string;
@@ -282,6 +341,13 @@ export interface StandardizedVote {
     /** Fine-grained legislative subjects from Congress.gov (5–20 per bill, e.g., "Defense spending"). */
     subjects?: string[];
   };
+  /** Senate only: the amendment this roll call was on. `bill` stays the
+   *  measure it amends — never the amendment's purpose. */
+  amendment?: SenateAmendmentRef;
+  /** Senate only: the nomination this roll call was on (`bill` is unset). */
+  nomination?: SenateNominationRef;
+  /** Senate only: "1/2" or "3/5", from the roll-call XML's majority_requirement. */
+  majorityRequirement?: string;
   totals: {
     yea: number;
     nay: number;
@@ -301,6 +367,20 @@ export interface StandardizedVote {
   }>;
   sourceUrl: string;
   processedAt: string;
+}
+
+/** One member's position on a roll call, as the member vote lists return it. */
+export interface MemberVoteRecord extends Pick<
+  StandardizedVote,
+  'amendment' | 'nomination' | 'majorityRequirement'
+> {
+  voteId: string;
+  date: string;
+  question: string;
+  position: string;
+  result: string;
+  bill?: StandardizedVote['bill'];
+  rollCallNumber?: number;
 }
 
 export interface VoteListItem {
@@ -459,17 +539,7 @@ export class BatchVotingService {
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20,
     bypassCache = false
-  ): Promise<
-    Array<{
-      voteId: string;
-      date: string;
-      question: string;
-      position: string;
-      result: string;
-      bill?: StandardizedVote['bill'];
-      rollCallNumber?: number;
-    }>
-  > {
+  ): Promise<MemberVoteRecord[]> {
     const startTime = Date.now();
 
     try {
@@ -515,17 +585,7 @@ export class BatchVotingService {
     congress = getCurrentCongressNumber(),
     session = new Date().getFullYear() % 2 === 1 ? 1 : 2,
     limit = 20
-  ): Promise<
-    Array<{
-      voteId: string;
-      date: string;
-      question: string;
-      position: string;
-      result: string;
-      bill?: StandardizedVote['bill'];
-      rollCallNumber?: number;
-    }>
-  > {
+  ): Promise<MemberVoteRecord[]> {
     // Corpus first (MR10): the mirrored senate.gov corpus in Redis serves
     // every environment, with menu-derived question/result/bill metadata.
     // Live XML remains only as a fallback for cold setups where senate.gov
@@ -915,17 +975,7 @@ export class BatchVotingService {
     bypassCache = false,
     congress = getCurrentCongressNumber(),
     session = 1
-  ): Promise<
-    Array<{
-      voteId: string;
-      date: string;
-      question: string;
-      position: string;
-      result: string;
-      bill?: StandardizedVote['bill'];
-      rollCallNumber?: number;
-    }>
-  > {
+  ): Promise<MemberVoteRecord[]> {
     const allVotes = await this.fetchHouseVotesRaw(voteList, bypassCache, congress, session);
     return this.extractMemberVotes(bioguideId, allVotes);
   }
@@ -1186,17 +1236,7 @@ export class BatchVotingService {
     congress: number,
     session: number,
     bioguideId: string
-  ): Promise<
-    Array<{
-      voteId: string;
-      date: string;
-      question: string;
-      position: string;
-      result: string;
-      bill?: StandardizedVote['bill'];
-      rollCallNumber?: number;
-    }>
-  > {
+  ): Promise<MemberVoteRecord[]> {
     const allVotes = await this.fetchSenateVotesRaw(voteNumbers, congress, session);
     return this.extractMemberVotes(bioguideId, allVotes);
   }
@@ -1355,8 +1395,9 @@ export class BatchVotingService {
         chamber: 'Senate',
         rollCallNumber: voteNumber,
         date: getTag('vote_date') || new Date().toISOString(),
-        question: getTag('vote_question_text') || getTag('question') || '',
+        question: stripMeasureTags(getTag('vote_question_text') || getTag('question') || ''),
         result: getTag('vote_result') || '',
+        ...senateXmlMeasure(getTag, congress),
         totals,
         memberVotes,
         sourceUrl: `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${voteNumber.toString().padStart(5, '0')}.xml`,
@@ -1577,27 +1618,8 @@ export class BatchVotingService {
   /**
    * Extract member votes from standardized vote data
    */
-  private extractMemberVotes(
-    bioguideId: string,
-    votes: StandardizedVote[]
-  ): Array<{
-    voteId: string;
-    date: string;
-    question: string;
-    position: string;
-    result: string;
-    bill?: StandardizedVote['bill'];
-    rollCallNumber?: number;
-  }> {
-    const memberVotes: Array<{
-      voteId: string;
-      date: string;
-      question: string;
-      position: string;
-      result: string;
-      bill?: StandardizedVote['bill'];
-      rollCallNumber?: number;
-    }> = [];
+  private extractMemberVotes(bioguideId: string, votes: StandardizedVote[]): MemberVoteRecord[] {
+    const memberVotes: MemberVoteRecord[] = [];
 
     // Debug: Log the extraction process
     logger.debug('Extracting member votes', {
@@ -1619,6 +1641,9 @@ export class BatchVotingService {
           result: vote.result,
           bill: vote.bill,
           rollCallNumber: vote.rollCallNumber,
+          ...(vote.amendment ? { amendment: vote.amendment } : {}),
+          ...(vote.nomination ? { nomination: vote.nomination } : {}),
+          ...(vote.majorityRequirement ? { majorityRequirement: vote.majorityRequirement } : {}),
         });
 
         logger.debug('Found member in vote', {

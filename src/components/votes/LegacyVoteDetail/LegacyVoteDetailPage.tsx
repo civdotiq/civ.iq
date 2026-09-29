@@ -179,7 +179,7 @@ export function LegacyVoteDetailPage({
             </div>
             {voteDetail.amendment?.number && (
               <a
-                href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number}`}
+                href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-civiq-blue hover:underline self-start"
@@ -229,7 +229,7 @@ export function LegacyVoteDetailPage({
               {voteDetail.amendment.number && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <a
-                    href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number}`}
+                    href={`https://www.congress.gov/amendment/${voteDetail.congress}th-congress/senate-amendment/${voteDetail.amendment.number.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 bg-civiq-blue text-white px-3 py-1.5 text-sm font-medium hover:bg-civiq-blue/90 transition-colors"

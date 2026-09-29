@@ -4,16 +4,12 @@
  */
 
 import type { EnhancedRepresentative } from '@/types/representative';
+import type { SenateAmendmentRef, SenateNominationRef } from '@/lib/senate-vote-fields';
 
 export type VotePosition = 'Yea' | 'Nay' | 'Present' | 'Not Voting';
 
 export type VoteCategory =
-  | 'Budget'
-  | 'Healthcare'
-  | 'Defense'
-  | 'Judiciary'
-  | 'Foreign Affairs'
-  | 'Other';
+  'Budget' | 'Healthcare' | 'Defense' | 'Judiciary' | 'Foreign Affairs' | 'Other';
 
 export interface PartyTotals {
   yes: number;
@@ -47,6 +43,10 @@ export interface ApiVote {
   congressUrl?: string;
   category?: VoteCategory;
   isKeyVote?: boolean;
+  /** Senate only: the amendment voted on (`bill` is the measure it amends). */
+  amendment?: SenateAmendmentRef;
+  /** Senate only: the nomination voted on. */
+  nomination?: SenateNominationRef;
   total?: { yes: number; no: number; not_voting: number; present: number };
   party_breakdown?: PartyBreakdown;
   metadata: {

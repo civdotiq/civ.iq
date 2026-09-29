@@ -11,11 +11,14 @@ import logger from '@/lib/logging/simple-logger';
 import { getLegislatorInfoMap, getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 import { isBioguideId, isLisMemberId } from '@/lib/votes/vote-links';
 import { getRedisCache } from '@/lib/cache/redis-client';
+import { cleanAmendmentPurpose } from '@/lib/senate-vote-fields';
 import { isSenateXmlDisabled } from '@/features/representatives/services/batch-voting-service';
 import {
   expandRoll,
   getSenateVoteMenu,
+  measureTitlesFromMenu,
   rollKey,
+  senateVoteFromMenu,
   type CompactRollCall,
 } from '@/features/representatives/services/roll-call-corpus';
 
@@ -428,9 +431,19 @@ async function senateVoteFromCorpus(
     );
 
     // Menu titles for measures read "Motion to …; <measure title>".
+    // An amendment vote's tail is the amendment's purpose, not the bill's
+    // title — take the bill title from the menu's other votes on it.
     const title = entry?.t || entry?.q || 'Senate Vote';
     const semi = title.indexOf('; ');
-    const billTitle = semi > -1 ? title.slice(semi + 2).trim() : title;
+    const fromMenu =
+      entry && menu ? senateVoteFromMenu(entry, congressNum, measureTitlesFromMenu(menu)) : null;
+    // XML-parsed amendment (persisted since 2026-09-29) wins over the menu's.
+    const amendment = roll.amendment ?? fromMenu?.amendment;
+    const billTitle = amendment
+      ? (fromMenu?.bill?.title ?? entry?.i ?? title)
+      : semi > -1
+        ? title.slice(semi + 2).trim()
+        : title;
     const billType = entry?.i
       .match(/^[A-Za-z.\s]+/)?.[0]
       ?.replace(/[^A-Za-z]/g, '')
@@ -458,6 +471,10 @@ async function senateVoteFromCorpus(
       members,
       bill:
         entry?.i && billType ? { number: entry.i, title: billTitle, type: billType } : undefined,
+      amendment: amendment
+        ? { number: amendment.number, purpose: amendment.purpose ?? '' }
+        : undefined,
+      requiredMajority: roll.majorityRequirement,
       metadata: {
         source: 'senate-corpus-mirror',
         confidence: 'high',
@@ -581,10 +598,10 @@ async function parseSenateVote(
             type: String(rcv.document.document_type || 'Bill'),
           }
         : undefined,
-      amendment: rcv.amendment
+      amendment: rcv.amendment?.amendment_number
         ? {
-            number: String(rcv.amendment.amendment_number || ''),
-            purpose: String(rcv.amendment.amendment_purpose || ''),
+            number: String(rcv.amendment.amendment_number),
+            purpose: cleanAmendmentPurpose(String(rcv.amendment.amendment_purpose || '')) ?? '',
           }
         : undefined,
       metadata: {
