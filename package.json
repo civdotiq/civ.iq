@@ -132,7 +132,7 @@
     "@eslint/compat": "2.1.1",
     "@eslint/eslintrc": "3.3.7",
     "@mapbox/mbtiles": "0.12.1",
-    "@mapbox/vector-tile": "2.0.4",
+    "@mapbox/vector-tile": "3.0.0",
     "@playwright/test": "1.63.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "15.0.7",
