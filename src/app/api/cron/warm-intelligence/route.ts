@@ -10,6 +10,11 @@
  * (finance-jurisdiction, vote-finance, vote-prediction, influence-chain)
  * for every current member of Congress so cold-path compute never hits a real user.
  *
+ * Then refreshes each rep's civic brief (the /results card summary). It runs
+ * after the four because it reads the finance-jurisdiction and influence-chain
+ * caches, and it always recomputes: the brief's TTL is 24h and a full cycle is
+ * ~13.5h, so a cache-respecting warm would leave it cold for part of each day.
+ *
  * Chunking strategy:
  *   - One slice of SLICE_SIZE reps per invocation, processed in inner batches
  *     of REP_CONCURRENCY to bound peak load on Congress/FEC APIs.
@@ -29,9 +34,11 @@ import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
+import { assembleCivicBrief } from '@/lib/intelligence/analyzers/civic-brief-assembler';
 import { runWithFecPriority } from '@/lib/fec/fec-rate-limiter';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 const DEFAULT_SLICE_SIZE = 20;
 // Concurrent reps per inner batch. Each rep fans out ~8-12 FEC calls across the
@@ -40,6 +47,10 @@ const DEFAULT_SLICE_SIZE = 20;
 const DEFAULT_REP_CONCURRENCY = 3;
 const PER_ANALYZER_TIMEOUT_MS = 55_000;
 const CURSOR_KEY = 'cron:warm-intel:cursor';
+// Briefs start only while the invocation has room left under maxDuration for
+// a full 55s brief; later reps in the slice report `skipped` and are picked
+// up next cycle (their previous brief stays cached until its TTL).
+const BRIEF_DEADLINE_MS = 230_000;
 
 function getSliceSize(): number {
   const raw = process.env.WARM_INTEL_SLICE_SIZE;
@@ -55,11 +66,12 @@ function getRepConcurrency(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_REP_CONCURRENCY;
 }
 
-type AnalyzerName = 'finance_jurisdiction' | 'vote_finance' | 'vote_prediction' | 'influence_chain';
+type AnalyzerName =
+  'finance_jurisdiction' | 'vote_finance' | 'vote_prediction' | 'influence_chain' | 'civic_brief';
 
 interface AnalyzerOutcome {
   name: AnalyzerName;
-  status: 'ok' | 'error' | 'timeout';
+  status: 'ok' | 'error' | 'timeout' | 'skipped';
   elapsedMs: number;
   error?: string;
 }
@@ -101,44 +113,64 @@ function withTimeoutLabel<T>(
   });
 }
 
-async function warmRep(bioguideId: string): Promise<RepOutcome> {
+async function runAnalyzer(
+  name: AnalyzerName,
+  run: () => Promise<unknown>
+): Promise<AnalyzerOutcome> {
+  const start = Date.now();
+  const outcome = await withTimeoutLabel(run(), PER_ANALYZER_TIMEOUT_MS, name);
+  const elapsedMs = Date.now() - start;
+  if (outcome.ok) {
+    return { name, status: 'ok', elapsedMs };
+  }
+  return {
+    name,
+    status: outcome.reason === 'timeout' ? 'timeout' : 'error',
+    elapsedMs,
+    error: outcome.error,
+  };
+}
+
+async function warmRep(bioguideId: string, invocationStart: number): Promise<RepOutcome> {
   const repStart = Date.now();
   const results = await Promise.all(
-    ANALYZERS.map(async ({ name, run }): Promise<AnalyzerOutcome> => {
-      const start = Date.now();
-      const outcome = await withTimeoutLabel(run(bioguideId), PER_ANALYZER_TIMEOUT_MS, name);
-      const elapsedMs = Date.now() - start;
-      if (outcome.ok) {
-        return { name, status: 'ok', elapsedMs };
-      }
-      return {
-        name,
-        status: outcome.reason === 'timeout' ? 'timeout' : 'error',
-        elapsedMs,
-        error: outcome.error,
-      };
-    })
+    ANALYZERS.map(({ name, run }) => runAnalyzer(name, () => run(bioguideId)))
+  );
+  results.push(
+    Date.now() - invocationStart < BRIEF_DEADLINE_MS
+      ? await runAnalyzer('civic_brief', () => assembleCivicBrief(bioguideId, { refresh: true }))
+      : { name: 'civic_brief', status: 'skipped', elapsedMs: 0 }
   );
   return { bioguideId, elapsedMs: Date.now() - repStart, results };
 }
 
-async function processSlice(reps: { bioguideId: string }[]): Promise<RepOutcome[]> {
+async function processSlice(
+  reps: { bioguideId: string }[],
+  invocationStart: number
+): Promise<RepOutcome[]> {
   const outcomes: RepOutcome[] = [];
   const concurrency = getRepConcurrency();
   for (let i = 0; i < reps.length; i += concurrency) {
     const batch = reps.slice(i, i + concurrency);
-    const batchOutcomes = await Promise.all(batch.map(rep => warmRep(rep.bioguideId)));
+    const batchOutcomes = await Promise.all(
+      batch.map(rep => warmRep(rep.bioguideId, invocationStart))
+    );
     outcomes.push(...batchOutcomes);
   }
   return outcomes;
 }
 
 function summarize(outcomes: RepOutcome[]) {
-  const counts: Record<AnalyzerName, { ok: number; error: number; timeout: number }> = {
-    finance_jurisdiction: { ok: 0, error: 0, timeout: 0 },
-    vote_finance: { ok: 0, error: 0, timeout: 0 },
-    vote_prediction: { ok: 0, error: 0, timeout: 0 },
-    influence_chain: { ok: 0, error: 0, timeout: 0 },
+  const zero = () => ({ ok: 0, error: 0, timeout: 0, skipped: 0 });
+  const counts: Record<
+    AnalyzerName,
+    { ok: number; error: number; timeout: number; skipped: number }
+  > = {
+    finance_jurisdiction: zero(),
+    vote_finance: zero(),
+    vote_prediction: zero(),
+    influence_chain: zero(),
+    civic_brief: zero(),
   };
   for (const rep of outcomes) {
     for (const r of rep.results) {
@@ -189,10 +221,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Run under cron priority so every nested FEC call yields to live traffic.
-    const outcomes = await runWithFecPriority('cron', () => processSlice(slice));
+    const outcomes = await runWithFecPriority('cron', () => processSlice(slice, startTime));
     const totalsByAnalyzer = summarize(outcomes);
     const errorCount = outcomes.reduce(
-      (acc, rep) => acc + rep.results.filter(r => r.status !== 'ok').length,
+      (acc, rep) =>
+        acc + rep.results.filter(r => r.status === 'error' || r.status === 'timeout').length,
       0
     );
     const okCount = outcomes.reduce(
@@ -209,7 +242,7 @@ export async function POST(request: NextRequest) {
       sliceStart: start,
       sliceEnd: end,
       reps: outcomes.length,
-      analyzerCalls: outcomes.length * ANALYZERS.length,
+      analyzerCalls: outcomes.length * (ANALYZERS.length + 1),
       ok: okCount,
       errors: errorCount,
       totalTimeMs: totalTime,
@@ -220,7 +253,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       warmed: outcomes.length,
-      analyzerCalls: outcomes.length * ANALYZERS.length,
+      analyzerCalls: outcomes.length * (ANALYZERS.length + 1),
       ok: okCount,
       errors: errorCount,
       slice: [start, end],

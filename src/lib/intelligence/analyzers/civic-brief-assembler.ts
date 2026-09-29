@@ -85,19 +85,25 @@ const METHODOLOGY =
  * Generate a civic intelligence brief for a representative.
  * Returns cached result if fresh, otherwise computes from scratch.
  */
-export async function assembleCivicBrief(bioguideId: string): Promise<CivicBriefInsight | null> {
+export async function assembleCivicBrief(
+  bioguideId: string,
+  options: { refresh?: boolean } = {}
+): Promise<CivicBriefInsight | null> {
   const cacheKey = `insight:civic_brief:${bioguideId}`;
 
-  // 1. Check cache
-  try {
-    const cached = await getRedisCache().get<CivicBriefInsight>(cacheKey);
-    if (cached) {
-      logger.info('[CivicBrief] Cache hit', { bioguideId });
-      trackInsightCacheHit('civic-brief');
-      return cached;
+  // 1. Check cache. The warm cron passes `refresh` to recompute before the
+  // 24h TTL lapses; a failed recompute never overwrites the cached brief.
+  if (!options.refresh) {
+    try {
+      const cached = await getRedisCache().get<CivicBriefInsight>(cacheKey);
+      if (cached) {
+        logger.info('[CivicBrief] Cache hit', { bioguideId });
+        trackInsightCacheHit('civic-brief');
+        return cached;
+      }
+    } catch {
+      // Cache miss — continue
     }
-  } catch {
-    // Cache miss — continue
   }
 
   // 2-7. Fetch, compute, narrate, cache — all under timeout
