@@ -37,3 +37,16 @@ export function configureTransformersEnv(env: TransformersEnv): void {
   env.allowLocalModels = false;
   env.cacheDir = TRANSFORMERS_CACHE_DIR;
 }
+
+/**
+ * Emergency kill switch: set CIVIQ_ML_PIPELINES=off (then redeploy) to stop
+ * every model load. Loaders call this first inside their try, so the existing
+ * failure path marks the pipeline unavailable and callers fall back to
+ * keyword matching — the behaviour before the models worked on Vercel — with
+ * no huggingface.co download and no native library load.
+ */
+export function assertMlPipelinesEnabled(): void {
+  if (process.env.CIVIQ_ML_PIPELINES === 'off') {
+    throw new Error('ML pipelines disabled by CIVIQ_ML_PIPELINES=off');
+  }
+}

@@ -234,6 +234,17 @@ const MONEY_SWR: SwrOptions = {
   source: 'fec',
 };
 
+// Visitor reads treat any cached money section as fresh for its whole Redis
+// life, so page traffic never makes FEC calls. Otherwise every view of an
+// entry older than 24h fired a background refresh at live priority; those
+// hit the 60/min shared key, failed with 429s (~600/day), and ate the budget
+// the warm-record-money cron needs. Only the cron refreshes (MONEY_SWR).
+// A true cache miss still computes inline.
+const MONEY_VISITOR_SWR: SwrOptions = {
+  ...MONEY_SWR,
+  freshMs: MONEY_SWR.maxStaleMs,
+};
+
 function moneyCacheKey(candidateId: string, cycle: number): string {
   return `record-card:money:v1:${candidateId}:${cycle}`;
 }
@@ -316,7 +327,7 @@ async function fetchMoneySection(bioguideId: string, state: string): Promise<Mon
     const { data } = await cachedStaleWhileRevalidate(
       moneyCacheKey(candidateId, cycle),
       () => computeMoneySection(candidateId, cycle, state),
-      MONEY_SWR
+      MONEY_VISITOR_SWR
     );
     return data ? { money: data, moneyStatus: 'ok' } : { money: null, moneyStatus: 'none' };
   } catch (error) {

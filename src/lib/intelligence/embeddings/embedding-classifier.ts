@@ -21,7 +21,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { configureTransformersEnv } from './transformers-env';
+import { assertMlPipelinesEnabled, configureTransformersEnv } from './transformers-env';
 import { classifySectors } from './cosine-similarity';
 import type { SectorClassification, SectorEmbeddingEntry } from './types';
 
@@ -134,6 +134,7 @@ async function getOrCreatePipeline(): Promise<FeatureExtractionPipeline | null> 
  */
 async function loadPipeline(): Promise<FeatureExtractionPipeline | null> {
   try {
+    assertMlPipelinesEnabled();
     // Dynamic import — the library is only loaded when first needed
     const { pipeline, env } = await import('@huggingface/transformers');
 

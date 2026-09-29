@@ -11,7 +11,7 @@
  * to prevent XSS attacks while allowing basic formatting.
  */
 
-import DOMPurify from 'dompurify';
+import DOMPurify from 'isomorphic-dompurify';
 
 /**
  * Strict sanitization configuration for Wikipedia HTML content

@@ -10,9 +10,28 @@
 
 import os from 'node:os';
 import {
+  assertMlPipelinesEnabled,
   configureTransformersEnv,
   TRANSFORMERS_CACHE_DIR,
 } from '@/lib/intelligence/embeddings/transformers-env';
+
+describe('assertMlPipelinesEnabled', () => {
+  const original = process.env.CIVIQ_ML_PIPELINES;
+  afterEach(() => {
+    if (original === undefined) delete process.env.CIVIQ_ML_PIPELINES;
+    else process.env.CIVIQ_ML_PIPELINES = original;
+  });
+
+  it('allows loads by default', () => {
+    delete process.env.CIVIQ_ML_PIPELINES;
+    expect(() => assertMlPipelinesEnabled()).not.toThrow();
+  });
+
+  it('throws when CIVIQ_ML_PIPELINES=off', () => {
+    process.env.CIVIQ_ML_PIPELINES = 'off';
+    expect(() => assertMlPipelinesEnabled()).toThrow('CIVIQ_ML_PIPELINES=off');
+  });
+});
 
 describe('configureTransformersEnv', () => {
   it('points the model cache at a writable temp directory', () => {
