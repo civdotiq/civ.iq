@@ -71,8 +71,12 @@ export function amendmentSponsorLabel(voteTitle: string): string | undefined {
  *  "Booker", "Van Hollen Amdt. No. 5632" gives "Van Hollen". Undefined for a
  *  label with no sponsor ("Amdt. No. 6776"). */
 export function amendmentSponsorName(sponsorLabel: string | undefined): string | undefined {
-  const match = sponsorLabel?.trim().match(/^(.+?)\s+Amdt\. No\. \d+$/);
-  return match?.[1];
+  const label = sponsorLabel?.trim();
+  if (!label) return undefined;
+  const marker = ' Amdt. No. ';
+  const at = label.lastIndexOf(marker);
+  if (at <= 0 || !/^\d+$/.test(label.slice(at + marker.length))) return undefined;
+  return label.slice(0, at).trim() || undefined;
 }
 
 /** Split a vote-menu title "<head>; <tail>" at the first "; ". */

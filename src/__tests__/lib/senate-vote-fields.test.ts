@@ -51,6 +51,7 @@ describe('senate-vote-fields', () => {
     expect(amendmentSponsorName('Van Hollen Amdt. No. 5632')).toBe('Van Hollen');
     expect(amendmentSponsorName('Amdt. No. 6776')).toBeUndefined();
     expect(amendmentSponsorName(undefined)).toBeUndefined();
+    expect(amendmentSponsorName('Booker Amdt. No. 68a5')).toBeUndefined();
   });
 
   it('splits menu titles at the first "; "', () => {
