@@ -233,6 +233,7 @@ export function ProfileRedesign({ representative }: ProfileRedesignProps) {
                   <RecentVotesSection
                     bioguideId={representative.bioguideId}
                     chamber={representative.chamber}
+                    memberParty={representative.party}
                     votes={votesResponse?.votes}
                     totalResults={votesResponse?.totalResults}
                     loading={batchLoading}

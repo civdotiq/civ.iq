@@ -1573,6 +1573,7 @@ Get comprehensive details about a specific Senate roll call vote, including all 
 **Parameters:**
 
 - `voteId`: Senate roll call vote number (numeric)
+- `view=tally` (optional): return `{ tally, success, metadata }` instead of the full vote — `tally` holds `yeas`, `nays`, `present`, `notVoting`, `seats`, `requiredMajority` and a per-party `parties` array (`{ party, yea, nay, other }`), without the member list
 
 **Data Source:**
 
