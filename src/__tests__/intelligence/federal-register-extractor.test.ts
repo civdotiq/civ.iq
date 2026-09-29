@@ -285,7 +285,7 @@ describe('Federal Register Preamble Extractor', () => {
       await extractPreambleFacts('2025-12345');
 
       expect(mockCacheSet).toHaveBeenCalledWith(
-        'insight:preamble:2025-12345',
+        'insight:preamble:v2:2025-12345',
         expect.objectContaining({ documentNumber: '2025-12345' }),
         30 * 24 * 60 * 60
       );

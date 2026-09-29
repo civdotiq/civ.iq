@@ -150,10 +150,22 @@ describe('civic NER', () => {
     await extractEntities('EPA issues rule', '2025-12345');
 
     expect(mockRedisSet).toHaveBeenCalledWith(
-      'ner2:2025-12345',
+      'ner3:2025-12345',
       expect.any(Array),
       expect.any(Number)
     );
+  });
+
+  it('does not cache regex-only results when the model fails to load', async () => {
+    mockPipeline.mockRejectedValue(
+      new Error('libonnxruntime.so.1: cannot open shared object file')
+    );
+
+    const entities = await extractEntities('EPA fines $1,000,000', '2025-12345');
+
+    // Regex MONEY still comes back to the caller, but is never pinned in Redis.
+    expect(entities.some(e => e.type === 'MONEY')).toBe(true);
+    expect(mockRedisSet).not.toHaveBeenCalled();
   });
 
   it('returns cached results from Redis', async () => {

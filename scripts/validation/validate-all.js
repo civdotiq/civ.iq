@@ -46,8 +46,8 @@ const tasks = [
   {
     // Every function that ships onnxruntime-node's native binding must also
     // ship libonnxruntime.so.1, or transformers fails at dlopen on Vercel and
-    // the ML pipelines silently fall back to keywords. The postbuild step adds
-    // it; this verifies the build output (scripts/onnx-trace.mjs).
+    // the ML pipelines silently fall back to keywords. Reads the build output;
+    // the fix is the ONNX_NODE_SHARED_LIB include in next.config.mjs.
     name: 'ONNX Trace Check',
     command: 'npm run check:onnx-trace',
     critical: true,

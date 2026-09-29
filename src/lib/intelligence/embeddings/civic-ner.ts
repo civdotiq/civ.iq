@@ -24,6 +24,9 @@ import type { CivicEntity } from './types';
 const MODEL_ID = 'onnx-community/distilbert-NER-ONNX';
 const EXTRACT_TIMEOUT_MS = 10_000;
 const CACHE_TTL = 30 * 24 * 60 * 60; // 30 days
+// ner3: ner2 entries were written while the model failed to load on Vercel
+// (2026-09), so they hold regex MONEY/DATE entities only.
+const CACHE_PREFIX = 'ner3';
 
 /** Approximate token window for the 512-token BERT limit. */
 const WINDOW_SIZE = 1600; // ~400 tokens at ~4 chars/token
@@ -71,7 +74,7 @@ export async function extractEntities(
   // Check Redis cache
   if (documentNumber) {
     try {
-      const cached = await getRedisCache().get<CivicEntity[]>(`ner2:${documentNumber}`);
+      const cached = await getRedisCache().get<CivicEntity[]>(`${CACHE_PREFIX}:${documentNumber}`);
       if (cached) return cached;
     } catch {
       // Cache miss — continue
@@ -79,12 +82,16 @@ export async function extractEntities(
   }
 
   try {
-    const results = await withTimeout(extractInternal(text), EXTRACT_TIMEOUT_MS);
+    const { entities: results, usedModel } = await withTimeout(
+      extractInternal(text),
+      EXTRACT_TIMEOUT_MS
+    );
 
-    // Cache on success
-    if (documentNumber && results.length > 0) {
+    // Cache on success — never a regex-only fallback, or a model outage
+    // would pin model-less results for the full TTL.
+    if (documentNumber && usedModel && results.length > 0) {
       try {
-        await getRedisCache().set(`ner2:${documentNumber}`, results, CACHE_TTL);
+        await getRedisCache().set(`${CACHE_PREFIX}:${documentNumber}`, results, CACHE_TTL);
       } catch {
         // Non-fatal
       }
@@ -111,7 +118,9 @@ export function _resetForTesting(): void {
 
 // ── Internal ────────────────────────────────────────────────────────
 
-async function extractInternal(text: string): Promise<CivicEntity[]> {
+async function extractInternal(
+  text: string
+): Promise<{ entities: CivicEntity[]; usedModel: boolean }> {
   const pipe = await getOrCreatePipeline();
 
   // ML entities (may be null if pipeline fails to load)
@@ -139,7 +148,10 @@ async function extractInternal(text: string): Promise<CivicEntity[]> {
   const regexEntities = extractRegexEntities(text);
 
   // Merge and deduplicate
-  return deduplicateEntities([...mlEntities, ...regexEntities]);
+  return {
+    entities: deduplicateEntities([...mlEntities, ...regexEntities]),
+    usedModel: pipe !== null,
+  };
 }
 
 /**

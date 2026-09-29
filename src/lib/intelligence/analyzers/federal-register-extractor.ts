@@ -47,7 +47,9 @@ import type {
 } from '@/types/federal-register';
 
 const CACHE_TTL = 30 * 24 * 60 * 60; // 30 days — preamble content is immutable
-const CACHE_PREFIX = 'insight:preamble';
+// v2: v1 insights were cached while NER failed to load on Vercel (2026-09),
+// so their `entities` hold regex MONEY/DATE matches only.
+const CACHE_PREFIX = 'insight:preamble:v2';
 const MAX_AI_RETRIES = 3;
 
 const DISCLAIMER =

@@ -46,11 +46,25 @@ Before the upgrade landed, calibration data was captured by running `next dev --
 
 ## Recurrence: broken again on Vercel only (found 2026-09-29)
 
-The 4.1.0 fix held in pure Node, but production was still silently on keywords. Evidence: `/api/intelligence/federal-register/2026-19945` returned only regex MONEY/DATE entities, while `extractEntities()` locally on the same text found 117 model entities (37 ORG, 11 LOC). The smoke test could not catch this because it runs where `node_modules` is writable and fully installed.
+The 4.1.0 fix held in pure Node, but production was still silently on keywords. Evidence: `/api/intelligence/federal-register/2026-19945` returned only regex MONEY/DATE entities, while `extractEntities()` locally on the same text found 117 model entities (37 ORG, 11 LOC). The runtime log for the same failure on a preview deployment:
+
+```
+[CivicNER] Pipeline load failed ... Failed to load external module @huggingface/transformers-31f28a0eb9b916d1:
+Error: libonnxruntime.so.1: cannot open shared object file: No such file or directory
+```
+
+The smoke test could not catch this because it runs where `node_modules` is writable and fully installed.
 
 Two independent causes, each sufficient on its own:
 
-1. **Missing shared library.** Next's tracer ships `onnxruntime-node/.../onnxruntime_binding.node` but not the `libonnxruntime.so.1` it dynamically links, so `import('@huggingface/transformers')` throws at dlopen. Fix: a `postbuild` step (`scripts/onnx-trace.mjs --fix`) adds the `.so` to every `.nft.json` trace that contains the binding (44 functions); `npm run check:onnx-trace` in `validate:all` verifies it. `outputFileTracingIncludes` was tried first and is not enough: Next skips it for SSG pages, and `/ask/[slug]/[entityId]` (SSG via an empty `generateStaticParams`) runs the analyzers.
+1. **Missing shared library.** Next's tracer ships `onnxruntime-node/.../onnxruntime_binding.node` but not the `libonnxruntime.so.1` it dynamically links. Fix: `ONNX_NODE_SHARED_LIB` in `outputFileTracingIncludes` (next.config.mjs), guarded by `npm run check:onnx-trace` in `validate:all`.
 2. **Read-only cache dir.** The default cache is `node_modules/@huggingface/transformers/.cache/`, under read-only `/var/task`. The library does not catch the failed cache write, so `pipeline()` rejects after downloading. Fix: `configureTransformersEnv()` (`src/lib/intelligence/embeddings/transformers-env.ts`) moves the cache to `os.tmpdir()`.
 
-Also note: `compiler.removeConsole` strips `console.log` in production builds, so the `[...] Pipeline loaded` info lines never reach Vercel logs. Only the `Pipeline load failed` warnings do. Verify ML in production by output shape (e.g. ORG/LOC entities on a Federal Register document), not by log search.
+Stale cache: every Federal Register entity result written during the outage was regex-only and cached for 30 days. The keys were bumped (`ner2` → `ner3`, `insight:preamble` → `insight:preamble:v2`), and `extractEntities()` no longer caches a result when the model did not run.
+
+### Traps hit while fixing it
+
+- **Patching `.nft.json` after the build does nothing on Vercel.** Vercel's Next 16 build adapter (`NEXT_ADAPTER_PATH`) collects each function's files from the traces _inside_ `next build`, before any `postbuild` script runs. A postbuild patch passed the local check but the preview still failed at dlopen. The includes are applied inside `next build`, so they work.
+- **Turbopack include keys are globs where `[x]` is a character class.** The old `'/ask/[slug]/[entityId]'` key never matched. Its data files only arrived through the tracer's own `readFile(join(process.cwd(), ...))` analysis. Use `'/ask/**'`. (The webpack-only `collect-build-traces.js` uses picomatch, which also accepts literal brackets. Do not read that file to predict Turbopack behavior.)
+- **Turbopack does not trace a `stat(join(process.cwd(), ...))` path**, so a "reference the file in code" trick does not ship it.
+- **Verify with a scoped, narrow log query.** Project-wide `get_runtime_logs` queries timed out; `deploymentId` plus a 4-minute window returned the full request log, including the warning above.

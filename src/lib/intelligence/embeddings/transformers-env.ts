@@ -14,7 +14,8 @@
  * Vercel) is writable, so the cache must live there.
  *
  * The other half of that outage (onnxruntime-node's shared library missing
- * from function bundles) is fixed at build time by `scripts/onnx-trace.mjs`.
+ * from function bundles) is fixed by the ONNX_NODE_SHARED_LIB tracing include in
+ * next.config.mjs.
  * See docs/EMBEDDING-PIPELINE-BROKEN-2026-04.md.
  */
 
