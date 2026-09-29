@@ -6,6 +6,7 @@
 import {
   amendmentNumberFromText,
   amendmentSponsorLabel,
+  amendmentSponsorName,
   cleanAmendmentPurpose,
   isNominationNumber,
   nominationDescriptionFromTitle,
@@ -46,6 +47,11 @@ describe('senate-vote-fields', () => {
     expect(amendmentSponsorLabel('Amdt. No. 6776')).toBe('Amdt. No. 6776');
     expect(amendmentSponsorLabel('Motion to Table Lee Amdt. No. 4286')).toBeUndefined();
     expect(amendmentSponsorLabel('Motion to Invoke Cloture: Cruz Amdt. No. 6776')).toBeUndefined();
+    expect(amendmentSponsorName('Booker Amdt. No. 6835')).toBe('Booker');
+    expect(amendmentSponsorName('Van Hollen Amdt. No. 5632')).toBe('Van Hollen');
+    expect(amendmentSponsorName('Amdt. No. 6776')).toBeUndefined();
+    expect(amendmentSponsorName(undefined)).toBeUndefined();
+    expect(amendmentSponsorName('Booker Amdt. No. 68a5')).toBeUndefined();
   });
 
   it('splits menu titles at the first "; "', () => {
