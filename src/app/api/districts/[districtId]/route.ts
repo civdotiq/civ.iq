@@ -251,7 +251,7 @@ async function fetchAgeDistribution(
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
     const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
 
-    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return [];
 
     const data = await response.json();
@@ -357,7 +357,7 @@ async function fetchIncomeAndEmployment(
     const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
     const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
 
-    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return { income: [], employment: [] };
 
     const data = await response.json();
@@ -519,7 +519,7 @@ async function getDistrictDemographics(
     });
 
     const response = await fetch(censusUrl, {
-      signal: AbortSignal.timeout(30000), // 30 second timeout
+      signal: AbortSignal.timeout(15000), // 15s: three Census calls must fit in maxDuration 60
     });
 
     logger.info('Census API response received', {

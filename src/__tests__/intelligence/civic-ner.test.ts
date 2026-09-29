@@ -172,6 +172,19 @@ describe('civic NER', () => {
     expect(mockRedisSet).not.toHaveBeenCalled();
   });
 
+  it('never loads the model when CIVIQ_ML_PIPELINES=off', async () => {
+    process.env.CIVIQ_ML_PIPELINES = 'off';
+    try {
+      const result = await extractEntitiesDetailed('EPA fines $1,000,000', '2025-12345');
+
+      expect(mockPipeline).not.toHaveBeenCalled();
+      expect(result.complete).toBe(false);
+      expect(result.entities.some(e => e.type === 'MONEY')).toBe(true);
+    } finally {
+      delete process.env.CIVIQ_ML_PIPELINES;
+    }
+  });
+
   it('reports incomplete when the model fails to load', async () => {
     mockPipeline.mockRejectedValue(new Error('libonnxruntime.so.1: cannot open shared object file'));
 

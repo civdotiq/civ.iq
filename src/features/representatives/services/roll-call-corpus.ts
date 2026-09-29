@@ -36,9 +36,10 @@ import {
   stripMeasureTags,
 } from '@/lib/senate-vote-fields';
 
-/** Roll calls are immutable once cast — keep them 120 days and refresh TTL
- *  on rebuilds so an active Congress never ages out. */
-export const ROLL_TTL_SECONDS = 120 * 24 * 60 * 60;
+/** Roll calls are immutable once cast — keep them for the 90-day Redis TTL
+ *  cap (MAX_TTL_SECONDS; longer values are clamped and logged as errors) and
+ *  refresh TTL on rebuilds so an active Congress never ages out. */
+export const ROLL_TTL_SECONDS = 90 * 24 * 60 * 60;
 
 /** Batched Redis reads when assembling corpora. */
 export const READ_BATCH = 25;

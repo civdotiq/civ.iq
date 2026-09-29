@@ -13,13 +13,19 @@ const cacheStore = new Map<string, unknown>();
 const mockAggregate = jest.fn();
 const mockBySize = jest.fn();
 const mockIndexWrite = jest.fn();
+const visitorSwrOptions: Array<{ freshMs: number; maxStaleMs: number }> = [];
 
 jest.mock('@/features/record-card/money-index', () => ({
   writeMoneyIndexEntry: (...args: unknown[]) => mockIndexWrite(...args),
 }));
 
 jest.mock('@/services/cache/unified-cache.service', () => ({
-  cachedStaleWhileRevalidate: async (key: string, fetcher: () => Promise<unknown>) => {
+  cachedStaleWhileRevalidate: async (
+    key: string,
+    fetcher: () => Promise<unknown>,
+    options: { freshMs: number; maxStaleMs: number }
+  ) => {
+    visitorSwrOptions.push(options);
     if (cacheStore.has(key)) return { data: cacheStore.get(key), state: 'fresh', fetchedAt: 0 };
     const data = await fetcher();
     cacheStore.set(key, data);
@@ -105,6 +111,7 @@ function finance(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   cacheStore.clear();
+  visitorSwrOptions.length = 0;
   mockAggregate.mockReset().mockResolvedValue(finance());
   mockBySize.mockReset().mockResolvedValue([{ size: 0, total: 200_000, count: 5000 }]);
   mockIndexWrite.mockReset().mockResolvedValue(undefined);
@@ -153,6 +160,12 @@ describe('Record Card money section', () => {
     expect(data?.moneyStatus).toBe('ok');
     expect(mockAggregate).not.toHaveBeenCalled();
     expect(mockBySize).not.toHaveBeenCalled();
+  });
+
+  test('visitor reads never trigger a background FEC refresh', async () => {
+    await getRecordCardData('C000127');
+    // Fresh for the entry's whole Redis life: only the warm cron refreshes.
+    expect(visitorSwrOptions[0]!.freshMs).toBe(visitorSwrOptions[0]!.maxStaleMs);
   });
 
   test('empty breakdowns (throttled) → rendered but not cached', async () => {

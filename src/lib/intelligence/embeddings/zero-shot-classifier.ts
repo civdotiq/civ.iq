@@ -16,7 +16,7 @@
 
 import { createHash } from 'crypto';
 import logger from '@/lib/logging/simple-logger';
-import { configureTransformersEnv } from './transformers-env';
+import { assertMlPipelinesEnabled, configureTransformersEnv } from './transformers-env';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import type { SectorClassification, ZeroShotResult } from './types';
@@ -170,6 +170,7 @@ async function getOrCreatePipeline(): Promise<ZeroShotPipeline | null> {
 
 async function loadPipeline(): Promise<ZeroShotPipeline | null> {
   try {
+    assertMlPipelinesEnabled();
     const { pipeline, env } = await import('@huggingface/transformers');
     configureTransformersEnv(env);
 

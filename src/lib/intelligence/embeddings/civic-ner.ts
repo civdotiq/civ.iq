@@ -17,7 +17,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { configureTransformersEnv } from './transformers-env';
+import { assertMlPipelinesEnabled, configureTransformersEnv } from './transformers-env';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import type { CivicEntity } from './types';
 
@@ -346,6 +346,7 @@ async function getOrCreatePipeline(): Promise<NERPipeline | null> {
 
 async function loadPipeline(): Promise<NERPipeline | null> {
   try {
+    assertMlPipelinesEnabled();
     const { pipeline, env } = await import('@huggingface/transformers');
     configureTransformersEnv(env);
 
