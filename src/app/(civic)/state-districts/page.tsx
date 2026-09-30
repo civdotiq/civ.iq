@@ -1,201 +1,23 @@
-'use client';
-
 /**
- * State Legislative Districts Index Page
- *
- * Displays all 50 states + DC for browsing state legislative district maps.
- *
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { BreadcrumbSchema } from '@/components/seo/JsonLd';
-import { getAllStateLegislatures, getTotalSeats } from '@/lib/data/static-state-legislatures';
-import { getStateName } from '@/lib/data/us-states';
-import { ExploreFooter } from '@/components/seo/ExploreFooter';
+import { getAllStateLegislatures } from '@/lib/data/static-state-legislatures';
+import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
+import { StateDistrictsDirectory, type FirstDistricts } from './StateDistrictsDirectory';
 
-export default function StateDistrictsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+// The roster corpus is committed and refreshed weekly; a day is plenty.
+export const revalidate = 86400;
 
-  // Get all state legislature data
-  const legislatures = getAllStateLegislatures();
-  const stateCodes = Object.keys(legislatures).filter(code => code !== 'DC');
-
-  // Filter states based on search
-  const filteredStates = stateCodes.filter(code => {
-    const name = getStateName(code) ?? code;
-    return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  return (
-    <>
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://civdotiq.org' },
-          { name: 'State Districts', url: 'https://civdotiq.org/state-districts' },
-        ]}
-      />
-      <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
-        <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb Navigation */}
-          <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-civiq-blue">
-              Home
-            </Link>
-            <span className="mx-2">›</span>
-            <Link href="/states" className="hover:text-civiq-blue">
-              States
-            </Link>
-            <span className="mx-2">›</span>
-            <span className="font-medium text-gray-900">State Districts</span>
-          </nav>
-
-          {/* Page header */}
-          <h1 className="accent-section-header-green text-4xl text-center mb-8">
-            State Legislative Districts
-          </h1>
-
-          <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Explore interactive maps of state legislative districts across all 50 states. View
-            senate and house district boundaries with detailed information.
-          </p>
-
-          {/* Search Bar */}
-          <div className="max-w-md mx-auto mb-12">
-            <input
-              type="text"
-              placeholder="Search states..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-green focus:border-transparent"
-            />
-          </div>
-
-          {/* States Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStates.map(code => {
-              const legislature = legislatures[code];
-              if (!legislature) return null;
-
-              const totalDistricts = getTotalSeats(code) ?? 0;
-              const stateName = getStateName(code) ?? code;
-              const lowerCode = code.toLowerCase();
-
-              return (
-                <div
-                  key={code}
-                  className="bg-white border-2 border-black hover:border-civiq-green transition-colors p-6"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold">{stateName}</h3>
-                      <p className="text-gray-500">{code}</p>
-                    </div>
-                    <span className="text-3xl font-bold text-civiq-green">{totalDistricts}</span>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    {legislature.unicameral ? (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">{legislature.chambers.lower.name}:</span>
-                        <span className="font-medium">
-                          {legislature.chambers.lower.seats} districts
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">{legislature.chambers.upper.name}:</span>
-                          <span className="font-medium">
-                            {legislature.chambers.upper.seats} districts
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">{legislature.chambers.lower.name}:</span>
-                          <span className="font-medium">
-                            {legislature.chambers.lower.seats} districts
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    {legislature.unicameral ? (
-                      <Link
-                        href={`/state-districts/${lowerCode}/lower/1`}
-                        className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-civiq-green transition-colors font-medium"
-                      >
-                        View Districts
-                      </Link>
-                    ) : (
-                      <>
-                        <Link
-                          href={`/state-districts/${lowerCode}/upper/1`}
-                          className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-civiq-green transition-colors font-medium"
-                        >
-                          View {legislature.chambers.upper.name} Districts
-                        </Link>
-                        <Link
-                          href={`/state-districts/${lowerCode}/lower/1`}
-                          className="block w-full text-center bg-white text-civiq-green py-2 border-2 border-civiq-green hover:bg-civiq-green hover:text-white transition-colors font-medium"
-                        >
-                          View {legislature.chambers.lower.name} Districts
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Summary Stats */}
-          <div className="mt-16 accent-card-stripe-green p-8">
-            <h2 className="accent-heading text-2xl mb-6 text-center">
-              State Legislative Districts Overview
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div>
-                <p className="text-4xl font-bold text-civiq-green">7,383</p>
-                <p className="text-gray-600">Total Districts</p>
-                <p className="text-sm text-gray-500 mt-2">Across all 50 states</p>
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-civiq-green">1,972</p>
-                <p className="text-gray-600">State Senate Districts</p>
-                <p className="text-sm text-gray-500 mt-2">Upper chambers</p>
-              </div>
-              <div>
-                <p className="text-4xl font-bold text-civiq-green">5,411</p>
-                <p className="text-gray-600">State House Districts</p>
-                <p className="text-sm text-gray-500 mt-2">Lower chambers</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Info box */}
-          <div className="mt-8 p-4 bg-gray-50 border border-gray-200 text-sm text-gray-600 text-center">
-            District boundary data from U.S. Census Bureau TIGER/Line files. Maps optimized with
-            PMTiles for fast loading.
-          </div>
-        </div>
-
-        <ExploreFooter
-          variant="state"
-          currentSection="State Districts"
-          relatedLinks={[
-            { href: '/states', label: 'All 50 States' },
-            { href: '/state-bills', label: 'State Bill Search' },
-            { href: '/glossary', label: 'Glossary' },
-          ]}
-        />
-      </main>
-    </>
+export default async function StateDistrictsPage() {
+  const codes = Object.keys(getAllStateLegislatures()).filter(code => code !== 'DC');
+  const firsts = await Promise.all(codes.map(firstDistrictPerChamber));
+  const firstDistricts: FirstDistricts = Object.fromEntries(
+    codes.map((code, i) => [
+      code,
+      Object.fromEntries((firsts[i] ?? []).map(f => [f.chamber, f.district])),
+    ])
   );
+  return <StateDistrictsDirectory firstDistricts={firstDistricts} />;
 }
