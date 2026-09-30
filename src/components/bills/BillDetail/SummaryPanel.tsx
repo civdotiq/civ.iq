@@ -254,9 +254,9 @@ function SponsorMark({ name, partyCode }: { name: string; partyCode: string }) {
       .toUpperCase() || '·';
   const stripeColor =
     partyCode === 'D'
-      ? 'var(--civiq-green)'
+      ? 'var(--party-democrat)'
       : partyCode === 'R'
-        ? 'var(--civiq-red)'
+        ? 'var(--party-republican)'
         : 'var(--data-vlau)';
   return (
     <div

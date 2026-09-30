@@ -23,7 +23,7 @@ const STATUS_LABELS: Record<BillStatus, string> = {
 
 /**
  * Maps a bill status to a non-partisan chip badge.
- * Red/green are reserved for vote breakdown bars only — never for status.
+ * Party colors (Republican red, Democrat blue) mark party breakdowns only — never status.
  */
 export function getStatusBadge(status: BillStatus): StatusBadge {
   const label = STATUS_LABELS[status] ?? 'Status unavailable';

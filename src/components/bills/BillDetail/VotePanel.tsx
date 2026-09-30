@@ -41,14 +41,14 @@ export function VotePanel({ bill }: VotePanelProps) {
           key: 'D-yea',
           label: 'D · Yea',
           n: breakdown.democratic.yea,
-          color: 'var(--civiq-green)',
+          color: 'var(--party-democrat)',
           stripe: false,
         },
         {
           key: 'R-yea',
           label: 'R · Yea',
           n: breakdown.republican.yea,
-          color: 'var(--civiq-red)',
+          color: 'var(--party-republican)',
           stripe: false,
         },
         {
@@ -62,14 +62,14 @@ export function VotePanel({ bill }: VotePanelProps) {
           key: 'D-nay',
           label: 'D · Nay',
           n: breakdown.democratic.nay,
-          color: 'var(--civiq-green)',
+          color: 'var(--party-democrat)',
           stripe: true,
         },
         {
           key: 'R-nay',
           label: 'R · Nay',
           n: breakdown.republican.nay,
-          color: 'var(--civiq-red)',
+          color: 'var(--party-republican)',
           stripe: true,
         },
         {
@@ -166,13 +166,13 @@ export function VotePanel({ bill }: VotePanelProps) {
         >
           <PartyRow
             label="Democratic"
-            color="var(--civiq-green)"
+            color="var(--party-democrat)"
             yea={breakdown.democratic.yea}
             nay={breakdown.democratic.nay}
           />
           <PartyRow
             label="Republican"
-            color="var(--civiq-red)"
+            color="var(--party-republican)"
             yea={breakdown.republican.yea}
             nay={breakdown.republican.nay}
           />
