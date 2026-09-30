@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Bill } from '@/types/bill';
 import { CqChip, CqLabel, CqPlainReading } from '@/components/cq';
 import { PanelHeader } from './PanelHeader';
+import { ExpandableList } from './ExpandableList';
 
 interface RelatedPanelProps {
   bill: Bill;
@@ -39,15 +40,20 @@ export function RelatedPanel({ bill }: RelatedPanelProps) {
             <CqLabel>Title</CqLabel>
             <CqLabel>Relation</CqLabel>
           </div>
-          {related.slice(0, 30).map(r => (
-            <RelatedRow
-              key={`${r.number}-${r.relationship}`}
-              billCongress={bill.congress}
-              number={r.number}
-              title={r.title}
-              relation={r.relationship}
-            />
-          ))}
+          <ExpandableList
+            initial={30}
+            noun="related bills"
+            items={related.map(r => (
+              <RelatedRow
+                key={r.id ?? `${r.number}-${r.relationship}`}
+                slug={r.id ?? relatedBillSlug(bill.congress, r.number)}
+                billCongress={bill.congress}
+                number={r.number}
+                title={r.title}
+                relation={r.relationship}
+              />
+            ))}
+          />
         </div>
       )}
     </section>
@@ -55,17 +61,22 @@ export function RelatedPanel({ bill }: RelatedPanelProps) {
 }
 
 function RelatedRow({
+  slug,
   billCongress,
   number,
   title,
   relation,
 }: {
+  slug: string | null;
   billCongress: string;
   number: string;
   title: string;
   relation: string;
 }) {
-  const slug = relatedBillSlug(billCongress, number);
+  // Related bills can come from earlier Congresses — say so next to the number.
+  const otherCongress = slug?.split('-')[0];
+  const label =
+    otherCongress && otherCongress !== billCongress ? `${number} (${otherCongress}th)` : number;
   return (
     <div
       role="row"
@@ -89,7 +100,7 @@ function RelatedRow({
             textDecoration: 'none',
           }}
         >
-          {number}
+          {label}
         </Link>
       ) : (
         <span
@@ -99,7 +110,7 @@ function RelatedRow({
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {number}
+          {label}
         </span>
       )}
       <span style={{ fontSize: 13 }}>{title}</span>
@@ -110,9 +121,9 @@ function RelatedRow({
   );
 }
 
+/** Fallback for cached bills without an id: "H.Con.Res. 87" → "<congress>-hconres-87". */
 function relatedBillSlug(congress: string, number: string): string | null {
-  // "H.R. 5376" → "<congress>-hr-5376"
-  const match = number.match(/^([A-Z]+)\.?\s+(\d+)$/i);
+  const match = number.replace(/\./g, '').match(/^([A-Z]+)\s*(\d+)$/i);
   if (!match) return null;
   const type = match[1]?.toLowerCase().replace(/\./g, '');
   const num = match[2];

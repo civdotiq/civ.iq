@@ -1,6 +1,7 @@
 import type { Bill } from '@/types/bill';
 import { CqButton, CqLabel, CqPlainReading } from '@/components/cq';
 import { PanelHeader } from './PanelHeader';
+import { ExpandableList } from './ExpandableList';
 import { formatDate } from './helpers';
 
 interface TextPanelProps {
@@ -77,43 +78,49 @@ export function TextPanel({ bill }: TextPanelProps) {
                   Single version
                 </span>
               ) : (
-                versions.slice(0, 8).map((v, i) => {
-                  const url =
-                    v.formats.find(f => f.type === 'Formatted Text' || f.type === 'Formatted HTML')
-                      ?.url ?? v.formats[0]?.url;
-                  const isLast = i === Math.min(versions.length, 8) - 1;
-                  return (
-                    <a
-                      key={`${v.type}-${v.date}`}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: 12,
-                        color: i === 0 ? 'var(--fg1)' : 'var(--fg2)',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '8px 0',
-                        borderBottom: isLast ? 0 : '1px solid var(--line)',
-                        fontWeight: i === 0 ? 700 : 500,
-                        textDecoration: 'none',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      <span style={{ color: 'var(--fg3)', marginRight: 8 }}>§{i + 1}</span>
-                      {v.type}
-                      <div
+                <ExpandableList
+                  initial={8}
+                  noun="versions"
+                  containerStyle={{ display: 'flex', flexDirection: 'column' }}
+                  items={versions.map((v, i) => {
+                    const url =
+                      v.formats.find(
+                        f => f.type === 'Formatted Text' || f.type === 'Formatted HTML'
+                      )?.url ?? v.formats[0]?.url;
+                    const isLast = i === versions.length - 1;
+                    return (
+                      <a
+                        key={`${v.type}-${v.date}`}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
-                          fontSize: 10,
-                          color: 'var(--fg3)',
-                          fontWeight: 400,
-                          marginTop: 2,
+                          fontSize: 12,
+                          color: i === 0 ? 'var(--fg1)' : 'var(--fg2)',
+                          fontFamily: 'var(--font-mono)',
+                          padding: '8px 0',
+                          borderBottom: isLast ? 0 : '1px solid var(--line)',
+                          fontWeight: i === 0 ? 700 : 500,
+                          textDecoration: 'none',
+                          fontVariantNumeric: 'tabular-nums',
                         }}
                       >
-                        {formatDate(v.date)}
-                      </div>
-                    </a>
-                  );
-                })
+                        <span style={{ color: 'var(--fg3)', marginRight: 8 }}>§{i + 1}</span>
+                        {v.type}
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: 'var(--fg3)',
+                            fontWeight: 400,
+                            marginTop: 2,
+                          }}
+                        >
+                          {formatDate(v.date)}
+                        </div>
+                      </a>
+                    );
+                  })}
+                />
               )}
             </div>
           </div>
