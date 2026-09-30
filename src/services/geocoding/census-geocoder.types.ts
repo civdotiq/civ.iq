@@ -158,6 +158,13 @@ export interface ParsedDistrictInfo {
     name: string;
   };
 
+  /**
+   * Year of the state legislative district layer both chambers came from
+   * ("2024"), or undefined when the geocoder answered from an unyeared layer.
+   * GEOIDs are only comparable within one vintage.
+   */
+  sldVintage?: string;
+
   /** Additional geographic context */
   county?: string;
   place?: string;

@@ -52,7 +52,7 @@ export class CensusGeocoderService {
     const vintage = request.vintage || currentOfficeholderVintage();
     // v2: v1 entries were parsed with stale layer names (no state districts).
     // The vintage is in the key so the 120th-Congress switch invalidates itself.
-    const cacheKey = `census:geocode:v2:${vintage}:${addressHash}`;
+    const cacheKey = `census:geocode:v3:${vintage}:${addressHash}`;
 
     try {
       // Check cache first
@@ -224,14 +224,19 @@ export class CensusGeocoderService {
     const geographies = match.geographies;
 
     // Extract upper chamber (State Senate) district
+    const upperLayer = this.findNewestYearLayer(geographies, this.SLD_UPPER_PATTERN);
     const upperChamberGeo =
-      this.findNewestYearLayer(geographies, this.SLD_UPPER_PATTERN)?.[0] ||
-      geographies['State Legislative District - Upper Chamber']?.[0];
+      upperLayer?.entries[0] || geographies['State Legislative District - Upper Chamber']?.[0];
 
     // Extract lower chamber (State House) district
+    const lowerLayer = this.findNewestYearLayer(geographies, this.SLD_LOWER_PATTERN);
     const lowerChamberGeo =
-      this.findNewestYearLayer(geographies, this.SLD_LOWER_PATTERN)?.[0] ||
-      geographies['State Legislative District - Lower Chamber']?.[0];
+      lowerLayer?.entries[0] || geographies['State Legislative District - Lower Chamber']?.[0];
+
+    // Nebraska and DC have no lower layer; a mixed pair means no one vintage.
+    const years = [upperLayer?.year, lowerLayer?.year].filter((y): y is number => y !== undefined);
+    const sldVintage =
+      years.length > 0 && years.every(y => y === years[0]) ? String(years[0]) : undefined;
 
     // Extract congressional district (for context)
     const congressionalGeo = findCongressionalDistrictLayer(geographies)?.[0];
@@ -253,19 +258,20 @@ export class CensusGeocoderService {
       congressionalDistrict: congressionalGeo
         ? this.parseDistrictFromGeography(congressionalGeo)
         : undefined,
+      sldVintage,
       county: countyGeo?.NAME,
       place: placeGeo?.NAME,
     };
   }
 
   /**
-   * Entries of the layer whose name matches `pattern` (year in group 1) with
-   * the newest year, or undefined if no such layer has entries.
+   * The layer whose name matches `pattern` (year in group 1) with the newest
+   * year, or undefined if no such layer has entries.
    */
   private static findNewestYearLayer(
     geographies: CensusGeographies,
     pattern: RegExp
-  ): CensusGeography[] | undefined {
+  ): { year: number; entries: CensusGeography[] } | undefined {
     let best: { year: number; entries: CensusGeography[] } | null = null;
     for (const [layerName, entries] of Object.entries(geographies)) {
       const match = layerName.match(pattern);
@@ -274,7 +280,7 @@ export class CensusGeocoderService {
         if (!best || year > best.year) best = { year, entries };
       }
     }
-    return best?.entries;
+    return best ?? undefined;
   }
 
   /**

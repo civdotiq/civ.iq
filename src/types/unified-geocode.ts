@@ -8,6 +8,8 @@
  * Shared type for the unified geocoding response that returns all districts and representatives
  */
 
+import type { StateMember, StateSeat } from '@/services/lookup/resolve-representatives.service';
+
 export interface UnifiedGeocodeResult {
   success: boolean;
   matchedAddress?: string;
@@ -80,7 +82,13 @@ export interface UnifiedGeocodeResult {
       phone?: string;
       website?: string;
     };
+    /** Every upper-bucket member for the address, at-large members last. */
+    senators?: StateMember[];
+    /** Every lower-bucket member for the address, at-large members last. */
+    representatives?: StateMember[];
   };
+  /** Per Census district: how it maps to the legislature and who holds it. */
+  stateSeats?: StateSeat[];
   error?: {
     code: string;
     message: string;
