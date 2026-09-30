@@ -216,6 +216,11 @@ const exampleProfiles = [
   { href: '/representative/J000294', name: 'Hakeem Jeffries', role: 'House Minority Leader' },
   { href: '/representative/T000250', name: 'John Thune', role: 'Senate Majority Leader' },
   { href: '/representative/J000299', name: 'Mike Johnson', role: 'Speaker of the House' },
+  {
+    href: '/state-legislature/mi/legislator/winnie-brinks-de38477b',
+    name: 'Winnie Brinks',
+    role: 'Michigan Senate Majority Leader',
+  },
 ];
 
 export default async function HomePage() {
@@ -230,12 +235,14 @@ export default async function HomePage() {
           CIV<span className={styles.dot}>.</span>IQ
         </p>
         <h1 className={styles.title}>
-          Know your <br />
-          Representatives
+          Find your <br />
+          representatives
+          <span className={styles.titleSub}>in Congress and your state legislature</span>
         </h1>
         <p className={styles.lede}>
-          See how your representatives vote, who funds them, and what they sponsor — all from public
-          government data.
+          One home address shows your members of Congress and your state legislators — how they
+          vote, what they sponsor, and, for Congress, who funds them. All from public government
+          data.
         </p>
 
         <SearchForm />

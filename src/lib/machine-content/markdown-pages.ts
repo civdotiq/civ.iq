@@ -63,13 +63,13 @@ export const VERSIONING_POLICY_MARKDOWN = `# CIV.IQ API versioning & deprecation
 - Every v1 response carries an \`X-API-Version\` header with the exact spec version.
 `;
 
-const HOME_MARKDOWN = `# CIV.IQ — Know your representatives
+const HOME_MARKDOWN = `# CIV.IQ — Find your representatives in Congress and your state legislature
 
-CIV.IQ is a nonpartisan civic intelligence platform. See how your U.S. representatives vote, who funds them, and what they sponsor — all from official government data (Congress.gov, FEC, Census Bureau, Open States). No account required.
+CIV.IQ is a nonpartisan civic intelligence platform. One home address shows your members of Congress and your state legislators — how they vote, what they sponsor, and, for Congress, who funds them — all from official government data (Congress.gov, FEC, Census Bureau, Open States). No account required.
 
 ## Start here
 
-- Find your representatives by street address: ${SITE}/your-reps
+- Find your representatives (Congress and state legislature) by street address: ${SITE}/your-reps
 - All 535 members of Congress: ${SITE}/representatives
 - Bills and votes: ${SITE}/legislation
 - State legislatures: ${SITE}/states

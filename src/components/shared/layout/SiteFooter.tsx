@@ -38,6 +38,16 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
             </h3>
             <ul className="space-y-grid-1 text-xs sm:text-sm">
               <li>
+                <Link href="/your-reps" className={linkClass}>
+                  Find your representatives
+                </Link>
+              </li>
+              <li>
+                <Link href="/states" className={linkClass}>
+                  States
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className={linkClass}>
                   About
                 </Link>
