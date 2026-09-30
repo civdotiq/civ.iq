@@ -24,7 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
-import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
+import { getBillDisplayStatus, getBillStatusColor, getBillVoteHref } from '@/types/bill';
 import { getPartyColors } from '@/lib/party-colors';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
@@ -456,7 +456,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   return (
                     <Link
                       key={`${vote.voteId || 'vote'}-${index}`}
-                      href={`/vote/${vote.rollNumber || vote.voteId}`}
+                      href={getBillVoteHref(vote, bill.congress) ?? `/vote/${vote.voteId}`}
                       className="block p-4 border-2 border-gray-200 hover:border-civiq-blue hover:bg-civiq-blue/10 transition-all"
                     >
                       <div className="flex items-start justify-between mb-3">

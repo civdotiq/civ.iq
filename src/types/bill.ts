@@ -152,6 +152,8 @@ export interface BillVote {
   question: string;
   result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
   rollNumber?: number;
+  /** Congressional session (1 or 2). Roll numbers restart each session. */
+  session?: number;
   /** When true, vote counts couldn't be retrieved from Congress.gov */
   votesUnavailable?: boolean;
   votes?: {
@@ -297,6 +299,18 @@ export function isBill(obj: unknown): obj is Bill {
     typeof (obj as Bill).number === 'string' &&
     typeof (obj as Bill).title === 'string'
   );
+}
+
+/**
+ * Path to a bill roll call's vote page, in the canonical
+ * `{chamber}-{congress}-{session}-{roll}` form. A bare roll number is read as
+ * a Senate vote by the vote page, so House links must carry the chamber.
+ */
+export function getBillVoteHref(vote: BillVote, congress: string): string | null {
+  if (!vote.rollNumber) return null;
+  const chamber = vote.chamber.toLowerCase();
+  const session = vote.session ? `${vote.session}-` : '';
+  return `/vote/${chamber}-${congress}-${session}${vote.rollNumber}`;
 }
 
 export function isBillVote(obj: unknown): obj is BillVote {
