@@ -6,7 +6,11 @@
  * bill pages must link each vote to its own chamber's vote page.
  */
 
-import { fetchBillVotes, type CongressAction } from '@/lib/services/bill.service';
+import {
+  fetchBillVotes,
+  officialVoteResult,
+  type CongressAction,
+} from '@/lib/services/bill.service';
 import { getBillVoteHref, type BillVote } from '@/types/bill';
 import { parseRollCallXML } from '@/features/legislation/services/rollcall-parser';
 
@@ -61,6 +65,52 @@ describe('fetchBillVotes', () => {
   it('carries the session so links resolve to the right roll call', async () => {
     const votes = await fetchBillVotes(actions, '119', 'hconres', '89');
     expect(votes.map(v => v.session)).toEqual([2, 2]);
+  });
+});
+
+describe('fetchBillVotes labels', () => {
+  it("uses the clerk's question and result over the action-text guess", async () => {
+    // H.R. 1 (119th), Senate roll 359: the action text reads like a failed
+    // passage vote, but the roll call is the Warnock motion to commit.
+    (parseRollCallXML as jest.Mock).mockResolvedValueOnce({
+      question: 'On the Motion',
+      result: 'Motion Rejected',
+      votes: [],
+      totals: { yea: 48, nay: 51, present: 0, notVoting: 1 },
+    });
+    const [vote] = await fetchBillVotes(
+      [
+        {
+          actionDate: '2025-07-01',
+          text: 'Motion to commit to the Committee on Finance failed of passage by Yea-Nay Vote. 48 - 51.',
+          recordedVotes: [{ ...senate244, rollNumber: 359, sessionNumber: 1 }],
+        },
+      ],
+      '119',
+      'hr',
+      '1'
+    );
+    expect(vote?.question).toBe('On the Motion');
+    expect(vote?.result).toBe('Failed');
+  });
+});
+
+describe('officialVoteResult', () => {
+  it.each([
+    ['Bill Passed', 'Passed'],
+    ['Passed', 'Passed'],
+    ['Motion Rejected', 'Failed'],
+    ['Concurrent Resolution Rejected', 'Failed'],
+    ['Failed', 'Failed'],
+    ['Motion Agreed to', 'Agreed to'],
+    ['Amendment Not Agreed to', 'Disagreed to'],
+  ])('%s → %s', (raw, expected) => {
+    expect(officialVoteResult(raw)).toBe(expected);
+  });
+
+  it('returns null for an unknown or missing result', () => {
+    expect(officialVoteResult('')).toBeNull();
+    expect(officialVoteResult(undefined)).toBeNull();
   });
 });
 

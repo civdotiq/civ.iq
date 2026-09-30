@@ -512,6 +512,19 @@ async function fetchBillActions(
   }
 }
 
+/**
+ * Map a clerk's result ("Bill Passed", "Motion Rejected", "Concurrent
+ * Resolution Rejected", "Agreed to", "Failed") onto BillVote['result'].
+ */
+export function officialVoteResult(raw: string | undefined): BillVote['result'] | null {
+  if (!raw) return null;
+  if (/not agreed|disagreed/i.test(raw)) return 'Disagreed to';
+  if (/reject|fail|defeat/i.test(raw)) return 'Failed';
+  if (/agreed/i.test(raw)) return 'Agreed to';
+  if (/pass|adopt|confirm|sustain|concur/i.test(raw)) return 'Passed';
+  return null;
+}
+
 /** Fetch votes for a specific bill from roll call data */
 export async function fetchBillVotes(
   actions: CongressAction[],
@@ -574,6 +587,10 @@ export async function fetchBillVotes(
                 const rollCallData = await parseRollCallXML(recordedVote.url);
 
                 if (rollCallData) {
+                  // The clerk's own labels beat guessing from action text: Senate
+                  // amendment and motion votes read as "failed ... passage" otherwise.
+                  if (rollCallData.question) question = rollCallData.question;
+                  result = officialVoteResult(rollCallData.result) ?? result;
                   yea = rollCallData.totals.yea;
                   nay = rollCallData.totals.nay;
                   present = rollCallData.totals.present;
@@ -708,8 +725,9 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
   const { type, number, congress } = parseBillNumber(billId);
   // v2: standard bill labels (H.R.) and per-action chamber
   // v3: de-duplicated roll calls + vote session
-  // v4: committees, related bills, summaries from their sub-endpoints — bump drops stale entries
-  const cacheKey = `bill-v4-${type}-${number}-${congress}`;
+  // v4: committees, related bills, summaries from their sub-endpoints
+  // v6: official roll-call question/result (House + Senate) — bump drops stale entries
+  const cacheKey = `bill-v6-${type}-${number}-${congress}`;
 
   return cachedFetch(
     cacheKey,

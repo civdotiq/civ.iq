@@ -143,7 +143,10 @@ export class RollCallParser {
 
       const congress = parseInt(metadata?.congress ?? '') || 0;
       const session = parseInt(metadata?.session ?? '') || 0;
-      const rollNumber = parseInt(metadata?.rollcall_num ?? '') || 0;
+      // The Clerk's XML uses hyphenated tags (rollcall-num, vote-question);
+      // the underscore names are kept as a fallback.
+      const rollNumber = parseInt(metadata?.['rollcall-num'] ?? metadata?.rollcall_num ?? '') || 0;
+      const legisNum = metadata?.['legis-num'] ?? metadata?.legis_num;
 
       const votes: RollCallVote[] = [];
       const recordedVotes = voteData?.['recorded-vote'];
@@ -173,14 +176,14 @@ export class RollCallParser {
         chamber: 'House',
         rollNumber,
         date: metadata?.['action-date'] || '',
-        bill: metadata?.legis_num
+        bill: legisNum
           ? {
-              number: metadata.legis_num,
-              title: metadata.vote_desc,
+              number: legisNum,
+              title: metadata?.['vote-desc'] ?? metadata?.vote_desc,
             }
           : undefined,
-        question: metadata?.vote_question || 'On Passage',
-        result: metadata?.vote_result || '',
+        question: metadata?.['vote-question'] || metadata?.vote_question || 'On Passage',
+        result: metadata?.['vote-result'] || metadata?.vote_result || '',
         votes,
         totals,
       };
