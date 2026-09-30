@@ -102,6 +102,15 @@ export function rosterPartyLabel(party: string): string {
   return party || 'Unknown';
 }
 
+/**
+ * Party as a label on one member's card: "Democrat", matching the federal
+ * roster, where the chamber roll-up keeps the adjective ("12 Democratic").
+ */
+export function memberPartyLabel(party: string): string {
+  const label = rosterPartyLabel(party);
+  return label === 'Democratic' ? 'Democrat' : label;
+}
+
 /** Natural district order: 2 before 10, 62A before 62B, then named seats. */
 export function compareDistricts(a: string, b: string): number {
   return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });

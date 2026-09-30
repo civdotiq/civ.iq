@@ -3,7 +3,13 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { compareDistricts, getHubCopy, isAtLargeDistrict, rosterPartyLabel } from '../hub-copy';
+import {
+  compareDistricts,
+  getHubCopy,
+  isAtLargeDistrict,
+  memberPartyLabel,
+  rosterPartyLabel,
+} from '../hub-copy';
 
 const base = { legislatureName: 'X Legislature', memberCount: 100 };
 
@@ -60,6 +66,12 @@ describe('roster helpers', () => {
     expect(rosterPartyLabel('Republican/Conservative')).toBe('Republican');
     expect(rosterPartyLabel('Nonpartisan')).toBe('Nonpartisan');
     expect(rosterPartyLabel('')).toBe('Unknown');
+  });
+
+  it('labels one member with the noun the federal roster uses', () => {
+    expect(memberPartyLabel('Democratic-Farmer-Labor')).toBe('Democrat');
+    expect(memberPartyLabel('Republican')).toBe('Republican');
+    expect(memberPartyLabel('Nonpartisan')).toBe('Nonpartisan');
   });
 
   it('sorts districts naturally', () => {
