@@ -149,6 +149,41 @@ describe('RollCallParser', () => {
       </vote-data>
     </rollcall-vote>`;
 
+    it('reads the real Clerk tags (hyphenated), e.g. roll 282 of 2026', async () => {
+      const realHouseXML = `<?xml version="1.0" encoding="UTF-8"?>
+      <rollcall-vote>
+        <vote-metadata>
+          <congress>119</congress>
+          <session>2nd</session>
+          <rollcall-num>282</rollcall-num>
+          <legis-num>H CON RES 89</legis-num>
+          <vote-question>On Agreeing to the Resolution</vote-question>
+          <vote-result>Passed</vote-result>
+          <action-date>23-Jul-2026</action-date>
+          <vote-desc>Directing the President to remove United States Armed Forces from hostilities with Iran</vote-desc>
+        </vote-metadata>
+        <vote-data>
+          <recorded-vote>
+            <legislator name-id="M001184" unaccented-name="Massie" party="R" state="KY"/>
+            <vote>Yea</vote>
+          </recorded-vote>
+        </vote-data>
+      </rollcall-vote>`;
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(realHouseXML));
+
+      const result = await parser.fetchAndParseRollCall(
+        'https://clerk.house.gov/evs/2026/roll282.xml'
+      );
+
+      expect(result).toMatchObject({
+        session: 2,
+        rollNumber: 282,
+        bill: { number: 'H CON RES 89' },
+        question: 'On Agreeing to the Resolution',
+        result: 'Passed',
+      });
+    });
+
     it('should parse House roll call XML correctly', async () => {
       global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockHouseXML));
 

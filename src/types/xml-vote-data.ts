@@ -33,6 +33,8 @@ export interface HouseXmlVoteData {
       'action-time'?: { '#text'?: string };
       congress?: string;
       session?: string;
+      'rollcall-num'?: string;
+      'legis-num'?: string;
       rollcall_num?: string;
       legis_num?: string;
       vote_question?: string;

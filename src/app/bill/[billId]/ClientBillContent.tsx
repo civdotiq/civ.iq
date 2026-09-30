@@ -271,7 +271,10 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.summary ? (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary</h3>
-              <p className="text-gray-700 leading-relaxed mb-3">{bill.summary.text}</p>
+              <div
+                className="text-gray-700 leading-relaxed mb-3 space-y-3"
+                dangerouslySetInnerHTML={{ __html: sanitizeBillHtml(bill.summary.text) }}
+              />
               <p className="text-sm text-gray-500">
                 {bill.summary.version} • {formatDateOnly(bill.summary.date)}
               </p>
@@ -842,8 +845,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   const billType =
                     billMatch?.[1]?.toLowerCase().replace(/\./g, '').replace(/\s+/g, '') ?? '';
                   const billNum = billMatch?.[2] ?? '';
-                  const billRoute =
-                    billMatch && billType && billNum
+                  const billRoute = relatedBill.id
+                    ? `/bill/${relatedBill.id}`
+                    : billMatch && billType && billNum
                       ? `/bill/${bill.congress}-${billType}-${billNum}`
                       : null;
 

@@ -83,6 +83,9 @@ interface CongressSummary {
   text: string;
   actionDate: string;
   versionCode: string;
+  /** Plain label for the version, e.g. "Passed House". */
+  actionDesc?: string;
+  updateDate?: string;
 }
 
 interface CongressSubject {
@@ -90,12 +93,14 @@ interface CongressSubject {
 }
 
 interface CongressRelatedBill {
+  congress?: number;
   type: string;
-  number: string;
+  number: string | number;
   title: string;
-  relationshipDetails?: {
+  relationshipDetails?: Array<{
+    type: string;
     identifiedBy: string;
-  };
+  }>;
 }
 
 interface CongressTextFormat {
@@ -293,6 +298,58 @@ async function fetchBillText(
   }
 }
 
+/**
+ * Fetch a list sub-resource of a bill (committees, relatedbills, summaries).
+ * The bill detail response only carries `{ count, url }` pointers for these,
+ * never the items — reading them off the detail yields nothing.
+ */
+async function fetchBillList<T>(
+  congress: string,
+  type: string,
+  number: string,
+  path: 'committees' | 'relatedbills' | 'summaries',
+  key: 'committees' | 'relatedBills' | 'summaries'
+): Promise<T[]> {
+  try {
+    const response = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/${path}?format=json&limit=250`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
+        },
+      }
+    );
+    const monitor = monitorExternalApi('congress', `bill-${path}`, response.url);
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      logger.warn(`Failed to fetch bill ${path}`, {
+        status: response.status,
+        congress,
+        type,
+        number,
+      });
+      return [];
+    }
+    const data: Partial<Record<typeof key, T[]>> = await response.json();
+    monitor.end(true, 200);
+    return data[key] ?? [];
+  } catch (error) {
+    logger.error(`Error fetching bill ${path}`, error as Error, { congress, type, number });
+    return [];
+  }
+}
+
+/** Most recent CRS summary — Congress.gov lists them oldest first. */
+function latestSummary(summaries: CongressSummary[]): CongressSummary | undefined {
+  return [...summaries].sort(
+    (a, b) =>
+      a.actionDate.localeCompare(b.actionDate) ||
+      (a.updateDate ?? '').localeCompare(b.updateDate ?? '')
+  )[summaries.length - 1];
+}
+
 /** Fetch additional bill details (subjects, policy area, text versions) */
 async function fetchBillDetails(
   congress: string,
@@ -455,6 +512,19 @@ async function fetchBillActions(
   }
 }
 
+/**
+ * Map a clerk's result ("Bill Passed", "Motion Rejected", "Concurrent
+ * Resolution Rejected", "Agreed to", "Failed") onto BillVote['result'].
+ */
+export function officialVoteResult(raw: string | undefined): BillVote['result'] | null {
+  if (!raw) return null;
+  if (/not agreed|disagreed/i.test(raw)) return 'Disagreed to';
+  if (/reject|fail|defeat/i.test(raw)) return 'Failed';
+  if (/agreed/i.test(raw)) return 'Agreed to';
+  if (/pass|adopt|confirm|sustain|concur/i.test(raw)) return 'Passed';
+  return null;
+}
+
 /** Fetch votes for a specific bill from roll call data */
 export async function fetchBillVotes(
   actions: CongressAction[],
@@ -517,6 +587,10 @@ export async function fetchBillVotes(
                 const rollCallData = await parseRollCallXML(recordedVote.url);
 
                 if (rollCallData) {
+                  // The clerk's own labels beat guessing from action text: Senate
+                  // amendment and motion votes read as "failed ... passage" otherwise.
+                  if (rollCallData.question) question = rollCallData.question;
+                  result = officialVoteResult(rollCallData.result) ?? result;
                   yea = rollCallData.totals.yea;
                   nay = rollCallData.totals.nay;
                   present = rollCallData.totals.present;
@@ -650,8 +724,10 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
 export async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
   const { type, number, congress } = parseBillNumber(billId);
   // v2: standard bill labels (H.R.) and per-action chamber
-  // v3: de-duplicated roll calls + vote session — bump drops stale entries
-  const cacheKey = `bill-v3-${type}-${number}-${congress}`;
+  // v3: de-duplicated roll calls + vote session
+  // v4: committees, related bills, summaries from their sub-endpoints
+  // v6: official roll-call question/result (House + Senate) — bump drops stale entries
+  const cacheKey = `bill-v6-${type}-${number}-${congress}`;
 
   return cachedFetch(
     cacheKey,
@@ -698,15 +774,26 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
         const bill = billData.bill;
 
-        const detailedCosponsors = await fetchBillCosponsors(
-          congress.toString(),
-          type,
-          number.toString()
-        );
-
-        const billDetails = await fetchBillDetails(congress.toString(), type, number.toString());
-        const billText = await fetchBillText(congress.toString(), type, number.toString());
-        const billActions = await fetchBillActions(congress.toString(), type, number.toString());
+        const c = congress.toString();
+        const n = number.toString();
+        const [
+          detailedCosponsors,
+          billDetails,
+          billText,
+          billActions,
+          committees,
+          relatedBills,
+          summaries,
+        ] = await Promise.all([
+          fetchBillCosponsors(c, type, n),
+          fetchBillDetails(c, type, n),
+          fetchBillText(c, type, n),
+          fetchBillActions(c, type, n),
+          fetchBillList<CongressCommittee>(c, type, n, 'committees', 'committees'),
+          fetchBillList<CongressRelatedBill>(c, type, n, 'relatedbills', 'relatedBills'),
+          fetchBillList<CongressSummary>(c, type, n, 'summaries', 'summaries'),
+        ]);
+        const summary = latestSummary(summaries);
 
         const result: Bill = {
           // Lowercase type so the id is the true canonical slug (119-hr-8814);
@@ -775,31 +862,29 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
             withdrawn: cosponsor.sponsorshipWithdrawnDate ? true : false,
           })),
 
-          committees: Array.isArray(bill.committees)
-            ? bill.committees.map((committee: CongressCommittee) => ({
-                committeeId: committee.systemCode,
-                name: committee.name,
-                chamber: committee.chamber === 'House' ? 'House' : 'Senate',
-                activities: Array.isArray(committee.activities)
-                  ? committee.activities.map(activity => ({
-                      date: activity.date,
-                      activity: activity.name,
-                    }))
-                  : [],
-              }))
-            : [],
+          committees: committees.map((committee: CongressCommittee) => ({
+            committeeId: committee.systemCode,
+            name: committee.name,
+            chamber: committee.chamber === 'House' ? 'House' : 'Senate',
+            activities: Array.isArray(committee.activities)
+              ? committee.activities.map(activity => ({
+                  date: activity.date,
+                  activity: activity.name,
+                }))
+              : [],
+          })),
 
-          summary: bill.summaries?.[0]
+          summary: summary
             ? {
                 // Congress.gov summaries arrive as HTML and are rendered with
                 // dangerouslySetInnerHTML downstream — sanitize here, same as fullText.
-                text: DOMPurify.sanitize(bill.summaries[0].text, {
+                text: DOMPurify.sanitize(summary.text, {
                   ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'u', 'ul', 'ol', 'li', 'a'],
                   ALLOWED_ATTR: ['href', 'title'],
                   ALLOW_DATA_ATTR: false,
                 }),
-                date: bill.summaries[0].actionDate,
-                version: bill.summaries[0].versionCode,
+                date: summary.actionDate,
+                version: summary.actionDesc || summary.versionCode,
               }
             : undefined,
 
@@ -867,15 +952,16 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
           votes: [],
 
-          relatedBills: Array.isArray(bill.relatedBills)
-            ? bill.relatedBills.map((related: CongressRelatedBill) => ({
-                number: formatBillNumber(related.type, related.number),
-                title: related.title,
-                relationship:
-                  (related.relationshipDetails?.identifiedBy as
-                    'identical' | 'related' | 'supersedes' | 'superseded') || 'related',
-              }))
-            : [],
+          relatedBills: relatedBills.map((related: CongressRelatedBill) => ({
+            id: `${related.congress ?? bill.congress}-${related.type.toLowerCase()}-${related.number}`,
+            number: formatBillNumber(related.type, String(related.number)),
+            title: related.title,
+            // relationshipDetails[].type is e.g. "Identical bill", "Related bill",
+            // "Procedurally-related"; identifiedBy is only who flagged it (CRS, House).
+            relationship: related.relationshipDetails?.some(d => /identical/i.test(d.type))
+              ? ('identical' as const)
+              : ('related' as const),
+          })),
 
           introducedDate: bill.introducedDate,
           url: `https://www.congress.gov/bill/${bill.congress}th-congress/${bill.originChamber.toLowerCase()}-bill/${bill.number}`,
