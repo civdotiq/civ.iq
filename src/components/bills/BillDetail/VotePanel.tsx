@@ -1,4 +1,7 @@
+import Link from 'next/link';
 import type { Bill, BillVote } from '@/types/bill';
+import { getBillVoteHref } from '@/types/bill';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import { CqChip, CqLabel, CqPlainReading } from '@/components/cq';
 import { PanelHeader } from './PanelHeader';
 import { findFinalPassageVote, formatDate } from './helpers';
@@ -8,7 +11,8 @@ interface VotePanelProps {
 }
 
 export function VotePanel({ bill }: VotePanelProps) {
-  const vote = findFinalPassageVote(bill.votes ?? []);
+  const allVotes = bill.votes ?? [];
+  const vote = findFinalPassageVote(allVotes);
 
   if (!vote) {
     return (
@@ -29,6 +33,7 @@ export function VotePanel({ bill }: VotePanelProps) {
   const totals = vote.votes ?? { yea: 0, nay: 0, present: 0, notVoting: 0 };
   const breakdown = vote.breakdown;
   const denominator = Math.max(1, totals.yea + totals.nay);
+  const voteHref = getBillVoteHref(vote, bill.congress);
 
   const segments = breakdown
     ? [
@@ -86,6 +91,13 @@ export function VotePanel({ bill }: VotePanelProps) {
           name: 'House Clerk + Senate.gov',
           id: vote.rollNumber ? `roll ${vote.rollNumber}` : 'roll call',
         }}
+        right={
+          voteHref ? (
+            <Link href={voteHref} style={LINK_STYLE}>
+              Every member&apos;s vote →
+            </Link>
+          ) : undefined
+        }
       />
 
       {segments.length > 0 && (
@@ -178,7 +190,8 @@ export function VotePanel({ bill }: VotePanelProps) {
         </CqPlainReading>
       )}
 
-      <SampleVotes vote={vote} />
+      <SampleVotes vote={vote} href={voteHref} />
+      {allVotes.length > 1 && <AllRollCalls votes={allVotes} congress={bill.congress} />}
     </section>
   );
 }
@@ -237,12 +250,75 @@ function PartyRow({
   );
 }
 
-function SampleVotes({ vote }: { vote: BillVote }) {
+const LINK_STYLE: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'var(--civiq-blue-active)',
+  textDecoration: 'none',
+};
+
+function AllRollCalls({ votes, congress }: { votes: BillVote[]; congress: string }) {
+  const ordered = [...votes].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  return (
+    <div style={{ marginTop: 24 }}>
+      <CqLabel>All {votes.length} roll calls on this bill</CqLabel>
+      <div style={{ marginTop: 8, borderTop: '2px solid var(--ink)' }}>
+        {ordered.map(v => {
+          const href = getBillVoteHref(v, congress);
+          const label = `${v.chamber} roll call ${v.rollNumber ?? '—'} · ${v.question}`;
+          return (
+            <div
+              key={v.voteId}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '110px minmax(0, 1fr) auto',
+                gap: 12,
+                padding: '12px 0',
+                borderBottom: '1px solid var(--line)',
+                alignItems: 'baseline',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              <span style={{ fontSize: 11, color: 'var(--fg3)', fontFamily: 'var(--font-mono)' }}>
+                {formatDate(v.date)}
+              </span>
+              {href ? (
+                <Link href={href} style={{ ...LINK_STYLE, fontSize: 13 }}>
+                  {label}
+                </Link>
+              ) : (
+                <span style={{ fontSize: 13 }}>{label}</span>
+              )}
+              <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--fg2)' }}>
+                {v.result}
+                {v.votes ? ` · ${v.votes.yea}–${v.votes.nay}` : ''}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SampleVotes({ vote, href }: { vote: BillVote; href: string | null }) {
   const sample = (vote.representativeVotes ?? []).slice(0, 6);
   if (sample.length === 0) return null;
   return (
     <div style={{ marginTop: 24 }}>
-      <CqLabel>Sample of votes</CqLabel>
+      <CqLabel>
+        Sample of {sample.length} votes
+        {href && (
+          <>
+            {' · '}
+            <Link href={href} style={LINK_STYLE}>
+              see all {vote.representativeVotes?.length ?? ''} →
+            </Link>
+          </>
+        )}
+      </CqLabel>
       <div style={{ marginTop: 12 }}>
         {sample.map((s, i) => {
           const partyCode = s.representative.party?.toUpperCase().charAt(0) ?? '';
@@ -267,7 +343,11 @@ function SampleVotes({ vote }: { vote: BillVote }) {
               }}
             >
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{s.representative.name}</div>
+                <RepLink
+                  bioguideId={s.representative.bioguideId}
+                  name={s.representative.name}
+                  className="text-[13px] font-bold"
+                />
                 <div
                   style={{
                     fontSize: 10,

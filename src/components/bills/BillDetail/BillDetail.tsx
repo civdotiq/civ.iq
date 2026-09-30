@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Bill } from '@/types/bill';
+import { getBillVoteHref } from '@/types/bill';
+import { RepLink } from '@/components/shared/links/EntityLinks';
 import { CqButton, CqChip, CqDisclaimer, CqLabel, CqSourceTag, CqStat } from '@/components/cq';
 import {
   computeBipartisanShare,
@@ -13,6 +15,7 @@ import { TimelinePanel } from './TimelinePanel';
 import { VotePanel } from './VotePanel';
 import { TextPanel } from './TextPanel';
 import { RelatedPanel } from './RelatedPanel';
+import { CosponsorsPanel } from './CosponsorsPanel';
 
 interface BillDetailProps {
   bill: Bill;
@@ -33,6 +36,10 @@ export function BillDetail({ bill }: BillDetailProps) {
   const cosponsorsCount = bill.cosponsors?.length ?? 0;
   const amendmentsCount = bill.amendments?.count ?? 0;
   const publicLaw = bill.laws?.[0];
+  const finalVoteHref = finalVote ? getBillVoteHref(finalVote, bill.congress) : null;
+  const committeesCount = bill.committees?.length ?? 0;
+  // No amendment pages of our own yet — Congress.gov lists them per bill.
+  const amendmentsHref = amendmentsCount > 0 && bill.url ? `${bill.url}/amendments` : null;
 
   const dataAsOf = formatDate(bill.lastUpdated || new Date().toISOString());
 
@@ -58,7 +65,10 @@ export function BillDetail({ bill }: BillDetailProps) {
         }}
       >
         <CqLabel>
-          ← Federal · {bill.chamber} · {bill.congress} Congress
+          <Link href="/legislation" style={{ color: 'var(--civiq-blue-active)' }}>
+            ← Legislation
+          </Link>{' '}
+          · {bill.chamber} · {bill.congress} Congress
         </CqLabel>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           {SOURCES.map(s => (
@@ -123,8 +133,14 @@ export function BillDetail({ bill }: BillDetailProps) {
             }}
           >
             Introduced {formatDate(bill.introducedDate)} · Sponsor{' '}
-            {bill.sponsor.representative.name} · {cosponsorsCount} co-sponsor
-            {cosponsorsCount === 1 ? '' : 's'}
+            <RepLink
+              bioguideId={bill.sponsor.representative.bioguideId}
+              name={bill.sponsor.representative.name}
+            />{' '}
+            ·{' '}
+            <a href="#cosponsors" style={{ color: 'var(--civiq-blue-active)' }}>
+              {cosponsorsCount} co-sponsor{cosponsorsCount === 1 ? '' : 's'}
+            </a>
           </p>
         </div>
 
@@ -177,9 +193,14 @@ export function BillDetail({ bill }: BillDetailProps) {
             }}
           >
             {amendmentsCount} amendment{amendmentsCount === 1 ? '' : 's'}
-            {bill.committees && bill.committees.length > 0
-              ? ` · ${bill.committees.length} committee${bill.committees.length === 1 ? '' : 's'}`
-              : ''}
+            {committeesCount > 0 && (
+              <>
+                {' · '}
+                <a href="#committees" style={{ color: 'var(--civiq-blue-active)' }}>
+                  {committeesCount} committee{committeesCount === 1 ? '' : 's'}
+                </a>
+              </>
+            )}
           </span>
         </div>
       </div>
@@ -191,18 +212,18 @@ export function BillDetail({ bill }: BillDetailProps) {
           borderBottom: '1px solid var(--line)',
         }}
       >
-        <StatCell index={0}>
+        <StatCell index={0} href={finalVoteHref}>
           <CqStat
-            label="Final vote"
+            label={finalVoteHref ? 'Final vote →' : 'Final vote'}
             value={finalVote?.votes ? `${finalVote.votes.yea}–${finalVote.votes.nay}` : '—'}
             caption={finalVote ? `${finalVote.chamber} · ${finalVote.result}` : 'No floor vote yet'}
             color={finalVote?.result === 'Passed' ? 'green' : 'ink'}
             size={32}
           />
         </StatCell>
-        <StatCell index={1}>
+        <StatCell index={1} href={cosponsorsCount > 0 ? '#cosponsors' : null}>
           <CqStat
-            label="Co-sponsors"
+            label={cosponsorsCount > 0 ? 'Co-sponsors →' : 'Co-sponsors'}
             value={cosponsorsCount}
             caption={
               bipartisan !== null && cosponsorsCount > 0
@@ -220,17 +241,17 @@ export function BillDetail({ bill }: BillDetailProps) {
             size={32}
           />
         </StatCell>
-        <StatCell index={3}>
+        <StatCell index={3} href={subjectsCount > 0 ? '#subjects' : null}>
           <CqStat
-            label="Subjects"
+            label={subjectsCount > 0 ? 'Subjects →' : 'Subjects'}
             value={subjectsCount > 0 ? subjectsCount : '—'}
             caption={subjectsCount > 0 ? bill.subjects.slice(0, 2).join(', ') : 'Subjects pending'}
             size={32}
           />
         </StatCell>
-        <StatCell index={4}>
+        <StatCell index={4} href={amendmentsHref}>
           <CqStat
-            label="Amendments"
+            label={amendmentsHref ? 'Amendments ↗' : 'Amendments'}
             value={amendmentsCount}
             caption={amendmentsCount === 0 ? 'None recorded' : 'Filed amendments'}
             size={32}
@@ -288,6 +309,7 @@ export function BillDetail({ bill }: BillDetailProps) {
       </div>
 
       <SummaryPanel bill={bill} />
+      <CosponsorsPanel bill={bill} />
       <TimelinePanel bill={bill} />
       <VotePanel bill={bill} />
       <TextPanel bill={bill} />
@@ -311,17 +333,42 @@ export function BillDetail({ bill }: BillDetailProps) {
   );
 }
 
-function StatCell({ index, children }: { index: number; children: React.ReactNode }) {
+function StatCell({
+  index,
+  href,
+  children,
+}: {
+  index: number;
+  /** Where the number drills to: an in-page anchor, a vote page, or an external source. */
+  href?: string | null;
+  children: React.ReactNode;
+}) {
+  const style: React.CSSProperties = {
+    display: 'block',
+    padding: '20px 18px',
+    borderLeft: index === 0 ? 0 : '1px solid var(--line)',
+    minWidth: 0,
+    color: 'inherit',
+    textDecoration: 'none',
+  };
+  if (!href) return <div style={style}>{children}</div>;
+  if (href.startsWith('http')) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={style}
+        className="hover:bg-[var(--bg2)]"
+      >
+        {children}
+      </a>
+    );
+  }
   return (
-    <div
-      style={{
-        padding: '20px 18px',
-        borderLeft: index === 0 ? 0 : '1px solid var(--line)',
-        minWidth: 0,
-      }}
-    >
+    <Link href={href} style={style} className="hover:bg-[var(--bg2)]">
       {children}
-    </div>
+    </Link>
   );
 }
 

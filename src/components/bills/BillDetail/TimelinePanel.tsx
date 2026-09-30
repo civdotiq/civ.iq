@@ -1,6 +1,7 @@
 import type { Bill, BillAction } from '@/types/bill';
 import { CqPlainReading } from '@/components/cq';
 import { PanelHeader } from './PanelHeader';
+import { ExpandableList } from './ExpandableList';
 import { formatDate, timelineDotKind } from './helpers';
 
 interface TimelinePanelProps {
@@ -35,11 +36,11 @@ export function TimelinePanel({ bill }: TimelinePanelProps) {
     );
   }
 
-  // Show actions oldest -> newest. Cap to 30 to keep the page scannable; the
-  // full action history lives on Congress.gov via the source link.
-  const ordered = [...actions]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 30);
+  // Show actions oldest -> newest. The first 30 keep the page scannable; the
+  // rest are one click away.
+  const ordered = [...actions].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   return (
     <section style={{ marginTop: 32 }}>
@@ -48,15 +49,18 @@ export function TimelinePanel({ bill }: TimelinePanelProps) {
         title="Legislative timeline"
         source={{ name: 'Congress.gov', id: 'actions' }}
       />
-      <div style={{ borderTop: '2px solid var(--ink)', paddingTop: 8 }}>
-        {ordered.map((action, i) => (
+      <ExpandableList
+        initial={30}
+        noun="actions"
+        containerStyle={{ borderTop: '2px solid var(--ink)', paddingTop: 8 }}
+        items={ordered.map((action, i) => (
           <TimelineRow
             key={`${action.date}-${i}`}
             action={action}
             isLast={i === ordered.length - 1}
           />
         ))}
-      </div>
+      />
     </section>
   );
 }

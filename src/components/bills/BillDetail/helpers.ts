@@ -1,4 +1,5 @@
 import type { Bill, BillStatus, BillVote } from '@/types/bill';
+import { formatDateOnly } from '@/lib/utils/date-only';
 import type { CqChipVariant } from '@/components/cq';
 
 export interface StatusBadge {
@@ -46,14 +47,22 @@ export function getStatusBadge(status: BillStatus): StatusBadge {
 }
 
 /** Find the latest decisive floor vote for the bill. */
+/**
+ * Clerk questions that decide a measure itself, not an amendment or motion:
+ * "On Passage of the Bill", "On Motion to Suspend the Rules and Pass",
+ * "On Motion to Concur in the Senate Amendment", "On Agreeing to the
+ * Resolution", "On the Concurrent Resolution", "On Agreeing to the Conference Report".
+ */
+const DECISIVE_QUESTION =
+  /passage|suspend the rules and (pass|agree)|\bconcur|agreeing to the (resolution|concurrent resolution|joint resolution|conference report)|^on the (concurrent |joint )?resolution\b|conference report/i;
+
 export function findFinalPassageVote(votes: BillVote[]): BillVote | null {
   if (!votes || votes.length === 0) return null;
-  const passageQuestions = ['On Passage', 'On Agreeing', 'On Concurring'];
   const decisive = votes.filter(
     v =>
       v.votes &&
       (v.result === 'Passed' || v.result === 'Failed' || v.result === 'Agreed to') &&
-      passageQuestions.some(q => (v.question ?? '').includes(q.split(' ')[1] ?? ''))
+      DECISIVE_QUESTION.test(v.question ?? '')
   );
   const pool = decisive.length > 0 ? decisive : votes.filter(v => v.votes);
   if (pool.length === 0) return null;
@@ -65,13 +74,9 @@ export function findFinalPassageVote(votes: BillVote[]): BillVote | null {
 /** Format an ISO/loose date as "Jun 4, 2021" or fallback. */
 export function formatDate(value?: string | null): string {
   if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  // Date-only strings ("2026-07-22") are formatted in UTC so a US timezone
+  // doesn't show the day before.
+  return formatDateOnly(value, { month: 'short', day: 'numeric', year: 'numeric' }) || value;
 }
 
 /** Days between two ISO dates, clamped >= 0. */

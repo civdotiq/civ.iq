@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import type { Bill } from '@/types/bill';
 import { CqChip, CqLabel, CqPlainReading } from '@/components/cq';
+import { CommitteeLink, PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
 import { PanelHeader } from './PanelHeader';
+import { ExpandableList } from './ExpandableList';
 import { formatDate, pickCboHeadline } from './helpers';
 
 interface SummaryPanelProps {
@@ -24,6 +26,7 @@ export function SummaryPanel({ bill }: SummaryPanelProps) {
   const sponsorParty = bill.sponsor.representative.party?.toUpperCase().charAt(0) ?? '';
   const cboHeadline = pickCboHeadline(bill);
   const subjects = bill.subjects ?? [];
+  const committees = bill.committees ?? [];
 
   return (
     <section style={{ marginTop: 32 }}>
@@ -50,20 +53,29 @@ export function SummaryPanel({ bill }: SummaryPanelProps) {
             </CqPlainReading>
           )}
 
-          {subjects.length > 0 && (
+          {bill.policyArea && (
             <div style={{ marginTop: 24 }}>
-              <CqLabel>Subjects</CqLabel>
-              <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {subjects.slice(0, 12).map(s => (
-                  <CqChip key={s} variant="ink" filled={false} size="sm">
-                    {s}
-                  </CqChip>
-                ))}
-                {subjects.length > 12 && (
-                  <CqChip variant="ink" filled={false} size="sm">
-                    +{subjects.length - 12} more
-                  </CqChip>
-                )}
+              <CqLabel>Policy area</CqLabel>
+              <div style={{ marginTop: 6, fontSize: 15, fontWeight: 700 }}>
+                <PolicyAreaLink policyArea={bill.policyArea} />
+              </div>
+            </div>
+          )}
+
+          {subjects.length > 0 && (
+            <div id="subjects" style={{ marginTop: 24, scrollMarginTop: 80 }}>
+              <CqLabel>Legislative subjects · {subjects.length}</CqLabel>
+              <div style={{ marginTop: 8 }}>
+                <ExpandableList
+                  initial={12}
+                  noun="subjects"
+                  containerStyle={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+                  items={subjects.map(s => (
+                    <CqChip key={s} variant="ink" filled={false} size="sm">
+                      {s}
+                    </CqChip>
+                  ))}
+                />
               </div>
             </div>
           )}
@@ -83,7 +95,10 @@ export function SummaryPanel({ bill }: SummaryPanelProps) {
               <SponsorMark name={bill.sponsor.representative.name} partyCode={sponsorParty} />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>
-                  {bill.sponsor.representative.name}
+                  <RepLink
+                    bioguideId={bill.sponsor.representative.bioguideId}
+                    name={bill.sponsor.representative.name}
+                  />
                 </div>
                 <div
                   style={{
@@ -109,6 +124,30 @@ export function SummaryPanel({ bill }: SummaryPanelProps) {
               </div>
             </div>
           </div>
+
+          {committees.length > 0 && (
+            <div
+              id="committees"
+              style={{ border: '2px solid var(--ink)', padding: '16px', scrollMarginTop: 80 }}
+            >
+              <CqLabel>Committee{committees.length === 1 ? '' : 's'}</CqLabel>
+              <ul style={{ listStyle: 'none', margin: '8px 0 0', padding: 0 }}>
+                {committees.map(c => (
+                  <li
+                    key={c.committeeId || c.name}
+                    style={{ padding: '6px 0', borderTop: '1px solid var(--line)', fontSize: 13 }}
+                  >
+                    <CommitteeLink code={c.committeeId} name={c.name} className="font-bold" />
+                    <div
+                      style={{ fontSize: 11, color: 'var(--fg3)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      {c.chamber}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div
             style={{
@@ -193,6 +232,7 @@ function SummaryBody({ text }: { text: string }) {
   // with DOMPurify in bill.service.ts before it reaches this component.
   return (
     <div
+      className="space-y-3"
       style={{
         fontSize: 15,
         lineHeight: 1.6,
