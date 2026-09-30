@@ -102,7 +102,13 @@ async function main(): Promise<void> {
     upper: sorted(built.upper),
     lower: sorted(built.lower),
   };
-  writeFileSync(OUT_PATH, JSON.stringify(file) + '\n');
+  // Prettier's layout (short string arrays inline), so a refresh diffs only
+  // the keys that changed rather than reformatting the whole file.
+  const json = JSON.stringify(file, null, 2).replace(
+    /\[\n\s+("[^"\n]*"(?:,\n\s+"[^"\n]*")*)\n\s+\]/g,
+    (_, items: string) => `[${items.replace(/,\n\s+/g, ', ')}]`
+  );
+  writeFileSync(OUT_PATH, json + '\n');
 
   const { unmapped, noSittingMember, unreached } = built.report;
   console.log(
