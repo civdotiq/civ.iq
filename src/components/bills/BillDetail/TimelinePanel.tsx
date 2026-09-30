@@ -9,9 +9,10 @@ interface TimelinePanelProps {
 }
 
 const DOT_COLOR: Record<ReturnType<typeof timelineDotKind>, string> = {
-  pass: 'var(--civiq-green)',
-  fail: 'var(--civiq-red)',
-  sign: 'var(--civiq-blue)',
+  // System states, not parties: party colors never mark pass/fail.
+  pass: 'var(--civiq-blue)',
+  fail: 'var(--color-warning)',
+  sign: 'var(--civiq-blue-active)',
   intro: 'var(--fg1)',
   cmte: 'var(--fg2)',
   other: 'var(--fg2)',

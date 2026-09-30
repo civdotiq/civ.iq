@@ -217,7 +217,6 @@ export function BillDetail({ bill }: BillDetailProps) {
             label={finalVoteHref ? 'Final vote →' : 'Final vote'}
             value={finalVote?.votes ? `${finalVote.votes.yea}–${finalVote.votes.nay}` : '—'}
             caption={finalVote ? `${finalVote.chamber} · ${finalVote.result}` : 'No floor vote yet'}
-            color={finalVote?.result === 'Passed' ? 'green' : 'ink'}
             size={32}
           />
         </StatCell>
@@ -270,7 +269,7 @@ export function BillDetail({ bill }: BillDetailProps) {
         <PartyAlignmentRow
           index={0}
           label="D yeas"
-          color="var(--civiq-green)"
+          color="var(--party-democrat)"
           breakdown={
             finalVote?.breakdown
               ? {
@@ -283,7 +282,7 @@ export function BillDetail({ bill }: BillDetailProps) {
         <PartyAlignmentRow
           index={1}
           label="R yeas"
-          color="var(--civiq-red)"
+          color="var(--party-republican)"
           breakdown={
             finalVote?.breakdown
               ? {
