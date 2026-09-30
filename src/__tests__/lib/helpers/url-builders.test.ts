@@ -5,7 +5,34 @@
  * to the same canonical slug.
  */
 
-import { canonicalCasePath, canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import {
+  canonicalCasePath,
+  canonicalizeDistrictId,
+  isRetiredLookupUrl,
+} from '@/lib/helpers/url-builders';
+
+describe('isRetiredLookupUrl', () => {
+  const url = (path: string) => new URL(path, 'https://civdotiq.org');
+
+  it('retires every /results URL', () => {
+    expect(isRetiredLookupUrl(url('/results'))).toBe(true);
+    expect(isRetiredLookupUrl(url('/results/?zip=48221'))).toBe(true);
+    expect(isRetiredLookupUrl(url('/results?q=100%20Main%20St'))).toBe(true);
+  });
+
+  it('retires the ZIP and address modes of /representatives only', () => {
+    expect(isRetiredLookupUrl(url('/representatives?zip=48221'))).toBe(true);
+    expect(isRetiredLookupUrl(url('/representatives?address=100%20Main'))).toBe(true);
+    expect(isRetiredLookupUrl(url('/representatives'))).toBe(false);
+    expect(isRetiredLookupUrl(url('/representatives?state=MI&chamber=house'))).toBe(false);
+  });
+
+  it('leaves look-alike paths alone', () => {
+    expect(isRetiredLookupUrl(url('/results-archive'))).toBe(false);
+    expect(isRetiredLookupUrl(url('/representative/T000481?zip=48221'))).toBe(false);
+    expect(isRetiredLookupUrl(url('/your-reps'))).toBe(false);
+  });
+});
 
 describe('canonicalizeDistrictId', () => {
   it('normalizes all four accepted variants to the same canonical form', () => {

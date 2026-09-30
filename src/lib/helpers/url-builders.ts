@@ -436,3 +436,15 @@ export function canonicalCasePath(pathname: string): string | null {
   const code = wanted === 'lower' ? state[2].toLowerCase() : state[2].toUpperCase();
   return code === state[2] ? null : `/${state[1]}/${code}${state[3] ?? ''}`;
 }
+
+/**
+ * /results (any query) and /representatives?zip= / ?address= were the ZIP and
+ * address lookup results pages. The plain /representatives directory stays.
+ */
+export function isRetiredLookupUrl(url: URL): boolean {
+  if (/^\/results\/?$/.test(url.pathname)) return true;
+  return (
+    /^\/representatives\/?$/.test(url.pathname) &&
+    (url.searchParams.has('zip') || url.searchParams.has('address'))
+  );
+}

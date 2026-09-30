@@ -20,7 +20,11 @@
  */
 
 import { censusGeocoder } from '@/services/geocoding/census-geocoder.service';
-import type { ParsedDistrictInfo } from '@/services/geocoding/census-geocoder.types';
+import {
+  CensusGeocoderError,
+  CensusGeocoderException,
+  type ParsedDistrictInfo,
+} from '@/services/geocoding/census-geocoder.types';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getJurisdictionRoster } from '@/lib/data-sources/openstates-people/load-people';
 import type { CorpusPerson } from '@/lib/data-sources/openstates-people/people-corpus';
@@ -37,12 +41,30 @@ import {
 import { censusCongressionalDistrictCode, STATE_FIPS_TO_CODE } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 
-export interface ResolveAddressInput {
-  street: string;
-  city: string;
-  /** USPS code the person entered; the geocoder's answer wins when they differ. */
-  state: string;
-  zip?: string;
+/**
+ * A street address in parts, the same address on one line (Census splits it),
+ * or a point from a device's location. Never a ZIP code alone.
+ */
+export type ResolveAddressInput =
+  | {
+      street: string;
+      city: string;
+      /** USPS code the person entered; the geocoder's answer wins when they differ. */
+      state: string;
+      zip?: string;
+    }
+  | { address: string }
+  | { lat: number; lon: number };
+
+function geocode(input: ResolveAddressInput): Promise<ParsedDistrictInfo> {
+  if ('address' in input) return censusGeocoder.geocodeOneLineAddress(input.address);
+  if ('lat' in input) return censusGeocoder.geographiesAtPoint(input.lat, input.lon);
+  return censusGeocoder.geocodeAddress({
+    street: input.street,
+    city: input.city,
+    state: input.state,
+    zip: input.zip,
+  });
 }
 
 export interface FederalMember {
@@ -231,18 +253,20 @@ async function federalMembers(
  * CensusGeocoderException so each caller keeps its own error envelope.
  */
 export async function resolveByAddress(input: ResolveAddressInput): Promise<ResolvedAddress> {
-  const info: ParsedDistrictInfo = await censusGeocoder.geocodeAddress({
-    street: input.street,
-    city: input.city,
-    state: input.state,
-    zip: input.zip,
-  });
+  const info = await geocode(input);
 
   const state =
     stateFromGeoid(info.congressionalDistrict?.geoid) ??
     stateFromGeoid(info.upperDistrict?.geoid) ??
     stateFromGeoid(info.lowerDistrict?.geoid) ??
-    input.state.toUpperCase();
+    ('state' in input ? input.state.toUpperCase() : undefined);
+  if (!state) {
+    // A point offshore or outside the US: no district layer answered.
+    throw new CensusGeocoderException(
+      CensusGeocoderError.MISSING_DISTRICT_DATA,
+      'No congressional or state legislative district at this location'
+    );
+  }
 
   const [federal, roster, ballotDistrict2026] = await Promise.all([
     federalMembers(state, info.congressionalDistrict?.geoid),

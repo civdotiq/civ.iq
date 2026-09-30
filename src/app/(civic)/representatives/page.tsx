@@ -8,10 +8,7 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
-import {
-  getAllRepresentativesService,
-  getRepresentativesByZipService,
-} from '@/lib/services/representatives.service';
+import { getAllRepresentativesService } from '@/lib/services/representatives.service';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 
@@ -53,7 +50,6 @@ const PerformanceDashboard = dynamic(
 
 interface SearchParams {
   searchParams: Promise<{
-    zip?: string;
     state?: string;
     district?: string;
     compare?: string;
@@ -62,7 +58,7 @@ interface SearchParams {
   }>;
 }
 
-async function getInitialRepresentatives(zip?: string, state?: string, district?: string) {
+async function getInitialRepresentatives(state?: string, district?: string) {
   try {
     // If we have state and district, get specific ones
     if (state && district) {
@@ -70,11 +66,7 @@ async function getInitialRepresentatives(zip?: string, state?: string, district?
       return representatives;
     }
 
-    // If we have a ZIP, use service directly (no HTTP roundtrip)
-    if (zip) {
-      return await getRepresentativesByZipService(zip);
-    }
-
+    // ?zip= and ?address= 308 to /your-reps in middleware: a ZIP can't place anyone.
     // Otherwise get ALL representatives directly (no HTTP roundtrip)
     return await getAllRepresentativesService();
   } catch {
@@ -83,11 +75,11 @@ async function getInitialRepresentatives(zip?: string, state?: string, district?
 }
 
 export default async function RepresentativesPage({ searchParams }: SearchParams) {
-  const { zip, state, district, compare, chamber, party } = await searchParams;
+  const { state, district, compare, chamber, party } = await searchParams;
   const compareIds = compare?.split(',').filter(Boolean) || [];
 
   // Fetch initial data on the server if we have URL params
-  const initialRepresentatives = await getInitialRepresentatives(zip, state, district);
+  const initialRepresentatives = await getInitialRepresentatives(state, district);
 
   return (
     <>

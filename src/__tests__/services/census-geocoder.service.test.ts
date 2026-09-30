@@ -124,3 +124,44 @@ describe('CensusGeocoderService.geocodeAddress', () => {
     expect(ballot.congressionalDistrict?.number).toBe('4');
   });
 });
+
+describe('CensusGeocoderService one-line and point lookups', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  const requestedUrl = () => new URL(String(mockFetch.mock.calls.at(-1)?.[0]));
+
+  it('sends a one-line address to the onelineaddress endpoint', async () => {
+    respondWith(lansingSitting);
+    const info = await CensusGeocoderService.geocodeOneLineAddress(
+      '100 N Capitol Ave, Lansing, MI 48933'
+    );
+
+    expect(requestedUrl().pathname).toMatch(/\/geographies\/onelineaddress$/);
+    expect(requestedUrl().searchParams.get('address')).toBe('100 N Capitol Ave, Lansing, MI 48933');
+    expect(requestedVintage()).toBe(currentOfficeholderVintage());
+    expect(info.upperDistrict?.geoid).toBe('26021');
+    expect(info.sldVintage).toBe('2024');
+  });
+
+  it('reads districts at a point, with no matched address', async () => {
+    const [match] = lansingSitting.result.addressMatches;
+    respondWith({ result: { geographies: match?.geographies } });
+    const info = await CensusGeocoderService.geographiesAtPoint(42.7336, -84.5555);
+
+    expect(requestedUrl().pathname).toMatch(/\/geographies\/coordinates$/);
+    expect(requestedUrl().searchParams.get('x')).toBe('-84.5555');
+    expect(requestedUrl().searchParams.get('y')).toBe('42.7336');
+    expect(info.matchedAddress).toBe('');
+    expect(info.coordinates).toEqual({ lat: 42.7336, lon: -84.5555 });
+    expect(info.congressionalDistrict?.geoid).toBe('2607');
+  });
+
+  it('refuses a point with no geographies', async () => {
+    respondWith({ result: {} });
+    await expect(CensusGeocoderService.geographiesAtPoint(0, 0)).rejects.toMatchObject({
+      errorType: 'MISSING_DISTRICT_DATA',
+    });
+  });
+});

@@ -25,6 +25,7 @@ import {
   resolveByAddress,
   stateMembersByBucket,
   type FederalMember,
+  type ResolveAddressInput,
   type StateMember,
   type StateSeat,
 } from '@/services/lookup/resolve-representatives.service';
@@ -34,15 +35,62 @@ import {
 // State legislators change during biennial elections (handled by govCache)
 export const revalidate = 2592000; // 30 days
 
+/**
+ * One of: street parts, a one-line address, or a device's coordinates.
+ * A ZIP code alone is refused: ZIPs cross district lines.
+ */
 interface UnifiedGeocodeRequest {
-  /** Full street address */
-  street: string;
-  /** City */
-  city: string;
+  /** Street address */
+  street?: string;
+  city?: string;
   /** State abbreviation (e.g., "MI") */
-  state: string;
-  /** Optional ZIP code */
+  state?: string;
+  /** Optional ZIP code, alongside a street address */
   zip?: string;
+  /** Whole address on one line ("100 N Capitol Ave, Lansing, MI") */
+  address?: string;
+  /** A device's location */
+  lat?: number;
+  lon?: number;
+}
+
+type ParsedRequest =
+  { input: ResolveAddressInput } | { error: { code: string; userMessage: string } };
+
+const ZIP_ONLY = /^\s*\d{5}(-\d{4})?\s*$/;
+
+function parseRequest(body: UnifiedGeocodeRequest): ParsedRequest {
+  if (typeof body.lat === 'number' && typeof body.lon === 'number') {
+    const { lat, lon } = body;
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+      return { error: { code: 'INVALID_COORDINATES', userMessage: 'That location isn’t valid.' } };
+    }
+    return { input: { lat, lon } };
+  }
+  const oneLine = body.address?.trim();
+  if (oneLine) {
+    if (ZIP_ONLY.test(oneLine)) {
+      return {
+        error: {
+          code: 'ZIP_ONLY',
+          userMessage:
+            'Add your street address. A ZIP code can cross district lines, so it can give the wrong representatives.',
+        },
+      };
+    }
+    return { input: { address: oneLine.slice(0, 300) } };
+  }
+  if (body.street && body.city && body.state) {
+    return {
+      input: { street: body.street, city: body.city, state: body.state, zip: body.zip },
+    };
+  }
+  return {
+    error: {
+      code: 'MISSING_REQUIRED_FIELDS',
+      userMessage: 'Please provide a complete address with street, city, and state.',
+    },
+  };
 }
 
 interface UnifiedGeocodeResponse {
@@ -109,37 +157,23 @@ export async function POST(request: NextRequest) {
   try {
     const body: UnifiedGeocodeRequest = await request.json();
 
-    logger.info('Unified geocode request', {
-      hasStreet: !!body.street,
-      hasCity: !!body.city,
-      hasState: !!body.state,
-      hasZip: !!body.zip,
-    });
-
-    // Validate required fields
-    if (!body.street || !body.city || !body.state) {
+    const parsed = parseRequest(body);
+    if ('error' in parsed) {
       return NextResponse.json(
         {
           success: false,
-          error: {
-            code: 'MISSING_REQUIRED_FIELDS',
-            message: 'Street, city, and state are required',
-            userMessage: 'Please provide a complete address with street, city, and state.',
-          },
+          error: { ...parsed.error, message: parsed.error.userMessage },
         } as UnifiedGeocodeResponse,
         { status: 400 }
       );
     }
 
-    // Privacy: never log the street address (see PRIVACY.md "Address lookups")
-    logger.info('Resolving address', { city: body.city, state: body.state });
-
-    const resolved = await resolveByAddress({
-      street: body.street,
-      city: body.city,
-      state: body.state,
-      zip: body.zip,
+    // Privacy: never log the address or coordinates (see PRIVACY.md "Address lookups")
+    logger.info('Resolving address', {
+      kind: 'lat' in parsed.input ? 'point' : 'address' in parsed.input ? 'oneline' : 'parts',
     });
+
+    const resolved = await resolveByAddress(parsed.input);
     const { state, congressionalDistrict: cd } = resolved;
     const upperSeat = resolved.stateSeats.find(s => s.censusChamber === 'upper');
     const lowerSeat = resolved.stateSeats.find(s => s.censusChamber === 'lower');

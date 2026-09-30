@@ -38,7 +38,7 @@ test.describe('Accessibility Validation', () => {
     });
 
     test('should support keyboard navigation in results page', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZip}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       // Tab through results page elements
@@ -235,7 +235,7 @@ test.describe('Accessibility Validation', () => {
     });
 
     test('should have proper heading hierarchy', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZip}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       // Check heading structure
@@ -358,13 +358,13 @@ test.describe('Accessibility Validation', () => {
       await page.goto('/');
       await expect(page).toHaveTitle(/CIV\.IQ/);
 
-      await page.goto(`/representatives?zip=${testZip}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
       await expect(page).toHaveTitle(/representatives|CIV\.IQ/i);
     });
 
     test('should have descriptive link text', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZip}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       const links = page.locator('a');

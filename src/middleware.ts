@@ -10,7 +10,11 @@ import { Redis } from '@upstash/redis';
 import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 import { recordSdkRequest } from '@/lib/analytics/adoption-telemetry';
 import { incrementCrawlerHit } from '@/lib/analytics/crawler-counter';
-import { canonicalCasePath, canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import {
+  canonicalCasePath,
+  canonicalizeDistrictId,
+  isRetiredLookupUrl,
+} from '@/lib/helpers/url-builders';
 import { LOCAL_PHOTO_IDS } from '@/generated/local-photo-ids';
 import { KNOWN_ROUTE_PREFIXES } from '@/generated/known-route-prefixes';
 import { addVersionHeaders } from '@/lib/api/v1-versioning';
@@ -316,6 +320,14 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = new URL(`/digest/mi/${legacyDigest[1].toUpperCase()}`, request.nextUrl);
       redirectUrl.search = request.nextUrl.search;
       return NextResponse.redirect(redirectUrl, 308);
+    }
+
+    // One lookup (search-growth Phase 4b): the old ZIP and address result
+    // pages 308 to /your-reps. The query is dropped, not carried over — it
+    // held a ZIP (which can't place anyone) or a home address (which must not
+    // sit in a URL).
+    if (isRetiredLookupUrl(request.nextUrl)) {
+      return NextResponse.redirect(new URL('/your-reps', request.nextUrl), 308);
     }
 
     // Validate request
