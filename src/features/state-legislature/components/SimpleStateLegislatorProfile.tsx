@@ -11,7 +11,13 @@ import useSWR from 'swr';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
-import { getChamberName } from '@/types/state-legislature';
+import {
+  formatStateDistrict,
+  getChamberName,
+  getLegislatorRoleTitle,
+} from '@/types/state-legislature';
+import { getStateName } from '@/lib/data/us-states';
+import { countSponsorships } from '@/features/state-legislature/utils/sponsorship-counts';
 import { sanitizeAndValidateWikipediaHtml } from '@/utils/sanitize';
 import { ClusteredNewsSection } from '@/features/news/components/ClusteredNewsSection';
 import {
@@ -24,7 +30,6 @@ import {
   ExternalLink,
   Newspaper,
   Crown,
-  Vote,
   BarChart3,
   User,
   Calendar,
@@ -110,14 +115,15 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
     return legislator.name;
   };
 
-  // Get full title with state
-  const getFullTitle = () => {
-    const stateName = (legislator.state || '').toUpperCase();
-    if (legislator.chamber === 'upper') {
-      return `State Senator from ${stateName}`;
-    }
-    return `State Representative, ${stateName} District ${legislator.district}`;
-  };
+  // "Michigan State Representative, District 81" / "California Assemblymember, District 12"
+  const stateName = getStateName(legislator.state) || legislator.state;
+  const roleTitle = getLegislatorRoleTitle(legislator.state, legislator.chamber);
+  const getFullTitle = () =>
+    `${stateName} ${roleTitle}, ${formatStateDistrict(legislator.district)}`;
+  const officePhone = legislator.phone || legislator.contact?.capitolOffice?.phone;
+  const officeAddress = legislator.contact?.capitolOffice?.address;
+  const website = legislator.links?.[0]?.url;
+  const seatStartYear = legislator.terms?.[0]?.startYear;
 
   // Extract counties represented from extras
   const getCountiesRepresented = (): string | undefined => {
@@ -146,15 +152,37 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
     return 'bg-gray-50 text-gray-800 border-black';
   };
 
-  // Stats for the header - matching federal 4-stat layout
-  const stats = {
-    billsSponsored: legislator.legislation?.sponsored || 0,
-    billsCosponsored: legislator.legislation?.cosponsored || 0,
-    committees: legislator.committees?.length || 0,
-    totalVotes: legislator.votingRecord?.totalVotes || 0,
-  };
-
   const base64Id = encodeBase64Url(legislator.id);
+
+  // Bill counts load in the browser, never on the server: /api/ is
+  // robots-blocked, so a crawler rendering this page cannot spend OpenStates
+  // quota. Same key as the Legislation tab, so the two share one request.
+  const { data: billsData, error: billsError } = useSWR<{
+    bills?: Array<{ sponsorships?: Array<{ name: string; primary?: boolean }> }>;
+  }>(
+    `/api/state-legislature/${legislator.state}/legislator/${base64Id}/bills`,
+    async (url: string) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    },
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+  const billCounts = billsData?.bills
+    ? countSponsorships(billsData.bills, legislator.name, legislator.lastName)
+    : null;
+  // The route returns at most BILLS_FETCH_LIMIT bills; a full page means more exist.
+  const BILLS_FETCH_LIMIT = 50;
+  const billsCapped = (billCounts?.examined ?? 0) >= BILLS_FETCH_LIMIT;
+  const formatBillCount = (n: number | undefined) =>
+    billsError ? '—' : n === undefined ? '…' : billsCapped ? `${n}+` : String(n);
+  const billCountNote = billsError
+    ? 'Unavailable'
+    : billsCapped
+      ? `Of latest ${BILLS_FETCH_LIMIT} bills`
+      : 'All sessions on file';
+
+  const committeeCount = legislator.committees?.length ?? 0;
 
   // Fetch network data
   const { data: networkData, isLoading: networkLoading } = useSWR(
@@ -212,7 +240,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             <div className="flex items-start gap-2">
               <Building className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
               <div>
-                <div className="aicher-heading-wide text-xs text-gray-600 mb-1">Capitol Office</div>
+                <div className="aicher-heading-wide text-xs text-gray-600 mb-1">Office</div>
                 <div className="text-sm text-gray-900">
                   {legislator.contact.capitolOffice.address}
                 </div>
@@ -879,7 +907,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                     {legislator.party}
                   </span>
                   <span className="aicher-heading text-xs sm:text-sm font-bold bg-white text-gray-800 border-2 border-black px-3 py-2">
-                    DISTRICT {legislator.district}
+                    {formatStateDistrict(legislator.district).toUpperCase()}
                   </span>
                   {/* Leadership positions */}
                   {legislator.leadershipRoles &&
@@ -897,6 +925,76 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               </div>
             </div>
 
+            {/* Contact comes before any statistic: it is what most visitors came for */}
+            {(officePhone || legislator.email || officeAddress || website) && (
+              <div className="border-t-2 border-gray-200 pt-6 mb-6">
+                <h2 className="aicher-heading-wide text-xs text-gray-600 uppercase mb-3">
+                  Contact
+                </h2>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3">
+                  {officePhone && (
+                    <div>
+                      <dt className="aicher-heading-wide text-xs text-gray-600 flex items-center gap-2">
+                        <Phone className="w-4 h-4" aria-hidden="true" />
+                        Phone
+                      </dt>
+                      <dd>
+                        <a
+                          href={`tel:${officePhone.replace(/[^\d+]/g, '')}`}
+                          className="inline-flex min-h-[44px] items-center text-base font-medium text-civiq-blue hover:underline"
+                        >
+                          {officePhone}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {legislator.email && (
+                    <div>
+                      <dt className="aicher-heading-wide text-xs text-gray-600 flex items-center gap-2">
+                        <Mail className="w-4 h-4" aria-hidden="true" />
+                        Email
+                      </dt>
+                      <dd>
+                        <a
+                          href={`mailto:${legislator.email}`}
+                          className="inline-flex min-h-[44px] items-center text-base font-medium text-civiq-blue hover:underline break-all"
+                        >
+                          {legislator.email}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {officeAddress && (
+                    <div>
+                      <dt className="aicher-heading-wide text-xs text-gray-600 flex items-center gap-2">
+                        <Building className="w-4 h-4" aria-hidden="true" />
+                        Office
+                      </dt>
+                      <dd className="py-2 text-base text-gray-900">{officeAddress}</dd>
+                    </div>
+                  )}
+                  {website && (
+                    <div>
+                      <dt className="aicher-heading-wide text-xs text-gray-600 flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                        Website
+                      </dt>
+                      <dd>
+                        <a
+                          href={website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-[44px] items-center text-base font-medium text-civiq-blue hover:underline"
+                        >
+                          Official page
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
             {/* Stats Section - 4-column grid matching federal design */}
             <div className="border-t-2 border-gray-200 pt-6">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -912,25 +1010,25 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       Bills Sponsored
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.billsSponsored}</div>
-                  <div className="text-xs text-gray-500 mt-1">Current session</div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatBillCount(billCounts?.sponsored)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{billCountNote}</div>
                 </button>
 
-                {/* Votes Cast */}
-                <button
-                  onClick={() => setActiveTab('voting')}
-                  className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
-                  type="button"
-                >
+                {/* In this seat since — the corpus role start, not a guess */}
+                <div className="bg-gray-50 border-2 border-gray-300 p-4 text-left">
                   <div className="flex items-center gap-2 mb-2">
-                    <Vote className="w-4 h-4 text-civiq-blue" />
+                    <Calendar className="w-4 h-4 text-civiq-blue" />
                     <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
-                      Votes Cast
+                      In seat since
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.totalVotes}</div>
-                  <div className="text-xs text-gray-500 mt-1">This term</div>
-                </button>
+                  <div className="text-3xl font-bold text-gray-900">{seatStartYear ?? '—'}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {seatStartYear ? formatStateDistrict(legislator.district) : 'Not on record'}
+                  </div>
+                </div>
 
                 {/* Co-sponsored */}
                 <button
@@ -944,8 +1042,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       Co-sponsored
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.billsCosponsored}</div>
-                  <div className="text-xs text-gray-500 mt-1">Current session</div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatBillCount(billCounts?.cosponsored)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{billCountNote}</div>
                 </button>
 
                 {/* Committees */}
@@ -960,7 +1060,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       Committees
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">{stats.committees}</div>
+                  <div className="text-3xl font-bold text-gray-900">{committeeCount}</div>
                   <div className="text-xs text-gray-500 mt-1">Current</div>
                 </button>
               </div>

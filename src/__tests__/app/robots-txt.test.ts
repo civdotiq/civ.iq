@@ -51,7 +51,8 @@ describe('public/robots.txt', () => {
     }
   });
 
-  it('lists the sitemap', () => {
+  it('lists the sitemaps', () => {
     expect(robots).toMatch(/^Sitemap: https:\/\/civdotiq\.org\/sitemap\.xml$/m);
+    expect(robots).toMatch(/^Sitemap: https:\/\/civdotiq\.org\/sitemap-state-legislators\.xml$/m);
   });
 });

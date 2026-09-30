@@ -8,7 +8,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, User, FileText, Users, X, Building2, DollarSign } from 'lucide-react';
-import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { buildBillUrl, buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 
 interface Representative {
   bioguideId: string;
@@ -151,7 +151,7 @@ export function GlobalSearch() {
       router.push(`/representative/${rep.bioguideId}`);
     } else if (result.type === 'state-leg') {
       const leg = result.item as StateLegislator;
-      router.push(`/state-legislature/${leg.state.toLowerCase()}/legislator/${leg.id}`);
+      router.push(buildStateLegislatorUrl(leg.state, leg.id, leg.name));
     } else if (result.type === 'bill') {
       const bill = result.item as Bill;
       // bill.number is the combined "HR8814" form; buildBillUrl strips the

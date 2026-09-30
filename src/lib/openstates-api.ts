@@ -217,6 +217,10 @@ export interface OpenStatesLegislator {
   photo_url?: string;
   email?: string;
   phone?: string;
+  /** Capitol office address, else the first office with one. Corpus only. */
+  office?: string;
+  /** Start of the member's current role (YYYY-MM-DD). Corpus only. */
+  startDate?: string;
   links?: Array<{ url: string; note?: string }>;
   // External profile links (BallotPedia, VoteSmart, etc.)
   other_identifiers?: Array<{
@@ -275,9 +279,22 @@ function transformCorpusPerson(person: CorpusPerson, state: string): OpenStatesL
     photo_url: person.image,
     email: person.email,
     phone: person.phone,
+    office: person.office,
+    startDate: person.startDate || undefined,
     links: person.links.map(url => ({ url })),
     other_identifiers: person.identifiers,
   };
+}
+
+/**
+ * One sitting member from the roster corpus, or null — never a live request.
+ * Public pages resolve legislators through this so a crawler walking every
+ * profile cannot spend the 1,000/day OpenStates quota. A miss means the id is
+ * not a sitting member (or the corpus failed to load, which logs on its own).
+ */
+export async function getCorpusLegislator(personId: string): Promise<OpenStatesLegislator | null> {
+  const person = await getCorpusPersonById(personId);
+  return person ? transformCorpusPerson(person, person.jurisdiction) : null;
 }
 
 export interface OpenStatesBill {

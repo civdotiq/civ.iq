@@ -31,7 +31,7 @@
  * This election-aware strategy reduces API calls by ~95% while maintaining accuracy.
  */
 
-import { openStatesAPI, OpenStatesUtils } from '@/lib/openstates-api';
+import { openStatesAPI, OpenStatesUtils, getCorpusLegislator } from '@/lib/openstates-api';
 import { getStateDistrictDemographics } from '@/lib/services/state-census-api.service';
 import type {
   OpenStatesLegislator,
@@ -89,15 +89,20 @@ export class StateLegislatureCoreService {
       phone: osLegislator.phone,
       photo_url: osLegislator.photo_url,
       isActive: true,
-      terms: [
-        {
-          chamber: osLegislator.chamber,
-          district: osLegislator.district,
-          startYear: new Date().getFullYear().toString(),
-          endYear: undefined,
-          party,
-        },
-      ],
+      // Only the corpus knows when the current role began. Without it there is
+      // no term to show — this used to print the current year for everyone.
+      terms: osLegislator.startDate
+        ? [
+            {
+              chamber: osLegislator.chamber,
+              district: osLegislator.district,
+              startYear: osLegislator.startDate.slice(0, 4),
+              endYear: undefined,
+              party,
+            },
+          ]
+        : undefined,
+      contact: this.transformContact(osLegislator),
       links: osLegislator.links,
       // External profile identifiers (BallotPedia, VoteSmart, Twitter, etc.)
       other_identifiers: osLegislator.other_identifiers,
@@ -115,6 +120,25 @@ export class StateLegislatureCoreService {
         },
       },
     };
+  }
+
+  /**
+   * Office address and social handles, which the corpus carries but the old
+   * transform dropped. Undefined when there is nothing to show.
+   */
+  private static transformContact(
+    osLegislator: OpenStatesLegislator
+  ): EnhancedStateLegislator['contact'] {
+    const handle = (scheme: string) =>
+      osLegislator.other_identifiers?.find(i => i.scheme === scheme)?.identifier;
+    const twitter = handle('twitter');
+    const facebook = handle('facebook');
+    const instagram = handle('instagram');
+    const socialMedia =
+      twitter || facebook || instagram ? { twitter, facebook, instagram } : undefined;
+    const capitolOffice = osLegislator.office ? { address: osLegislator.office } : undefined;
+
+    return capitolOffice || socialMedia ? { capitolOffice, socialMedia } : undefined;
   }
 
   /**
@@ -533,7 +557,14 @@ export class StateLegislatureCoreService {
   }
 
   /**
-   * Get single state legislator by ID - DIRECT lookup, no HTTP
+   * Get single state legislator by ID — from the roster corpus, never the API.
+   *
+   * Every public profile and nine API routes resolve legislators here, so this
+   * path must not spend OpenStates quota (1,000/day): a crawler walking 7,420
+   * profiles would exhaust it within hours. An id the corpus doesn't hold is
+   * not a sitting member and returns null. Bill counts are not part of the
+   * profile; the page loads them in the browser from the robots-blocked
+   * /bills route, so only real visitors ever trigger that request.
    */
   static async getStateLegislatorById(
     state: string,
@@ -541,7 +572,9 @@ export class StateLegislatureCoreService {
   ): Promise<EnhancedStateLegislator | null> {
     // Normalize state to uppercase for consistent caching across all endpoints
     const normalizedState = state.toUpperCase();
-    const cacheKey = `core:state-legislator:${normalizedState}:${legislatorId}`;
+    // v2: corpus-only shape (office address, real term start, no bill counts).
+    // Entries under the old key carry the current-year term for everyone.
+    const cacheKey = `core:state-legislator:v2:${normalizedState}:${legislatorId}`;
     const startTime = Date.now();
 
     try {
@@ -557,32 +590,14 @@ export class StateLegislatureCoreService {
         return cached;
       }
 
-      // Try direct person lookup API first for detailed profile data
-      const osLegislator = await openStatesAPI.getPersonById(legislatorId);
-
-      // Fallback to list endpoint if direct lookup fails
-      // Some legislators may not be available via direct endpoint but exist in the list
+      const osLegislator = await getCorpusLegislator(legislatorId);
       if (!osLegislator) {
-        logger.info('Direct person lookup failed, falling back to list endpoint', {
+        logger.warn('State legislator not in roster corpus', {
           state: normalizedState,
           legislatorId,
+          responseTime: Date.now() - startTime,
         });
-
-        const allLegislators = await this.getAllStateLegislators(normalizedState);
-        const legislatorFromList = allLegislators.find(leg => leg.id === legislatorId);
-
-        if (!legislatorFromList) {
-          logger.warn('State legislator not found in list either', {
-            state: normalizedState,
-            legislatorId,
-            totalLegsSearched: allLegislators.length,
-            responseTime: Date.now() - startTime,
-          });
-          return null;
-        }
-
-        // Return the legislator from the list (won't have enhanced bio data, but will work)
-        return legislatorFromList;
+        return null;
       }
 
       // Transform to our enhanced type
@@ -670,11 +685,7 @@ export class StateLegislatureCoreService {
                   id: committee.id,
                   name: committee.name,
                   role: membership?.role as
-                    | 'Chair'
-                    | 'Vice Chair'
-                    | 'Ranking Member'
-                    | 'Member'
-                    | undefined,
+                    'Chair' | 'Vice Chair' | 'Ranking Member' | 'Member' | undefined,
                   chamber: committee.chamber || legislator.chamber,
                 };
               });
@@ -701,81 +712,7 @@ export class StateLegislatureCoreService {
           }
         })(),
 
-        // 3. Fetch bills to get sponsored/cosponsored counts
-        (async () => {
-          try {
-            const bills = await openStatesAPI.getBillsBySponsor(
-              legislatorId,
-              normalizedState,
-              undefined,
-              100
-            );
-
-            if (bills.length > 0) {
-              // Count primary sponsorships vs cosponsorships
-              // The API returns bills where this person is a sponsor
-              // We need to check if they're primary or co-sponsor on each bill
-              let sponsoredCount = 0;
-              let cosponsoredCount = 0;
-
-              // Normalize legislator name for comparison (case-insensitive, handle middle names)
-              const legislatorNameLower = legislator.name.toLowerCase();
-              const legislatorLastName = legislator.lastName?.toLowerCase() || '';
-
-              bills.forEach(bill => {
-                // Find this legislator in the bill's sponsorships
-                const sponsorship = bill.sponsorships?.find(s => {
-                  const sponsorNameLower = s.name.toLowerCase();
-                  // Match by full name or last name
-                  return (
-                    sponsorNameLower === legislatorNameLower ||
-                    sponsorNameLower.includes(legislatorLastName) ||
-                    legislatorNameLower.includes(sponsorNameLower)
-                  );
-                });
-
-                if (sponsorship?.primary) {
-                  sponsoredCount++;
-                } else if (sponsorship) {
-                  cosponsoredCount++;
-                } else {
-                  // If we can't find a match but the API returned this bill for this sponsor,
-                  // count it as sponsored (the API filter is authoritative)
-                  sponsoredCount++;
-                }
-              });
-
-              legislator.legislation = {
-                sponsored: sponsoredCount,
-                cosponsored: cosponsoredCount,
-                passed: 0, // Future enhancement: Calculate from bill.status
-                failed: 0,
-                pending: 0,
-              };
-
-              logger.info('Enriched state legislator with legislation counts', {
-                state: normalizedState,
-                legislatorId,
-                sponsored: sponsoredCount,
-                cosponsored: cosponsoredCount,
-                totalBillsFromAPI: bills.length,
-              });
-            }
-
-            // Update completeness metadata
-            if (legislator.metadata?.completeness) {
-              legislator.metadata.completeness.legislation = bills.length > 0;
-            }
-          } catch (error) {
-            logger.warn('Failed to fetch bills, continuing without', {
-              error: error instanceof Error ? error.message : 'Unknown error',
-              state: normalizedState,
-              legislatorId,
-            });
-          }
-        })(),
-
-        // 4. Fetch Wikipedia biography
+        // 3. Fetch Wikipedia biography
         (async () => {
           try {
             const wikipediaData = await this.fetchWikipediaForStateLegislator(
@@ -827,7 +764,6 @@ export class StateLegislatureCoreService {
         name: legislator.name,
         hasDemographics: !!legislator.demographics,
         hasCommittees: !!legislator.committees && legislator.committees.length > 0,
-        hasLegislation: !!legislator.legislation,
         hasWikipedia: !!legislator.wikipedia,
         responseTime: Date.now() - startTime,
       });

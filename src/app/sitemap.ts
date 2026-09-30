@@ -606,7 +606,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.4,
     });
+
+    // Whole-state overview (lowercase is canonical; /states/MI 308s here)
+    entries.push({
+      url: `${BASE_URL}/states/${stateLower}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: isHighPop ? 0.7 : 0.6,
+    });
   }
+  // Individual legislator profiles are in /sitemap-state-legislators.xml.
 
   // ===========================================
   // TIER 7: LOWER PRIORITY (0.5) - Bills

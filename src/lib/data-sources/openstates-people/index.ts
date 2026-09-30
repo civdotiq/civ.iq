@@ -5,7 +5,7 @@
 
 export { buildPeopleCorpus, currentChamberRole } from './build-corpus';
 export type { BuildInput, RawPersonYaml } from './build-corpus';
-export { decodePersonRow } from './people-corpus';
+export { decodePersonRow, personIdSuffix, PERSON_ID_SUFFIX_LENGTH } from './people-corpus';
 export type {
   CorpusChamber,
   CorpusPerson,

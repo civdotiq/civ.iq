@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Calendar,
 } from 'lucide-react';
-import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
@@ -147,12 +147,9 @@ function LegislatorCard({
         )
       : 0;
 
-  // Base64 encode the ID for URL safety
-  const base64Id = encodeBase64Url(legislator.id);
-
   return (
     <Link
-      href={`/state-legislature/${state}/legislator/${base64Id}`}
+      href={buildStateLegislatorUrl(state, legislator.id, legislator.name)}
       className="block bg-white border border-gray-200 p-4 sm:p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">

@@ -903,6 +903,11 @@ interface ProfilePageSchemaProps {
     knowsAbout?: string[];
     worksFor?: { name: string; url?: string };
     memberOf?: Array<{ name: string; url?: string }>;
+    /** Official office contact — the public record, never a personal line. */
+    telephone?: string;
+    email?: string;
+    /** Office address as one line; emitted as the person's workLocation. */
+    workAddress?: string;
   };
   url: string;
 }
@@ -960,6 +965,12 @@ export function ProfilePageSchema({ person, url }: ProfilePageSchemaProps) {
 
   if (person.knowsAbout && person.knowsAbout.length > 0) {
     personData.knowsAbout = person.knowsAbout;
+  }
+
+  if (person.telephone) personData.telephone = person.telephone;
+  if (person.email) personData.email = person.email;
+  if (person.workAddress) {
+    personData.workLocation = { '@type': 'Place', address: person.workAddress };
   }
 
   personData.nationality = { '@type': 'Country', name: 'United States of America' };

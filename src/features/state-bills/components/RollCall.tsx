@@ -7,7 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 import type { StateBillVote } from '@/types/state-legislature';
 
 type RollCallEntry = NonNullable<StateBillVote['votes']>[number];
@@ -98,9 +98,11 @@ export function RollCall({ state, vote }: RollCallProps) {
                 <li key={`${member.legislator_id ?? member.legislator_name}-${idx}`}>
                   {member.legislator_id ? (
                     <Link
-                      href={`/state-legislature/${state.toLowerCase()}/legislator/${encodeBase64Url(
-                        member.legislator_id
-                      )}`}
+                      href={buildStateLegislatorUrl(
+                        state,
+                        member.legislator_id,
+                        member.legislator_name
+                      )}
                       className="text-civiq-blue hover:underline"
                     >
                       {member.legislator_name}

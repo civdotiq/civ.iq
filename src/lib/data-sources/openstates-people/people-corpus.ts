@@ -149,3 +149,20 @@ export function decodePersonRow(
     identifiers: row[14].map(([scheme, identifier]) => ({ scheme, identifier })),
   };
 }
+
+/**
+ * Readable legislator URLs end in the first 8 hex digits of the member's uuid
+ * (`/state-legislature/mi/legislator/angela-rigas-2a1a6b8f`). Eight is enough
+ * while no two sitting members share a prefix, which buildPeopleCorpus checks,
+ * so a collision fails the build rather than sending one member's link to
+ * another.
+ */
+export const PERSON_ID_SUFFIX_LENGTH = 8;
+
+/** `ocd-person/2a1a6b8f-1f9c-...` or a bare uuid → `2a1a6b8f`. */
+export function personIdSuffix(personId: string): string {
+  return personId
+    .replace(/^ocd-person\//, '')
+    .slice(0, PERSON_ID_SUFFIX_LENGTH)
+    .toLowerCase();
+}

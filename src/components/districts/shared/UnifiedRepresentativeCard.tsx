@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 
 /**
@@ -70,7 +70,7 @@ export default function UnifiedRepresentativeCard({
   // Build profile link
   const profileLink = isFederal
     ? `/representative/${representative.bioguideId}`
-    : `/state-legislature/${representative.state}/legislator/${encodeBase64Url(representative.id)}`;
+    : buildStateLegislatorUrl(representative.state, representative.id, representative.name);
 
   // Normalize party names (state uses "Democratic", federal uses "Democrat")
   const displayParty = party === 'Democratic' ? 'Democrat' : party;

@@ -12,8 +12,14 @@
  * - Representatives: /representative/K000367
  * - Bills: /bill/119-hr-1234
  * - Committees: /committee/HSAG
- * - State Legislature: /state-legislature/mi/legislator/abc123
+ * - State Legislature: /state-legislature/mi/legislator/angela-rigas-2a1a6b8f
  */
+
+import {
+  PERSON_ID_SUFFIX_LENGTH,
+  personIdSuffix,
+} from '@/lib/data-sources/openstates-people/people-corpus';
+import { decodeBase64Url } from '@/lib/url-encoding';
 
 // ============================================================================
 // DISTRICT URLs
@@ -246,17 +252,77 @@ export function buildStateLegislatureUrl(state: string): string {
 }
 
 /**
+ * Readable URL segment for a state legislator: the name, ASCII-folded and
+ * hyphenated, then the id suffix that actually identifies them. The name part
+ * is decoration — the page resolves by suffix and 308s any other spelling
+ * (a renamed member, a hand-typed link) to the current one.
+ *
+ * @example
+ * stateLegislatorSlug("José Peña Jr.", "ocd-person/2a1a6b8f-1f9c-...")  // "jose-pena-jr-2a1a6b8f"
+ */
+export function stateLegislatorSlug(name: string, legislatorId: string): string {
+  const namePart = name
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const suffix = personIdSuffix(legislatorId);
+  return namePart ? `${namePart}-${suffix}` : suffix;
+}
+
+/**
  * Build a state legislator URL
  *
  * @param state - 2-letter state code
- * @param legislatorId - OpenStates legislator ID
- * @returns State legislator URL
+ * @param legislatorId - OpenStates legislator ID (`ocd-person/<uuid>`)
+ * @param name - The legislator's display name
  *
  * @example
- * buildStateLegislatorUrl("MI", "ocd-person/abc-123")  // "/state-legislature/mi/legislator/ocd-person/abc-123"
+ * buildStateLegislatorUrl("MI", "ocd-person/2a1a6b8f-...", "Angela Rigas")
+ * // "/state-legislature/mi/legislator/angela-rigas-2a1a6b8f"
  */
-export function buildStateLegislatorUrl(state: string, legislatorId: string): string {
-  return `/state-legislature/${state.toLowerCase()}/legislator/${legislatorId}`;
+export function buildStateLegislatorUrl(state: string, legislatorId: string, name: string): string {
+  return `/state-legislature/${state.toLowerCase()}/legislator/${stateLegislatorSlug(name, legislatorId)}`;
+}
+
+/** What a legislator URL segment identifies the member by. */
+export type StateLegislatorParam = { kind: 'id'; id: string } | { kind: 'suffix'; suffix: string };
+
+const OCD_PERSON_UUID =
+  /^(?:ocd-person[-/])?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+const SLUG_SUFFIX = new RegExp(`(?:^|-)([0-9a-f]{${PERSON_ID_SUFFIX_LENGTH}})$`, 'i');
+
+/**
+ * Read a legislator URL segment in any form a link has ever used: the readable
+ * slug, the legacy base64 of `ocd-person/<uuid>`, or the raw id. Null means the
+ * segment names nobody and the page should 404 without asking any API.
+ */
+export function parseStateLegislatorParam(segment: string): StateLegislatorParam | null {
+  let value: string;
+  try {
+    value = decodeURIComponent(segment).trim();
+  } catch {
+    return null;
+  }
+
+  const raw = OCD_PERSON_UUID.exec(value);
+  if (raw?.[1]) return { kind: 'id', id: `ocd-person/${raw[1].toLowerCase()}` };
+
+  // Legacy links: base64url("ocd-person/<uuid>") always starts with "b2NkLXBlcnNvbi".
+  if (value.startsWith('b2NkLXBlcnNvbi')) {
+    let decoded = '';
+    try {
+      decoded = decodeBase64Url(value);
+    } catch {
+      return null;
+    }
+    const legacy = OCD_PERSON_UUID.exec(decoded);
+    return legacy?.[1] ? { kind: 'id', id: `ocd-person/${legacy[1].toLowerCase()}` } : null;
+  }
+
+  const slug = SLUG_SUFFIX.exec(value);
+  return slug?.[1] ? { kind: 'suffix', suffix: slug[1].toLowerCase() } : null;
 }
 
 /**
