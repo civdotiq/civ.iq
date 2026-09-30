@@ -57,6 +57,7 @@ export interface UnifiedGeocodeResult {
     title: string;
     phone?: string;
     website?: string;
+    contactForm?: string;
     imageUrl?: string;
   }>;
   stateLegislators?: {

@@ -77,6 +77,8 @@ export interface FederalMember {
   title: string;
   phone?: string;
   website?: string;
+  /** The member's official web contact form (congress-legislators `contact_form`). */
+  contactForm?: string;
   imageUrl?: string;
 }
 
@@ -238,8 +240,11 @@ async function federalMembers(
         district: rep.district,
         chamber: rep.chamber,
         title: rep.title,
-        phone: rep.phone,
-        website: rep.website,
+        // The roster keeps office contact details on the current term; the
+        // top-level fields are unset for every member.
+        phone: rep.currentTerm?.phone ?? rep.phone,
+        website: rep.currentTerm?.website ?? rep.website,
+        contactForm: rep.currentTerm?.contactForm,
         imageUrl: rep.imageUrl,
       }));
   } catch (error) {

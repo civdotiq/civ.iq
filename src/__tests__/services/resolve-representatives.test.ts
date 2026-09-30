@@ -180,6 +180,29 @@ describe('resolveByAddress', () => {
 
     expect(r.federal).toBeNull();
   });
+
+  it("reads a member's phone and contact form from the current term", async () => {
+    allReps.mockResolvedValueOnce([
+      {
+        ...rep('MI0', 'MI', 'Senate'),
+        currentTerm: {
+          start: '2021-01-03',
+          end: '2027-01-03',
+          phone: '202-224-6221',
+          website: 'https://www.peters.senate.gov',
+          contactForm: 'https://www.peters.senate.gov/contact/email-gary',
+        },
+      },
+    ]);
+    geocode.mockResolvedValue(geocoded({ congressionalDistrict: sld('2613') }));
+    const r = await resolveByAddress(address);
+
+    expect(r.federal?.[0]).toMatchObject({
+      phone: '202-224-6221',
+      website: 'https://www.peters.senate.gov',
+      contactForm: 'https://www.peters.senate.gov/contact/email-gary',
+    });
+  });
 });
 
 describe('districtLookup (state-legislators-by-address)', () => {
