@@ -18,7 +18,11 @@ import {
   type CensusSld,
   type CorpusSeat,
 } from '@/lib/data-sources/sld-district-keys/build-keys';
-import { corpusDistrictsForGeoid, SLD_KEYS_VINTAGE } from '@/lib/data-sources/sld-district-keys';
+import {
+  corpusDistrictsForGeoid,
+  isKeyedDistrict,
+  SLD_KEYS_VINTAGE,
+} from '@/lib/data-sources/sld-district-keys';
 import { getAllPeople } from '@/lib/data-sources/openstates-people/load-people';
 import keysFile from '@/data/sld-district-keys.json';
 import { STATE_FIPS_TO_CODE } from '@/lib/data/us-states';
@@ -198,5 +202,18 @@ describe('committed src/data/sld-district-keys.json', () => {
     expect(corpusDistrictsForGeoid('upper', '11001')).toEqual(['Ward 1']);
     expect(corpusDistrictsForGeoid('lower', '16016')).toEqual(['16A', '16B']);
     expect(corpusDistrictsForGeoid('lower', '99999')).toBeNull();
+  });
+
+  it('tells a real district page from a made-up one', () => {
+    expect(isKeyedDistrict('26', 'lower', '8')).toBe(true);
+    expect(isKeyedDistrict('27', 'lower', '62A')).toBe(true);
+    expect(isKeyedDistrict('16', 'lower', '16B')).toBe(true);
+    expect(isKeyedDistrict('25', 'lower', '14th Suffolk')).toBe(true);
+    // DC's council is `lower` in the roster, `upper` in the Census layer.
+    expect(isKeyedDistrict('11', 'lower', 'Ward 2')).toBe(true);
+    expect(isKeyedDistrict('11', 'upper', 'Ward 2')).toBe(false);
+    expect(isKeyedDistrict('31', 'upper', '28')).toBe(true);
+    expect(isKeyedDistrict('26', 'lower', '9999')).toBe(false);
+    expect(isKeyedDistrict('26', 'upper', '62A')).toBe(false);
   });
 });

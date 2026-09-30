@@ -15,7 +15,8 @@ import {
 import { getChamberName } from '@/types/state-legislature';
 import { MapPin, Users } from 'lucide-react';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
-import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
+import { normalizeStateIdentifier, getStateName, STATE_CODE_TO_FIPS } from '@/lib/data/us-states';
+import { isKeyedDistrict } from '@/lib/data-sources/sld-district-keys';
 import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
 import logger from '@/lib/logging/simple-logger';
 import { decodeSegment } from '@/lib/helpers/decode-segment';
@@ -101,18 +102,16 @@ export default async function StateDistrictPage({ params }: PageProps) {
 
   // The three sources are independent; each degrades to empty on failure
   // (legislators may hit rate limits, Census and Wikipedia are optional).
-  const [districtLegislators, demographics, wikipediaBio] = await Promise.all([
-    StateLegislatureCoreService.getAllStateLegislators(stateCode)
-      .then(all => all.filter(leg => leg.district === district && leg.chamber === chamber))
-      .catch((error: unknown): EnhancedStateLegislator[] => {
-        logger.warn('Failed to fetch legislators (continuing without data)', {
-          stateCode,
-          district,
-          chamber,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return [];
-      }),
+  const [roster, demographics, wikipediaBio] = await Promise.all([
+    StateLegislatureCoreService.getAllStateLegislators(stateCode).catch((error: unknown): null => {
+      logger.warn('Failed to fetch legislators (continuing without data)', {
+        stateCode,
+        district,
+        chamber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }),
     getStateDistrictDemographics(stateCode, district, chamber).catch(
       (error: unknown): StateDistrictDemographics | null => {
         logger.warn('Failed to fetch demographics', {
@@ -128,6 +127,23 @@ export default async function StateDistrictPage({ params }: PageProps) {
       (): WikipediaBiography | null => null
     ),
   ]);
+
+  const districtLegislators: EnhancedStateLegislator[] = (roster ?? []).filter(
+    leg => leg.district === district && leg.chamber === chamber
+  );
+  // Any string used to render a page here ("/mi/lower/9999"): a soft 404.
+  // A district is real when someone holds it or the Census places addresses
+  // in it (a vacant seat). An empty or failed roster never 404s a keyed seat.
+  const stateFips = STATE_CODE_TO_FIPS[stateCode];
+  if (
+    roster &&
+    roster.length > 0 &&
+    districtLegislators.length === 0 &&
+    stateFips &&
+    !isKeyedDistrict(stateFips, chamber, district)
+  ) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-white">

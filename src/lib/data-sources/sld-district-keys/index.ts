@@ -35,3 +35,31 @@ export function corpusDistrictsForGeoid(chamber: SldChamber, geoid: string): str
   if (key === undefined) return null;
   return Array.isArray(key) ? key : [key];
 }
+
+let keyedDistricts: Set<string> | null = null;
+
+/**
+ * Whether the Census places some address in this district — true for a
+ * vacant seat too, which the sitting-member roster can't show. `chamber` is
+ * the app's bucket: DC's council files as `lower` in the roster but sits in
+ * the Census upper-chamber layer; Nebraska's unicameral seats are `upper` in
+ * both.
+ */
+export function isKeyedDistrict(
+  stateFips: string,
+  chamber: 'upper' | 'lower',
+  district: string
+): boolean {
+  if (!keyedDistricts) {
+    const found = new Set<string>();
+    for (const census of ['upper', 'lower'] as const) {
+      for (const [geoid, key] of Object.entries(KEYS[census])) {
+        const fips = geoid.slice(0, 2);
+        const bucket = fips === '11' ? 'lower' : census;
+        for (const d of Array.isArray(key) ? key : [key]) found.add(`${fips}|${bucket}|${d}`);
+      }
+    }
+    keyedDistricts = found;
+  }
+  return keyedDistricts.has(`${stateFips}|${chamber}|${district}`);
+}
