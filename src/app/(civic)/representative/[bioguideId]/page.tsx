@@ -351,7 +351,7 @@ export default async function RepresentativeProfilePage({
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://civdotiq.org' },
-          { name: 'Representatives', url: 'https://civdotiq.org/results' },
+          { name: 'Representatives', url: 'https://civdotiq.org/representatives' },
           { name: representative.name, url: `https://civdotiq.org/representative/${bioguideId}` },
         ]}
       />
@@ -361,7 +361,7 @@ export default async function RepresentativeProfilePage({
   // Breadcrumb navigation with preserved search context
   const breadcrumbItems = [
     { label: 'Search', href: '/' },
-    { label: 'Your Representatives', href: '/results', preserveSearch: true },
+    { label: 'Your Representatives', href: '/your-reps' },
     { label: representative.name, href: '#' },
   ];
 

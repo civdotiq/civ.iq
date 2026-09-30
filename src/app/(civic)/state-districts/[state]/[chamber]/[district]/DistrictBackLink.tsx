@@ -26,16 +26,12 @@ export default function DistrictBackLink({
 
   return (
     <Link
-      href={
-        fromAddress
-          ? `/representatives?address=${encodeURIComponent(fromAddress)}`
-          : `/state-legislature/${stateCode}`
-      }
+      href={fromAddress ? '/your-reps' : `/state-legislature/${stateCode}`}
       className="inline-flex items-center gap-2 text-civiq-blue hover:text-civiq-blue transition-colors"
     >
       <Home className="w-4 h-4" />
       <span>
-        {fromAddress ? 'Back to All Representatives' : `Back to ${stateName} Legislature`}
+        {fromAddress ? 'Back to your representatives' : `Back to ${stateName} Legislature`}
       </span>
     </Link>
   );

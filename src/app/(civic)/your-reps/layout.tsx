@@ -9,12 +9,12 @@ import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: { default: 'Your Representatives', template: '%s | CIV.IQ' },
   description:
-    'Enter your address to see who represents you in Congress with plain-language summaries of their record.',
+    'Enter your home address to see who represents you in Congress and your state legislature, with contact details and plain-language summaries of their record.',
   alternates: { canonical: 'https://civdotiq.org/your-reps' },
   openGraph: {
     title: 'Your Representatives — CIV.IQ',
     description:
-      'Enter your address to see who represents you in Congress with plain-language summaries of their record.',
+      'Enter your home address to see who represents you in Congress and your state legislature.',
   },
 };
 
@@ -23,7 +23,7 @@ export default function YourRepsLayout({ children }: { children: React.ReactNode
     <>
       <GovernmentServiceSchema
         name="Find Your Representatives"
-        description="Enter your address to find your U.S. Senators and House Representative with voting records, campaign finance, and legislative activity."
+        description="Enter your home address to find your U.S. Senators, House member and state legislators, with contact details, voting records, and campaign finance."
         url="https://civdotiq.org/your-reps"
         serviceType="Civic Information"
       />

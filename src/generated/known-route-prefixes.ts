@@ -77,7 +77,6 @@ export const KNOWN_ROUTE_PREFIXES: ReadonlySet<string> = new Set([
   'regulations',
   'representative',
   'representatives',
-  'results',
   'robots.txt',
   'search',
   'sitemap-images.xml',

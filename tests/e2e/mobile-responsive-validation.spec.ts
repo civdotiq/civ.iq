@@ -255,7 +255,7 @@ test.describe('Mobile Responsive Validation', () => {
     test.use({ ...devices['iPhone 13'] });
 
     test('should display results properly on mobile', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZips.singleDistrict}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       // Check mobile layout of results
@@ -275,7 +275,7 @@ test.describe('Mobile Responsive Validation', () => {
     });
 
     test('should handle mobile navigation', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZips.singleDistrict}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       // Test mobile header navigation
@@ -291,7 +291,7 @@ test.describe('Mobile Responsive Validation', () => {
     });
 
     test('should handle mobile tabs if present', async ({ page }) => {
-      await page.goto(`/representatives?zip=${testZips.singleDistrict}`);
+      await page.goto(`/representatives`);
       await page.waitForLoadState('networkidle');
 
       // Check for tab navigation

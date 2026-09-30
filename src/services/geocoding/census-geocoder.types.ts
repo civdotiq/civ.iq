@@ -47,6 +47,13 @@ export interface CensusGeocodeResponse {
   };
 }
 
+/** geographies/coordinates: districts at a point, with no address match. */
+export interface CensusPointResponse {
+  result?: {
+    geographies?: CensusGeographies;
+  };
+}
+
 export interface CensusAddressMatch {
   matchedAddress: string;
   coordinates: {

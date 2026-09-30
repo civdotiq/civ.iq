@@ -233,7 +233,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             Preview Message
           </button>
           <a
-            href={`/representatives?zip=${formData.zipCode || ''}`}
+            href="/your-reps"
             className="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
             title="Find all your representatives"
           >

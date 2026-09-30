@@ -6,7 +6,10 @@
 'use client';
 
 import Link from 'next/link';
-import { RepresentativeLookupForm } from '@/components/intelligence/RepresentativeLookupForm';
+import SearchForm from '@/components/SearchForm';
+import { RepBriefSummary } from '@/components/intelligence/RepBriefSummary';
+import { AlertSubscribeForm } from '@/components/alerts/AlertSubscribeForm';
+import { BallotCard } from '@/features/record-card/components/BallotCard';
 
 export default function YourRepsPage() {
   return (
@@ -27,14 +30,44 @@ export default function YourRepsPage() {
             Your Representatives
           </h1>
           <p className="type-sm text-gray-600 dark:text-gray-400 max-w-2xl">
-            Enter your address to see who represents you in Congress. Each representative gets a
-            plain-language summary of their voting record, funding sources, and key findings from
-            public government data.
+            Enter your home address to see who represents you in Congress and in your state
+            legislature, with phone numbers and email. Each member of Congress gets a plain-language
+            summary of their voting record, funding sources, and key findings from public government
+            data.
           </p>
         </div>
 
-        {/* Form */}
-        <RepresentativeLookupForm />
+        <SearchForm
+          renderFederalExtras={federal => (
+            <div className="mt-6">
+              {/* Which of these seats are on the next ballot (additive; fails silent) */}
+              <BallotCard bioguideIds={federal.map(r => r.bioguideId)} />
+              <div className="mt-6 space-y-4">
+                {federal.map(rep => (
+                  <RepBriefSummary
+                    key={rep.bioguideId}
+                    bioguideId={rep.bioguideId}
+                    name={rep.name}
+                    party={rep.party}
+                    state={rep.state}
+                    district={rep.district ?? null}
+                    chamber={rep.chamber}
+                  />
+                ))}
+              </div>
+              <div className="mt-6">
+                <AlertSubscribeForm
+                  entities={federal.map(rep => ({
+                    type: 'representative' as const,
+                    id: rep.bioguideId,
+                    name: rep.name,
+                    chamber: rep.chamber,
+                  }))}
+                />
+              </div>
+            </div>
+          )}
+        />
 
         {/* Money Report CTA */}
         <div className="mt-8 border-2 border-gray-900 dark:border-[#444] p-4 sm:p-6 max-w-2xl">

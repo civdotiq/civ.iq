@@ -26,12 +26,17 @@ import type {
   DistrictGEOID,
   CensusGeography,
   CensusGeographies,
+  CensusPointResponse,
 } from './census-geocoder.types';
 import { CensusGeocoderException, CensusGeocoderError } from './census-geocoder.types';
 
 export class CensusGeocoderService {
   private static readonly BASE_URL =
     'https://geocoding.geo.census.gov/geocoder/geographies/address';
+  private static readonly ONELINE_URL =
+    'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress';
+  private static readonly COORDINATES_URL =
+    'https://geocoding.geo.census.gov/geocoder/geographies/coordinates';
   private static readonly DEFAULT_BENCHMARK = 'Public_AR_Current';
   // Newest "<year> State Legislative Districts - Upper/Lower" layer; Census
   // renames these every vintage, so never match an exact layer name.
@@ -44,14 +49,68 @@ export class CensusGeocoderService {
    * Geocode an address and extract state legislative district information
    */
   static async geocodeAddress(request: CensusGeocodeRequest): Promise<ParsedDistrictInfo> {
+    const url = new URL(this.BASE_URL);
+    url.searchParams.set('street', request.street);
+    url.searchParams.set('city', request.city);
+    url.searchParams.set('state', request.state);
+    if (request.zip) url.searchParams.set('zip', request.zip);
+    return this.lookup(url, this.normalizeAddress(request), request.state, request);
+  }
+
+  /**
+   * Geocode a one-line address ("100 N Capitol Ave, Lansing, MI"). Census
+   * splits it into street, city and state itself, which beats guessing the
+   * split in the browser.
+   */
+  static async geocodeOneLineAddress(
+    address: string,
+    options: Pick<CensusGeocodeRequest, 'benchmark' | 'vintage'> = {}
+  ): Promise<ParsedDistrictInfo> {
+    const url = new URL(this.ONELINE_URL);
+    url.searchParams.set('address', address);
+    const normalized = `oneline:${address.toLowerCase().replace(/\s+/g, ' ').trim()}`;
+    return this.lookup(url, normalized, undefined, options);
+  }
+
+  /**
+   * Districts at a point (a device's location). There is no address to match,
+   * so `matchedAddress` is empty.
+   */
+  static async geographiesAtPoint(
+    lat: number,
+    lon: number,
+    options: Pick<CensusGeocodeRequest, 'benchmark' | 'vintage'> = {}
+  ): Promise<ParsedDistrictInfo> {
+    const url = new URL(this.COORDINATES_URL);
+    url.searchParams.set('x', String(lon));
+    url.searchParams.set('y', String(lat));
+    // ~1m: finer precision only makes every visitor a cache miss.
+    const normalized = `point:${lat.toFixed(5)},${lon.toFixed(5)}`;
+    return this.lookup(url, normalized, undefined, options, { lat, lon });
+  }
+
+  /**
+   * Shared cache → request → validate → parse path. `point` marks a
+   * coordinates lookup, whose response has geographies but no address match.
+   */
+  private static async lookup(
+    url: URL,
+    normalizedAddress: string,
+    state: string | undefined,
+    options: Pick<CensusGeocodeRequest, 'benchmark' | 'vintage'>,
+    point?: { lat: number; lon: number }
+  ): Promise<ParsedDistrictInfo> {
+    const request = { state };
     const startTime = Date.now();
-    const normalizedAddress = this.normalizeAddress(request);
     // Privacy: the raw address must never appear in logs or cache keys
     // (see PRIVACY.md "Address lookups") — key on a one-way hash instead.
     const addressHash = createHash('sha256').update(normalizedAddress).digest('hex').slice(0, 16);
-    const vintage = request.vintage || currentOfficeholderVintage();
-    // v2: v1 entries were parsed with stale layer names (no state districts).
-    // The vintage is in the key so the 120th-Congress switch invalidates itself.
+    const vintage = options.vintage || currentOfficeholderVintage();
+    url.searchParams.set('benchmark', options.benchmark || this.DEFAULT_BENCHMARK);
+    url.searchParams.set('vintage', vintage);
+    url.searchParams.set('format', 'json');
+    // v3: entries carry sldVintage. The vintage is in the key so the
+    // 120th-Congress switch invalidates itself.
     const cacheKey = `census:geocode:v3:${vintage}:${addressHash}`;
 
     try {
@@ -68,13 +127,27 @@ export class CensusGeocoderService {
 
       // Make API request
       logger.info('Geocoding address via Census API', { addressHash, state: request.state });
-      const response = await this.makeGeocodeRequest(request, vintage);
+      const response = await this.makeGeocodeRequest(url);
 
-      // Validate response
-      this.validateResponse(response);
-
-      // Parse district information
-      const districtInfo = this.parseDistrictInfo(response, normalizedAddress);
+      let districtInfo: ParsedDistrictInfo;
+      if (point) {
+        const geographies = (response as unknown as CensusPointResponse).result?.geographies;
+        if (!geographies) {
+          throw new CensusGeocoderException(
+            CensusGeocoderError.MISSING_DISTRICT_DATA,
+            'No geographic data found for this location'
+          );
+        }
+        districtInfo = this.parseGeographies(geographies, '', point);
+      } else {
+        this.validateResponse(response);
+        // validateResponse guarantees a first match with geographies.
+        const match = response.result.addressMatches[0]!;
+        districtInfo = this.parseGeographies(match.geographies, match.matchedAddress, {
+          lat: match.coordinates.y,
+          lon: match.coordinates.x,
+        });
+      }
 
       // Cache result
       await govCache.set(cacheKey, districtInfo, {
@@ -115,21 +188,7 @@ export class CensusGeocoderService {
   /**
    * Make HTTP request to Census Geocoder API
    */
-  private static async makeGeocodeRequest(
-    request: CensusGeocodeRequest,
-    vintage: string
-  ): Promise<CensusGeocodeResponse> {
-    const url = new URL(this.BASE_URL);
-    url.searchParams.set('street', request.street);
-    url.searchParams.set('city', request.city);
-    url.searchParams.set('state', request.state);
-    if (request.zip) {
-      url.searchParams.set('zip', request.zip);
-    }
-    url.searchParams.set('benchmark', request.benchmark || this.DEFAULT_BENCHMARK);
-    url.searchParams.set('vintage', vintage);
-    url.searchParams.set('format', 'json');
-
+  private static async makeGeocodeRequest(url: URL): Promise<CensusGeocodeResponse> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT);
 
@@ -215,14 +274,11 @@ export class CensusGeocoderService {
   /**
    * Parse Census response into our normalized structure
    */
-  private static parseDistrictInfo(
-    response: CensusGeocodeResponse,
-    _normalizedAddress: string
+  private static parseGeographies(
+    geographies: CensusGeographies,
+    matchedAddress: string,
+    coordinates: { lat: number; lon: number }
   ): ParsedDistrictInfo {
-    // Safe to access [0] because validateResponse ensures at least one match exists
-    const match = response.result.addressMatches[0]!;
-    const geographies = match.geographies;
-
     // Extract upper chamber (State Senate) district
     const upperLayer = this.findNewestYearLayer(geographies, this.SLD_UPPER_PATTERN);
     const upperChamberGeo =
@@ -248,11 +304,8 @@ export class CensusGeocoderService {
     const placeGeo = geographies['Incorporated Places']?.[0];
 
     return {
-      matchedAddress: match.matchedAddress,
-      coordinates: {
-        lat: match.coordinates.y,
-        lon: match.coordinates.x,
-      },
+      matchedAddress,
+      coordinates,
       upperDistrict: upperChamberGeo ? this.parseDistrictFromGeography(upperChamberGeo) : null,
       lowerDistrict: lowerChamberGeo ? this.parseDistrictFromGeography(lowerChamberGeo) : null,
       congressionalDistrict: congressionalGeo
@@ -371,6 +424,9 @@ export class CensusGeocoderService {
 // Export singleton-style utility functions
 export const censusGeocoder = {
   geocodeAddress: (request: CensusGeocodeRequest) => CensusGeocoderService.geocodeAddress(request),
+  geocodeOneLineAddress: (address: string) => CensusGeocoderService.geocodeOneLineAddress(address),
+  geographiesAtPoint: (lat: number, lon: number) =>
+    CensusGeocoderService.geographiesAtPoint(lat, lon),
   parseGEOID: (geoid: string) => CensusGeocoderService.parseGEOID(geoid),
   healthCheck: () => CensusGeocoderService.healthCheck(),
 };
