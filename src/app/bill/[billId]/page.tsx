@@ -30,6 +30,17 @@ async function getBillData(billId: string): Promise<Bill | null> {
   }
 }
 
+/**
+ * Official bill titles run to 190+ characters, and search results cut a title
+ * off near 60. Keep whole words; the full title stays in the page's h1.
+ */
+function shortenAtWord(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > max / 2 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.-]+$/, '')}…`;
+}
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: BillPageProps): Promise<Metadata> {
   const { billId } = await params;
@@ -41,7 +52,9 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
   }
   const bill = await getBillData(parsed.canonical);
 
-  const title = bill ? `${bill.number}: ${bill.title}` : `Bill ${parsed.canonical}`;
+  const title = bill
+    ? `${bill.number}: ${shortenAtWord(bill.shortTitle || bill.title, 70)}`
+    : `Bill ${parsed.canonical}`;
   const description = bill
     ? `Learn about ${bill.number} - ${bill.title}. Current status: ${getBillDisplayStatus(bill.status.current)}. Sponsored by ${bill.sponsor.representative.name}.`
     : `Information about bill ${billId}`;
@@ -50,6 +63,7 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
     title,
     description,
     alternates: {
+      canonical: `https://civdotiq.org/bill/${parsed.canonical}`,
       types: {
         'application/atom+xml': `/api/feed/bill/${billId}`,
       },

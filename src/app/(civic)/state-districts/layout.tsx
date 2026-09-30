@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'State Legislative Districts',
+  title: { default: 'State Legislative Districts', template: '%s | CIV.IQ' },
   description:
     'Browse state legislative districts across all 50 states. Upper and lower chamber district maps and legislator profiles.',
   openGraph: {

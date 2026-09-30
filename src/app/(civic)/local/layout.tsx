@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Local Government',
+  title: { default: 'Local Government', template: '%s | CIV.IQ' },
   description:
     'Local (city and county) government is not covered on CIV.IQ. Why local records are the hardest layer to organize, and where to find your federal and state representatives.',
   openGraph: {

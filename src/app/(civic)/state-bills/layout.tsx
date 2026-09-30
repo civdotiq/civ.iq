@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'State bill search',
+  title: { default: 'State bill search', template: '%s | CIV.IQ' },
   description:
     'Search current legislation in all 50 state legislatures: bill text, status, sponsors, and votes from official state sources.',
   openGraph: {

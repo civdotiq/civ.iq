@@ -5,7 +5,7 @@
  * to the same canonical slug.
  */
 
-import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { canonicalCasePath, canonicalizeDistrictId } from '@/lib/helpers/url-builders';
 
 describe('canonicalizeDistrictId', () => {
   it('normalizes all four accepted variants to the same canonical form', () => {
@@ -65,5 +65,44 @@ describe('canonicalizeDistrictId', () => {
     // Page.tsx guards on: parsed.canonical !== inputDistrictId
     expect('NY-08' === canonical?.canonical).toBe(true);
     expect('ny-8' === nonCanonical?.canonical).toBe(false);
+  });
+});
+
+describe('canonicalCasePath', () => {
+  it('uppercases bioguide IDs and keeps the sub-path', () => {
+    expect(canonicalCasePath('/representative/t000481')).toBe('/representative/T000481');
+    expect(canonicalCasePath('/representative/t000481/votes')).toBe(
+      '/representative/T000481/votes'
+    );
+    expect(canonicalCasePath('/representative/T000481')).toBeNull();
+  });
+
+  it('leaves the state-legislator route under /representative alone', () => {
+    expect(canonicalCasePath('/representative/state/MI/abc')).toBeNull();
+  });
+
+  it('lowercases state codes on state routes', () => {
+    expect(canonicalCasePath('/states/MI')).toBe('/states/mi');
+    expect(canonicalCasePath('/state-bills/Mi')).toBe('/state-bills/mi');
+    expect(canonicalCasePath('/state-districts/MI/upper/1')).toBe('/state-districts/mi/upper/1');
+    expect(canonicalCasePath('/states/mi')).toBeNull();
+  });
+
+  it('never recases the case-sensitive segments after the state code', () => {
+    expect(canonicalCasePath('/state-legislature/MI/legislator/b2NkLXBl')).toBe(
+      '/state-legislature/mi/legislator/b2NkLXBl'
+    );
+    expect(canonicalCasePath('/state-legislature/mi/legislator/b2NkLXBl')).toBeNull();
+  });
+
+  it('uppercases delegation state codes', () => {
+    expect(canonicalCasePath('/delegation/mi')).toBe('/delegation/MI');
+    expect(canonicalCasePath('/delegation/MI')).toBeNull();
+  });
+
+  it('ignores unrelated paths', () => {
+    expect(canonicalCasePath('/states')).toBeNull();
+    expect(canonicalCasePath('/bill/119-HR-1')).toBeNull();
+    expect(canonicalCasePath('/districts/mi-12')).toBeNull();
   });
 });

@@ -7,9 +7,10 @@ import type { Metadata } from 'next';
 import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Your Representatives',
+  title: { default: 'Your Representatives', template: '%s | CIV.IQ' },
   description:
     'Enter your address to see who represents you in Congress with plain-language summaries of their record.',
+  alternates: { canonical: 'https://civdotiq.org/your-reps' },
   openGraph: {
     title: 'Your Representatives — CIV.IQ',
     description:

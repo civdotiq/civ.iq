@@ -6,7 +6,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 interface UseSectionNavigationOptions {
   validSections: string[];
@@ -23,15 +22,21 @@ export function useSectionNavigation({
   validSections,
   paramName = 'section',
 }: UseSectionNavigationOptions): UseSectionNavigationReturn {
-  const searchParams = useSearchParams();
-  const initialSection = searchParams.get(paramName);
+  // The URL is read after mount, not with useSearchParams(). On a prerendered
+  // (ISR) page, useSearchParams() makes Next.js skip server rendering for the
+  // whole client tree up to the nearest Suspense boundary. On the profile page
+  // that shipped search engines an empty skeleton with no h1 and no content.
+  // A ?section= deep link now shows the overview for one frame first.
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  const [activeSection, setActiveSection] = useState<string | null>(() => {
-    if (initialSection && validSections.includes(initialSection)) {
-      return initialSection;
+  useEffect(() => {
+    const section = new URLSearchParams(window.location.search).get(paramName);
+    if (section && validSections.includes(section)) {
+      setActiveSection(section);
     }
-    return null;
-  });
+    // Initial read only; later changes arrive through navigateTo/popstate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const navigateToSection = useCallback(
     (id: string) => {

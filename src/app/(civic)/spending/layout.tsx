@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema, GovernmentServiceSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Federal Spending',
+  title: { default: 'Federal Spending', template: '%s | CIV.IQ' },
   description:
     'Explore federal contracts and grants by congressional district. All data from USASpending.gov.',
   openGraph: {

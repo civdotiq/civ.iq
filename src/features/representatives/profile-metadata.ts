@@ -121,7 +121,7 @@ export async function buildProfileMetadata(
       ? `. Serves on ${representative.committees.length} committee${representative.committees.length === 1 ? '' : 's'}`
       : '';
     const description = `${representative.party} ${chamberLabel} ${representative.name} (${representative.state}${districtLabel}) — voting record, campaign finance, and legislative activity in the 119th Congress${committeeNote}.`;
-    const url = `https://civdotiq.org/representative/${bioguideId}`;
+    const url = `https://civdotiq.org/representative/${bioguideId.toUpperCase()}`;
 
     // Build OG image URL - default to profile card, override with specific card type
     const cardType = opts.card;

@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   return {
     title: `${stateName} — State Profile`,
     description: `Government data for ${stateName}: congressional delegation, state legislature, demographics, economy, and election results.`,
+    alternates: { canonical: `https://civdotiq.org/states/${state.toLowerCase()}` },
     openGraph: {
       title: `${stateName} — State Profile | CIV.IQ`,
       description: `Government data for ${stateName}: congressional delegation, state legislature, demographics, economy, and election results.`,

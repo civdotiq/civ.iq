@@ -42,7 +42,7 @@ export function HousePanel({ houseMembers, stateCode }: HousePanelProps) {
           </h2>
         </div>
         <Link
-          href={`/delegation/${stateCode.toLowerCase()}`}
+          href={`/delegation/${stateCode.toUpperCase()}`}
           style={{
             fontSize: 11,
             color: 'var(--civiq-blue-active)',

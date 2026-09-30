@@ -6,22 +6,19 @@
 import { renderHook, act } from '@testing-library/react';
 import { useSectionNavigation } from './useSectionNavigation';
 
-// Mock useSearchParams
-const mockGet = jest.fn();
-jest.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: mockGet,
-  }),
-}));
-
 // Mock window.history.pushState
 const pushStateSpy = jest.spyOn(window.history, 'pushState').mockImplementation(() => {});
 
 const validSections = ['overview', 'voting', 'finance'];
 
+/** Put `?section=` in the jsdom URL (replaceState is not mocked). */
+function setSectionInUrl(section: string | null): void {
+  window.history.replaceState({}, '', section ? `?section=${section}` : window.location.pathname);
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGet.mockReturnValue(null);
+  setSectionInUrl(null);
 });
 
 describe('useSectionNavigation', () => {
@@ -30,16 +27,23 @@ describe('useSectionNavigation', () => {
     expect(result.current.activeSection).toBeNull();
   });
 
-  it('reads initial section from URL search params', () => {
-    mockGet.mockReturnValue('voting');
+  it('reads the initial section from the URL after mount', () => {
+    setSectionInUrl('voting');
     const { result } = renderHook(() => useSectionNavigation({ validSections }));
     expect(result.current.activeSection).toBe('voting');
   });
 
   it('ignores invalid section from URL', () => {
-    mockGet.mockReturnValue('invalid-section');
+    setSectionInUrl('invalid-section');
     const { result } = renderHook(() => useSectionNavigation({ validSections }));
     expect(result.current.activeSection).toBeNull();
+  });
+
+  it('does not use useSearchParams (it disables server rendering on ISR pages)', () => {
+    const source = jest
+      .requireActual<typeof import('fs')>('fs')
+      .readFileSync(require.resolve('./useSectionNavigation'), 'utf8');
+    expect(source).not.toMatch(/from 'next\/navigation'/);
   });
 
   it('navigateToSection updates state and calls pushState', () => {
@@ -65,7 +69,7 @@ describe('useSectionNavigation', () => {
   });
 
   it('navigateBack clears section and calls pushState', () => {
-    mockGet.mockReturnValue('voting');
+    setSectionInUrl('voting');
     const { result } = renderHook(() => useSectionNavigation({ validSections }));
 
     act(() => {

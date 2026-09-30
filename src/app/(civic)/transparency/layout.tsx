@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Transparency',
+  title: { default: 'Transparency', template: '%s | CIV.IQ' },
   description:
     'CIV.IQ transparency tools: reading level analysis of intelligence outputs and data quality metrics.',
   openGraph: {

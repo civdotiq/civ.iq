@@ -154,7 +154,7 @@ export function StateOverview({ data }: StateOverviewProps) {
               Find your reps →
             </CqButton>
           </Link>
-          <Link href={`/delegation/${stateCode.toLowerCase()}`} style={{ textDecoration: 'none' }}>
+          <Link href={`/delegation/${stateCode.toUpperCase()}`} style={{ textDecoration: 'none' }}>
             <CqButton variant="primary" size="sm">
               Delegation →
             </CqButton>
