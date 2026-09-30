@@ -6,174 +6,77 @@
 /**
  * State Legislative District Lookup Service
  *
- * Maps Census district identifiers to OpenStates legislators by:
- * 1. Querying OpenStates API for all legislators in a state
- * 2. Filtering by chamber (upper/lower) and district number
- * 3. Returning matched legislators with full profile data
+ * Maps a geocoded address's Census districts to the state legislators who hold
+ * them, in the one-senator, one-representative shape the
+ * /api/state-legislators-by-address route returns.
+ *
+ * District matching is resolveSeat's (Census GEOID → corpus district keys, see
+ * src/data/sld-district-keys.json). It used to compare the first run of digits
+ * on each side, which merged Minnesota's 62A with 62B and every Massachusetts
+ * "7th ..." district with every other.
  */
 
 import logger from '@/lib/logging/simple-logger';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
+import { getJurisdictionRoster } from '@/lib/data-sources/openstates-people/load-people';
+import {
+  resolveSeat,
+  stateMembersByBucket,
+  type StateSeat,
+} from '@/services/lookup/resolve-representatives.service';
+import type { ParsedDistrictInfo } from '@/services/geocoding/census-geocoder.types';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 
 export interface DistrictLookupRequest {
-  /** State abbreviation (e.g., "MI", "CA") */
+  /** USPS code (e.g., "MI"). */
   state: string;
-  /** Upper chamber (State Senate) district number (e.g., "3") */
-  upperDistrict?: string | null;
-  /** Lower chamber (State House) district number (e.g., "9") */
-  lowerDistrict?: string | null;
+  /** The geocoder's answer: the districts and the vintage their GEOIDs belong to. */
+  districts: Pick<ParsedDistrictInfo, 'upperDistrict' | 'lowerDistrict' | 'sldVintage'>;
 }
 
 export interface DistrictLookupResult {
-  /** State Senate legislator (if upper district provided) */
+  /** First member holding the address's upper-bucket district. */
   senator: EnhancedStateLegislator | null;
-  /** State House/Assembly representative (if lower district provided) */
+  /** First member holding the address's lower-bucket district. */
   representative: EnhancedStateLegislator | null;
-  /** All legislators queried (for debugging) */
-  _debug?: {
-    totalLegislators: number;
-    upperChamberCount: number;
-    lowerChamberCount: number;
-  };
+  /** Every seat, with all its members, for callers that can show more than one. */
+  seats: StateSeat[];
 }
 
 export class DistrictLookupService {
-  /**
-   * Find state legislators by district numbers
-   */
   static async findLegislatorsByDistrict(
     request: DistrictLookupRequest
   ): Promise<DistrictLookupResult> {
-    const startTime = Date.now();
-    const { state, upperDistrict, lowerDistrict } = request;
+    const state = request.state.toUpperCase();
+    const { upperDistrict, lowerDistrict, sldVintage } = request.districts;
 
-    logger.info('Looking up state legislators by district', {
+    const roster = await getJurisdictionRoster(state);
+    const seats: StateSeat[] = [];
+    if (upperDistrict) seats.push(resolveSeat(state, 'upper', upperDistrict, sldVintage, roster));
+    if (lowerDistrict) seats.push(resolveSeat(state, 'lower', lowerDistrict, sldVintage, roster));
+
+    const byBucket = stateMembersByBucket(seats);
+    const senatorId = byBucket.upper.find(m => !m.atLarge)?.id;
+    const representativeId = byBucket.lower.find(m => !m.atLarge)?.id;
+    if (!senatorId && !representativeId) {
+      return { senator: null, representative: null, seats };
+    }
+
+    // The route's response carries the full EnhancedStateLegislator profile.
+    const all = await StateLegislatureCoreService.getAllStateLegislators(state);
+    const byId = (id: string | undefined) => (id ? (all.find(l => l.id === id) ?? null) : null);
+    const result = { senator: byId(senatorId), representative: byId(representativeId), seats };
+
+    logger.info('State legislators matched by district', {
       state,
-      upperDistrict,
-      lowerDistrict,
+      seats: seats.map(s => `${s.censusChamber}:${s.status}`).join(','),
+      hasSenator: !!result.senator,
+      hasRepresentative: !!result.representative,
     });
-
-    // Fetch all legislators for the state
-    const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(state);
-
-    logger.info('Retrieved legislators from OpenStates', {
-      state,
-      totalCount: allLegislators.length,
-      responseTime: Date.now() - startTime,
-    });
-
-    // Find matching senator (upper chamber)
-    let senator: EnhancedStateLegislator | null = null;
-    if (upperDistrict) {
-      senator = this.findLegislatorInChamber(allLegislators, 'upper', upperDistrict);
-      if (senator) {
-        logger.info('Found matching senator', {
-          state,
-          district: upperDistrict,
-          name: senator.name,
-          party: senator.party,
-        });
-      } else {
-        logger.warn('No senator found for district', {
-          state,
-          district: upperDistrict,
-        });
-      }
-    }
-
-    // Find matching representative (lower chamber)
-    let representative: EnhancedStateLegislator | null = null;
-    if (lowerDistrict) {
-      representative = this.findLegislatorInChamber(allLegislators, 'lower', lowerDistrict);
-      if (representative) {
-        logger.info('Found matching representative', {
-          state,
-          district: lowerDistrict,
-          name: representative.name,
-          party: representative.party,
-        });
-      } else {
-        logger.warn('No representative found for district', {
-          state,
-          district: lowerDistrict,
-        });
-      }
-    }
-
-    return {
-      senator,
-      representative,
-      _debug: {
-        totalLegislators: allLegislators.length,
-        upperChamberCount: allLegislators.filter(l => l.chamber === 'upper').length,
-        lowerChamberCount: allLegislators.filter(l => l.chamber === 'lower').length,
-      },
-    };
-  }
-
-  /**
-   * Find a specific legislator by chamber and district number
-   *
-   * Matches district strings with normalization:
-   * - "3" matches "3", "03", "003"
-   * - "District 3" matches "3"
-   * - Handles various OpenStates district naming formats
-   */
-  private static findLegislatorInChamber(
-    legislators: EnhancedStateLegislator[],
-    chamber: 'upper' | 'lower',
-    districtNumber: string
-  ): EnhancedStateLegislator | null {
-    // Normalize the target district number (remove leading zeros, extract numbers)
-    const normalizedTarget = this.normalizeDistrictNumber(districtNumber);
-
-    // Filter to chamber and find matching district
-    const matches = legislators.filter(legislator => {
-      if (legislator.chamber !== chamber) return false;
-
-      const normalizedLegislatorDistrict = this.normalizeDistrictNumber(legislator.district);
-      return normalizedLegislatorDistrict === normalizedTarget;
-    });
-
-    if (matches.length > 1) {
-      logger.warn('Multiple legislators found for district', {
-        chamber,
-        districtNumber,
-        matchCount: matches.length,
-        legislators: matches.map(m => ({ name: m.name, district: m.district })),
-      });
-      // Return first match (multi-member districts are possible)
-      return matches[0] ?? null;
-    }
-
-    return matches[0] ?? null;
-  }
-
-  /**
-   * Normalize district numbers for comparison
-   *
-   * Examples:
-   * - "003" → "3"
-   * - "District 9" → "9"
-   * - "9" → "9"
-   * - "At-Large" → "0"
-   */
-  private static normalizeDistrictNumber(district: string): string {
-    // Extract first number from string
-    const match = district.match(/\d+/);
-    if (!match) {
-      // Handle at-large districts
-      if (district.toLowerCase().includes('large')) return '0';
-      return district.toLowerCase();
-    }
-
-    // Remove leading zeros
-    return parseInt(match[0], 10).toString();
+    return result;
   }
 }
 
-// Export singleton-style utility function
 export const districtLookup = {
   findLegislatorsByDistrict: (request: DistrictLookupRequest) =>
     DistrictLookupService.findLegislatorsByDistrict(request),

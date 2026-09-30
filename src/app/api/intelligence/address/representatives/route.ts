@@ -21,16 +21,14 @@ import {
   ErrorCodes,
   type ApiError,
 } from '@/lib/api/error-responses';
-import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
+import { resolveByAddress } from '@/services/lookup/resolve-representatives.service';
+import { censusCongressionalDistrictCode } from '@/lib/data/us-states';
 import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { withTimeout } from '@/lib/intelligence/analyzers/shared';
 import type { InsightError } from '@/lib/intelligence/types';
 import { ZIP_ACCURACY_NOTE } from '@/lib/backbone/zip-accuracy';
-import {
-  resolveBallotDistrict2026,
-  type BallotDistrict2026,
-} from '@/lib/data-sources/cd120-districts';
+import type { BallotDistrict2026 } from '@/lib/data-sources/cd120-districts';
 import type { DataQuality, SourceStatus } from '@/types/backbone-response';
 
 function sourceStatusOf(
@@ -88,29 +86,46 @@ type RouteResponse = RepresentativesResponse | ApiError;
 
 // ── Shared Logic ─────────────────────────────────────────────────────
 
-async function resolveRepresentatives(
+function toIdentity(rep: {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: string;
+}): RepresentativeIdentity {
+  return {
+    bioguideId: rep.bioguideId,
+    name: rep.name,
+    party: rep.party,
+    state: rep.state,
+    district: rep.district ?? null,
+    chamber: rep.chamber as 'House' | 'Senate',
+  };
+}
+
+/** ZIP path: senators plus the House member for one mapped district. */
+async function representativesForDistrict(
   state: string,
   district: string,
   multiDistrict: boolean
 ): Promise<RepresentativesResponse> {
   const allReps = await RepresentativesCoreService.getAllRepresentatives();
   const stateUpper = state.toUpperCase();
+  // The ZIP map pads districts ("07", "00") and the roster doesn't ("7", "0").
+  const wanted = censusCongressionalDistrictCode(stateUpper, district);
 
   const districtReps = allReps.filter(rep => {
     if (rep.state !== stateUpper) return false;
     if (rep.chamber === 'Senate') return true;
-    return rep.chamber === 'House' && rep.district === district;
+    return (
+      rep.chamber === 'House' &&
+      censusCongressionalDistrictCode(stateUpper, rep.district ?? '') === wanted
+    );
   });
 
   return {
-    representatives: districtReps.map(rep => ({
-      bioguideId: rep.bioguideId,
-      name: rep.name,
-      party: rep.party,
-      state: rep.state,
-      district: rep.district ?? null,
-      chamber: rep.chamber as 'House' | 'Senate',
-    })),
+    representatives: districtReps.map(toIdentity),
     state: stateUpper,
     district,
     multiDistrict,
@@ -137,8 +152,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
       state: body.state,
     });
 
-    const geocodeResult = await withTimeout(
-      CensusGeocoderService.geocodeAddress({
+    const resolved = await withTimeout(
+      resolveByAddress({
         street: body.street,
         city: body.city,
         state: body.state,
@@ -148,30 +163,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<RouteResp
       'CensusGeocode'
     );
 
-    if (!geocodeResult.congressionalDistrict) {
+    if (!resolved.congressionalDistrict) {
       return createErrorResponse(
         ErrorCodes.NOT_FOUND,
         'Could not resolve congressional district for this address',
         404
       );
     }
+    if (!resolved.federal) return ApiErrors.serverError();
 
-    const result = await resolveRepresentatives(
-      body.state.toUpperCase(),
-      geocodeResult.congressionalDistrict.number,
-      false
-    );
-
+    const result: RepresentativesResponse = {
+      representatives: resolved.federal.map(toIdentity),
+      state: resolved.state,
+      district: resolved.congressionalDistrict.number,
+      multiDistrict: false,
+    };
     // 2026-ballot (120th Congress) district from the committed corpus. The
     // geocoder's district above is the 119th-Congress one; in the ten redrawn
     // states they differ, and the response carries both.
-    const ballotDistrict2026 = geocodeResult.coordinates
-      ? await resolveBallotDistrict2026(
-          geocodeResult.coordinates.lon,
-          geocodeResult.coordinates.lat,
-          { state: result.state, district: result.district }
-        )
-      : null;
+    const { ballotDistrict2026 } = resolved;
 
     return NextResponse.json(
       {
@@ -223,7 +233,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteRespo
     const multiDistrict = districts.length > 1;
     const primary = districts.find(d => d.primary) ?? districts[0]!;
 
-    const result = await resolveRepresentatives(
+    const result = await representativesForDistrict(
       primary.state.toUpperCase(),
       primary.district,
       multiDistrict

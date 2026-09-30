@@ -10,98 +10,29 @@
  * - Federal Congressional District
  * - State Senate District
  * - State House/Assembly District
- * - Federal Representatives (Senators + House Rep)
- * - State Legislators (Senator + Representative) for specific districts
+ * - Federal Representatives (Senators + House member or delegate)
+ * - Every state legislator for the address's districts, from the roster corpus
  *
- * This replaces the fragmented ZIP-first approach with a unified address-first flow.
+ * Resolution lives in resolve-representatives.service.ts; this route keeps
+ * its response shape and adds the multi-member fields.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { censusGeocoder } from '@/services/geocoding/census-geocoder.service';
-import { districtLookup } from '@/services/state-legislators/district-lookup.service';
-import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
-import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { CensusGeocoderException } from '@/services/geocoding/census-geocoder.types';
+import type { BallotDistrict2026 } from '@/lib/data-sources/cd120-districts';
 import {
-  resolveBallotDistrict2026,
-  type BallotDistrict2026,
-} from '@/lib/data-sources/cd120-districts';
+  resolveByAddress,
+  stateMembersByBucket,
+  type FederalMember,
+  type StateMember,
+  type StateSeat,
+} from '@/services/lookup/resolve-representatives.service';
 
 // ISR: Revalidate every 30 days - addresses/districts are very stable
 // Districts only change during redistricting (every 10 years)
 // State legislators change during biennial elections (handled by govCache)
 export const revalidate = 2592000; // 30 days
-
-// FIPS state codes to 2-letter abbreviations (for deriving state from Census GEOID)
-const FIPS_TO_STATE: Record<string, string> = {
-  '01': 'AL',
-  '02': 'AK',
-  '04': 'AZ',
-  '05': 'AR',
-  '06': 'CA',
-  '08': 'CO',
-  '09': 'CT',
-  '10': 'DE',
-  '11': 'DC',
-  '12': 'FL',
-  '13': 'GA',
-  '15': 'HI',
-  '16': 'ID',
-  '17': 'IL',
-  '18': 'IN',
-  '19': 'IA',
-  '20': 'KS',
-  '21': 'KY',
-  '22': 'LA',
-  '23': 'ME',
-  '24': 'MD',
-  '25': 'MA',
-  '26': 'MI',
-  '27': 'MN',
-  '28': 'MS',
-  '29': 'MO',
-  '30': 'MT',
-  '31': 'NE',
-  '32': 'NV',
-  '33': 'NH',
-  '34': 'NJ',
-  '35': 'NM',
-  '36': 'NY',
-  '37': 'NC',
-  '38': 'ND',
-  '39': 'OH',
-  '40': 'OK',
-  '41': 'OR',
-  '42': 'PA',
-  '44': 'RI',
-  '45': 'SC',
-  '46': 'SD',
-  '47': 'TN',
-  '48': 'TX',
-  '49': 'UT',
-  '50': 'VT',
-  '51': 'VA',
-  '53': 'WA',
-  '54': 'WV',
-  '55': 'WI',
-  '56': 'WY',
-  '60': 'AS',
-  '66': 'GU',
-  '69': 'MP',
-  '72': 'PR',
-  '78': 'VI',
-};
-
-/**
- * Extract state code from Census GEOID
- * GEOID format: SSFFF where SS is state FIPS code
- */
-function getStateFromGEOID(geoid: string): string | null {
-  if (!geoid || geoid.length < 2) return null;
-  const stateFips = geoid.slice(0, 2);
-  return FIPS_TO_STATE[stateFips] || null;
-}
 
 interface UnifiedGeocodeRequest {
   /** Full street address */
@@ -146,44 +77,20 @@ interface UnifiedGeocodeResponse {
    * Omitted when the corpus is unavailable or no coordinates were resolved.
    */
   ballotDistrict2026?: BallotDistrict2026;
-  /** Federal representatives (2 Senators + 1 House Rep) */
-  federalRepresentatives?: Array<{
-    bioguideId: string;
-    name: string;
-    party: string;
-    state: string;
-    district?: string;
-    chamber: 'House' | 'Senate';
-    title: string;
-    phone?: string;
-    website?: string;
-    imageUrl?: string;
-  }>;
-  /** State legislators (1 Senator + 1 Representative) */
+  /** Senators plus the House member or delegate. */
+  federalRepresentatives?: FederalMember[];
   stateLegislators?: {
-    senator?: {
-      id: string;
-      name: string;
-      party: string;
-      district: string;
-      chamber: 'upper';
-      image?: string;
-      email?: string;
-      phone?: string;
-      website?: string;
-    };
-    representative?: {
-      id: string;
-      name: string;
-      party: string;
-      district: string;
-      chamber: 'lower';
-      image?: string;
-      email?: string;
-      phone?: string;
-      website?: string;
-    };
+    /** First member holding the address's upper-bucket district (one-per-chamber legacy field). */
+    senator?: ReturnType<typeof legacyLegislator<'upper'>>;
+    /** First member holding the address's lower-bucket district (one-per-chamber legacy field). */
+    representative?: ReturnType<typeof legacyLegislator<'lower'>>;
+    /** ADDITIVE: every upper-bucket member for the address, at-large members last. */
+    senators?: StateMember[];
+    /** ADDITIVE: every lower-bucket member for the address, at-large members last. */
+    representatives?: StateMember[];
   };
+  /** ADDITIVE: per Census district, how it maps to the legislature and who holds it. */
+  stateSeats?: StateSeat[];
   error?: {
     code: string;
     message: string;
@@ -224,203 +131,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Geocode address using Census API to get ALL districts
     // Privacy: never log the street address (see PRIVACY.md "Address lookups")
-    logger.info('Geocoding address via Census API', {
-      city: body.city,
-      state: body.state,
-    });
+    logger.info('Resolving address', { city: body.city, state: body.state });
 
-    const districtInfo = await censusGeocoder.geocodeAddress({
+    const resolved = await resolveByAddress({
       street: body.street,
       city: body.city,
       state: body.state,
       zip: body.zip,
     });
-
-    // Derive state from Census GEOID (authoritative) rather than trusting client input
-    // This prevents issues where client-side address parsing fails to extract correct state
-    const derivedState =
-      (districtInfo.congressionalDistrict?.geoid &&
-        getStateFromGEOID(districtInfo.congressionalDistrict.geoid)) ||
-      (districtInfo.upperDistrict?.geoid && getStateFromGEOID(districtInfo.upperDistrict.geoid)) ||
-      (districtInfo.lowerDistrict?.geoid && getStateFromGEOID(districtInfo.lowerDistrict.geoid)) ||
-      body.state.toUpperCase(); // Fallback to client-provided state
-
-    logger.info('Census geocoding successful', {
-      hasMatch: !!districtInfo.matchedAddress,
-      hasUpperDistrict: !!districtInfo.upperDistrict,
-      hasLowerDistrict: !!districtInfo.lowerDistrict,
-      hasCongressionalDistrict: !!districtInfo.congressionalDistrict,
-      derivedState,
-      clientState: body.state.toUpperCase(),
-    });
-
-    // Step 2: Fetch federal representatives for the congressional district
-    const federalReps = await fetchFederalRepresentatives(
-      derivedState,
-      districtInfo.congressionalDistrict?.number || '00'
-    );
-
-    // Step 3: Fetch state legislators using EITHER geographic or district-based lookup
-    // Try geographic lookup first (faster, single API call), fallback to district-based
-    let stateLegislators: Awaited<ReturnType<typeof districtLookup.findLegislatorsByDistrict>> = {
-      senator: null,
-      representative: null,
-    };
-
-    if (districtInfo.coordinates) {
-      try {
-        logger.info('Attempting geographic state legislator lookup', {
-          lat: districtInfo.coordinates.lat,
-          lon: districtInfo.coordinates.lon,
-        });
-
-        const geoLegislators = await StateLegislatureCoreService.getStateLegislatorsByLocation(
-          districtInfo.coordinates.lat,
-          districtInfo.coordinates.lon
-        );
-
-        if (geoLegislators.senator || geoLegislators.representative) {
-          // Success! Use geographic lookup results
-          // Transform EnhancedStateLegislator to match districtLookup return type
-          stateLegislators = {
-            senator: geoLegislators.senator
-              ? {
-                  id: geoLegislators.senator.id,
-                  name: geoLegislators.senator.name,
-                  party: geoLegislators.senator.party,
-                  state: geoLegislators.senator.state,
-                  chamber: geoLegislators.senator.chamber,
-                  district: geoLegislators.senator.district,
-                  photo_url: geoLegislators.senator.photo_url,
-                  email: geoLegislators.senator.email,
-                  phone: geoLegislators.senator.phone,
-                  website: undefined,
-                }
-              : null,
-            representative: geoLegislators.representative
-              ? {
-                  id: geoLegislators.representative.id,
-                  name: geoLegislators.representative.name,
-                  party: geoLegislators.representative.party,
-                  state: geoLegislators.representative.state,
-                  chamber: geoLegislators.representative.chamber,
-                  district: geoLegislators.representative.district,
-                  photo_url: geoLegislators.representative.photo_url,
-                  email: geoLegislators.representative.email,
-                  phone: geoLegislators.representative.phone,
-                  website: undefined,
-                }
-              : null,
-          };
-
-          logger.info('Geographic state legislator lookup successful', {
-            hasSenator: !!stateLegislators.senator,
-            hasRep: !!stateLegislators.representative,
-          });
-        } else {
-          // No results from geographic lookup, fallback
-          throw new Error('No legislators found via geographic lookup');
-        }
-      } catch (geoError) {
-        // Fallback to district-based lookup
-        logger.warn('Geographic lookup failed, falling back to district-based lookup', {
-          error: geoError instanceof Error ? geoError.message : 'Unknown error',
-        });
-
-        stateLegislators = await districtLookup.findLegislatorsByDistrict({
-          state: body.state.toUpperCase(),
-          upperDistrict: districtInfo.upperDistrict?.number,
-          lowerDistrict: districtInfo.lowerDistrict?.number,
-        });
-      }
-    } else {
-      // No coordinates available, use district-based lookup
-      stateLegislators = await districtLookup.findLegislatorsByDistrict({
-        state: body.state.toUpperCase(),
-        upperDistrict: districtInfo.upperDistrict?.number,
-        lowerDistrict: districtInfo.lowerDistrict?.number,
-      });
-    }
-
-    // 2026-ballot (120th Congress) district from the committed corpus — the
-    // geocoder's congressionalDistrict above is the 119th-Congress answer.
-    const ballotDistrict2026 = districtInfo.coordinates
-      ? await resolveBallotDistrict2026(
-          districtInfo.coordinates.lon,
-          districtInfo.coordinates.lat,
-          districtInfo.congressionalDistrict
-            ? { state: derivedState, district: districtInfo.congressionalDistrict.number }
-            : undefined
-        )
-      : null;
+    const { state, congressionalDistrict: cd } = resolved;
+    const upperSeat = resolved.stateSeats.find(s => s.censusChamber === 'upper');
+    const lowerSeat = resolved.stateSeats.find(s => s.censusChamber === 'lower');
+    const byBucket = stateMembersByBucket(resolved.stateSeats);
+    // The one-per-chamber fields predate multi-member seats: first district holder.
+    const senator = byBucket.upper.find(m => !m.atLarge);
+    const representative = byBucket.lower.find(m => !m.atLarge);
+    const cdNumber = cd?.number || '00';
 
     // Build response
     const response: UnifiedGeocodeResponse = {
       success: true,
-      matchedAddress: districtInfo.matchedAddress,
-      coordinates: districtInfo.coordinates,
+      matchedAddress: resolved.matchedAddress,
+      coordinates: resolved.coordinates,
       districts: {
         federal: {
-          state: derivedState,
-          district: districtInfo.congressionalDistrict?.number || '00',
-          districtId: `${derivedState}-${districtInfo.congressionalDistrict?.number || '00'}`,
+          state,
+          district: cdNumber,
+          districtId: `${state}-${cdNumber}`,
         },
-        stateSenate: districtInfo.upperDistrict
-          ? {
-              number: districtInfo.upperDistrict.number,
-              name: districtInfo.upperDistrict.name,
-            }
+        stateSenate: upperSeat
+          ? { number: upperSeat.census.number, name: upperSeat.census.name }
           : undefined,
-        stateHouse: districtInfo.lowerDistrict
-          ? {
-              number: districtInfo.lowerDistrict.number,
-              name: districtInfo.lowerDistrict.name,
-            }
+        stateHouse: lowerSeat
+          ? { number: lowerSeat.census.number, name: lowerSeat.census.name }
           : undefined,
       },
-      ...(ballotDistrict2026 ? { ballotDistrict2026 } : {}),
-      federalRepresentatives: federalReps,
+      ...(resolved.ballotDistrict2026 ? { ballotDistrict2026: resolved.ballotDistrict2026 } : {}),
+      federalRepresentatives: resolved.federal ?? [],
       stateLegislators: {
-        senator: stateLegislators.senator
-          ? {
-              id: stateLegislators.senator.id,
-              name: stateLegislators.senator.name,
-              party: stateLegislators.senator.party,
-              district: stateLegislators.senator.district,
-              chamber: 'upper' as const,
-              image: stateLegislators.senator.photo_url,
-              email: stateLegislators.senator.email,
-              phone: stateLegislators.senator.phone,
-              website: stateLegislators.senator.website,
-            }
-          : undefined,
-        representative: stateLegislators.representative
-          ? {
-              id: stateLegislators.representative.id,
-              name: stateLegislators.representative.name,
-              party: stateLegislators.representative.party,
-              district: stateLegislators.representative.district,
-              chamber: 'lower' as const,
-              image: stateLegislators.representative.photo_url,
-              email: stateLegislators.representative.email,
-              phone: stateLegislators.representative.phone,
-              website: stateLegislators.representative.website,
-            }
-          : undefined,
+        senator: senator ? legacyLegislator(senator, 'upper') : undefined,
+        representative: representative ? legacyLegislator(representative, 'lower') : undefined,
+        senators: byBucket.upper,
+        representatives: byBucket.lower,
       },
+      stateSeats: resolved.stateSeats,
       metadata: {
         timestamp: new Date().toISOString(),
         processingTime: Date.now() - startTime,
-        dataSource: 'census-geocoder + congress.gov + openstates',
+        dataSource: 'census-geocoder + congress-legislators + openstates-people corpus',
       },
     };
 
     logger.info('Unified geocode successful', {
-      federalRepsCount: federalReps?.length || 0,
-      hasStateSenator: !!stateLegislators.senator,
-      hasStateRep: !!stateLegislators.representative,
+      federalRepsCount: resolved.federal?.length ?? 0,
+      seatStatuses: resolved.stateSeats.map(s => `${s.censusChamber}:${s.status}`).join(','),
       processingTime: Date.now() - startTime,
     });
 
@@ -466,51 +231,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Fetch federal representatives (Senators + House Rep) for a state/district
- */
-async function fetchFederalRepresentatives(
-  state: string,
-  districtNum: string
-): Promise<UnifiedGeocodeResponse['federalRepresentatives']> {
-  try {
-    const allReps = await RepresentativesCoreService.getAllRepresentatives();
-
-    const federalReps = allReps
-      .filter(rep => {
-        // Include senators from the state
-        if (rep.chamber === 'Senate' && rep.state === state) {
-          return true;
-        }
-        // Include house representative from the district
-        if (rep.chamber === 'House' && rep.state === state) {
-          const repDistrict = rep.district?.padStart(2, '0') || '00';
-          const targetDistrictNorm = districtNum.padStart(2, '0');
-          return repDistrict === targetDistrictNorm;
-        }
-        return false;
-      })
-      .map(rep => ({
-        bioguideId: rep.bioguideId,
-        name: rep.name,
-        party: rep.party,
-        state: rep.state,
-        district: rep.district,
-        chamber: rep.chamber,
-        title: rep.title,
-        phone: rep.phone,
-        website: rep.website,
-        imageUrl: rep.imageUrl,
-      }));
-
-    return federalReps;
-  } catch (error) {
-    logger.error('Error fetching federal representatives', error as Error, {
-      state,
-      district: districtNum,
-    });
-    return [];
-  }
+/** The one-member-per-chamber shape the route returned before multi-member seats. */
+function legacyLegislator<C extends 'upper' | 'lower'>(m: StateMember, chamber: C) {
+  return {
+    id: m.id,
+    name: m.name,
+    party: m.party,
+    district: m.district,
+    chamber,
+    image: m.image,
+    email: m.email,
+    phone: m.phone,
+    website: m.website,
+  };
 }
 
 /**

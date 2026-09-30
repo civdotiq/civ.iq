@@ -65,6 +65,15 @@ jobs:
         if: inputs.jurisdictions == ''
         run: npx tsx scripts/sync-openstates-people.ts --ref "${{ inputs.ref || 'main' }}"
 
+      # Address lookups name state legislators through Census GEOID → corpus
+      # district keys (src/data/sld-district-keys.json). Rebuild them against the
+      # fresh corpus; the script fails if a Census district can no longer be
+      # placed, which opens the failure issue below instead of shipping lookups
+      # that silently lose a seat.
+      - name: Rebuild SLD district keys
+        if: inputs.jurisdictions == ''
+        run: npx tsx scripts/sync-sld-district-keys.ts
+
       # The corpus is the only source of roster membership, so a build that
       # silently lost most of it would publish empty legislatures rather than an
       # error. Both floors are far below the real figures (52 jurisdictions,
@@ -100,7 +109,8 @@ jobs:
             echo "No change to the roster or committee corpus"
           else
             git add data/openstates-people.json.br data/openstates-people.meta.json \
-              data/openstates-committees.json.br data/openstates-committees.meta.json
+              data/openstates-committees.json.br data/openstates-committees.meta.json \
+              src/data/sld-district-keys.json
             git commit -m "chore(state-legislature): refresh OpenStates roster and committee corpora [skip ci]"
             # Rebase and retry rather than merge: main-protection enforces
             # linear history, so a merge commit is rejected outright. Only

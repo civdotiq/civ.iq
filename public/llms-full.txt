@@ -604,7 +604,7 @@ CIV.IQ provides a Model Context Protocol server for AI assistant integration.
 
 By domain:
 
-- **Representatives:** `lookup_representatives` (full street address — not ZIP), `list_state_delegation`, `get_representative_profile`, `compare_legislators`
+- **Representatives:** `lookup_representatives` (full street address — not ZIP; returns US Senators, House member and every state legislator), `list_state_delegation`, `get_representative_profile`, `compare_legislators`
 - **Legislation:** `search_legislation`, `get_bill_details`, `get_voting_history`, `get_vote_record`
 - **Finance:** `get_campaign_finance`, `search_lobbying`, `get_federal_spending`
 - **Intelligence:** `analyze_vote_prediction`, `get_influence_chain`, `analyze_district_comprehensive`, `analyze_industry_regulatory_landscape`, `analyze_policy_area_ecosystem`

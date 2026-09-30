@@ -23,6 +23,13 @@ import {
   type ParsedDistrictInfo,
 } from '@/services/geocoding/census-geocoder.types';
 import { districtLookup } from './district-lookup.service';
+import { STATE_FIPS_TO_CODE } from '@/lib/data/us-states';
+
+/** The address's state as the Census answered it, over what the person typed. */
+function stateFromGeocode(info: ParsedDistrictInfo): string | undefined {
+  const geoid = info.upperDistrict?.geoid ?? info.lowerDistrict?.geoid;
+  return geoid ? STATE_FIPS_TO_CODE[geoid.slice(0, 2)] : undefined;
+}
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 
 // ============================================================================
@@ -183,9 +190,8 @@ export class AddressToLegislatorsService {
 
       try {
         const lookupResult = await districtLookup.findLegislatorsByDistrict({
-          state: request.state,
-          upperDistrict: districtInfo.upperDistrict?.number,
-          lowerDistrict: districtInfo.lowerDistrict?.number,
+          state: stateFromGeocode(districtInfo) ?? request.state,
+          districts: districtInfo,
         });
 
         senator = lookupResult.senator;

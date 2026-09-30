@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { CensusGeocoderService } from '@/services/geocoding/census-geocoder.service';
+import { resolveByAddress } from '@/services/lookup/resolve-representatives.service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
@@ -17,7 +17,7 @@ export function registerRepresentativeTools(server: McpServer): void {
     {
       title: 'Representative lookup by address',
       description:
-        'Find federal legislators by full street address (most accurate) or by state. A full address resolves the exact congressional district via Census Geocoder. Returns bioguideId, name, party, state, district, chamber.',
+        'Find everyone who represents a full street address: the two US Senators and House member (bioguideId, name, party, state, district, chamber) plus every state legislator for the address (name, party, district, chamber, phone, email). The Census Geocoder resolves the exact districts; a ZIP code alone is not accepted because ZIPs cross district lines.',
       inputSchema: {
         street: z
           .string()
@@ -34,37 +34,22 @@ export function registerRepresentativeTools(server: McpServer): void {
     },
     async ({ street, city, state, zip }) => {
       try {
-        const geocodeResult = await CensusGeocoderService.geocodeAddress({
-          street,
-          city,
-          state,
-          zip,
-        });
+        const resolved = await resolveByAddress({ street, city, state, zip });
+        const cd = resolved.congressionalDistrict;
 
-        if (!geocodeResult.congressionalDistrict) {
+        if (!cd || !resolved.federal) {
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `Could not resolve congressional district for this address. Verify the address is correct and try again.`,
+                text: cd
+                  ? 'Federal legislator roster is temporarily unavailable. Try again shortly.'
+                  : `Could not resolve congressional district for this address. Verify the address is correct and try again.`,
               },
             ],
             isError: true,
           };
         }
-
-        const allReps = await RepresentativesCoreService.getAllRepresentatives();
-        const stateUpper = state.toUpperCase();
-        const districtNum = geocodeResult.congressionalDistrict.number;
-
-        const reps = allReps.filter(rep => {
-          if (rep.state !== stateUpper) return false;
-          if (rep.chamber === 'Senate') return true;
-          if (rep.chamber !== 'House') return false;
-          // At-large districts: Census returns "0", rep data may have "0" or undefined
-          if (districtNum === '0') return rep.district === '0' || !rep.district;
-          return rep.district === districtNum;
-        });
 
         return {
           content: [
@@ -72,8 +57,24 @@ export function registerRepresentativeTools(server: McpServer): void {
               type: 'text' as const,
               text: JSON.stringify({
                 method: 'address_geocode',
-                district: `${stateUpper}-${districtNum}`,
-                representatives: reps.map(formatRep),
+                district: `${resolved.state}-${cd.number}`,
+                representatives: resolved.federal.map(formatRep),
+                stateLegislators: resolved.stateSeats.map(seat => ({
+                  censusDistrict: seat.census.name,
+                  district: seat.districts.join(', ') || null,
+                  status: seat.status,
+                  ...(seat.note ? { note: seat.note } : {}),
+                  members: seat.members.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    party: m.party,
+                    district: m.district,
+                    chamber: m.chamber,
+                    atLarge: m.atLarge,
+                    phone: m.phone ?? null,
+                    email: m.email ?? null,
+                  })),
+                })),
               }),
             },
           ],
