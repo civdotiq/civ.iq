@@ -113,6 +113,8 @@ export interface Bill {
 
   // Related bills
   relatedBills: Array<{
+    /** Canonical bill slug, e.g. "119-hconres-87" — may be another Congress. */
+    id?: string;
     number: string;
     title: string;
     relationship: 'identical' | 'related' | 'supersedes' | 'superseded';

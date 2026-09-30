@@ -111,7 +111,10 @@ async function BillContent({
         <LegislationSchema
           name={`${bill.number}: ${bill.title}`}
           legislationIdentifier={bill.number}
-          description={bill.summary?.text}
+          description={bill.summary?.text
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()}
           datePublished={bill.introducedDate}
           legislationDate={bill.introducedDate}
           legislationPassedBy={
