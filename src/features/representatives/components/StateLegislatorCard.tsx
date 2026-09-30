@@ -9,7 +9,7 @@
 import { memo, useState } from 'react';
 import Link from 'next/link';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 
 interface StateLegislator {
   id: string;
@@ -62,9 +62,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
 
   const chamberInfo = getChamberInfo(legislator.chamber);
 
-  // Generate profile URL - Base64 encode the ID for URL safety
-  const base64Id = encodeBase64Url(legislator.id);
-  const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${base64Id}`;
+  const profileUrl = buildStateLegislatorUrl(legislator.state, legislator.id, legislator.name);
 
   return (
     <div className="bg-white border-2 border-black overflow-hidden">

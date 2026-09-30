@@ -115,3 +115,4 @@ Disallow: /state-legislature/*/committee/
 
 Sitemap: https://civdotiq.org/sitemap.xml
 Sitemap: https://civdotiq.org/sitemap-images.xml
+Sitemap: https://civdotiq.org/sitemap-state-legislators.xml

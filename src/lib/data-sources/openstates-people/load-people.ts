@@ -26,7 +26,7 @@ import { join } from 'node:path';
 import { brotliDecompress } from 'node:zlib';
 import { promisify } from 'node:util';
 import logger from '@/lib/logging/simple-logger';
-import { decodePersonRow } from './people-corpus';
+import { decodePersonRow, personIdSuffix } from './people-corpus';
 import type { CorpusPerson, PeopleCorpusFile } from './people-corpus';
 
 const decompress = promisify(brotliDecompress);
@@ -43,6 +43,8 @@ interface PeopleIndex {
    * 7,000-odd rows, which is the whole point of storing them grouped.
    */
   byId?: Map<string, { position: number; jurisdiction: string }>;
+  /** id suffix (first 8 hex digits) → uuid. Built on first use. */
+  bySuffix?: Map<string, string>;
 }
 
 // undefined = not yet loaded; null = corpus unavailable.
@@ -134,6 +136,27 @@ export async function getJurisdictionRoster(state: string): Promise<CorpusPerson
 }
 
 /**
+ * Every sitting member in every jurisdiction, with the corpus's upstream commit
+ * date for sitemap lastmod. Null when the corpus is unavailable.
+ */
+export async function getAllPeople(): Promise<{
+  people: CorpusPerson[];
+  upstreamCommittedAt: string;
+} | null> {
+  const index = await loadIndex();
+  if (!index) return null;
+
+  const people: CorpusPerson[] = [];
+  for (const [jurisdiction, offset, count] of index.file.jurisdictions) {
+    for (let p = offset; p < offset + count; p++) {
+      const row = index.file.rows[p];
+      if (row) people.push(decodePersonRow(index.file, row, jurisdiction));
+    }
+  }
+  return { people, upstreamCommittedAt: index.file.upstreamCommittedAt };
+}
+
+/**
  * One member by `ocd-person/<uuid>` id — the same identifier the v3 API returns,
  * so a caller holding an id from either source can look it up here.
  */
@@ -147,6 +170,27 @@ export async function getPersonById(personId: string): Promise<CorpusPerson | nu
 
   const row = index.file.rows[hit.position];
   return row ? decodePersonRow(index.file, row, hit.jurisdiction) : null;
+}
+
+/** Memoized suffix index, the lookup behind readable legislator URLs. */
+function indexBySuffix(index: PeopleIndex): NonNullable<PeopleIndex['bySuffix']> {
+  if (index.bySuffix) return index.bySuffix;
+  const map = new Map<string, string>();
+  for (const uuid of indexById(index).keys()) map.set(personIdSuffix(uuid), uuid);
+  index.bySuffix = map;
+  return map;
+}
+
+/**
+ * One member by the id suffix at the end of a readable URL
+ * (`angela-rigas-2a1a6b8f` → `2a1a6b8f`). The build guarantees suffixes are
+ * unique; null means no sitting member has it, not that the corpus is missing.
+ */
+export async function getPersonByIdSuffix(suffix: string): Promise<CorpusPerson | null> {
+  const index = await loadIndex();
+  if (!index) return null;
+  const uuid = indexBySuffix(index).get(suffix.toLowerCase());
+  return uuid ? getPersonById(uuid) : null;
 }
 
 export interface PeopleCorpusStatus {

@@ -25,12 +25,7 @@ export type StateChamber = 'upper' | 'lower';
  * Party affiliation for state legislators
  */
 export type StateParty =
-  | 'Democratic'
-  | 'Republican'
-  | 'Independent'
-  | 'Green'
-  | 'Libertarian'
-  | 'Other';
+  'Democratic' | 'Republican' | 'Independent' | 'Green' | 'Libertarian' | 'Other';
 
 /**
  * Base state legislator interface
@@ -824,10 +819,31 @@ export function getLegislatorTitle(state: string, chamber: StateChamber): string
   // Handle special cases
   if (chamberName === 'Assembly') return 'Assemblymember';
   if (chamberName === 'House of Delegates') return 'Delegate';
-  if (chamberName === 'General Assembly') return 'Assemblyman/Assemblywoman';
+  if (chamberName === 'General Assembly') return 'Assemblymember';
   if (chamber === 'upper') return 'Senator';
 
   return 'Representative';
+}
+
+/**
+ * The role as people search for it: "State Senator", "State Representative",
+ * "Assemblymember", "Delegate". DC's legislature is a council, and Puerto Rico
+ * is not a state, so neither gets the "State" prefix.
+ */
+export function getLegislatorRoleTitle(state: string, chamber: StateChamber): string {
+  const code = state.toUpperCase();
+  if (code === 'DC') return 'Councilmember';
+  const title = getLegislatorTitle(code, chamber);
+  if (code === 'PR') return title;
+  return title === 'Senator' || title === 'Representative' ? `State ${title}` : title;
+}
+
+/**
+ * "81" → "District 81", "62A" → "District 62A". Named seats read as they are:
+ * "Ward 1", "At-Large", "7th Hampden", "Rockingham 30".
+ */
+export function formatStateDistrict(district: string): string {
+  return /^\d+[A-Z]?$/i.test(district) ? `District ${district}` : district;
 }
 
 // ============================================================================

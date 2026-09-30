@@ -11,6 +11,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import type { StateVoteDetail } from '@/types/state-legislature';
 import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
 
 interface StateVoteDetailViewProps {
   vote: StateVoteDetail;
@@ -147,7 +148,7 @@ export const StateVoteDetailView: React.FC<StateVoteDetailViewProps> = ({ vote, 
                   >
                     {voter.voter_id ? (
                       <Link
-                        href={`/state-legislature/${state}/legislator/${encodeBase64Url(voter.voter_id)}`}
+                        href={buildStateLegislatorUrl(state, voter.voter_id, voter.voter_name)}
                         className="text-civiq-blue hover:text-civiq-blue hover:underline"
                       >
                         {voter.voter_name}

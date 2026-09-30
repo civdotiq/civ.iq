@@ -11,6 +11,7 @@
  * people-corpus.ts.
  */
 
+import { personIdSuffix } from './people-corpus';
 import type { CorpusChamber, EncodedPersonRow, PeopleCorpusFile } from './people-corpus';
 
 /** The subset of an openstates/people YAML record this build reads. */
@@ -123,6 +124,26 @@ export interface BuildInput {
   upstreamCommittedAt: string;
 }
 
+/**
+ * Legislator URLs are resolved by the uuid's first PERSON_ID_SUFFIX_LENGTH hex
+ * digits, so two sitting members sharing a prefix would make one of them
+ * unreachable. Fail the build; the fix is a longer suffix, not a skipped row.
+ */
+function assertUniqueIdSuffixes(rows: EncodedPersonRow[]): void {
+  const seen = new Map<string, string>();
+  for (const row of rows) {
+    const suffix = personIdSuffix(row[0]);
+    const other = seen.get(suffix);
+    if (other) {
+      throw new Error(
+        `Legislator id suffix "${suffix}" is shared by ${other} and ${row[1]}; ` +
+          'raise PERSON_ID_SUFFIX_LENGTH'
+      );
+    }
+    seen.set(suffix, row[1]);
+  }
+}
+
 export function buildPeopleCorpus(input: BuildInput): PeopleCorpusFile {
   const asOf = input.generatedAt.slice(0, 10);
   const parties: string[] = [];
@@ -155,6 +176,8 @@ export function buildPeopleCorpus(input: BuildInput): PeopleCorpusFile {
     }
     jurisdictions.push([jurisdiction, offset, rows.length - offset]);
   }
+
+  assertUniqueIdSuffixes(rows);
 
   return {
     version: 1,
