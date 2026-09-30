@@ -61,6 +61,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   const [districtImpactError, setDistrictImpactError] = useState<string | null>(null);
   const [processExplanation, setProcessExplanation] = useState<ProcessExplanation | null>(null);
   const [processLoading, setProcessLoading] = useState(false);
+  const [showAllCosponsors, setShowAllCosponsors] = useState(false);
   const searchParams = useSearchParams();
 
   // Streaming AI summary hook — only enabled after bill loads
@@ -661,49 +662,66 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   Cosponsors ({bill.cosponsors.length})
                 </h4>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {bill.cosponsors.slice(0, 6).map(cosponsor => (
-                    <div
-                      key={cosponsor.representative.bioguideId}
-                      className={`flex items-center space-x-3 p-3 border-2 hover:bg-white ${
-                        cosponsor.withdrawn
-                          ? 'border-gray-300 bg-white opacity-60'
-                          : 'border-gray-200'
-                      }`}
-                    >
-                      <RepresentativePhoto
-                        bioguideId={cosponsor.representative.bioguideId}
-                        name={cosponsor.representative.name}
-                        size="sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <RepLink
+                  {(showAllCosponsors ? bill.cosponsors : bill.cosponsors.slice(0, 6)).map(
+                    cosponsor => (
+                      <div
+                        key={cosponsor.representative.bioguideId}
+                        className={`flex items-center space-x-3 p-3 border-2 hover:bg-white ${
+                          cosponsor.withdrawn
+                            ? 'border-gray-300 bg-white opacity-60'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <RepresentativePhoto
                           bioguideId={cosponsor.representative.bioguideId}
                           name={cosponsor.representative.name}
-                          className="text-sm font-medium truncate block"
+                          size="sm"
                         />
-                        <p className="text-xs text-gray-500 truncate">
-                          {cosponsor.representative.party === 'D'
-                            ? 'D'
-                            : cosponsor.representative.party === 'R'
-                              ? 'R'
-                              : 'I'}
-                          -{cosponsor.representative.state}
-                          {cosponsor.representative.district &&
-                            `-${cosponsor.representative.district}`}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {cosponsor.withdrawn
-                            ? 'Withdrawn'
-                            : `Joined ${formatDateOnly(cosponsor.date)}`}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <RepLink
+                            bioguideId={cosponsor.representative.bioguideId}
+                            name={cosponsor.representative.name}
+                            className="text-sm font-medium truncate block"
+                          />
+                          <p className="text-xs text-gray-500 truncate">
+                            {cosponsor.representative.party === 'D'
+                              ? 'D'
+                              : cosponsor.representative.party === 'R'
+                                ? 'R'
+                                : 'I'}
+                            -{cosponsor.representative.state}
+                            {cosponsor.representative.district &&
+                              `-${cosponsor.representative.district}`}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {cosponsor.withdrawn
+                              ? 'Withdrawn'
+                              : `Joined ${formatDateOnly(cosponsor.date)}`}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
                 {bill.cosponsors.length > 6 && (
-                  <p className="text-sm text-gray-500 mt-3 text-center">
-                    And {bill.cosponsors.length - 6} more cosponsors
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllCosponsors(prev => !prev)}
+                    aria-expanded={showAllCosponsors}
+                    className="mt-3 w-full py-2 text-sm text-civiq-blue hover:bg-civiq-blue/10 transition-colors flex items-center justify-center gap-1"
+                  >
+                    {showAllCosponsors ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Show fewer
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Show all {bill.cosponsors.length} cosponsors
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
             ) : (
