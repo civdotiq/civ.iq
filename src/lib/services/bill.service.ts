@@ -31,6 +31,7 @@ export interface CongressAction {
     congress?: number;
     date?: string;
     rollNumber?: number;
+    sessionNumber?: number;
     url?: string;
     result?: string;
   }>;
@@ -455,13 +456,16 @@ async function fetchBillActions(
 }
 
 /** Fetch votes for a specific bill from roll call data */
-async function fetchBillVotes(
+export async function fetchBillVotes(
   actions: CongressAction[],
   congress: string,
   type: string,
   number: string
 ): Promise<BillVote[]> {
   const votes: BillVote[] = [];
+  // Congress.gov attaches the same roll call to several actions (e.g. the
+  // floor result and the "Passed/agreed to" status action) — keep the first.
+  const seenRollCalls = new Set<string>();
 
   try {
     if (actions.length > 0) {
@@ -470,6 +474,11 @@ async function fetchBillVotes(
           for (const recordedVote of action.recordedVotes) {
             const voteId = `${congress}-${type}-${number}-${recordedVote.rollNumber || 'unknown'}`;
             const chamber = recordedVote.chamber === 'House' ? 'House' : ('Senate' as const);
+            if (recordedVote.rollNumber) {
+              const rollKey = `${chamber}-${recordedVote.sessionNumber ?? ''}-${recordedVote.rollNumber}`;
+              if (seenRollCalls.has(rollKey)) continue;
+              seenRollCalls.add(rollKey);
+            }
 
             const actionText = action.text?.toLowerCase() || '';
             let result = 'Unknown';
@@ -560,6 +569,7 @@ async function fetchBillVotes(
               chamber,
               date: recordedVote.date || action.actionDate,
               rollNumber: recordedVote.rollNumber,
+              ...(recordedVote.sessionNumber ? { session: recordedVote.sessionNumber } : {}),
               question,
               result: result as 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to',
               ...(hasRealVoteData
@@ -639,8 +649,9 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
  */
 export async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
   const { type, number, congress } = parseBillNumber(billId);
-  // v2: standard bill labels (H.R.) and per-action chamber — bump drops stale entries
-  const cacheKey = `bill-v2-${type}-${number}-${congress}`;
+  // v2: standard bill labels (H.R.) and per-action chamber
+  // v3: de-duplicated roll calls + vote session — bump drops stale entries
+  const cacheKey = `bill-v3-${type}-${number}-${congress}`;
 
   return cachedFetch(
     cacheKey,
@@ -862,10 +873,7 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
                 title: related.title,
                 relationship:
                   (related.relationshipDetails?.identifiedBy as
-                    | 'identical'
-                    | 'related'
-                    | 'supersedes'
-                    | 'superseded') || 'related',
+                    'identical' | 'related' | 'supersedes' | 'superseded') || 'related',
               }))
             : [],
 
