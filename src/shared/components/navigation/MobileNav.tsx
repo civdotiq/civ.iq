@@ -29,6 +29,7 @@ interface NavSection {
 interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
+  lookupLink: NavigationItem;
   sections: NavSection[];
   flatNavigation: NavigationItem[];
   currentPath: string;
@@ -37,6 +38,7 @@ interface MobileNavProps {
 export function MobileNav({
   isOpen,
   onClose,
+  lookupLink,
   sections,
   flatNavigation,
   currentPath,
@@ -89,6 +91,19 @@ export function MobileNav({
         className="md:hidden absolute top-full left-0 w-full aicher-card aicher-no-radius z-50 animate-slide-down"
       >
         <nav className="container mx-auto px-4 py-4" aria-label="Mobile navigation">
+          <Link
+            href={lookupLink.href}
+            aria-current={currentPath === lookupLink.href ? 'page' : undefined}
+            className={`aicher-heading-wide block mb-1 py-3 px-4 transition-all duration-200 ${
+              currentPath === lookupLink.href
+                ? 'bg-[#3ea2d4]/10 text-[#3ea2d4] border-l-4 border-[#3ea2d4]'
+                : 'text-gray-700 hover:text-[#3ea2d4] aicher-hover'
+            }`}
+            onClick={onClose}
+          >
+            {lookupLink.name}
+          </Link>
+
           {/* Accordion sections: Federal, State */}
           <div className="space-y-1" role="list">
             {sections.map((section, sectionIndex) => {

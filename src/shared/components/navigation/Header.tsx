@@ -97,8 +97,19 @@ const navigationSections: NavSection[] = [
   // /local stays reachable by URL and explains why.
 ];
 
+// The address lookup answers for Congress and the state legislature at once,
+// so it leads the nav rather than hiding under Federal → Tools.
+const lookupLink = { name: 'Find your reps', href: '/your-reps' };
+
 // Flat navigation for mobile and simple links
 const flatNavigation = [{ name: 'About', href: '/about' }];
+
+const flatLinkClass = (isActive: boolean) =>
+  `aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
+    isActive
+      ? 'text-civiq-blue after:w-full'
+      : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
+  }`;
 
 // Dropdown component for desktop navigation
 function NavDropdown({
@@ -305,6 +316,14 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-6" aria-label="Main navigation">
+            <Link
+              href={lookupLink.href}
+              className={flatLinkClass(pathname === lookupLink.href)}
+              aria-current={pathname === lookupLink.href ? 'page' : undefined}
+            >
+              {lookupLink.name}
+            </Link>
+
             {/* Dropdown sections: Federal, State */}
             {navigationSections.map(section => {
               const isActive =
@@ -323,15 +342,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
             {flatNavigation.map(item => {
               const isActive = pathname.startsWith(item.href);
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-civiq-blue after:transition-all after:duration-200 hover:after:w-full ${
-                    isActive
-                      ? 'text-civiq-blue after:w-full'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-civiq-blue'
-                  }`}
-                >
+                <Link key={item.name} href={item.href} className={flatLinkClass(isActive)}>
                   {item.name}
                 </Link>
               );
@@ -377,6 +388,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
         <MobileNav
           isOpen={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
+          lookupLink={lookupLink}
           sections={navigationSections}
           flatNavigation={flatNavigation}
           currentPath={pathname}
