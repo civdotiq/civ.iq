@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 import { partyFillClasses } from './types';
+import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 
 interface IdentityHeaderProps {
   representative: EnhancedRepresentative;
@@ -52,11 +53,14 @@ export function IdentityHeader({
 
   const displayName = r.fullName?.official || r.name;
   const age = computeAge(r.bio?.birthday);
+  // The roster keeps contact details on the current term; top-level fields
+  // are fallbacks only.
   const phone = r.currentTerm?.phone || r.phone;
-  const websiteHost = r.website
-    ? r.website.replace(/^https?:\/\//, '').replace(/\/$/, '')
-    : undefined;
-  const contactHref = r.website || r.currentTerm?.contactForm || r.contact?.contactForm;
+  const phoneHref = telHref(phone);
+  const officeLines = dcOfficeLines(r.currentTerm?.address);
+  const website = safeHttpUrl(r.currentTerm?.website || r.website);
+  const websiteHost = website?.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const contactForm = safeHttpUrl(r.currentTerm?.contactForm || r.contact?.contactForm);
 
   // Terms are sorted most-recent-first; the earliest term is last.
   const terms = r.terms ?? [];
@@ -178,15 +182,17 @@ export function IdentityHeader({
         </div>
 
         {/* Actions */}
-        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2 flex lg:flex-col gap-2 lg:min-w-[224px]">
-          {contactHref && (
+        <div className="col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2 flex flex-wrap lg:flex-col lg:flex-nowrap gap-2 lg:min-w-[224px]">
+          {/* Official contact form when the roster has one (most senators,
+              almost no House members); otherwise the official website. */}
+          {(contactForm || website) && (
             <a
-              href={contactHref}
+              href={contactForm ?? website}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 lg:flex-none text-center border-2 border-civiq-blue-dark rounded-[2px] bg-civiq-blue-dark text-white px-4 py-3 text-[15px] font-bold hover:bg-black"
             >
-              Contact office
+              {contactForm ? 'Contact office' : 'Official website'}
             </a>
           )}
           {!r.isHistorical && (
@@ -197,19 +203,39 @@ export function IdentityHeader({
               className="flex-1 lg:flex-none"
             />
           )}
-          <p className="hidden lg:flex flex-col gap-1 text-sm text-gray-800 mt-2">
-            {phone && <span>{phone}</span>}
-            {r.website && websiteHost && (
-              <a
-                href={r.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-civiq-blue-dark hover:underline"
-              >
-                {websiteHost}
-              </a>
-            )}
-          </p>
+          {(phone || officeLines.length > 0 || (contactForm && websiteHost)) && (
+            <address className="basis-full not-italic flex flex-col gap-1 text-sm text-gray-800 mt-2">
+              {phone && (
+                <span>
+                  <span className="text-gray-600">DC office </span>
+                  {phoneHref ? (
+                    <a
+                      href={phoneHref}
+                      className="text-[15px] font-bold text-civiq-blue-dark hover:underline"
+                    >
+                      {phone}
+                    </a>
+                  ) : (
+                    <span className="text-[15px] font-bold">{phone}</span>
+                  )}
+                </span>
+              )}
+              {officeLines.map(line => (
+                <span key={line}>{line}</span>
+              ))}
+              {/* Without a contact form the button above is already the website. */}
+              {contactForm && website && websiteHost && (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-civiq-blue-dark hover:underline"
+                >
+                  {websiteHost}
+                </a>
+              )}
+            </address>
+          )}
         </div>
       </div>
     </header>
