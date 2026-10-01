@@ -620,13 +620,35 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
   return result;
 }
 
+// v3: v2 entries could hold 2024-cycle money (hardcoded cycle list).
+function summaryCacheKey(bioguideId: string): string {
+  return `representative-summary:v3:${bioguideId}`;
+}
+
+/**
+ * The cached summary, or null on a miss. Never computes: for callers that
+ * must answer fast (share images) and would rather omit a number.
+ */
+export async function getCachedRepresentativeSummary(bioguideId: string): Promise<{
+  billsSponsored?: number;
+  totalRaised?: number;
+  financeCycle?: number;
+  financeUnavailable?: boolean;
+  legislationUnavailable?: boolean;
+} | null> {
+  try {
+    return await govCache.get(summaryCacheKey(bioguideId));
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Get optimized summary data for stats displays
  * Much faster than full batch requests
  */
 export async function getRepresentativeSummary(bioguideId: string) {
-  // v3: v2 entries could hold 2024-cycle money (hardcoded cycle list).
-  const cacheKey = `representative-summary:v3:${bioguideId}`;
+  const cacheKey = summaryCacheKey(bioguideId);
   const cached = await govCache.get<{
     billsSponsored?: number;
     billsCosponsored?: number;

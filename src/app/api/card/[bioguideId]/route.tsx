@@ -14,9 +14,9 @@
  */
 
 import { ImageResponse } from 'next/og';
+import sharp from 'sharp';
 import { NextRequest } from 'next/server';
 import {
-  fetchProfileCardData,
   fetchMoneyCardData,
   fetchVoteCardData,
   fetchAlignmentCardData,
@@ -26,6 +26,13 @@ import {
 import { renderCard } from '@/features/trading-cards/og/card-renderer';
 import type { CardType } from '@/features/trading-cards/types';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getChamberBaselines } from '@/lib/intelligence/analyzers/chamber-baselines';
+import { getCachedRepresentativeSummary } from '@/services/batch/representative-batch.service';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { buildProfilePreview } from '@/features/trading-cards/og/profile-preview-data';
+import { renderProfilePreview } from '@/features/trading-cards/og/profile-preview';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -45,6 +52,58 @@ async function fetchPhotoBase64(bioguideId: string): Promise<string | undefined>
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Portrait for the profile card: the 450x550 unitedstates photo, else the
+ * site's photo route (Commons / House Clerk tiers; covers new members the
+ * unitedstates set lags on). Each try gives up after 2.5s so the card still
+ * ships. Normalised to JPEG because the photo route can answer WebP, which
+ * Satori can't draw.
+ */
+async function fetchPortraitBase64(bioguideId: string): Promise<string | undefined> {
+  const sources = [
+    `https://raw.githubusercontent.com/unitedstates/images/gh-pages/congress/450x550/${bioguideId}.jpg`,
+    `${getServerBaseUrl()}/api/representative-photo/${bioguideId}`,
+  ];
+  for (const url of sources) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
+      if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) continue;
+      const jpeg = await sharp(Buffer.from(await res.arrayBuffer()))
+        .resize(450, 550, { fit: 'cover', position: 'top' })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${jpeg.toString('base64')}`;
+    } catch {
+      // try the next source
+    }
+  }
+  return undefined;
+}
+
+async function profilePreviewResponse(id: string): Promise<Response> {
+  const rep = await getEnhancedRepresentative(id);
+  if (!rep) return new Response('Representative not found', { status: 404 });
+
+  const [baselines, summary, photo] = await Promise.all([
+    getChamberBaselines(rep.chamber),
+    getCachedRepresentativeSummary(id),
+    fetchPortraitBase64(id),
+  ]);
+  const preview = buildProfilePreview(rep, baselines, summary, getCurrentCongressNumber());
+
+  const png = new ImageResponse(renderProfilePreview(preview, photo), {
+    width: 1200,
+    height: 630,
+  });
+  // A photo-led PNG is ~600KB; WhatsApp drops previews much over 300KB.
+  // Cache-Control comes from the blanket /api rule in next.config (300s),
+  // which also refreshes a card rendered before the summary was cached.
+  const jpeg = await sharp(Buffer.from(await png.arrayBuffer()))
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer();
+  return new Response(new Uint8Array(jpeg), { headers: { 'Content-Type': 'image/jpeg' } });
 }
 
 export async function GET(
@@ -75,11 +134,13 @@ export async function GET(
   try {
     const id = bioguideId.toUpperCase();
 
+    // The profile card is the page's og:image. Scrapers give up after a few
+    // seconds, so it reads only stored data (see profile-preview-data.ts).
+    if (type === 'profile') return await profilePreviewResponse(id);
+
     // Fetch card data based on type
     const dataPromise = (() => {
       switch (type) {
-        case 'profile':
-          return fetchProfileCardData(id);
         case 'money':
           return fetchMoneyCardData(id);
         case 'vote':
