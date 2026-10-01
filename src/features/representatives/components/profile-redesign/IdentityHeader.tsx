@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import { partyFillClasses } from './types';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 
@@ -195,14 +196,24 @@ export function IdentityHeader({
               {contactForm ? 'Contact office' : 'Official website'}
             </a>
           )}
-          {!r.isHistorical && (
-            <AlertSubscribeButton
-              bioguideId={r.bioguideId}
-              name={r.name}
-              chamber={r.chamber}
-              className="flex-1 lg:flex-none"
+          <div className="flex items-center gap-4">
+            <ShareButton
+              data={{
+                representative: {
+                  name: r.name,
+                  party: r.party,
+                  state: r.state,
+                  bioguideId: r.bioguideId,
+                  chamber: r.chamber,
+                  district: r.district,
+                },
+                section: 'overview',
+              }}
             />
-          )}
+            {!r.isHistorical && (
+              <AlertSubscribeButton bioguideId={r.bioguideId} name={r.name} chamber={r.chamber} />
+            )}
+          </div>
           {(phone || officeLines.length > 0 || (contactForm && websiteHost)) && (
             <address className="basis-full not-italic flex flex-col gap-1 text-sm text-gray-800 mt-2">
               {phone && (
