@@ -129,6 +129,9 @@ export async function buildProfileMetadata(
       cardType && VALID_CARD_TYPES.includes(cardType as (typeof VALID_CARD_TYPES)[number]);
     const effectiveCardType = isValidCard ? cardType : 'profile';
     let ogImageUrl = `https://civdotiq.org/api/card/${bioguideId}?type=${effectiveCardType}`;
+    // v=2: the photo-led JPEG card. A new URL makes X/Facebook/Slack, which
+    // cache og:image by URL, fetch it instead of the old PNG.
+    if (effectiveCardType === 'profile') ogImageUrl += '&v=2';
     if (effectiveCardType === 'vote' && opts.billId) {
       ogImageUrl += `&billId=${encodeURIComponent(opts.billId)}`;
     }
@@ -148,7 +151,14 @@ export async function buildProfileMetadata(
         url,
         siteName: 'CIV.IQ',
         type: 'profile',
-        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${representative.name}, ${representative.party} ${chamberLabel}`,
+          },
+        ],
       },
       twitter: {
         card: 'summary_large_image' as const,
