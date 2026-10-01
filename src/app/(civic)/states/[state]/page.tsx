@@ -10,16 +10,15 @@ import { loadStateOverviewData, StateOverview } from '@/components/states/StateO
 import { LegacyStateOverviewPage } from '@/components/states/LegacyStateOverview';
 import { getStateName, isValidStateCode, normalizeStateIdentifier } from '@/lib/data/us-states';
 import { loadStateHub, type StateHubData } from '@/lib/state-hub/load-state-hub';
+import { loadStateOverview } from '@/lib/state-overview/load-state-overview';
+import { StateOverviewServerSections } from '@/components/states/LegacyStateOverview/StateOverviewServerSections';
 
 interface StatePageProps {
   params: Promise<{ state: string }>;
   searchParams: Promise<{ v?: string }>;
 }
 
-/**
- * Server-rendered link to the "Who is my state representative?" hub. The
- * overview below is client-fetched, so this is the part a crawler sees.
- */
+/** Server-rendered link to the "Who is my state representative?" hub. */
 function LegislatureHubLink({ hub }: { hub: StateHubData }) {
   const roles = hub.chambers.map(c => c.roleTitle).join(' and ');
   return (
@@ -51,11 +50,22 @@ export default async function StateOverviewPageRoute({ params, searchParams }: S
   const useRedesign = v === 'new' || isPreviewEnv;
 
   if (!useRedesign) {
-    const hub = await loadStateHub(state);
+    const stateCode = state.toUpperCase();
+    const [hub, overview] = await Promise.all([loadStateHub(state), loadStateOverview(stateCode)]);
     return (
       <>
         {hub && <LegislatureHubLink hub={hub} />}
-        <LegacyStateOverviewPage />
+        <LegacyStateOverviewPage
+          initialDemographics={overview.demographics}
+          serverSections={
+            <StateOverviewServerSections
+              stateCode={stateCode}
+              stateName={getStateName(stateCode) ?? stateCode}
+              data={overview}
+              hub={hub}
+            />
+          }
+        />
       </>
     );
   }

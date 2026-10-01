@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -18,6 +18,7 @@ import {
   getNextElectionYear,
 } from '@/lib/data/state-election-cycles';
 import type { RaceResultFull } from '@/types/elections';
+import type { StateDemographics } from '@/lib/data-sources/census-state-demographics';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -80,45 +81,6 @@ interface CrimeResponse {
   dataSource: string;
 }
 
-interface StateExecutive {
-  id: string;
-  name: string;
-  position: string;
-  party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
-  termStart: string;
-  termEnd: string;
-  photoUrl?: string;
-  keyInitiatives: string[];
-}
-
-interface ExecutivesResponse {
-  state: string;
-  stateName: string;
-  executives: StateExecutive[];
-  nextElection: { date: string; offices: string[] };
-  partyBreakdown: Record<string, number>;
-}
-
-interface DemographicsResponse {
-  state_code: string;
-  state_name: string;
-  population: number;
-  median_age: number;
-  median_household_income: number;
-  per_capita_income: number;
-  poverty_rate: number;
-  demographics: Record<string, number>;
-  education: {
-    high_school_or_higher: number;
-    bachelors_or_higher: number;
-    graduate_or_professional: number;
-  };
-  housing: { median_home_value: number; median_rent: number; homeownership_rate: number };
-  employment: { labor_force_participation_rate: number; unemployment_rate: number };
-  data_source: string;
-  survey_year: number;
-}
-
 interface LegislatureChamber {
   name: string;
   title: string;
@@ -171,13 +133,19 @@ function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
-function formatPosition(position: string): string {
-  return position.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
 // ── Main Page ────────────────────────────────────────────────────────
 
-export default function LegacyStateOverviewPage() {
+interface LegacyStateOverviewPageProps {
+  /** Server-rendered governor, delegation and legislature sections. */
+  serverSections?: ReactNode;
+  /** Census figures fetched on the server; the browser fetches when absent. */
+  initialDemographics?: StateDemographics | null;
+}
+
+export default function LegacyStateOverviewPage({
+  serverSections,
+  initialDemographics,
+}: LegacyStateOverviewPageProps) {
   const params = useParams();
   const rawState = params.state as string;
   const stateCode = normalizeStateIdentifier(rawState);
@@ -255,7 +223,14 @@ export default function LegacyStateOverviewPage() {
         </div>
 
         {/* Tab content */}
-        {activeTab === 'overview' && <OverviewTab stateCode={stateCode} stateName={stateName} />}
+        {activeTab === 'overview' && (
+          <OverviewTab
+            stateCode={stateCode}
+            stateName={stateName}
+            serverSections={serverSections}
+            initialDemographics={initialDemographics ?? null}
+          />
+        )}
         {activeTab === 'legislature' && <LegislatureTab stateCode={stateCode} />}
         {activeTab === 'elections' && <ElectionsTab stateCode={stateCode} stateName={stateName} />}
 
@@ -274,18 +249,24 @@ export default function LegacyStateOverviewPage() {
 
 // ── Overview Tab ─────────────────────────────────────────────────────
 
-function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: string }) {
-  const { data: execs, isLoading: execsLoading } = useSWR<ExecutivesResponse>(
-    `/api/state-executives/${stateCode}`,
+function OverviewTab({
+  stateCode,
+  stateName,
+  serverSections,
+  initialDemographics,
+}: {
+  stateCode: string;
+  stateName: string;
+  serverSections: ReactNode;
+  initialDemographics: StateDemographics | null;
+}) {
+  // Fetch in the browser only when the server couldn't (Census slow or down).
+  const { data: fetchedDemographics, isLoading: demoLoading } = useSWR<StateDemographics>(
+    initialDemographics ? null : `/api/state-demographics/${stateCode}`,
     fetcher,
     SWR_OPTIONS
   );
-
-  const { data: demographics, isLoading: demoLoading } = useSWR<DemographicsResponse>(
-    `/api/state-demographics/${stateCode}`,
-    fetcher,
-    SWR_OPTIONS
-  );
+  const demographics = initialDemographics ?? fetchedDemographics;
 
   const { data: enforcement, isLoading: enforcementLoading } = useSWR<EnforcementInsightResponse>(
     `/api/intelligence/enforcement/state/${stateCode}`,
@@ -301,6 +282,8 @@ function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: s
 
   return (
     <div className="space-y-6">
+      {serverSections}
+
       {/* Demographics stats */}
       {demoLoading && <SkeletonGrid count={4} />}
       {demographics && (
@@ -316,49 +299,6 @@ function OverviewTab({ stateCode, stateName }: { stateCode: string; stateName: s
           />
           <StatBox label="Median age" value={demographics.median_age.toFixed(1)} />
         </div>
-      )}
-
-      {/* State executives */}
-      {execsLoading && <SkeletonCard />}
-      {execs && execs.executives.length > 0 && (
-        <div className="border-2 border-gray-900 bg-white p-4 sm:p-6">
-          <h2 className="aicher-heading type-lg text-gray-900 mb-4">State Leadership</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {execs.executives.slice(0, 6).map(exec => (
-              <div key={exec.id} className="border-2 border-gray-200 p-3">
-                <div className="flex items-start gap-3">
-                  <span
-                    className="inline-block w-3 h-3 mt-1 flex-shrink-0 border-2 border-gray-300"
-                    style={{ backgroundColor: PARTY_COLORS[exec.party] ?? '#6b7280' }}
-                    title={exec.party}
-                  />
-                  <div>
-                    <p className="type-sm font-medium text-gray-900">{exec.name}</p>
-                    <p className="type-xs text-gray-500">{formatPosition(exec.position)}</p>
-                    {exec.termEnd && (
-                      <p className="type-xs text-gray-400">
-                        Term ends {new Date(exec.termEnd).getFullYear()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {execs.nextElection?.date && (
-            <p className="type-xs text-gray-400 mt-4">
-              Next statewide election:{' '}
-              {new Date(execs.nextElection.date).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          )}
-        </div>
-      )}
-      {execs && execs.executives.length === 0 && (
-        <EmptyState message="State executive data not yet available from Wikidata for this state." />
       )}
 
       {/* Education + Housing */}

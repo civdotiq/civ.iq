@@ -1,0 +1,454 @@
+{
+  "source": "National Governors Association (https://www.nga.org/governors/); District of Columbia mayor from Wikidata",
+  "asOf": "2026-10-01",
+  "executives": {
+    "AK": {
+      "title": "Governor",
+      "name": "Mike Dunleavy",
+      "party": "Republican",
+      "inOfficeSince": "2018-12-03",
+      "website": "https://gov.alaska.gov/",
+      "sourceUrl": "https://www.nga.org/governors/alaska/"
+    },
+    "AL": {
+      "title": "Governor",
+      "name": "Kay Ivey",
+      "party": "Republican",
+      "inOfficeSince": "2017-04-19",
+      "website": "https://governor.alabama.gov/",
+      "sourceUrl": "https://www.nga.org/governors/alabama/"
+    },
+    "AR": {
+      "title": "Governor",
+      "name": "Sarah Huckabee Sanders",
+      "party": "Republican",
+      "inOfficeSince": "2023-01-10",
+      "website": "https://governor.arkansas.gov/",
+      "sourceUrl": "https://www.nga.org/governors/arkansas/"
+    },
+    "AS": {
+      "title": "Governor",
+      "name": "Pula’ali’i Nikolao Pula",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-03",
+      "website": null,
+      "sourceUrl": "https://www.nga.org/governors/american-samoa/"
+    },
+    "AZ": {
+      "title": "Governor",
+      "name": "Katie Hobbs",
+      "party": "Democratic",
+      "inOfficeSince": "2023-01-02",
+      "website": "https://azgovernor.gov/",
+      "sourceUrl": "https://www.nga.org/governors/arizona/"
+    },
+    "CA": {
+      "title": "Governor",
+      "name": "Gavin Newsom",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-07",
+      "website": "https://www.gov.ca.gov/",
+      "sourceUrl": "https://www.nga.org/governors/california/"
+    },
+    "CO": {
+      "title": "Governor",
+      "name": "Jared Polis",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-08",
+      "website": "https://www.colorado.gov/governor/",
+      "sourceUrl": "https://www.nga.org/governors/colorado/"
+    },
+    "CT": {
+      "title": "Governor",
+      "name": "Ned Lamont",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-09",
+      "website": "https://portal.ct.gov/governor/",
+      "sourceUrl": "https://www.nga.org/governors/connecticut/"
+    },
+    "DC": {
+      "title": "Mayor",
+      "name": "Muriel Bowser",
+      "party": "Democratic",
+      "inOfficeSince": "2015-01-02",
+      "website": "https://mayor.dc.gov/",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q6938597"
+    },
+    "DE": {
+      "title": "Governor",
+      "name": "Matt Meyer",
+      "party": "Democratic",
+      "inOfficeSince": "2025-01-21",
+      "website": "https://governor.delaware.gov/",
+      "sourceUrl": "https://www.nga.org/governors/delaware/"
+    },
+    "FL": {
+      "title": "Governor",
+      "name": "Ron DeSantis",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-08",
+      "website": null,
+      "sourceUrl": "https://www.nga.org/governors/florida/"
+    },
+    "GA": {
+      "title": "Governor",
+      "name": "Brian Kemp",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-14",
+      "website": "https://gov.georgia.gov/",
+      "sourceUrl": "https://www.nga.org/governors/georgia/"
+    },
+    "GU": {
+      "title": "Governor",
+      "name": "Lou Leon Guerrero",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-07",
+      "website": "http://governor.guam.gov/",
+      "sourceUrl": "https://www.nga.org/governors/guam/"
+    },
+    "HI": {
+      "title": "Governor",
+      "name": "Josh Green",
+      "party": "Democratic",
+      "inOfficeSince": "2022-12-05",
+      "website": "https://governor.hawaii.gov/",
+      "sourceUrl": "https://www.nga.org/governors/hawaii/"
+    },
+    "IA": {
+      "title": "Governor",
+      "name": "Kim Reynolds",
+      "party": "Republican",
+      "inOfficeSince": "2017-05-27",
+      "website": "https://governor.iowa.gov/",
+      "sourceUrl": "https://www.nga.org/governors/iowa/"
+    },
+    "ID": {
+      "title": "Governor",
+      "name": "Brad Little",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-07",
+      "website": "https://gov.idaho.gov/",
+      "sourceUrl": "https://www.nga.org/governors/idaho/"
+    },
+    "IL": {
+      "title": "Governor",
+      "name": "JB Pritzker",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-14",
+      "website": "https://www2.illinois.gov/sites/gov/Pages/default.aspx",
+      "sourceUrl": "https://www.nga.org/governors/illinois/"
+    },
+    "IN": {
+      "title": "Governor",
+      "name": "Mike Braun",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-13",
+      "website": "https://www.in.gov/gov/index.htm",
+      "sourceUrl": "https://www.nga.org/governors/indiana/"
+    },
+    "KS": {
+      "title": "Governor",
+      "name": "Laura Kelly",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-14",
+      "website": "https://governor.kansas.gov/",
+      "sourceUrl": "https://www.nga.org/governors/kansas/"
+    },
+    "KY": {
+      "title": "Governor",
+      "name": "Andy Beshear",
+      "party": "Democratic",
+      "inOfficeSince": "2019-12-10",
+      "website": "https://governor.ky.gov/Pages/index.aspx",
+      "sourceUrl": "https://www.nga.org/governors/kentucky/"
+    },
+    "LA": {
+      "title": "Governor",
+      "name": "Jeff Landry",
+      "party": "Republican",
+      "inOfficeSince": "2024-01-08",
+      "website": "https://gov.louisiana.gov/",
+      "sourceUrl": "https://www.nga.org/governors/louisiana/"
+    },
+    "MA": {
+      "title": "Governor",
+      "name": "Maura Healey",
+      "party": "Democratic",
+      "inOfficeSince": "2023-01-05",
+      "website": "https://www.mass.gov/orgs/office-of-the-governor",
+      "sourceUrl": "https://www.nga.org/governors/massachusetts/"
+    },
+    "MD": {
+      "title": "Governor",
+      "name": "Wes Moore",
+      "party": "Democratic",
+      "inOfficeSince": "2023-01-18",
+      "website": "https://governor.maryland.gov/",
+      "sourceUrl": "https://www.nga.org/governors/maryland/"
+    },
+    "ME": {
+      "title": "Governor",
+      "name": "Janet Mills",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-02",
+      "website": "https://www.maine.gov/governor/mills/",
+      "sourceUrl": "https://www.nga.org/governors/maine/"
+    },
+    "MI": {
+      "title": "Governor",
+      "name": "Gretchen Whitmer",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-01",
+      "website": "https://www.michigan.gov/whitmer/",
+      "sourceUrl": "https://www.nga.org/governors/michigan/"
+    },
+    "MN": {
+      "title": "Governor",
+      "name": "Tim Walz",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-07",
+      "website": "https://mn.gov/governor/",
+      "sourceUrl": "https://www.nga.org/governors/minnesota/"
+    },
+    "MO": {
+      "title": "Governor",
+      "name": "Mike Kehoe",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-13",
+      "website": "https://governor.mo.gov/",
+      "sourceUrl": "https://www.nga.org/governors/missouri/"
+    },
+    "MP": {
+      "title": "Governor",
+      "name": "David M. Apatang",
+      "party": "Republican",
+      "inOfficeSince": "2025-07-24",
+      "website": "https://governor.cnmi.gov/",
+      "sourceUrl": "https://www.nga.org/governors/northern-mariana-islands/"
+    },
+    "MS": {
+      "title": "Governor",
+      "name": "Tate Reeves",
+      "party": "Republican",
+      "inOfficeSince": "2020-01-14",
+      "website": "https://governorreeves.ms.gov/",
+      "sourceUrl": "https://www.nga.org/governors/mississippi/"
+    },
+    "MT": {
+      "title": "Governor",
+      "name": "Greg Gianforte",
+      "party": "Republican",
+      "inOfficeSince": "2021-01-04",
+      "website": "http://governor.mt.gov/",
+      "sourceUrl": "https://www.nga.org/governors/montana/"
+    },
+    "NC": {
+      "title": "Governor",
+      "name": "Josh Stein",
+      "party": "Democratic",
+      "inOfficeSince": "2025-01-01",
+      "website": "https://governor.nc.gov/",
+      "sourceUrl": "https://www.nga.org/governors/north-carolina/"
+    },
+    "ND": {
+      "title": "Governor",
+      "name": "Kelly Armstrong",
+      "party": "Republican",
+      "inOfficeSince": "2024-12-15",
+      "website": "https://www.governor.nd.gov/",
+      "sourceUrl": "https://www.nga.org/governors/north-dakota/"
+    },
+    "NE": {
+      "title": "Governor",
+      "name": "Jim Pillen",
+      "party": "Republican",
+      "inOfficeSince": "2023-01-05",
+      "website": "https://governor.nebraska.gov/",
+      "sourceUrl": "https://www.nga.org/governors/nebraska/"
+    },
+    "NH": {
+      "title": "Governor",
+      "name": "Kelly Ayotte",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-09",
+      "website": "https://www.governor.nh.gov/",
+      "sourceUrl": "https://www.nga.org/governors/new-hampshire/"
+    },
+    "NJ": {
+      "title": "Governor",
+      "name": "Mikie Sherrill",
+      "party": "Democratic",
+      "inOfficeSince": "2026-01-20",
+      "website": null,
+      "sourceUrl": "https://www.nga.org/governors/new-jersey/"
+    },
+    "NM": {
+      "title": "Governor",
+      "name": "Michelle Lujan Grisham",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-01",
+      "website": "http://www.governor.state.nm.us/",
+      "sourceUrl": "https://www.nga.org/governors/new-mexico/"
+    },
+    "NV": {
+      "title": "Governor",
+      "name": "Joe Lombardo",
+      "party": "Republican",
+      "inOfficeSince": "2023-01-02",
+      "website": "https://gov.nv.gov/",
+      "sourceUrl": "https://www.nga.org/governors/nevada/"
+    },
+    "NY": {
+      "title": "Governor",
+      "name": "Kathy Hochul",
+      "party": "Democratic",
+      "inOfficeSince": "2021-08-24",
+      "website": "https://www.governor.ny.gov/",
+      "sourceUrl": "https://www.nga.org/governors/new-york/"
+    },
+    "OH": {
+      "title": "Governor",
+      "name": "Mike DeWine",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-14",
+      "website": "http://governor.ohio.gov/",
+      "sourceUrl": "https://www.nga.org/governors/ohio/"
+    },
+    "OK": {
+      "title": "Governor",
+      "name": "Kevin Stitt",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-14",
+      "website": "http://www.gov.ok.gov/",
+      "sourceUrl": "https://www.nga.org/governors/oklahoma/"
+    },
+    "OR": {
+      "title": "Governor",
+      "name": "Tina Kotek",
+      "party": "Democratic",
+      "inOfficeSince": "2023-01-09",
+      "website": "http://www.oregon.gov/gov/pages/index.aspx",
+      "sourceUrl": "https://www.nga.org/governors/oregon/"
+    },
+    "PA": {
+      "title": "Governor",
+      "name": "Josh Shapiro",
+      "party": "Democratic",
+      "inOfficeSince": "2023-01-17",
+      "website": "http://governor.pa.gov/",
+      "sourceUrl": "https://www.nga.org/governors/pennsylvania/"
+    },
+    "PR": {
+      "title": "Governor",
+      "name": "Jenniffer González-Colón",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-02",
+      "website": null,
+      "sourceUrl": "https://www.nga.org/governors/puerto-rico/"
+    },
+    "RI": {
+      "title": "Governor",
+      "name": "Dan McKee",
+      "party": "Democratic",
+      "inOfficeSince": "2021-03-02",
+      "website": "https://governor.ri.gov/",
+      "sourceUrl": "https://www.nga.org/governors/rhode-island/"
+    },
+    "SC": {
+      "title": "Governor",
+      "name": "Henry McMaster",
+      "party": "Republican",
+      "inOfficeSince": "2017-01-24",
+      "website": "http://governor.sc.gov/",
+      "sourceUrl": "https://www.nga.org/governors/south-carolina/"
+    },
+    "SD": {
+      "title": "Governor",
+      "name": "Larry Rhoden",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-25",
+      "website": "https://governor.sd.gov/default.aspx",
+      "sourceUrl": "https://www.nga.org/governors/south-dakota/"
+    },
+    "TN": {
+      "title": "Governor",
+      "name": "Bill Lee",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-19",
+      "website": "https://www.tn.gov/content/tn/governor.html",
+      "sourceUrl": "https://www.nga.org/governors/tennessee/"
+    },
+    "TX": {
+      "title": "Governor",
+      "name": "Greg Abbott",
+      "party": "Republican",
+      "inOfficeSince": "2015-01-20",
+      "website": "http://gov.texas.gov/",
+      "sourceUrl": "https://www.nga.org/governors/texas/"
+    },
+    "UT": {
+      "title": "Governor",
+      "name": "Spencer Cox",
+      "party": "Republican",
+      "inOfficeSince": "2021-01-04",
+      "website": "https://governor.utah.gov/",
+      "sourceUrl": "https://www.nga.org/governors/utah/"
+    },
+    "VA": {
+      "title": "Governor",
+      "name": "Abigail Spanberger",
+      "party": "Democratic",
+      "inOfficeSince": "2026-01-17",
+      "website": null,
+      "sourceUrl": "https://www.nga.org/governors/virginia/"
+    },
+    "VI": {
+      "title": "Governor",
+      "name": "Albert Bryan",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-07",
+      "website": "https://www.vi.gov/",
+      "sourceUrl": "https://www.nga.org/governors/virgin-islands/"
+    },
+    "VT": {
+      "title": "Governor",
+      "name": "Phil Scott",
+      "party": "Republican",
+      "inOfficeSince": "2017-01-05",
+      "website": "https://governor.vermont.gov/",
+      "sourceUrl": "https://www.nga.org/governors/vermont/"
+    },
+    "WA": {
+      "title": "Governor",
+      "name": "Bob Ferguson",
+      "party": "Democratic",
+      "inOfficeSince": "2025-01-15",
+      "website": "http://www.governor.wa.gov/",
+      "sourceUrl": "https://www.nga.org/governors/washington/"
+    },
+    "WI": {
+      "title": "Governor",
+      "name": "Tony Evers",
+      "party": "Democratic",
+      "inOfficeSince": "2019-01-07",
+      "website": "https://evers.wi.gov/",
+      "sourceUrl": "https://www.nga.org/governors/wisconsin/"
+    },
+    "WV": {
+      "title": "Governor",
+      "name": "Patrick Morrisey",
+      "party": "Republican",
+      "inOfficeSince": "2025-01-13",
+      "website": "https://governor.wv.gov/",
+      "sourceUrl": "https://www.nga.org/governors/west-virginia/"
+    },
+    "WY": {
+      "title": "Governor",
+      "name": "Mark Gordon",
+      "party": "Republican",
+      "inOfficeSince": "2019-01-07",
+      "website": "http://governor.wy.gov/",
+      "sourceUrl": "https://www.nga.org/governors/wyoming/"
+    }
+  }
+}
