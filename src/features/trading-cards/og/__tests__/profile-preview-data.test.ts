@@ -60,6 +60,20 @@ describe('buildProfilePreview', () => {
     expect(p.stats).toEqual([]);
   });
 
+  it('leaves the vote count off for delegates', () => {
+    const b = {
+      ...baselines(true),
+      members: { N000147: { cast: 78 } },
+    } as unknown as ChamberBaselines;
+    const p = buildProfilePreview(
+      rep({ bioguideId: 'N000147', state: 'DC', district: '0' }),
+      b,
+      null,
+      119
+    );
+    expect(p.stats).toEqual([]);
+  });
+
   it('uses the official name when the roster has one', () => {
     const norton = rep({
       name: 'Eleanor Norton',

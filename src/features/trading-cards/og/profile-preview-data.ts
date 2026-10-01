@@ -81,8 +81,12 @@ export function buildProfilePreview(
   const stats: PreviewStat[] = [];
   const sources = ['congress-legislators'];
 
-  // Only a full-Congress sweep has an honest period label.
-  const cast = baselines?.fullCoverage ? baselines.members[rep.bioguideId]?.cast : undefined;
+  // Only a full-Congress sweep has an honest period label. Delegates and the
+  // resident commissioner vote only in some proceedings, so their count
+  // would read as absenteeism next to a voting member's; leave it off.
+  const nonVoting = rep.chamber === 'House' && rep.state in NON_VOTING_ROLE;
+  const cast =
+    baselines?.fullCoverage && !nonVoting ? baselines.members[rep.bioguideId]?.cast : undefined;
   if (typeof cast === 'number' && cast > 0) {
     stats.push({
       value: cast,
