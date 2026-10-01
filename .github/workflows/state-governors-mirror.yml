@@ -1,0 +1,133 @@
+name: Mirror State Governors
+
+# /states/[state] server-renders each state's governor (and DC's mayor) from
+# src/data/state-governors.json, so a page view never waits on a live source.
+# This refreshes that file weekly from the National Governors Association's
+# public pages (nga.org/governors) plus one Wikidata query for DC. No secret
+# is needed.
+#
+# Live Wikidata was the previous source and named Chris Sununu as New
+# Hampshire's governor in 2026 — see
+# src/lib/data-sources/state-governors/parse-nga.ts.
+
+on:
+  schedule:
+    # Weekly, Wednesday 06:45 UTC — offset from the other mirrors. Governors
+    # change after elections and the occasional resignation, not daily.
+    - cron: '45 6 * * 3'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      # No lifecycle scripts needed: the sync runs under tsx only.
+      - run: npm ci --ignore-scripts
+
+      # The script refuses to write unless NGA lists exactly 55 governors, each
+      # with a party and a current term, and Wikidata names one sitting DC
+      # mayor. On any failure the committed file keeps serving.
+      - name: Refresh governors
+        run: npm run sync:state-governors
+
+      - name: Commit updated governors
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- src/data/state-governors.json; then
+            echo "No change to state governors"
+          else
+            git add src/data/state-governors.json
+            git commit -m "chore(states): refresh state governors from NGA [skip ci]"
+            # Rebase and retry rather than merge: main-protection enforces
+            # linear history.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
+            git push
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `/states pages keep serving the last committed governors, so this is`,
+              `not an outage — but a new governor won't appear until it's fixed.`,
+              `NGA may have changed its page markup (parse-nga.ts).`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }
