@@ -145,7 +145,7 @@ interface LegacyStateOverviewPageProps {
 export default function LegacyStateOverviewPage({
   serverSections,
   initialDemographics,
-}: LegacyStateOverviewPageProps) {
+}: Readonly<LegacyStateOverviewPageProps>) {
   const params = useParams();
   const rawState = params.state as string;
   const stateCode = normalizeStateIdentifier(rawState);
@@ -254,12 +254,12 @@ function OverviewTab({
   stateName,
   serverSections,
   initialDemographics,
-}: {
+}: Readonly<{
   stateCode: string;
   stateName: string;
   serverSections: ReactNode;
   initialDemographics: StateDemographics | null;
-}) {
+}>) {
   // Fetch in the browser only when the server couldn't (Census slow or down).
   const { data: fetchedDemographics, isLoading: demoLoading } = useSWR<StateDemographics>(
     initialDemographics ? null : `/api/state-demographics/${stateCode}`,

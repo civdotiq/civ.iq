@@ -620,18 +620,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // have a chief executive, a delegate and ACS figures. The other territories'
   // don't (no roster, no ACS), so they stay out.
   for (const code of ['dc', 'pr']) {
-    entries.push({
-      url: `${BASE_URL}/state-legislature/${code}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.6,
-    });
-    entries.push({
-      url: `${BASE_URL}/states/${code}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.6,
-    });
+    entries.push(
+      {
+        url: `${BASE_URL}/state-legislature/${code}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      },
+      {
+        url: `${BASE_URL}/states/${code}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      }
+    );
   }
   // Individual legislator profiles are in /sitemap-state-legislators.xml.
 

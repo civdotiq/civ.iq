@@ -48,8 +48,23 @@ function decode(text: string): string {
   return text.replace(/&(?:amp|#039|#8217|rsquo|quot|nbsp);/g, m => ENTITIES[m] ?? m);
 }
 
+/** Replace every tag with "|" (a linear scan; no backtracking regex). */
+function stripTags(fragment: string): string {
+  let out = '';
+  let i = 0;
+  while (i < fragment.length) {
+    const open = fragment.indexOf('<', i);
+    if (open < 0) return out + fragment.slice(i);
+    const close = fragment.indexOf('>', open);
+    if (close < 0) return out + fragment.slice(i);
+    out += fragment.slice(i, open) + '|';
+    i = close + 1;
+  }
+  return out;
+}
+
 function textParts(fragment: string): string[] {
-  return decode(fragment.replace(/<[^>]+>/g, '|'))
+  return decode(stripTags(fragment))
     .split('|')
     .map(s => s.replace(/\s+/g, ' ').trim())
     .filter(Boolean);
@@ -108,7 +123,8 @@ function labelled(html: string, label: string): string[] {
 export function parseNgaGovernorPage(html: string): NgaGovernorDetail {
   const party = labelled(html, 'Party')[0] ?? null;
   const terms = labelled(html, 'Terms').flatMap((line): NgaTerm[] => {
-    const [from, to] = line.split(/\s+-\s+/);
+    // textParts has already collapsed whitespace to single spaces.
+    const [from, to] = line.split(' - ');
     const start = from ? parseNgaDate(from) : null;
     if (!start || !to) return [];
     if (/^current$/i.test(to.trim())) return [{ start, end: null }];

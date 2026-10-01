@@ -78,7 +78,7 @@ interface Props {
   hub: StateHubData | null;
 }
 
-export function StateOverviewServerSections({ stateCode, stateName, data, hub }: Props) {
+export function StateOverviewServerSections({ stateCode, stateName, data, hub }: Readonly<Props>) {
   const { chiefExecutive, senators, houseMembers, delegationAvailable } = data;
   const delegation = [...senators, ...houseMembers];
 
@@ -123,57 +123,65 @@ export function StateOverviewServerSections({ stateCode, stateName, data, hub }:
   );
 }
 
+function executiveSentence(exec: StateChiefExecutive | null, stateName: string): string | null {
+  if (!exec) return null;
+  const since = exec.inOfficeSince ? monthYear(exec.inOfficeSince) : null;
+  const party = exec.party ? ` (${exec.party})` : '';
+  const tail = since ? `, in office since ${since}.` : '.';
+  return `The ${exec.title.toLowerCase()} of ${stateName} is ${exec.name}${party}${tail}`;
+}
+
+function congressSentence(data: StateOverviewServerData, stateName: string): string | null {
+  const { senators, houseMembers, delegationAvailable } = data;
+  if (!delegationAvailable || senators.length + houseMembers.length === 0) return null;
+  const voting = houseMembers.filter(m => m.role === 'Representative');
+  const delegate = houseMembers.find(m => m.role !== 'Representative');
+  const parts: string[] = [];
+  if (senators.length > 0) parts.push(plural(senators.length, 'U.S. senator', 'U.S. senators'));
+  if (voting.length > 0) parts.push(plural(voting.length, 'representative', 'representatives'));
+  if (delegate) parts.push(`a non-voting ${delegate.role.toLowerCase()}`);
+  return `In Congress, ${stateName} is represented by ${parts.join(' and ')}.`;
+}
+
+function legislatureSentences(hub: StateHubData | null): string[] {
+  if (!hub) return [];
+  let shape: string;
+  if (hub.unicameral) {
+    shape = `one chamber with ${hub.chambers[0]?.seats ?? hub.memberCount} seats`;
+  } else if (hub.chambers.every(c => c.seats !== null)) {
+    shape = hub.chambers.map(c => `${seatCount(c.seats ?? 0)} ${c.name}`).join(' and ');
+  } else {
+    shape = `two chambers, the ${hub.chambers.map(c => c.name).join(' and the ')}`;
+  }
+  const out = [`The ${hub.legislatureName} has ${shape}.`];
+  if (hub.nextElectionYear) {
+    out.push(`The next regular legislative election is in ${hub.nextElectionYear}.`);
+  }
+  return out;
+}
+
 function Summary({
   stateName,
   data,
   hub,
-}: {
+}: Readonly<{
   stateName: string;
   data: StateOverviewServerData;
   hub: StateHubData | null;
-}) {
-  const { chiefExecutive, senators, houseMembers, delegationAvailable } = data;
-  const sentences: string[] = [];
-
-  if (chiefExecutive) {
-    const since = chiefExecutive.inOfficeSince ? monthYear(chiefExecutive.inOfficeSince) : null;
-    const party = chiefExecutive.party ? ` (${chiefExecutive.party})` : '';
-    sentences.push(
-      `The ${chiefExecutive.title.toLowerCase()} of ${stateName} is ${chiefExecutive.name}${party}` +
-        (since ? `, in office since ${since}.` : '.')
-    );
-  }
-
-  if (delegationAvailable && (senators.length > 0 || houseMembers.length > 0)) {
-    const voting = houseMembers.filter(m => m.role === 'Representative');
-    const nonVoting = houseMembers.filter(m => m.role !== 'Representative');
-    const parts: string[] = [];
-    if (senators.length > 0) parts.push(plural(senators.length, 'U.S. senator', 'U.S. senators'));
-    if (voting.length > 0) parts.push(plural(voting.length, 'representative', 'representatives'));
-    if (nonVoting[0]) parts.push(`a non-voting ${nonVoting[0].role.toLowerCase()}`);
-    sentences.push(`In Congress, ${stateName} is represented by ${parts.join(' and ')}.`);
-  }
-
-  if (hub) {
-    const allSeatsKnown = hub.chambers.every(c => c.seats !== null);
-    const chambers = allSeatsKnown
-      ? hub.chambers.map(c => `${seatCount(c.seats ?? 0)} ${c.name}`).join(' and ')
-      : `two chambers, the ${hub.chambers.map(c => c.name).join(' and the ')}`;
-    sentences.push(
-      hub.unicameral
-        ? `The ${hub.legislatureName} has one chamber with ${hub.chambers[0]?.seats ?? hub.memberCount} seats.`
-        : `The ${hub.legislatureName} has ${chambers}.`
-    );
-    if (hub.nextElectionYear) {
-      sentences.push(`The next regular legislative election is in ${hub.nextElectionYear}.`);
-    }
-  }
-
+}>) {
+  const sentences = [
+    executiveSentence(data.chiefExecutive, stateName),
+    congressSentence(data, stateName),
+    ...legislatureSentences(hub),
+  ].filter((s): s is string => s !== null);
   if (sentences.length === 0) return null;
   return <p className="type-base text-gray-700 leading-relaxed">{sentences.join(' ')}</p>;
 }
 
-function ChiefExecutiveCard({ exec, stateName }: { exec: StateChiefExecutive; stateName: string }) {
+function ChiefExecutiveCard({
+  exec,
+  stateName,
+}: Readonly<{ exec: StateChiefExecutive; stateName: string }>) {
   const since = exec.inOfficeSince ? monthYear(exec.inOfficeSince) : null;
   const fromNga = exec.sourceUrl.includes('nga.org');
   return (
@@ -211,11 +219,11 @@ function MemberList({
   heading,
   members,
   seat,
-}: {
+}: Readonly<{
   heading: string;
   members: DelegationMember[];
   seat: (m: DelegationMember) => string;
-}) {
+}>) {
   return (
     <div>
       <h3 className="aicher-heading type-sm text-gray-500 mb-2">{heading}</h3>
@@ -241,7 +249,7 @@ function MemberList({
   );
 }
 
-function LegislatureCard({ hub }: { hub: StateHubData }) {
+function LegislatureCard({ hub }: Readonly<{ hub: StateHubData }>) {
   return (
     <section className="border-2 border-gray-900 bg-white p-4 sm:p-6">
       <h2 className="aicher-heading type-lg text-gray-900 mb-4">{hub.legislatureName}</h2>

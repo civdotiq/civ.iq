@@ -114,7 +114,7 @@ async function fetchDcMayor(): Promise<StateChiefExecutive> {
   return {
     title: 'Mayor',
     name,
-    party: normalizeGovernorParty(row.partyLabel?.value.replace(/\s+Party$/, '') ?? null),
+    party: normalizeGovernorParty(row.partyLabel?.value.replace(/ Party$/, '') ?? null),
     inOfficeSince: row.start?.value.slice(0, 10) ?? null,
     website: row.site?.value.replace(/^http:\/\//, 'https://') ?? null,
     sourceUrl: `https://www.wikidata.org/wiki/${qid}`,

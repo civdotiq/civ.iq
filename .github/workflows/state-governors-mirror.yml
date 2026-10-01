@@ -30,7 +30,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # No lifecycle scripts needed: the sync runs under tsx only.
+      - run: npm ci --ignore-scripts
 
       # The script refuses to write unless NGA lists exactly 55 governors, each
       # with a party and a current term, and Wikidata names one sitting DC
