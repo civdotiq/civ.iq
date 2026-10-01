@@ -3,16 +3,15 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { Suspense } from 'react';
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Bill } from '@/types/bill';
 import { getBillDisplayStatus } from '@/types/bill';
-import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { lookupBill, type BillLookup } from '@/lib/services/bill.service';
 import { parseBillSlug } from '@/lib/data/route-slugs';
 import { ClientBillContent } from './ClientBillContent';
 import { Breadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { LegislationSchema, BreadcrumbSchema, SpeakableSchema } from '@/components/seo/JsonLd';
 import { BillDetail } from '@/components/bills/BillDetail';
 
@@ -21,13 +20,26 @@ interface BillPageProps {
   searchParams: Promise<{ from?: string; name?: string; v?: string }>;
 }
 
-async function getBillData(billId: string): Promise<Bill | null> {
+/**
+ * One Congress.gov lookup per request, shared by metadata and the page.
+ * A missing API key counts as unavailable, never as "no such bill".
+ */
+const getBillLookup = cache(async (billId: string): Promise<BillLookup> => {
+  if (!process.env.CONGRESS_API_KEY) return { status: 'unavailable' };
   try {
-    if (!process.env.CONGRESS_API_KEY) return null;
-    return await fetchBillFromCongress(billId);
+    return await lookupBill(billId);
   } catch {
-    return null;
+    return { status: 'unavailable' };
   }
+});
+
+/**
+ * The bill as sent to the browser. Bill text runs to megabytes (the NDAA's is
+ * 3.3MB) behind a collapsed section, so the page sends only its version and
+ * date; the text loads when someone opens that section.
+ */
+function withoutTextBody(bill: Bill): Bill {
+  return bill.fullText ? { ...bill, fullText: { ...bill.fullText, content: '' } } : bill;
 }
 
 /**
@@ -50,7 +62,8 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
     // redirects or 404s before the shell is emitted.
     return {};
   }
-  const bill = await getBillData(parsed.canonical);
+  const lookup = await getBillLookup(parsed.canonical);
+  const bill = lookup.status === 'found' ? lookup.bill : null;
 
   const title = bill
     ? `${bill.number}: ${shortenAtWord(bill.shortTitle || bill.title, 70)}`
@@ -81,29 +94,19 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
   };
 }
 
-// Loading component for bill data
-function BillLoading() {
-  return (
-    <div className="min-h-screen aicher-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <LoadingState fullPage message="Loading bill details..." />
-      </div>
-    </div>
-  );
-}
-
-// Bill content component
-async function BillContent({
+// Bill content component. `bill` is null only while Congress.gov is
+// unreachable; the browser then retries the fetch itself.
+function BillContent({
   billId,
+  bill,
   fromBioguideId,
   fromRepName,
 }: {
   billId: string;
+  bill: Bill | null;
   fromBioguideId?: string;
   fromRepName?: string;
 }) {
-  const bill = await getBillData(billId);
-
   return (
     <div className="min-h-screen aicher-background density-detailed">
       {/* Structured Data for SEO */}
@@ -163,8 +166,7 @@ async function BillContent({
           }
         />
 
-        {/* Client-side content */}
-        <ClientBillContent billId={billId} />
+        <ClientBillContent billId={billId} initialBill={bill ? withoutTextBody(bill) : undefined} />
       </div>
     </div>
   );
@@ -185,19 +187,23 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
   const useRedesign = v === 'new' || isPreviewEnv;
 
+  // Awaited before anything streams, so the status code is still ours to set:
+  // only Congress.gov's own 404 becomes a 404 page.
+  const lookup = await getBillLookup(parsed.canonical);
+  if (lookup.status === 'not_found') notFound();
+  const bill = lookup.status === 'found' ? lookup.bill : null;
+
   if (useRedesign) {
-    const bill = await getBillData(parsed.canonical);
-    if (!bill) notFound();
+    if (!bill) throw new Error(`Bill ${parsed.canonical} unavailable from Congress.gov`);
     return <BillDetail bill={bill} />;
   }
 
   return (
-    <Suspense fallback={<BillLoading />}>
-      <BillContent
-        billId={parsed.canonical}
-        fromBioguideId={fromBioguideId}
-        fromRepName={fromRepName}
-      />
-    </Suspense>
+    <BillContent
+      billId={parsed.canonical}
+      bill={bill}
+      fromBioguideId={fromBioguideId}
+      fromRepName={fromRepName}
+    />
   );
 }

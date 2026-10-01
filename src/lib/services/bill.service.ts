@@ -718,10 +718,28 @@ export function mapCongressStatus(actionText?: string): BillStatus | null {
 }
 
 /**
- * Fetch a bill from Congress.gov, including cosponsors, text, actions, and votes.
- * Results are cached for 24 hours via cachedFetch.
+ * A bill lookup that keeps "Congress.gov has no such bill" apart from
+ * "Congress.gov could not be reached". Only the first may become a 404 page;
+ * an outage must never tell search engines a real bill is gone.
+ */
+export type BillLookup =
+  { status: 'found'; bill: Bill } | { status: 'not_found' } | { status: 'unavailable' };
+
+type BillMiss = 'not_found' | 'unavailable';
+
+/**
+ * Fetch a bill from Congress.gov, or null when it is missing or unreachable.
  */
 export async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
+  const result = await lookupBill(billId);
+  return result.status === 'found' ? result.bill : null;
+}
+
+/**
+ * Fetch a bill from Congress.gov, including cosponsors, text, actions, and votes.
+ * Found bills are cached for 24 hours via cachedFetch; misses are never cached.
+ */
+export async function lookupBill(billId: string): Promise<BillLookup> {
   const { type, number, congress } = parseBillNumber(billId);
   // v2: standard bill labels (H.R.) and per-action chamber
   // v3: de-duplicated roll calls + vote session
@@ -729,7 +747,7 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
   // v6: official roll-call question/result (House + Senate) — bump drops stale entries
   const cacheKey = `bill-v6-${type}-${number}-${congress}`;
 
-  return cachedFetch(
+  const result = await cachedFetch<Bill | BillMiss>(
     cacheKey,
     async () => {
       try {
@@ -758,7 +776,7 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
           if (billResponse.status === 404) {
             logger.warn('Bill not found in Congress.gov', { billId });
-            return null;
+            return 'not_found';
           }
 
           throw new Error(`Congress.gov API error: ${billResponse.status}`);
@@ -769,7 +787,7 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
 
         if (!billData.bill) {
           logger.warn('No bill data in response', { billId });
-          return null;
+          return 'unavailable';
         }
 
         const bill = billData.bill;
@@ -992,9 +1010,12 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
         logger.error('Error fetching bill from Congress.gov', error as Error, {
           billId,
         });
-        return null;
+        return 'unavailable';
       }
     },
-    24 * 60 * 60
+    24 * 60 * 60,
+    data => typeof data === 'object'
   );
+
+  return typeof result === 'object' ? { status: 'found', bill: result } : { status: result };
 }

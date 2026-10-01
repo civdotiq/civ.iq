@@ -49,11 +49,14 @@ import { SkeletonLoader } from '@/shared/components/ui/SkeletonLoader';
 
 interface ClientBillContentProps {
   billId: string;
+  /** Server-fetched bill, so the content is in the first HTML. Its text body is
+   * left out (see BillTextSection). Absent only when Congress.gov was down. */
+  initialBill?: Bill;
 }
 
-export function ClientBillContent({ billId }: ClientBillContentProps) {
-  const [bill, setBill] = useState<Bill | null>(null);
-  const [loading, setLoading] = useState(true);
+export function ClientBillContent({ billId, initialBill }: ClientBillContentProps) {
+  const [bill, setBill] = useState<Bill | null>(initialBill ?? null);
+  const [loading, setLoading] = useState(!initialBill);
   const [error, setError] = useState<string | null>(null);
   const [district, setDistrict] = useState<string | null>(null);
   const [districtImpact, setDistrictImpact] = useState<DistrictImpactType | null>(null);
@@ -73,6 +76,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   } = useBillSummaryStream(billId, !!bill);
 
   useEffect(() => {
+    if (initialBill) return;
+
     async function fetchBill() {
       try {
         setLoading(true);
@@ -103,7 +108,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
     }
 
     fetchBill();
-  }, [billId]);
+  }, [billId, initialBill]);
 
   // Fetch legislative process explanation when bill is loaded
   useEffect(() => {
@@ -378,7 +383,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           )}
 
           {/* Bill Text Section */}
-          {bill.fullText && <BillTextSection fullText={bill.fullText} />}
+          {bill.fullText && <BillTextSection billId={billId} fullText={bill.fullText} />}
 
           {/* CBO Cost Estimates */}
           {bill.cboCostEstimates && bill.cboCostEstimates.length > 0 && (
@@ -1044,7 +1049,9 @@ function LegislativeProcessSection({ explanation }: LegislativeProcessSectionPro
 
 // Bill Text Section Component - Collapsible display of full bill text
 interface BillTextSectionProps {
+  billId: string;
   fullText: {
+    /** Empty when the server left the text out of the page; fetched on open. */
     content: string;
     format: 'html' | 'text';
     version: string;
@@ -1052,15 +1059,36 @@ interface BillTextSectionProps {
   };
 }
 
-function BillTextSection({ fullText }: BillTextSectionProps) {
+function BillTextSection({ billId, fullText }: BillTextSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
+  const [content, setContent] = useState(fullText.content);
+  const [textUnavailable, setTextUnavailable] = useState(false);
+  const needsText = isExpanded && !content && !textUnavailable;
+
+  useEffect(() => {
+    if (!needsText) return;
+    let cancelled = false;
+    fetch(`/api/bill/${billId}`)
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((data: { bill?: Bill }) => {
+        if (cancelled) return;
+        const text = data.bill?.fullText?.content;
+        if (text) setContent(text);
+        else setTextUnavailable(true);
+      })
+      .catch(() => {
+        if (!cancelled) setTextUnavailable(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsText, billId]);
 
   // Truncate content for preview
   const previewLength = 2000;
-  const isLongContent = fullText.content.length > previewLength;
-  const rawContent =
-    showFullText || !isLongContent ? fullText.content : fullText.content.slice(0, previewLength);
+  const isLongContent = content.length > previewLength;
+  const rawContent = showFullText || !isLongContent ? content : content.slice(0, previewLength);
   const displayContent = useMemo(() => sanitizeBillHtml(rawContent), [rawContent]);
 
   return (
@@ -1096,10 +1124,18 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
             </p>
           </div>
 
-          <div
-            className="prose prose-sm max-w-none bg-gray-50 p-4 border border-gray-200 overflow-auto max-h-[600px]"
-            dangerouslySetInnerHTML={{ __html: displayContent }}
-          />
+          {textUnavailable ? (
+            <p className="text-sm text-gray-600 border-l-4 border-amber-500 pl-3">
+              The bill text couldn&apos;t be loaded from Congress.gov right now. Try again later.
+            </p>
+          ) : !content ? (
+            <LoadingState message="Fetching bill text from Congress.gov..." />
+          ) : (
+            <div
+              className="prose prose-sm max-w-none bg-gray-50 p-4 border border-gray-200 overflow-auto max-h-[600px]"
+              dangerouslySetInnerHTML={{ __html: displayContent }}
+            />
+          )}
 
           {isLongContent && !showFullText && (
             <div className="mt-4 text-center">
@@ -1107,7 +1143,7 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
                 onClick={() => setShowFullText(true)}
                 className="px-4 py-2 bg-civiq-blue/10 text-civiq-blue hover:bg-civiq-blue/10 transition-colors font-medium text-sm"
               >
-                Show Full Text ({Math.round(fullText.content.length / 1000)}KB)
+                Show Full Text ({Math.round(content.length / 1000)}KB)
               </button>
             </div>
           )}
