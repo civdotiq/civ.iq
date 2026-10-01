@@ -114,7 +114,7 @@ export function ShareButton({
       <div
         role="menu"
         aria-orientation="vertical"
-        className="absolute right-0 z-20 mt-1 w-48 border-2 border-black bg-white"
+        className="absolute right-0 z-50 mt-1 w-48 border-2 border-black bg-white"
         onKeyDown={handleKeyDown}
       >
         {/* Copy Link */}
