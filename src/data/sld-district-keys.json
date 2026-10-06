@@ -1,8 +1,8 @@
 {
   "vintage": "2024",
   "source": "https://www2.census.gov/geo/docs/maps-data/data/rel2020/cd-sld/ (tab20_sldu202420_zcta520_natl.txt, tab20_sldl202420_zcta520_natl.txt)",
-  "corpusUpstreamCommit": "bf4caf105dc0e4fbd52d06e970ec264540f5da97",
-  "generatedAt": "2026-09-30T17:45:55.033Z",
+  "corpusUpstreamCommit": "69d646a33d556fe80740636dbd7e9787a7d8851a",
+  "generatedAt": "2026-10-06T13:15:22.275Z",
   "knownGaps": {
     "NH-lower": "Floterial districts overlay the base districts; the Census layer has 165 districts, the corpus 199."
   },

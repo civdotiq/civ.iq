@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-29T12:46:43.638Z",
-  "staleAfter": "2026-10-20",
-  "upstreamCommit": "bf4caf105dc0e4fbd52d06e970ec264540f5da97",
-  "upstreamCommittedAt": "2026-09-24T16:35:09Z",
+  "generatedAt": "2026-10-06T13:15:10.734Z",
+  "staleAfter": "2026-10-27",
+  "upstreamCommit": "69d646a33d556fe80740636dbd7e9787a7d8851a",
+  "upstreamCommittedAt": "2026-10-06T11:57:08Z",
   "jurisdictions": 52,
   "committees": 2795,
-  "memberships": 34479,
-  "compressedBytes": 399783,
+  "memberships": 34416,
+  "compressedBytes": 399467,
   "meta": {
     "committees": 2795,
-    "memberships": 34479,
+    "memberships": 34416,
     "source": "https://github.com/openstates/people (CC0-1.0)",
     "methodology": "Every data/<jurisdiction>/committees/*.yml record with an ocd-organization id: standing committees, subcommittees (linked to their parent) and joint committees. Members are listed as upstream records them, with their role verbatim."
   }
