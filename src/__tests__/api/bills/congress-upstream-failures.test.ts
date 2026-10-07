@@ -11,44 +11,29 @@
  * "Introduced in Senate"; the feed crashed on it with a 500.
  */
 
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { GET as getV1Bill } from '@/app/api/v1/bills/[billId]/route';
 import { GET as getBillFeed } from '@/app/api/feed/bill/[billId]/route';
 
-// The global jest.setup mock of next/server drops headers and has no
-// NextResponse constructor; these assertions need both.
+// The global jest.setup mock of next/server drops headers and can't be
+// constructed; the routes need `new NextResponse(...)` and these tests read
+// status, headers, and body.
 jest.mock('next/server', () => {
-  class _NextResponse {
-    body: string | null;
-    status: number;
-    headers: Headers;
-
-    constructor(
-      body?: string | null,
-      init?: { status?: number; headers?: Record<string, string> }
-    ) {
-      this.body = body ?? null;
-      this.status = init?.status ?? 200;
-      this.headers = new Headers(init?.headers);
+  const respond = (body: string | null, init?: { status?: number; headers?: HeadersInit }) => ({
+    status: init?.status ?? 200,
+    headers: new Headers(init?.headers),
+    text: async () => body ?? '',
+  });
+  const NextResponse = Object.assign(
+    function (body: string | null, init?: { status?: number; headers?: HeadersInit }) {
+      return respond(body, init);
+    },
+    {
+      json: (data: unknown, init?: { status?: number; headers?: HeadersInit }) =>
+        respond(JSON.stringify(data), init),
     }
-
-    async text() {
-      return this.body ?? '';
-    }
-
-    static json(data: unknown, init?: { status?: number; headers?: Record<string, string> }) {
-      return new _NextResponse(JSON.stringify(data), init);
-    }
-  }
-
-  class _NextRequest {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-  }
-
-  return { NextResponse: _NextResponse, NextRequest: _NextRequest };
+  );
+  return { NextResponse };
 });
 
 jest.mock('@/lib/logging/simple-logger', () => ({
@@ -58,6 +43,8 @@ jest.mock('@/lib/logging/simple-logger', () => ({
 
 const BILL_ID = '119-s-3362';
 const ctx = { params: Promise.resolve({ billId: BILL_ID }) };
+// Neither route reads the request.
+const req = {} as NextRequest;
 
 const timeoutError = () =>
   new DOMException('The operation was aborted due to timeout', 'TimeoutError');
@@ -81,7 +68,7 @@ describe('GET /api/v1/bills/[billId]', () => {
         jsonResponse({ bill: { congress: 119, type: 'S', number: '3362', title: 'T' } })
       );
 
-    await getV1Bill(new NextRequest(`https://civdotiq.org/api/v1/bills/${BILL_ID}`), ctx);
+    await getV1Bill(req, ctx);
 
     const init = fetchMock.mock.calls[0]?.[1];
     expect(init?.signal).toBeInstanceOf(AbortSignal);
@@ -90,10 +77,7 @@ describe('GET /api/v1/bills/[billId]', () => {
   it('returns 503 with Retry-After when Congress.gov times out', async () => {
     jest.spyOn(global, 'fetch').mockRejectedValue(timeoutError());
 
-    const res = await getV1Bill(
-      new NextRequest(`https://civdotiq.org/api/v1/bills/${BILL_ID}`),
-      ctx
-    );
+    const res = await getV1Bill(req, ctx);
 
     expect(res.status).toBe(503);
     expect(res.headers.get('Retry-After')).toBe('120');
@@ -104,10 +88,7 @@ describe('GET /api/feed/bill/[billId]', () => {
   it('returns 503 with Retry-After when Congress.gov times out', async () => {
     jest.spyOn(global, 'fetch').mockRejectedValue(timeoutError());
 
-    const res = await getBillFeed(
-      new NextRequest(`https://civdotiq.org/api/feed/bill/${BILL_ID}`),
-      ctx
-    );
+    const res = await getBillFeed(req, ctx);
 
     expect(res.status).toBe(503);
     expect(res.headers.get('Retry-After')).toBe('120');
@@ -130,10 +111,7 @@ describe('GET /api/feed/bill/[billId]', () => {
         : jsonResponse({ bill: { title: 'Health Marketplace and Savings Accounts for All Act' } })
     );
 
-    const res = await getBillFeed(
-      new NextRequest(`https://civdotiq.org/api/feed/bill/${BILL_ID}`),
-      ctx
-    );
+    const res = await getBillFeed(req, ctx);
     const xml = await res.text();
 
     expect(res.status).toBe(200);
