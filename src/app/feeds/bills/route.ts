@@ -18,6 +18,7 @@ import {
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,7 @@ interface BillsResponse {
 
 async function fetchLatestBills(): Promise<Bill[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/bills/latest?limit=50`, {
       cache: 'force-cache',
     });
