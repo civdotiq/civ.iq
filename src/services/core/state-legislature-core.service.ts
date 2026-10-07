@@ -1019,12 +1019,14 @@ export class StateLegislatureCoreService {
    * @param legislatorId - OpenStates person ID
    * @param session - Optional session identifier
    * @param limit - Maximum number of bills to return
+   * @param budgetMs - Time allowed for the OpenStates read (default: the shared route budget)
    */
   static async getStateLegislatorBills(
     state: string,
     legislatorId: string,
     session?: string,
-    limit = 50
+    limit = 50,
+    budgetMs?: number
   ): Promise<StateBill[]> {
     const cacheKey = `core:state-legislator-bills:${state}:${legislatorId}:${session || 'latest'}:${limit}`;
     const startTime = Date.now();
@@ -1043,14 +1045,21 @@ export class StateLegislatureCoreService {
       }
 
       // Use server-side sponsor filtering (efficient!)
-      const osBills = await openStatesAPI.getBillsBySponsor(legislatorId, state, session, limit);
+      const osBills = await openStatesAPI.getBillsBySponsor(
+        legislatorId,
+        state,
+        session,
+        limit,
+        budgetMs
+      );
 
       // Transform to our type system
       const bills = osBills.map(bill => this.transformBill(bill, state));
 
-      // Cache for 1 hour
+      // 24 hours: a cold read of a prolific sponsor costs ~15s, and a
+      // sponsor's bill list changes far more slowly than that.
       await govCache.set(cacheKey, bills, {
-        ttl: 3600000, // 60 minutes
+        ttl: 86400000, // 24 hours (ms)
         source: 'openstates-bills',
         dataType: 'bills',
       });
@@ -1069,7 +1078,8 @@ export class StateLegislatureCoreService {
         legislatorId,
         responseTime: Date.now() - startTime,
       });
-      return [];
+      // Rethrown, not []: an empty list reads as "sponsored no bills".
+      throw error;
     }
   }
 

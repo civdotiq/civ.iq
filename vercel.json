@@ -77,6 +77,9 @@
     "src/app/api/districts/[districtId]/government-spending/route.ts": {
       "maxDuration": 60
     },
+    "src/app/api/state-legislature/[state]/legislator/[id]/bills/route.ts": {
+      "maxDuration": 30
+    },
     "src/app/api/**/*.ts": {
       "maxDuration": 20
     }

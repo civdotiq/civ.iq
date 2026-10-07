@@ -433,17 +433,13 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
                   )}
                 </div>
 
-                {bill.actions &&
-                  bill.actions.length > 0 &&
-                  (() => {
-                    const lastAction = bill.actions[bill.actions.length - 1];
-                    return lastAction ? (
-                      <div className="text-sm text-gray-600 bg-gray-50 p-2">
-                        <span className="font-medium">Latest Action: </span>
-                        {lastAction.description} ({formatDate(lastAction.date)})
-                      </div>
-                    ) : null;
-                  })()}
+                {bill.latest_action_description && (
+                  <div className="text-sm text-gray-600 bg-gray-50 p-2">
+                    <span className="font-medium">Latest Action: </span>
+                    {bill.latest_action_description}
+                    {bill.latest_action_date && ` (${formatDate(bill.latest_action_date)})`}
+                  </div>
+                )}
               </div>
             );
           })}

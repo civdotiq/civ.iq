@@ -28,6 +28,7 @@ import {
   isDailyQuotaBody,
   isDailyQuotaExhausted,
   markDailyQuotaExhausted,
+  secondsUntilUtcMidnight,
 } from '@/lib/openstates-quota';
 
 interface OpenStatesConfig {
@@ -35,6 +36,40 @@ interface OpenStatesConfig {
   baseUrl: string;
   timeout: number;
   retryAttempts: number;
+}
+
+/**
+ * Every /api route runs under a 20s function cap (vercel.json). A paged read
+ * that serves one of those routes spends this budget across all its pages,
+ * retries and backoff, so a stalled OpenStates answers 503 instead of hanging
+ * the function into a 504.
+ */
+export const OPENSTATES_ROUTE_BUDGET_MS = 12_000;
+
+/** OpenStates did not answer within the caller's time budget. */
+export class OpenStatesTimeoutError extends Error {
+  constructor(endpoint: string) {
+    super(`OpenStates did not respond in time: ${endpoint}`);
+    this.name = 'OpenStatesTimeoutError';
+  }
+}
+
+/**
+ * Response init for a route whose OpenStates read timed out or hit the daily
+ * quota: 503 that no cache keeps, so the next visit asks again. Null for any
+ * other error.
+ */
+export function openStatesUnavailableInit(error: unknown): ResponseInit | null {
+  if (error instanceof OpenStatesTimeoutError) {
+    return { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '120' } };
+  }
+  if (error instanceof OpenStatesQuotaExhaustedError) {
+    return {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store', 'Retry-After': String(secondsUntilUtcMidnight()) },
+    };
+  }
+  return null;
 }
 
 // v3 REST API Response Types
@@ -242,6 +277,15 @@ export interface OpenStatesLegislator {
  * 100 bills multiplies the payload for blocks no list renders.
  */
 const BILL_LIST_INCLUDES = ['sponsorships', 'abstracts', 'actions'] as const;
+
+/**
+ * A sponsor's bill list renders sponsorships plus the top-level dates and
+ * `latest_action_description`, which need no include. `actions` is the heavy
+ * block: measured 2026-10-07 on a CA member, a 20-bill page took 7.6s with it
+ * and 0.6s with sponsorships alone, and three such pages ran the legislator
+ * bills route past its 20s cap.
+ */
+const SPONSOR_BILL_INCLUDES = ['sponsorships'] as const;
 
 /**
  * A bill's own page shows all of it, so the detail request asks for everything
@@ -546,11 +590,14 @@ class OpenStatesAPI {
    * @param endpoint - API endpoint
    * @param params - Query parameters
    * @param cacheTTL - Optional cache TTL in milliseconds (default: smart based on endpoint)
+   * @param deadline - Optional epoch ms by which every attempt must finish; past it,
+   *   throws OpenStatesTimeoutError instead of retrying
    */
   private async makeRequest<T = unknown>(
     endpoint: string,
     params?: Record<string, string | number | boolean | string[] | undefined>,
-    cacheTTL?: number
+    cacheTTL?: number,
+    deadline?: number
   ): Promise<T> {
     // Build cache key
     const cacheKey = JSON.stringify({ endpoint, params });
@@ -596,17 +643,22 @@ class OpenStatesAPI {
 
     // Retry logic
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+      const attemptTimeout =
+        deadline === undefined
+          ? this.config.timeout
+          : Math.min(this.config.timeout, deadline - Date.now());
+      if (attemptTimeout <= 0) throw new OpenStatesTimeoutError(endpoint);
 
+      const controller = new AbortController();
+      // Armed until the body is read: a 500KB page can stall after the headers.
+      const timeoutId = setTimeout(() => controller.abort(), attemptTimeout);
+
+      try {
         const response = await fetch(url.toString(), {
           method: 'GET',
           headers,
           signal: controller.signal,
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -670,12 +722,20 @@ class OpenStatesAPI {
         return data as T;
       } catch (error) {
         if (error instanceof OpenStatesQuotaExhaustedError) throw error;
+        // Under a deadline, a stall that ran out the attempt has used the budget.
+        if (deadline !== undefined && controller.signal.aborted) {
+          throw new OpenStatesTimeoutError(endpoint);
+        }
         lastError = error as Error;
 
         if (attempt < this.config.retryAttempts) {
+          const backoff = Math.pow(2, attempt) * 1000;
+          if (deadline !== undefined && Date.now() + backoff >= deadline) break;
           // Wait before retry with exponential backoff
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          await new Promise(resolve => setTimeout(resolve, backoff));
         }
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -919,42 +979,47 @@ class OpenStatesAPI {
    * @param state - State abbreviation (e.g., 'MI')
    * @param session - Optional session identifier
    * @param limit - Maximum number of bills to return (default 50, max 100)
+   * @param budgetMs - Time allowed for all pages; throws OpenStatesTimeoutError past it
    */
   async getBillsBySponsor(
     personId: string,
     state: string,
     session?: string,
-    limit = 50
+    limit = 50,
+    budgetMs = OPENSTATES_ROUTE_BUDGET_MS
   ): Promise<OpenStatesBill[]> {
     const jurisdiction = state.toLowerCase();
+    const deadline = Date.now() + budgetMs;
+    // OpenStates v3 /bills API has a max per_page of 20 (not 100 like other endpoints).
+    // It must not shrink on the last page: the offset is (page - 1) * per_page, so
+    // page 3 at per_page 10 re-reads bills 21-30 and duplicates them.
+    const perPage = Math.min(20, limit);
 
-    let allBills: V3Bill[] = [];
-    let page = 1;
-    let hasMore = true;
-
-    // OpenStates v3 /bills API has a max per_page of 20 (not 100 like other endpoints)
-    while (hasMore && allBills.length < limit) {
+    const fetchPage = (page: number) => {
       const params: Record<string, string | number | string[]> = {
         jurisdiction,
         sponsor: personId,
-        per_page: Math.min(20, limit - allBills.length), // /bills endpoint max is 20 per page
+        per_page: perPage,
         page,
         // Without this every returned bill has an empty sponsorship list, which
         // is the whole point of a sponsor query: the co-sponsorship network and
         // the sponsored/cosponsored split are both computed from it.
-        include: [...BILL_LIST_INCLUDES],
+        include: [...SPONSOR_BILL_INCLUDES],
       };
-
       if (session) params.session = session;
+      return this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params, undefined, deadline);
+    };
 
-      const response = await this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params);
-      allBills = allBills.concat(response.results);
+    // Page 1 says how many pages exist; the rest run in parallel. Deep pages are
+    // the slow ones (a CA member's page 3 took 9-18s), so in sequence they ran
+    // the route past its cap. Same request count as paging in order.
+    const first = await fetchPage(1);
+    const lastPage = Math.min(first.pagination.max_page, Math.ceil(limit / perPage));
+    const rest = await Promise.all(
+      Array.from({ length: Math.max(0, lastPage - 1) }, (_, i) => fetchPage(i + 2))
+    );
 
-      // Check if there are more pages
-      hasMore = page < response.pagination.max_page && allBills.length < limit;
-      page++;
-    }
-
+    const allBills = [first, ...rest].flatMap(response => response.results);
     return allBills.slice(0, limit).map(bill => this.transformBill(bill));
   }
 
@@ -1485,11 +1550,15 @@ class OpenStatesAPI {
     let allEvents: OpenStatesEvent[] = [];
     let page = 1;
     let hasMore = true;
+    // One budget for every page: these reads serve 20s-capped routes.
+    const deadline = Date.now() + OPENSTATES_ROUTE_BUDGET_MS;
 
     while (hasMore && allEvents.length < limit) {
       const params: Record<string, string | number> = {
         jurisdiction,
-        per_page: Math.min(20, limit - allEvents.length), // /events API max is 20 per page
+        // /events API max is 20 per page. Fixed across pages: the offset is
+        // (page - 1) * per_page, so a smaller last page re-reads earlier events.
+        per_page: Math.min(20, limit),
         page,
       };
 
@@ -1506,7 +1575,12 @@ class OpenStatesAPI {
         };
       }
 
-      const response = await this.makeRequest<EventListResponse>('/events', params);
+      const response = await this.makeRequest<EventListResponse>(
+        '/events',
+        params,
+        undefined,
+        deadline
+      );
       allEvents = allEvents.concat(response.results);
 
       // Check if there are more pages
