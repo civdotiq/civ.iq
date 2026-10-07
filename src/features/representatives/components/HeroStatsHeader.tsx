@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Crown, Phone, ExternalLink } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import { ShareIconButton } from '@/components/shared/social/ShareButton';
+import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
 
 interface HeroStatsHeaderProps {
@@ -175,7 +175,7 @@ export function HeroStatsHeader({
               <h1 data-testid="representative-name" className="profile-hero-name">
                 {getDisplayName()}
               </h1>
-              <ShareIconButton
+              <RepresentativeShareButton
                 data={{
                   representative: {
                     name: representative.name,
@@ -187,6 +187,7 @@ export function HeroStatsHeader({
                   },
                   section: 'overview',
                 }}
+                variant="minimal"
               />
               {!representative.isHistorical && (
                 <AlertSubscribeButton

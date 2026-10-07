@@ -20,11 +20,19 @@ import {
   getSectionDisplayName,
 } from '@/lib/social/share-utils';
 import { copyToClipboard } from '@/lib/utils/contactHelpers';
-import logger from '@/lib/logging/simple-logger';
+
+type ShareVariant = 'default' | 'minimal' | 'text';
 
 interface ShareButtonProps {
-  data: ShareData;
-  variant?: 'default' | 'minimal' | 'text';
+  /** Page to share: absolute, or a site path resolved against the current origin. */
+  url: string;
+  /** Short title for Reddit, email subject and the native share sheet. */
+  title: string;
+  /** Post text for X, Bluesky, the share sheet and email; must include the link. Defaults to the title and link. */
+  text?: string;
+  /** Accessible name of the button. */
+  label?: string;
+  variant?: ShareVariant;
   className?: string;
   onClick?: () => void;
 }
@@ -36,7 +44,10 @@ interface ShareButtonProps {
  * Facebook, Reddit, and Email. Follows ExportButton dropdown pattern.
  */
 export function ShareButton({
-  data,
+  url,
+  title,
+  text,
+  label = 'Share this page',
   variant = 'default',
   className = '',
   onClick,
@@ -55,12 +66,12 @@ export function ShareButton({
     }
   }, []);
 
-  const shareUrl = generateShareUrl(data.representative.bioguideId, data.section);
-  const tweetText = isShareDataValid(data) ? generateTweetText(data) : '';
-  const shareTitle = isShareDataValid(data) ? generateShareTitle(data) : '';
+  // Resolved only in click handlers, so the server render never needs an origin.
+  const shareUrl = () => new URL(url, window.location.origin).toString();
+  const postText = () => text ?? `${title}\n\n${shareUrl()}`;
 
   const handleCopyLink = async () => {
-    const success = await copyToClipboard(shareUrl);
+    const success = await copyToClipboard(shareUrl());
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -71,11 +82,7 @@ export function ShareButton({
   const handleNativeShare = async () => {
     setIsOpen(false);
     try {
-      await navigator.share({
-        title: shareTitle,
-        text: tweetText,
-        url: shareUrl,
-      });
+      await navigator.share({ title, text, url: shareUrl() });
     } catch {
       // User cancelled or share failed — no action needed
     }
@@ -88,20 +95,14 @@ export function ShareButton({
   };
 
   const handleEmailShare = () => {
-    const emailUrl = generateEmailShareUrl(shareTitle, `${tweetText}\n\n${shareUrl}`);
+    const emailUrl = generateEmailShareUrl(title, postText());
     window.location.href = emailUrl;
     setIsOpen(false);
     onClick?.();
   };
 
-  const sectionName = getSectionDisplayName(data.section);
-
   const toggleButton = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!isShareDataValid(data)) {
-      logger.warn('Invalid share data', { data });
-      return;
-    }
     setIsOpen(!isOpen);
   };
 
@@ -177,7 +178,7 @@ export function ShareButton({
         <button
           type="button"
           role="menuitem"
-          onClick={() => handlePlatformShare(generateTwitterShareUrl(tweetText))}
+          onClick={() => handlePlatformShare(generateTwitterShareUrl(postText()))}
           className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -192,7 +193,7 @@ export function ShareButton({
         <button
           type="button"
           role="menuitem"
-          onClick={() => handlePlatformShare(generateBlueskyShareUrl(tweetText))}
+          onClick={() => handlePlatformShare(generateBlueskyShareUrl(postText()))}
           className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -207,7 +208,7 @@ export function ShareButton({
         <button
           type="button"
           role="menuitem"
-          onClick={() => handlePlatformShare(generateFacebookShareUrl(shareUrl))}
+          onClick={() => handlePlatformShare(generateFacebookShareUrl(shareUrl()))}
           className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -222,7 +223,7 @@ export function ShareButton({
         <button
           type="button"
           role="menuitem"
-          onClick={() => handlePlatformShare(generateRedditShareUrl(shareUrl, shareTitle))}
+          onClick={() => handlePlatformShare(generateRedditShareUrl(shareUrl(), title))}
           className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -275,7 +276,7 @@ export function ShareButton({
         <button
           onClick={toggleButton}
           className={`inline-flex items-center justify-center w-8 h-8 p-0 bg-transparent border border-gray-300 text-gray-600 cursor-pointer transition-all duration-150 hover:border-black hover:text-black hover:bg-gray-50 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-civiq-blue focus-visible:outline-offset-2 ${className}`}
-          aria-label={`Share ${sectionName}`}
+          aria-label={label}
           aria-haspopup="menu"
           aria-expanded={isOpen}
         >
@@ -306,7 +307,7 @@ export function ShareButton({
         <button
           onClick={toggleButton}
           className={`inline-flex items-center gap-2 p-0 bg-transparent border-none text-civiq-blue text-sm font-normal leading-relaxed cursor-pointer no-underline transition-colors duration-150 hover:text-black hover:underline hover:underline-offset-2 active:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-civiq-blue focus-visible:outline-offset-2 ${className}`}
-          aria-label={`Share ${sectionName}`}
+          aria-label={label}
           aria-haspopup="menu"
           aria-expanded={isOpen}
         >
@@ -323,7 +324,7 @@ export function ShareButton({
       <button
         onClick={toggleButton}
         className={`inline-flex items-center gap-2 px-4 py-2 bg-transparent border border-gray-300 text-gray-600 text-sm font-normal leading-relaxed cursor-pointer transition-all duration-150 hover:border-black hover:text-black hover:bg-gray-50 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-civiq-blue focus-visible:outline-offset-2 ${className}`}
-        aria-label={`Share ${sectionName}`}
+        aria-label={label}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
@@ -350,16 +351,26 @@ export function ShareButton({
   );
 }
 
-/**
- * ShareIconButton - Icon-only variant (alias for minimal)
- */
-export function ShareIconButton(props: Omit<ShareButtonProps, 'variant'>) {
-  return <ShareButton {...props} variant="minimal" />;
+interface RepresentativeShareButtonProps {
+  data: ShareData;
+  variant?: ShareVariant;
+  className?: string;
+  onClick?: () => void;
 }
 
 /**
- * ShareTextButton - Text-only variant
+ * ShareButton for a Congress member's profile or one of its sections,
+ * with the member's title and section-specific post text.
  */
-export function ShareTextButton(props: Omit<ShareButtonProps, 'variant'>) {
-  return <ShareButton {...props} variant="text" />;
+export function RepresentativeShareButton({ data, ...rest }: RepresentativeShareButtonProps) {
+  if (!isShareDataValid(data)) return null;
+  return (
+    <ShareButton
+      url={generateShareUrl(data.representative.bioguideId, data.section)}
+      title={generateShareTitle(data)}
+      text={generateTweetText(data)}
+      label={`Share ${getSectionDisplayName(data.section)}`}
+      {...rest}
+    />
+  );
 }
