@@ -76,6 +76,40 @@ function getRedis(): Redis | null {
   return new Redis({ url, token });
 }
 
+/**
+ * List keys matching `<prefix>*`. Upstash disables KEYS once the store holds
+ * too many keys, so this uses SCAN. Each SCAN pass walks the whole keyspace
+ * (one billed command per 1,000 keys), so one pass per two-segment family
+ * (e.g. `analytics:requests:`) is memoized and filtered in memory for every
+ * per-date lookup, instead of a full pass per pattern.
+ */
+const keyFamilies = new Map<string, Promise<string[]>>();
+
+async function scanAll(redis: Redis, match: string): Promise<string[]> {
+  const keys: string[] = [];
+  let cursor = '0';
+  do {
+    const [next, batch] = await redis.scan(cursor, { match, count: 1000 });
+    keys.push(...batch);
+    cursor = String(next);
+  } while (cursor !== '0');
+  return keys;
+}
+
+async function listKeys(redis: Redis, pattern: string): Promise<string[]> {
+  if (!pattern.endsWith('*') || pattern.slice(0, -1).includes('*')) {
+    throw new Error(`listKeys only supports "<prefix>*" patterns, got ${pattern}`);
+  }
+  const prefix = pattern.slice(0, -1);
+  const family = `${prefix.split(':').slice(0, 2).join(':')}:`;
+  let pending = keyFamilies.get(family);
+  if (!pending) {
+    pending = scanAll(redis, `${family}*`);
+    keyFamilies.set(family, pending);
+  }
+  return (await pending).filter(key => key.startsWith(prefix));
+}
+
 function lastNDates(n: number): string[] {
   const dates: string[] = [];
   for (let i = 0; i < n; i++) {
@@ -100,7 +134,7 @@ async function collectSubscribers(redis: Redis | null): Promise<StatsReport['sub
 
   // Subscription values are plain JSON written by RedisCache; @upstash/redis
   // deserializes JSON automatically on get.
-  const subKeys = await redis.keys(`${CACHE_PREFIX}alert:sub:*`);
+  const subKeys = await listKeys(redis, `${CACHE_PREFIX}alert:sub:*`);
   let verified = 0;
   let pending = 0;
   for (const key of subKeys) {
@@ -110,7 +144,7 @@ async function collectSubscribers(redis: Redis | null): Promise<StatsReport['sub
     else pending++;
   }
 
-  const entityKeys = await redis.keys(`${CACHE_PREFIX}alert:entity:*`);
+  const entityKeys = await listKeys(redis, `${CACHE_PREFIX}alert:entity:*`);
   const topEntities: Array<{ entity: string; watchers: number }> = [];
   for (const key of entityKeys) {
     const watchers = await redis.get<string[]>(key);
@@ -124,7 +158,7 @@ async function collectSubscribers(redis: Redis | null): Promise<StatsReport['sub
 
   let digestVerified = 0;
   let digestPending = 0;
-  const digestKeys = await redis.keys(`${CACHE_PREFIX}digest:sub:*`);
+  const digestKeys = await listKeys(redis, `${CACHE_PREFIX}digest:sub:*`);
   for (const key of digestKeys) {
     const sub = await redis.get<{ verified?: boolean }>(key);
     if (!sub) continue;
@@ -151,7 +185,7 @@ async function collectApiRequests(redis: Redis | null): Promise<StatsReport['api
   let total = 0;
 
   for (const date of lastNDates(REQUEST_WINDOW_DAYS)) {
-    const keys = await redis.keys(`analytics:requests:${date}:*`);
+    const keys = await listKeys(redis, `analytics:requests:${date}:*`);
     if (keys.length === 0) continue;
     const values = await redis.mget<Array<number | null>>(...keys);
     keys.forEach((key, i) => {
@@ -180,7 +214,7 @@ async function collectCrawlers(redis: Redis | null): Promise<StatsReport['crawle
 
   const byBot: Record<string, number> = {};
   for (const date of lastNDates(CRAWLER_WINDOW_DAYS)) {
-    const keys = await redis.keys(`analytics:crawler:${date}:*`);
+    const keys = await listKeys(redis, `analytics:crawler:${date}:*`);
     if (keys.length === 0) continue;
     const values = await redis.mget<Array<number | null>>(...keys);
     keys.forEach((key, i) => {
@@ -214,7 +248,7 @@ async function collectAdoption(redis: Redis | null): Promise<StatsReport['adopti
     ['sdk', sdkRequestsByVersion],
   ] as const) {
     for (const date of lastNDates(ADOPTION_WINDOW_DAYS)) {
-      const keys = await redis.keys(`analytics:adoption:${kind}:${date}:*`);
+      const keys = await listKeys(redis, `analytics:adoption:${kind}:${date}:*`);
       if (keys.length === 0) continue;
       const values = await redis.mget<Array<number | null>>(...keys);
       keys.forEach((key, i) => {
