@@ -17,9 +17,14 @@ import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
 
+// Congress.gov occasionally stalls for minutes at a time. Two sequential calls
+// at 8s each stay under the 20s function cap instead of hanging into a 504.
+const CONGRESS_TIMEOUT_MS = 8_000;
+
 interface CongressAction {
   actionDate: string;
-  text: string;
+  // Absent on some records, e.g. the bare "Intro-S" code beside "Introduced in Senate".
+  text?: string;
   actionCode?: string;
   type?: string;
 }
@@ -57,6 +62,7 @@ export async function GET(
           'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
           'X-API-Key': apiKey,
         },
+        signal: AbortSignal.timeout(CONGRESS_TIMEOUT_MS),
       }
     );
 
@@ -83,6 +89,7 @@ export async function GET(
           'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
           'X-API-Key': apiKey,
         },
+        signal: AbortSignal.timeout(CONGRESS_TIMEOUT_MS),
       }
     );
 
@@ -95,14 +102,20 @@ export async function GET(
     const billTitle = bill.title ?? `${type.toUpperCase()} ${billNumber}`;
     const now = new Date();
 
-    const entries: AtomEntry[] = actions.map((action, index) => ({
-      id: `${baseUrl}/bill/${billId}#action-${index}`,
-      title: action.text.length > 120 ? action.text.slice(0, 117) + '...' : action.text,
-      link: `${baseUrl}/bill/${billId}`,
-      updated: new Date(action.actionDate || now),
-      summary: action.text,
-      categories: action.type ? [{ term: action.type, label: action.type }] : undefined,
-    }));
+    const entries: AtomEntry[] = actions.flatMap((action, index) => {
+      const text = action.text;
+      if (!text) return [];
+      return [
+        {
+          id: `${baseUrl}/bill/${billId}#action-${index}`,
+          title: text.length > 120 ? text.slice(0, 117) + '...' : text,
+          link: `${baseUrl}/bill/${billId}`,
+          updated: new Date(action.actionDate || now),
+          summary: text,
+          categories: action.type ? [{ term: action.type, label: action.type }] : undefined,
+        },
+      ];
+    });
 
     // Sort newest first
     entries.sort((a, b) => b.updated.getTime() - a.updated.getTime());
@@ -130,6 +143,13 @@ export async function GET(
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      logger.warn('Bill Atom feed: Congress.gov timed out');
+      return new NextResponse('Congress.gov did not respond in time', {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store', 'Retry-After': '120' },
+      });
+    }
     logger.error('Bill Atom feed error', error as Error);
     return new NextResponse(
       '<?xml version="1.0" encoding="UTF-8"?><error>Failed to generate bill feed</error>',

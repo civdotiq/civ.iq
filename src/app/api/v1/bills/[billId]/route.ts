@@ -82,6 +82,9 @@ export async function GET(
           'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
           'X-API-Key': apiKey,
         },
+        // Congress.gov occasionally stalls for minutes at a time. Without a
+        // timeout the request hangs until the 20s function cap and returns 504.
+        signal: AbortSignal.timeout(8_000),
       }
     );
 
@@ -136,6 +139,13 @@ export async function GET(
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      logger.warn('v1 bill detail: Congress.gov timed out');
+      return NextResponse.json(v1Error(503, 'Congress.gov did not respond in time'), {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store', 'Retry-After': '120' },
+      });
+    }
     logger.error('v1 bill detail error', error as Error);
     return NextResponse.json(v1Error(500, 'Internal server error'), { status: 500 });
   }
