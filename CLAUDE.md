@@ -1,31 +1,31 @@
-# CLAUDE.MD - CIV.IQ AI Assistant Instructions
+# CIV.IQ
 
-## Quick Context
+Civic data platform (civdotiq.org): factual, nonpartisan representative profiles built only from real government sources. Next.js 16 + TypeScript + React 18.
 
-**Project**: civic-intel-hub | **Stack**: Next.js 16 + TypeScript + React 18
-**Purpose**: Civic intelligence platform using ONLY real government APIs (no mock data ever)
-**Status**: 100% TypeScript compliant, 249 API endpoints, 21 intelligence analyzers
+## Rules that never bend
 
-## Critical Rules (NEVER VIOLATE)
+1. **Real data only.** Real government APIs or an explicit "Data unavailable" — never fake, mock, or estimated-as-real data.
+2. **TypeScript strict.** No `any`; null-safe with optional chaining.
+3. **Done means verified.** `npm run validate:all` passes, and the change is checked against real output (curl the route, check `%{http_code}`, load the page) — not just "it compiles".
+4. **Conventional commits** (feat/fix/docs/chore).
 
-1. **Real Data Only**: Use real government APIs or show "Data unavailable" - NEVER fake data
-2. **TypeScript Strict**: No `any` types, full null safety with optional chaining
-3. **Quality Gates**: All code must pass `npm run validate:all` before completion
-4. **30-Line Rule**: Never write more than 30 lines without validation
-5. **Clean Commits**: Use conventional commits (feat/fix/docs/chore)
-6. **Ask First**: Clarify approach before implementing non-trivial features
+## How to work
+
+- Bugs with a clear repro: just fix and verify. Don't ask permission.
+- Features where the approach is genuinely ambiguous or hard to undo (new data source, schema/cache-key changes, anything user-visible at scale): state the approach in a few lines and confirm first. Otherwise, proceed.
+- Match the effort to the ask. A small fix stays small — no drive-by refactors.
 
 ## Project Structure
 
 ```
 src/
-├── app/api/              # 249 API routes (real data only)
+├── app/api/              # API routes (real data only)
 ├── app/(civic)/          # Public pages
 ├── components/           # React components
-│   └── intelligence/     # 35 insight cards and analysis displays
+│   └── intelligence/     # Insight cards and analysis displays
 ├── features/             # Feature modules (campaign-finance, legislation, representatives)
 ├── lib/                  # Utilities and services
-│   ├── intelligence/     # 21 analyzers, ML models, embeddings, entity resolution
+│   ├── intelligence/     # Analyzers, ML models, embeddings, entity resolution
 │   ├── nostr/            # Nostr event signing and relay publishing
 │   └── data-sources/     # Federal Register, FRED, SEC, lobbying services
 ├── types/                # TypeScript definitions
@@ -43,7 +43,7 @@ Detailed rules are decomposed into focused files loaded automatically:
 - **design-system.md** — Aicher/Ulm School: colors, typography, borders, wayfinding, banned patterns
 - **intelligence-layer.md** — Analyzer architecture, confidence scores, causation language, sample sizes
 - **security.md** — Data integrity, API key handling, address-not-ZIP, input sanitization
-- **workflow.md** — Guiding principles, workflow habits, when-stuck protocol
+- **workflow.md** — Subagents, corrections, when stuck
 
 ## Validation Commands
 
@@ -64,16 +64,11 @@ npm run diagnose:apis # Test API connectivity
 
 ## Extended Documentation
 
-- `docs/API_REFERENCE.md` - Complete API documentation (249 endpoints)
+- `docs/API_REFERENCE.md` - API documentation
 - `docs/ARCHITECTURE.md` - System design and patterns
 - `docs/DATA_NETWORK.md` - Cross-domain join layer
 - `docs/internal/PHASE_TRACKER.md` - Feature completion tracking
 - `SECURITY.md` - Security policies
-
----
-
-**Remember**: Civic utility serving citizens with real government data.
-Keep it clean, fast, transparent, and always use authentic sources.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
