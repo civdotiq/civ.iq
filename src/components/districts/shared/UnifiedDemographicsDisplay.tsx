@@ -56,7 +56,7 @@ export default function UnifiedDemographicsDisplay({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div className="aicher-card aicher-status-info p-6">
           <div className="aicher-heading text-2xl text-white">
-            {demographics.population.toLocaleString()}
+            {demographics.population.toLocaleString('en-US')}
           </div>
           <p className="aicher-heading-wide text-sm text-white mt-1">Total Population</p>
         </div>

@@ -121,7 +121,7 @@ export function IncomeDistributionChart({
           </div>
         </div>
         <p className="text-sm text-gray-600 mt-2">
-          Median household income: <strong>${medianIncome.toLocaleString()}</strong>
+          Median household income: <strong>${medianIncome.toLocaleString('en-US')}</strong>
         </p>
       </div>
     );
@@ -149,7 +149,7 @@ export function IncomeDistributionChart({
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Median household income: <strong>${medianIncome.toLocaleString()}</strong> | Source:{' '}
+        Median household income: <strong>${medianIncome.toLocaleString('en-US')}</strong> | Source:{' '}
         <a
           href="https://data.census.gov"
           target="_blank"
@@ -293,7 +293,9 @@ export function ElectionHistoryChart({
               <strong>{Math.abs(currentMargin).toFixed(1)}%</strong>
             </p>
             {turnout && turnout > 0 ? (
-              <p className="text-sm text-gray-500">{turnout.toLocaleString()} total votes cast</p>
+              <p className="text-sm text-gray-500">
+                {turnout.toLocaleString('en-US')} total votes cast
+              </p>
             ) : null}
           </div>
           <p className="text-xs text-gray-400 mt-2">

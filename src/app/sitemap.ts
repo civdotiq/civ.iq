@@ -21,6 +21,7 @@ import { getTemplatesByEntityType, slugifyPolicyArea } from '@/lib/questions/que
 import { getAllPolicyAreas } from '@/lib/connections/policy-area-map';
 import { getBillsByPolicyArea } from '@/lib/data-sources/bill-policy-areas/load';
 import { firstDistrictPerChamber } from '@/lib/sitemap/state-district-urls';
+import { houseDistrictIds } from '@/lib/districts/known-districts';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { latestCompleteWeekId, previousWeekIds } from '@/lib/digest/week';
 
@@ -91,66 +92,6 @@ const STATES_ONLY = ALL_REGIONS.filter(s => !['DC', 'PR', 'VI', 'GU', 'AS', 'MP'
 
 // High-population states get higher priority (more search volume)
 const HIGH_POP_STATES = ['CA', 'TX', 'FL', 'NY', 'PA', 'IL', 'OH', 'GA', 'NC', 'MI'];
-
-// Congressional districts per state (119th Congress)
-const DISTRICTS_PER_STATE: Record<string, number> = {
-  AL: 7,
-  AK: 1,
-  AZ: 9,
-  AR: 4,
-  CA: 52,
-  CO: 8,
-  CT: 5,
-  DE: 1,
-  FL: 28,
-  GA: 14,
-  HI: 2,
-  ID: 2,
-  IL: 17,
-  IN: 9,
-  IA: 4,
-  KS: 4,
-  KY: 6,
-  LA: 6,
-  ME: 2,
-  MD: 8,
-  MA: 9,
-  MI: 13,
-  MN: 8,
-  MS: 4,
-  MO: 8,
-  MT: 2,
-  NE: 3,
-  NV: 4,
-  NH: 2,
-  NJ: 12,
-  NM: 3,
-  NY: 26,
-  NC: 14,
-  ND: 1,
-  OH: 15,
-  OK: 5,
-  OR: 6,
-  PA: 17,
-  RI: 2,
-  SC: 7,
-  SD: 1,
-  TN: 9,
-  TX: 38,
-  UT: 4,
-  VT: 1,
-  VA: 11,
-  WA: 10,
-  WV: 2,
-  WI: 8,
-  WY: 1,
-  DC: 1,
-  PR: 1,
-  VI: 1,
-  GU: 1,
-  AS: 1,
-  MP: 1,
-};
 
 interface CommitteeData {
   committeeId: string;
@@ -543,17 +484,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Congressional district pages
   // Format: STATE-DISTRICT (e.g., MI-12, CA-04, AK-AL for at-large)
-  for (const [state, count] of Object.entries(DISTRICTS_PER_STATE)) {
-    const isHighPop = HIGH_POP_STATES.includes(state);
-    for (let i = 1; i <= count; i++) {
-      const districtId = count === 1 ? `${state}-AL` : `${state}-${String(i).padStart(2, '0')}`;
-      entries.push({
-        url: `${BASE_URL}/districts/${districtId}`,
-        lastModified: now,
-        changeFrequency: 'monthly',
-        priority: isHighPop ? 0.7 : 0.6,
-      });
-    }
+  for (const districtId of houseDistrictIds()) {
+    const isHighPop = HIGH_POP_STATES.includes(districtId.slice(0, 2));
+    entries.push({
+      url: `${BASE_URL}/districts/${districtId}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: isHighPop ? 0.7 : 0.6,
+    });
   }
 
   // ===========================================
