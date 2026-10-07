@@ -17,6 +17,7 @@ import {
   createFloorFeedConfig,
   type AtomEntry,
 } from '@/lib/feeds/atom-generator';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // Must be force-dynamic: self-fetches /api/floor-schedule which isn't available during Vercel prerender
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ interface FloorScheduleResponse {
 
 async function fetchFloorSchedule(): Promise<FloorItem[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/floor-schedule`, {
       cache: 'force-cache',
     });

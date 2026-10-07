@@ -24,6 +24,7 @@ import { hydrateNeighborhood } from '@/lib/graph/hydrator';
 import { buildTemporalProfile } from '../temporal';
 import { buildDistrictProfile } from '../district-profile';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // ── Response Types ───────────────────────────────────────────────────
 
@@ -180,15 +181,9 @@ async function fetchIntelligence(
  * Safely fetch an internal insight endpoint. Returns null on any failure.
  * Uses internal fetch (server-side) to reuse existing API route logic.
  */
-function getInternalBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
-}
-
 async function fetchInsightSafe(path: string): Promise<InsightBase | null> {
   try {
-    const baseUrl = getInternalBaseUrl();
+    const baseUrl = getServerBaseUrl();
     const res = await fetch(`${baseUrl}${path}`, {
       signal: AbortSignal.timeout(15000),
     });

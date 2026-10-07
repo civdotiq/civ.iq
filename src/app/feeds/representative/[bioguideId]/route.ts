@@ -22,6 +22,7 @@ import {
 } from '@/lib/feeds/atom-generator';
 import { buildBillUrl } from '@/lib/helpers/url-builders';
 import { voteMeasureLabel } from '@/lib/bill-label';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // ISR: Revalidate every 30 minutes
 export const dynamic = 'force-dynamic';
@@ -78,7 +79,7 @@ interface Representative {
 
 async function fetchRepresentativeData(bioguideId: string): Promise<Representative | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/simple`, {
       cache: 'force-cache',
     });
@@ -91,7 +92,7 @@ async function fetchRepresentativeData(bioguideId: string): Promise<Representati
 
 async function fetchVotes(bioguideId: string): Promise<Vote[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/votes?limit=10`, {
       cache: 'force-cache',
     });
@@ -105,7 +106,7 @@ async function fetchVotes(bioguideId: string): Promise<Vote[]> {
 
 async function fetchBills(bioguideId: string): Promise<Bill[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/bills?limit=10`, {
       cache: 'force-cache',
     });
@@ -121,7 +122,7 @@ async function fetchBills(bioguideId: string): Promise<Bill[]> {
 
 async function fetchNews(bioguideId: string): Promise<NewsArticle[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://civdotiq.org';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/news?limit=5`, {
       cache: 'force-cache',
     });
