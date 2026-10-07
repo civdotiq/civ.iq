@@ -7,6 +7,11 @@ import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import {
+  districtDetailsResponse,
+  getCachedDistrictDetails,
+  resolveSeatId,
+} from '@/lib/districts/district-details';
 import { epaEchoService } from '@/lib/data-sources/epa-echo-service';
 import { cmsProviderService } from '@/lib/data-sources/cms-provider-service';
 import { femaService } from '@/lib/data-sources/fema-service';
@@ -94,22 +99,17 @@ export function registerResources(server: McpServer): void {
       const district = Array.isArray(variables.districtNumber)
         ? variables.districtNumber[0]
         : variables.districtNumber;
-      const districtId = `${(state ?? '').toUpperCase()}-${(district ?? '').padStart(2, '0')}`;
-
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_URL ??
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+      const districtId = resolveSeatId(state ?? '', district ?? '');
+      const notFound = {
+        contents: [{ uri: uri.href, mimeType: 'application/json', text: '{"error":"Not found"}' }],
+      };
+      if (!districtId) return notFound;
 
       try {
-        const response = await fetch(`${baseUrl}/api/districts/${districtId}`);
-        if (!response.ok) {
-          return {
-            contents: [
-              { uri: uri.href, mimeType: 'application/json', text: '{"error":"Not found"}' },
-            ],
-          };
-        }
-        const data = await response.json();
+        // Called directly, not over HTTP: NEXT_PUBLIC_BASE_URL is localhost on Vercel.
+        const details = await getCachedDistrictDetails(districtId);
+        if (!details) return notFound;
+        const data = districtDetailsResponse(details);
         return {
           contents: [
             { uri: uri.href, mimeType: 'application/json', text: JSON.stringify(data, null, 2) },

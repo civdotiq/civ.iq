@@ -7,6 +7,11 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
+import {
+  districtDetailsResponse,
+  getCachedDistrictDetails,
+  resolveSeatId,
+} from '@/lib/districts/district-details';
 
 export function registerCivicTools(server: McpServer): void {
   server.registerTool(
@@ -121,22 +126,35 @@ export function registerCivicTools(server: McpServer): void {
     },
     async ({ stateCode, districtNumber }) => {
       try {
-        const districtId = `${stateCode.toUpperCase()}-${districtNumber.padStart(2, '0')}`;
-
-        // Fetch district data from the internal API
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL ??
-          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
-        const response = await fetch(`${baseUrl}/api/districts/${districtId}`);
-        if (!response.ok) {
+        const districtId = resolveSeatId(stateCode, districtNumber);
+        if (!districtId) {
           return {
-            content: [{ type: 'text' as const, text: `District not found: ${districtId}` }],
+            content: [
+              {
+                type: 'text' as const,
+                text: `District not found: ${stateCode}-${districtNumber}`,
+              },
+            ],
             isError: true,
           };
         }
 
-        const data = await response.json();
+        // Called directly, not over HTTP: a self-fetch needs this deployment's
+        // public origin, and NEXT_PUBLIC_BASE_URL is localhost on Vercel.
+        const district = await getCachedDistrictDetails(districtId);
+        if (!district) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `No current member found for ${districtId}; the seat may be vacant.`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const data = districtDetailsResponse(district);
         return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] };
       } catch (error) {
         return {
