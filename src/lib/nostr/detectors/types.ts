@@ -23,6 +23,7 @@ export interface CongressBill {
 
 export interface CongressApiResponse {
   bills?: CongressBill[];
+  pagination?: { count: number; next?: string };
 }
 
 export interface HouseRollCallVoteDetail {

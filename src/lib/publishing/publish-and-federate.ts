@@ -46,6 +46,8 @@ export interface PublishResult {
   alertEventsPublished: number;
   correctionsPublished: number;
   relayResults: RelayPublishResult[];
+  /** Events that failed or were deferred: no dedup entry, retried next run. */
+  unpublishedEventIds: string[];
 }
 
 export interface PublishOptions {
@@ -78,13 +80,18 @@ export async function publishAndFederate(
   let activityPubDelivered = 0;
   let alertEventsPublished = 0;
   let correctionsPublished = 0;
-  // Canonical civ.iq paths for successfully published events, submitted to
-  // IndexNow in one batch after the loop.
-  const indexNowPaths: string[] = [];
+  const unpublishedEventIds: string[] = [];
 
-  for (const event of events) {
+  // IndexNow goes first, for every detected event: the civ.iq page exists
+  // whether or not Nostr relays accept the event, and the publish deadline
+  // must not decide what search engines hear about. Skips event types with
+  // no indexable detail page; corrections re-submit their updated page.
+  await submitIndexNow(events);
+
+  for (const [index, event] of events.entries()) {
     if (options?.deadline && Date.now() >= options.deadline) {
       eventsDeferred = events.length - eventsPublished - eventsFailed;
+      unpublishedEventIds.push(...events.slice(index).map(e => e.id));
       logger.warn('Publish deadline reached, deferring remaining events to next run', {
         eventsDeferred,
         operation: 'nostr_publisher',
@@ -144,12 +151,6 @@ export async function publishAndFederate(
         await cache.set(dedupKey, dedupEntry, nostrConfig.dedupTTL);
         eventsPublished++;
 
-        // Queue the canonical civ.iq URL for IndexNow (skips event types with
-        // no indexable detail page). Corrections re-publish here too, so an
-        // updated page is re-submitted.
-        const indexNowPath = eventToCanonicalPath(event);
-        if (indexNowPath) indexNowPaths.push(indexNowPath);
-
         // Kind 1 alert and ActivityPub federation are independent of each
         // other — run them concurrently to keep per-event wall time down.
         // (Outbox index writes stay serialized: one event at a time here.)
@@ -200,6 +201,7 @@ export async function publishAndFederate(
         });
       } else {
         eventsFailed++;
+        unpublishedEventIds.push(event.id);
         logger.error('Failed to publish to any relay', {
           eventType: event.type,
           eventId: event.id,
@@ -209,27 +211,11 @@ export async function publishAndFederate(
       }
     } catch (error) {
       eventsFailed++;
+      unpublishedEventIds.push(event.id);
       logger.error('Failed to sign/publish civic event', error as Error, {
         eventType: event.type,
         eventId: event.id,
         operation: 'nostr_publisher',
-      });
-    }
-  }
-
-  // Push freshly published URLs to IndexNow (Bing/Yandex/Seznam/Naver) in a
-  // single batch. Non-fatal and gated on INDEXNOW_KEY — a no-op until set.
-  // The submit fn logs accepted/rejected internally; log the skip reasons here
-  // (no_key, non_canonical_host, no_urls) so a dropped env var leaves a trail
-  // instead of looking identical to "nothing new to publish".
-  if (indexNowPaths.length > 0) {
-    const baseUrl = getServerBaseUrl();
-    const indexNowResult = await submitToIndexNow(indexNowPaths.map(path => `${baseUrl}${path}`));
-    if (indexNowResult.skipped) {
-      logger.info('IndexNow submission skipped', {
-        reason: indexNowResult.reason,
-        candidates: indexNowPaths.length,
-        operation: 'indexnow_publisher',
       });
     }
   }
@@ -243,5 +229,36 @@ export async function publishAndFederate(
     alertEventsPublished,
     correctionsPublished,
     relayResults,
+    unpublishedEventIds,
   };
+}
+
+/**
+ * Push the events' canonical civ.iq URLs to IndexNow (Bing/Yandex/Seznam/Naver)
+ * in a single batch. Non-fatal and gated on INDEXNOW_KEY — a no-op until set.
+ * The submit fn logs accepted/rejected internally; log the skip reasons here
+ * (no_key, non_canonical_host, no_urls) so a dropped env var leaves a trail
+ * instead of looking identical to "nothing new to publish".
+ */
+async function submitIndexNow(events: CivicEvent[]): Promise<void> {
+  const indexNowPaths = [
+    ...new Set(events.map(eventToCanonicalPath).filter((p): p is string => Boolean(p))),
+  ];
+  if (indexNowPaths.length === 0) return;
+  try {
+    const baseUrl = getServerBaseUrl();
+    const indexNowResult = await submitToIndexNow(indexNowPaths.map(path => `${baseUrl}${path}`));
+    if (indexNowResult.skipped) {
+      logger.info('IndexNow submission skipped', {
+        reason: indexNowResult.reason,
+        candidates: indexNowPaths.length,
+        operation: 'indexnow_publisher',
+      });
+    }
+  } catch (error) {
+    logger.warn('IndexNow submission failed (non-fatal)', {
+      error: error instanceof Error ? error.message : 'Unknown',
+      operation: 'indexnow_publisher',
+    });
+  }
 }

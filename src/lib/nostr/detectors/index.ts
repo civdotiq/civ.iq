@@ -3,7 +3,11 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-export { detectBillEvents } from './bill-detector';
+export {
+  detectBillEvents,
+  detectBillEventsWithWindow,
+  advanceBillWatermark,
+} from './bill-detector';
 export { detectVoteEvents, detectSenateVoteEvents } from './vote-detector';
 export { detectExecutiveOrderEvents } from './executive-order-detector';
 export { detectCommentPeriodEvents } from './comment-period-detector';
