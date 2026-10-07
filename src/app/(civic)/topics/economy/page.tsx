@@ -14,6 +14,7 @@ import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO'
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/topics/economy' },
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
     'unemployment',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Economy & Jobs Legislation',
     description:
       'Track economic legislation in Congress. Tax policy, employment, trade, and financial regulation.',

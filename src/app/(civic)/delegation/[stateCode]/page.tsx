@@ -12,6 +12,7 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DelegationExportButton } from './DelegationExportButton';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // ISR: Revalidate daily
 export const revalidate = 86400;
@@ -34,6 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: `https://civdotiq.org/delegation/${stateCode.toUpperCase()}` },
     description: `View all U.S. Senators and Representatives from ${stateName}. Complete federal delegation with contact information and committee assignments.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${stateName} Congressional Delegation | CIV.IQ`,
       description: `View all U.S. Senators and Representatives from ${stateName}. Complete federal delegation with contact information and committee assignments.`,
       url: `https://civdotiq.org/delegation/${stateCode.toUpperCase()}`,

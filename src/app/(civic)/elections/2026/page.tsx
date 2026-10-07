@@ -20,6 +20,7 @@ import {
 } from '@/data/elections-2026-races';
 import { getGeneralElectionDayISO } from '@/lib/data/election-dates';
 import { getStateName } from '@/lib/data/us-states';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const revalidate = 86400;
 
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
     'FEC candidates',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: '2026 federal elections | CIV.IQ',
     description:
       'Every U.S. House and Senate race in the November 3, 2026 election, with FEC-filed candidates and fundraising.',

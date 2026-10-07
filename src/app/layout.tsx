@@ -7,6 +7,7 @@ import { LiteModeProvider } from '@/lib/lite-mode/context';
 import { ToastProvider } from '@/shared/components/ui/Toast';
 import { OrganizationSchema, WebSiteSchema } from '@/components/seo/JsonLd';
 import { Analytics } from '@vercel/analytics/next';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // Google Analytics Measurement ID
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
     siteName: 'CIV.IQ',
     locale: 'en_US',
     type: 'website',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+    images: SITE_OG_IMAGES,
   },
   twitter: {
     card: 'summary_large_image',

@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/elections' },
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     'governor results',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Elections | CIV.IQ',
     description:
       'Browse 2024 election results for federal and state races. President, Senate, House, Governor, and State Legislature results from MEDSL/Harvard Dataverse.',

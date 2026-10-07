@@ -12,6 +12,7 @@ import {
   LobbyFilingDetail,
   loadLobbyFilingDetailData,
 } from '@/components/lobbying/LobbyFilingDetail';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LobbyFilingPageProps {
   params: Promise<{ id: string }>;
@@ -41,6 +42,7 @@ export async function generateMetadata({ params }: LobbyFilingPageProps): Promis
     description,
     alternates: { canonical: `https://civdotiq.org/lobby/filings/${id}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/lobby/filings/${id}`,

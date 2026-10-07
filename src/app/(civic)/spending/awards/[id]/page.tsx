@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SpendingContractPage } from '@/components/spending/SpendingContractPage';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -62,6 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: { canonical: `https://civdotiq.org/spending/awards/${awardId}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/spending/awards/${awardId}`,

@@ -12,6 +12,7 @@ import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { LobbyOrgClient } from './LobbyOrgClient';
 import { getLobbyingOrgProfile } from '@/app/api/lobby/[registrantId]/route';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,6 +116,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       alternates: { canonical: `https://civdotiq.org/lobby/${registrantId}` },
       openGraph: {
+        images: SITE_OG_IMAGES,
         title,
         description,
         url: `https://civdotiq.org/lobby/${registrantId}`,

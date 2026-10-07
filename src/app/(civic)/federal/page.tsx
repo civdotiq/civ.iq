@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/federal' },
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     'campaign finance',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Federal Government | CIV.IQ',
     description:
       'Explore federal government data: representatives, legislation, spending, regulations, elections, and more. All sourced from official government APIs.',

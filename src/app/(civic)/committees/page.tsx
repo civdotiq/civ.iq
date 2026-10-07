@@ -8,6 +8,7 @@ import { Metadata } from 'next';
 import { Users, Building2, Scale, ChevronDown } from 'lucide-react';
 import committeesData from '@/data/committees-with-subcommittees.json';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // Fully static page - no revalidation needed
 export const dynamic = 'force-static';
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
   description:
     'Browse all House, Senate, and Joint committees in the U.S. Congress. Explore their jurisdictions, leadership, and responsibilities.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Congressional Committees',
     description:
       'Browse all House, Senate, and Joint committees in the U.S. Congress. Explore their jurisdictions, leadership, and responsibilities.',

@@ -5,12 +5,14 @@
 
 import { Metadata } from 'next';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Executive Orders',
   description:
     'Browse executive orders and presidential actions. Track new directives, see which agencies are affected, and understand their impact on federal policy.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Executive Orders',
     description:
       'Browse executive orders and presidential actions. Track new directives, see which agencies are affected, and understand their impact on federal policy.',

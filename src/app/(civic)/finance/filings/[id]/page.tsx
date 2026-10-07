@@ -9,6 +9,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { FECFilingDetail, loadFECFilingDetailData } from '@/components/finance/FECFilingDetail';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface FECFilingPageProps {
   params: Promise<{ id: string }>;
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: FECFilingPageProps): Promise<
     description,
     alternates: { canonical: `https://civdotiq.org/finance/filings/${data.fileNumber}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/finance/filings/${data.fileNumber}`,

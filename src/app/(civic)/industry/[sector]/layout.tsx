@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     title: `${sectorName} — Industry Sector`,
     description: `Federal legislation, congressional committees, lobbying organizations, and campaign finance activity connected to the ${sectorName.toLowerCase()} industry sector.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${sectorName} — Industry Sector | CIV.IQ`,
       description: `Federal legislation, congressional committees, lobbying organizations, and campaign finance activity connected to the ${sectorName.toLowerCase()} industry sector.`,
       url: `https://civdotiq.org/industry/${sector}`,

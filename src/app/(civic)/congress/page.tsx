@@ -15,6 +15,7 @@ import {
   ItemListSchema,
 } from '@/components/seo/JsonLd';
 import { CongressStatsBox } from './CongressStatsBox';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/congress' },
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
     '119th Congress',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'United States Congress',
     description:
       'Complete guide to the 119th United States Congress. Find all Senators, Representatives, and committees.',

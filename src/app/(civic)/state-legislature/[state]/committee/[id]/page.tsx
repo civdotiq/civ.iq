@@ -11,6 +11,7 @@ import { lookupStateCommittee } from '@/lib/state-committee-lookup';
 import { getStateName } from '@/lib/data/us-states';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{
@@ -49,6 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     description: `View committee membership, leadership, and information for ${committee.name} in the ${state.toUpperCase()} state legislature. See full roster, party composition, and more.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: committee.name,
       description: `${state.toUpperCase()} state legislative committee with ${committee.members?.length || 0} members`,
       type: 'website',

@@ -14,6 +14,7 @@ import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO'
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { TopicListingPage } from '@/components/search/SearchVariants';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/topics' },
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
     'Congress issues',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Legislative Topics - Policy Areas & Issues',
     description:
       'Explore legislative topics and policy areas. Find related bills, committees, and representatives.',

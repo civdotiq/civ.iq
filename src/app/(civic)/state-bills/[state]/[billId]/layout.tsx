@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import { BreadcrumbSchema, LegislationSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
       canonical: `https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`,
     },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${billId.toUpperCase()} — ${stateName} Bill | CIV.IQ`,
       description: `Details, sponsors, and status for ${billId.toUpperCase()} in the ${stateName} state legislature.`,
       url: `https://civdotiq.org/state-bills/${state.toLowerCase()}/${billId}`,

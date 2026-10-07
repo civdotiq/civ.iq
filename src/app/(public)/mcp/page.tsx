@@ -10,6 +10,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/mcp' },
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
   description:
     'Connect Claude, ChatGPT, Claude Code, or Cursor to live U.S. government data. One URL, no API key: representatives, votes, bills, campaign finance, and district data with citations.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Use CIV.IQ in Claude & ChatGPT — Civic Data MCP Server',
     description:
       'Connect Claude, ChatGPT, Claude Code, or Cursor to live U.S. government data. One URL, no API key.',

@@ -25,6 +25,7 @@ import {
 } from '@/lib/data/education-curriculum';
 import { getTermByName } from '@/lib/data/civic-glossary';
 import { PrintButton } from './PrintButton';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // Grade-level color utilities — non-partisan palette (amber / interactive blue /
 // gray-black). Party colors and retired green are never used for grade bands.
@@ -100,6 +101,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...lesson.c3Standards.slice(0, 3),
     ],
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${lesson.title} - ${gradeInfo.label} Lesson Plan`,
       description,
       type: 'article',

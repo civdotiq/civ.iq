@@ -22,6 +22,7 @@ import { ElectionPage } from '@/components/elections/ElectionPage';
 import { officeLabel, parseRaceId, raceTitle } from '@/components/elections/ElectionPage/data';
 import { RACES_2026 } from '@/data/elections-2026-races';
 import { getStateName } from '@/lib/data/us-states';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -87,6 +88,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: { canonical: `https://civdotiq.org/elections/${raceId}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/elections/${raceId}`,

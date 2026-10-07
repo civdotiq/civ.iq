@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema, WebAPISchema, SoftwareSourceCodeSchema } from '@/components/seo/JsonLd';
 import { DATASET_REGISTRY } from '@/lib/datasets';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/developers' },
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
   description:
     'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'CIV.IQ Developer Portal — Free Civic Data API, MCP Server, SDK, CLI & Bulk Data',
     description:
       'The CIV.IQ (civdotiq.org) developer portal: free REST API (181 endpoints), MCP server for AI agents, TypeScript SDK, civiq CLI, embeddable widgets, Atom feeds, and bulk datasets. No API key required. MIT licensed.',

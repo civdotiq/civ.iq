@@ -35,6 +35,7 @@ import {
   type GradeLevel,
   type LessonTopic,
 } from '@/lib/data/education-curriculum';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/education' },
@@ -53,6 +54,7 @@ export const metadata: Metadata = {
     'congressional education',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Civic Education - CIV.IQ',
     description: `${EDUCATION_CURRICULUM.length} standards-aligned civics lessons using real government data for K-12 classrooms.`,
     type: 'website',

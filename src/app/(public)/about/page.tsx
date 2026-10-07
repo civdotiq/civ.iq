@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import { BreadcrumbSchema, OrganizationSchema, AboutPageSchema } from '@/components/seo/JsonLd';
 import { LegacyAboutPage } from '@/components/system/LegacyAboutPage';
 import { AboutHybrid } from '@/components/system/AboutHybrid';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'About CIV.IQ — Civic Intelligence from Real Government Data',
   description:
     'CIV.IQ organizes government data about elected officials from 26 official sources — Congress.gov, FEC, Census Bureau, and more — so citizens can understand who represents them. 535 members of Congress, 50 state legislatures (legislators, bills, votes). Local government is not covered. Nonpartisan.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'About CIV.IQ',
     description:
       'Nonpartisan civic intelligence platform. 535 members of Congress, 50 state legislatures, 26 government data sources.',

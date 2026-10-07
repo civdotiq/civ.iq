@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: { default: 'Local Government', template: '%s | CIV.IQ' },
   description:
     'Local (city and county) government is not covered on CIV.IQ. Why local records are the hardest layer to organize, and where to find your federal and state representatives.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Local Government | CIV.IQ',
     description:
       'Local (city and county) government is not covered on CIV.IQ. Why local records are the hardest layer to organize, and where to find your federal and state representatives.',

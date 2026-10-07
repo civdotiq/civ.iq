@@ -14,6 +14,7 @@ import { getStateName } from '@/lib/data/us-states';
 import { StateVoteDetailView } from '@/features/state-legislature/components/StateVoteDetailView';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{
@@ -85,6 +86,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       canonical: `https://civdotiq.org/state-legislature/${state.toLowerCase()}/vote/${id}?bill=${(await searchParams)?.bill ?? ''}`,
     },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       type: 'article',
