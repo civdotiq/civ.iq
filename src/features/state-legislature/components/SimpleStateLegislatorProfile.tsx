@@ -39,6 +39,8 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { encodeBase64Url } from '@/lib/url-encoding';
+import { buildStateLegislatorUrl } from '@/lib/helpers/url-builders';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
 
 // Dynamically import heavy components to reduce initial bundle
@@ -921,6 +923,13 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                         {role.title}
                       </span>
                     ))}
+                </div>
+
+                <div className="mt-4 flex justify-center md:justify-start">
+                  <ShareButton
+                    url={buildStateLegislatorUrl(legislator.state, legislator.id, legislator.name)}
+                    title={`${getDisplayName()}, ${getFullTitle()}`}
+                  />
                 </div>
               </div>
             </div>

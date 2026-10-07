@@ -15,19 +15,29 @@ Following Dieter Rams' principle: **"As little design as possible"**
 
 ### ShareButton
 
-Basic share button with three variants.
+Menu with Copy link, Share… (native share sheet, where supported), X, Bluesky,
+Facebook, Reddit and Email. Takes any page: a site path is resolved against the
+current origin when clicked.
 
 ```tsx
-import { ShareButton, ShareIconButton, ShareTextButton } from '@/components/shared/social/ShareButton';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 
-// Default variant (icon + text)
-<ShareButton data={shareData} />
+<ShareButton url={`/bill/${billId}`} title={`${bill.number}: ${bill.title}`} />
 
-// Minimal variant (icon only)
-<ShareIconButton data={shareData} />
+// variant: 'default' (icon + "Share"), 'minimal' (icon only), 'text'
+<ShareButton url={path} title={title} variant="minimal" />
+```
 
-// Text variant (text only)
-<ShareTextButton data={shareData} />
+### RepresentativeShareButton
+
+ShareButton for a Congress member's profile or one of its sections. Builds the
+URL, title and section-specific post text from `ShareData`; renders nothing when
+the data is incomplete.
+
+```tsx
+import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
+
+<RepresentativeShareButton data={shareData} variant="minimal" />;
 ```
 
 ### ShareableDataCard
@@ -104,13 +114,7 @@ interface ShareData {
     district?: string;
   };
   section:
-    | 'overview'
-    | 'finance'
-    | 'voting'
-    | 'legislation'
-    | 'committees'
-    | 'alignment'
-    | 'district';
+    'overview' | 'finance' | 'voting' | 'legislation' | 'committees' | 'alignment' | 'district';
   stats?: {
     // Finance stats
     totalRaised?: number;
@@ -144,7 +148,7 @@ interface ShareData {
 ```tsx
 'use client';
 
-import { ShareIconButton } from '@/components/shared/social/ShareButton';
+import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { ShareData } from '@/lib/social/share-utils';
 
 export function MyFinanceComponent({ representative, financeData }) {
@@ -169,7 +173,7 @@ export function MyFinanceComponent({ representative, financeData }) {
     <div>
       <h2>
         Campaign Finance
-        <ShareIconButton data={shareData} className="ml-2" />
+        <RepresentativeShareButton data={shareData} variant="minimal" className="ml-2" />
       </h2>
       {/* Your content */}
     </div>

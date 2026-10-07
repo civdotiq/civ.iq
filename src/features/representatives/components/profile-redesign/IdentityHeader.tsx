@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AlertSubscribeButton } from '@/components/alerts/AlertSubscribeButton';
-import { ShareButton } from '@/components/shared/social/ShareButton';
+import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import { partyFillClasses } from './types';
 import { dcOfficeLines, safeHttpUrl, telHref } from './contact';
 
@@ -197,7 +197,7 @@ export function IdentityHeader({
             </a>
           )}
           <div className="flex items-center gap-4">
-            <ShareButton
+            <RepresentativeShareButton
               data={{
                 representative: {
                   name: r.name,

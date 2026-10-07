@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { RepLookup } from '@/components/lookup/RepLookup';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import { getPartyTextClass } from '@/lib/party-colors';
 import { buildDelegationUrl } from '@/lib/helpers/url-builders';
 import type { HubChamber, StateHubData } from '@/lib/state-hub/load-state-hub';
@@ -181,6 +182,11 @@ export function StateHubPage({ data }: { data: StateHubData }) {
         <header className="mb-8 max-w-3xl">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{data.copy.h1}</h1>
           <p className="text-lg text-gray-700">{data.copy.lede}</p>
+          <ShareButton
+            url={`/state-legislature/${data.stateCode.toLowerCase()}`}
+            title={data.copy.h1}
+            className="mt-4"
+          />
         </header>
 
         <div className="mb-12">

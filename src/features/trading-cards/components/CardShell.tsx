@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import { ShareButton } from '@/components/shared/social/ShareButton';
+import { RepresentativeShareButton } from '@/components/shared/social/ShareButton';
 import type { ShareSection } from '@/lib/social/share-utils';
 
 interface CardShellProps {
@@ -56,7 +56,10 @@ export function CardShell({
       {/* Footer */}
       <div className="flex items-center justify-between border-t-2 border-gray-200 px-4 py-3 sm:px-6">
         <span className="aicher-heading-wide type-xs text-gray-500">CIV.IQ</span>
-        <ShareButton data={{ representative, section: shareSection }} variant="minimal" />
+        <RepresentativeShareButton
+          data={{ representative, section: shareSection }}
+          variant="minimal"
+        />
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import { HousingAffordabilitySection } from '@/features/districts/components/Hou
 import ServicesHealthProfile from '@/features/districts/components/ServicesHealthProfile';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
@@ -208,7 +209,7 @@ export default function DistrictPageClient({
         })()}
 
         {/* Page Title */}
-        <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{seatName}</h1>
             <p className="text-gray-600">
@@ -216,7 +217,7 @@ export default function DistrictPageClient({
               {district.geography.counties.length === 1 ? 'County' : 'Counties'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/districts/${districtId}/print`}
               className="inline-flex items-center gap-1.5 px-4 py-2 border-2 border-black bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-civiq-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2"
@@ -239,6 +240,7 @@ export default function DistrictPageClient({
               <span>Print Civic Pack</span>
             </Link>
             <DistrictExportButton districtId={districtId} />
+            <ShareButton url={`/districts/${districtId}`} title={seatName} />
           </div>
         </div>
 

@@ -24,6 +24,7 @@ import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { VoteFooter } from '@/components/seo/VoteFooter';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import type { UnifiedVoteDetail } from '@/lib/services/vote.service';
 import {
   isBioguideId,
@@ -211,6 +212,11 @@ export function LegacyVoteDetailPage({
                 {voteDetail.result}
               </div>
               <div className="text-sm text-gray-500">Roll Call #{voteDetail.rollNumber}</div>
+              <ShareButton
+                url={`/vote/${voteId}`}
+                title={`${voteDetail.chamber} Roll Call #${voteDetail.rollNumber}: ${voteDetail.title}`}
+                className="mt-3"
+              />
             </div>
           </div>
 

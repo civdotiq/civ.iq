@@ -5,6 +5,7 @@ import { sanitizeBillHtml } from '@/utils/sanitize';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import Link from 'next/link';
 import { PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
+import { ShareButton } from '@/components/shared/social/ShareButton';
 import {
   ExternalLink,
   Calendar,
@@ -255,6 +256,7 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
                 Full Text
               </Link>
             )}
+            <ShareButton url={`/bill/${billId}`} title={`${bill.number}: ${bill.title}`} />
           </div>
         </div>
 
