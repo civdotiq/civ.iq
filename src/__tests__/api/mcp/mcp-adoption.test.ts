@@ -135,14 +135,24 @@ describe('POST /api/mcp — adoption.mcp.initialize telemetry', () => {
     expect(metrics).toHaveLength(0);
   });
 
-  it('still delegates to the underlying handler when body is malformed JSON', async () => {
+  // mcp-handler hangs (→ 504 at the function timeout) on a JSON body it
+  // can't parse, so the route must answer these itself.
+  it.each([
+    ['malformed', 'not json'],
+    ['empty', ''],
+  ])('answers a %s JSON body with a 400 parse error without delegating', async (_label, body) => {
     const { POST } = await import('@/app/api/mcp/route');
-    const request = createMockRequest({ body: 'not json' });
+    const request = createMockRequest({ body });
 
-    await POST(request as never);
+    const response = await POST(request as never);
 
-    // Telemetry must never throw — inner handler still runs.
-    expect(innerHandler).toHaveBeenCalledTimes(1);
+    expect((response as { status: number }).status).toBe(400);
+    expect(await (response as Response).json()).toEqual({
+      jsonrpc: '2.0',
+      error: { code: -32700, message: 'Parse error: Invalid JSON' },
+      id: null,
+    });
+    expect(innerHandler).not.toHaveBeenCalled();
     const metrics = parseMetricLogs(logSpy).filter(m => m.message === 'adoption.mcp.initialize');
     expect(metrics).toHaveLength(0);
   });
@@ -160,5 +170,28 @@ describe('POST /api/mcp — adoption.mcp.initialize telemetry', () => {
     expect(innerHandler).toHaveBeenCalledTimes(1);
     const metrics = parseMetricLogs(logSpy).filter(m => m.message === 'adoption.mcp.initialize');
     expect(metrics).toHaveLength(0);
+  });
+});
+
+describe('HEAD /api/mcp', () => {
+  // Next.js serves HEAD through the GET export with request.method 'HEAD';
+  // mcp-handler has no HEAD branch and would hang until the timeout.
+  it('answers 405 directly instead of falling through to mcp-handler', async () => {
+    innerHandler.mockClear();
+    const { GET } = await import('@/app/api/mcp/route');
+
+    const response = await GET({ method: 'HEAD', url: 'http://localhost/api/mcp' } as never);
+
+    expect((response as { status: number }).status).toBe(405);
+    expect(innerHandler).not.toHaveBeenCalled();
+  });
+
+  it('still delegates a real GET to mcp-handler', async () => {
+    innerHandler.mockClear();
+    const { GET } = await import('@/app/api/mcp/route');
+
+    await GET({ method: 'GET', url: 'http://localhost/api/mcp' } as never);
+
+    expect(innerHandler).toHaveBeenCalledTimes(1);
   });
 });
