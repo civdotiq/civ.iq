@@ -1,485 +1,51 @@
-'use client';
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { DistrictPage as RedesignedDistrictPage } from '@/components/districts/DistrictPage';
-import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
-import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
-import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
-import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
-import FederalSpendingProfile from '@/features/spending/components/FederalSpendingProfile';
-import { SpendingNarrativeSection } from '@/features/spending/components/SpendingNarrativeSection';
-import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
-import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
-import { EconomicIndicatorsSection } from '@/features/districts/components/EconomicIndicatorsSection';
-import { CommunityProfileSection } from '@/features/districts/components/CommunityProfileSection';
-import { HousingAffordabilitySection } from '@/features/districts/components/HousingAffordabilitySection';
-import ServicesHealthProfile from '@/features/districts/components/ServicesHealthProfile';
-import logger from '@/lib/logging/simple-logger';
-import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
-import { FiledCandidates2026, raceId2026 } from '@/components/elections/FiledCandidates2026';
-import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
-import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
-import { DistrictFooter } from '@/components/seo/DistrictFooter';
-import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
-import { getVacancyInfo, formatVacancyMessage } from '@/lib/data/congressional-vacancies';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { checkDistrictId } from '@/lib/districts/known-districts';
+import { loadDistrictPage } from '@/lib/districts/load-district-page';
+import DistrictPageClient from './DistrictPageClient';
+import { SeatWithoutMember } from './SeatWithoutMember';
 
-const DistrictIntelligenceCard = dynamic(
-  () => import('@/components/intelligence/DistrictIntelligenceCard'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="bg-white border-2 border-black p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-        <div className="h-24 bg-gray-200 border-2 border-gray-300" />
-      </div>
-    ),
-  }
-);
-
-const DistrictProfileCard = dynamic(() => import('@/components/mesh/DistrictProfileCard'), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-white border-2 border-black p-6 animate-pulse">
-      <div className="h-6 bg-gray-200 border-2 border-gray-300 w-1/2 mb-4" />
-      <div className="h-32 bg-gray-200 border-2 border-gray-300" />
-    </div>
-  ),
-});
-
-// Dynamic import of the map component to avoid SSR issues
-const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
-      <div className="text-center">
-        <div className="inline-block animate-spin h-8 w-8 border-b-2 border-civiq-blue mb-2" />
-        <p className="text-sm text-gray-600">Loading district map...</p>
-      </div>
-    </div>
-  ),
-});
-
-interface DistrictDetails {
-  id: string;
-  state: string;
-  number: string;
-  name: string;
-  representative: {
-    name: string;
-    party: string;
-    bioguideId: string;
-    imageUrl?: string;
-    yearsInOffice?: number;
-  };
-  demographics?: {
-    population: number;
-    medianIncome: number;
-    medianAge: number;
-    diversityIndex: number;
-    urbanPercentage: number;
-    white_percent: number;
-    black_percent: number;
-    hispanic_percent: number;
-    asian_percent: number;
-    poverty_rate: number;
-    bachelor_degree_percent: number;
-    ageDistribution?: Array<{ bracket: string; count: number }>;
-    incomeDistribution?: Array<{ bracket: string; count: number }>;
-    employmentByIndustry?: Array<{ industry: string; count: number }>;
-  };
-  political: {
-    cookPVI: string;
-    lastElection: {
-      winner: string;
-      margin: number;
-      turnout: number;
-    };
-    registeredVoters: number;
-  };
-  geography: {
-    area: number;
-    counties: string[];
-    majorCities: string[];
-  };
-  wikidata?: {
-    established?: string;
-    area?: number;
-    previousRepresentatives?: string[];
-    wikipediaUrl?: string;
-  } | null;
+interface DistrictPageProps {
+  params: Promise<{ districtId: string }>;
+  searchParams: Promise<{ v?: string }>;
 }
 
-interface APIResponse {
-  district: DistrictDetails;
-  metadata: {
-    timestamp: string;
-    dataSource: string;
-    note: string;
-    districtBoundaries: {
-      congress: string;
-      redistrictingYear: string;
-      source: string;
-      note: string;
-    };
-  };
-}
+export default async function DistrictPage({ params, searchParams }: DistrictPageProps) {
+  const { districtId } = await params;
+  const { v } = await searchParams;
 
-export default function DistrictPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const districtId = params?.districtId as string;
+  // Middleware has already 308'd spelling variants (NY-8, ny8) to the canonical id.
+  const parsed = canonicalizeDistrictId(districtId);
+  if (!parsed) notFound();
+
+  // Checked against the local seat list before any fetch, so the status is real.
+  const check = checkDistrictId(parsed.state, parsed.district);
+  if (check.kind === 'unknown') notFound();
+  if (check.kind === 'at-large') permanentRedirect(`/districts/${check.canonical}`);
 
   // PR 14: redesigned district page behind ?v=new (or NEXT_PUBLIC_CIVIQ_V
-  // outside production). Old design path stays untouched below.
+  // outside production). Old design path stays the default.
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
-  const useRedesign = searchParams?.get('v') === 'new' || isPreviewEnv;
-
-  const [district, setDistrict] = useState<DistrictDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchDistrict() {
-      try {
-        setLoading(true);
-        logger.info('Starting fetch for district:', districtId);
-
-        const response = await fetch(`/api/districts/${districtId}`);
-        logger.info('Fetch response:', response.status, response.statusText);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch district: ${response.status}`);
-        }
-
-        const data: APIResponse = await response.json();
-        logger.info('District data loaded:', data.district.name);
-        setDistrict(data.district);
-      } catch (err) {
-        logger.error('District fetch error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load district');
-      } finally {
-        logger.info('District loading complete');
-        setLoading(false);
-      }
-    }
-
-    if (districtId) {
-      fetchDistrict();
-    }
-  }, [districtId]);
-
-  if (useRedesign) {
-    return <RedesignedDistrictPage districtId={districtId} />;
+  if (v === 'new' || isPreviewEnv) {
+    return <RedesignedDistrictPage districtId={parsed.canonical} />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin h-12 w-12 border-b-2 border-civiq-blue"></div>
-          <p className="mt-4 text-gray-600">Loading district details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !district) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">District Not Found</h1>
-          <p className="text-gray-600 mb-4">
-            {error || 'The requested district could not be found.'}
-          </p>
-          <Link
-            href="/districts"
-            className="inline-flex items-center px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-civiq-blue"
-          >
-            Browse All Districts
-          </Link>
-        </div>
-      </div>
-    );
+  const data = await loadDistrictPage(parsed.canonical);
+  if (data.status === 'no-member') {
+    return <SeatWithoutMember state={parsed.state} district={parsed.district} />;
   }
 
   return (
-    <div className="min-h-screen bg-white density-default">
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <nav className="text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-civiq-blue">
-            Home
-          </Link>
-          <span className="mx-2">›</span>
-          <Link href="/districts" className="hover:text-civiq-blue">
-            Districts
-          </Link>
-          <span className="mx-2">›</span>
-          <span className="font-medium text-gray-900">{districtId}</span>
-        </nav>
-
-        {(() => {
-          const [vState, vDistrict] = districtId.split('-');
-          if (!vState || !vDistrict) return null;
-          const vacancy = getVacancyInfo(vState, vDistrict.padStart(2, '0'));
-          if (!vacancy) return null;
-          const electionDate = vacancy.specialElection?.date;
-          return (
-            <div
-              role="status"
-              aria-label="Seat vacant"
-              className="border-2 border-civiq-amber bg-amber-50 p-grid-2 md:p-grid-3 mb-grid-3"
-            >
-              <div className="text-sm font-semibold uppercase tracking-wide text-civiq-amber">
-                Seat vacant
-                {electionDate ? ` · Special election ${electionDate}` : ''}
-              </div>
-              <p className="mt-1 text-sm text-gray-700">{formatVacancyMessage(vacancy)}</p>
-            </div>
-          );
-        })()}
-
-        {/* Page Title */}
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{district.name}</h1>
-            <p className="text-gray-600">
-              Congressional District in {district.state} • {district.geography.counties.length}{' '}
-              {district.geography.counties.length === 1 ? 'County' : 'Counties'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/districts/${districtId}/print`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 border-2 border-black bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-civiq-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2"
-              style={{ borderRadius: 0 }}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                />
-              </svg>
-              <span>Print Civic Pack</span>
-            </Link>
-            <DistrictExportButton districtId={districtId} />
-          </div>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Representative */}
-            <UnifiedRepresentativeCard
-              representative={district.representative}
-              districtName={district.name}
-            />
-
-            {/* 2026 election — FEC filings for this seat */}
-            {(() => {
-              const seatRaceId = raceId2026('House', district.state, district.number);
-              if (!seatRaceId) return null;
-              return (
-                <div className="bg-white border-2 border-black p-4 sm:p-8">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">2026 election</h2>
-                  <FiledCandidates2026
-                    raceId={seatRaceId}
-                    state={district.state}
-                    showRedistrictingNote
-                  />
-                </div>
-              );
-            })()}
-
-            {/* Interactive Map */}
-            <div className="bg-white border-2 border-black p-4 sm:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">District Boundaries</h2>
-              <DistrictMap state={district.state} district={district.number} />
-            </div>
-
-            {/* Demographics */}
-            <UnifiedDemographicsDisplay demographics={district.demographics} />
-
-            {/* Demographic Charts */}
-            {district.demographics && (
-              <DistrictCharts
-                districtData={{
-                  demographics: district.demographics,
-                  political: district.political,
-                }}
-              />
-            )}
-
-            {/* Economic Indicators */}
-            <EconomicIndicatorsSection districtId={districtId} />
-
-            {/* Community Profile */}
-            <CommunityProfileSection districtId={districtId} />
-
-            {/* Housing Affordability */}
-            <HousingAffordabilitySection districtId={districtId} />
-
-            {/* Education, Healthcare & Public Health (CDC PLACES district estimate) */}
-            <ServicesHealthProfile districtId={districtId} />
-
-            {/* Federal Spending */}
-            <FederalSpendingProfile districtId={districtId} />
-
-            {/* AI Spending Narrative */}
-            <SpendingNarrativeSection districtId={districtId} />
-
-            {/* Relevant Legislation */}
-            <DistrictRelevantBills districtId={districtId} />
-
-            {/* Intelligence */}
-            <DistrictIntelligenceCard districtId={districtId} />
-
-            {/* District Intelligence Profile */}
-            <DistrictProfileCard districtId={districtId} />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Navigation */}
-            <UnifiedDistrictSidebar
-              representativeName={district.representative.name}
-              representativeLink={`/representative/${district.representative.bioguideId}`}
-              counties={district.geography.counties}
-              majorCities={district.geography.majorCities}
-              quickLinks={[
-                { href: '/representatives', label: 'All Representatives' },
-                { href: '/districts', label: 'All Districts' },
-                {
-                  href: `/districts/${district.state}-Senate`,
-                  label: `${district.state} Senate Seats`,
-                },
-              ]}
-            />
-
-            {/* Wikidata Facts */}
-            {district.wikidata && (
-              <div className="bg-white border-2 border-black p-4 sm:p-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Facts</h3>
-                <div className="space-y-3">
-                  {district.wikidata.established && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-700">Established: </span>
-                      <span className="text-sm text-gray-600">
-                        {new Date(district.wikidata.established).getFullYear()}
-                      </span>
-                    </div>
-                  )}
-                  {district.wikidata.wikipediaUrl && (
-                    <div>
-                      <a
-                        href={district.wikidata.wikipediaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-civiq-blue hover:text-civiq-blue"
-                      >
-                        View on Wikipedia →
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Neighboring Districts */}
-        <div className="mt-12">
-          <NeighboringDistricts currentDistrict={district.id} />
-        </div>
-
-        {/* Wikipedia-style SEO Section */}
-        <div className="mt-12 space-y-8">
-          {/* FAQ Section - Common questions about the district */}
-          <FAQSection
-            faqs={[
-              {
-                question: `Who represents ${district.name}?`,
-                answer:
-                  district.number === 'STATE'
-                    ? `${district.representative.name} (${district.representative.party}) currently represents ${district.state} in the U.S. Senate.`
-                    : `${district.representative.name} (${district.representative.party}) currently represents ${district.name} in the U.S. House of Representatives.`,
-              },
-              {
-                question:
-                  district.number === 'STATE'
-                    ? `What are the major counties in ${district.state}?`
-                    : `What counties are in ${district.name}?`,
-                answer:
-                  district.number === 'STATE'
-                    ? `${district.state} has ${district.geography.counties.length} major counties including: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`
-                    : `${district.name} includes ${district.geography.counties.length} counties: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`,
-              },
-              {
-                question:
-                  district.number === 'STATE'
-                    ? `What are the major cities in ${district.state}?`
-                    : `What are the major cities in ${district.name}?`,
-                answer:
-                  district.geography.majorCities.length > 0
-                    ? district.number === 'STATE'
-                      ? `The major cities in ${district.state} include ${district.geography.majorCities.join(', ')}.`
-                      : `The major cities in this district include ${district.geography.majorCities.join(', ')}.`
-                    : `This district encompasses various communities across ${district.state}.`,
-              },
-              district.demographics?.population
-                ? {
-                    question:
-                      district.number === 'STATE'
-                        ? `What is the population of ${district.state}?`
-                        : `What is the population of ${district.name}?`,
-                    answer:
-                      district.number === 'STATE'
-                        ? `${district.state} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`
-                        : `${district.name} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`,
-                  }
-                : null,
-            ].filter((faq): faq is FAQItem => faq !== null)}
-            title="Frequently Asked Questions"
-          />
-
-          {/* Contextual Footer - Ulm Style */}
-          <DistrictFooter
-            districtName={district.name}
-            state={district.state}
-            districtNumber={district.number}
-            representativeName={district.representative.name}
-            representativeBioguideId={district.representative.bioguideId}
-            representativeParty={district.representative.party}
-            population={district.demographics?.population}
-            cookPVI={district.political?.cookPVI}
-          />
-          <OpenDataStrip
-            feedUrl={`/api/feed/district/${districtId}`}
-            feedLabel="District Feed"
-            apiUrl={`/api/v1/districts/${districtId}`}
-            exportUrl={`/api/district/${districtId}/export`}
-          />
-        </div>
-      </main>
-    </div>
+    <DistrictPageClient
+      districtId={parsed.canonical}
+      initialDistrict={data.status === 'found' ? data.district : null}
+    />
   );
 }
