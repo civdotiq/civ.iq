@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ComparePage } from '@/components/officials/ComparePage';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   searchParams: Promise<{ a?: string; b?: string }>;
@@ -151,6 +152,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     description,
     alternates: { canonical: url },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url,

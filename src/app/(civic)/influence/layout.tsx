@@ -5,12 +5,14 @@
 
 import type { Metadata } from 'next';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: { default: 'Follow the Money', template: '%s | CIV.IQ' },
   description:
     'Search any PAC, Super PAC, or political committee to see who they fund in Congress. All data from FEC.gov.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Follow the Money | CIV.IQ',
     description:
       'Search any PAC, Super PAC, or political committee to see who they fund in Congress. All data from FEC.gov.',

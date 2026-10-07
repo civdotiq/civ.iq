@@ -18,6 +18,7 @@ import {
 } from '@/lib/data/us-states';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{
@@ -140,6 +141,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     },
     description: `Browse committees in the ${legislatureName}. View committee leadership, membership rosters, and jurisdiction information.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${state.toUpperCase()} ${chamberName} Committees`,
       description: `Explore state legislative committees with full membership rosters and leadership information`,
       type: 'website',

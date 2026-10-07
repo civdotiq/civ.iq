@@ -19,6 +19,7 @@ import {
 } from '@/lib/questions/question-registry';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { AskEntryPage } from '@/components/ask/AskEntryPage';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Ask a Question | CIV.IQ',
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
     'Browse civic questions about your representatives — answered with real government data from Congress.gov and FEC filings.',
   alternates: { canonical: 'https://civdotiq.org/ask' },
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Ask a Question | CIV.IQ',
     description:
       'Browse civic questions about your representatives — answered with real government data.',

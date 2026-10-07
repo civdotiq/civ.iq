@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { VotingRecordPage } from '@/components/officials/VotingRecordPage';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const runtime = 'nodejs';
 export const revalidate = 3600;
@@ -70,6 +71,7 @@ export async function generateMetadata({
       description,
       alternates: { canonical: url },
       openGraph: {
+        images: SITE_OG_IMAGES,
         title,
         description,
         url,

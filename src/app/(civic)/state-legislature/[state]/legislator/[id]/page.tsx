@@ -10,22 +10,12 @@
  * robots-blocked /api/ route. An id the corpus doesn't hold is a 404.
  */
 
-import { cache } from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { SimpleStateLegislatorProfile } from '@/features/state-legislature/components/SimpleStateLegislatorProfile';
 import { StateLegislatorProfile } from '@/components/state-officials/StateLegislatorProfile';
-import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
-import {
-  getPersonById,
-  getPersonByIdSuffix,
-} from '@/lib/data-sources/openstates-people/load-people';
-import {
-  buildStateLegislatorUrl,
-  buildStateLegislatureUrl,
-  parseStateLegislatorParam,
-} from '@/lib/helpers/url-builders';
+import { buildStateLegislatorUrl, buildStateLegislatureUrl } from '@/lib/helpers/url-builders';
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { ProfilePageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
@@ -34,6 +24,7 @@ import {
   getLegislatorRoleTitle,
   type EnhancedStateLegislator,
 } from '@/types/state-legislature';
+import { getLegislator } from './get-legislator';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -44,24 +35,6 @@ interface PageProps {
   }>;
   searchParams?: Promise<{ address?: string; v?: string }>;
 }
-
-/**
- * URL segment → sitting member, or null. Accepts the readable slug, the legacy
- * base64 id and the raw id; the page 308s the latter two to the slug.
- * Memoized per request because metadata and the page both need it.
- */
-const getLegislator = cache(async (segment: string): Promise<EnhancedStateLegislator | null> => {
-  const parsed = parseStateLegislatorParam(segment);
-  if (!parsed) return null;
-
-  const person =
-    parsed.kind === 'suffix'
-      ? await getPersonByIdSuffix(parsed.suffix)
-      : await getPersonById(parsed.id);
-  if (!person) return null;
-
-  return StateLegislatureCoreService.getStateLegislatorById(person.jurisdiction, person.id);
-});
 
 /** "Angela Rigas, Michigan State Representative (District 81)" */
 function describe(legislator: EnhancedStateLegislator) {

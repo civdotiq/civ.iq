@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { isValidFederalRegisterDocumentNumber } from '@/lib/data/route-slugs';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     alternates: { canonical: `https://civdotiq.org/regulations/${documentNumber}` },
     description: `Federal Register document ${documentNumber}. View full text, agency details, and comment period information.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `Regulation ${documentNumber} | CIV.IQ`,
       description: `Federal Register document ${documentNumber}. View full text, agency details, and comment period information.`,
       url: `https://civdotiq.org/regulations/${documentNumber}`,

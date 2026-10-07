@@ -11,6 +11,7 @@ import { getRepresentativesByLocation } from '@/features/representatives/service
 import { getAllRepresentativesService } from '@/lib/services/representatives.service';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/representatives' },
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
   description:
     'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Representatives | CIV.IQ',
     description:
       'Browse all 535 members of the U.S. House and Senate. Filter by state, party, and chamber.',

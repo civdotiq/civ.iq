@@ -20,6 +20,7 @@ import {
 } from '@/components/topics/IssueTopicPage/data';
 import { getPolicyAreaMapping } from '@/lib/connections/policy-area-map';
 import { slugifyPolicyArea } from '@/lib/questions/question-registry';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -76,6 +77,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: { canonical: `https://civdotiq.org/topics/${slugifyPolicyArea(policyArea)}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/topics/${slug}`,

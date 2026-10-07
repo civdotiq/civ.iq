@@ -14,6 +14,7 @@ import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO'
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { StateListingPage } from '@/components/search/SearchVariants';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/states' },
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
     'state bills',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'U.S. States - All 50 State Legislatures',
     description:
       'Complete guide to all 50 U.S. state legislatures. Find your state senators, state representatives, bills, committees, and voting records.',

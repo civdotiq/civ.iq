@@ -21,6 +21,7 @@ import { CommitteeProfileClient } from './CommitteeProfileClient';
 import type { CommitteeProfile } from '@/types/influence';
 import { BreadcrumbSchema, OrganizationSchema } from '@/components/seo/JsonLd';
 import { isCongressionalSystemCode, isValidFecCommitteeId } from '@/lib/data/route-slugs';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
@@ -318,6 +319,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       description,
       alternates: { canonical: `https://civdotiq.org/influence/${committeeId}` },
       openGraph: {
+        images: SITE_OG_IMAGES,
         title,
         description,
         url: `https://civdotiq.org/influence/${committeeId}`,

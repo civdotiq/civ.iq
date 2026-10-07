@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { GlossaryClient } from './GlossaryClient';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/glossary' },
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
   description:
     'Definitions for civic and legislative terms. Understand congressional procedures, campaign finance, and government structure.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Civic Glossary | CIV.IQ',
     description:
       'Definitions for civic and legislative terms. Understand congressional procedures, campaign finance, and government structure.',

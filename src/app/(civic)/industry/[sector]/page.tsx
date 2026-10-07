@@ -11,6 +11,7 @@ import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import { IndustrySectorClient } from './IndustrySectorClient';
 import { IndustrySector } from '@/lib/fec/industry-taxonomy';
 import { IndustrySectorPage } from '@/components/sectors/IndustrySectorPage';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface PageProps {
   params: Promise<{ sector: string }>;
@@ -135,6 +136,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: { canonical: `https://civdotiq.org/industry/${sector}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       url: `https://civdotiq.org/industry/${sector}`,

@@ -4,12 +4,14 @@
  */
 
 import type { Metadata } from 'next';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Investigate',
   description:
     'Explore connections between legislators, donors, committees, and government contracts. Follow the money and trace influence through real government data.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Investigate | CIV.IQ',
     description:
       'Explore connections between legislators, donors, committees, and government contracts. Follow the money and trace influence through real government data.',

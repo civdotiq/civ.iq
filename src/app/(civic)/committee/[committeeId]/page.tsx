@@ -25,6 +25,7 @@ import { CommitteeFooter } from '@/components/seo/CommitteeFooter';
 import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 import GlossaryLink from '@/components/shared/ui/GlossaryLink';
 import { CommitteeDetail } from '@/components/committees/CommitteeDetail';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -142,6 +143,7 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
       },
     },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title,
       description,
       type: 'website',

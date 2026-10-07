@@ -52,7 +52,7 @@ const NON_VOTING_ROLE: Record<string, string> = {
   PR: 'Resident Commissioner',
 };
 
-function ordinal(n: number): string {
+export function ordinal(n: number): string {
   const rem10 = n % 10;
   const rem100 = n % 100;
   if (rem10 === 1 && rem100 !== 11) return `${n}st`;

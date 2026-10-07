@@ -5,12 +5,14 @@
 
 import type { Metadata } from 'next';
 import { AboutPageSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Methodology',
   description:
     'How CIV.IQ analyzes campaign finance, voting records, and lobbying data. Academic citations, data sources, confidence scoring, and what we do not claim.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Methodology | CIV.IQ',
     description:
       'How CIV.IQ analyzes campaign finance, voting records, and lobbying data. Academic citations, data sources, confidence scoring, and what we do not claim.',

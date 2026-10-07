@@ -15,6 +15,7 @@ import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, DefinedTermSchema } from '@/components/seo/JsonLd';
 import { CIVIC_GLOSSARY, GLOSSARY_CATEGORIES, type GlossaryTerm } from '@/lib/data/civic-glossary';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 // Generate static params for all glossary terms
 export async function generateStaticParams() {
@@ -71,6 +72,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...(glossaryTerm.relatedTerms || []),
     ],
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${glossaryTerm.term} - Civic Glossary`,
       description,
       type: 'article',

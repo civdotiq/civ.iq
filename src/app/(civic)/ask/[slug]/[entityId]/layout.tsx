@@ -11,6 +11,7 @@ import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/ques
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { fetchTopicBillsData } from '@/lib/questions/template-data-fetchers';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -62,6 +63,7 @@ export async function generateMetadata({
       alternates: { canonical: url },
       ...(robots ? { robots } : {}),
       openGraph: {
+        images: SITE_OG_IMAGES,
         title,
         description,
         url,

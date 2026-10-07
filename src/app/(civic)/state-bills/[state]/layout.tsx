@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getStateName } from '@/lib/data/us-states';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     title: { default: `${stateName} Bills`, template: '%s | CIV.IQ' },
     description: `Browse current and recent bills in the ${stateName} state legislature. Search by topic, sponsor, or status.`,
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${stateName} Bills | CIV.IQ`,
       description: `Browse current and recent bills in the ${stateName} state legislature. Search by topic, sponsor, or status.`,
       url: `https://civdotiq.org/state-bills/${state.toLowerCase()}`,

@@ -5,12 +5,14 @@
 
 import type { Metadata } from 'next';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: { default: 'State bill search', template: '%s | CIV.IQ' },
   description:
     'Search current legislation in all 50 state legislatures: bill text, status, sponsors, and votes from official state sources.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'State bill search | CIV.IQ',
     description:
       'Search current legislation in all 50 state legislatures: bill text, status, sponsors, and votes from official state sources.',

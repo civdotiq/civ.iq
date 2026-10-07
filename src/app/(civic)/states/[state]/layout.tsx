@@ -6,6 +6,7 @@
 import type { Metadata } from 'next';
 import { BreadcrumbSchema, AdministrativeAreaSchema } from '@/components/seo/JsonLd';
 import { getStateName } from '@/lib/data/us-states';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     description: `Government data for ${stateName}: congressional delegation, state legislature, demographics, economy, and election results.`,
     alternates: { canonical: `https://civdotiq.org/states/${state.toLowerCase()}` },
     openGraph: {
+      images: SITE_OG_IMAGES,
       title: `${stateName} — State Profile | CIV.IQ`,
       description: `Government data for ${stateName}: congressional delegation, state legislature, demographics, economy, and election results.`,
       url: `https://civdotiq.org/states/${state.toLowerCase()}`,

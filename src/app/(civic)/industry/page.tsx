@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema, ItemListSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { SectorListingPage } from '@/components/search/SearchVariants';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/industry' },
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   description:
     'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Industries | CIV.IQ',
     description:
       'Track how industry sectors connect to federal legislation, congressional committees, and government agencies.',

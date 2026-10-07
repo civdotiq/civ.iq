@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Enforcement Actions',
   description:
     'Browse federal enforcement actions from EPA, OSHA, SEC, and CFPB. Search by sector, state, or organization.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Enforcement Actions | CIV.IQ',
     description:
       'Browse federal enforcement actions from EPA, OSHA, SEC, and CFPB. Search by sector, state, or organization.',

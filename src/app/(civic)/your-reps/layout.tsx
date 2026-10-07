@@ -5,6 +5,7 @@
 
 import type { Metadata } from 'next';
 import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: { default: 'Your Representatives', template: '%s | CIV.IQ' },
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
     'Enter your home address to see who represents you in Congress and your state legislature, with contact details and plain-language summaries of their record.',
   alternates: { canonical: 'https://civdotiq.org/your-reps' },
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Your Representatives — CIV.IQ',
     description:
       'Enter your home address to see who represents you in Congress and your state legislature.',

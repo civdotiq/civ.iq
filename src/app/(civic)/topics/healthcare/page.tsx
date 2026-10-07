@@ -14,6 +14,7 @@ import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO'
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, CollectionPageSchema } from '@/components/seo/JsonLd';
 import { PolicyAreaCrossDomain } from '@/features/legislation/components/PolicyAreaCrossDomain';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/topics/healthcare' },
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
     'prescription drugs Congress',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Healthcare Legislation & Policy',
     description:
       'Track healthcare legislation in Congress. Medicare, Medicaid, ACA, drug pricing, and public health bills.',

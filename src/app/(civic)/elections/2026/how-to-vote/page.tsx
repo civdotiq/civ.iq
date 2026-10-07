@@ -21,6 +21,7 @@ import {
 } from '@/data/voter-registration-2026';
 import { getGeneralElectionDayISO } from '@/lib/data/election-dates';
 import { summarizeRegistrationDeadline } from '@/lib/data/voter-registration';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const revalidate = 86400;
 
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
     'same-day registration',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: '2026 election calendar | CIV.IQ',
     description:
       'Registration deadlines and official links for the November 3, 2026 election, state by state.',

@@ -10,6 +10,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Google Civic Info API Alternative — Free Migration Guide',
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
     'congress api free',
   ],
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Google Civic Info API Alternative — Free Migration Guide',
     description:
       'Migrate from the Google Civic Information API to CIV.IQ. Free, no API key, same data.',

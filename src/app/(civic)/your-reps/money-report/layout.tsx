@@ -5,6 +5,7 @@
 
 import type { Metadata } from 'next';
 import { GovernmentServiceSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://civdotiq.org/your-reps/money-report' },
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   description:
     'See how campaign money correlates with voting patterns for all your congressional representatives.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Money Report Card — CIV.IQ',
     description:
       'See how campaign money correlates with voting patterns for all your congressional representatives.',

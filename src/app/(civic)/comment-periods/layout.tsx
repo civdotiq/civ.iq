@@ -5,12 +5,14 @@
 
 import { Metadata } from 'next';
 import { BreadcrumbSchema, GovernmentServiceSchema } from '@/components/seo/JsonLd';
+import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 
 export const metadata: Metadata = {
   title: 'Open Comment Periods',
   description:
     'Track open federal comment periods. See which regulations are accepting public comments, deadlines, and how to participate in the rulemaking process.',
   openGraph: {
+    images: SITE_OG_IMAGES,
     title: 'Open Comment Periods',
     description:
       'Track open federal comment periods. See which regulations are accepting public comments, deadlines, and how to participate in the rulemaking process.',
