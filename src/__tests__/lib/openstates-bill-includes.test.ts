@@ -75,9 +75,11 @@ describe('OpenStates bill requests carry the include parameters', () => {
       20
     );
 
-    expect(includesFor(fetchMock.mock.calls[0])).toEqual(
-      expect.arrayContaining(['sponsorships', 'abstracts', 'actions'])
-    );
+    const includes = includesFor(fetchMock.mock.calls[0]);
+    expect(includes).toContain('sponsorships');
+    // `actions` is ~10x the page cost and no sponsor-list view reads it; with it,
+    // three pages ran the legislator bills route past its 20s cap.
+    expect(includes).not.toContain('actions');
     // A sponsor query whose bills carry no sponsorships cannot answer the
     // question it was asked — the network and the sponsored/cosponsored split
     // are both derived from this list.

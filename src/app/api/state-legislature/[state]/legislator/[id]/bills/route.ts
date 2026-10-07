@@ -14,10 +14,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { openStatesUnavailableInit } from '@/lib/openstates-api';
 
 // Bills can be cached based on session activity
 // Default: 24h for current session, 7d for historical sessions
 export const revalidate = 86400; // 24 hours default
+
+// vercel.json gives this route 30s, not the /api default of 20s: a prolific
+// sponsor's pages take ~15s cold. Five seconds stay in reserve to answer 503.
+const OPENSTATES_DEADLINE_MS = 25_000;
 
 export async function GET(
   request: NextRequest,
@@ -73,7 +78,8 @@ export async function GET(
       state.toUpperCase(),
       legislatorId,
       session,
-      limit
+      limit,
+      OPENSTATES_DEADLINE_MS - (Date.now() - startTime)
     );
 
     logger.info('State legislator bills request successful', {
@@ -114,6 +120,14 @@ export async function GET(
     logger.error('State legislator bills request failed', error as Error, {
       responseTime: Date.now() - startTime,
     });
+
+    const unavailable = openStatesUnavailableInit(error);
+    if (unavailable) {
+      return NextResponse.json(
+        { success: false, error: 'OpenStates is unavailable; try again shortly' },
+        unavailable
+      );
+    }
 
     return NextResponse.json(
       {

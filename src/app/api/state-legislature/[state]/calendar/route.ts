@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { openStatesAPI, OpenStatesEvent } from '@/lib/openstates-api';
+import { openStatesAPI, OpenStatesEvent, openStatesUnavailableInit } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
 import type { StateLegislativeEvent, LegislativeCalendarResponse } from '@/types/state-legislature';
 
@@ -144,6 +144,6 @@ export async function GET(
       error: error instanceof Error ? error.message : 'Failed to fetch legislative calendar',
     };
 
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, openStatesUnavailableInit(error) ?? { status: 500 });
   }
 }
