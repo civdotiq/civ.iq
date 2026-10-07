@@ -156,6 +156,8 @@ interface V3Bill {
     entity_type: string;
     classification: string;
     primary: boolean;
+    // `name` is often a bare surname ("Hurtado"); `person` carries the real id.
+    person?: { id: string; name: string; party?: string } | null;
   }>;
   actions: Array<{
     description: string;
@@ -359,6 +361,9 @@ export interface OpenStatesBill {
     entity_type: string;
     classification: string;
     primary: boolean;
+    /** OpenStates person id (`ocd-person/...`) when the sponsor is a linked person. */
+    personId?: string;
+    party?: string;
   }>;
   actions?: Array<{
     description: string;
@@ -1053,6 +1058,8 @@ class OpenStatesAPI {
           entity_type: s.entity_type,
           classification: s.classification,
           primary: s.primary,
+          personId: s.person?.id,
+          party: s.person?.party,
         })) ?? [],
       actions:
         bill.actions?.map(a => ({
