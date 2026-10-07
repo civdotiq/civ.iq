@@ -39,6 +39,25 @@ jest.mock('nostr-tools/pool', () => ({
 
 jest.mock('ws', () => jest.fn());
 
+const relayResult = (successCount: number) => ({
+  successCount,
+  failureCount: 5 - successCount,
+  successes: [],
+  failures: [],
+  eventId: 'mock-nostr-event-id',
+});
+const mockPublishToRelays = jest.fn();
+jest.mock('@/lib/nostr', () => ({
+  ...jest.requireActual('@/lib/nostr'),
+  publishToRelays: (...args: unknown[]) => mockPublishToRelays(...args),
+}));
+
+const mockSubmitToIndexNow = jest.fn();
+jest.mock('@/lib/publishing/indexnow', () => ({
+  ...jest.requireActual('@/lib/publishing/indexnow'),
+  submitToIndexNow: (...args: unknown[]) => mockSubmitToIndexNow(...args),
+}));
+
 jest.mock('@/lib/activitypub/outbox', () => ({
   civicEventToNote: jest.fn().mockReturnValue({
     type: 'Note',
@@ -103,6 +122,8 @@ describe('publishAndFederate', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPublishToRelays.mockResolvedValue(relayResult(5));
+    mockSubmitToIndexNow.mockResolvedValue({ skipped: false, submitted: 1 });
   });
 
   test('publishes events and returns correct counts', async () => {
@@ -126,6 +147,42 @@ describe('publishAndFederate', () => {
       }),
       expect.any(Number)
     );
+  });
+
+  test('submits the bill page to IndexNow even when relays reject the event', async () => {
+    mockPublishToRelays.mockResolvedValue(relayResult(1));
+    const result = await publishAndFederate([mockEvent], privateKey);
+    expect(result.eventsFailed).toBe(1);
+    expect(result.unpublishedEventIds).toEqual([mockEvent.id]);
+    expect(mockSet).not.toHaveBeenCalled();
+    expect(mockSubmitToIndexNow).toHaveBeenCalledWith([
+      expect.stringMatching(/\/bill\/119-hr-1234$/),
+    ]);
+  });
+
+  test('submits deferred events to IndexNow and reports them unpublished', async () => {
+    const second: CivicEvent = {
+      ...mockEvent,
+      id: 'hres1552-119-action-2025-01-15',
+      data: { ...mockEvent.data, billId: 'hres1552-119', billType: 'hres', billNumber: '1552' },
+    } as CivicEvent;
+    const result = await publishAndFederate([mockEvent, second], privateKey, {
+      deadline: Date.now() - 1,
+    });
+    expect(result.eventsPublished).toBe(0);
+    expect(result.eventsDeferred).toBe(2);
+    expect(result.unpublishedEventIds).toEqual([mockEvent.id, second.id]);
+    expect(mockPublishToRelays).not.toHaveBeenCalled();
+    const [urls] = mockSubmitToIndexNow.mock.calls[0] as [string[]];
+    expect(urls).toHaveLength(2);
+    expect(urls[1]).toMatch(/\/bill\/119-hres-1552$/);
+  });
+
+  test('keeps publishing when IndexNow throws', async () => {
+    mockSubmitToIndexNow.mockRejectedValue(new Error('network down'));
+    const result = await publishAndFederate([mockEvent], privateKey);
+    expect(result.eventsPublished).toBe(1);
+    expect(result.unpublishedEventIds).toEqual([]);
   });
 
   test('returns empty results for empty input', async () => {

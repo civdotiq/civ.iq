@@ -14,7 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNostrKeypair } from '@/lib/nostr';
 import {
-  detectBillEvents,
+  detectBillEventsWithWindow,
+  advanceBillWatermark,
   detectVoteEvents,
   detectSenateVoteEvents,
   detectExecutiveOrderEvents,
@@ -31,22 +32,23 @@ import logger from '@/lib/logging/simple-logger';
 export const dynamic = 'force-dynamic';
 
 /** Wrap a detection function with a timeout to prevent hanging on slow APIs */
-async function withDetectionTimeout(
-  fn: () => Promise<CivicEvent[]>,
+async function withDetectionTimeout<T = CivicEvent[]>(
+  fn: () => Promise<T>,
   label: string,
-  timeoutMs = 30000
-): Promise<CivicEvent[]> {
+  timeoutMs = 30000,
+  fallback: T = [] as T
+): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       fn(),
-      new Promise<CivicEvent[]>(resolve => {
+      new Promise<T>(resolve => {
         timer = setTimeout(() => {
           logger.warn(`Event detection timed out: ${label}`, {
             timeoutMs,
             operation: 'nostr_publisher',
           });
-          resolve([]);
+          resolve(fallback);
         }, timeoutMs);
       }),
     ]);
@@ -54,15 +56,26 @@ async function withDetectionTimeout(
     logger.error(`Event detection failed: ${label}`, error as Error, {
       operation: 'nostr_publisher',
     });
-    return [];
+    return fallback;
   } finally {
     clearTimeout(timer);
   }
 }
 
+/**
+ * Bills page through every update since the last fully published run
+ * (~350 a day, up to 7 days when catching up), so they get more than the
+ * 30s default. Detection runs in parallel and the state sweep already
+ * allows 120s, so this adds no wall time.
+ */
+const BILL_DETECTION_TIMEOUT_MS = 90000;
+
 interface DetectionResult {
   events: CivicEvent[];
   stateStaleness: StateStalenessInfo[];
+  billEventIds: string[];
+  /** Bill window end; null when detection was partial, failed or timed out. */
+  billsFetchedThrough: string | null;
 }
 
 /**
@@ -84,7 +97,10 @@ async function detectNewEvents(): Promise<DetectionResult> {
     hearingEvents,
     stateResult,
   ] = await Promise.all([
-    withDetectionTimeout(detectBillEvents, 'bills'),
+    withDetectionTimeout(detectBillEventsWithWindow, 'bills', BILL_DETECTION_TIMEOUT_MS, {
+      events: [],
+      fetchedThrough: null,
+    }),
     withDetectionTimeout(detectVoteEvents, 'votes'),
     withDetectionTimeout(detectSenateVoteEvents, 'senate-votes'),
     withDetectionTimeout(detectExecutiveOrderEvents, 'executive-orders'),
@@ -99,7 +115,7 @@ async function detectNewEvents(): Promise<DetectionResult> {
   ]);
   return {
     events: [
-      ...billEvents,
+      ...billEvents.events,
       ...voteEvents,
       ...senateVoteEvents,
       ...eoEvents,
@@ -108,6 +124,8 @@ async function detectNewEvents(): Promise<DetectionResult> {
       ...stateResult.events,
     ],
     stateStaleness: stateResult.staleness,
+    billEventIds: billEvents.events.map(e => e.id),
+    billsFetchedThrough: billEvents.fetchedThrough,
   };
 }
 
@@ -163,7 +181,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Detect new events
-    const { events, stateStaleness } = await detectNewEvents();
+    const { events, stateStaleness, billEventIds, billsFetchedThrough } = await detectNewEvents();
 
     logger.info(`Detected ${events.length} new civic events`, {
       operation: 'nostr_publisher',
@@ -174,6 +192,18 @@ export async function POST(request: NextRequest) {
     const result = await publishAndFederate(events, keypair.privateKey, {
       deadline: startTime + 240000,
     });
+
+    // Move the bill window forward only when every bill event made it out;
+    // otherwise the next run reaches back to re-detect the deferred ones.
+    const unpublished = new Set(result.unpublishedEventIds);
+    if (billsFetchedThrough && !billEventIds.some(id => unpublished.has(id))) {
+      await advanceBillWatermark(billsFetchedThrough).catch(err =>
+        logger.warn('Bill watermark update failed', {
+          error: err instanceof Error ? err.message : 'Unknown',
+          operation: 'nostr_publisher',
+        })
+      );
+    }
 
     const totalTime = Date.now() - startTime;
     const summary: NostrPublishRun = {
