@@ -18,6 +18,8 @@ import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES, censusCongressionalDistrictCode } from '@/lib/data/us-states';
 import { getHouseResult2024 } from '@/lib/services/election-results.service';
+import { canonicalizeDistrictId } from '@/lib/helpers/url-builders';
+import { checkDistrictId } from '@/lib/districts/known-districts';
 
 // Type for Census Gazetteer data
 interface GazetteerDistrict {
@@ -1984,6 +1986,39 @@ export async function getDistrictDetails(districtId: string): Promise<DistrictDe
     logger.error('Error fetching district details', error as Error, { districtId });
     throw error;
   }
+}
+
+/**
+ * The seat id for a state + district pair, as the district page resolves it:
+ * `MI-7` → `MI-07`, `AK-0`/`AK-01` → `AK-AL`. Null when no such seat exists.
+ */
+export function resolveSeatId(stateCode: string, district: string): string | null {
+  const parsed = canonicalizeDistrictId(`${stateCode.trim()}-${district.trim()}`);
+  if (!parsed) return null;
+  const check = checkDistrictId(parsed.state, parsed.district);
+  if (check.kind === 'unknown') return null;
+  return check.kind === 'at-large' ? check.canonical : parsed.canonical;
+}
+
+/**
+ * The response envelope for district details: the API route returns it, and
+ * the MCP tool and resource return the same JSON.
+ */
+export function districtDetailsResponse(district: DistrictDetails) {
+  return {
+    district,
+    metadata: {
+      timestamp: new Date().toISOString(),
+      dataSource: 'congress-legislators + census-api + census-tiger-2023',
+      note: 'Political data unavailable. Demographic data from Census API when available, otherwise marked as unavailable.',
+      districtBoundaries: {
+        congress: '119th Congress (2023-2025)',
+        redistrictingYear: '2023',
+        source: 'Census TIGER/Line 2023',
+        note: 'Geographic data reflects post-2023 redistricting boundaries',
+      },
+    },
+  };
 }
 
 /**
