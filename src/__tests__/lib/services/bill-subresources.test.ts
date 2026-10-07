@@ -58,6 +58,24 @@ const responses: Record<string, unknown> = {
       },
     ],
   },
+  // Real shape from S. 3362 (119th): Congress.gov lists a bare "Intro-S" code
+  // with no text beside "Introduced in Senate". It crashed the bill page.
+  '/actions?': {
+    actions: [
+      {
+        actionDate: '2026-04-22',
+        type: 'IntroReferral',
+        text: 'Referred to the House Committee on Foreign Affairs.',
+      },
+      { actionDate: '2026-04-22', type: 'IntroReferral', actionCode: 'Intro-H' },
+      {
+        actionDate: '2026-04-22',
+        type: 'IntroReferral',
+        actionCode: '1000',
+        text: 'Introduced in House',
+      },
+    ],
+  },
   '/summaries?': {
     summaries: [
       { actionDate: '2026-04-22', versionCode: '00', text: '<p>Introduced version.</p>' },
@@ -107,5 +125,14 @@ describe('fetchBillFromCongress sub-resources', () => {
     for (const path of ['committees', 'relatedbills', 'summaries']) {
       expect(urls.find(u => u.includes(`/${path}?`))).toContain('limit=250');
     }
+  });
+
+  it('drops actions Congress.gov lists without text', async () => {
+    const bill = await fetchBillFromCongress('119-hconres-89');
+
+    expect(bill?.status.timeline.map(a => a.description)).toEqual([
+      'Referred to the House Committee on Foreign Affairs.',
+      'Introduced in House',
+    ]);
   });
 });
