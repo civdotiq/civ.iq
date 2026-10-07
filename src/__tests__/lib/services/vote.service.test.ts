@@ -12,7 +12,13 @@
  * Senate fallback, so Google-indexed House vote URLs served Senate votes.
  */
 
-import { parseVoteId, sessionsToTry } from '@/lib/services/vote.service';
+import {
+  lookupVote,
+  parseVoteId,
+  senateRollAbsentFromMenu,
+  sessionsToTry,
+} from '@/lib/services/vote.service';
+import type { SenateVoteMenu } from '@/features/representatives/services/roll-call-corpus';
 
 describe('parseVoteId', () => {
   describe('4-part House format (sitemap URLs) — regression', () => {
@@ -117,5 +123,91 @@ describe('sessionsToTry', () => {
 
   it('falls back to [1, 2] for a malformed congress', () => {
     expect(sessionsToTry('not-a-congress')).toEqual([1, 2]);
+  });
+});
+
+describe('senateRollAbsentFromMenu', () => {
+  const now = new Date('2026-10-07T12:00:00Z');
+  const entry = (n: number) => ({ n, d: '2026-01-01', q: 'On the Motion', r: 'Agreed to', i: '' });
+  const menu = (sessions: SenateVoteMenu['sessions'], updatedAt = '2026-10-07T08:15:00Z') => ({
+    congress: 119,
+    sessions,
+    updatedAt,
+  });
+
+  it('is false for a roll the menu lists', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(1), entry(2)] }), 2, [2], now)).toBe(false);
+  });
+
+  it('is true for a number below the latest that the menu skips', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(1), entry(3)] }), 2, [2], now)).toBe(true);
+  });
+
+  it('is false just above the latest: it may have been cast since the sync', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(500)] }), 550, [2], now)).toBe(false);
+  });
+
+  it('is true far beyond anything the Senate could cast since the sync', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(500)] }), 9999, [2], now)).toBe(true);
+  });
+
+  it('widens the headroom when the menu is days old', () => {
+    const stale = menu({ '2': [entry(500)] }, '2026-10-01T08:15:00Z');
+    expect(senateRollAbsentFromMenu(stale, 1000, [2], now)).toBe(false);
+  });
+
+  it('proves nothing for a session the menu does not carry', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(500)] }), 9999, [2, 1], now)).toBe(false);
+  });
+
+  it('treats a session that has not started as empty', () => {
+    const before = new Date('2025-06-01T12:00:00Z');
+    const m = menu({ '1': [entry(300)] }, '2025-06-01T08:15:00Z');
+    expect(senateRollAbsentFromMenu(m, 5, [2], before)).toBe(true);
+  });
+
+  it('is false when the sync time is unreadable', () => {
+    expect(senateRollAbsentFromMenu(menu({ '2': [entry(1)] }, 'bad'), 9999, [2], now)).toBe(false);
+  });
+});
+
+describe('lookupVote', () => {
+  const originalFetch = global.fetch;
+  let fetchMock: jest.Mock;
+  const status = (code: number) => ({ ok: code < 400, status: code, json: async () => ({}) });
+
+  beforeEach(() => {
+    fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it.each(['nonsense', 'house-119-1-0', 'senate-200-1-1', 'house-150-5'])(
+    'is not_found for %s without any upstream call',
+    async id => {
+      expect(await lookupVote(id, new Date('2026-10-07T12:00:00Z'))).toEqual({
+        status: 'not_found',
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it('is not_found when Congress.gov 404s every session of a House roll', async () => {
+    fetchMock.mockResolvedValue(status(404));
+    expect(await lookupVote('house-119-99999')).toEqual({ status: 'not_found' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('is unavailable when Congress.gov fails, never not_found', async () => {
+    fetchMock.mockResolvedValueOnce(status(503)).mockResolvedValueOnce(status(404));
+    expect(await lookupVote('house-119-99999')).toEqual({ status: 'unavailable' });
+  });
+
+  it('is unavailable when the House request times out', async () => {
+    fetchMock.mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+    expect(await lookupVote('house-119-1-100')).toEqual({ status: 'unavailable' });
   });
 });

@@ -20,6 +20,7 @@ import {
   rollKey,
   senateVoteFromMenu,
   type CompactRollCall,
+  type SenateVoteMenu,
 } from '@/features/representatives/services/roll-call-corpus';
 
 // Types for vote data
@@ -252,17 +253,20 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
 }
 
 // Parse House vote from Congress.gov API
+const HOUSE_VOTE_NOT_FOUND = 'not_found' as const;
+
 async function parseHouseVote(
   voteId: string,
   congress: string,
   rollNumber: string,
   knownSession?: string
-): Promise<UnifiedVoteDetail | null> {
+): Promise<UnifiedVoteDetail | typeof HOUSE_VOTE_NOT_FOUND | null> {
   try {
     const sessions = sessionsToTry(congress, knownSession);
     let response: Response | null = null;
     let sessionNumber = sessions[0] ?? 1;
     let apiUrl = '';
+    let every404 = true;
 
     for (const session of sessions) {
       apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?format=json`;
@@ -277,9 +281,11 @@ async function parseHouseVote(
         sessionNumber = session;
         break;
       }
+      if (response.status !== 404) every404 = false;
     }
 
-    if (!response?.ok) return null;
+    // Congress.gov answers "No Vote matches the given query." with a 404.
+    if (!response?.ok) return every404 ? HOUSE_VOTE_NOT_FOUND : null;
 
     const apiData = await response.json();
     const vote = apiData.houseRollCallVote;
@@ -675,21 +681,96 @@ async function enrichBillData(vote: UnifiedVoteDetail): Promise<UnifiedVoteDetai
 }
 
 /**
+ * Outcome of a vote lookup. `not_found` only when the source of record proves
+ * the roll call doesn't exist; a timeout, 5xx or missing mirror is
+ * `unavailable`, so an upstream outage never turns into a 404.
+ */
+export type VoteLookup =
+  | { status: 'found'; vote: UnifiedVoteDetail }
+  | { status: 'not_found' }
+  | { status: 'unavailable' };
+
+/** The Senate has never cast close to this many roll calls in one day. */
+const MAX_SENATE_ROLLS_PER_DAY = 100;
+
+function congressFirstYear(congress: number): number {
+  return 1789 + (congress - 1) * 2;
+}
+
+/**
+ * Does the mirrored senate.gov vote menu prove this roll call doesn't exist
+ * in any of the given sessions? Roll numbers are consecutive within a
+ * session, so a number at or below the session's latest that the menu
+ * doesn't list was never cast. Above the latest, only numbers beyond what
+ * the Senate could have cast since the menu was synced count as absent. A
+ * session the menu doesn't carry proves nothing, unless it hasn't started.
+ */
+export function senateRollAbsentFromMenu(
+  menu: SenateVoteMenu,
+  roll: number,
+  sessions: number[],
+  now: Date = new Date()
+): boolean {
+  const syncedAt = Date.parse(menu.updatedAt);
+  if (!Number.isFinite(syncedAt)) return false;
+  const daysSinceSync = Math.max(1, Math.ceil((now.getTime() - syncedAt) / 86_400_000));
+  const headroom = MAX_SENATE_ROLLS_PER_DAY * daysSinceSync;
+
+  return sessions.every(session => {
+    if (congressFirstYear(menu.congress) + session - 1 > now.getUTCFullYear()) return true;
+    const entries = menu.sessions[String(session)] ?? [];
+    if (entries.length === 0) return false;
+    if (entries.some(e => e.n === roll)) return false;
+    const latest = entries.reduce((max, e) => Math.max(max, e.n), 0);
+    return roll <= latest || roll > latest + headroom;
+  });
+}
+
+/**
+ * Look up a vote, distinguishing "doesn't exist" from "couldn't load".
+ * Misses are never cached. IDs that can't name a roll call (no roll number,
+ * a congress that hasn't convened) are not_found without any upstream call.
+ */
+export async function lookupVote(voteId: string, now: Date = new Date()): Promise<VoteLookup> {
+  const parsed = parseVoteId(voteId);
+  const congress = Number(parsed.congress);
+  const roll = Number(parsed.rollNumber);
+  const currentCongress = Math.floor((now.getUTCFullYear() - 1789) / 2) + 1;
+  if (
+    !/^\d+$/.test(parsed.congress) ||
+    !/^\d+$/.test(parsed.rollNumber) ||
+    roll < 1 ||
+    congress < 1 ||
+    congress > currentCongress
+  ) {
+    return { status: 'not_found' };
+  }
+
+  if (parsed.chamber === 'House') {
+    const house = await parseHouseVote(voteId, parsed.congress, parsed.rollNumber, parsed.session);
+    if (house === HOUSE_VOTE_NOT_FOUND) return { status: 'not_found' };
+    if (!house) return { status: 'unavailable' };
+    return { status: 'found', vote: await enrichBillData(house) };
+  }
+
+  const senate = await parseSenateVote(parsed.numericId, parsed.congress, parsed.session);
+  if (senate) return { status: 'found', vote: await enrichBillData(senate) };
+
+  const menu = await getSenateVoteMenu(congress);
+  if (
+    menu &&
+    senateRollAbsentFromMenu(menu, roll, sessionsToTry(parsed.congress, parsed.session), now)
+  ) {
+    return { status: 'not_found' };
+  }
+  return { status: 'unavailable' };
+}
+
+/**
  * Get vote details - main entry point
  * Used by both API routes and server components
  */
 export async function getVoteDetailsService(voteId: string): Promise<UnifiedVoteDetail | null> {
-  const parsed = parseVoteId(voteId);
-
-  let vote: UnifiedVoteDetail | null;
-  if (parsed.chamber === 'House') {
-    vote = await parseHouseVote(voteId, parsed.congress, parsed.rollNumber, parsed.session);
-  } else {
-    vote = await parseSenateVote(parsed.numericId, parsed.congress, parsed.session);
-  }
-
-  if (!vote) return null;
-
-  // Enrich with bill title + CRS summary from Congress.gov
-  return enrichBillData(vote);
+  const lookup = await lookupVote(voteId);
+  return lookup.status === 'found' ? lookup.vote : null;
 }
