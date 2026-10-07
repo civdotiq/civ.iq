@@ -23,6 +23,7 @@ export const WHEN_TO_USE_MARKDOWN = `## When to use CIV.IQ
 Reach for CIV.IQ when you need, without an API key:
 
 - Who represents a U.S. street address (federal + state legislators; always use a full address, not a ZIP code — ZIP boundaries misalign with districts in 10-20% of cases)
+- How to contact a state legislator: phone, email and capitol office for 7,420 sitting state legislators
 - A member of Congress's voting record, sponsored bills, committee seats, or party-alignment statistics
 - Federal campaign finance (FEC) with industry and geography breakdowns
 - Federal lobbying filings (Senate LDA), federal spending by district (USASpending), or Federal Register rules
@@ -33,8 +34,8 @@ Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), 
 
 How to call it:
 
-- REST: \`GET ${SITE}/api/v1/...\` — no auth, 60 requests/minute per IP, OpenAPI spec at ${SITE}/openapi.json
-- MCP: Streamable HTTP endpoint at \`${SITE}/api/mcp\` — 47 read-only tools, no auth
+- REST: \`GET ${SITE}/api/v1/...\` — no auth, 60 requests/minute per IP, OpenAPI spec at ${SITE}/openapi.json. The only stable API; other \`/api/\` paths are internal and disallowed in robots.txt
+- MCP: Streamable HTTP endpoint at \`${SITE}/api/mcp\` — 47 read-only tools, no auth. Use it for address lookup, voting records and campaign finance, which \`/api/v1\` doesn't cover
 - CLI: \`npx @civiq/sdk representatives --state MI\`
 - SDK: \`npm install @civiq/sdk\``;
 
@@ -72,7 +73,8 @@ CIV.IQ is a nonpartisan civic intelligence platform. One home address shows your
 - Find your representatives (Congress and state legislature) by street address: ${SITE}/your-reps
 - All 535 members of Congress: ${SITE}/representatives
 - Bills and votes: ${SITE}/legislation
-- State legislatures: ${SITE}/states
+- Who is my state representative? One page per state, e.g. ${SITE}/state-legislature/mi
+- State overviews: ${SITE}/states
 - Congressional districts: ${SITE}/districts
 
 ${WHEN_TO_USE_MARKDOWN}
@@ -135,15 +137,16 @@ Complete REST reference for the free CIV.IQ civic data API.
 
 ## Key endpoints
 
-- \`GET /api/v1/representatives?state=MI&chamber=house\` — list legislators
-- \`GET /api/v1/representatives/{bioguideId}\` — legislator detail
-- \`GET /api/representative/{bioguideId}/votes\` — voting record
-- \`GET /api/representative/{bioguideId}/finance\` — campaign finance
+- \`GET /api/v1/representatives?state=MI&chamber=house\` — list members of Congress
+- \`GET /api/v1/representatives/{bioguideId}\` — member detail
 - \`GET /api/v1/bills?sort=updateDate+desc&limit=20\` — recent bills
-- \`GET /api/search/unified?q=healthcare\` — keyword search (bills, members, committees)
 - \`GET /api/v1/bills/{billId}\` — bill detail
+- \`GET /api/v1/votes/{voteId}\` — roll-call vote detail
+- \`GET /api/v1/districts/{districtId}\` — congressional district
 - \`GET /api/v1/committees\` — committees
 - \`GET /api/v1/changelog\` — API changelog
+
+Voting records, campaign finance and address lookup are MCP tools (\`get_voting_history\`, \`get_campaign_finance\`, \`lookup_representatives\`) at ${SITE}/api/mcp.
 
 ## Errors
 

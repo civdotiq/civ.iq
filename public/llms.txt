@@ -9,6 +9,7 @@ CIV.IQ fills the vacuum left by the shutdown of ProPublica Congress API, Google 
 Reach for CIV.IQ when an agent needs, without an API key:
 
 - Who represents a U.S. street address (federal + state legislators). Always pass a full street address, not a ZIP code — ZIP boundaries misalign with congressional districts in 10-20% of cases.
+- How to contact a state legislator: phone, email and capitol office for 7,420 sitting state legislators in all 50 states, DC and Puerto Rico
 - A member of Congress's voting record, sponsored bills, committee seats, or party-alignment statistics
 - Federal campaign finance (FEC) with industry and geography breakdowns
 - Federal lobbying filings (Senate LDA), federal spending by district (USASpending), or Federal Register rules
@@ -19,8 +20,9 @@ Do NOT use CIV.IQ for: state-level campaign finance or lobbying (federal only), 
 
 How to call it:
 
-- REST: `GET https://civdotiq.org/api/v1/...` — no auth, 60 requests/minute per IP
-- MCP: Streamable HTTP endpoint at `https://civdotiq.org/api/mcp` — 47 read-only tools, no auth
+- REST: `GET https://civdotiq.org/api/v1/...` — no auth, 60 requests/minute per IP. This is the only stable, documented API and the only `/api/` path robots.txt allows.
+- MCP: Streamable HTTP endpoint at `https://civdotiq.org/api/mcp` — 47 read-only tools, no auth. Use it for anything `/api/v1` doesn't cover (address lookup, voting records, campaign finance, lobbying).
+- Web pages: every page below is server-rendered HTML, so a plain fetch returns the full content
 - CLI: `npx @civiq/sdk representatives --state MI`
 - SDK: `npm install @civiq/sdk`
 - Markdown variants: key pages (`/`, `/about`, `/developers`, `/docs/api`, `/mcp`, `/support`) respond to `Accept: text/markdown` with markdown instead of HTML
@@ -55,16 +57,43 @@ The canonical coverage matrix is published at https://github.com/civdotiq/civ.iq
 
 ## Key Endpoints
 
-- `GET /api/v1/representatives?state=MI&chamber=house` — list legislators
-- `GET /api/v1/representatives/{bioguideId}` — legislator detail
-- `GET /api/representative/{bioguideId}/votes` — voting record
-- `GET /api/representative/{bioguideId}/finance` — campaign finance
+REST (`/api/v1`, stable):
+
+- `GET /api/v1` — machine-readable endpoint directory
+- `GET /api/v1/representatives?state=MI&chamber=house` — list members of Congress
+- `GET /api/v1/representatives/{bioguideId}` — member detail
 - `GET /api/v1/bills?sort=updateDate+desc&limit=20` — recent bills
-- `GET /api/search/unified?q=healthcare` — keyword search (bills, members, committees)
-- `GET /api/v1/bills/{billId}` — bill detail
-- `GET /api/v1/committees` — list committees
-- `POST /api/intelligence/address/representatives` — find reps by full address
-- `GET /api/intelligence/vote-prediction/{bioguideId}` — ML vote prediction
+- `GET /api/v1/bills/{billId}` — bill detail (e.g. `119-hr-1`)
+- `GET /api/v1/bills/{billId}/summary` — cached plain-language summary
+- `GET /api/v1/votes/{voteId}` — roll-call vote detail (e.g. `house-119-116`)
+- `GET /api/v1/districts/{districtId}` — congressional district and its member (e.g. `MI-12`)
+- `GET /api/v1/committees` and `GET /api/v1/committees/{committeeId}` — committees and members
+- `GET /api/v1/changelog` — API changelog
+
+MCP tools for what `/api/v1` doesn't cover:
+
+- `lookup_representatives` — everyone who represents a full street address (Congress + state legislature)
+- `get_voting_history` — a member's recent votes
+- `get_campaign_finance` — FEC totals, PAC money, industry breakdown
+- `search_legislation` — full-text bill search
+- `search_lobbying` — Senate LDA filings
+- `analyze_vote_prediction` — ML vote prediction
+
+Other paths under `/api/` (for example `/api/representative/{id}/votes`) are internal routes behind the site's own pages. They are unversioned, can change without notice, and robots.txt disallows them, so agents that respect robots.txt can't fetch them. Use `/api/v1` or MCP instead.
+
+## Pages
+
+Server-rendered HTML pages, listed in [sitemap.xml](/sitemap.xml) and [sitemap-state-legislators.xml](/sitemap-state-legislators.xml):
+
+- `/your-reps` — find your members of Congress and state legislators by street address
+- `/representative/{bioguideId}` — member of Congress profile: phone, DC office, contact form or website, votes, bills, campaign finance (e.g. `/representative/T000481`)
+- `/state-legislature/{state}` — "Who is my state representative in [State]?": every state legislator by chamber with district, party and phone (e.g. `/state-legislature/mi`)
+- `/state-legislature/{state}/legislator/{name}-{id}` — state legislator profile: phone, email, capitol office, district (e.g. `/state-legislature/mi/legislator/winnie-brinks-de38477b`)
+- `/states/{state}` — state overview: governor, congressional delegation, legislature party split, Census demographics (e.g. `/states/mi`)
+- `/districts/{ST-NN}` — congressional district: member, demographics, economy (e.g. `/districts/MI-12`; at-large seats use `AL`, e.g. `/districts/AK-AL`)
+- `/state-districts/{state}/{upper|lower}/{district}` — state legislative district: members and population (e.g. `/state-districts/mi/upper/8`)
+- `/bill/{congress}-{type}-{number}` — bill status, sponsors, actions and summary (e.g. `/bill/119-hr-1`)
+- `/vote/{chamber}-{congress}-{session}-{rollNumber}` — roll-call vote (e.g. `/vote/senate-119-2-1`)
 
 ## Question Pages
 

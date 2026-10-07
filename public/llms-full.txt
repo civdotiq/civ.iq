@@ -10,6 +10,18 @@
 - Versioned: `https://civdotiq.org/api/v1`
 - OpenAPI 3.0 spec: `https://civdotiq.org/openapi.json`
 
+### Stable API vs internal routes
+
+- `/api/v1/` is the stable, versioned API. It is the only `/api/` path robots.txt allows.
+- Every other `/api/` path documented below is an internal route behind the site's own pages. These routes are unversioned and can change without notice. robots.txt disallows them, so agents that respect robots.txt (for example Claude-User or Perplexity-User) can't fetch them.
+- For anything `/api/v1` doesn't cover, use the MCP server (`https://civdotiq.org/api/mcp`, see "MCP Server" below):
+  - Address lookup: `lookup_representatives`
+  - Voting records: `get_voting_history`
+  - Campaign finance: `get_campaign_finance`
+  - Lobbying: `search_lobbying`
+  - Bill search: `search_legislation`
+- The web pages listed under "Web Pages" are server-rendered. A plain fetch returns the full content.
+
 ## Rate Limiting
 
 - 60 requests/minute per IP address on `/api/v1/`
@@ -32,6 +44,28 @@
 - Bills: cached 6 hours, sourced from Congress.gov API v3
 - Lobbying: cached 24 hours, sourced from Senate LDA API
 - Intelligence insights: cached 7 days, recomputed on demand
+- State legislators: Open States people data, mirrored into the repo and refreshed weekly
+
+---
+
+## Web Pages
+
+Server-rendered HTML, listed in `https://civdotiq.org/sitemap.xml` and `https://civdotiq.org/sitemap-state-legislators.xml`. State codes in page paths are lowercase. Congressional district IDs are uppercase.
+
+| Page | What it shows | Example |
+|------|---------------|---------|
+| `/your-reps` | Address lookup: members of Congress and state legislators for a street address | `/your-reps` |
+| `/representative/{bioguideId}` | Member of Congress: phone, DC office, contact form or website, votes, bills, campaign finance | `/representative/T000481` |
+| `/state-legislature/{state}` | "Who is my state representative in [State]?": every state legislator by chamber, with district, party and phone | `/state-legislature/mi` |
+| `/state-legislature/{state}/legislator/{name}-{id}` | State legislator: phone, email, capitol office, district | `/state-legislature/mi/legislator/winnie-brinks-de38477b` |
+| `/states/{state}` | State overview: governor, congressional delegation, legislature party split, Census demographics | `/states/mi` |
+| `/districts/{ST-NN}` | Congressional district: member, demographics, economy. At-large seats use `AL` | `/districts/MI-12`, `/districts/AK-AL` |
+| `/state-districts/{state}/{upper\|lower}/{district}` | State legislative district: members and population | `/state-districts/mi/upper/8` |
+| `/bill/{congress}-{type}-{number}` | Bill status, sponsors, actions, summary | `/bill/119-hr-1` |
+| `/vote/{chamber}-{congress}-{session}-{rollNumber}` | Roll-call vote | `/vote/senate-119-2-1` |
+| `/ask/{question}/{bioguideId}` | Question pages (campaign contributions, party alignment, voting record) | `/ask/voting-record/T000481` |
+
+Unknown member, legislator, state, district and bill IDs return HTTP 404.
 
 ---
 
@@ -552,7 +586,7 @@ How often a legislator votes with their party.
 
 ### GET /api/state-legislature/{state}
 
-State legislators via OpenStates GraphQL API.
+State legislators from the Open States people data, mirrored into the repo and refreshed weekly (no live upstream call).
 
 ### GET /api/state-bills/{state}
 
