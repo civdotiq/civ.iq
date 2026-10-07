@@ -18,6 +18,7 @@
  * the runtime never emits it — see inline note below.
  */
 
+import { NextResponse } from 'next/server';
 import { createMcpHandler } from 'mcp-handler/next';
 import { initializeMcpServer } from '@/lib/mcp/server';
 import { recordMcpInitialize, recordMcpToolCall } from '@/lib/analytics/adoption-telemetry';
@@ -71,30 +72,50 @@ function atCanonicalPath(request: Request): Request {
   return request;
 }
 
+/**
+ * mcp-handler only resolves its Response once something calls writeHead.
+ * Any request it doesn't write to never resolves and hangs until the 20s
+ * function timeout turns it into a 504. Two such inputs reach us in practice:
+ *   - HEAD: Next.js serves HEAD with the GET export (request.method is
+ *     still 'HEAD'), and mcp-handler's method switch has no HEAD branch.
+ *   - A JSON content type with an empty or invalid body: mcp-handler calls
+ *     req.json() before its try block, so the parse error is never answered.
+ * Both are answered here instead, in the same shape the MCP SDK uses.
+ */
+function jsonRpcError(status: number, code: number, message: string): Response {
+  return NextResponse.json(
+    { jsonrpc: '2.0', error: { code, message }, id: null },
+    { status, headers: status === 405 ? { Allow: 'POST' } : undefined }
+  );
+}
+
 // mcp-handler@<current> defines `requestReceived` on its event emitter but
 // never calls it; only REQUEST_COMPLETED fires, and the request body is
 // passed as `result`. Rather than couple telemetry to that quirk we peek
 // the body ourselves before delegating.
 async function postWithTelemetry(request: Request): Promise<Response> {
-  try {
-    const contentType = request.headers.get('content-type') ?? '';
-    if (contentType.includes('application/json')) {
-      const clone = request.clone();
-      const text = await clone.text();
-      if (text) {
-        const body: unknown = JSON.parse(text);
-        recordMcpInitialize(body);
-        recordMcpToolCall(body);
-      }
+  const contentType = request.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    let body: unknown;
+    try {
+      body = JSON.parse(await request.clone().text());
+    } catch {
+      return jsonRpcError(400, -32700, 'Parse error: Invalid JSON');
     }
-  } catch {
-    // Telemetry never throws.
+    try {
+      recordMcpInitialize(body);
+      recordMcpToolCall(body);
+    } catch {
+      // Telemetry never throws.
+    }
   }
   return handler(atCanonicalPath(request));
 }
 
-const getAtCanonicalPath = (request: Request): Promise<Response> =>
-  handler(atCanonicalPath(request));
+const getAtCanonicalPath = async (request: Request): Promise<Response> =>
+  request.method === 'HEAD'
+    ? jsonRpcError(405, -32000, 'Method not allowed.')
+    : handler(atCanonicalPath(request));
 const deleteAtCanonicalPath = (request: Request): Promise<Response> =>
   handler(atCanonicalPath(request));
 
