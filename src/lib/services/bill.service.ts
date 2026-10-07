@@ -23,7 +23,9 @@ import DOMPurify from 'isomorphic-dompurify';
 
 export interface CongressAction {
   actionDate: string;
-  text: string;
+  // Absent on some records, e.g. the bare "Intro-S" code Congress.gov lists
+  // beside the "Introduced in Senate" action.
+  text?: string;
   actionCode?: string;
   sourceSystem?: { code?: number; name?: string };
   recordedVotes?: Array<{
@@ -840,13 +842,19 @@ export async function lookupBill(billId: string): Promise<BillLookup> {
                 )
               ),
             },
-            timeline: billActions.map((action: CongressAction) => ({
-              date: action.actionDate,
-              description: action.text,
-              chamber: actionChamber(action),
-              actionCode: action.actionCode,
-              type: 'action' as const,
-            })),
+            timeline: billActions.flatMap((action: CongressAction) =>
+              action.text
+                ? [
+                    {
+                      date: action.actionDate,
+                      description: action.text,
+                      chamber: actionChamber(action),
+                      actionCode: action.actionCode,
+                      type: 'action' as const,
+                    },
+                  ]
+                : []
+            ),
           },
 
           sponsor: {

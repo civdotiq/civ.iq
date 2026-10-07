@@ -102,7 +102,8 @@ const STAGE_KEYWORDS: Record<BillStage, string[]> = {
 };
 
 function classifyAction(action: BillAction): BillStage | null {
-  const text = action.description.toLowerCase();
+  // Bills cached before text-less actions were filtered out can still carry one.
+  const text = action.description?.toLowerCase() ?? '';
   const type = action.type?.toLowerCase() ?? '';
 
   // Check each stage's keywords
