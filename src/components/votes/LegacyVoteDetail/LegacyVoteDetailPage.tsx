@@ -62,7 +62,7 @@ export function LegacyVoteDetailPage({
         <div className="max-w-4xl mx-auto px-4">
           {fromBioguideId && fromRepName ? (
             <Breadcrumb
-              currentPage="Vote Not Found"
+              currentPage="Vote unavailable"
               fromBioguideId={fromBioguideId}
               fromRepName={fromRepName}
             />
@@ -71,9 +71,10 @@ export function LegacyVoteDetailPage({
           )}
 
           <div className="aicher-card p-4 sm:p-8 text-center">
-            <h1 className="aicher-heading text-2xl text-gray-900 mb-4">Vote Not Found</h1>
+            <h1 className="aicher-heading text-2xl text-gray-900 mb-4">Vote unavailable</h1>
             <p className="text-gray-600 mb-6">
-              The requested vote (ID: {voteId}) could not be found or is not available.
+              The official record for this vote (ID: {voteId}) couldn&apos;t be loaded right now.
+              Try again in a few minutes.
             </p>
             <Link
               href="/"

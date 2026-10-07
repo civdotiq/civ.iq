@@ -9,9 +9,11 @@
  * `vote.service` so federal House + Senate roll calls share one ingestion path.
  */
 
+import { cache } from 'react';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import logger from '@/lib/logging/simple-logger';
-import { getVoteDetailsService, type UnifiedVoteDetail } from '@/lib/services/vote.service';
+import { lookupVote, type VoteLookup } from '@/lib/services/vote.service';
 import { LegacyVoteDetailPage } from '@/components/votes/LegacyVoteDetail';
 import { RollCallDetail, loadRollCallDetailData } from '@/components/votes/RollCallDetail';
 
@@ -20,13 +22,23 @@ interface VoteDetailPageProps {
   searchParams: Promise<{ from?: string; name?: string; v?: string }>;
 }
 
-async function fetchVoteDetails(voteId: string): Promise<UnifiedVoteDetail | null> {
+/**
+ * One lookup per request, shared by generateMetadata and the page. Only a
+ * proven miss (not_found) 404s; an upstream failure renders the page, which
+ * shows its own "couldn't load" state.
+ */
+const getVoteLookup = cache(async (voteId: string): Promise<VoteLookup> => {
   try {
-    return (await getVoteDetailsService(voteId)) as UnifiedVoteDetail | null;
+    return await lookupVote(voteId);
   } catch (error) {
     logger.error('Error fetching vote details', error as Error, { voteId });
-    return null;
+    return { status: 'unavailable' };
   }
+});
+
+async function fetchVoteDetails(voteId: string) {
+  const lookup = await getVoteLookup(voteId);
+  return lookup.status === 'found' ? lookup.vote : null;
 }
 
 export async function generateMetadata({
@@ -37,13 +49,20 @@ export async function generateMetadata({
   const { voteId } = await params;
 
   try {
-    const vote = await fetchVoteDetails(voteId);
-    if (!vote) {
+    const lookup = await getVoteLookup(voteId);
+    if (lookup.status === 'not_found') {
       return {
         title: 'Vote Not Found',
         description: 'The requested vote could not be found.',
       };
     }
+    if (lookup.status === 'unavailable') {
+      return {
+        title: 'Vote Details',
+        description: 'View detailed vote results including member positions and party breakdown.',
+      };
+    }
+    const { vote } = lookup;
 
     const title = `${vote.chamber} Roll Call #${vote.rollNumber}: ${vote.title} — ${vote.result}`;
     const description = `The ${vote.chamber} voted ${vote.result.toLowerCase()} on ${vote.question}. Yeas: ${vote.yeas}, Nays: ${vote.nays}. View all member positions and party breakdown.`;
@@ -79,6 +98,8 @@ export async function generateMetadata({
 export default async function VoteDetailPage({ params, searchParams }: VoteDetailPageProps) {
   const { voteId } = await params;
   const { from: fromBioguideId, name: fromRepName, v } = await searchParams;
+
+  if ((await getVoteLookup(voteId)).status === 'not_found') notFound();
 
   const isPreviewEnv =
     process.env.NEXT_PUBLIC_CIVIQ_V === 'new' && process.env.NODE_ENV !== 'production';
