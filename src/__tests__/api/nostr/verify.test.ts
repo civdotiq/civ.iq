@@ -35,7 +35,7 @@ jest.mock('ws', () => jest.fn());
 
 jest.mock('@/lib/cache/redis-client', () => ({
   getRedisCache: jest.fn().mockReturnValue({
-    keys: jest.fn().mockResolvedValue([]),
+    scanKeys: jest.fn().mockResolvedValue([]),
     get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue(true),
   }),
@@ -91,15 +91,7 @@ describe('GET /api/nostr/verify', () => {
 
     const { getRedisCache } = require('@/lib/cache/redis-client');
     getRedisCache.mockReturnValue({
-      keys: jest
-        .fn()
-        .mockResolvedValue([
-          'nostr:published:bill1',
-          'nostr:published:bill2',
-          'nostr:published:bill3',
-          'nostr:published:vote1',
-          'nostr:published:eo1',
-        ]),
+      scanKeys: jest.fn().mockResolvedValue(['bill1', 'bill2', 'bill3', 'vote1', 'eo1']),
     });
 
     const { GET } = require('@/app/api/nostr/verify/route');
@@ -131,13 +123,7 @@ describe('GET /api/nostr/verify', () => {
 
     const { getRedisCache } = require('@/lib/cache/redis-client');
     getRedisCache.mockReturnValue({
-      keys: jest
-        .fn()
-        .mockResolvedValue([
-          'nostr:published:bill1',
-          'nostr:published:bill2',
-          'nostr:published:bill3',
-        ]),
+      scanKeys: jest.fn().mockResolvedValue(['bill1', 'bill2', 'bill3']),
     });
 
     const { GET } = require('@/app/api/nostr/verify/route');
@@ -164,15 +150,7 @@ describe('GET /api/nostr/verify', () => {
 
     const { getRedisCache } = require('@/lib/cache/redis-client');
     getRedisCache.mockReturnValue({
-      keys: jest
-        .fn()
-        .mockResolvedValue([
-          'nostr:published:bill1',
-          'nostr:published:bill2',
-          'nostr:published:bill3',
-          'nostr:published:bill4',
-          'nostr:published:bill5',
-        ]),
+      scanKeys: jest.fn().mockResolvedValue(['bill1', 'bill2', 'bill3', 'bill4', 'bill5']),
     });
 
     const { GET } = require('@/app/api/nostr/verify/route');
@@ -181,6 +159,58 @@ describe('GET /api/nostr/verify', () => {
 
     expect(data.discrepancies).toHaveLength(1);
     expect(data.discrepancies[0]).toContain('3 event(s)');
+  });
+
+  test('reports discrepancies when relays answer but hold none of the published events', async () => {
+    process.env.NOSTR_PRIVATE_KEY = 'a'.repeat(64);
+
+    const { queryRelays } = require('@/lib/nostr/relay-reader');
+    queryRelays.mockResolvedValue({
+      totalUniqueEvents: 0,
+      relayResults: [
+        { url: 'wss://relay1.example.com', status: 'ok', eventsFound: 0 },
+        { url: 'wss://relay2.example.com', status: 'ok', eventsFound: 0 },
+        { url: 'wss://relay3.example.com', status: 'ok', eventsFound: 0 },
+      ],
+      eventIds: [],
+    });
+
+    const { getRedisCache } = require('@/lib/cache/redis-client');
+    getRedisCache.mockReturnValue({
+      scanKeys: jest.fn().mockResolvedValue(['bill1', 'bill2']),
+    });
+
+    const { GET } = require('@/app/api/nostr/verify/route');
+    const data = await (await GET()).json();
+
+    expect(data.status).toBe('degraded');
+    expect(data.published).toBe(2);
+    expect(data.discrepancies[0]).toContain('2 event(s)');
+  });
+
+  test('reports published as null, not 0, when Redis cannot be read', async () => {
+    process.env.NOSTR_PRIVATE_KEY = 'a'.repeat(64);
+
+    const { queryRelays } = require('@/lib/nostr/relay-reader');
+    queryRelays.mockResolvedValue({
+      totalUniqueEvents: 5,
+      relayResults: [
+        { url: 'wss://relay1.example.com', status: 'ok', eventsFound: 5 },
+        { url: 'wss://relay2.example.com', status: 'ok', eventsFound: 5 },
+        { url: 'wss://relay3.example.com', status: 'ok', eventsFound: 5 },
+      ],
+      eventIds: ['e1', 'e2', 'e3', 'e4', 'e5'],
+    });
+
+    const { getRedisCache } = require('@/lib/cache/redis-client');
+    getRedisCache.mockReturnValue({ scanKeys: jest.fn().mockResolvedValue(null) });
+
+    const { GET } = require('@/app/api/nostr/verify/route');
+    const data = await (await GET()).json();
+
+    expect(data.published).toBeNull();
+    expect(data.status).toBe('degraded');
+    expect(data.discrepancies[0]).toContain('unavailable');
   });
 
   test('includes metadata with endpoint and timestamps', async () => {

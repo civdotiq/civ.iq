@@ -110,8 +110,8 @@ export class RedisCache {
 
     this.redisAvailable = Boolean(
       process.env.REDIS_URL ||
-        process.env.REDIS_HOST ||
-        (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+      process.env.REDIS_HOST ||
+      (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
     );
 
     if (!this.redisAvailable) {
@@ -606,6 +606,75 @@ export class RedisCache {
 
     const entry = this.fallbackCache.get(this.getFallbackKey(key));
     return (entry?.data as Record<string, string> | undefined) ?? {};
+  }
+
+  /**
+   * Every key starting with `prefix`, without the cache's own key prefix
+   * (so results can be passed back to get/delete). Uses SCAN: Upstash
+   * disables KEYS once the store is large. One call walks the whole keyspace
+   * (~12 commands at 110k keys), so keep it off hot paths. Returns null when
+   * Redis could not be read, so callers can tell "unavailable" from "none".
+   */
+  async scanKeys(prefix: string): Promise<string[] | null> {
+    const match = `${this.keyPrefix}${prefix}*`;
+    const strip = (keys: string[]) =>
+      keys.filter(k => k.startsWith(this.keyPrefix)).map(k => k.slice(this.keyPrefix.length));
+
+    if (
+      this.isConnected &&
+      !this.client &&
+      process.env.UPSTASH_REDIS_REST_URL &&
+      process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      try {
+        const found: string[] = [];
+        let cursor = '0';
+        do {
+          const response = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+            body: JSON.stringify(['SCAN', cursor, 'MATCH', match, 'COUNT', '10000']),
+          });
+          if (!response.ok) throw new Error(`REST API failed: ${response.status}`);
+          const data = (await response.json()) as {
+            result?: [string | number, string[]];
+            error?: string;
+          };
+          if (!data.result) throw new Error(data.error ?? 'SCAN returned no result');
+          cursor = String(data.result[0]);
+          found.push(...data.result[1]);
+        } while (cursor !== '0');
+        return strip(found);
+      } catch (restError) {
+        this.recordRestFailure('scanKeys', restError);
+        logger.warn('[Cache] REST API error on scanKeys', {
+          prefix,
+          error: (restError as Error).message,
+        });
+        return null;
+      }
+    }
+
+    if (this.isConnected && this.client) {
+      try {
+        // ioredis applies keyPrefix to key arguments but not to SCAN's MATCH.
+        const found: string[] = [];
+        let cursor = '0';
+        do {
+          const [next, batch] = await this.client.scan(cursor, 'MATCH', match, 'COUNT', 10000);
+          cursor = next;
+          found.push(...batch);
+        } while (cursor !== '0');
+        return strip(found);
+      } catch (error) {
+        logger.warn('[Cache] scanKeys failed', { prefix, error: (error as Error).message });
+        return null;
+      }
+    }
+
+    return strip(
+      Array.from(this.fallbackCache.keys()).filter(k => k.startsWith(match.slice(0, -1)))
+    );
   }
 
   async delete(key: string): Promise<boolean> {

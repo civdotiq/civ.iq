@@ -38,33 +38,23 @@ export async function GET() {
       );
     }
 
-    // Count published events from Redis dedup keys
-    let publishedCount = 0;
-    let publishedEventIds: string[] = [];
-    try {
-      const cache = getRedisCache();
-      const dedupKeys = await cache.keys(`${nostrConfig.dedupPrefix}*`);
-      publishedCount = dedupKeys.length;
-      publishedEventIds = dedupKeys.map(k => k.replace(nostrConfig.dedupPrefix, ''));
-    } catch {
-      // Redis unavailable — continue with relay-only data
-    }
+    // Published records = live dedup keys (one per event, 30-day TTL). The
+    // scan runs alongside the relay query, which takes several seconds.
+    const [dedupKeys, relayResult] = await Promise.all([
+      getRedisCache().scanKeys(nostrConfig.dedupPrefix),
+      queryRelays(keypair.publicKey),
+    ]);
+    const publishedCount = dedupKeys?.length ?? null;
 
-    // Query relays for CIV.IQ-signed events
-    const relayResult = await queryRelays(keypair.publicKey);
-
-    // Find discrepancies: events in Redis but not found on any relay
-    const relayEventIdSet = new Set(relayResult.eventIds);
+    // Dedup keys are civic event IDs and relays return Nostr event hashes, so
+    // the comparison is count-based. Without the Redis count there is nothing
+    // to compare against, which is itself a discrepancy.
     const discrepancies: string[] = [];
-
-    if (relayResult.eventIds.length > 0 && publishedEventIds.length > 0) {
-      // We can only compare d-tags if we have both sources
-      // Redis stores civic event IDs, relays store Nostr event IDs (hashes)
-      // So discrepancy detection is count-based
-      if (publishedCount > relayResult.totalUniqueEvents) {
-        const missing = publishedCount - relayResult.totalUniqueEvents;
-        discrepancies.push(`${missing} event(s) in Redis dedup cache not confirmed on any relay`);
-      }
+    if (publishedCount === null) {
+      discrepancies.push('Redis publishing records unavailable; relay copies not compared');
+    } else if (publishedCount > relayResult.totalUniqueEvents) {
+      const missing = publishedCount - relayResult.totalUniqueEvents;
+      discrepancies.push(`${missing} event(s) in Redis dedup cache not confirmed on any relay`);
     }
 
     // Determine overall health
