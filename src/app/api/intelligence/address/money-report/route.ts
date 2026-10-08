@@ -8,7 +8,7 @@
  *
  * Resolves an address (POST) or ZIP code (GET) to a congressional district
  * and returns a money report card for all representatives in that district.
- * Runs vote-finance, finance-jurisdiction, vote-prediction, and influence-chain
+ * Runs vote-finance, finance-jurisdiction, and influence-chain
  * analyzers in parallel for each representative.
  *
  * POST /api/intelligence/address/money-report  (street/city/state address)
@@ -29,7 +29,6 @@ import { getAllDistrictsForZip } from '@/lib/data/zip-district-mapping-119th';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { analyzeVoteFinanceWithReason } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
 import { analyzeFinanceJurisdictionWithReason } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
-import { analyzeVotePredictionWithReason } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { confidenceScore, mean } from '@/lib/intelligence/statistics/civic-stats';
 import {
@@ -155,7 +154,7 @@ async function analyzeRepresentative(
   chamber: 'House' | 'Senate',
   state: string
 ): Promise<RepAnalysis> {
-  const [vfResult, fjResult, vpResult, icResult] = await Promise.allSettled([
+  const [vfResult, fjResult, icResult] = await Promise.allSettled([
     withTimeout(
       analyzeVoteFinanceWithReason(bioguideId),
       ANALYZER_TIMEOUT_MS,
@@ -165,11 +164,6 @@ async function analyzeRepresentative(
       analyzeFinanceJurisdictionWithReason(bioguideId),
       ANALYZER_TIMEOUT_MS,
       `FinanceJurisdiction:${bioguideId}`
-    ),
-    withTimeout(
-      analyzeVotePredictionWithReason(bioguideId),
-      ANALYZER_TIMEOUT_MS,
-      `VotePrediction:${bioguideId}`
     ),
     withTimeout(
       analyzeInfluenceChains(bioguideId),
@@ -188,8 +182,6 @@ async function analyzeRepresentative(
     bioguideId
   );
   if (fjError) errors.push(fjError);
-  const vpError = errorForRejection(vpResult, 'independence', 'vote-prediction', bioguideId);
-  if (vpError) errors.push(vpError);
   const icError = errorForRejection(icResult, 'influenceChainCount', 'influence-chain', bioguideId);
   if (icError) errors.push(icError);
 
@@ -201,10 +193,6 @@ async function analyzeRepresentative(
     fjResult,
     outcome => outcome.insight?.overlapScore ?? null
   );
-  const independence = toMetricStatus(
-    vpResult,
-    outcome => outcome.insight?.independenceScore?.score ?? null
-  );
 
   const metrics: RepMoneyMetrics = {
     bioguideId,
@@ -214,7 +202,6 @@ async function analyzeRepresentative(
     state,
     voteFinance,
     financeJurisdiction,
-    independence,
     influenceChainCount:
       icResult.status === 'fulfilled' ? (icResult.value?.chains?.length ?? 0) : 0,
   };
@@ -282,17 +269,10 @@ function computeAggregates(reps: RepMoneyMetrics[]): DistrictAggregates {
     .filter((o): o is { name: string; value: number } => o.value !== null)
     .sort((a, b) => b.value - a.value);
 
-  const independence = reps
-    .map(r => ({ name: r.name, value: metricValue(r.independence) }))
-    .filter((o): o is { name: string; value: number } => o.value !== null)
-    .sort((a, b) => b.value - a.value);
-
   return {
     averageCorrelation: correlations.length > 0 ? mean(correlations) : null,
     highestOverlap: overlaps[0] ?? null,
     lowestOverlap: overlaps.length > 0 ? overlaps[overlaps.length - 1]! : null,
-    mostIndependent: independence[0] ?? null,
-    leastIndependent: independence.length > 0 ? independence[independence.length - 1]! : null,
   };
 }
 
@@ -357,10 +337,6 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
       if (overlap !== null) {
         parts.push(`jurisdiction overlap: ${(overlap * 100).toFixed(0)}%`);
       }
-      const independence = metricValue(r.independence);
-      if (independence !== null) {
-        parts.push(`independence score: ${(independence * 100).toFixed(0)}%`);
-      }
       if (r.influenceChainCount > 0) {
         parts.push(`${r.influenceChainCount} influence chains detected`);
       }
@@ -388,10 +364,9 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
     let c = count;
     if (metricValue(r.voteFinance) !== null) c++;
     if (metricValue(r.financeJurisdiction) !== null) c++;
-    if (metricValue(r.independence) !== null) c++;
     return c;
   }, 0);
-  const maxDataPoints = representatives.length * 3;
+  const maxDataPoints = representatives.length * 2;
 
   const confidence = confidenceScore({
     sampleSize: representatives.length,
@@ -410,7 +385,7 @@ async function buildMoneyReport(resolved: ResolvedDistrict): Promise<MoneyReport
     confidence,
     dataAsOf: new Date().toISOString(),
     methodology:
-      'Aggregates vote-finance correlation, finance-jurisdiction overlap, ML independence score, ' +
+      'Aggregates vote-finance correlation, finance-jurisdiction overlap, ' +
       'and influence chain analysis for each representative in the district.',
     disclaimer: DISCLAIMER,
     lastAnalyzedAt: new Date().toISOString(),

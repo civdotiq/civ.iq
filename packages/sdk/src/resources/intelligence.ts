@@ -12,13 +12,6 @@ import type {
 export class IntelligenceResource {
   constructor(private readonly http: HttpClient) {}
 
-  /** ML vote prediction with SHAP explanations. */
-  votePrediction(bioguideId: string): Promise<IntelligenceInsight> {
-    return this.http.get(
-      `/intelligence/representative/${encodeURIComponent(bioguideId)}/vote-prediction`
-    );
-  }
-
   /** Lobbying money → contribution → committee → vote chain. */
   influenceChain(bioguideId: string): Promise<IntelligenceInsight> {
     return this.http.get(

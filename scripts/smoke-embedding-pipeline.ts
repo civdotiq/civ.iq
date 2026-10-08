@@ -12,13 +12,12 @@
  * `ERR_UNSUPPORTED_ESM_URL_SCHEME` and `embedText()` silently returned
  * `null` in production while every test stayed green).
  *
- * The four checks below mirror the four production code paths:
+ * The three checks below mirror the three production code paths:
  *   1. feature-extraction (embedding-classifier, lobbying matcher)
  *   2. zero-shot-classification (zero-shot-classifier — bill sectors)
  *   3. token-classification (civic-ner — entity extraction)
- *   4. onnxruntime-web direct (vote-predictor — custom ONNX model)
  *
- * Run after any change to `@huggingface/transformers`, `onnxruntime-web`,
+ * Run after any change to `@huggingface/transformers`,
  * Node major version, or any of the four pipeline call sites:
  *
  *   npm run smoke:embedding
@@ -117,35 +116,11 @@ async function checkNER(): Promise<void> {
   });
 }
 
-async function checkVotePredictor(): Promise<void> {
-  const t0 = performance.now();
-  // Same import path the production module uses (onnxruntime-web, not -node)
-  const ort = (await import('onnxruntime-web')) as unknown as {
-    InferenceSession: {
-      create(buffer: ArrayBuffer): Promise<{ inputNames: string[]; outputNames: string[] }>;
-    };
-  };
-  const modelPath = resolve('models/vote-prediction.onnx');
-  const buf = readFileSync(modelPath);
-  // Float32Array view → fresh ArrayBuffer copy, satisfies onnxruntime-web's typed-buffer contract
-  const ab = new Uint8Array(buf).buffer;
-  const session = await ort.InferenceSession.create(ab);
-  if (!session.inputNames || session.inputNames.length === 0) {
-    throw new Error('expected non-empty inputNames on the session');
-  }
-  results.push({
-    name: 'onnxruntime-web (vote-predictor)',
-    ok: true,
-    detail: `session loaded with input "${session.inputNames[0]}" in ${Math.round(performance.now() - t0)}ms`,
-  });
-}
-
 async function main(): Promise<void> {
   const checks = [
     { name: 'feature-extraction', fn: checkFeatureExtraction },
     { name: 'zero-shot-classification', fn: checkZeroShot },
     { name: 'token-classification', fn: checkNER },
-    { name: 'onnxruntime-web', fn: checkVotePredictor },
   ];
 
   const overallStart = performance.now();

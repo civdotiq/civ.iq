@@ -238,11 +238,6 @@ jest.mock('@/lib/intelligence/analyzers/finance-jurisdiction-analyzer', () => ({
   analyzeFinanceJurisdictionWithReason: jest.fn(() => Promise.resolve({ insight: null })),
 }));
 
-jest.mock('@/lib/intelligence/analyzers/vote-prediction-analyzer', () => ({
-  analyzeVotePrediction: jest.fn(() => Promise.resolve(null)),
-  analyzeVotePredictionWithReason: jest.fn(() => Promise.resolve({ insight: null })),
-}));
-
 jest.mock('@/lib/intelligence/analyzers/influence-chain-analyzer', () => ({
   analyzeInfluenceChains: jest.fn(() => Promise.resolve({ chains: [] })),
 }));

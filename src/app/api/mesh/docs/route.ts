@@ -84,18 +84,6 @@ export async function GET(): Promise<NextResponse> {
       example: '/api/mesh/influence/path?from=org:lockheed-martin&to=rep:A000360',
     },
     {
-      path: '/api/mesh/influence/counterfactual',
-      method: 'POST',
-      description: 'Counterfactual query — mask donor sectors and re-predict votes',
-      cache: 'none',
-    },
-    {
-      path: '/api/mesh/influence/cascade',
-      method: 'POST',
-      description: 'Cascade simulation — perturb sector funding and measure vote shifts',
-      cache: 'none',
-    },
-    {
       path: '/api/mesh/feed/{entityType}',
       method: 'GET',
       description: 'Nostr civic intelligence feed — signed, verifiable events',

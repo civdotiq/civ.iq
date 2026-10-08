@@ -39,16 +39,8 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Next.js 16 uses Turbopack by default
   turbopack: {},
-  // Force-ship the ONNX model + metadata AND the onnxruntime-web WASM runtime
-  // with intelligence routes. Without this, `require('onnxruntime-web')` inside
-  // vote-predictor.ts is a runtime lookup the tracer may miss, causing a
-  // MODULE_NOT_FOUND on Vercel's read-only fs → 500 on /vote-prediction.
   outputFileTracingIncludes: {
-    '/api/intelligence/**': [
-      './models/**/*',
-      './node_modules/onnxruntime-web/**/*',
-      ONNX_NODE_SHARED_LIB,
-    ],
+    '/api/intelligence/**': [ONNX_NODE_SHARED_LIB],
     // Every other function that imports @huggingface/transformers (via the
     // analyzers) needs the shared library too. `npm run check:onnx-trace`
     // fails validate:all if a new route loads the binding without it.

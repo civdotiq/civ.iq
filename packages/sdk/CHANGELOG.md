@@ -2,6 +2,12 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.3.0] — 2026-10-08
+
+### Removed
+
+- `civiq.intelligence.votePrediction(bioguideId)`. The ML vote-prediction endpoint (`/intelligence/representative/{id}/vote-prediction`) is retired: its donor-model "independence score" was an interpretive verdict, not public data, and it never produced a result in production. The underlying facts (roll-call votes and FEC contributions) remain available through `representatives.votes()` and `representatives.finance()`.
+
 ## [0.2.0] — 2026-08-21
 
 ### Added

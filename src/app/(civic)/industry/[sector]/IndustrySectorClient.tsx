@@ -3,7 +3,6 @@
 import useSWR from 'swr';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { SectorLeaderboard } from '@/components/intelligence/SectorLeaderboard';
-import { CascadeSection } from '@/components/mesh/CascadeSection';
 import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 import type { DataSource } from '@/shared/components/ui/DataProvenance';
 import { CommitteeLink, BillLink, PACLink, LobbyLink } from '@/components/shared/links/EntityLinks';
@@ -421,9 +420,6 @@ export function IndustrySectorClient({ sector, displayName, wikiSummary }: Props
 
       {/* Sector Leaderboard */}
       <SectorLeaderboard initialSector={data?.sector ?? sector} />
-
-      {/* Funding Impact Simulation */}
-      <CascadeSection sector={data?.sector ?? sector} />
     </div>
   );
 }

@@ -17,7 +17,6 @@ import {
 import { VoteShiftTimeline } from './VoteShiftTimeline';
 import { InfluenceChainTable } from './InfluenceChainTable';
 import { StockOverlapTable } from './StockOverlapTable';
-import { VotePredictionCard } from './VotePredictionCard';
 import { InfluenceChainCard } from './InfluenceChainCard';
 import { InfluenceGraphCard } from './InfluenceGraphCard';
 import { CivicBriefCard } from './CivicBriefCard';
@@ -25,7 +24,6 @@ import { InfluenceClusterChart } from './InfluenceClusterChart';
 import { TemporalProximityCard } from './TemporalProximityCard';
 import { AnomalyFlagsDisplay } from './AnomalyFlagsDisplay';
 import { LoadingState } from '@/components/shared/ui/LoadingState';
-import { CounterfactualSection } from '@/components/mesh/CounterfactualSection';
 import type { TemporalProximityInsight } from '@/lib/intelligence/analyzers/temporal-proximity-analyzer';
 import type {
   CivicBriefInsight,
@@ -34,7 +32,6 @@ import type {
   TemporalVoteInsight,
   LobbyingPipelineInsight,
   StockCommitteeInsight,
-  VotePredictionInsight,
   InfluenceChainInsight,
   InfluenceGraphInsight,
 } from '@/lib/intelligence/types';
@@ -109,13 +106,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     SWR_OPTIONS
   );
 
-  const { data: votePredictionData, isLoading: votePredictionLoading } =
-    useSWR<VotePredictionInsight>(
-      `/api/intelligence/representative/${bioguideId}/vote-prediction`,
-      fetcher,
-      SWR_OPTIONS
-    );
-
   const { data: influenceChainData, isLoading: influenceChainLoading } =
     useSWR<InfluenceChainInsight>(
       `/api/intelligence/representative/${bioguideId}/influence-chain`,
@@ -153,7 +143,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
   );
   const lobbying = lobbyingResults.length > 0 ? lobbyingResults[0]! : null;
   const stock = stockData?.flaggedTrades ? stockData : null;
-  const votePrediction = votePredictionData?.independenceScore ? votePredictionData : null;
   const influenceChain = influenceChainData?.chains ? influenceChainData : null;
   const influenceGraph = influenceGraphData?.graphStats ? influenceGraphData : null;
   const civicBrief = civicBriefData?.identity ? civicBriefData : null;
@@ -166,7 +155,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     temporal ||
     lobbying ||
     stock ||
-    votePrediction ||
     influenceChain ||
     influenceGraph ||
     temporalProximity;
@@ -177,7 +165,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     !temporalLoading &&
     !lobbyingLoading &&
     !stockLoading &&
-    !votePredictionLoading &&
     !influenceChainLoading &&
     !influenceGraphLoading &&
     !temporalProximityLoading;
@@ -187,7 +174,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
     !temporalData &&
     !lobbyingData0 &&
     !stockData &&
-    !votePredictionData &&
     !influenceChainData &&
     !influenceGraphData;
 
@@ -226,13 +212,12 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
       temporal,
       influenceChain,
       influenceGraph,
-      votePrediction,
       stock,
       temporalProximity,
     ].filter(Boolean).length + lobbyingResults.length;
-  // Always-rendered sections (What-If, Clusters) add to the count
-  const totalDetailedCount = detailedCount + 2;
-  // Always show details section — What-If and Clusters are always available,
+  // The always-rendered Clusters section adds to the count
+  const totalDetailedCount = detailedCount + 1;
+  // Always show details section — Clusters is always available,
   // plus we show it while data is still loading
   const hasDetailedInsights = civicBrief != null || !allDoneLoading;
 
@@ -340,8 +325,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
             {influenceGraphLoading && !influenceGraph && <InsightPlaceholder tall />}
 
             {/* Vote Prediction */}
-            {votePrediction && <VotePredictionCard insight={votePrediction} />}
-            {votePredictionLoading && !votePrediction && <InsightPlaceholder />}
 
             {/* Stock Trades */}
             {stock && (
@@ -359,9 +342,6 @@ export function IntelligenceTab({ bioguideId, committeeCodes }: IntelligenceTabP
             {/* Timing Patterns */}
             {temporalProximity && <TemporalProximityCard insight={temporalProximity} />}
             {temporalProximityLoading && !temporalProximity && <InsightPlaceholder />}
-
-            {/* What-If Analysis */}
-            <CounterfactualSection bioguideId={bioguideId} />
 
             {/* Influence Clusters */}
             <InfluenceClusterChart highlightBioguideId={bioguideId} />

@@ -139,15 +139,6 @@ describe('Bills resource', () => {
 });
 
 describe('Intelligence resource', () => {
-  it('votePrediction() uses correct path', async () => {
-    const fetchFn = mockFetch({});
-    const civiq = new CivIQ({ fetch: fetchFn });
-    await civiq.intelligence.votePrediction('A000001');
-    expect(fetchFn.mock.calls[0]?.[0]).toContain(
-      '/intelligence/representative/A000001/vote-prediction'
-    );
-  });
-
   it('sectorLeaderboard() passes params', async () => {
     const fetchFn = mockFetch({ sector: 'Energy', legislators: [] });
     const civiq = new CivIQ({ fetch: fetchFn });

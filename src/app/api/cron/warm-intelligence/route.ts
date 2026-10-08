@@ -6,8 +6,8 @@
 /**
  * Warm-Intelligence Cron Job
  *
- * Pre-computes and caches the four heavy intelligence analyzers
- * (finance-jurisdiction, vote-finance, vote-prediction, influence-chain)
+ * Pre-computes and caches the three heavy intelligence analyzers
+ * (finance-jurisdiction, vote-finance, influence-chain)
  * for every current member of Congress so cold-path compute never hits a real user.
  *
  * Then refreshes each rep's civic brief (the /results card summary). It runs
@@ -32,7 +32,6 @@ import { readCronCursor, writeCronCursor } from '@/lib/cron/cursor';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { assembleCivicBrief } from '@/lib/intelligence/analyzers/civic-brief-assembler';
 import { runWithFecPriority } from '@/lib/fec/fec-rate-limiter';
@@ -66,8 +65,7 @@ function getRepConcurrency(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_REP_CONCURRENCY;
 }
 
-type AnalyzerName =
-  'finance_jurisdiction' | 'vote_finance' | 'vote_prediction' | 'influence_chain' | 'civic_brief';
+type AnalyzerName = 'finance_jurisdiction' | 'vote_finance' | 'influence_chain' | 'civic_brief';
 
 interface AnalyzerOutcome {
   name: AnalyzerName;
@@ -85,7 +83,6 @@ interface RepOutcome {
 const ANALYZERS: { name: AnalyzerName; run: (id: string) => Promise<unknown> }[] = [
   { name: 'finance_jurisdiction', run: analyzeFinanceJurisdiction },
   { name: 'vote_finance', run: analyzeVoteFinance },
-  { name: 'vote_prediction', run: analyzeVotePrediction },
   { name: 'influence_chain', run: analyzeInfluenceChains },
 ];
 
@@ -168,7 +165,6 @@ function summarize(outcomes: RepOutcome[]) {
   > = {
     finance_jurisdiction: zero(),
     vote_finance: zero(),
-    vote_prediction: zero(),
     influence_chain: zero(),
     civic_brief: zero(),
   };

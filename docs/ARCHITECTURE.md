@@ -143,7 +143,6 @@ src/
 │   │   │   │   ├── finance-jurisdiction/ # Donor-committee overlap
 │   │   │   │   ├── temporal/             # Voting pattern shifts
 │   │   │   │   ├── stock-trades/         # STOCK Act analysis
-│   │   │   │   ├── vote-prediction/      # ML vote prediction
 │   │   │   │   └── influence-chain/      # Full influence chains
 │   │   │   ├── committee/[committeeId]/  # Committee intelligence
 │   │   │   ├── bill/[billId]/            # Bill intelligence
@@ -182,7 +181,6 @@ src/
 │   │   ├── InsightCard.tsx       # Base insight display
 │   │   ├── ConfidenceBadge.tsx   # Confidence indicator
 │   │   ├── MoneyReportCard.tsx   # Address money report
-│   │   ├── VotePredictionCard.tsx # ML prediction display
 │   │   ├── InfluenceChainCard.tsx # Influence chain visualization
 │   │   ├── SectorLeaderboard.tsx  # Industry rankings
 │   │   ├── PACVoteTable.tsx       # PAC-to-vote tracing

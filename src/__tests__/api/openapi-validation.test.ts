@@ -104,7 +104,6 @@ describe('OpenAPI Specification', () => {
 
     // Intelligence endpoints
     const INTELLIGENCE_PATHS = [
-      '/intelligence/representative/{bioguideId}/vote-prediction',
       '/intelligence/representative/{bioguideId}/influence-chain',
       '/intelligence/representative/{bioguideId}/temporal',
       '/intelligence/representative/{bioguideId}/finance-jurisdiction',
@@ -166,8 +165,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 40 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(40);
+    it('should have 39 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(39);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];

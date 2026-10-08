@@ -58,7 +58,7 @@ export const ANALYZER_TIMEOUT_MS = 55_000;
  * endpoint can surface timings without requiring Vercel log access.
  *
  * Introduced for MR7 (`PROMPT-MR7-analyzer-timeout-rootcause.md`) to root-cause
- * uniform 55000ms timeouts on vote-finance + vote-prediction. Remove when the
+ * uniform 55000ms timeouts on vote-finance. Remove when the
  * root cause is fixed and steady-state production timings are known.
  */
 export interface PhaseEvent {
@@ -304,7 +304,7 @@ export function findCommitteeMapping(committeeName: string): CommitteeMapping | 
  * Classification runs embeddings + zero-shot NLI — hundreds of ms per call
  * on a cold path. Reps overlap heavily on which bills they vote on, so
  * keying by billId alone makes the cache shared across every analyzer
- * (vote-finance, vote-prediction, influence-chain, influence-graph). Bills
+ * (vote-finance, influence-chain, influence-graph). Bills
  * are immutable once introduced, so a 30-day TTL is safe; bump the key
  * version if the classifier itself changes in a breaking way.
  */

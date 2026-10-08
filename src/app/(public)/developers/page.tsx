@@ -54,7 +54,7 @@ const INTEGRATION_CARDS = [
   },
   {
     title: 'MCP Server',
-    detail: '47 tools, 9 domains',
+    detail: '46 tools, 9 domains',
     description: 'Connect AI agents to live civic data via the Model Context Protocol.',
     href: '#mcp',
   },
@@ -88,7 +88,7 @@ const MCP_DOMAINS = [
   { domain: 'Representatives', examples: 'get_representative_profile, search_representatives' },
   { domain: 'Legislation', examples: 'get_bill_details, search_bills, get_voting_history' },
   { domain: 'Finance', examples: 'get_campaign_finance, search_lobbying' },
-  { domain: 'Intelligence', examples: 'analyze_vote_prediction, get_influence_chain' },
+  { domain: 'Intelligence', examples: 'get_influence_chain, analyze_district_comprehensive' },
   { domain: 'Civic', examples: 'get_district_info, lookup_address_district' },
   { domain: 'Environment', examples: 'search_epa_facilities, get_district_environmental_profile' },
   { domain: 'Health', examples: 'search_healthcare_providers, get_district_healthcare_profile' },
@@ -381,7 +381,7 @@ const reps = await civiq.representatives.list({ state: 'MI', chamber: 'house' })
             >
               Model Context Protocol
             </a>
-            . 47 tools across 9 domains, plus resources and prompt templates. For step-by-step
+            . 46 tools across 9 domains, plus resources and prompt templates. For step-by-step
             instructions in Claude, ChatGPT, and Cursor, see the{' '}
             <Link href="/mcp" className="text-[#3ea2d4] underline hover:no-underline">
               setup guide
@@ -478,7 +478,7 @@ const civiq = new CivIQ();
 
 const reps = await civiq.representatives.list({ state: 'MI' });
 const bill = await civiq.legislation.getBill('hr1-119');
-const prediction = await civiq.intelligence.votePrediction('B001230', 'hr1-119');`}
+const chains = await civiq.intelligence.influenceChain('B001230');`}
           </pre>
 
           <div className="flex flex-wrap gap-grid-1 mb-grid-3">

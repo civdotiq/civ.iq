@@ -714,50 +714,6 @@
         }
       }
     },
-    "/intelligence/representative/{bioguideId}/vote-prediction": {
-      "get": {
-        "summary": "Vote prediction analysis",
-        "description": "ML-based vote prediction using XGBoost model with SHAP explanations. Shows independence score, notable deviations from predicted behavior, and key factors driving predictions.",
-        "operationId": "getVotePrediction",
-        "tags": ["Intelligence"],
-        "parameters": [
-          {
-            "name": "bioguideId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Bioguide ID",
-            "example": "P000197"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Vote prediction insight",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntelligenceInsightResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ApiBadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/ApiNotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "500": {
-            "$ref": "#/components/responses/ApiInternalError"
-          }
-        }
-      }
-    },
     "/intelligence/representative/{bioguideId}/influence-chain": {
       "get": {
         "summary": "Influence chain analysis",

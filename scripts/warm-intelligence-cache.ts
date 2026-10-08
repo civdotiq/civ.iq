@@ -17,7 +17,6 @@ dotenv.config({ path: '.env.local' });
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { getRedisCache } from '@/lib/cache/redis-client';
 
@@ -74,12 +73,11 @@ async function warmIntelligenceCache() {
         const bioguideId = rep.bioguideId;
         const idx = i + batchIdx + 1;
 
-        // In incremental mode, skip if all four cache keys already exist
+        // In incremental mode, skip if all three cache keys already exist
         if (isIncremental) {
           const cached = await Promise.all([
             redis.get(`insight:finance_jurisdiction:${bioguideId}`),
             redis.get(`insight:vote_finance:${bioguideId}`),
-            redis.get(`insight:vote_prediction:${bioguideId}`),
             redis.get(`insight:influence_chain:v2:${bioguideId}`),
           ]);
           if (cached.every(c => c !== null)) {
@@ -91,7 +89,6 @@ async function warmIntelligenceCache() {
         const analyzerRuns: { label: string; run: () => Promise<unknown> }[] = [
           { label: 'fj', run: () => analyzeFinanceJurisdiction(bioguideId) },
           { label: 'vf', run: () => analyzeVoteFinance(bioguideId) },
-          { label: 'vp', run: () => analyzeVotePrediction(bioguideId) },
           { label: 'ic', run: () => analyzeInfluenceChains(bioguideId) },
         ];
 

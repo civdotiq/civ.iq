@@ -33,7 +33,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { initializeMcpServer } from '../server';
 
-const EXPECTED_TOOL_COUNT = 47;
+const EXPECTED_TOOL_COUNT = 46;
 const EXPECTED_PROMPT_COUNT = 6;
 const EXPECTED_RESOURCE_TEMPLATE_COUNT = 7;
 const EXPECTED_STATIC_RESOURCE_COUNT = 3;

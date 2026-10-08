@@ -63,12 +63,6 @@ jest.mock('@/lib/intelligence/analyzers/finance-jurisdiction-analyzer', () => ({
     mockAnalyzeFinanceJurisdiction(...args),
 }));
 
-const mockAnalyzeVotePrediction = jest.fn();
-jest.mock('@/lib/intelligence/analyzers/vote-prediction-analyzer', () => ({
-  analyzeVotePrediction: (...args: unknown[]) => mockAnalyzeVotePrediction(...args),
-  analyzeVotePredictionWithReason: (...args: unknown[]) => mockAnalyzeVotePrediction(...args),
-}));
-
 const mockAnalyzeInfluenceChains = jest.fn();
 jest.mock('@/lib/intelligence/analyzers/influence-chain-analyzer', () => ({
   analyzeInfluenceChains: (...args: unknown[]) => mockAnalyzeInfluenceChains(...args),
@@ -151,9 +145,6 @@ function setDefaultMocks(): void {
 
   mockAnalyzeVoteFinance.mockResolvedValue({ insight: { overallCorrelation: 0.45 } });
   mockAnalyzeFinanceJurisdiction.mockResolvedValue({ insight: { overlapScore: 0.6 } });
-  mockAnalyzeVotePrediction.mockResolvedValue({
-    insight: { independenceScore: { score: 0.3 } },
-  });
   mockAnalyzeInfluenceChains.mockResolvedValue({ chains: [1, 2, 3] });
 
   mockGenerateInsightNarrative.mockResolvedValue({
@@ -261,7 +252,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     // Other analyzers should still have produced values
     for (const rep of data.representatives) {
       expect(rep.financeJurisdiction).toEqual({ state: 'ready', value: 0.6 });
-      expect(rep.independence).toEqual({ state: 'ready', value: 0.3 });
       expect(rep.influenceChainCount).toBe(3);
     }
   });
@@ -291,7 +281,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     const reason =
       'Senate roll-call data is temporarily unavailable from Vercel due to upstream CDN blocking by senate.gov.';
     mockAnalyzeVoteFinance.mockResolvedValue({ insight: null, unavailableReason: reason });
-    mockAnalyzeVotePrediction.mockResolvedValue({ insight: null, unavailableReason: reason });
 
     const req = postRequest({ street: '123 Main St', city: 'Springfield', state: 'IL' });
     const response = await POST(req);
@@ -300,7 +289,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     expect(response.status).toBe(200);
     for (const rep of data.representatives) {
       expect(rep.voteFinance).toEqual({ state: 'unavailable', reason });
-      expect(rep.independence).toEqual({ state: 'unavailable', reason });
     }
   });
 
@@ -351,7 +339,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     expect(typeof sample.message).toBe('string');
     expect(typeof sample.timestamp).toBe('string');
     // Non-rejected analyzers must not contribute errors.
-    expect(data.errors.some((e: { metric: string }) => e.metric === 'independence')).toBe(false);
   });
 
   it('reflects mixed fulfilled/rejected analyzers in metrics and errors', async () => {
@@ -378,7 +365,6 @@ describe('POST /api/intelligence/address/money-report', () => {
     const [rep] = data.representatives;
     expect(rep.voteFinance.state).toBe('unavailable');
     expect(rep.financeJurisdiction).toEqual({ state: 'ready', value: 0.6 });
-    expect(rep.independence).toEqual({ state: 'ready', value: 0.3 });
     expect(rep.influenceChainCount).toBe(3);
     expect(data.errors).toHaveLength(1);
     expect(data.errors[0].metric).toBe('voteFinance');

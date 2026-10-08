@@ -31,8 +31,6 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 
 **Intelligence Layer**: Statistical analyzers that cross-reference voting records with campaign finance, lobbying filings, stock trades, and committee jurisdictions to surface patterns of potential influence. Every insight carries a confidence score, methodology note, and correlation-not-causation disclaimer.
 
-**Vote Prediction**: An XGBoost model (trained on historical roll call data, exported to ONNX) predicts how representatives are likely to vote on upcoming legislation, with an independence score measuring deviation from party line.
-
 **Money Report**: Address-based lookup that traces the path from campaign contributions through committee assignments to legislative outcomes for your specific representatives.
 
 **Sector Leaderboard**: Rankings of legislators by industry sector, showing which members receive the most from a given industry relative to their peers.
@@ -53,7 +51,7 @@ Honest coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md). It is the canonica
 | ------------------------------------------------------ | --------------------------------------------------------------- |
 | [OpenAPI spec](public/openapi.json)                    | 39 paths, 29 schemas — generate clients in any language         |
 | [@civiq/sdk](packages/sdk)                             | Zero-dependency TypeScript client (`npm install @civiq/sdk`)    |
-| [MCP server](/api/mcp)                                 | 47 tools for AI assistants (Claude, Cursor, etc.)               |
+| [MCP server](/api/mcp)                                 | 46 tools for AI assistants (Claude, Cursor, etc.)               |
 | [Atom feeds](/api/feed/bills/latest)                   | RSS-compatible feeds for bills, members, districts, committees  |
 | [Embeddable widgets](https://civdotiq.org/open/embeds) | Drop-in HTML for legislator cards, district lookup, bill status |
 | [llms.txt](public/llms.txt)                            | AI-discoverable documentation                                   |
