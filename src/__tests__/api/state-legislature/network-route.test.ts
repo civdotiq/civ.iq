@@ -12,6 +12,7 @@
 import type { NextRequest } from 'next/server';
 import { GET } from '@/app/api/state-legislature/[state]/legislator/[id]/network/route';
 import { openStatesAPI, OpenStatesTimeoutError } from '@/lib/openstates-api';
+import { govCache } from '@/services/cache';
 import type { OpenStatesBill } from '@/lib/openstates-api';
 
 // The global jest.setup mock of next/server drops headers; these tests read
@@ -34,6 +35,13 @@ jest.mock('@/lib/logging/simple-logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
+
+jest.mock('@/services/cache', () => ({
+  govCache: { get: jest.fn(async () => null), set: jest.fn(async () => undefined) },
+}));
+
+const cacheGet = govCache.get as jest.Mock;
+const cacheSet = govCache.set as jest.Mock;
 
 const ROGERS = 'ocd-person/84a80bdb-37d5-4f52-8f55-e116fb97ca58';
 const HURTADO = 'ocd-person/ee9910a2-0b27-46e0-be87-43c800596b41';
@@ -78,7 +86,47 @@ describe('GET /api/state-legislature/[state]/legislator/[id]/network', () => {
       { id: DAHLE, name: 'Megan Dahle', party: 'Republican' },
     ] as Awaited<ReturnType<typeof openStatesAPI.getLegislators>>);
   });
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    cacheGet.mockReset().mockResolvedValue(null);
+    cacheSet.mockClear();
+  });
+
+  it('serves a cached network without calling OpenStates', async () => {
+    const cached = { legislatorId: ROGERS, summary: { totalBillsSponsored: 13 } };
+    cacheGet.mockResolvedValueOnce(cached);
+    const bills = jest.spyOn(openStatesAPI, 'getBillsBySponsor');
+
+    const response = await GET(request, ctx);
+    const body = await response.json();
+
+    expect(cacheGet).toHaveBeenCalledWith(`state-network:v1:CA:${ROGERS}`);
+    expect(body.network).toEqual(cached);
+    expect(bills).not.toHaveBeenCalled();
+    expect(openStatesAPI.getPersonById).not.toHaveBeenCalled();
+  });
+
+  it('keeps a computed network for 24 hours', async () => {
+    jest
+      .spyOn(openStatesAPI, 'getBillsBySponsor')
+      .mockResolvedValue([bill('AB 1', [['Rogers', ROGERS, 'Democratic', true]])]);
+
+    await GET(request, ctx);
+
+    expect(cacheSet).toHaveBeenCalledWith(
+      `state-network:v1:CA:${ROGERS}`,
+      expect.objectContaining({ legislatorId: ROGERS }),
+      expect.objectContaining({ ttl: 24 * 60 * 60 * 1000 })
+    );
+  });
+
+  it('does not pin a zero network built from no bills', async () => {
+    jest.spyOn(openStatesAPI, 'getBillsBySponsor').mockResolvedValue([]);
+
+    await GET(request, ctx);
+
+    expect(cacheSet).not.toHaveBeenCalled();
+  });
 
   it('counts bills whose sponsors are named by surname alone', async () => {
     jest.spyOn(openStatesAPI, 'getBillsBySponsor').mockResolvedValue([

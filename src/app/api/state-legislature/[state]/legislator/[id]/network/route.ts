@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { openStatesAPI, openStatesUnavailableInit } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { govCache } from '@/services/cache';
 import type { CoSponsorshipNetwork } from '@/types/state-legislature';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,13 @@ export const dynamic = 'force-dynamic';
 // 5 pages of a sponsor's bills, and deep pages are the slow ones. Five seconds
 // stay in reserve to answer 503.
 const OPENSTATES_DEADLINE_MS = 25_000;
+
+// A cold network costs up to 5 OpenStates pages (16-22s) and a sponsor's bills
+// change slowly, so a computed network is kept for 24h. Bump the version when
+// the network's shape or matching changes.
+const NETWORK_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const networkCacheKey = (state: string, legislatorId: string) =>
+  `state-network:v1:${state}:${legislatorId}`;
 
 /**
  * Analyze co-sponsorship patterns from bills
@@ -214,6 +222,24 @@ export async function GET(
       legislatorId,
     });
 
+    const cacheKey = networkCacheKey(state.toUpperCase(), legislatorId);
+    const cachedNetwork = await govCache.get<CoSponsorshipNetwork>(cacheKey);
+    if (cachedNetwork) {
+      return NextResponse.json(
+        {
+          success: true,
+          state: state.toUpperCase(),
+          network: cachedNetwork,
+          metadata: { responseTime: Date.now() - startTime },
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          },
+        }
+      );
+    }
+
     // Fetch legislator details to get party affiliation
     const legislator = await openStatesAPI.getPersonById(legislatorId);
     if (!legislator) {
@@ -316,6 +342,14 @@ export async function GET(
       chamber,
       bills
     );
+
+    // Only a network built from bills is kept: a zero result is rare and is the
+    // shape a matching bug produces, so it is recomputed rather than pinned.
+    await govCache.set(cacheKey, network, {
+      ttl: NETWORK_CACHE_TTL_MS,
+      source: 'openstates-network',
+      dataType: 'bills',
+    });
 
     const responseTime = Date.now() - startTime;
 
