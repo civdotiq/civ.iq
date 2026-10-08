@@ -11,12 +11,25 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { openStatesAPI } from '@/lib/openstates-api';
+import { openStatesAPI, openStatesUnavailableInit } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { govCache } from '@/services/cache';
 import type { CoSponsorshipNetwork } from '@/types/state-legislature';
 
 export const dynamic = 'force-dynamic';
+
+// vercel.json gives this route 30s, not the /api default of 20s: it reads up to
+// 5 pages of a sponsor's bills, and deep pages are the slow ones. Five seconds
+// stay in reserve to answer 503.
+const OPENSTATES_DEADLINE_MS = 25_000;
+
+// A cold network costs up to 5 OpenStates pages (16-22s) and a sponsor's bills
+// change slowly, so a computed network is kept for 24h. Bump the version when
+// the network's shape or matching changes.
+const NETWORK_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const networkCacheKey = (state: string, legislatorId: string) =>
+  `state-network:v1:${state}:${legislatorId}`;
 
 /**
  * Analyze co-sponsorship patterns from bills
@@ -93,6 +106,9 @@ function analyzeCoSponsorshipNetwork(
     // Track co-sponsors
     for (const sponsor of sponsors) {
       if (sponsor.id === legislatorId) continue; // Skip self
+      // An unlinked surname ("Xiong", with two in the MN roster) resolves to no
+      // id. Keyed on '', every such sponsor merged into one invented collaborator.
+      if (!sponsor.id) continue;
 
       const existing = collaborators.get(sponsor.id);
       if (existing) {
@@ -206,6 +222,24 @@ export async function GET(
       legislatorId,
     });
 
+    const cacheKey = networkCacheKey(state.toUpperCase(), legislatorId);
+    const cachedNetwork = await govCache.get<CoSponsorshipNetwork>(cacheKey);
+    if (cachedNetwork) {
+      return NextResponse.json(
+        {
+          success: true,
+          state: state.toUpperCase(),
+          network: cachedNetwork,
+          metadata: { responseTime: Date.now() - startTime },
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          },
+        }
+      );
+    }
+
     // Fetch legislator details to get party affiliation
     const legislator = await openStatesAPI.getPersonById(legislatorId);
     if (!legislator) {
@@ -224,29 +258,37 @@ export async function GET(
 
     // Fetch bills and all legislators in parallel
     const [rawBills, allLegislators] = await Promise.all([
-      openStatesAPI.getBillsBySponsor(legislatorId, state.toLowerCase(), undefined, 100),
+      openStatesAPI.getBillsBySponsor(
+        legislatorId,
+        state.toLowerCase(),
+        undefined,
+        100,
+        OPENSTATES_DEADLINE_MS - (Date.now() - startTime)
+      ),
       openStatesAPI.getLegislators(state.toLowerCase()),
     ]);
 
-    // Build name→{id, party} lookup from all state legislators
+    // Name→{id, party} lookup, only for sponsorships OpenStates did not link to a person
     const legislatorLookup = new Map<string, { id: string; party: string }>();
     for (const leg of allLegislators) {
       legislatorLookup.set(leg.name.toLowerCase(), { id: leg.id, party: leg.party });
     }
 
-    // Transform bills, resolving sponsor IDs and parties via name lookup
+    // Sponsorship names are often bare surnames ("Rogers"), which never match a
+    // roster's full names, so every bill read as uninvolved and the network
+    // reported zero activity. The linked person id is the reliable key.
     const bills = rawBills.map(bill => ({
       id: bill.id,
       identifier: bill.identifier,
       title: bill.title,
       sponsorships: (bill.sponsorships || []).map(s => {
-        const match = legislatorLookup.get(s.name.toLowerCase());
+        const match = s.personId ? undefined : legislatorLookup.get(s.name.toLowerCase());
         return {
-          id: match?.id || '',
+          id: s.personId || match?.id || '',
           name: s.name,
           entity_type: s.entity_type,
           primary: s.primary,
-          party: match?.party,
+          party: s.party ?? match?.party,
         };
       }),
     }));
@@ -266,10 +308,7 @@ export async function GET(
             legislatorId,
             legislatorName: legislator.name,
             party: (legislator.party || 'Other') as
-              | 'Democratic'
-              | 'Republican'
-              | 'Independent'
-              | 'Other',
+              'Democratic' | 'Republican' | 'Independent' | 'Other',
             chamber,
             summary: {
               totalBillsSponsored: 0,
@@ -303,6 +342,14 @@ export async function GET(
       chamber,
       bills
     );
+
+    // Only a network built from bills is kept: a zero result is rare and is the
+    // shape a matching bug produces, so it is recomputed rather than pinned.
+    await govCache.set(cacheKey, network, {
+      ttl: NETWORK_CACHE_TTL_MS,
+      source: 'openstates-network',
+      dataType: 'bills',
+    });
 
     const responseTime = Date.now() - startTime;
 
@@ -342,7 +389,7 @@ export async function GET(
         state: (await params).state.toUpperCase(),
         error: error instanceof Error ? error.message : 'Failed to analyze co-sponsorship network',
       },
-      { status: 500 }
+      openStatesUnavailableInit(error) ?? { status: 500 }
     );
   }
 }

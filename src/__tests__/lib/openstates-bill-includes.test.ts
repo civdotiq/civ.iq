@@ -27,10 +27,11 @@ const billFixture = {
   sponsorships: [
     {
       id: 's1',
-      name: 'Primary Sponsor',
+      name: 'Sponsor',
       entity_type: 'person',
       classification: 'primary',
       primary: true,
+      person: { id: 'ocd-person/primary-sponsor', name: 'Primary Sponsor', party: 'Democratic' },
     },
     {
       id: 's2',
@@ -84,6 +85,11 @@ describe('OpenStates bill requests carry the include parameters', () => {
     // question it was asked — the network and the sponsored/cosponsored split
     // are both derived from this list.
     expect(bills[0]?.sponsorships).toHaveLength(2);
+    // `name` can be a bare surname; the linked person id is what callers match on.
+    expect(bills[0]?.sponsorships?.[0]).toMatchObject({
+      personId: 'ocd-person/primary-sponsor',
+      party: 'Democratic',
+    });
   });
 
   it('asks for the full bill on a single-bill lookup, versions included', async () => {
