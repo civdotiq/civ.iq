@@ -1130,12 +1130,19 @@ class OpenStatesAPI {
   /**
    * Get a single bill by ID
    * @param billId - OpenStates bill ID (e.g., 'ocd-bill/...')
+   * @param budgetMs - Time allowed for the read; throws OpenStatesTimeoutError past it
    */
-  async getBillById(billId: string): Promise<OpenStatesBill | null> {
+  async getBillById(
+    billId: string,
+    budgetMs = OPENSTATES_ROUTE_BUDGET_MS
+  ): Promise<OpenStatesBill | null> {
     try {
-      const response = await this.makeRequest<V3Bill>(`/bills/${billId}`, {
-        include: [...BILL_INCLUDES],
-      });
+      const response = await this.makeRequest<V3Bill>(
+        `/bills/${billId}`,
+        { include: [...BILL_INCLUDES] },
+        undefined,
+        Date.now() + budgetMs
+      );
       return this.transformBill(response);
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {

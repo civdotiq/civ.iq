@@ -954,6 +954,8 @@ export class StateLegislatureCoreService {
 
   /**
    * Get single state bill by ID - DIRECT lookup, no HTTP
+   * @returns The bill, or null when OpenStates has no such bill. Any other
+   *   failure throws (OpenStatesTimeoutError past the route budget).
    */
   static async getStateBillById(state: string, billId: string): Promise<StateBill | null> {
     const cacheKey = `core:state-bill:${state}:${billId}`;
@@ -1008,7 +1010,9 @@ export class StateLegislatureCoreService {
         billId,
         responseTime: Date.now() - startTime,
       });
-      return null;
+      // Rethrown, not null: null means the bill does not exist, so an outage
+      // would answer "Bill not found".
+      throw error;
     }
   }
 
