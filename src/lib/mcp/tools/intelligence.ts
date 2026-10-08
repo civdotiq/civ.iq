@@ -5,7 +5,6 @@
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { getCountiesForDistrict } from '@/lib/data/county-district-mapping';
@@ -30,42 +29,6 @@ import { READ_ONLY_EXTERNAL } from '@/lib/mcp/tool-annotations';
 import logger from '@/lib/logging/simple-logger';
 
 export function registerIntelligenceTools(server: McpServer): void {
-  server.registerTool(
-    'analyze_vote_prediction',
-    {
-      title: 'Vote prediction analysis',
-      description:
-        'ML-based vote prediction analysis. Returns independence score (how often a legislator votes against their donor-predicted position), SHAP factors, and notable deviations.',
-      inputSchema: {
-        bioguideId: z.string().describe('Congress bioguide identifier'),
-      },
-      annotations: READ_ONLY_EXTERNAL,
-    },
-    async ({ bioguideId }) => {
-      try {
-        const insight = await analyzeVotePrediction(bioguideId);
-        if (!insight) {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `Vote prediction analysis unavailable for ${bioguideId}. This may be due to insufficient data or the ML model not being loaded.`,
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        return { content: [{ type: 'text' as const, text: JSON.stringify(insight) }] };
-      } catch (error) {
-        return {
-          content: [{ type: 'text' as const, text: `Error: ${(error as Error).message}` }],
-          isError: true,
-        };
-      }
-    }
-  );
-
   server.registerTool(
     'get_influence_chain',
     {

@@ -38,9 +38,6 @@ jest.mock('./InfluenceChainTable', () => ({
 jest.mock('./StockOverlapTable', () => ({
   StockOverlapTable: () => <div data-testid="stock-overlap-table" />,
 }));
-jest.mock('./VotePredictionCard', () => ({
-  VotePredictionCard: () => <div data-testid="vote-prediction-card" />,
-}));
 jest.mock('./InfluenceChainCard', () => ({
   InfluenceChainCard: () => <div data-testid="influence-chain-card" />,
 }));
@@ -49,9 +46,6 @@ jest.mock('./InfluenceClusterChart', () => ({
 }));
 jest.mock('./TemporalProximityCard', () => ({
   TemporalProximityCard: () => <div data-testid="temporal-proximity-card" />,
-}));
-jest.mock('@/components/mesh/CounterfactualSection', () => ({
-  CounterfactualSection: () => <div data-testid="counterfactual-section" />,
 }));
 
 // ── SWR mock ─────────────────────────────────────────────────────────
@@ -201,8 +195,8 @@ describe('IntelligenceTab', () => {
 
     render(<IntelligenceTab bioguideId="T000001" />);
 
-    // 1 detailed insight + 2 always-rendered sections (What-If, Clusters) = 3
-    expect(screen.getByText(/3 sections available/)).toBeInTheDocument();
+    // 1 detailed insight + the always-rendered Clusters section = 2
+    expect(screen.getByText(/2 sections available/)).toBeInTheDocument();
   });
 
   it('shows empty state when no insights load', () => {
@@ -212,15 +206,14 @@ describe('IntelligenceTab', () => {
     expect(screen.getByText('No insights available')).toBeInTheDocument();
   });
 
-  it('always shows details section when civic brief is loaded (What-If and Clusters are always available)', () => {
+  it('always shows details section when civic brief is loaded (Clusters is always available)', () => {
     setSWR('/api/intelligence/representative/T000001/brief', mockCivicBrief);
 
     render(<IntelligenceTab bioguideId="T000001" />);
 
-    // Details section renders because What-If and Clusters are always available
+    // Details section renders because Clusters is always available
     const details = document.querySelector('details');
     expect(details).toBeInTheDocument();
-    expect(screen.getByTestId('counterfactual-section')).toBeInTheDocument();
     expect(screen.getByTestId('influence-cluster-chart')).toBeInTheDocument();
   });
 

@@ -22,7 +22,6 @@ function makeRep(
 ): RepMoneyMetrics {
   const voteFinance = overrides.voteFinance ?? ready(0);
   const financeJurisdiction = overrides.financeJurisdiction ?? ready(0);
-  const independence = overrides.independence ?? ready(0);
   return {
     party: 'D',
     chamber: 'House',
@@ -31,7 +30,6 @@ function makeRep(
     ...overrides,
     voteFinance,
     financeJurisdiction,
-    independence,
   };
 }
 
@@ -54,7 +52,6 @@ function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyRepo
         chamber: 'Senate',
         voteFinance: ready(0.35),
         financeJurisdiction: ready(0.42),
-        independence: ready(0.65),
         influenceChainCount: 12,
       }),
       makeRep({
@@ -63,7 +60,6 @@ function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyRepo
         chamber: 'Senate',
         voteFinance: ready(0.28),
         financeJurisdiction: ready(0.38),
-        independence: ready(0.72),
         influenceChainCount: 8,
       }),
       makeRep({
@@ -72,7 +68,6 @@ function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyRepo
         chamber: 'House',
         voteFinance: ready(0.45),
         financeJurisdiction: ready(0.55),
-        independence: ready(0.58),
         influenceChainCount: 5,
       }),
     ],
@@ -80,8 +75,6 @@ function makeInsight(overrides: Partial<MoneyReportCardInsight> = {}): MoneyRepo
       averageCorrelation: 0.36,
       highestOverlap: { name: 'Nikki Budzinski', value: 0.55 },
       lowestOverlap: { name: 'Tammy Duckworth', value: 0.38 },
-      mostIndependent: { name: 'Tammy Duckworth', value: 0.72 },
-      leastIndependent: { name: 'Nikki Budzinski', value: 0.58 },
     },
     ...overrides,
   };
@@ -110,8 +103,6 @@ describe('MoneyReportCard', () => {
     render(<MoneyReportCard insight={makeInsight()} />);
     expect(screen.getByText('Highest overlap')).toBeInTheDocument();
     expect(screen.getByText('Lowest overlap')).toBeInTheDocument();
-    expect(screen.getByText('Most independent')).toBeInTheDocument();
-    expect(screen.getByText('Least independent')).toBeInTheDocument();
   });
 
   it('renders representative names as links', () => {
@@ -132,7 +123,6 @@ describe('MoneyReportCard', () => {
     render(<MoneyReportCard insight={makeInsight()} />);
     expect(screen.getAllByText('Votes align with top donor industries')).toHaveLength(3);
     expect(screen.getAllByText('Campaign money from industries they oversee')).toHaveLength(3);
-    expect(screen.getAllByText('Votes independently of party + donors')).toHaveLength(3);
   });
 
   it('renders insufficient-data state with tooltip when analyzer surfaces a reason', () => {
@@ -151,17 +141,13 @@ describe('MoneyReportCard', () => {
             state: 'insufficient-data',
             reason: 'No FEC contributions for this cycle',
           },
-          independence: {
-            state: 'insufficient-data',
-            reason: 'Model requires 20 confident predictions; only 3 available',
-          },
         }),
       ],
     });
     render(<MoneyReportCard insight={insight} />);
     expect(screen.getByRole('link', { name: 'New Rep' })).toBeInTheDocument();
     const empties = screen.getAllByText('Not enough data yet');
-    expect(empties.length).toBe(3);
+    expect(empties.length).toBe(2);
     expect(empties[0]).toHaveAttribute(
       'title',
       'No donor industry sector has 10 or more recorded votes. We need at least 10 votes in a sector to show a pattern.'
@@ -176,13 +162,12 @@ describe('MoneyReportCard', () => {
           name: 'Timeout Rep',
           voteFinance: { state: 'unavailable', reason: 'timeout' },
           financeJurisdiction: { state: 'unavailable', reason: 'analyzer-error' },
-          independence: { state: 'unavailable', reason: 'timeout' },
         }),
       ],
     });
     render(<MoneyReportCard insight={insight} />);
     const labels = screen.getAllByText('Unavailable');
-    expect(labels.length).toBe(3);
+    expect(labels.length).toBe(2);
     expect(labels[0]).toHaveClass('text-amber-600');
     expect(labels[0]).toHaveAttribute('title', 'timeout');
   });
@@ -195,13 +180,12 @@ describe('MoneyReportCard', () => {
           name: 'Warming Rep',
           voteFinance: { state: 'computing' },
           financeJurisdiction: { state: 'computing' },
-          independence: { state: 'computing' },
         }),
       ],
     });
     render(<MoneyReportCard insight={insight} />);
     const labels = screen.getAllByText('Warming analysis…');
-    expect(labels.length).toBe(3);
+    expect(labels.length).toBe(2);
   });
 
   it('shows empty state when no reps', () => {
@@ -211,8 +195,6 @@ describe('MoneyReportCard', () => {
         averageCorrelation: null,
         highestOverlap: null,
         lowestOverlap: null,
-        mostIndependent: null,
-        leastIndependent: null,
       },
     });
     render(<MoneyReportCard insight={insight} />);
@@ -235,8 +217,6 @@ describe('MoneyReportCard', () => {
         averageCorrelation: null,
         highestOverlap: null,
         lowestOverlap: null,
-        mostIndependent: null,
-        leastIndependent: null,
       },
     });
     render(<MoneyReportCard insight={insight} />);
@@ -255,7 +235,6 @@ describe('MoneyReportCard', () => {
         party: 'R',
         voteFinance: ready(0.5),
         financeJurisdiction: ready(0.5),
-        independence: ready(0.5),
         influenceChainCount: 3,
       })
     );

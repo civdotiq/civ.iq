@@ -37,7 +37,7 @@ import { confidenceScore } from '../statistics/civic-stats';
  * Redis cache TTL: 7 days. Roll-call votes are immutable once cast, so this
  * insight only changes when *new* votes land — a 6h TTL forced needless
  * recomputation of identical results. Matches the 7d tier used by the other
- * vote-based analyzers (vote-finance, vote-prediction, pac-votes).
+ * vote-based analyzers (vote-finance, pac-votes).
  */
 const CACHE_TTL = 7 * 24 * 60 * 60;
 

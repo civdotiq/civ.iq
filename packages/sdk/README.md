@@ -51,9 +51,6 @@ const reps = await civiq.districts.geocode({
 // What's their voting record?
 const detail = await civiq.representatives.get('P000197');
 
-// How independent are they from donor interests?
-const prediction = await civiq.intelligence.votePrediction('P000197');
-
 // What industries fund legislators on this committee?
 const leaderboard = await civiq.intelligence.sectorLeaderboard('Energy', {
   chamber: 'senate',
@@ -103,7 +100,6 @@ civiq.committees.get(committeeId);
 ### intelligence
 
 ```typescript
-civiq.intelligence.votePrediction(bioguideId)
 civiq.intelligence.influenceChain(bioguideId)
 civiq.intelligence.sectorLeaderboard(sector, { chamber })
 civiq.intelligence.moneyReportByAddress({ street, city, state })

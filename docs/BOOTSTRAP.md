@@ -258,7 +258,6 @@ Be explicit — nothing below is wired by default, and pretending otherwise woul
 
 - **State campaign finance.** FollowTheMoney.org is in maintenance during the OpenSecrets merger. Routes return `dataQuality: 'unavailable'`. See `docs/COVERAGE.md`.
 - **Non-pilot local government.** Only 10 cities are wired via Legistar (`src/lib/local-government/pilot-cities.ts`). Every other city returns `unavailable` with the pilot list included.
-- **ML training.** Trained weights are not checked into the repo. You can use the existing ONNX vote-predictor model (committed under `public/models/`), but retraining requires Python + training data — see `scripts/train-vote-model.py` and `PLAN-ml-deepening.md`.
 - **Production Redis.** A local dev server runs fine with the in-memory cache; Upstash is for production.
 
 ---

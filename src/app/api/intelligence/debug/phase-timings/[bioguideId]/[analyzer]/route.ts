@@ -18,7 +18,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeVoteFinance } from '@/lib/intelligence/analyzers/vote-finance-analyzer';
-import { analyzeVotePrediction } from '@/lib/intelligence/analyzers/vote-prediction-analyzer';
 import { analyzeFinanceJurisdiction } from '@/lib/intelligence/analyzers/finance-jurisdiction-analyzer';
 import { analyzeInfluenceChains } from '@/lib/intelligence/analyzers/influence-chain-analyzer';
 import { getLastPhases } from '@/lib/intelligence/analyzers/shared';
@@ -33,10 +32,6 @@ const ANALYZERS: Record<
   'vote-finance': {
     run: analyzeVoteFinance,
     label: id => `[VoteFinance] ${id}`,
-  },
-  'vote-prediction': {
-    run: analyzeVotePrediction,
-    label: id => `[VotePrediction] ${id}`,
   },
   'finance-jurisdiction': {
     run: analyzeFinanceJurisdiction,

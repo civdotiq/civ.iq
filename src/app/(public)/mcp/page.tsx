@@ -65,7 +65,7 @@ const TOOL_GROUPS = [
   },
   {
     domain: 'Cross-domain analysis',
-    detail: 'Influence chains, vote prediction, industry regulatory landscapes',
+    detail: 'Influence chains, district profiles, industry regulatory landscapes',
   },
 ];
 
@@ -121,7 +121,7 @@ export default function McpSetupPage() {
           <span className="text-sm text-gray-500 uppercase tracking-wider">Server URL</span>
           <pre className="text-lg font-mono mt-1 overflow-x-auto">{MCP_URL}</pre>
           <p className="text-sm text-gray-600 mt-2">
-            Streamable HTTP transport · 47 tools · no authentication required
+            Streamable HTTP transport · 46 tools · no authentication required
           </p>
         </div>
 

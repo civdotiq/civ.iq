@@ -20,7 +20,6 @@ interface CiviqScorecardProps {
   state: string;
   district?: string;
   alignmentScore?: number | null;
-  independenceScore?: number | null;
   topDonorSector?: string | null;
   dataAsOf: string;
 }
@@ -37,7 +36,6 @@ export default function CiviqScorecard({
   state,
   district,
   alignmentScore,
-  independenceScore,
   topDonorSector,
   dataAsOf,
 }: CiviqScorecardProps) {
@@ -61,10 +59,6 @@ export default function CiviqScorecard({
       </div>
 
       <Row label="District Match" value={formatPct(alignmentScore)} bar={alignmentScore} />
-      <Row
-        label="Votes Against Party"
-        value={independenceScore != null ? `${Math.round(independenceScore * 100)}%` : 'N/A'}
-      />
       <Row
         label="Top Donor Industry"
         value={topDonorSector ? displaySector(topDonorSector) : 'N/A'}

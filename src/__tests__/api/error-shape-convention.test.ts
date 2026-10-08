@@ -28,7 +28,6 @@ import path from 'path';
 const APP_API = path.join(process.cwd(), 'src', 'app', 'api');
 
 const CONVERTED_ROUTES = [
-  'intelligence/representative/[bioguideId]/vote-prediction/route.ts',
   'intelligence/representative/[bioguideId]/influence-chain/route.ts',
   'intelligence/representative/[bioguideId]/temporal/route.ts',
   'intelligence/representative/[bioguideId]/finance-jurisdiction/route.ts',

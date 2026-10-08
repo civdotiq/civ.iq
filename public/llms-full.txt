@@ -453,48 +453,7 @@ Education, healthcare, and public health data.
 
 ## Intelligence & Analysis
 
-ML-powered analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
-
-### GET /api/intelligence/vote-prediction/{bioguideId}
-
-XGBoost model predicts votes based on donor profile. Returns independence score — how often the legislator votes against their donor-predicted position.
-
-**Response shape:**
-```json
-{
-  "bioguideId": "string",
-  "independenceScore": {
-    "score": 0.35,
-    "confidentPredictions": 87,
-    "deviations": 30,
-    "peerPercentile": 72
-  },
-  "modelAccuracy": 0.78,
-  "notableDeviations": [
-    {
-      "billId": "string",
-      "billTitle": "string",
-      "predictedVote": "yea",
-      "actualVote": "nay",
-      "yeaProbability": 0.85,
-      "billSectors": ["Health"]
-    }
-  ],
-  "shapFactors": [
-    {
-      "feature": "donor_pct_health",
-      "humanLabel": "Health sector donations",
-      "importance": 0.15,
-      "featureValue": 0.23,
-      "direction": "toward_yea"
-    }
-  ],
-  "narrative": "string",
-  "confidence": 0.82,
-  "methodology": "string",
-  "disclaimer": "string"
-}
-```
+Statistical analysis endpoints. All insights carry: confidence (0-1), dataAsOf, methodology, disclaimer.
 
 ### GET /api/intelligence/representative/{bioguideId}/influence-chain
 

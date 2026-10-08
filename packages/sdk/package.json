@@ -1,6 +1,6 @@
 {
   "name": "@civiq/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript client and `civiq` CLI for the CIV.IQ civic data API — representatives, bills, votes, committees, intelligence analysis",
   "type": "module",
   "main": "./dist/index.js",

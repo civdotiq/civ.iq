@@ -155,9 +155,6 @@ async function fetchIntelligence(
       'finance-jurisdiction': fetchInsightSafe(
         `/api/intelligence/representative/${bioguideId}/finance-jurisdiction`
       ),
-      'vote-prediction': fetchInsightSafe(
-        `/api/intelligence/representative/${bioguideId}/vote-prediction`
-      ),
       'influence-chain': fetchInsightSafe(
         `/api/intelligence/representative/${bioguideId}/influence-chain`
       ),

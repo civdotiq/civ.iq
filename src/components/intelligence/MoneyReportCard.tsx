@@ -126,7 +126,6 @@ function RepCard({ rep }: { rep: RepMoneyMetrics }) {
         status={rep.financeJurisdiction}
         label="Campaign money from industries they oversee"
       />
-      <PercentageBar status={rep.independence} label="Votes independently of party + donors" />
     </div>
   );
 }
@@ -159,11 +158,7 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
     : insight.representatives.slice(0, INITIAL_COUNT);
   const hasMore = insight.representatives.length > INITIAL_COUNT;
 
-  const hasAggregates =
-    insight.aggregates.highestOverlap ||
-    insight.aggregates.lowestOverlap ||
-    insight.aggregates.mostIndependent ||
-    insight.aggregates.leastIndependent;
+  const hasAggregates = insight.aggregates.highestOverlap || insight.aggregates.lowestOverlap;
 
   return (
     <div
@@ -197,11 +192,9 @@ export function MoneyReportCard({ insight, className = '' }: MoneyReportCardProp
 
       {/* Aggregates banner */}
       {hasAggregates && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <AggregateStat label="Highest overlap" entry={insight.aggregates.highestOverlap} />
           <AggregateStat label="Lowest overlap" entry={insight.aggregates.lowestOverlap} />
-          <AggregateStat label="Most independent" entry={insight.aggregates.mostIndependent} />
-          <AggregateStat label="Least independent" entry={insight.aggregates.leastIndependent} />
         </div>
       )}
 

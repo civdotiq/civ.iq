@@ -469,61 +469,6 @@ export interface BillIntelligenceInsight extends InsightBase {
   lobbyingSimilarity?: BillLobbyingSimilarity;
 }
 
-// ── Vote Prediction (ML-based) ──────────────────────────────────────
-
-/**
- * ML-derived vote prediction insight. Uses a trained XGBoost model to
- * predict how a legislator would vote based on their donor profile.
- * The key metric is the independence score: how often the legislator
- * votes against their donor-predicted position.
- */
-export interface VotePredictionInsight extends InsightBase {
-  bioguideId: string;
-  independenceScore: {
-    /** How often the legislator voted against model prediction (0-1). */
-    score: number;
-    /** Number of votes where model was confident. */
-    confidentPredictions: number;
-    /** Number of times legislator defied prediction. */
-    deviations: number;
-    /** Peer comparison — percentile among chamber peers. Null when too few peers have data. */
-    peerPercentile: number | null;
-  };
-  /** Test set accuracy of the model (disclosed for transparency). */
-  modelAccuracy: number;
-  /** How this legislator's independence score compares to peers. Null when too few peers have data. */
-  peerComparison: PeerComparison | null;
-  /** Citizen-readable reason the peer comparison is missing. Set only when peerComparison is null. */
-  peerComparisonUnavailableReason?: string;
-  /** Top 5 bills where legislator deviated from prediction. */
-  notableDeviations: Array<{
-    billId: string;
-    billTitle: string;
-    predictedVote: 'yea' | 'nay';
-    actualVote: 'yea' | 'nay';
-    yeaProbability: number;
-    billSectors: IndustrySector[];
-  }>;
-  /** Top 3 model features driving this legislator's predictions. */
-  topPredictiveFactors: Array<{
-    feature: string;
-    humanLabel: string;
-    importance: number;
-  }>;
-  /** SHAP-based feature importance with directional context for visualization. */
-  shapFactors?: Array<{
-    feature: string;
-    humanLabel: string;
-    /** Mean absolute SHAP value for this feature. */
-    importance: number;
-    /** Actual feature value for this legislator/bill. */
-    featureValue: number;
-    /** Whether this feature pushes toward yea, nay, or is neutral. */
-    direction: 'toward_yea' | 'toward_nay' | 'neutral';
-  }>;
-  narrative: string;
-}
-
 // ── Bill Lobbying Similarity ────────────────────────────────────────
 
 /**
@@ -766,7 +711,6 @@ export interface RepMoneyMetrics {
   state: string;
   voteFinance: MetricStatus;
   financeJurisdiction: MetricStatus;
-  independence: MetricStatus;
   influenceChainCount: number;
 }
 
@@ -774,8 +718,6 @@ export interface DistrictAggregates {
   averageCorrelation: number | null;
   highestOverlap: { name: string; value: number } | null;
   lowestOverlap: { name: string; value: number } | null;
-  mostIndependent: { name: string; value: number } | null;
-  leastIndependent: { name: string; value: number } | null;
 }
 
 export interface MoneyReportCardInsight extends InsightBase {
