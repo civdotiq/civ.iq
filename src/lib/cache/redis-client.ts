@@ -76,6 +76,39 @@ export function clampTtl(key: string, ttlSeconds: number): number {
   return MAX_TTL_SECONDS;
 }
 
+const SCAN_COUNT = 10000;
+
+/** One SCAN round-trip: returns the next cursor and the keys in this batch. */
+type ScanStep = (cursor: string) => Promise<[string, string[]]>;
+
+async function scanAll(step: ScanStep): Promise<string[]> {
+  const found: string[] = [];
+  let cursor = '0';
+  do {
+    const [next, batch] = await step(cursor);
+    cursor = String(next);
+    found.push(...batch);
+  } while (cursor !== '0');
+  return found;
+}
+
+async function scanViaRest(
+  url: string,
+  token: string,
+  cursor: string,
+  match: string
+): Promise<[string, string[]]> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(['SCAN', cursor, 'MATCH', match, 'COUNT', String(SCAN_COUNT)]),
+  });
+  if (!response.ok) throw new Error(`REST API failed: ${response.status}`);
+  const data = (await response.json()) as { result?: [string | number, string[]]; error?: string };
+  if (!data.result) throw new Error(data.error ?? 'SCAN returned no result');
+  return [String(data.result[0]), data.result[1]];
+}
+
 export class RedisCache {
   private client: Redis | null = null;
   private fallbackCache: Map<string, CacheEntry>;
@@ -110,8 +143,8 @@ export class RedisCache {
 
     this.redisAvailable = Boolean(
       process.env.REDIS_URL ||
-        process.env.REDIS_HOST ||
-        (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+      process.env.REDIS_HOST ||
+      (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
     );
 
     if (!this.redisAvailable) {
@@ -606,6 +639,41 @@ export class RedisCache {
 
     const entry = this.fallbackCache.get(this.getFallbackKey(key));
     return (entry?.data as Record<string, string> | undefined) ?? {};
+  }
+
+  /**
+   * Every key starting with `prefix`, without the cache's own key prefix
+   * (so results can be passed back to get/delete). Uses SCAN: Upstash
+   * disables KEYS once the store is large. One call walks the whole keyspace
+   * (~12 commands at 110k keys), so keep it off hot paths. Returns null when
+   * Redis could not be read, so callers can tell "unavailable" from "none".
+   */
+  async scanKeys(prefix: string): Promise<string[] | null> {
+    const match = `${this.keyPrefix}${prefix}*`;
+    const strip = (keys: string[]) =>
+      keys.filter(k => k.startsWith(this.keyPrefix)).map(k => k.slice(this.keyPrefix.length));
+
+    const restUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const restToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const useRest = this.isConnected && !this.client && restUrl && restToken;
+    if (!useRest && !(this.isConnected && this.client)) {
+      const fallbackPrefix = match.slice(0, -1);
+      return strip(Array.from(this.fallbackCache.keys()).filter(k => k.startsWith(fallbackPrefix)));
+    }
+
+    // ioredis applies keyPrefix to key arguments but not to SCAN's MATCH, so
+    // both transports pass the full pattern.
+    const step: ScanStep = useRest
+      ? cursor => scanViaRest(restUrl, restToken, cursor, match)
+      : cursor => this.client!.scan(cursor, 'MATCH', match, 'COUNT', SCAN_COUNT);
+
+    try {
+      return strip(await scanAll(step));
+    } catch (error) {
+      if (useRest) this.recordRestFailure('scanKeys', error);
+      logger.warn('[Cache] scanKeys failed', { prefix, error: (error as Error).message });
+      return null;
+    }
   }
 
   async delete(key: string): Promise<boolean> {
