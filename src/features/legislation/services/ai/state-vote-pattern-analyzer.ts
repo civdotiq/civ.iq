@@ -32,6 +32,14 @@ export class StateVotePatternAnalyzer {
     legislatorParty: string,
     state: string
   ): Promise<StateVotePatternSummary> {
+    // Nothing to summarize: no per-legislator roll calls exist for states yet
+    // (StateLegislatureCoreService.getStateLegislatorVotes). Asking a model to
+    // describe zero votes invites invented prose, so answer plainly and cache
+    // nothing.
+    if (enrichment.totalVotesAnalyzed === 0) {
+      return this.generateUnavailableAnalysis(enrichment, state);
+    }
+
     const cacheKey = `state-vote-patterns:${state}:${enrichment.legislatorId}`;
 
     try {
@@ -72,6 +80,26 @@ export class StateVotePatternAnalyzer {
 
       return this.generateFallbackAnalysis(enrichment, legislatorName, legislatorParty, state);
     }
+  }
+
+  /** The answer when there are no votes to analyze. */
+  private static generateUnavailableAnalysis(
+    enrichment: VoteEnrichmentResult,
+    state: string
+  ): StateVotePatternSummary {
+    return {
+      legislatorId: enrichment.legislatorId,
+      state,
+      summary: 'No per-legislator roll-call data is available for this legislator yet.',
+      topIssueAreas: [],
+      partyAlignmentSummary: 'Party alignment data not available.',
+      keyVoteSummary: 'No votes available to analyze.',
+      attendanceSummary: 'Attendance data not available.',
+      confidence: 0,
+      lastUpdated: new Date().toISOString(),
+      source: 'fallback',
+      plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
+    };
   }
 
   /**

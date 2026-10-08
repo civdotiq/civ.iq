@@ -37,7 +37,6 @@ import type {
   OpenStatesLegislator,
   OpenStatesBill,
   OpenStatesJurisdiction,
-  OpenStatesPersonVote,
 } from '@/lib/openstates-api';
 import { govCache } from '@/services/cache';
 import { dedupe } from '@/services/request-deduplicator';
@@ -680,75 +679,38 @@ export class StateLegislatureCoreService {
   }
 
   /**
+   * Whether per-legislator roll calls exist for state legislatures. False
+   * until a per-legislator source ships; the votes route and the profile
+   * surfaces read it so an empty list is labelled "not available" rather
+   * than "no votes".
+   */
+  static readonly STATE_LEGISLATOR_VOTES_AVAILABLE = false;
+
+  static readonly STATE_LEGISLATOR_VOTES_UNAVAILABLE_REASON =
+    'Per-legislator roll calls are not yet available for state legislatures. OpenStates publishes votes per bill; each bill page lists its roll calls.';
+
+  /**
    * Get voting records for a specific state legislator - DIRECT function call, no HTTP
+   *
+   * NOT AVAILABLE YET. OpenStates v3 has no per-person votes endpoint: its
+   * OpenAPI spec (2021.11.12, checked 2026-10-08) lists 12 paths, and roll
+   * calls are reachable only inside a bill (`/bills/{id}?include=votes`).
+   * This used to ask `/people/{id}/votes`, get a 404 on every call, and serve
+   * that as "0 votes" under a 6-month cache. It now spends no requests. A real
+   * implementation needs OpenStates' session bulk data (vote_people), served
+   * corpus-style like the rosters; flip STATE_LEGISLATOR_VOTES_AVAILABLE with it.
    */
   static async getStateLegislatorVotes(
     state: string,
     legislatorId: string,
     limit = 50
   ): Promise<StatePersonVote[]> {
-    const cacheKey = `core:state-legislator-votes:${state}:${legislatorId}:${limit}`;
-    const startTime = Date.now();
-
-    try {
-      // Check cache first
-      const cached = await govCache.get<StatePersonVote[]>(cacheKey);
-      if (cached) {
-        logger.info('Core service cache hit for state legislator votes', {
-          state,
-          legislatorId,
-          voteCount: cached.length,
-          responseTime: Date.now() - startTime,
-        });
-        return cached;
-      }
-
-      // Fetch votes directly from OpenStates API
-      const osVotes: OpenStatesPersonVote[] = await openStatesAPI.getVotesByPerson(
-        legislatorId,
-        limit
-      );
-
-      // Transform to StatePersonVote format
-      const votes: StatePersonVote[] = osVotes.map(osVote => ({
-        vote_id: osVote.vote_id,
-        identifier: osVote.identifier,
-        motion_text: osVote.motion_text,
-        start_date: osVote.start_date,
-        result: osVote.result === 'pass' ? 'passed' : 'failed',
-        option: osVote.option,
-        bill_identifier: osVote.bill_identifier,
-        bill_title: osVote.bill_title,
-        bill_id: osVote.bill_id,
-        organization_name: osVote.organization_name,
-        chamber: osVote.chamber,
-      }));
-
-      // Cache the transformed votes for 1 hour
-      await govCache.set(cacheKey, votes, {
-        ttl: 3600000, // 60 minutes
-        source: 'openstates-votes',
-        dataType: 'voting',
-      });
-
-      logger.info('Successfully fetched state legislator votes', {
-        state,
-        legislatorId,
-        voteCount: votes.length,
-        limit,
-        responseTime: Date.now() - startTime,
-      });
-
-      return votes;
-    } catch (error) {
-      logger.error('Failed to get state legislator votes', error as Error, {
-        state,
-        legislatorId,
-        limit,
-        responseTime: Date.now() - startTime,
-      });
-      return [];
-    }
+    logger.info('State legislator votes requested; no per-legislator source yet', {
+      state,
+      legislatorId,
+      limit,
+    });
+    return [];
   }
 
   /**

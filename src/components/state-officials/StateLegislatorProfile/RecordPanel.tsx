@@ -33,6 +33,9 @@ interface PersonVote {
 
 interface VotesApiResponse {
   success: boolean;
+  /** False while no per-legislator roll-call source exists for states. */
+  dataAvailable?: boolean;
+  reason?: string;
   votes: PersonVote[];
   total: number;
   statistics: {
@@ -125,7 +128,9 @@ export function RecordPanel({ legislator: l, legislatorIdBase64, stateCode }: Re
               fontFamily: 'var(--font-mono)',
             }}
           >
-            Data unavailable — no floor votes returned for this legislator.
+            {data?.dataAvailable === false
+              ? 'Not yet available — OpenStates publishes state roll calls per bill, not per legislator. Each bill page lists its votes.'
+              : 'Data unavailable — no floor votes returned for this legislator.'}
           </div>
         ) : (
           <>

@@ -7,7 +7,11 @@
  * State Legislator Voting Records API
  *
  * GET /api/state-legislature/[state]/legislator/[id]/votes
- * Returns voting records for a specific state legislator using OpenStates v3 API.
+ * Returns voting records for a specific state legislator.
+ *
+ * No per-legislator source exists yet (see
+ * StateLegislatureCoreService.getStateLegislatorVotes), so the body carries
+ * `dataAvailable: false` and a reason, and nothing caches it for long.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,8 +20,7 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
 
-// Votes are immutable historical records - use long-term caching
-export const revalidate = 15552000; // 6 months in seconds
+export const revalidate = 3600;
 
 export async function GET(
   request: NextRequest,
@@ -107,16 +110,20 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    // Votes never change once cast - use long-term cache headers
+    // Short: the answer changes the day a per-legislator source ships. The old
+    // 6-month max-age had browsers holding "0 votes" long past any fix.
     const headers = new Headers({
-      'Cache-Control': 'public, max-age=15552000, stale-while-revalidate=86400', // 6 months cache
-      'CDN-Cache-Control': 'public, max-age=15552000',
+      'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
       Vary: 'Accept-Encoding',
     });
 
     return NextResponse.json(
       {
         success: true,
+        dataAvailable: StateLegislatureCoreService.STATE_LEGISLATOR_VOTES_AVAILABLE,
+        reason: StateLegislatureCoreService.STATE_LEGISLATOR_VOTES_AVAILABLE
+          ? undefined
+          : StateLegislatureCoreService.STATE_LEGISLATOR_VOTES_UNAVAILABLE_REASON,
         votes: paginatedVotes,
         total: votes.length,
         page,
