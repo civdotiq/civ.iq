@@ -8,6 +8,17 @@ name: Publish @civiq packages
 #   git tag entity-resolution-v0.1.1
 #   git tag sdk-v0.1.1
 # The tag-resolution step below parses `<pkg>-v<version>` back out.
+#
+# Auth: npm Trusted Publishing (OIDC). There is no npm token anywhere. Each
+# package must list this workflow as a trusted publisher on npmjs.com
+# (package → Settings → Trusted Publisher → GitHub Actions: owner `civdotiq`,
+# repository `civ.iq`, workflow `publish-packages.yml`, no environment).
+# npm then mints a short-lived credential from the job's OIDC token
+# (`id-token: write` below) and attaches provenance automatically. Needs
+# npm >= 11.5.1, which Node 22's bundled npm 10 is not — see the upgrade
+# step. Granular tokens with bypass-2FA publish rights are removed by npm in
+# January 2027; the last one we used (NPM_TOKEN secret, created 2026-10-08)
+# expires 2027-01-05 and can be deleted once this flow is proven.
 on:
   push:
     tags:
@@ -49,6 +60,13 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing (OIDC credential exchange) landed in npm 11.5.1.
+      # Pinned exactly so a publish is reproducible; bump deliberately.
+      - name: Upgrade npm for trusted publishing
+        run: |
+          npm install -g npm@12.2.0
+          npm --version
 
       - name: Resolve target package and version
         id: target
@@ -117,11 +135,12 @@ jobs:
             exit 1
           fi
 
-      - name: Publish with provenance
+      # No NODE_AUTH_TOKEN on purpose: with one set, npm uses it instead of
+      # the OIDC exchange (and an empty one fails ENEEDAUTH). An E404 on the
+      # PUT here means npmjs.com has no trusted publisher for this package.
+      - name: Publish with provenance (trusted publishing)
         if: steps.target.outputs.dry_run != 'true'
         working-directory: packages/${{ steps.target.outputs.package }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public
 
       - name: Dry-run publish
