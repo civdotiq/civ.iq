@@ -6,10 +6,10 @@ import {
   UpstreamError,
 } from './errors.js';
 
-// Bump manually when packages/sdk/package.json bumps so the User-Agent
-// signature reflects the installed SDK build. There is no automated drift
-// check yet — the Phase 5.C release checklist includes it as a manual step.
-export const SDK_VERSION = '0.2.0';
+// Bump together with packages/sdk/package.json so the User-Agent signature
+// and `civiq --version` reflect the installed build. __tests__/version.test.ts
+// fails when the two drift (0.3.0 shipped reporting itself as 0.2.0).
+export const SDK_VERSION = '0.3.1';
 export const SDK_USER_AGENT = `@civiq/sdk/${SDK_VERSION}`;
 
 export interface HttpClientOptions {
