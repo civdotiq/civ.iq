@@ -2,6 +2,12 @@
 
 All notable changes to `@civiq/sdk` are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [0.3.1] — 2026-10-08
+
+### Fixed
+
+- `civiq --version` and the default `User-Agent` reported `0.2.0` in the 0.3.0 release; the internal `SDK_VERSION` constant was not bumped with `package.json`. A test now fails when the two drift.
+
 ## [0.3.0] — 2026-10-08
 
 ### Removed
