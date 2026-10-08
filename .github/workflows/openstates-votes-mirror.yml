@@ -1,0 +1,171 @@
+name: Mirror OpenStates Roll Calls
+
+# Per-legislator roll calls for state legislatures. OpenStates v3 has no
+# per-person votes endpoint — roll calls are reachable only inside a bill, and
+# paging every bill of a session (~2,500 for California) against the 1,000/day
+# cap is not a route. The per-session bulk CSV archives carry vote_people.csv
+# (one row per member per roll call, keyed by the same ocd-person id the roster
+# corpus uses) under a public domain dedication.
+#
+# The archives are public S3 objects whose links are listed on a login-gated
+# page, so this job signs in with an OpenStates account to discover them, then
+# builds one ~1 MB artifact per state and publishes the set as assets of a
+# rolling GitHub release (public repo: no token needed to read them). Only the
+# small manifest, data/openstates-votes.meta.json, is committed. See
+# scripts/sync-openstates-votes.ts.
+
+on:
+  schedule:
+    # Monthly, the 12th at 07:20 UTC. Upstream regenerates the archives around
+    # the 7th; a few days' margin keeps a slow upstream month from being missed.
+    - cron: '20 7 12 * *'
+  workflow_dispatch:
+    inputs:
+      jurisdictions:
+        description: >-
+          Comma-separated USPS codes (e.g. VT,CA) to rebuild. Artifacts are one
+          per state, so a partial run is safe: the manifest keeps the others.
+          Leave empty for every state.
+        required: false
+        default: ''
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # California's archive is ~160 MB and the full set is a few GB of download;
+    # the timeout catches a hang, not a long job.
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Build and publish roll-call artifacts
+        env:
+          OPENSTATES_LOGIN: ${{ secrets.OPENSTATES_LOGIN }}
+          OPENSTATES_PASSWORD: ${{ secrets.OPENSTATES_PASSWORD }}
+          OPENSTATES_API_KEY: ${{ secrets.OPENSTATES_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "${{ inputs.jurisdictions }}" ]; then
+            npx tsx scripts/sync-openstates-votes.ts --upload release \
+              --jurisdictions "${{ inputs.jurisdictions }}"
+          else
+            npx tsx scripts/sync-openstates-votes.ts --upload release
+          fi
+
+      # A full run that silently lost most states would publish empty voting
+      # records rather than an error. The floors are far below the real figures
+      # and only trip on a structural failure (a changed archive page, a broken
+      # login). Partial runs skip the floors: they rebuild what they were asked.
+      - name: Sanity-check the manifest before committing
+        if: inputs.jurisdictions == ''
+        run: |
+          node -e '
+            const m = require("./data/openstates-votes.meta.json");
+            const states = Object.keys(m.jurisdictions);
+            const votes = states.reduce((n, s) => n + m.jurisdictions[s].memberVotes, 0);
+            if (states.length < 40) throw new Error(`only ${states.length} states`);
+            if (votes < 1_000_000) throw new Error(`only ${votes} member-votes`);
+            if (!m.baseUrl) throw new Error("manifest has no baseUrl; upload failed");
+            console.log(`${states.length} states, ${votes} member-votes, stale after ${m.staleAfter}`);
+          '
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/openstates-votes.meta.json; then
+            echo "No change to the roll-call manifest"
+          else
+            git add data/openstates-votes.meta.json
+            git commit -m "chore(state-legislature): refresh OpenStates roll-call corpus [skip ci]"
+            # Rebase and retry rather than merge: main-protection enforces
+            # linear history. Only the manifest is touched here.
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
+            git push
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const body = [
+              `The scheduled workflow **${workflow}** failed on run ${context.runId}.`,
+              ``,
+              `Run: ${runUrl}`,
+              `Voting records keep serving from the last published artifacts, so this`,
+              `is not an outage — but they age, and /api/state-legislature/corpus/status`,
+              `reports the roll-call corpus as stale once it passes its staleAfter date.`,
+              ``,
+              `This issue auto-closes on the next successful run.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Another failure — ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['sync-failure', 'backbone-freshness'],
+              });
+            }
+
+      - name: Close stale failure issue on success
+        if: success()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const workflow = '${{ github.workflow }}';
+            const title = `Scheduled workflow failing: ${workflow}`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'sync-failure',
+              per_page: 100,
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Resolved — workflow succeeded on run ${context.runId}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+              });
+            }

@@ -160,7 +160,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
         <div className="bg-gray-50 border-2 border-gray-300 p-grid-4 text-center">
           <p className="text-gray-600">
             {unavailable
-              ? 'Floor votes by legislator are not yet available for state legislatures. OpenStates publishes roll calls per bill; open a bill to see its votes.'
+              ? 'Roll-call records for this legislature are not in the corpus yet. Open a bill to see its votes.'
               : `No voting records found for ${legislatorName}.`}
           </p>
         </div>

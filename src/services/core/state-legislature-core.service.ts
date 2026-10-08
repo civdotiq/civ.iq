@@ -38,6 +38,13 @@ import type {
   OpenStatesBill,
   OpenStatesJurisdiction,
 } from '@/lib/openstates-api';
+import {
+  getMemberVotes,
+  getVotesCorpusStatus,
+  hasVotesCorpus,
+} from '@/lib/data-sources/openstates-votes/load-votes';
+import type { CorpusMemberVote } from '@/lib/data-sources/openstates-votes/votes-corpus';
+import { getChamberName } from '@/types/state-legislature';
 import { govCache } from '@/services/cache';
 import { dedupe } from '@/services/request-deduplicator';
 import logger from '@/lib/logging/simple-logger';
@@ -678,39 +685,72 @@ export class StateLegislatureCoreService {
     }
   }
 
-  /**
-   * Whether per-legislator roll calls exist for state legislatures. False
-   * until a per-legislator source ships; the votes route and the profile
-   * surfaces read it so an empty list is labelled "not available" rather
-   * than "no votes".
-   */
-  static readonly STATE_LEGISLATOR_VOTES_AVAILABLE = false;
-
   static readonly STATE_LEGISLATOR_VOTES_UNAVAILABLE_REASON =
-    'Per-legislator roll calls are not yet available for state legislatures. OpenStates publishes votes per bill; each bill page lists its roll calls.';
+    'Roll-call records for this legislature are not in the corpus yet. OpenStates publishes votes per bill; each bill page lists its roll calls.';
 
   /**
-   * Get voting records for a specific state legislator - DIRECT function call, no HTTP
+   * Whether the roll-call corpus (scripts/sync-openstates-votes.ts) covers a
+   * state. False means "not available", never "no votes".
+   */
+  static async stateVotesAvailable(state: string): Promise<boolean> {
+    return hasVotesCorpus(state);
+  }
+
+  /** When a state's roll-call artifact was built and which sessions it folds in. */
+  static async getStateVotesProvenance(state: string): Promise<{
+    generatedAt: string;
+    sessions: Array<{ identifier: string; name: string }>;
+    unresolvedVotes: number;
+  } | null> {
+    const manifest = await getVotesCorpusStatus();
+    const entry = manifest?.jurisdictions[state.toUpperCase()];
+    if (!entry) return null;
+    return {
+      generatedAt: entry.generatedAt,
+      sessions: entry.sessions.map(s => ({ identifier: s.identifier, name: s.name })),
+      unresolvedVotes: entry.unresolvedVotes,
+    };
+  }
+
+  /**
+   * Get voting records for a specific state legislator - DIRECT read of the
+   * roll-call corpus, no HTTP to OpenStates.
    *
-   * NOT AVAILABLE YET. OpenStates v3 has no per-person votes endpoint: its
-   * OpenAPI spec (2021.11.12, checked 2026-10-08) lists 12 paths, and roll
-   * calls are reachable only inside a bill (`/bills/{id}?include=votes`).
-   * This used to ask `/people/{id}/votes`, get a 404 on every call, and serve
-   * that as "0 votes" under a 6-month cache. It now spends no requests. A real
-   * implementation needs OpenStates' session bulk data (vote_people), served
-   * corpus-style like the rosters; flip STATE_LEGISLATOR_VOTES_AVAILABLE with it.
+   * OpenStates v3 has no per-person votes endpoint (its OpenAPI spec lists 12
+   * paths; roll calls are reachable only inside a bill), so the record comes
+   * from the per-session bulk CSV, mirrored monthly into one artifact per
+   * state. Newest first. Null when the state has no artifact — distinct from
+   * [], which means the member cast no recorded votes.
    */
   static async getStateLegislatorVotes(
     state: string,
     legislatorId: string,
-    limit = 50
-  ): Promise<StatePersonVote[]> {
-    logger.info('State legislator votes requested; no per-legislator source yet', {
-      state,
-      legislatorId,
-      limit,
-    });
-    return [];
+    limit?: number
+  ): Promise<StatePersonVote[] | null> {
+    const member = await getMemberVotes(state, legislatorId);
+    if (!member) return null;
+    const votes = member.map(v => this.toStatePersonVote(v, state));
+    return limit !== undefined ? votes.slice(0, limit) : votes;
+  }
+
+  private static toStatePersonVote(vote: CorpusMemberVote, state: string): StatePersonVote {
+    const { rollCall } = vote;
+    const chamber: StateChamber = rollCall.chamber === 'upper' ? 'upper' : 'lower';
+    return {
+      vote_id: rollCall.id,
+      identifier: rollCall.billIdentifier ?? rollCall.id,
+      motion_text: rollCall.motion,
+      start_date: rollCall.date,
+      result: rollCall.result === 'pass' ? 'passed' : 'failed',
+      option: vote.option,
+      bill_identifier: rollCall.billIdentifier,
+      bill_title: rollCall.billTitle,
+      bill_id: rollCall.billId,
+      organization_name: getChamberName(state, chamber),
+      chamber,
+      floor: rollCall.floor,
+      counts: { yes: rollCall.yes, no: rollCall.no, other: rollCall.other },
+    };
   }
 
   /**

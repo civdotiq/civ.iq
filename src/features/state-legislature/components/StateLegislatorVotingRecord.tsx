@@ -250,7 +250,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
         </div>
         <div className="text-sm text-gray-400">
           {data?.dataAvailable === false
-            ? 'OpenStates publishes state roll calls per bill, not per legislator. Each bill page lists its votes.'
+            ? 'Roll-call records for this legislature are not in the corpus yet. Each bill page lists its votes.'
             : `${legislatorName}'s voting records are not available from OpenStates.`}
         </div>
       </div>
