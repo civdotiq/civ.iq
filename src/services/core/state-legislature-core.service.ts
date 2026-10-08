@@ -37,8 +37,14 @@ import type {
   OpenStatesLegislator,
   OpenStatesBill,
   OpenStatesJurisdiction,
-  OpenStatesPersonVote,
 } from '@/lib/openstates-api';
+import {
+  getMemberVotes,
+  getVotesCorpusStatus,
+  hasVotesCorpus,
+} from '@/lib/data-sources/openstates-votes/load-votes';
+import type { CorpusMemberVote } from '@/lib/data-sources/openstates-votes/votes-corpus';
+import { getChamberName } from '@/types/state-legislature';
 import { govCache } from '@/services/cache';
 import { dedupe } from '@/services/request-deduplicator';
 import logger from '@/lib/logging/simple-logger';
@@ -679,76 +685,72 @@ export class StateLegislatureCoreService {
     }
   }
 
+  static readonly STATE_LEGISLATOR_VOTES_UNAVAILABLE_REASON =
+    'Roll-call records for this legislature are not in the corpus yet. OpenStates publishes votes per bill; each bill page lists its roll calls.';
+
   /**
-   * Get voting records for a specific state legislator - DIRECT function call, no HTTP
+   * Whether the roll-call corpus (scripts/sync-openstates-votes.ts) covers a
+   * state. False means "not available", never "no votes".
+   */
+  static async stateVotesAvailable(state: string): Promise<boolean> {
+    return hasVotesCorpus(state);
+  }
+
+  /** When a state's roll-call artifact was built and which sessions it folds in. */
+  static async getStateVotesProvenance(state: string): Promise<{
+    generatedAt: string;
+    sessions: Array<{ identifier: string; name: string }>;
+    unresolvedVotes: number;
+  } | null> {
+    const manifest = await getVotesCorpusStatus();
+    const entry = manifest?.jurisdictions[state.toUpperCase()];
+    if (!entry) return null;
+    return {
+      generatedAt: entry.generatedAt,
+      sessions: entry.sessions.map(s => ({ identifier: s.identifier, name: s.name })),
+      unresolvedVotes: entry.unresolvedVotes,
+    };
+  }
+
+  /**
+   * Get voting records for a specific state legislator - DIRECT read of the
+   * roll-call corpus, no HTTP to OpenStates.
+   *
+   * OpenStates v3 has no per-person votes endpoint (its OpenAPI spec lists 12
+   * paths; roll calls are reachable only inside a bill), so the record comes
+   * from the per-session bulk CSV, mirrored monthly into one artifact per
+   * state. Newest first. Null when the state has no artifact — distinct from
+   * [], which means the member cast no recorded votes.
    */
   static async getStateLegislatorVotes(
     state: string,
     legislatorId: string,
-    limit = 50
-  ): Promise<StatePersonVote[]> {
-    const cacheKey = `core:state-legislator-votes:${state}:${legislatorId}:${limit}`;
-    const startTime = Date.now();
+    limit?: number
+  ): Promise<StatePersonVote[] | null> {
+    const member = await getMemberVotes(state, legislatorId);
+    if (!member) return null;
+    const votes = member.map(v => this.toStatePersonVote(v, state));
+    return limit !== undefined ? votes.slice(0, limit) : votes;
+  }
 
-    try {
-      // Check cache first
-      const cached = await govCache.get<StatePersonVote[]>(cacheKey);
-      if (cached) {
-        logger.info('Core service cache hit for state legislator votes', {
-          state,
-          legislatorId,
-          voteCount: cached.length,
-          responseTime: Date.now() - startTime,
-        });
-        return cached;
-      }
-
-      // Fetch votes directly from OpenStates API
-      const osVotes: OpenStatesPersonVote[] = await openStatesAPI.getVotesByPerson(
-        legislatorId,
-        limit
-      );
-
-      // Transform to StatePersonVote format
-      const votes: StatePersonVote[] = osVotes.map(osVote => ({
-        vote_id: osVote.vote_id,
-        identifier: osVote.identifier,
-        motion_text: osVote.motion_text,
-        start_date: osVote.start_date,
-        result: osVote.result === 'pass' ? 'passed' : 'failed',
-        option: osVote.option,
-        bill_identifier: osVote.bill_identifier,
-        bill_title: osVote.bill_title,
-        bill_id: osVote.bill_id,
-        organization_name: osVote.organization_name,
-        chamber: osVote.chamber,
-      }));
-
-      // Cache the transformed votes for 1 hour
-      await govCache.set(cacheKey, votes, {
-        ttl: 3600000, // 60 minutes
-        source: 'openstates-votes',
-        dataType: 'voting',
-      });
-
-      logger.info('Successfully fetched state legislator votes', {
-        state,
-        legislatorId,
-        voteCount: votes.length,
-        limit,
-        responseTime: Date.now() - startTime,
-      });
-
-      return votes;
-    } catch (error) {
-      logger.error('Failed to get state legislator votes', error as Error, {
-        state,
-        legislatorId,
-        limit,
-        responseTime: Date.now() - startTime,
-      });
-      return [];
-    }
+  private static toStatePersonVote(vote: CorpusMemberVote, state: string): StatePersonVote {
+    const { rollCall } = vote;
+    const chamber: StateChamber = rollCall.chamber === 'upper' ? 'upper' : 'lower';
+    return {
+      vote_id: rollCall.id,
+      identifier: rollCall.billIdentifier ?? rollCall.id,
+      motion_text: rollCall.motion,
+      start_date: rollCall.date,
+      result: rollCall.result === 'pass' ? 'passed' : 'failed',
+      option: vote.option,
+      bill_identifier: rollCall.billIdentifier,
+      bill_title: rollCall.billTitle,
+      bill_id: rollCall.billId,
+      organization_name: getChamberName(state, chamber),
+      chamber,
+      floor: rollCall.floor,
+      counts: { yes: rollCall.yes, no: rollCall.no, other: rollCall.other },
+    };
   }
 
   /**
@@ -954,6 +956,8 @@ export class StateLegislatureCoreService {
 
   /**
    * Get single state bill by ID - DIRECT lookup, no HTTP
+   * @returns The bill, or null when OpenStates has no such bill. Any other
+   *   failure throws (OpenStatesTimeoutError past the route budget).
    */
   static async getStateBillById(state: string, billId: string): Promise<StateBill | null> {
     const cacheKey = `core:state-bill:${state}:${billId}`;
@@ -1008,7 +1012,9 @@ export class StateLegislatureCoreService {
         billId,
         responseTime: Date.now() - startTime,
       });
-      return null;
+      // Rethrown, not null: null means the bill does not exist, so an outage
+      // would answer "Bill not found".
+      throw error;
     }
   }
 

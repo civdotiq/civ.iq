@@ -330,12 +330,20 @@ export interface StatePersonVote {
   motion_text: string;
   start_date: string;
   result: 'passed' | 'failed';
-  option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+  /** 'other' is what the bulk data records when a chamber names no option. */
+  option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused' | 'other';
   bill_identifier: string | null;
   bill_title: string | null;
   bill_id: string | null;
   organization_name: string;
   chamber: StateChamber;
+  /**
+   * True when enough of the chamber voted for this to be a floor roll call
+   * rather than a committee one. California files both under the chamber.
+   */
+  floor?: boolean;
+  /** Chamber-wide tallies on this roll call. */
+  counts?: { yes: number; no: number; other: number };
 }
 
 /**
@@ -1186,6 +1194,10 @@ export interface VoteEnrichmentResult {
   state: string;
   legislatorId: string;
   totalVotesAnalyzed: number;
+  /** Of those, how many were floor roll calls (key votes are drawn from these). */
+  floorVotesAnalyzed?: number;
+  /** When the roll-call corpus this was computed from was built. */
+  dataAsOf?: string;
   partyBreakdown: PartyBreakdown;
   categoryBreakdown: VoteCategoryBreakdown[];
   keyVotes: EnrichedKeyVote[];

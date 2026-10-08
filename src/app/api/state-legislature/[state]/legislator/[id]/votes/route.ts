@@ -7,7 +7,11 @@
  * State Legislator Voting Records API
  *
  * GET /api/state-legislature/[state]/legislator/[id]/votes
- * Returns voting records for a specific state legislator using OpenStates v3 API.
+ * Returns voting records for a specific state legislator, from the roll-call
+ * corpus (src/lib/data-sources/openstates-votes). A state the corpus does not
+ * cover answers `dataAvailable: false` with a reason rather than "0 votes".
+ *
+ * Query: page, per_page, floor=only.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,8 +20,7 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
 
-// Votes are immutable historical records - use long-term caching
-export const revalidate = 15552000; // 6 months in seconds
+export const revalidate = 3600;
 
 export async function GET(
   request: NextRequest,
@@ -35,8 +38,9 @@ export async function GET(
       Math.max(parseInt(searchParams.get('per_page') || '20', 10) || 20, 1),
       100
     );
-    // Fetch more to calculate statistics (max 100)
-    const limit = Math.min(100, Math.max(perPage * 5, 50));
+    // California files committee roll calls under the chamber; `floor=only`
+    // keeps the ones enough of the chamber voted on to be floor votes.
+    const floorOnly = searchParams.get('floor') === 'only';
 
     // Normalize state identifier (handles both "MI" and "Michigan")
     const stateCode = normalizeStateIdentifier(state);
@@ -56,7 +60,7 @@ export async function GET(
     logger.info('Fetching state legislator voting records', {
       state: stateCode,
       legislatorId,
-      limit,
+      floorOnly,
     });
 
     // Verify the legislator exists first
@@ -76,20 +80,28 @@ export async function GET(
       );
     }
 
-    // Fetch voting records using core service
-    const votes = await StateLegislatureCoreService.getStateLegislatorVotes(
-      stateCode,
-      legislatorId,
-      limit
-    );
+    // Every recorded vote, newest first; null when the state has no artifact.
+    const all = await StateLegislatureCoreService.getStateLegislatorVotes(stateCode, legislatorId);
+    const dataAvailable = all !== null;
+    const votes = (all ?? []).filter(v => !floorOnly || v.floor);
+    const totals = {
+      all: all?.length ?? 0,
+      floor: (all ?? []).filter(v => v.floor).length,
+    };
+    const provenance = dataAvailable
+      ? await StateLegislatureCoreService.getStateVotesProvenance(stateCode)
+      : null;
 
-    // Calculate statistics from all fetched votes
+    // Statistics over the selected set, not just the page
     const statistics = {
       total: votes.length,
       yes: votes.filter(v => v.option === 'yes').length,
       no: votes.filter(v => v.option === 'no').length,
       abstain: votes.filter(v => v.option === 'abstain' || v.option === 'not voting').length,
       absent: votes.filter(v => v.option === 'absent' || v.option === 'excused').length,
+      // A position the chamber recorded without naming it (California has ~100
+      // per member); shown so the buckets add up to the total.
+      other: votes.filter(v => v.option === 'other').length,
     };
 
     // Paginate the results
@@ -107,16 +119,24 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    // Votes never change once cast - use long-term cache headers
+    // The corpus refreshes monthly, so a day is safe; no browser max-age so a
+    // refresh is seen on the next visit rather than after the old 6 months.
     const headers = new Headers({
-      'Cache-Control': 'public, max-age=15552000, stale-while-revalidate=86400', // 6 months cache
-      'CDN-Cache-Control': 'public, max-age=15552000',
+      'Cache-Control': 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400',
       Vary: 'Accept-Encoding',
     });
 
     return NextResponse.json(
       {
         success: true,
+        dataAvailable,
+        reason: dataAvailable
+          ? undefined
+          : StateLegislatureCoreService.STATE_LEGISLATOR_VOTES_UNAVAILABLE_REASON,
+        dataAsOf: provenance?.generatedAt,
+        sessions: provenance?.sessions,
+        totals,
+        floorOnly,
         votes: paginatedVotes,
         total: votes.length,
         page,
