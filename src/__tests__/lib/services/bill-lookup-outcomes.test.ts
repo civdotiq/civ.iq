@@ -5,10 +5,16 @@
  * The bill page 404s on `not_found`. That outcome must come only from
  * Congress.gov's own 404; an outage or odd response is `unavailable`, and
  * neither miss may be cached in place of a real bill.
+ *
+ * A 429 anywhere in the fan-out must also make the whole lookup unavailable:
+ * a bill whose cosponsors call was rate limited would otherwise be cached for
+ * a day with zero cosponsors. And once Congress.gov has said 429, further
+ * lookups skip it until the pause ends.
  */
 
 import { lookupBill } from '@/lib/services/bill.service';
 import { cachedFetch } from '@/lib/cache';
+import { _resetForTesting } from '@/lib/services/congress-rate-limit';
 
 jest.mock('@/lib/cache', () => ({
   cachedFetch: jest.fn(
@@ -26,6 +32,17 @@ jest.mock('@/lib/cache', () => ({
 }));
 
 const mockCacheWrites: boolean[] = [];
+const mockRedis = new Map<string, unknown>();
+
+jest.mock('@/lib/cache/redis-client', () => ({
+  getRedisCache: () => ({
+    get: async (key: string) => mockRedis.get(key) ?? null,
+    set: async (key: string, value: unknown) => {
+      mockRedis.set(key, value);
+      return true;
+    },
+  }),
+}));
 
 function respondWith(status: number, body: unknown = {}) {
   global.fetch = jest.fn(
@@ -42,6 +59,8 @@ function respondWith(status: number, body: unknown = {}) {
 describe('lookupBill outcomes', () => {
   beforeEach(() => {
     mockCacheWrites.length = 0;
+    mockRedis.clear();
+    _resetForTesting();
     (cachedFetch as jest.Mock).mockClear();
   });
 
@@ -67,5 +86,34 @@ describe('lookupBill outcomes', () => {
       throw new Error('ECONNRESET');
     });
     await expect(lookupBill('119-hr-4')).resolves.toEqual({ status: 'unavailable' });
+  });
+
+  it('is unavailable, and not cached, when only a sub-request is rate limited', async () => {
+    global.fetch = jest.fn(
+      async (url: string) =>
+        ({
+          ok: !url.includes('/cosponsors'),
+          status: url.includes('/cosponsors') ? 429 : 200,
+          url,
+          headers: new Headers(url.includes('/cosponsors') ? { 'retry-after': '900' } : {}),
+          json: async () => ({
+            bill: { congress: 119, type: 'HR', number: '4', originChamber: 'House' },
+          }),
+        }) as unknown as Response
+    ) as unknown as typeof fetch;
+
+    await expect(lookupBill('119-hr-4')).resolves.toEqual({ status: 'unavailable' });
+    expect(mockCacheWrites).toEqual([false]);
+  });
+
+  it('skips Congress.gov entirely after a 429 until the pause ends', async () => {
+    respondWith(429);
+    await expect(lookupBill('119-hr-4')).resolves.toEqual({ status: 'unavailable' });
+
+    // A fresh instance learns of the pause from Redis, not its own memory.
+    _resetForTesting();
+    respondWith(200, { bill: { congress: 119, type: 'HR', number: '5' } });
+    await expect(lookupBill('119-hr-5')).resolves.toEqual({ status: 'unavailable' });
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
