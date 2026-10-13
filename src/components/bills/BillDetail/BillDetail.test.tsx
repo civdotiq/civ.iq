@@ -150,9 +150,10 @@ describe('BillDetail drill-down', () => {
       'href',
       `${bill.url}/amendments`
     );
-    expect(screen.getByRole('link', { name: 'S.Con.Res. 12 (118th)' })).toHaveAttribute(
+    // Earlier Congresses have no page here, so they link out to Congress.gov.
+    expect(screen.getByRole('link', { name: 'S.Con.Res. 12 (118th) ↗' })).toHaveAttribute(
       'href',
-      '/bill/118-sconres-12'
+      'https://www.congress.gov/bill/118th-congress/senate-concurrent-resolution/12'
     );
     expect(screen.getByRole('link', { name: 'H.Con.Res. 87' })).toHaveAttribute(
       'href',

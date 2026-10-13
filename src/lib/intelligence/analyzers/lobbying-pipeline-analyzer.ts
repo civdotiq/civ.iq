@@ -17,6 +17,7 @@
  * Pattern: finance-jurisdiction-analyzer.ts
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { cachedFetch } from '@/lib/cache';
@@ -429,7 +430,7 @@ async function fetchAndMatchBills(
     allBills = await cachedFetch(
       'lobbying-pipeline-bills-recent',
       async () => {
-        const url = new URL('https://api.congress.gov/v3/bill');
+        const url = new URL(`https://api.congress.gov/v3/bill/${getCurrentCongressNumber()}`);
         url.searchParams.set('format', 'json');
         url.searchParams.set('limit', '250');
         url.searchParams.set('sort', 'updateDate+desc');

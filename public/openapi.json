@@ -246,10 +246,10 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "minimum": 93,
+              "minimum": 119,
               "default": 119
             },
-            "description": "Congress number (93 or later, up to the current Congress). Defaults to the current Congress."
+            "description": "Congress number. CIV.IQ covers the current Congress only (the 119th); after a new Congress convenes, the previous one stays available. Other values return 400."
           },
           {
             "name": "sort",

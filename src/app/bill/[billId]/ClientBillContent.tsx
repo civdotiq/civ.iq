@@ -5,6 +5,7 @@ import { sanitizeBillHtml } from '@/utils/sanitize';
 import { formatDateOnly } from '@/lib/utils/date-only';
 import Link from 'next/link';
 import { PolicyAreaLink, RepLink } from '@/components/shared/links/EntityLinks';
+import { billLinkTarget } from '@/lib/data/route-slugs';
 import { ShareButton } from '@/components/shared/social/ShareButton';
 import {
   ExternalLink,
@@ -852,43 +853,68 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
                   const billType =
                     billMatch?.[1]?.toLowerCase().replace(/\./g, '').replace(/\s+/g, '') ?? '';
                   const billNum = billMatch?.[2] ?? '';
-                  const billRoute = relatedBill.id
-                    ? `/bill/${relatedBill.id}`
+                  const billSlug = relatedBill.id
+                    ? relatedBill.id
                     : billMatch && billType && billNum
-                      ? `/bill/${bill.congress}-${billType}-${billNum}`
+                      ? `${bill.congress}-${billType}-${billNum}`
                       : null;
+                  // Earlier Congresses have no page here; those link to Congress.gov.
+                  const target = billSlug ? billLinkTarget(billSlug) : null;
 
-                  return (
-                    <Link
-                      key={index}
-                      href={billRoute || '#'}
-                      className={`block p-3 border border-gray-200 transition-colors ${billRoute ? 'hover:bg-civiq-blue/10 hover:border-civiq-blue' : ''}`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-civiq-blue hover:text-civiq-blue">
-                            {relatedBill.number}
-                          </p>
-                          <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                            {relatedBill.title}
-                          </p>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
-                              {relatedBill.relationship === 'identical'
-                                ? 'Identical'
-                                : relatedBill.relationship === 'supersedes'
-                                  ? 'Supersedes'
-                                  : relatedBill.relationship === 'superseded'
-                                    ? 'Superseded by'
-                                    : 'Related'}
+                  const body = (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-civiq-blue hover:text-civiq-blue">
+                          {relatedBill.number}
+                        </p>
+                        <p className="text-xs text-gray-700 mt-1 line-clamp-2">
+                          {relatedBill.title}
+                        </p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
+                            {relatedBill.relationship === 'identical'
+                              ? 'Identical'
+                              : relatedBill.relationship === 'supersedes'
+                                ? 'Supersedes'
+                                : relatedBill.relationship === 'superseded'
+                                  ? 'Superseded by'
+                                  : 'Related'}
+                          </span>
+                          {target && (
+                            <span className="text-xs text-civiq-blue">
+                              {target.external ? 'View on Congress.gov ↗' : 'View bill →'}
                             </span>
-                            {billRoute && (
-                              <span className="text-xs text-civiq-blue">View bill →</span>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
-                    </Link>
+                    </div>
+                  );
+                  const className = `block p-3 border border-gray-200 transition-colors ${target ? 'hover:bg-civiq-blue/10 hover:border-civiq-blue' : ''}`;
+
+                  if (target?.external) {
+                    return (
+                      <a
+                        key={index}
+                        href={target.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={className}
+                      >
+                        {body}
+                      </a>
+                    );
+                  }
+                  if (target) {
+                    return (
+                      <Link key={index} href={target.href} className={className}>
+                        {body}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div key={index} className={className}>
+                      {body}
+                    </div>
                   );
                 })}
               </div>

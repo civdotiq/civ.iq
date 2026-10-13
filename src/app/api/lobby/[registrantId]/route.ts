@@ -5,6 +5,7 @@
  * cross-referenced with FEC (PAC linkage) and enriched with Wikipedia/Wikidata.
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextResponse } from 'next/server';
 import type { RawLDAFiling } from '@/lib/data-sources/senate-lobbying-api';
 import { reportedRawFilingAmount } from '@/lib/data-sources/lda-filing-amounts';
@@ -349,7 +350,7 @@ async function fetchRelatedBills(issueCodes: string[]): Promise<RelatedBill[]> {
 
     const bills: RelatedBill[] = [];
     // Fetch recent bills and match by title keywords derived from policy areas
-    const url = new URL('https://api.congress.gov/v3/bill');
+    const url = new URL(`https://api.congress.gov/v3/bill/${getCurrentCongressNumber()}`);
     url.searchParams.set('format', 'json');
     url.searchParams.set('limit', '100');
     url.searchParams.set('sort', 'updateDate+desc');

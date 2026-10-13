@@ -10,7 +10,11 @@
  * Wraps the same Congress.gov API call as /api/bills/latest.
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import {
+  getCurrentCongressNumber,
+  getServedCongressRange,
+  isServedCongress,
+} from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import { unknownParamWarnings } from '@/lib/api/v1-params';
@@ -22,20 +26,16 @@ export const dynamic = 'force-dynamic';
 /** Query parameters this route understands; anything else is reported in meta.warnings. */
 const SUPPORTED_PARAMS = ['congress', 'sort', 'limit', 'offset'] as const;
 
-/** Congress.gov's /bill collection starts at the 93rd Congress (1973). */
-const MIN_CONGRESS = 93;
-
 /**
  * The Congress to query when the caller doesn't name one.
  *
- * CURRENT_CONGRESS is an operator override; a non-numeric value falls back to
- * the date-derived number rather than reaching Congress.gov as garbage.
+ * CURRENT_CONGRESS is an operator override; a non-numeric or out-of-scope
+ * value falls back to the date-derived number rather than reaching
+ * Congress.gov as garbage.
  */
 function resolveDefaultCongress(): number {
   const override = Number.parseInt(process.env.CURRENT_CONGRESS ?? '', 10);
-  return Number.isInteger(override) && override >= MIN_CONGRESS
-    ? override
-    : getCurrentCongressNumber();
+  return isServedCongress(override) ? override : getCurrentCongressNumber();
 }
 
 interface CongressBill {
@@ -69,12 +69,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     let congress = defaultCongress;
     if (congressParam !== null) {
       const parsed = Number.parseInt(congressParam, 10);
-      if (!Number.isInteger(parsed) || parsed < MIN_CONGRESS || parsed > defaultCongress) {
+      if (!isServedCongress(parsed)) {
+        const { first, last } = getServedCongressRange();
+        const expected = first === last ? `${last}` : `between ${first} and ${last}`;
         return NextResponse.json(
           v1Error(
             400,
             'Invalid congress parameter',
-            `Expected an integer between ${MIN_CONGRESS} and ${defaultCongress}; received '${congressParam}'`
+            `CIV.IQ covers the current Congress only. Expected ${expected}; received '${congressParam}'`
           ),
           { status: 400 }
         );

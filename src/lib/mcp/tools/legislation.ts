@@ -3,7 +3,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import {
+  getCurrentCongressNumber,
+  getServedCongressRange,
+} from '@/lib/data/congressional-constants';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
@@ -29,10 +32,10 @@ export function registerLegislationTools(server: McpServer): void {
         congress: z
           .number()
           .int()
-          .min(1)
-          .max(getCurrentCongressNumber() + 1)
+          .min(getServedCongressRange().first)
+          .max(getServedCongressRange().last)
           .optional()
-          .describe('Congress number (defaults to the current Congress)'),
+          .describe('Congress number (defaults to the current Congress; only it is covered)'),
         type: z
           .enum(['hr', 's', 'hjres', 'sjres', 'hconres', 'sconres', 'hres', 'sres'])
           .optional()
@@ -63,7 +66,7 @@ export function registerLegislationTools(server: McpServer): void {
           };
         }
 
-        const congressNum = congress ?? 119;
+        const congressNum = congress ?? getCurrentCongressNumber();
         const maxResults = Math.min(limit ?? 20, 50);
 
         // Congress.gov /bill/{congress} is a listing endpoint — no keyword search supported.
@@ -212,10 +215,10 @@ export function registerLegislationTools(server: McpServer): void {
         congress: z
           .number()
           .int()
-          .min(1)
-          .max(120)
+          .min(getServedCongressRange().first)
+          .max(getServedCongressRange().last)
           .optional()
-          .describe('Congress number, default 119'),
+          .describe('Congress number (defaults to the current Congress; only it is covered)'),
         session: z
           .number()
           .int()
@@ -237,7 +240,7 @@ export function registerLegislationTools(server: McpServer): void {
           };
         }
 
-        const congressNum = congress ?? 119;
+        const congressNum = congress ?? getCurrentCongressNumber();
         const sessionNum = session ?? (new Date().getFullYear() % 2 === 1 ? 1 : 2);
 
         // Congress.gov v3 uses hyphenated path: house-vote (not house/vote)
