@@ -252,9 +252,8 @@ describe('Intelligence API Routes', () => {
     let GET: typeof import('@/app/api/intelligence/representative/[bioguideId]/stock-trades/route').GET;
 
     beforeAll(async () => {
-      const mod = await import(
-        '@/app/api/intelligence/representative/[bioguideId]/stock-trades/route'
-      );
+      const mod =
+        await import('@/app/api/intelligence/representative/[bioguideId]/stock-trades/route');
       GET = mod.GET;
     });
 
@@ -354,6 +353,16 @@ describe('Intelligence API Routes', () => {
       );
       const data = await res.json();
       expect(data.billId).toBe('119-hr-1');
+    });
+
+    it('returns 404 without analyzing a bill from an earlier Congress', async () => {
+      mockAnalyzeBillIntelligence.mockClear();
+      const res = await GET(
+        mockRequest('http://localhost/') as never,
+        mockParams({ billId: '114-hr-973' })
+      );
+      expect(res.status).toBe(404);
+      expect(mockAnalyzeBillIntelligence).not.toHaveBeenCalled();
     });
   });
 

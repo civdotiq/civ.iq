@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import { analyzeBillIntelligence } from '@/lib/intelligence/analyzers/bill-intelligence-analyzer';
 import type { BillIntelligenceInsight, InsightError } from '@/lib/intelligence/types';
 
@@ -34,6 +35,11 @@ export async function GET(
   const billIdPattern = /^\d{1,3}-[a-z]+-\d+$/;
   if (!billIdPattern.test(billId)) {
     return NextResponse.json({ error: `Invalid bill ID format: ${billId}` }, { status: 400 });
+  }
+
+  // Older Congresses are out of scope — don't serve cached insights or recompute.
+  if (!isServedCongress(Number(billId.split('-')[0]))) {
+    return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
   }
 
   try {
