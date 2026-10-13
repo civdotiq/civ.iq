@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Bill } from '@/types/bill';
+import { billLinkTarget } from '@/lib/data/route-slugs';
 import { CqChip, CqLabel, CqPlainReading } from '@/components/cq';
 import { PanelHeader } from './PanelHeader';
 import { ExpandableList } from './ExpandableList';
@@ -77,6 +78,15 @@ function RelatedRow({
   const otherCongress = slug?.split('-')[0];
   const label =
     otherCongress && otherCongress !== billCongress ? `${number} (${otherCongress}th)` : number;
+  // Out-of-scope Congresses have no page here; those link to Congress.gov.
+  const target = slug ? billLinkTarget(slug) : null;
+  const linkStyle = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 12,
+    color: 'var(--civiq-blue-active)',
+    fontVariantNumeric: 'tabular-nums',
+    textDecoration: 'none',
+  } as const;
   return (
     <div
       role="row"
@@ -89,17 +99,12 @@ function RelatedRow({
         alignItems: 'center',
       }}
     >
-      {slug ? (
-        <Link
-          href={`/bill/${slug}`}
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 12,
-            color: 'var(--civiq-blue-active)',
-            fontVariantNumeric: 'tabular-nums',
-            textDecoration: 'none',
-          }}
-        >
+      {target?.external ? (
+        <a href={target.href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+          {label} ↗
+        </a>
+      ) : target ? (
+        <Link href={target.href} style={linkStyle}>
           {label}
         </Link>
       ) : (

@@ -18,6 +18,7 @@
  * - limit: max 50, default 20
  */
 
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -135,7 +136,7 @@ export async function GET(
       async () => {
         // Fetch a larger batch of recent bills
         const fetchLimit = Math.min(limit * 5, 250);
-        const url = new URL('https://api.congress.gov/v3/bill');
+        const url = new URL(`https://api.congress.gov/v3/bill/${getCurrentCongressNumber()}`);
         url.searchParams.set('format', 'json');
         url.searchParams.set('limit', fetchLimit.toString());
         url.searchParams.set('sort', 'updateDate+desc');

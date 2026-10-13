@@ -11,6 +11,7 @@
 
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Bill, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
@@ -743,6 +744,8 @@ export async function fetchBillFromCongress(billId: string): Promise<Bill | null
  */
 export async function lookupBill(billId: string): Promise<BillLookup> {
   const { type, number, congress } = parseBillNumber(billId);
+  // Bills from Congresses CIV.IQ doesn't cover have no page, API or MCP answer.
+  if (!isServedCongress(Number(congress))) return { status: 'not_found' };
   // v2: standard bill labels (H.R.) and per-action chamber
   // v3: de-duplicated roll calls + vote session
   // v4: committees, related bills, summaries from their sub-endpoints

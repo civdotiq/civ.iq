@@ -8,6 +8,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
+import { isServedCongress } from '@/lib/data/congressional-constants';
 import { getLegislatorInfoMap, getSenatorBioguideLookup } from '@/lib/data/legislator-mappings';
 import { isBioguideId, isLisMemberId } from '@/lib/votes/vote-links';
 import { getRedisCache } from '@/lib/cache/redis-client';
@@ -729,19 +730,17 @@ export function senateRollAbsentFromMenu(
 /**
  * Look up a vote, distinguishing "doesn't exist" from "couldn't load".
  * Misses are never cached. IDs that can't name a roll call (no roll number,
- * a congress that hasn't convened) are not_found without any upstream call.
+ * a Congress outside the served range) are not_found without any upstream call.
  */
 export async function lookupVote(voteId: string, now: Date = new Date()): Promise<VoteLookup> {
   const parsed = parseVoteId(voteId);
   const congress = Number(parsed.congress);
   const roll = Number(parsed.rollNumber);
-  const currentCongress = Math.floor((now.getUTCFullYear() - 1789) / 2) + 1;
   if (
     !/^\d+$/.test(parsed.congress) ||
     !/^\d+$/.test(parsed.rollNumber) ||
     roll < 1 ||
-    congress < 1 ||
-    congress > currentCongress
+    !isServedCongress(congress, now)
   ) {
     return { status: 'not_found' };
   }

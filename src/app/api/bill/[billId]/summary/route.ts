@@ -21,6 +21,8 @@ import { fetchBillText } from '@/features/legislation/services/bill-text-fetcher
 import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
+import { isServedCongress } from '@/lib/data/congressional-constants';
+import { parseBillNumber } from '@/types/bill';
 
 interface _BillSummaryRequest {
   includeFull?: boolean;
@@ -55,6 +57,11 @@ export async function GET(
         },
         { status: 400 }
       );
+    }
+
+    // Older Congresses are out of scope — don't fetch text or spend an LLM call.
+    if (!isServedCongress(Number(parseBillNumber(billId).congress))) {
+      return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
     }
 
     // Parse query parameters

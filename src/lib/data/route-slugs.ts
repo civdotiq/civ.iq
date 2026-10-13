@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { CURRENT_CONGRESS } from './congressional-constants';
+import { CURRENT_CONGRESS, isServedCongress } from './congressional-constants';
 
 const BILL_TYPES = ['hr', 's', 'hres', 'sres', 'hjres', 'sjres', 'hconres', 'sconres'] as const;
 
@@ -25,7 +25,8 @@ export type BillSlugResult =
  * `119-hr-7682`. Exactly that form is treated as canonical. Uppercase
  * variants, shapes without all three segments, and shapes without dashes
  * are recoverable (308 to canonical). Anything else returns
- * `{ kind: 'invalid' }` so the route can 404.
+ * `{ kind: 'invalid' }` so the route can 404. So does any Congress outside
+ * the served range (see isServedCongress): older bills have no page here.
  *
  * Recoverable inputs:
  *   - `119-HR-7682`                    (canonical shape, wrong case)
@@ -41,6 +42,7 @@ export function parseBillSlug(slug: string): BillSlugResult {
     const [, congress, rawType, number] = canonicalMatch;
     const type = rawType!.toLowerCase();
     if (!isBillType(type) || Number(number) <= 0) return { kind: 'invalid' };
+    if (!isServedCongress(Number(congress))) return { kind: 'invalid' };
     const canonical = `${congress}-${type}-${number}`;
     return slug === canonical
       ? { kind: 'canonical', canonical }
@@ -64,7 +66,7 @@ export function parseBillSlug(slug: string): BillSlugResult {
   const typeNumberDashCongress = normalized.match(/^([a-z]+)(\d+)-(\d{1,3})$/);
   if (typeNumberDashCongress) {
     const [, type, number, congress] = typeNumberDashCongress;
-    if (isBillType(type!) && Number(number) > 0) {
+    if (isBillType(type!) && Number(number) > 0 && isServedCongress(Number(congress))) {
       return { kind: 'recoverable', canonical: `${congress}-${type}-${number}` };
     }
     return { kind: 'invalid' };
@@ -83,6 +85,45 @@ export function parseBillSlug(slug: string): BillSlugResult {
   }
 
   return { kind: 'invalid' };
+}
+
+const CONGRESS_GOV_TYPE_SLUGS: Record<BillType, string> = {
+  hr: 'house-bill',
+  s: 'senate-bill',
+  hres: 'house-resolution',
+  sres: 'senate-resolution',
+  hjres: 'house-joint-resolution',
+  sjres: 'senate-joint-resolution',
+  hconres: 'house-concurrent-resolution',
+  sconres: 'senate-concurrent-resolution',
+};
+
+function congressOrdinal(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  const suffix = ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th';
+  return `${n}${suffix}`;
+}
+
+/**
+ * Where a reference to a bill (`<congress>-<type>-<number>`) should link.
+ * Bills in a served Congress get their CIV.IQ page. Bills from other
+ * Congresses (e.g. an earlier version listed under "related bills") have no
+ * page here, so they link out to Congress.gov instead of to a 404.
+ * Null when the id doesn't name a bill.
+ */
+export function billLinkTarget(slug: string): { href: string; external: boolean } | null {
+  const parsed = parseBillSlug(slug);
+  if (parsed.kind !== 'invalid') return { href: `/bill/${parsed.canonical}`, external: false };
+
+  const match = slug.toLowerCase().match(/^(\d{1,3})-([a-z]+)-(\d+)$/);
+  if (!match) return null;
+  const [, congress, type = '', number] = match;
+  if (!isBillType(type) || Number(number) <= 0 || Number(congress) <= 0) return null;
+  return {
+    href: `https://www.congress.gov/bill/${congressOrdinal(Number(congress))}-congress/${CONGRESS_GOV_TYPE_SLUGS[type]}/${number}`,
+    external: true,
+  };
 }
 
 // ── Federal Register document numbers ───────────────────────────────────

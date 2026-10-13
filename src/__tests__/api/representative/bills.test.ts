@@ -5,6 +5,7 @@
 
 import { GET } from '@/app/api/representative/[bioguideId]/bills/route';
 import { createMockRequest } from '../../utils/test-helpers';
+import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
 
 // Mock the cache module
 jest.mock('@/services/cache', () => ({
@@ -124,17 +125,28 @@ describe('/api/representative/[bioguideId]/bills', () => {
     });
 
     it('should filter by congress number', async () => {
+      const current = getCurrentCongressNumber();
       const request = createMockRequest(
-        'http://localhost:3000/api/representative/K000367/bills?congress=118'
+        `http://localhost:3000/api/representative/K000367/bills?congress=${current}`
       );
       const response = await GET(request, { params: Promise.resolve({ bioguideId: 'K000367' }) });
 
       expect(response.status).toBe(200);
       expect(mockGetComprehensiveBills).toHaveBeenCalledWith(
         expect.objectContaining({
-          congress: 118,
+          congress: current,
         })
       );
+    });
+
+    it('should reject Congresses CIV.IQ does not cover', async () => {
+      const request = createMockRequest(
+        'http://localhost:3000/api/representative/K000367/bills?congress=114'
+      );
+      const response = await GET(request, { params: Promise.resolve({ bioguideId: 'K000367' }) });
+
+      expect(response.status).toBe(400);
+      expect(mockGetComprehensiveBills).not.toHaveBeenCalled();
     });
 
     it('should return summary when summary=true', async () => {

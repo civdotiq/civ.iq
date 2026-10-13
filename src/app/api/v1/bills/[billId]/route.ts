@@ -10,7 +10,7 @@
  * Accepts bill IDs like "hr1-119", "s100-119", "hjres5-119".
  */
 
-import { getCurrentCongressNumber } from '@/lib/data/congressional-constants';
+import { getCurrentCongressNumber, isServedCongress } from '@/lib/data/congressional-constants';
 import { NextRequest, NextResponse } from 'next/server';
 import { v1Success, v1Error } from '@/lib/api/v1-response';
 import { parseBillNumber } from '@/types/bill';
@@ -73,6 +73,11 @@ export async function GET(
     }
 
     const { type, number: billNumber, congress } = parsed;
+
+    // Older Congresses are out of scope: no bill page, no API answer.
+    if (!isServedCongress(Number(congress))) {
+      return NextResponse.json(v1Error(404, 'Bill not found'), { status: 404 });
+    }
 
     const response = await fetch(
       `https://api.congress.gov/v3/bill/${congress}/${type}/${billNumber}?format=json`,

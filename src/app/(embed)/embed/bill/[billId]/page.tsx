@@ -11,7 +11,9 @@
  */
 
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { fetchBillFromCongress } from '@/lib/services/bill.service';
+import { parseBillSlug } from '@/lib/data/route-slugs';
 import { EmbedBillCard } from '@/components/embed/EmbedBillCard';
 
 interface PageProps {
@@ -64,6 +66,9 @@ function getStatusIndex(status: string): number {
 export default async function EmbedBillPage({ params, searchParams }: PageProps) {
   const { billId } = await params;
   const { v } = await searchParams;
+
+  // Out-of-scope Congresses and malformed ids have no bill page to embed.
+  if (parseBillSlug(billId).kind === 'invalid') notFound();
 
   const bill = await fetchBillFromCongress(billId);
 
