@@ -44,8 +44,28 @@ export interface Ga4Summary {
   topSources: Array<{ source: string; sessions: number }>;
   /** Referrals from AI assistants — the signal that the agent-native bet is landing. */
   aiReferrals: Array<{ source: string; sessions: number }>;
+  /** Traffic left out of every figure above (see EXCLUDED_BOT_CITIES). */
+  excludedBots: { cities: string[]; activeUsers: number; pageViews: number } | null;
   error: string | null;
 }
+
+/**
+ * Cities whose GA4 traffic is a bot, not people, so every report excludes them.
+ *
+ * Singapore: a headless Chrome on Tencent Cloud that runs the GA tag. In the 28
+ * days to 2026-10-12 it was 16,440 of 18K "active users" with 2 seconds of
+ * total engagement, spiking to 6,933 users on 2026-10-02. Left in, it turns
+ * every human number into a bot number. Its size is still reported separately
+ * so a change in the bot stays visible.
+ */
+export const EXCLUDED_BOT_CITIES = ['Singapore'];
+
+const cityFilter = (cities: string[]) => ({
+  filter: { fieldName: 'city', inListFilter: { values: cities } },
+});
+
+/** GA4 dimensionFilter that drops the bot cities. */
+const HUMANS_ONLY = { notExpression: cityFilter(EXCLUDED_BOT_CITIES) };
 
 /** Hosts that indicate a visit arrived via an AI assistant rather than search. */
 const AI_SOURCE_PATTERNS = [
@@ -146,7 +166,8 @@ function firstMetric(row: ReportRow): number {
 
 /**
  * One batched call covering all three questions: how many people, which pages,
- * where they came from. batchRunReports keeps it to a single round trip.
+ * where they came from (all excluding bot cities), plus the size of what was
+ * excluded. batchRunReports keeps it to a single round trip.
  */
 async function batchRunReports(
   cfg: Ga4Config,
@@ -165,10 +186,12 @@ async function batchRunReports(
       requests: [
         {
           dateRanges,
+          dimensionFilter: HUMANS_ONLY,
           metrics: [{ name: 'activeUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }],
         },
         {
           dateRanges,
+          dimensionFilter: HUMANS_ONLY,
           dimensions: [{ name: 'pagePath' }],
           metrics: [{ name: 'screenPageViews' }],
           orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
@@ -176,10 +199,16 @@ async function batchRunReports(
         },
         {
           dateRanges,
+          dimensionFilter: HUMANS_ONLY,
           dimensions: [{ name: 'sessionSource' }],
           metrics: [{ name: 'sessions' }],
           orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
           limit: 25,
+        },
+        {
+          dateRanges,
+          dimensionFilter: cityFilter(EXCLUDED_BOT_CITIES),
+          metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }],
         },
       ],
     }),
@@ -207,6 +236,7 @@ export async function fetchGa4Summary(windowDays: number): Promise<Ga4Summary> {
     topPages: [],
     topSources: [],
     aiReferrals: [],
+    excludedBots: null,
     error: null,
   };
 
@@ -215,7 +245,7 @@ export async function fetchGa4Summary(windowDays: number): Promise<Ga4Summary> {
 
   try {
     const token = await getAccessToken(cfg);
-    const [totalsReport, pagesReport, sourcesReport] = await batchRunReports(
+    const [totalsReport, pagesReport, sourcesReport, excludedReport] = await batchRunReports(
       cfg,
       token,
       windowDays
@@ -224,6 +254,11 @@ export async function fetchGa4Summary(windowDays: number): Promise<Ga4Summary> {
     const totalsRow = totalsReport?.rows?.[0];
     const metric = (i: number): number => {
       const raw = Number(totalsRow?.metricValues?.[i]?.value);
+      return Number.isFinite(raw) ? raw : 0;
+    };
+    const excludedRow = excludedReport?.rows?.[0];
+    const excludedMetric = (i: number): number => {
+      const raw = Number(excludedRow?.metricValues?.[i]?.value);
       return Number.isFinite(raw) ? raw : 0;
     };
 
@@ -244,6 +279,11 @@ export async function fetchGa4Summary(windowDays: number): Promise<Ga4Summary> {
       })),
       topSources: topSources.slice(0, 10),
       aiReferrals: topSources.filter(s => isAiSource(s.source)),
+      excludedBots: {
+        cities: EXCLUDED_BOT_CITIES,
+        activeUsers: excludedMetric(0),
+        pageViews: excludedMetric(1),
+      },
       error: null,
     };
   } catch (err) {

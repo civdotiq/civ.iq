@@ -381,6 +381,13 @@ function printReport(report: StatsReport): void {
     const t = report.ga4.totals;
     if (!t) line('  no data returned for this window');
     else line(`  ${t.activeUsers} users, ${t.sessions} sessions, ${t.pageViews} pageviews`);
+    const bots = report.ga4.excludedBots;
+    if (bots) {
+      line(
+        `  Excluded as bot (city: ${bots.cities.join(', ')}): ` +
+          `${bots.activeUsers} users, ${bots.pageViews} pageviews`
+      );
+    }
 
     if (report.ga4.topPages.length > 0) {
       line('  Top pages:');
