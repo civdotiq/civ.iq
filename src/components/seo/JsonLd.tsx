@@ -470,6 +470,8 @@ export function LegislativeEventSchema({
 
 interface LegislationSchemaProps {
   name: string;
+  /** Popular or short title, e.g. "One Big Beautiful Bill Act" */
+  alternateName?: string;
   legislationIdentifier: string;
   description?: string;
   datePublished?: string;
@@ -492,6 +494,7 @@ interface LegislationSchemaProps {
  */
 export function LegislationSchema({
   name,
+  alternateName,
   legislationIdentifier,
   description,
   datePublished,
@@ -517,6 +520,7 @@ export function LegislationSchema({
   if (mainEntityOfPage) {
     schema.mainEntityOfPage = { '@type': 'WebPage', '@id': mainEntityOfPage };
   }
+  if (alternateName) schema.alternateName = alternateName;
   if (description) schema.description = description;
   if (datePublished) schema.datePublished = datePublished;
   if (legislationDate) schema.legislationDate = legislationDate;

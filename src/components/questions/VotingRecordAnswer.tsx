@@ -79,9 +79,26 @@ interface BillsData {
   cosponsoredCapped?: boolean;
 }
 
+/** The member's full voting-record page, which owns "[name] voting record" searches. */
+interface FullRecordLink {
+  href: string;
+  name: string;
+}
+
 interface VotingRecordAnswerProps {
   votes: VotesData | null;
   bills: BillsData | null;
+  fullRecord: FullRecordLink;
+}
+
+function FullRecordCta({ fullRecord }: { fullRecord: FullRecordLink }) {
+  return (
+    <p className="type-sm mt-3">
+      <Link href={fullRecord.href} className="text-[#3ea2d4] hover:underline">
+        See {fullRecord.name}&apos;s full voting record →
+      </Link>
+    </p>
+  );
 }
 
 const POSITION_STYLES: Record<string, string> = {
@@ -91,7 +108,13 @@ const POSITION_STYLES: Record<string, string> = {
   'Not Voting': 'text-gray-400',
 };
 
-function RecentVotesPod({ votes }: { votes: VotesData | null }) {
+function RecentVotesPod({
+  votes,
+  fullRecord,
+}: {
+  votes: VotesData | null;
+  fullRecord: FullRecordLink;
+}) {
   if (!votes?.votes?.length) {
     return (
       <div className="border-2 border-black bg-white p-4 sm:p-6 lg:col-span-2">
@@ -99,6 +122,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
         <p className="type-sm text-gray-500">
           Voting record data is not yet available for this representative.
         </p>
+        <FullRecordCta fullRecord={fullRecord} />
       </div>
     );
   }
@@ -168,6 +192,7 @@ function RecentVotesPod({ votes }: { votes: VotesData | null }) {
           Showing 10 of the last {votes.totalResults.toLocaleString()} recorded votes.
         </p>
       )}
+      <FullRecordCta fullRecord={fullRecord} />
     </div>
   );
 }
@@ -299,10 +324,10 @@ function SourcesPod() {
   );
 }
 
-export function VotingRecordAnswer({ votes, bills }: VotingRecordAnswerProps) {
+export function VotingRecordAnswer({ votes, bills, fullRecord }: VotingRecordAnswerProps) {
   return (
     <>
-      <RecentVotesPod votes={votes} />
+      <RecentVotesPod votes={votes} fullRecord={fullRecord} />
       <LegislationPod bills={bills} />
       <VotingStatsPod votes={votes} />
       <SourcesPod />

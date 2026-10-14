@@ -7,7 +7,7 @@ import { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Bill } from '@/types/bill';
-import { getBillDisplayStatus } from '@/types/bill';
+import { getBillCommonTitle, getBillDisplayStatus } from '@/types/bill';
 import { lookupBill, type BillLookup } from '@/lib/services/bill.service';
 import { parseBillSlug } from '@/lib/data/route-slugs';
 import { ClientBillContent } from './ClientBillContent';
@@ -65,11 +65,19 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
   const lookup = await getBillLookup(parsed.canonical);
   const bill = lookup.status === 'found' ? lookup.bill : null;
 
+  // Lead with the name people search for ("One Big Beautiful Bill Act (H.R. 1)");
+  // bills with only an official title keep the number first.
+  const commonTitle = bill ? getBillCommonTitle(bill) : undefined;
   const title = bill
-    ? `${bill.number}: ${shortenAtWord(bill.shortTitle || bill.title, 70)}`
+    ? commonTitle
+      ? `${shortenAtWord(commonTitle, 60)} (${bill.number})`
+      : `${bill.number}: ${shortenAtWord(bill.title, 70)}`
     : `Bill ${parsed.canonical}`;
+  const officialTitle = bill?.title.replace(/\.+$/, '');
   const description = bill
-    ? `Learn about ${bill.number} - ${bill.title}. Current status: ${getBillDisplayStatus(bill.status.current)}. Sponsored by ${bill.sponsor.representative.name}.`
+    ? `Learn about ${commonTitle ? `${commonTitle} (${bill.number})` : bill.number}` +
+      `${officialTitle && officialTitle !== commonTitle ? ` - ${officialTitle}` : ''}. ` +
+      `Current status: ${getBillDisplayStatus(bill.status.current)}. Sponsored by ${bill.sponsor.representative.name}.`
     : `Information about bill ${billId}`;
 
   return {
@@ -113,6 +121,7 @@ function BillContent({
       {bill && (
         <LegislationSchema
           name={`${bill.number}: ${bill.title}`}
+          alternateName={getBillCommonTitle(bill)}
           legislationIdentifier={bill.number}
           description={bill.summary?.text
             .replace(/<[^>]+>/g, ' ')

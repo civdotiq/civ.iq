@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { CqButton, CqChip, CqLabel, CqPortrait } from '@/components/cq';
 import { partyKey, partyLong } from '@/components/officials/ProfileHybrid/types';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { commonName } from '@/features/representatives/utils/common-name';
 
 interface CompactHeroProps {
   representative: EnhancedRepresentative;
@@ -66,7 +67,7 @@ export function CompactHero({ representative: r, totalVotes, loading }: CompactH
             whiteSpace: 'nowrap',
           }}
         >
-          {r.name} · Voting record
+          {commonName(r)} voting record
         </h1>
         <div
           style={{

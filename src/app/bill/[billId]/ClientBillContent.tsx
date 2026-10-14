@@ -26,7 +26,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
-import { getBillDisplayStatus, getBillStatusColor, getBillVoteHref } from '@/types/bill';
+import {
+  getBillCommonTitle,
+  getBillDisplayStatus,
+  getBillStatusColor,
+  getBillVoteHref,
+} from '@/types/bill';
 import { getPartyColors } from '@/lib/party-colors';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
@@ -212,20 +217,26 @@ export function ClientBillContent({ billId, initialBill }: ClientBillContentProp
     );
   }
 
+  const commonTitle = getBillCommonTitle(bill);
+
   return (
     <div className="space-y-8">
       {/* Bill Header */}
       <div className="bg-white border-2 border-black p-4 sm:p-8" data-speakable="bill-summary">
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-            <h1 className="text-3xl accent-title-underline-blue text-gray-900">{bill.number}</h1>
+            <h1 className="text-3xl accent-title-underline-blue text-gray-900">
+              {commonTitle ? `${commonTitle} (${bill.number})` : bill.number}
+            </h1>
             <span
               className={`px-3 py-1 text-sm font-medium ${getBillStatusColor(bill.status.current)}`}
             >
               {getBillDisplayStatus(bill.status.current)}
             </span>
           </div>
-          <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
+          {bill.title !== commonTitle && (
+            <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
+          )}
           <div className="flex flex-wrap items-center gap-y-1 text-gray-600 mb-4">
             <Calendar className="w-5 h-5 mr-2" />
             <span>Introduced {formatDateOnly(bill.introducedDate)}</span>
