@@ -1,6 +1,6 @@
 /**
  * methodology-by-slug — hard-coded "How this answer was built" metadata for
- * the 9 active question slugs.
+ * the 10 active question slugs.
  *
  * v1 carve-out: the typed answer pods (CampaignContributionsAnswer, etc.) do
  * not self-describe their sources / retrieval scope / refresh cadence. That
@@ -146,6 +146,42 @@ export const METHODOLOGY_BY_SLUG: Record<string, SlugMethodology> = {
     underlyingData: [
       { route: '/representative/{entityId}', title: 'Full profile', sub: 'Bills panel' },
       { route: '/representative/{entityId}/votes', title: 'Voting record', sub: 'Roll-call list' },
+    ],
+  },
+  'stock-trades': {
+    sources: [
+      { name: 'House Clerk', note: 'House periodic transaction reports (STOCK Act)' },
+      { name: 'Senate eFD', note: 'Senate periodic transaction reports (STOCK Act)' },
+      {
+        name: 'Congress Trading Monitor',
+        note: 'Open dataset that compiles both chambers’ filings daily',
+      },
+    ],
+    retrieval:
+      'Entity-scoped lookup: bioguide ID matched to the member’s filer record; trades made since January 3, 2025 (119th Congress) are kept.',
+    generation: EXTRACTIVE_GENERATION,
+    refresh: 'Source dataset refreshes daily; CIV.IQ caches each member’s filings for 24 hours.',
+    limitations: [
+      'Reports give a value range, not an exact amount or price.',
+      'Trades by a spouse or dependent child are included and labeled by owner.',
+      'Members may file up to 45 days after a trade, so the newest trades may not appear yet.',
+      'Holdings that were not traded appear only in annual financial disclosures, which are not shown here.',
+      'Trades are shown as filed. CIV.IQ does not connect trades to votes or infer motive.',
+    ],
+    citations: [
+      {
+        source: 'House Clerk',
+        entity: 'Periodic transaction reports',
+        href: 'https://disclosures-clerk.house.gov',
+      },
+      {
+        source: 'Senate eFD',
+        entity: 'Periodic transaction reports',
+        href: 'https://efdsearch.senate.gov',
+      },
+    ],
+    underlyingData: [
+      { route: '/representative/{entityId}', title: 'Full profile', sub: 'Finance panel' },
     ],
   },
   'contact-info': {

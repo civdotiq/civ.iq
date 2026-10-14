@@ -10,6 +10,7 @@ import { getCachedCommittee } from '@/lib/questions/get-committee';
 import { getTemplate, fillPattern, getCategoryLabel } from '@/lib/questions/question-registry';
 import { resolvePolicyAreaSlug } from '@/lib/services/policy-area-search.service';
 import { fetchTopicBillsData } from '@/lib/questions/template-data-fetchers';
+import { fetchStockTradesData } from '@/lib/questions/stock-trades';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { SITE_OG_IMAGES } from '@/lib/social/site-og-image';
 import { commonName } from '@/features/representatives/utils/common-name';
@@ -54,8 +55,14 @@ export async function generateMetadata({
       const rep = await getCachedRepresentative(entityId.toUpperCase());
       if (!rep) return { title: 'Representative not found' };
       const entity = { name: commonName(rep), party: rep.party, state: rep.state };
-      title = fillPattern(template.questionPattern, entity);
+      title = fillPattern(template.titlePattern ?? template.questionPattern, entity);
       description = fillPattern(template.descriptionPattern, entity);
+      // Most members report no trades; those pages carry only the empty
+      // state, so keep them out of the index (the sitemap omits them too).
+      if (slug === 'stock-trades') {
+        const stockTrades = await fetchStockTradesData(entityId.toUpperCase(), rep.chamber);
+        if (!stockTrades.trades.length) robots = { index: false, follow: true };
+      }
     }
 
     return {

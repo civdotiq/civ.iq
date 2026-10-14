@@ -105,6 +105,7 @@ Members of Congress (`{bioguideId}`, e.g. `P000197`):
 - `/ask/campaign-contributions/{bioguideId}` — Where do their campaign contributions come from? (FEC data, industry breakdown, in-state vs out-of-state)
 - `/ask/donor-voting-alignment/{bioguideId}` — Does their voting align with their donors? (sector-by-sector correlation, not causation)
 - `/ask/contact-info/{bioguideId}` — How do I contact this legislator? (DC office phone, mailing address, website)
+- `/ask/stock-trades/{bioguideId}` — What stock trades has this legislator reported? (119th Congress STOCK Act periodic transaction reports: dates, assets, owners, value ranges)
 
 Congressional committees (`{committeeId}`, the committee code, e.g. `HSAG`):
 - `/ask/committee-members/{committeeId}` — Who sits on this committee? (members, leadership, subcommittees)

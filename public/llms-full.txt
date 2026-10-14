@@ -63,7 +63,7 @@ Server-rendered HTML, listed in `https://civdotiq.org/sitemap.xml` and `https://
 | `/state-districts/{state}/{upper\|lower}/{district}` | State legislative district: members and population | `/state-districts/mi/upper/8` |
 | `/bill/{congress}-{type}-{number}` | Bill status, sponsors, actions, summary | `/bill/119-hr-1` |
 | `/vote/{chamber}-{congress}-{session}-{rollNumber}` | Roll-call vote | `/vote/senate-119-2-1` |
-| `/ask/{question}/{entityId}` | Question pages. Members (`{bioguideId}`): `voting-record`, `bills-sponsored`, `campaign-contributions`, `donor-voting-alignment`, `contact-info`. Committees (`{committeeId}`): `committee-members`, `committee-activity`, `committee-lobbying`. Policy areas (`{topic}`): `topic-bills` | `/ask/voting-record/T000481`, `/ask/committee-members/HSAG`, `/ask/topic-bills/health` |
+| `/ask/{question}/{entityId}` | Question pages. Members (`{bioguideId}`): `voting-record`, `bills-sponsored`, `campaign-contributions`, `donor-voting-alignment`, `contact-info`, `stock-trades`. Committees (`{committeeId}`): `committee-members`, `committee-activity`, `committee-lobbying`. Policy areas (`{topic}`): `topic-bills` | `/ask/voting-record/T000481`, `/ask/committee-members/HSAG`, `/ask/topic-bills/health` |
 
 Unknown member, legislator, state, district and bill IDs return HTTP 404.
 
