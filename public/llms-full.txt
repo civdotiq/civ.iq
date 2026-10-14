@@ -540,6 +540,15 @@ Stock trades in sectors regulated by the legislator's committees. House members 
 
 Sponsor/cosponsor funding analysis and related lobbying for a bill.
 
+### GET /api/intelligence/sector/{sector}/leaderboard
+
+House members' yes-vote rates on bills classified to an industry sector: yea votes / (yea + nay votes) on recent House roll calls, as a 0-1 fraction. Every included member is returned, ordered by state then name; there is no rank and no dollar figure. `stats.mean` is the House average to compare against. Members with fewer than 10 such votes are excluded. House only: senators are not covered. Rates describe voting patterns, not support for or opposition to the industry.
+
+**Parameters:**
+- `sector` (path): industry sector slug, e.g. `defense`, `health`, `finance-insurance-real-estate`
+- `party` (query, optional): "D", "R", or "I"
+- `limit` (query, optional): cap on entries; omit for all
+
 ### POST /api/intelligence/address/money-report
 
 Money-in-politics report card for representatives at a given address.

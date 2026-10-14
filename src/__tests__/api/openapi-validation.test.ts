@@ -102,11 +102,11 @@ describe('OpenAPI Specification', () => {
       '/mcp',
     ];
 
-    // Intelligence endpoints. The sector leaderboard 404s in production, so it
-    // is left out of the spec until it is fixed.
+    // Intelligence endpoints
     const INTELLIGENCE_PATHS = [
       '/intelligence/representative/{bioguideId}/influence-chain',
       '/intelligence/representative/{bioguideId}/temporal',
+      '/intelligence/sector/{sector}/leaderboard',
       '/intelligence/representative/{bioguideId}/finance-jurisdiction',
       '/intelligence/address/money-report',
       '/intelligence/address/representatives',
@@ -165,8 +165,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 38 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(38);
+    it('should have 39 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(39);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];
