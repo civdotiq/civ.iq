@@ -38,7 +38,7 @@
     "fuse.js": "^7.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.0"
+    "typescript": "^7.0.2"
   },
   "license": "MIT",
   "author": "Mark Sandford",
