@@ -102,13 +102,13 @@ describe('OpenAPI Specification', () => {
       '/mcp',
     ];
 
-    // Intelligence endpoints. influence-chain, temporal, sector leaderboard and
-    // influence-clusters 404 in production, so they are left out of the spec
-    // until they are fixed.
+    // Intelligence endpoints. influence-chain, temporal and sector leaderboard
+    // 404 in production, so they are left out of the spec until they are fixed.
     const INTELLIGENCE_PATHS = [
       '/intelligence/representative/{bioguideId}/finance-jurisdiction',
       '/intelligence/address/money-report',
       '/intelligence/address/representatives',
+      '/intelligence/influence-clusters',
     ];
 
     // Feed endpoints
@@ -163,8 +163,8 @@ describe('OpenAPI Specification', () => {
       });
     }
 
-    it('should have 35 paths total', () => {
-      expect(Object.keys(spec.paths).length).toBe(35);
+    it('should have 36 paths total', () => {
+      expect(Object.keys(spec.paths).length).toBe(36);
     });
 
     const ALLOWED_METHODS = ['get', 'post', 'delete'];
