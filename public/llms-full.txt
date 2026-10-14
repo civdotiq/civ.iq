@@ -500,6 +500,34 @@ Overlap between campaign donors' industry sectors and committee jurisdictions.
 
 Correlation between campaign donors (by sector) and voting record.
 
+### GET /api/intelligence/representative/{bioguideId}/temporal
+
+Party-line voting alignment per calendar quarter of the current Congress, computed from every roll call in the chamber. Flags quarters more than 10 percentage points from the trailing 4-quarter average and compares overall alignment with other members of the same party in the chamber. Needs at least 4 quarters of votes; returns 404 for independents or when the roll-call corpus is incomplete, 503 if the analysis times out.
+
+**Response shape:**
+```json
+{
+  "bioguideId": "P000197",
+  "quarters": [
+    { "quarter": "2025-Q1", "alignmentScore": 1, "voteCount": 51, "rollingAverage": null }
+  ],
+  "shifts": [],
+  "overallTrend": "stable",
+  "peerComparison": {
+    "value": 0.992,
+    "peerAverage": 0.964,
+    "peerCount": 222,
+    "peerGroupLabel": "other House Democrats",
+    "percentileRank": 99
+  },
+  "narrative": "string",
+  "confidence": 1,
+  "dataAsOf": "2026-09-16T19:05:00-04:00",
+  "methodology": "string",
+  "disclaimer": "string"
+}
+```
+
 ### GET /api/intelligence/committee/{committeeId}
 
 Lobbying pipeline for a committee: lobbying expenditures to committee activity to legislative output. `committeeId` is the committee code, e.g. `HSAG`.
